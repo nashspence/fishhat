@@ -34,7 +34,12 @@ def runtime_registry() -> tuple[Registry, dict, dict]:
     path = next(p for p in descriptors() if "podman-quadlet" in p.parts)
     descriptor = json.loads(path.read_text())
     descriptor["id"] = "independent-author.example-runtime"
-    descriptor["implemented"] = ["runtime.activate", "runtime.deactivate"]
+    descriptor["implemented"] = [
+        "runtime.activate",
+        "runtime.deactivate",
+        "runtime.observe",
+        "runtime.inventory",
+    ]
     installation = {
         "implementation": descriptor["id"],
         "artifact": {"digest": D, "media_type": "application/zip", "size_bytes": 100},
@@ -165,7 +170,12 @@ def request(method: str = "activate") -> dict:
     }
 
 
-def observation(admission_generation: int = 0) -> dict:
+def native_exclusion(scope: dict) -> str:
+    """Synthetic continuously held native exclusion; never a native safety proof."""
+    return identifier(90)
+
+
+def observation(admission_generation: int = 0, *, barrier: dict | None = None) -> dict:
     return {
         "scope": copy.deepcopy(SCOPE),
         "generation": 1,
@@ -180,4 +190,11 @@ def observation(admission_generation: int = 0) -> dict:
         "instance": "native-demo",
         "installation_digest": D,
         "admission_generation": admission_generation,
+        "barrier": copy.deepcopy(barrier),
     }
+
+
+def fresh_observation(owner, subject: str = "demo", *, method: str = "observe") -> dict:
+    query = owner.observation_request(subject, owner_approved=True, method=method)
+    barrier = query["input"]["barrier"]
+    return observation(barrier["admission_generation"], barrier=barrier)

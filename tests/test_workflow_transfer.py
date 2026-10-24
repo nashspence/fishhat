@@ -11,9 +11,20 @@ from fishhat_contracts.handoffs import validate_cli_result, validate_workflow
 from fishhat_contracts.transfers import validate_transfer_proposal, validate_transfer_request
 from fishhat_contracts.validation import MAX_BYTES, ContractError, digest, validate
 from fishhat_contracts.witness import sign, verify
+from fishhat_contracts.workflows import advance_workflow, validate_advance_request
 
 from tests.test_contracts import uid
-from tests.test_owner_handoffs import U, V, operation, request, wire, work_page, workflow
+from tests.test_owner_handoffs import (
+    U,
+    V,
+    operation,
+    rebind_workflow_proposal,
+    request,
+    staged_workflow_input,
+    wire,
+    work_page,
+    workflow,
+)
 
 CHECK_PURPOSE = {
     "purpose": "public-contract",
@@ -24,6 +35,7 @@ CHECK_PURPOSE = {
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/records.schema.json#/$defs/WorkflowTransferWitness",
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/ssh-request.schema.json",
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/ssh-response.schema.json",
+        "packages/fishhat-contracts/src/fishhat_contracts/contracts/workflow.schema.json",
     ],
     "scope": "retained transfer proposal, participant evidence and lost-client phase reconstruction",
     "relationship": "candidate",
@@ -38,6 +50,7 @@ def capsule():
     other["owner"]["id"] = V
     other["resource"]["id"] = "other-app"
     value["participants"].append(other)
+    rebind_workflow_proposal(value)
     return value
 
 
@@ -155,7 +168,7 @@ def test_pending_transfer_exposes_exact_original_input_without_client_state():
         validate_cli_result(result)
     recovered = reconstruct(value, "freeze")
     assert recovered == original
-    validate("ssh-request.schema.json", request("workflow.transfer", recovered))
+    staged_workflow_input("workflow.transfer", recovered)
     value["generation"] = 5
     assert validate_transfer_request(recovered, value) == "replay"
     assert recovered["expected_generation"] == 0
@@ -225,6 +238,36 @@ def test_commit_requires_every_participant_owner_freeze_before_new_driver():
         validate_transfer_request(original, fresh)
 
 
+def completion_request(value):
+    transfer = value["transfer"]
+    witnesses = copy.deepcopy(transfer["commit_witnesses"])
+    owners = {canonical_owner(item["owner"]) for item in witnesses}
+    for participant in value["participants"]:
+        if canonical_owner(participant["owner"]) not in owners:
+            witnesses.append(
+                attestation(transfer["proposal"], participant["owner"], "transferred", 8)
+            )
+            owners.add(canonical_owner(participant["owner"]))
+    return {
+        "owner": value["owner"],
+        "workflow_id": value["id"],
+        "advance_id": uid("transfer-completion-advance"),
+        "driver_term": value["driver_term"],
+        "expected_generation": value["generation"],
+        "phase": "draining",
+        "witnesses": [],
+        "transfer_completion": {
+            "transfer_id": transfer["proposal"]["transfer_id"],
+            "proposal_digest": transfer["proposal_digest"],
+            "witnesses": witnesses,
+        },
+    }
+
+
+def canonical_owner(owner):
+    return owner["tool"], owner["id"], owner["epoch"]
+
+
 def test_local_commit_replays_original_generation_and_completion_needs_all_commits():
     value, original = committed()
     value["generation"] = 6
@@ -239,18 +282,22 @@ def test_local_commit_replays_original_generation_and_completion_needs_all_commi
     assert validate_transfer_request(reconstruct(value, "freeze"), value) == "replay"
     assert value["state"] == "transfer-pending"
     assert value["driver_term"] == 2
-    complete = copy.deepcopy(value)
-    complete["state"] = "active"
-    complete["phase"] = "draining"
-    complete["transfer"]["phase"] = "completed"
+    advance = completion_request(value)
+    incomplete = copy.deepcopy(advance)
+    incomplete["transfer_completion"]["witnesses"].pop()
     with pytest.raises(ContractError, match="participant commits"):
-        validate_workflow(complete)
-    other = complete["participants"][1]["owner"]
-    complete["transfer"]["commit_witnesses"].append(
-        attestation(complete["transfer"]["proposal"], other, "transferred", 8)
-    )
+        advance_workflow(incomplete, value)
+    staged_workflow_input("workflow.advance", advance)
+    complete = advance_workflow(advance, value)
+    assert complete["generation"] == value["generation"] + 1
+    assert complete["state"] == "active"
+    assert complete["transfer"]["phase"] == "completed"
+    assert complete["advances"][0]["request"] == advance
     validate_workflow(complete)
     assert validate_transfer_request(recovered, complete) == "replay"
+    assert advance_workflow(advance, complete) == complete
+    complete["generation"] += 1
+    assert validate_advance_request(advance, complete) == "replay"
 
 
 @pytest.mark.parametrize("field", ["owner", "workflow_id", "subject_digest", "state"])
@@ -293,7 +340,7 @@ def test_transfer_proposal_exactly_matches_unique_retained_participant_closure()
         validate_transfer_request(query, value)
 
 
-def test_commit_request_stays_bounded_for_complete_maximum_owner_closure():
+def test_staged_commit_request_keeps_complete_owner_closure():
     value = workflow()
     template = value["participants"][0]
     value["participants"] = [copy.deepcopy(template)]
@@ -302,15 +349,16 @@ def test_commit_request_stays_bounded_for_complete_maximum_owner_closure():
         item["owner"]["id"] = uid(f"transfer-owner-{index}")
         item["resource"]["id"] = f"app-{index}"
         value["participants"].append(item)
+    rebind_workflow_proposal(value)
     value, _ = frozen(value)
     query = commit_input(value)
-    validate("ssh-request.schema.json", request("workflow.transfer", query))
+    reference, _ = staged_workflow_input("workflow.transfer", query)
     assert validate_transfer_request(query, value) == "new"
     assert len(query["witnesses"]) == 64
-    assert len(frame(request("workflow.transfer", query))) <= MAX_BYTES + 4
+    assert len(frame(request("workflow.transfer", reference))) <= MAX_BYTES + 4
     query["witnesses"][0]["evidence_digests"] = ["sha256:" + "0" * 64]
     with pytest.raises(ContractError):
-        validate("ssh-request.schema.json", request("workflow.transfer", query))
+        staged_workflow_input("workflow.transfer", query)
 
 
 def test_obsolete_unretained_transfer_shape_is_rejected():

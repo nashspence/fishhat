@@ -15,7 +15,7 @@
               "type": "string",
               "minLength": 2,
               "maxLength": 512,
-              "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+$"
+              "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+(?![\\s\\S])"
             },
             "reserve_bytes": {
               "type": "integer",
@@ -68,7 +68,7 @@
                 "type": "string",
                 "minLength": 2,
                 "maxLength": 512,
-                "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+$"
+                "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+(?![\\s\\S])"
               },
               "allocation_budget_bytes": {
                 "type": "integer",
@@ -146,7 +146,7 @@
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 24,
-                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
               },
               "login": {
                 "type": "string",
@@ -166,13 +166,13 @@
                         "type": "string",
                         "minLength": 1,
                         "maxLength": 24,
-                        "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                        "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                       },
                       "root": {
                         "type": "string",
                         "minLength": 2,
                         "maxLength": 512,
-                        "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+$"
+                        "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+(?![\\s\\S])"
                       },
                       "max_bytes": {
                         "type": "integer",
@@ -217,13 +217,13 @@
                         "type": "string",
                         "minLength": 1,
                         "maxLength": 24,
-                        "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                        "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                       },
                       "root": {
                         "type": "string",
                         "minLength": 2,
                         "maxLength": 512,
-                        "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+$"
+                        "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+(?![\\s\\S])"
                       },
                       "max_bytes": {
                         "type": "integer",
@@ -268,13 +268,13 @@
                         "type": "string",
                         "minLength": 1,
                         "maxLength": 24,
-                        "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                        "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                       },
                       "root": {
                         "type": "string",
                         "minLength": 2,
                         "maxLength": 512,
-                        "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+$"
+                        "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+(?![\\s\\S])"
                       },
                       "max_bytes": {
                         "type": "integer",
@@ -319,13 +319,13 @@
                         "type": "string",
                         "minLength": 1,
                         "maxLength": 24,
-                        "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                        "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                       },
                       "root": {
                         "type": "string",
                         "minLength": 2,
                         "maxLength": 512,
-                        "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+$"
+                        "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+(?![\\s\\S])"
                       },
                       "max_bytes": {
                         "type": "integer",
@@ -726,7 +726,7 @@
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 24,
-                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
               },
               "read_bps": {
                 "type": "integer",

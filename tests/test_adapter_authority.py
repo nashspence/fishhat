@@ -13,8 +13,8 @@ from tests.adapter_support import (
     SCOPE,
     D,
     binding,
+    fresh_observation,
     identifier,
-    observation,
     request,
     runtime_registry,
     runtime_sources,
@@ -257,9 +257,11 @@ def test_unpinned_binding_preserves_custody_without_inventing_dispatch_authority
         restored.settle(attempt["attempt_id"], *result(restored, retained_attempt))
     else:
         restored.cancel_prepared(attempt["attempt_id"], owner_approved=True)
-    restored.prove_quiescent("demo", observation(2))
     with pytest.raises(ContractError, match="BINDING_AUTHORITY_UNPINNED"):
+        restored.observation_request("demo", owner_approved=True)
+    with pytest.raises(ContractError, match="QUIESCENCE_REQUIRED"):
         restored.open_admission("demo", owner_approved=True)
+    assert restored.snapshot()["quiescent"]["demo"] is False
     assert "instance_digest" not in restored.snapshot()["bindings"]["demo"]
 
 
@@ -468,9 +470,9 @@ def test_delegate_uncertainty_blocks_quiescence_in_the_same_runtime_owner():
     c.dispatch("demo", attempt["attempt_id"])
     c.close_admission("demo")
     with pytest.raises(ContractError, match="PENDING_NATIVE_WORK"):
-        c.prove_quiescent("demo", observation(1))
+        c.observation_request("demo", owner_approved=True)
     c.settle(attempt["attempt_id"], *result(c, attempt))
-    c.prove_quiescent("demo", observation(1))
+    c.prove_quiescent("demo", fresh_observation(c), owner_approved=True)
     assert c.snapshot()["quiescent"]["demo"] is True
 
 
@@ -488,7 +490,7 @@ def test_missing_service_executor_does_not_erase_accepted_uncertain_work_on_rest
     assert state["attempts"][attempt["attempt_id"]]["certainty"] == "unknown"
     assert state["admission"]["demo"] is False
     with pytest.raises(ContractError, match="PENDING_NATIVE_WORK"):
-        restored.prove_quiescent("demo", observation(1))
+        restored.observation_request("demo", owner_approved=True)
     with pytest.raises(ContractError, match="INSTANCE_ROLE"):
         restored.dispatch("demo", attempt["attempt_id"])
 

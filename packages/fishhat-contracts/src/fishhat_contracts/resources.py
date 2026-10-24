@@ -197,8 +197,10 @@ def validate_requirements(
 
 def validate_snapshot(snapshot: dict[str, Any]) -> None:
     validate("resource-records.schema.json", snapshot, "CapacitySnapshot")
+    buckets = [quota["bucket"] for quota in snapshot["quotas"]]
     require(
-        set(q["bucket"] for q in snapshot["quotas"]) == set(BUCKETS), "incomplete quota buckets"
+        len(buckets) == len(BUCKETS) and set(buckets) == set(BUCKETS),
+        "quota buckets must occur exactly once",
     )
     pools = {p["pool"]: p for p in snapshot["pools"]}
     require(len(pools) == len(snapshot["pools"]), "duplicate pool observation")

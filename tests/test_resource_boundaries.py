@@ -27,6 +27,19 @@ CHECK_PURPOSE = {
     "claims": [],
 }
 
+CHECK_OVERRIDES = {
+    "test_capacity_snapshot_rejects_duplicate_buckets_even_for_distinct_allocations": {
+        "purpose": "public-contract",
+        "authority": [
+            "packages/fishhat-contracts/src/fishhat_contracts/contracts/resource-records.schema.json#/$defs/CapacitySnapshot"
+        ],
+        "scope": "one approved native allocation for each logical capacity bucket",
+        "relationship": "candidate",
+        "reason": "Independent extra-allocation and replaced-bucket cases must reject at both schema and semantic boundaries; this does not qualify native quota enforcement.",
+        "claims": [],
+    },
+}
+
 NOW = "2026-10-19T12:00:00Z"
 
 
@@ -180,6 +193,39 @@ def test_accounting_updates_and_order_do_not_change_approved_binding_identity():
     observed["pools"][0]["available_bytes"] -= 1
     observed["observed_at"] = "2026-10-19T12:00:01Z"
     assert resource_bindings_digest(observed) == expected
+
+
+@pytest.mark.parametrize("shape", ["extra-allocation", "replaced-bucket"])
+def test_capacity_snapshot_rejects_duplicate_buckets_even_for_distinct_allocations(shape):
+    observed = snapshot()
+    other = deepcopy(observed["quotas"][0])
+    other["storage"]["handle"] = "separate-runtime-allocation"
+    other["root"] = "/srv/ops/separate-runtime"
+    if shape == "extra-allocation":
+        observed["quotas"].append(other)
+    else:
+        observed["quotas"][1] = other
+    with pytest.raises(ContractError):
+        validate("resource-records.schema.json", observed, "CapacitySnapshot")
+    with pytest.raises(ContractError):
+        validate_snapshot(observed)
+
+
+def test_reordered_capacity_buckets_reserve_and_release_the_same_allocations():
+    observed, proposed = snapshot(), request()
+    observed["quotas"].reverse()
+    before = {quota["bucket"]: deepcopy(quota) for quota in observed["quotas"]}
+    book = ReservationModel(observed, approved_bindings_digest=proposed["bindings_digest"])
+    book.reserve(proposed, now=NOW)
+    growth = {item["bucket"]: item for item in proposed["growth"]}
+    for quota in book.snapshot["quotas"]:
+        for unit in ("bytes", "inodes"):
+            assert quota["reserved_remaining_" + unit] == (
+                before[quota["bucket"]]["reserved_remaining_" + unit]
+                + growth.get(quota["bucket"], {}).get(unit, 0)
+            )
+    book.release(proposed["operation_id"], writer_stopped=True)
+    assert {quota["bucket"]: quota for quota in book.snapshot["quotas"]} == before
 
 
 def test_resource_bindings_cannot_hide_a_native_provider_field():

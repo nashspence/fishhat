@@ -23,12 +23,12 @@
             "id": {
               "type": "string",
               "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
             },
             "epoch": {
               "type": "string",
               "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
             }
           },
           "required": [
@@ -42,7 +42,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 24,
-          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
         },
         "resource_generation": {
           "type": "integer",
@@ -55,7 +55,7 @@
         "boot_id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "coverage_complete": {
           "type": "boolean"
@@ -80,13 +80,13 @@
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 24,
-                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
               },
               "root": {
                 "type": "string",
                 "minLength": 2,
                 "maxLength": 512,
-                "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+$"
+                "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+(?![\\s\\S])"
               },
               "max_bytes": {
                 "type": "integer",
@@ -152,7 +152,66 @@
             ],
             "additionalProperties": false
           },
-          "minItems": 4
+          "minItems": 4,
+          "description": "Exactly one approved allocation for each logical runtime, state, scratch and logs bucket. Array order has no authority; duplicate bucket names are invalid even when native allocations differ.",
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "bucket": {
+                    "const": "runtime"
+                  }
+                },
+                "required": [
+                  "bucket"
+                ]
+              },
+              "minContains": 1,
+              "maxContains": 1
+            },
+            {
+              "contains": {
+                "properties": {
+                  "bucket": {
+                    "const": "state"
+                  }
+                },
+                "required": [
+                  "bucket"
+                ]
+              },
+              "minContains": 1,
+              "maxContains": 1
+            },
+            {
+              "contains": {
+                "properties": {
+                  "bucket": {
+                    "const": "scratch"
+                  }
+                },
+                "required": [
+                  "bucket"
+                ]
+              },
+              "minContains": 1,
+              "maxContains": 1
+            },
+            {
+              "contains": {
+                "properties": {
+                  "bucket": {
+                    "const": "logs"
+                  }
+                },
+                "required": [
+                  "bucket"
+                ]
+              },
+              "minContains": 1,
+              "maxContains": 1
+            }
+          ]
         },
         "pools": {
           "type": "array",
@@ -163,7 +222,7 @@
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 24,
-                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
               },
               "available_bytes": {
                 "type": "integer",
@@ -250,13 +309,13 @@
         "operation_id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "account": {
           "type": "string",
           "minLength": 1,
           "maxLength": 24,
-          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
         },
         "resource_generation": {
           "type": "integer",
@@ -352,12 +411,12 @@
             "id": {
               "type": "string",
               "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
             },
             "epoch": {
               "type": "string",
               "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
             }
           },
           "required": [
@@ -370,18 +429,18 @@
         "id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "operation_id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "account": {
           "type": "string",
           "minLength": 1,
           "maxLength": 24,
-          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
         },
         "resource_generation": {
           "type": "integer",
@@ -392,19 +451,19 @@
           "type": "string",
           "minLength": 71,
           "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}$"
+          "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
         },
         "snapshot_digest": {
           "type": "string",
           "minLength": 71,
           "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}$"
+          "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
         },
         "grants_digest": {
           "type": "string",
           "minLength": 71,
           "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}$"
+          "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
         },
         "created_at": {
           "$ref": "common.schema.json#/$defs/Time"
@@ -430,7 +489,7 @@
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 24,
-                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
               },
               "bucket": {
                 "enum": [
@@ -506,12 +565,12 @@
             "id": {
               "type": "string",
               "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
             },
             "epoch": {
               "type": "string",
               "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
             }
           },
           "required": [
@@ -525,7 +584,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 24,
-          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
         },
         "account_kind": {
           "enum": [
@@ -538,7 +597,7 @@
           "type": "string",
           "minLength": 71,
           "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}$"
+          "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
         },
         "generation": {
           "type": "integer",
@@ -570,7 +629,7 @@
                 "type": "string",
                 "minLength": 71,
                 "maxLength": 71,
-                "pattern": "^sha256:[0-9a-f]{64}$"
+                "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
               },
               "kind": {
                 "enum": [
@@ -603,7 +662,7 @@
                   "type": "string",
                   "minLength": 71,
                   "maxLength": 71,
-                  "pattern": "^sha256:[0-9a-f]{64}$"
+                  "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
                 },
                 "minItems": 0
               },
@@ -633,7 +692,7 @@
                   {
                     "type": "string",
                     "format": "uuid",
-                    "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                    "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
                   },
                   {
                     "type": "null"
@@ -671,7 +730,7 @@
             "type": "string",
             "minLength": 71,
             "maxLength": 71,
-            "pattern": "^sha256:[0-9a-f]{64}$"
+            "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
           },
           "minItems": 0
         },
@@ -742,12 +801,12 @@
             "id": {
               "type": "string",
               "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
             },
             "epoch": {
               "type": "string",
               "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
             }
           },
           "required": [
@@ -761,25 +820,25 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 24,
-          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
         },
         "store_binding": {
           "type": "string",
           "minLength": 71,
           "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}$"
+          "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
         },
         "inventory_digest": {
           "type": "string",
           "minLength": 71,
           "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}$"
+          "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
         },
         "protection_digest": {
           "type": "string",
           "minLength": 71,
           "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}$"
+          "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
         },
         "generation": {
           "type": "integer",
@@ -801,7 +860,7 @@
                 "type": "string",
                 "minLength": 71,
                 "maxLength": 71,
-                "pattern": "^sha256:[0-9a-f]{64}$"
+                "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
               },
               "kind": {
                 "enum": [
@@ -889,12 +948,12 @@
             "id": {
               "type": "string",
               "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
             },
             "epoch": {
               "type": "string",
               "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
             }
           },
           "required": [
@@ -907,19 +966,19 @@
         "operation_id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "plan_digest": {
           "type": "string",
           "minLength": 71,
           "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}$"
+          "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
         },
         "account": {
           "type": "string",
           "minLength": 1,
           "maxLength": 24,
-          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
         },
         "started_at": {
           "$ref": "common.schema.json#/$defs/Time"
@@ -936,7 +995,7 @@
                 "type": "string",
                 "minLength": 71,
                 "maxLength": 71,
-                "pattern": "^sha256:[0-9a-f]{64}$"
+                "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
               },
               "outcome": {
                 "enum": [
@@ -953,7 +1012,7 @@
                   "type": "string",
                   "minLength": 71,
                   "maxLength": 71,
-                  "pattern": "^sha256:[0-9a-f]{64}$"
+                  "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
                 },
                 "minItems": 0
               }
@@ -1036,12 +1095,12 @@
             "id": {
               "type": "string",
               "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
             },
             "epoch": {
               "type": "string",
               "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
             }
           },
           "required": [
@@ -1100,7 +1159,7 @@
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 24,
-                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
               },
               "subject_kind": {
                 "enum": [
@@ -1211,13 +1270,13 @@
                       "type": "string",
                       "minLength": 1,
                       "maxLength": 24,
-                      "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                      "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                     },
                     "root": {
                       "type": "string",
                       "minLength": 2,
                       "maxLength": 512,
-                      "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+$"
+                      "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+(?![\\s\\S])"
                     },
                     "max_bytes": {
                       "type": "integer",
@@ -1368,12 +1427,12 @@
             "id": {
               "type": "string",
               "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
             },
             "epoch": {
               "type": "string",
               "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
             }
           },
           "required": [
@@ -1387,7 +1446,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 24,
-          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
         },
         "protection_generation": {
           "type": "integer",
@@ -1410,7 +1469,7 @@
                 "type": "string",
                 "minLength": 71,
                 "maxLength": 71,
-                "pattern": "^sha256:[0-9a-f]{64}$"
+                "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
               },
               "verified_at": {
                 "$ref": "common.schema.json#/$defs/Time",
@@ -1428,7 +1487,7 @@
                   "type": "string",
                   "minLength": 71,
                   "maxLength": 71,
-                  "pattern": "^sha256:[0-9a-f]{64}$"
+                  "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
                 }
               },
               "blocking_refs": {
@@ -1448,19 +1507,19 @@
                         "type": "string",
                         "minLength": 71,
                         "maxLength": 71,
-                        "pattern": "^sha256:[0-9a-f]{64}$"
+                        "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
                       },
                       "custody_handle": {
                         "type": "string",
                         "minLength": 71,
                         "maxLength": 71,
-                        "pattern": "^sha256:[0-9a-f]{64}$"
+                        "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
                       },
                       "evidence_digest": {
                         "type": "string",
                         "minLength": 71,
                         "maxLength": 71,
-                        "pattern": "^sha256:[0-9a-f]{64}$"
+                        "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
                       },
                       "verified_at": {
                         "$ref": "common.schema.json#/$defs/Time"

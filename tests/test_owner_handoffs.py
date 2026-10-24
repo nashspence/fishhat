@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 
 import pytest
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from fishhat_contracts.handoffs import (
     schema_identity,
     validate_cli_result,
@@ -17,8 +18,12 @@ from fishhat_contracts.handoffs import (
     validate_staging,
     validate_workflow,
 )
-from fishhat_contracts.validation import ContractError, canonical, validate, validate_cli
+from fishhat_contracts.validation import ContractError, canonical, digest, validate, validate_cli
+from fishhat_contracts.witness import sign
+from fishhat_contracts.workflows import decode_workflow_input
 from fishhat_owner.commands import parse_command
+
+from tests.test_contracts import uid
 
 CHECK_PURPOSE = {
     "purpose": "public-contract",
@@ -81,22 +86,22 @@ def cli(result):
 
 def workflow():
     op = operation()
-    return {
+    owner = {**op["owner"], "tool": "host-ops"}
+    value = {
         "format": "deployment-ops/record/v1",
         "kind": "Workflow",
         "id": U,
-        "owner": copy.deepcopy(op["owner"]),
+        "owner": copy.deepcopy(owner),
         "generation": 0,
         "type": "host-drain",
-        "target_digest": D,
         "driver_term": 1,
         "driver_principal": "ops-app-operate",
         "state": "prepared",
         "phase": "prepared",
         "participants": [
             {
-                "owner": copy.deepcopy(op["owner"]),
-                "resource": op["subject"]["resource"],
+                "owner": copy.deepcopy(owner),
+                "resource": {"kind": "host", "id": "node-a"},
                 "expected_generation": 9,
                 "request_ids": [V],
                 "last_witness": None,
@@ -106,14 +111,111 @@ def workflow():
         "holds": [],
         "recovery_digests": [],
         "transfer": None,
+        "advances": [],
     }
+    rebind_workflow_proposal(value)
+    return value
+
+
+def rebind_workflow_proposal(value):
+    """Build exact synthetic Plans/content when a test creates a new closure."""
+    participants = []
+    content = {}
+    for participant in value["participants"]:
+        requests = []
+        for request_id in participant["request_ids"]:
+            plan = json.loads((FIXTURES / "plan.json").read_text())
+            plan["id"] = uid("workflow-plan-" + request_id)
+            plan["owner"] = copy.deepcopy(participant["owner"])
+            plan["subject"] = {
+                "action": "host.reboot",
+                "resource": copy.deepcopy(participant["resource"]),
+                "arguments": {},
+            }
+            plan["summary"] = "Reboot the selected synthetic host through its exact reviewed scope."
+            for condition in plan["preconditions"]:
+                condition.update(
+                    owner=copy.deepcopy(participant["owner"]),
+                    resource=copy.deepcopy(participant["resource"]),
+                    generation=participant["expected_generation"],
+                )
+            for effect in plan["effects"]:
+                effect.update(
+                    executor=copy.deepcopy(participant["owner"]),
+                    resource=copy.deepcopy(participant["resource"]),
+                    action="admitted-reboot",
+                )
+            plan["digest"] = digest(
+                {k: v for k, v in plan.items() if k not in {"digest", "witness"}}
+            )
+            body = {k: v for k, v in plan["witness"].items() if k != "signature"}
+            body.update(
+                owner=copy.deepcopy(plan["owner"]),
+                subject_digest=plan["digest"],
+                generation=participant["expected_generation"],
+            )
+            plan["witness"] = sign(body, Ed25519PrivateKey.from_private_bytes(b"\x17" * 32))
+            requests.append({"request_id": request_id, "plan": plan})
+            for input_digest in plan["input_digests"]:
+                identity = canonical([plan["owner"], input_digest]).decode()
+                content[identity] = {
+                    "owner": copy.deepcopy(plan["owner"]),
+                    "id": uid("workflow-content-" + identity),
+                    "purpose": "content",
+                    "binding": {"kind": "staging", "staging_id": uid("workflow-stage-" + identity)},
+                    "digest": input_digest,
+                    "size": 1,
+                }
+        participants.append(
+            {
+                **{
+                    k: copy.deepcopy(participant[k])
+                    for k in ("owner", "resource", "expected_generation")
+                },
+                "requests": requests,
+            }
+        )
+    value["proposal"] = {
+        "format": "deployment-ops/workflow-proposal/v1",
+        "workflow_id": value["id"],
+        "type": value["type"],
+        "target": {
+            "host_change": {
+                "owner": copy.deepcopy(participants[0]["owner"]),
+                "request_id": participants[0]["requests"][0]["request_id"],
+            }
+        },
+        "participants": participants,
+        "content": list(content.values()),
+    }
+    value["proposal_digest"] = digest(value["proposal"])
+
+
+def staged_workflow_input(method, payload):
+    data = canonical(payload)
+    reference = {
+        "owner": copy.deepcopy(payload["owner"]),
+        "input": {
+            "owner": copy.deepcopy(payload["owner"]),
+            "id": uid(method + "-input"),
+            "purpose": "workflow-input",
+            "binding": {"kind": "staging", "staging_id": uid(method + "-staging")},
+            "digest": "sha256:" + hashlib.sha256(data).hexdigest(),
+            "size": len(data),
+        },
+    }
+    validate("ssh-request.schema.json", request(method, reference))
+    assert (
+        decode_workflow_input(method, reference, data, expected_owner=payload["owner"]) == payload
+    )
+    return reference, data
 
 
 def work_page(kind, items):
     return {
         "format": "deployment-ops/record/v1",
         "kind": kind,
-        "owner": operation()["owner"],
+        "owner": copy.deepcopy(items[0]["owner"] if items else operation()["owner"]),
         "items": items,
         "next_cursor": "next_1",
         "history_complete": False,
@@ -237,39 +339,29 @@ def test_work_listings_cover_resource_filters_terminal_history_and_continuation(
 
 def test_prepare_cannot_supply_observed_owner_state():
     value = workflow()
-    participant = {k: v for k, v in value["participants"][0].items() if k != "last_witness"}
-    params = {
-        "expected_owner": value["owner"],
-        "workflow_id": value["id"],
-        "type": value["type"],
-        "target_digest": value["target_digest"],
-        "participants": [participant],
-    }
-    validate("ssh-request.schema.json", request("workflow.prepare", params))
+    params = {"owner": value["owner"], "proposal": value["proposal"]}
+    staged_workflow_input("workflow.prepare", params)
     for field, claim in (("state", "completed"), ("generation", 9), ("driver_principal", "admin")):
         with pytest.raises(ContractError):
-            validate(
-                "ssh-request.schema.json", request("workflow.prepare", {**params, field: claim})
-            )
+            staged_workflow_input("workflow.prepare", {**params, field: claim})
 
 
 def test_workflow_capsule_generation_is_separate_from_participant_generation():
     value = workflow()
     value["generation"] = 4
     validate_workflow(value)
-    validate(
-        "ssh-request.schema.json",
-        request(
-            "workflow.advance",
-            {
-                "owner": value["owner"],
-                "workflow_id": value["id"],
-                "driver_term": 1,
-                "phase": "draining",
-                "expected_generation": 4,
-                "witnesses": [],
-            },
-        ),
+    staged_workflow_input(
+        "workflow.advance",
+        {
+            "owner": value["owner"],
+            "workflow_id": value["id"],
+            "advance_id": U,
+            "driver_term": 1,
+            "phase": "draining",
+            "expected_generation": 4,
+            "witnesses": [],
+            "transfer_completion": None,
+        },
     )
     assert value["participants"][0]["expected_generation"] == 9
     foreign = copy.deepcopy(value)

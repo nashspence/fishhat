@@ -9,7 +9,7 @@
     "request_id": {
       "type": "string",
       "format": "uuid",
-      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
     },
     "outcome": {
       "enum": [
@@ -35,7 +35,7 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 64,
-            "pattern": "^[A-Z][A-Z0-9_]+$"
+            "pattern": "^[A-Z][A-Z0-9_]+(?![\\s\\S])"
           },
           "passed": {
             "type": "boolean"
@@ -64,7 +64,7 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 240,
-            "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*$"
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*(?![\\s\\S])"
           },
           "bytes": {
             "type": "integer",
@@ -75,7 +75,7 @@
             "type": "string",
             "minLength": 71,
             "maxLength": 71,
-            "pattern": "^sha256:[0-9a-f]{64}$"
+            "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
           }
         },
         "required": [

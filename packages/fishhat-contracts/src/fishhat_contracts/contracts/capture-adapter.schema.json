@@ -15,7 +15,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 160,
-          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*$"
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*(?![\\s\\S])"
         },
         "procedure_digest": {
           "$ref": "common.schema.json#/$defs/Digest"
@@ -47,7 +47,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 160,
-          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*$"
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*(?![\\s\\S])"
         },
         "procedure_digest": {
           "$ref": "common.schema.json#/$defs/Digest"
@@ -79,7 +79,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 160,
-          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*$"
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*(?![\\s\\S])"
         },
         "procedure_digest": {
           "$ref": "common.schema.json#/$defs/Digest"
@@ -115,7 +115,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 160,
-          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*$"
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*(?![\\s\\S])"
         },
         "procedure_digest": {
           "$ref": "common.schema.json#/$defs/Digest"

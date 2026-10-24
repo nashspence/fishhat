@@ -51,7 +51,10 @@ def host_plan(disposition="overwrite", baseline="accepted", live="edited", propo
     }
     value["summary"] = "Apply the reviewed host configuration on node-a."
     value["data_consequences"] = "Resolve the reviewed edit to the managed host message."
-    value["input_digests"] = [digest(value["subject"])]
+    value["input_digests"] = [
+        digest(value["subject"]),
+        value["subject"]["arguments"]["source"]["closure_digest"],
+    ]
     value["preconditions"][0].update(owner=owner, resource=resource)
     value["effects"][0].update(
         step="apply-message",

@@ -33,7 +33,18 @@ from fishhat_contracts.witness import sign, verify
 from fishhat_owner.commands import parse_command
 
 from tests.test_contracts import uid
-from tests.test_owner_handoffs import FIXTURES, NOW, U, V, cli, operation, request, wire, work_page
+from tests.test_owner_handoffs import (
+    FIXTURES,
+    NOW,
+    U,
+    V,
+    cli,
+    operation,
+    rebind_workflow_proposal,
+    request,
+    wire,
+    work_page,
+)
 from tests.test_owner_handoffs import workflow as workflow_record
 
 CHECK_PURPOSE = {
@@ -67,12 +78,14 @@ def expanded_workflow(*, witnesses):
         if witnesses:
             body = {k: v for k, v in operation()["witness"].items() if k != "signature"}
             body["workflow_id"] = value["id"]
+            body["owner"] = copy.deepcopy(participant["owner"])
             body["id"] = uid(f"participant-witness-{index}")
             body["evidence_digests"] = ["sha256:" + f"{number:064x}" for number in range(256)]
             participant["last_witness"] = sign(body, key)
         value["participants"].append(participant)
     if witnesses:
         value.update(state="active", phase="draining", generation=1)
+    rebind_workflow_proposal(value)
     return value
 
 

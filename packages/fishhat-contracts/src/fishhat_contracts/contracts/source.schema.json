@@ -28,7 +28,7 @@
         "id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "name": {
           "type": "string",
@@ -50,7 +50,7 @@
                   "instance": {
                     "type": "string",
                     "format": "uuid",
-                    "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                    "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
                   },
                   "repository_id": {
                     "type": "integer",
@@ -61,7 +61,7 @@
                     "type": "string",
                     "minLength": 3,
                     "maxLength": 160,
-                    "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+                    "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?![\\s\\S])"
                   }
                 },
                 "required": [
@@ -85,7 +85,7 @@
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 240,
-                "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*$",
+                "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*(?![\\s\\S])",
                 "description": "Path identifying this resource definition within its repository. A branch or tag selects a revision without creating another host identity."
               }
             },
@@ -112,14 +112,14 @@
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 24,
-                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$",
+                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])",
                 "description": "Source definition for this named host, identified by canonical repository and entrypoint rather than a repository alias or mutable ref."
               },
               "host_ops_alias": {
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 24,
-                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
               },
               "app_ops_alias": {
                 "anyOf": [
@@ -127,7 +127,7 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 24,
-                    "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                    "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                   },
                   {
                     "type": "null"
@@ -147,7 +147,7 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 24,
-                    "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                    "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                   },
                   {
                     "type": "null"
@@ -178,14 +178,14 @@
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 24,
-                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$",
+                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])",
                 "description": "Source definition for this application, separate from its admitted release, running components, and durable data."
               },
               "host": {
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 24,
-                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$",
+                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])",
                 "description": "Declared placement for the application. Editing this selection proposes a move; admission and activation require separately authorized owner work."
               },
               "placement_generation": {
@@ -198,7 +198,7 @@
                 "type": "string",
                 "minLength": 71,
                 "maxLength": 71,
-                "pattern": "^sha256:[0-9a-f]{64}$",
+                "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])",
                 "description": "Digest of the exact declared application boundary to be reviewed and checked during admission."
               },
               "security_control": {
@@ -228,13 +228,13 @@
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 24,
-                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
               },
               "adapter": {
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 24,
-                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
               },
               "scope": {
                 "type": "string",
@@ -250,13 +250,13 @@
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 240,
-                "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*$"
+                "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*(?![\\s\\S])"
               },
               "schema_digest": {
                 "type": "string",
                 "minLength": 71,
                 "maxLength": 71,
-                "pattern": "^sha256:[0-9a-f]{64}$"
+                "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
               }
             },
             "required": [
@@ -283,13 +283,13 @@
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 24,
-                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
               },
               "adapter": {
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 24,
-                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
               },
               "repository_id": {
                 "type": "string",
@@ -339,7 +339,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 24,
-          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
         },
         "platform": {
           "enum": [
@@ -354,7 +354,7 @@
               "type": "string",
               "minLength": 1,
               "maxLength": 240,
-              "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*$"
+              "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*(?![\\s\\S])"
             },
             {
               "type": "null"
@@ -366,7 +366,7 @@
           "description": "Concern and binding names label declarations; they do not partition native targets. Within one host, each native service unit, package-manager/name target and user named by a group-membership declaration has exactly one declaration. Ordinary files, secret files and artifacts share one absolute destination namespace. Duplicate targets are rejected even when their prescriptions agree; declaration order grants no precedence. Destination paths use canonical absolute spelling without empty, dot or parent segments or a trailing slash. These are lexical source checks; native admission must resolve provider, user and filesystem aliases and reject overlapping writers.",
           "minProperties": 0,
           "propertyNames": {
-            "pattern": "^[a-z][a-z0-9-]{0,63}$"
+            "pattern": "^[a-z][a-z0-9-]{0,63}(?![\\s\\S])"
           },
           "additionalProperties": {
             "type": "object",
@@ -380,7 +380,7 @@
                 "type": "object",
                 "minProperties": 0,
                 "propertyNames": {
-                  "pattern": "^[a-z][a-z0-9-]{0,63}$"
+                  "pattern": "^[a-z][a-z0-9-]{0,63}(?![\\s\\S])"
                 },
                 "additionalProperties": {
                   "type": "object",
@@ -389,19 +389,19 @@
                       "type": "string",
                       "minLength": 1,
                       "maxLength": 240,
-                      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*$"
+                      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*(?![\\s\\S])"
                     },
                     "destination": {
                       "type": "string",
                       "minLength": 2,
                       "maxLength": 512,
-                      "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+$"
+                      "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+(?![\\s\\S])"
                     },
                     "mode": {
                       "type": "string",
                       "minLength": 4,
                       "maxLength": 4,
-                      "pattern": "^0[0-7]{3}$"
+                      "pattern": "^0[0-7]{3}(?![\\s\\S])"
                     },
                     "user": {
                       "type": "string",
@@ -419,7 +419,7 @@
                           "type": "string",
                           "minLength": 1,
                           "maxLength": 24,
-                          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                         },
                         {
                           "type": "null"
@@ -435,7 +435,7 @@
                             "type": "string",
                             "minLength": 1,
                             "maxLength": 24,
-                            "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                            "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                           },
                           "action": {
                             "enum": [
@@ -475,7 +475,7 @@
                 "type": "object",
                 "minProperties": 0,
                 "propertyNames": {
-                  "pattern": "^[a-z][a-z0-9-]{0,63}$"
+                  "pattern": "^[a-z][a-z0-9-]{0,63}(?![\\s\\S])"
                 },
                 "additionalProperties": {
                   "type": "object",
@@ -484,13 +484,13 @@
                       "type": "string",
                       "minLength": 1,
                       "maxLength": 64,
-                      "pattern": "^[a-z][a-z0-9-]{0,63}$"
+                      "pattern": "^[a-z][a-z0-9-]{0,63}(?![\\s\\S])"
                     },
                     "destination": {
                       "type": "string",
                       "minLength": 2,
                       "maxLength": 512,
-                      "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+$"
+                      "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+(?![\\s\\S])"
                     },
                     "mode": {
                       "enum": [
@@ -516,7 +516,7 @@
                           "type": "string",
                           "minLength": 1,
                           "maxLength": 24,
-                          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                         },
                         {
                           "type": "null"
@@ -532,7 +532,7 @@
                             "type": "string",
                             "minLength": 1,
                             "maxLength": 24,
-                            "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                            "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                           },
                           "action": {
                             "enum": [
@@ -572,7 +572,7 @@
                 "type": "object",
                 "minProperties": 0,
                 "propertyNames": {
-                  "pattern": "^[a-z][a-z0-9-]{0,63}$"
+                  "pattern": "^[a-z][a-z0-9-]{0,63}(?![\\s\\S])"
                 },
                 "additionalProperties": {
                   "type": "object",
@@ -630,7 +630,7 @@
                 "type": "object",
                 "minProperties": 0,
                 "propertyNames": {
-                  "pattern": "^[a-z][a-z0-9-]{0,63}$"
+                  "pattern": "^[a-z][a-z0-9-]{0,63}(?![\\s\\S])"
                 },
                 "additionalProperties": {
                   "type": "object",
@@ -645,7 +645,7 @@
                       "type": "string",
                       "minLength": 71,
                       "maxLength": 71,
-                      "pattern": "^sha256:[0-9a-f]{64}$"
+                      "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
                     },
                     "platform": {
                       "type": "string",
@@ -656,13 +656,13 @@
                       "type": "string",
                       "minLength": 2,
                       "maxLength": 512,
-                      "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+$"
+                      "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+(?![\\s\\S])"
                     },
                     "mode": {
                       "type": "string",
                       "minLength": 4,
                       "maxLength": 4,
-                      "pattern": "^0[0-7]{3}$"
+                      "pattern": "^0[0-7]{3}(?![\\s\\S])"
                     },
                     "reason": {
                       "type": "string",
@@ -685,7 +685,7 @@
                 "type": "object",
                 "minProperties": 0,
                 "propertyNames": {
-                  "pattern": "^[a-z][a-z0-9-]{0,63}$"
+                  "pattern": "^[a-z][a-z0-9-]{0,63}(?![\\s\\S])"
                 },
                 "additionalProperties": {
                   "type": "object",
@@ -732,7 +732,7 @@
                       "type": "string",
                       "minLength": 1,
                       "maxLength": 128,
-                      "pattern": "^[A-Za-z0-9_.@-]+\\.(service|timer)$"
+                      "pattern": "^[A-Za-z0-9_.@-]+\\.(service|timer)(?![\\s\\S])"
                     },
                     "enabled": {
                       "type": "boolean"
@@ -787,7 +787,7 @@
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 24,
-                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                 },
                 "minItems": 0,
                 "uniqueItems": true
@@ -801,7 +801,7 @@
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 24,
-                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
               },
               "runtime_instance": {
                 "$ref": "common.schema.json#/$defs/Id",
@@ -830,7 +830,7 @@
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 24,
-                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
               },
               "type": {
                 "enum": [
@@ -845,7 +845,7 @@
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 24,
-                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
               },
               "resources": {
                 "type": "array",
@@ -882,13 +882,13 @@
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 32,
-                "pattern": "^[a-z][a-z0-9_-]{0,31}$"
+                "pattern": "^[a-z][a-z0-9_-]{0,31}(?![\\s\\S])"
               },
               "principal": {
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 24,
-                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
               },
               "role": {
                 "enum": [
@@ -903,7 +903,7 @@
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 128,
-                  "pattern": "^SHA256:[A-Za-z0-9+/]+$"
+                  "pattern": "^SHA256:[A-Za-z0-9+/]+(?![\\s\\S])"
                 },
                 "minItems": 1,
                 "uniqueItems": true
@@ -977,7 +977,7 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 128,
-            "pattern": "^[A-Za-z0-9+/]+={0,2}$"
+            "pattern": "^[A-Za-z0-9+/]+={0,2}(?![\\s\\S])"
           }
         },
         "resources": {
@@ -994,7 +994,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 24,
-          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
         },
         "adapter_instances": {
           "type": "object",
@@ -1037,7 +1037,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 24,
-          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
         },
         "runtime": {
           "$ref": "adapter.schema.json#/$defs/Selection",
@@ -1054,7 +1054,7 @@
               "type": "string",
               "minLength": 1,
               "maxLength": 240,
-              "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*$"
+              "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*(?![\\s\\S])"
             },
             {
               "type": "null"
@@ -1081,7 +1081,7 @@
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 24,
-                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
               },
               "purpose": {
                 "type": "string",
@@ -1114,7 +1114,7 @@
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 24,
-                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
               },
               "protocol": {
                 "enum": [
@@ -1144,7 +1144,7 @@
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 24,
-                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                 },
                 "minItems": 1,
                 "uniqueItems": true
@@ -1160,7 +1160,7 @@
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 24,
-                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$",
+                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])",
                 "description": "Names a health hook with read mode. Readiness is observational and cannot invoke restore, configure, transition or other write procedures. The hook retains its declared executor and exact data/secret/network grants; referencing it here never broadens them."
               }
             },
@@ -1179,7 +1179,7 @@
           "type": "object",
           "minProperties": 0,
           "propertyNames": {
-            "pattern": "^[a-z][a-z0-9-]{0,63}$"
+            "pattern": "^[a-z][a-z0-9-]{0,63}(?![\\s\\S])"
           },
           "additionalProperties": {
             "type": "object",
@@ -1195,13 +1195,13 @@
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 24,
-                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
               },
               "interface": {
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 24,
-                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
               },
               "consumers": {
                 "type": "array",
@@ -1209,7 +1209,7 @@
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 24,
-                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                 },
                 "minItems": 1,
                 "uniqueItems": true
@@ -1220,7 +1220,7 @@
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 24,
-                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                 },
                 "minItems": 1,
                 "uniqueItems": true
@@ -1288,7 +1288,7 @@
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 24,
-                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                 },
                 "minItems": 0,
                 "uniqueItems": true
@@ -1299,7 +1299,7 @@
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 24,
-                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                 },
                 "minItems": 0,
                 "uniqueItems": true
@@ -1308,7 +1308,7 @@
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 24,
-                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
               },
               "capture": {
                 "anyOf": [
@@ -1316,7 +1316,7 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 24,
-                    "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                    "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                   },
                   {
                     "type": "null"
@@ -1329,7 +1329,7 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 24,
-                    "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                    "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                   },
                   {
                     "type": "null"
@@ -1342,7 +1342,7 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 24,
-                    "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                    "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                   },
                   {
                     "type": "null"
@@ -1395,7 +1395,7 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 24,
-                    "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                    "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                   },
                   {
                     "type": "null"
@@ -1409,7 +1409,7 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 24,
-                    "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                    "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                   },
                   {
                     "type": "null"
@@ -1534,7 +1534,7 @@
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 24,
-                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
               },
               "role": {
                 "enum": [
@@ -1580,7 +1580,7 @@
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 24,
-                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                 },
                 "minItems": 0,
                 "uniqueItems": true
@@ -1591,7 +1591,7 @@
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 64,
-                  "pattern": "^[a-z][a-z0-9-]{0,63}$"
+                  "pattern": "^[a-z][a-z0-9-]{0,63}(?![\\s\\S])"
                 },
                 "minItems": 0,
                 "uniqueItems": true
@@ -1664,7 +1664,7 @@
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 24,
-                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
               },
               "minItems": 1,
               "uniqueItems": true
@@ -1675,7 +1675,7 @@
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 24,
-                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                 },
                 {
                   "type": "null"
@@ -1688,7 +1688,7 @@
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 24,
-                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                 },
                 {
                   "type": "null"
@@ -1701,7 +1701,7 @@
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 24,
-                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                 },
                 {
                   "type": "null"
@@ -1714,7 +1714,7 @@
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 24,
-                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                 },
                 {
                   "type": "null"
@@ -1727,7 +1727,7 @@
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 24,
-                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                 },
                 {
                   "type": "null"
@@ -1740,7 +1740,7 @@
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 24,
-                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                 },
                 {
                   "type": "null"
@@ -1779,7 +1779,7 @@
           "description": "Each component and canonical absolute target pair has one secret-delivery declaration, regardless of binding name, secret entry or delivery mode. Different component namespaces may use the same target spelling. Native admission must verify that their actual destinations remain independently scoped.",
           "minProperties": 0,
           "propertyNames": {
-            "pattern": "^[a-z][a-z0-9-]{0,63}$"
+            "pattern": "^[a-z][a-z0-9-]{0,63}(?![\\s\\S])"
           },
           "additionalProperties": {
             "type": "object",
@@ -1788,13 +1788,13 @@
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 64,
-                "pattern": "^[a-z][a-z0-9-]{0,63}$"
+                "pattern": "^[a-z][a-z0-9-]{0,63}(?![\\s\\S])"
               },
               "component": {
                 "type": "string",
                 "minLength": 1,
                 "maxLength": 24,
-                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
               },
               "delivery": {
                 "enum": [
@@ -1806,7 +1806,7 @@
                 "type": "string",
                 "minLength": 2,
                 "maxLength": 512,
-                "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+$"
+                "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+(?![\\s\\S])"
               },
               "uid": {
                 "type": "integer",
@@ -1863,7 +1863,7 @@
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 24,
-                    "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                    "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                   },
                   {
                     "type": "null"
@@ -1959,7 +1959,7 @@
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 24,
-                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                 },
                 "rpo_seconds": {
                   "type": "integer",
@@ -2030,7 +2030,7 @@
           "type": "object",
           "minProperties": 0,
           "propertyNames": {
-            "pattern": "^[a-z][a-z0-9-]{0,63}$"
+            "pattern": "^[a-z][a-z0-9-]{0,63}(?![\\s\\S])"
           },
           "additionalProperties": {
             "type": "object",

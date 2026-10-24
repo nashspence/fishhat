@@ -11,10 +11,10 @@ from typing import Any, cast
 
 from fishhat_contracts.validation import FORMAT_CHECKER, ContractError, canonical, digest, validate
 from jsonschema import Draft202012Validator
-from jsonschema.exceptions import SchemaError
 from referencing.exceptions import Unresolvable
 
 from .dns import validate_changes, validate_rrsets
+from .schemas import check_closed_schema
 
 ROLES: dict[str, dict[str, dict[str, Any]]] = json.loads(
     Path(__file__).with_name("roles.json").read_text(encoding="utf-8")
@@ -33,36 +33,8 @@ def runtime_binding_digest(binding: dict[str, Any]) -> str:
 
 
 def check_schema(schema: dict[str, Any]) -> None:
-    """No remote resolution; every object boundary must explicitly close its fields."""
-    require(len(canonical(schema)) <= 262144, "SCHEMA_CAPACITY")
-    try:
-        Draft202012Validator.check_schema(schema)
-    except SchemaError as exc:
-        raise ContractError("INVALID_CONFIGURATION_SCHEMA") from exc
-
-    def walk(node: Any, depth: int = 0) -> None:
-        require(depth <= 32, "SCHEMA_DEPTH")
-        if isinstance(node, dict):
-            for key in ("$ref", "$dynamicRef", "$recursiveRef"):
-                if key in node:
-                    require(
-                        isinstance(node[key], str) and node[key].startswith("#/"),
-                        "NONLOCAL_SCHEMA_REFERENCE",
-                    )
-            node_type = node.get("type")
-            if (
-                node_type == "object"
-                or (isinstance(node_type, list) and "object" in node_type)
-                or "properties" in node
-            ):
-                require(node.get("additionalProperties") is False, "OPEN_OBJECT_SCHEMA")
-            for value in node.values():
-                walk(value, depth + 1)
-        elif isinstance(node, list):
-            for value in node:
-                walk(value, depth + 1)
-
-    walk(schema)
+    """Reject open value boundaries and unsafe references in provider-owned schemas."""
+    check_closed_schema(schema)
 
 
 def check_descriptor(value: dict[str, Any]) -> None:
@@ -126,6 +98,19 @@ def check_request(role: str, value: dict[str, Any]) -> None:
             or (previous["source"] == binding and previous["entry"] == inputs["entry"]),
             "PUBLICATION_PREDECESSOR_IDENTITY",
         )
+    if role == "repository" and method == "publish":
+        require(
+            inputs["candidate"]["repository"] == inputs["repository"],
+            "REPOSITORY_CANDIDATE_IDENTITY",
+        )
+    if role == "runtime" and method in {"observe", "inventory"}:
+        barrier = inputs["barrier"]
+        if barrier is not None:
+            require(
+                barrier["scope"] == inputs["scope"]
+                and barrier["owner"]["id"] == inputs["scope"]["authority"],
+                "OBSERVATION_BARRIER_SCOPE",
+            )
 
 
 def instance_reference(instance: dict[str, Any], scope: dict[str, Any]) -> dict[str, Any]:
@@ -173,6 +158,11 @@ def _handoff_binding(role: str, request: dict[str, Any]) -> dict[str, Any] | Non
             return cast(dict[str, Any], inputs["issuer"])
         if method in {"renew", "revoke"}:
             return cast(dict[str, Any], inputs["lease"]["issuer"])
+    if role == "repository":
+        if method in {"resolve", "fetch", "publish"}:
+            return cast(dict[str, Any], inputs["repository"]["binding"])
+        if method == "observe":
+            return cast(dict[str, Any], inputs["binding"])
     return None
 
 
@@ -272,6 +262,71 @@ def _check_handoff_response(role: str, request: dict[str, Any], response: dict[s
             ),
             "PUBLICATION_RESULT_IDENTITY",
         )
+    if role == "repository":
+        _check_repository_response(request, response)
+    if role == "runtime" and method in {"observe", "inventory"}:
+        observation = output["observation"]
+        if observation is not None:
+            require(
+                observation["scope"] == inputs["scope"]
+                and observation["barrier"] == inputs["barrier"],
+                "OBSERVATION_BARRIER_IDENTITY",
+            )
+            if inputs["barrier"] is not None:
+                require(
+                    observation["admission_generation"]
+                    == inputs["barrier"]["admission_generation"],
+                    "OBSERVATION_BARRIER_GENERATION",
+                )
+
+
+def _check_repository_response(request: dict[str, Any], response: dict[str, Any]) -> None:
+    """Correlate repository observations and immutable custody with the exact request."""
+    method, inputs, output = request["method"], request["input"], response["output"]
+    if method == "resolve":
+        resolution = output["resolution"]
+        require(
+            resolution["repository"] == inputs["repository"] and resolution["ref"] == inputs["ref"],
+            "REPOSITORY_RESOLUTION_IDENTITY",
+        )
+        require(
+            response["coverage"] == ("unknown" if resolution["state"] == "unknown" else "complete")
+            and response["continuation"] is None,
+            "REPOSITORY_RESOLUTION_COVERAGE",
+        )
+    elif method == "fetch":
+        snapshot = output["snapshot"]
+        require(
+            snapshot is None
+            or (
+                snapshot["repository"] == inputs["repository"]
+                and snapshot["commit"] == inputs["commit"]
+            ),
+            "REPOSITORY_FETCH_IDENTITY",
+        )
+    elif method == "publish":
+        publication = output["publication"]
+        require(
+            publication is None
+            or (
+                publication["repository"] == inputs["repository"]
+                and publication["ref"] == inputs["ref"]
+                and publication["object_id"] == inputs["candidate"]["commit"]
+                and publication["previous"] == inputs["expected_previous"]
+                and publication["snapshot"] == inputs["candidate"]
+            ),
+            "REPOSITORY_PUBLICATION_IDENTITY",
+        )
+    elif method == "observe":
+        identities: set[bytes] = set()
+        for resolution in output["refs"]:
+            require(
+                resolution["repository"]["binding"] == inputs["binding"],
+                "REPOSITORY_OBSERVATION_EXECUTOR",
+            )
+            identity = canonical([resolution["repository"]["canonical"], resolution["ref"]])
+            require(identity not in identities, "DUPLICATE_REPOSITORY_REF")
+            identities.add(identity)
 
 
 def _same_set(a: list[Any], b: list[Any]) -> bool:
@@ -330,7 +385,6 @@ def _check_success_output(
             output["selections"] == [inputs["selection"]]
             and _same_set(output["artifacts"], inputs["artifacts"])
         ),
-        "repository": lambda: output["commit"] == inputs["commit"],
         "ingress": lambda: output["serving_generation"] == inputs["generation_digest"],
         "network": lambda: output["policy_generation"] == inputs["policy_digest"],
         "dns": lambda: _same_set(
@@ -437,6 +491,8 @@ class Registry:
     def __init__(self) -> None:
         self._installations: dict[str, tuple[dict[str, Any], dict[str, Any]]] = {}
         self._instances: dict[str, dict[str, Any]] = {}
+        self._repositories: dict[bytes, dict[str, Any]] = {}
+        self._repository_targets: dict[bytes, bytes] = {}
 
     def install(
         self, installation: dict[str, Any], descriptor: dict[str, Any], *, owner_approved: bool
@@ -479,6 +535,41 @@ class Registry:
         require(previous is None or previous == instance, "EXPLICIT_REBIND_REQUIRED")
         self._check_mutation_authority(instance)
         self._instances[instance["id"]] = copy.deepcopy(instance)
+
+    @staticmethod
+    def _repository_key(reference: dict[str, Any]) -> bytes:
+        repository = reference["canonical"]
+        return canonical(
+            [reference["binding"]["scope"], repository["instance"], repository["repository_id"]]
+        )
+
+    def enroll_repository(self, reference: dict[str, Any], *, owner_approved: bool) -> None:
+        """Retain an independently approved provider mapping; no native lookup is performed."""
+        require(owner_approved, "REPOSITORY_MAPPING_NOT_AUTHORIZED")
+        validate("repository-adapter.schema.json", reference, "RepositoryReference")
+        binding = reference["binding"]
+        instance = self.inspect_instance(binding["instance"])
+        self._grant(instance, binding["scope"], "observe")
+        require(
+            binding == instance_reference(instance, binding["scope"]),
+            "HANDOFF_INSTANCE_IDENTITY",
+        )
+        key = self._repository_key(reference)
+        previous = self._repositories.get(key)
+        require(previous is None or previous == reference, "EXPLICIT_REPOSITORY_REBIND_REQUIRED")
+        target = canonical([binding, reference["provider_handle"]])
+        require(
+            target not in self._repository_targets or self._repository_targets[target] == key,
+            "REPOSITORY_MAPPING_ALIAS",
+        )
+        self._repositories[key] = copy.deepcopy(reference)
+        self._repository_targets[target] = key
+
+    def _check_repository_mapping(self, reference: dict[str, Any]) -> None:
+        require(
+            self._repositories.get(self._repository_key(reference)) == reference,
+            "UNAPPROVED_REPOSITORY_MAPPING",
+        )
 
     def _check_mutation_authority(self, instance: dict[str, Any]) -> None:
         """Scan local enrolled facts; native admission still owns alias resolution/exclusion."""
@@ -608,6 +699,14 @@ class Registry:
                 binding == instance_reference(instance, request["input"]["scope"]),
                 "HANDOFF_INSTANCE_IDENTITY",
             )
+        if role == "repository":
+            original = (
+                request["input"]["invocation"]["request"]
+                if request["method"] == "reconcile"
+                else request
+            )
+            if original["method"] in {"resolve", "fetch", "publish"}:
+                self._check_repository_mapping(original["input"]["repository"])
         return instance
 
     def authorize_invocation(
@@ -637,6 +736,8 @@ class Registry:
             attempt["executor"] == instance_reference(instance, request["input"]["scope"]),
             "HANDOFF_INSTANCE_IDENTITY",
         )
+        if role == "repository":
+            self._check_repository_mapping(request["input"]["repository"])
         return instance
 
     def authorize(

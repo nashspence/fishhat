@@ -2,24 +2,139 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://fishhat.invalid/contracts/repository-adapter.schema.json",
   "$defs": {
-    "resolve": {
+    "ObjectId": {
+      "type": "string",
+      "minLength": 40,
+      "maxLength": 64,
+      "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})(?![\\s\\S])",
+      "description": "The exact unpeeled Git object ID stored in a ref, using the repository object format. It may identify an annotated tag or another non-commit object; it does not assert commit identity."
+    },
+    "RepositoryReference": {
       "type": "object",
       "properties": {
-        "scope": {
-          "$ref": "adapter.schema.json#/$defs/Scope"
+        "canonical": {
+          "$ref": "common.schema.json#/$defs/Repository"
         },
+        "provider_handle": {
+          "$ref": "adapter.schema.json#/$defs/Handle"
+        },
+        "binding": {
+          "allOf": [
+            {
+              "$ref": "adapter.schema.json#/$defs/InstanceReference"
+            },
+            {
+              "properties": {
+                "role": {
+                  "const": "repository"
+                },
+                "scope": {
+                  "properties": {
+                    "kind": {
+                      "const": "repository"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "canonical",
+        "provider_handle",
+        "binding"
+      ],
+      "additionalProperties": false,
+      "description": "An owner-approved mapping from canonical source-history identity to one opaque provider object under the exact accepted repository executor, configuration, generation and resource scope. Native admission compares this entire mapping to protected owner state; caller-supplied canonical IDs, handles or instance references neither enroll a mapping nor grant authority. Provider handles are never interpreted by generic code as paths, URLs or command arguments. Existing accepted invocations retain their original mapping across later enrollment changes."
+    },
+    "RepositorySnapshot": {
+      "type": "object",
+      "properties": {
         "repository": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 160,
-          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*$"
+          "$ref": "#/$defs/RepositoryReference"
+        },
+        "commit": {
+          "$ref": "common.schema.json#/$defs/Commit"
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "adapter.schema.json#/$defs/Artifact"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "repository",
+        "commit",
+        "artifacts"
+      ],
+      "additionalProperties": false,
+      "description": "Complete immutable owner-retained artifact custody for this exact repository and Git commit, including all objects needed to materialize its selected source closure. Artifact identity includes digest, media type and byte size; native custody verifies bytes and Git object identity before exposing success. A snapshot does not assert that a mutable remote ref points at its commit. Referenced artifacts must remain retrievable while accepted publication or recovery depends on them."
+    },
+    "RefPrecondition": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "absent"
+            }
+          },
+          "required": [
+            "state"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "const": "present"
+            },
+            "object_id": {
+              "$ref": "#/$defs/ObjectId"
+            }
+          },
+          "required": [
+            "state",
+            "object_id"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "description": "Exact publication compare-and-swap precondition. Absent means the literal ref must not exist; present requires that it still names this exact raw predecessor object ID. An annotated tag is compared by its tag object ID, never its peeled commit. Neither form means ignore the current value. The provider must atomically compare this preimage when changing the ref, or reject publication as unsupported; a prior resolve observation is not an atomic comparison."
+    },
+    "ResolvedRef": {
+      "type": "object",
+      "properties": {
+        "repository": {
+          "$ref": "#/$defs/RepositoryReference"
         },
         "ref": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 512
+          "$ref": "common.schema.json#/$defs/GitRef"
         },
-        "expected_commit": {
+        "state": {
+          "enum": [
+            "present",
+            "non-commit",
+            "absent",
+            "unknown"
+          ]
+        },
+        "object_id": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ObjectId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "commit": {
           "anyOf": [
             {
               "$ref": "common.schema.json#/$defs/Commit"
@@ -29,18 +144,121 @@
             }
           ]
         },
-        "commit": {
-          "$ref": "common.schema.json#/$defs/Commit"
+        "observed_at": {
+          "$ref": "common.schema.json#/$defs/Time"
+        }
+      },
+      "required": [
+        "repository",
+        "ref",
+        "state",
+        "object_id",
+        "commit",
+        "observed_at"
+      ],
+      "additionalProperties": false,
+      "description": "Read-only observation of one literal ref under its exact approved repository mapping. Present supplies both the raw ref object ID and the verified peeled commit; they may differ for an annotated tag. Non-commit means the ref exists but its verified target does not peel to a commit, so commit is null and it cannot be fetched as a source commit. Absent has no object or commit. Unknown means existence, raw identity or commit classification could not be established and supplies neither value. These facts are observations at observed_at, not authorization for a later publication.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "present"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "commit": {
+                "$ref": "common.schema.json#/$defs/Commit"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "commit": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "present",
+                  "non-commit"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "object_id": {
+                "$ref": "#/$defs/ObjectId"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "object_id": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Publication": {
+      "type": "object",
+      "properties": {
+        "repository": {
+          "$ref": "#/$defs/RepositoryReference"
+        },
+        "ref": {
+          "$ref": "common.schema.json#/$defs/GitRef"
+        },
+        "object_id": {
+          "$ref": "#/$defs/ObjectId"
+        },
+        "previous": {
+          "$ref": "#/$defs/RefPrecondition"
+        },
+        "snapshot": {
+          "$ref": "#/$defs/RepositorySnapshot"
+        }
+      },
+      "required": [
+        "repository",
+        "ref",
+        "object_id",
+        "previous",
+        "snapshot"
+      ],
+      "additionalProperties": false,
+      "description": "A verified atomic ref publication receipt. Repository, literal ref and observed raw compare-and-swap predecessor match the original request; snapshot is the exact retained candidate and object_id equals its commit. Publication creates a direct commit ref, including a lightweight tag when the ref is under refs/tags; it does not create annotated tags. A successful reply requires verified remote ref identity plus complete immutable candidate custody. An ambiguous remote outcome remains unresolved and is reconciled through the original invocation; it never permits an unconditional retry."
+    },
+    "resolve": {
+      "type": "object",
+      "properties": {
+        "scope": {
+          "$ref": "adapter.schema.json#/$defs/Scope"
+        },
+        "repository": {
+          "$ref": "#/$defs/RepositoryReference"
+        },
+        "ref": {
+          "$ref": "common.schema.json#/$defs/GitRef"
         }
       },
       "required": [
         "scope",
         "repository",
-        "ref",
-        "expected_commit",
-        "commit"
+        "ref"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "Resolve the current value of one literal branch or tag; no caller-invented commit is required. Return present, non-commit, absent or unknown explicitly, distinguishing the raw ref object ID from the peeled commit. This method performs no fetch, publication or owner admission."
     },
     "fetch": {
       "type": "object",
@@ -49,25 +267,7 @@
           "$ref": "adapter.schema.json#/$defs/Scope"
         },
         "repository": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 160,
-          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*$"
-        },
-        "ref": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 512
-        },
-        "expected_commit": {
-          "anyOf": [
-            {
-              "$ref": "common.schema.json#/$defs/Commit"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "$ref": "#/$defs/RepositoryReference"
         },
         "commit": {
           "$ref": "common.schema.json#/$defs/Commit"
@@ -76,11 +276,10 @@
       "required": [
         "scope",
         "repository",
-        "ref",
-        "expected_commit",
         "commit"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "Fetch the exact immutable Git commit and its complete source closure from the approved repository into retained owner custody. Mutable ref movement cannot substitute another commit. Success requires verified artifacts bound to that same repository, executor and commit; no caller destination path is accepted."
     },
     "publish": {
       "type": "object",
@@ -89,38 +288,27 @@
           "$ref": "adapter.schema.json#/$defs/Scope"
         },
         "repository": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 160,
-          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*$"
+          "$ref": "#/$defs/RepositoryReference"
         },
         "ref": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 512
+          "$ref": "common.schema.json#/$defs/GitRef"
         },
-        "expected_commit": {
-          "anyOf": [
-            {
-              "$ref": "common.schema.json#/$defs/Commit"
-            },
-            {
-              "type": "null"
-            }
-          ]
+        "expected_previous": {
+          "$ref": "#/$defs/RefPrecondition"
         },
-        "commit": {
-          "$ref": "common.schema.json#/$defs/Commit"
+        "candidate": {
+          "$ref": "#/$defs/RepositorySnapshot"
         }
       },
       "required": [
         "scope",
         "repository",
         "ref",
-        "expected_commit",
-        "commit"
+        "expected_previous",
+        "candidate"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "Publish only the exact retained candidate under the approved repository mapping, using atomic compare-and-swap of the literal ref against the explicit raw predecessor object ID or absence condition. The resulting ref points directly at candidate.commit; annotated-tag creation is not supported by this operation. Admission pins complete candidate artifacts before dispatch. Changed refs conflict; unsupported atomic comparison rejects. Lost replies reconcile the original invocation and retained candidate rather than resubmitting with a new predecessor."
     },
     "observe": {
       "type": "object",
@@ -142,12 +330,34 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 256
+        },
+        "binding": {
+          "allOf": [
+            {
+              "$ref": "adapter.schema.json#/$defs/InstanceReference"
+            },
+            {
+              "properties": {
+                "role": {
+                  "const": "repository"
+                },
+                "scope": {
+                  "properties": {
+                    "kind": {
+                      "const": "repository"
+                    }
+                  }
+                }
+              }
+            }
+          ]
         }
       },
       "required": [
         "scope",
         "cursor",
-        "limit"
+        "limit",
+        "binding"
       ],
       "additionalProperties": false
     },
@@ -168,33 +378,87 @@
       "additionalProperties": false,
       "description": "Observe and settle the exact original owner-retained invocation, including the original typed request, full accepted executor reference and attempt identity. Scope and role must agree with that closure. Recovered outputs obey the original method result contract. Current enrollment cannot retarget historical work; an unavailable or replaced executor leaves the result unresolved. Corrective mutation requires a separate reviewed invocation; reconciliation never dispatches or repeats the supplied mutation."
     },
-    "Output": {
+    "ResolveOutput": {
       "type": "object",
       "properties": {
-        "commit": {
+        "resolution": {
+          "$ref": "#/$defs/ResolvedRef"
+        }
+      },
+      "required": [
+        "resolution"
+      ],
+      "additionalProperties": false
+    },
+    "FetchOutput": {
+      "type": "object",
+      "properties": {
+        "snapshot": {
           "anyOf": [
             {
-              "$ref": "common.schema.json#/$defs/Commit"
+              "$ref": "#/$defs/RepositorySnapshot"
             },
             {
               "type": "null"
             }
           ]
-        },
-        "artifacts": {
-          "type": "array",
-          "items": {
-            "$ref": "adapter.schema.json#/$defs/Artifact"
-          },
-          "minItems": 0,
-          "uniqueItems": true
         }
       },
       "required": [
-        "commit",
-        "artifacts"
+        "snapshot"
       ],
       "additionalProperties": false
+    },
+    "PublishOutput": {
+      "type": "object",
+      "properties": {
+        "publication": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Publication"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "publication"
+      ],
+      "additionalProperties": false
+    },
+    "ObserveOutput": {
+      "type": "object",
+      "properties": {
+        "refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResolvedRef"
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "refs"
+      ],
+      "additionalProperties": false
+    },
+    "Output": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/ResolveOutput"
+        },
+        {
+          "$ref": "#/$defs/FetchOutput"
+        },
+        {
+          "$ref": "#/$defs/PublishOutput"
+        },
+        {
+          "$ref": "#/$defs/ObserveOutput"
+        }
+      ]
     },
     "Response": {
       "oneOf": [
@@ -241,7 +505,7 @@
               ]
             },
             "output": {
-              "$ref": "#/$defs/Output"
+              "$ref": "#/$defs/ResolveOutput"
             }
           },
           "required": [
@@ -299,7 +563,7 @@
               ]
             },
             "output": {
-              "$ref": "#/$defs/Output"
+              "$ref": "#/$defs/FetchOutput"
             },
             "effect": {
               "$ref": "adapter.schema.json#/$defs/EffectResult"
@@ -354,11 +618,8 @@
                   },
                   "output": {
                     "properties": {
-                      "commit": {
-                        "type": "string"
-                      },
-                      "artifacts": {
-                        "minItems": 1
+                      "snapshot": {
+                        "type": "object"
                       }
                     }
                   }
@@ -411,7 +672,7 @@
               ]
             },
             "output": {
-              "$ref": "#/$defs/Output"
+              "$ref": "#/$defs/PublishOutput"
             },
             "effect": {
               "$ref": "adapter.schema.json#/$defs/EffectResult"
@@ -466,8 +727,8 @@
                   },
                   "output": {
                     "properties": {
-                      "commit": {
-                        "type": "string"
+                      "publication": {
+                        "type": "object"
                       }
                     }
                   }
@@ -520,7 +781,7 @@
               ]
             },
             "output": {
-              "$ref": "#/$defs/Output"
+              "$ref": "#/$defs/ObserveOutput"
             }
           },
           "required": [

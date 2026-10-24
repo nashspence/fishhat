@@ -68,7 +68,7 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 24,
-            "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+            "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
           },
           "repository": {
             "type": "object",
@@ -76,7 +76,7 @@
               "instance": {
                 "type": "string",
                 "format": "uuid",
-                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
               },
               "repository_id": {
                 "type": "integer",
@@ -87,7 +87,7 @@
                 "type": "string",
                 "minLength": 3,
                 "maxLength": 160,
-                "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+                "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?![\\s\\S])"
               }
             },
             "required": [
@@ -101,19 +101,19 @@
             "type": "string",
             "minLength": 40,
             "maxLength": 64,
-            "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+            "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})(?![\\s\\S])"
           },
           "entrypoint": {
             "type": "string",
             "minLength": 1,
             "maxLength": 240,
-            "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*$"
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*(?![\\s\\S])"
           },
           "closure_digest": {
             "type": "string",
             "minLength": 71,
             "maxLength": 71,
-            "pattern": "^sha256:[0-9a-f]{64}$"
+            "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
           }
         },
         "required": [
@@ -133,7 +133,7 @@
           "type": "string",
           "minLength": 71,
           "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}$"
+          "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
         },
         {
           "type": "null"
@@ -146,7 +146,7 @@
           "type": "string",
           "minLength": 71,
           "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}$"
+          "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
         },
         {
           "type": "null"
@@ -159,7 +159,7 @@
         "type": "string",
         "minLength": 71,
         "maxLength": 71,
-        "pattern": "^sha256:[0-9a-f]{64}$"
+        "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
       },
       "minItems": 0,
       "uniqueItems": true
@@ -206,7 +206,7 @@
           "type": "string",
           "minLength": 71,
           "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}$"
+          "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
         },
         {
           "type": "null"
@@ -217,7 +217,7 @@
       "type": "array",
       "items": {
         "type": "string",
-        "pattern": "^[a-z][a-z0-9-]*$",
+        "pattern": "^[a-z][a-z0-9-]*(?![\\s\\S])",
         "minLength": 1,
         "maxLength": 96
       },
@@ -228,7 +228,7 @@
       "type": "object",
       "minProperties": 0,
       "propertyNames": {
-        "pattern": "^[A-Za-z0-9-]+$"
+        "pattern": "^[A-Za-z0-9-]+(?![\\s\\S])"
       },
       "additionalProperties": {
         "type": "object",
@@ -247,7 +247,7 @@
                 "type": "string",
                 "minLength": 71,
                 "maxLength": 71,
-                "pattern": "^sha256:[0-9a-f]{64}$"
+                "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
               },
               {
                 "type": "null"

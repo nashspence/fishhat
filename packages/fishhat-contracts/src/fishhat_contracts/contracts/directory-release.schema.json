@@ -13,7 +13,7 @@
       "anyOf": [
         {
           "type": "string",
-          "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})$"
+          "pattern": "^(?:[a-f0-9]{40}|[a-f0-9]{64})(?![\\s\\S])"
         },
         {
           "type": "null"
@@ -24,7 +24,7 @@
       "anyOf": [
         {
           "type": "string",
-          "pattern": "^sha256:[a-f0-9]{64}$"
+          "pattern": "^sha256:[a-f0-9]{64}(?![\\s\\S])"
         },
         {
           "type": "null"
@@ -113,7 +113,7 @@
       "type": "array",
       "items": {
         "type": "string",
-        "pattern": "^sha256:[a-f0-9]{64}$"
+        "pattern": "^sha256:[a-f0-9]{64}(?![\\s\\S])"
       },
       "uniqueItems": true
     },

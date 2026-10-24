@@ -6,24 +6,26 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 24,
-      "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+      "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])",
+      "description": "The complete string must match the declared grammar. Reject trailing control characters and invalid bytes; never trim or normalize an identity before comparison."
     },
     "Entry": {
       "type": "string",
       "minLength": 1,
       "maxLength": 64,
-      "pattern": "^[a-z][a-z0-9-]{0,63}$"
+      "pattern": "^[a-z][a-z0-9-]{0,63}(?![\\s\\S])",
+      "description": "The complete string must match the declared grammar. Reject trailing control characters and invalid bytes; never trim or normalize an identity before comparison."
     },
     "Digest": {
       "type": "string",
       "minLength": 71,
       "maxLength": 71,
-      "pattern": "^sha256:[0-9a-f]{64}$"
+      "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
     },
     "UUID": {
       "type": "string",
       "format": "uuid",
-      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
     },
     "Time": {
       "type": "string",
@@ -37,25 +39,25 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 240,
-      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*$"
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*(?![\\s\\S])"
     },
     "AbsolutePath": {
       "type": "string",
       "minLength": 2,
       "maxLength": 512,
-      "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+$"
+      "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+(?![\\s\\S])"
     },
     "Commit": {
       "type": "string",
       "minLength": 40,
       "maxLength": 64,
-      "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+      "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})(?![\\s\\S])"
     },
     "Mode": {
       "type": "string",
       "minLength": 4,
       "maxLength": 4,
-      "pattern": "^0[0-7]{3}$"
+      "pattern": "^0[0-7]{3}(?![\\s\\S])"
     },
     "Role": {
       "enum": [
@@ -77,12 +79,12 @@
         "id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "epoch": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])",
           "description": "The current authority generation of this local owner. Restoring owner state changes the authority generation; an old receipt cannot silently authorize new work."
         }
       },
@@ -110,7 +112,8 @@
             "adapter",
             "interface",
             "dataset",
-            "component"
+            "component",
+            "workflow"
           ]
         },
         "id": {
@@ -132,7 +135,7 @@
         "instance": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "repository_id": {
           "type": "integer",
@@ -143,7 +146,7 @@
           "type": "string",
           "minLength": 3,
           "maxLength": 160,
-          "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+          "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?![\\s\\S])"
         }
       },
       "required": [
@@ -161,7 +164,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 24,
-          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
         },
         "repository": {
           "type": "object",
@@ -169,7 +172,7 @@
             "instance": {
               "type": "string",
               "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
             },
             "repository_id": {
               "type": "integer",
@@ -180,7 +183,7 @@
               "type": "string",
               "minLength": 3,
               "maxLength": 160,
-              "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+              "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?![\\s\\S])"
             }
           },
           "required": [
@@ -194,19 +197,19 @@
           "type": "string",
           "minLength": 40,
           "maxLength": 64,
-          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})(?![\\s\\S])"
         },
         "entrypoint": {
           "type": "string",
           "minLength": 1,
           "maxLength": 240,
-          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*$"
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*(?![\\s\\S])"
         },
         "closure_digest": {
           "type": "string",
           "minLength": 71,
           "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}$"
+          "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
         }
       },
       "required": [
@@ -235,19 +238,20 @@
             "restore-input",
             "source-proposal",
             "native-config",
-            "secret-candidate"
+            "secret-candidate",
+            "workflow-input"
           ]
         },
         "binding": {
           "$ref": "common.schema.json#/$defs/HandleBinding"
         },
         "digest": {
-          "$ref": "common.schema.json#/$defs/Digest"
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
         },
         "size": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 10737418240
+          "maximum": 9007199254740991
         }
       },
       "required": [
@@ -259,13 +263,13 @@
         "size"
       ],
       "additionalProperties": false,
-      "description": "An owner-minted reference to complete immutable bytes. Every redemption rechecks the actual receiving principal, resource, purpose and owner epoch against protected owner state; possession is not bearer authority. Only content.commit exposes an input handle. Planning binds its exact digest and identity; operation admission atomically pins referenced inputs before acknowledgement or effects. Unadmitted staging expiry cannot collect accepted references. Restoring owner state invalidates mutable staging and requires explicit recovery of retained bindings."
+      "description": "An owner-minted reference to complete immutable bytes. Every redemption rechecks the actual receiving principal, resource, purpose and owner epoch against protected owner state; possession is not bearer authority. Only content.commit exposes an input handle. Planning binds its exact digest and identity; operation admission and accepted workflow preparation or phase input atomically pin referenced inputs before acknowledgement or effects. Unadmitted staging expiry cannot collect accepted references. Restoring owner state invalidates mutable staging and requires explicit recovery of retained bindings. Complete content size uses the interoperable integer range, while independently approved receiver capacity may explicitly reject new staging; transport chunks never impose a hidden total closure limit."
     },
     "Cursor": {
       "type": "string",
       "minLength": 1,
       "maxLength": 256,
-      "pattern": "^[A-Za-z0-9_-]+$",
+      "pattern": "^[A-Za-z0-9_-]+(?![\\s\\S])",
       "description": "Opaque owner-minted base64url continuation, bound to authenticated principal, exact query, retained traversal and owner epoch. Expiry requires an explicit restart; a cursor conveys no authority."
     },
     "SchemaIdentity": {
@@ -361,7 +365,7 @@
       "type": "string",
       "minLength": 11,
       "maxLength": 240,
-      "pattern": "^refs/(heads|tags)/[^\\s]+$",
+      "pattern": "^refs/(heads|tags)/[^\\s]+(?![\\s\\S])",
       "not": {
         "pattern": "(^|/)\\.|\\.\\.|@\\{|//|\\.lock(/|$)|[\\u0000-\\u0020\\u007f~^:?*\\[\\\\]|[./]$"
       },
@@ -438,7 +442,7 @@
         "size"
       ],
       "additionalProperties": false,
-      "description": "An owner-minted immutable canonical-JSON snapshot of one complete record, independently of operation admission. The record identity, exact owner epoch, record-declared generation, installed schema closure, complete byte digest and size are inseparable. Immutable Plans use null generation; Operations and Workflows use their declared generation, with the digest distinguishing every snapshot. Possession grants no read or execution authority: every record.read rechecks the actual receiving principal and the protected snapshot resource closure. The owner commits complete retrievable snapshot custody before advertising this reference. Later generations never replace its bytes. Plan expiry affects admission, not completion of an already advertised traversal; accepted, active, uncertain and recovery-required custody cannot lose its only retrievable evidence. An explicit expired or restored snapshot requires a fresh record lookup, never silent rebinding. Accepted work must remain discoverable and fully retrievable through its current record even if old completed traversals are collected. This reference does not establish plan review, acceptance or execution success before its complete payload is verified. Size describes the record and adds no total-size limit beyond its owning contract; transfers use bounded chunks and local capacity failures must be explicit.",
+      "description": "An owner-minted immutable canonical-JSON snapshot of one complete record, independently of operation admission. The record identity, exact owner epoch, record-declared generation, installed schema closure, complete byte digest and size are inseparable. Immutable Plans use null generation; Operations and Workflows use their declared generation, with the digest distinguishing every snapshot. Possession grants no read or execution authority: every record.read rechecks the actual receiving principal and the protected snapshot resource closure. The owner commits complete retrievable snapshot custody before advertising this reference. Later generations never replace its bytes. Plan expiry affects admission, not completion of an already advertised traversal; accepted, active, uncertain and recovery-required custody cannot lose its only retrievable evidence. An explicit expired or restored snapshot requires a fresh record lookup, never silent rebinding. Accepted work must remain discoverable and fully retrievable through its current record even if old completed traversals are collected. This reference does not establish plan review, acceptance or execution success before its complete payload is verified. Size describes the record and adds no total-size limit beyond its owning contract; transfers use bounded chunks and local capacity failures must be explicit. A historical schema closure is readable only through an immutable reader independently installed by the receiver for that exact digest and the declared record-kind URI. CLI envelopes, SSH results, pages and chunks propagate the same trusted reader context; neither the record nor its caller can install a reader. Historical retrieval does not admit new work under an obsolete schema.",
       "allOf": [
         {
           "if": {
@@ -500,7 +504,7 @@
           "type": "string",
           "minLength": 0,
           "maxLength": 262144,
-          "pattern": "^[A-Za-z0-9+/]*={0,2}$"
+          "pattern": "^[A-Za-z0-9+/]*={0,2}(?![\\s\\S])"
         },
         "next_offset": {
           "type": "integer",
@@ -522,6 +526,10 @@
       ],
       "additionalProperties": false,
       "description": "One exact requested byte range from the immutable record snapshot. The complete reference and starting offset match the request; decoded bytes are at most the requested length and 196608 bytes. next_offset equals offset plus decoded length and never exceeds the pinned size. complete is true exactly at that size; a nonterminal chunk must make progress. Consumers reject substituted references, offsets, invalid base64, gaps, overlaps and premature completion, then verify complete size, digest, canonical encoding, installed schema and record identity before using the record. A chunk or an exhausted connection is not a completed record."
+    },
+    "MaterialDigest": {
+      "$ref": "common.schema.json#/$defs/Digest",
+      "description": "The digest of immutable material required to execute or recover the selected work, including a release, source closure, checkpoint, candidate or retained evidence record. A Plan subject value with this semantic type must occur in input_digests and remain under verified owner custody. A manifest or protected owner record also retains the material closure that it references. An identity or comparison hash alone is not custody; schema identities, expected predecessors and other integrity preconditions use Digest instead."
     }
   }
 }
