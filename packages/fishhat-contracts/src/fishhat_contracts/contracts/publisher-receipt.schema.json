@@ -9,7 +9,7 @@
     "id": {
       "type": "string",
       "format": "uuid",
-      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
     },
     "repository": {
       "type": "object",
@@ -17,7 +17,7 @@
         "instance": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "repository_id": {
           "type": "integer",
@@ -28,7 +28,7 @@
           "type": "string",
           "minLength": 3,
           "maxLength": 160,
-          "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+          "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?![\\s\\S])"
         }
       },
       "required": [
@@ -48,7 +48,7 @@
       "type": "string",
       "minLength": 71,
       "maxLength": 71,
-      "pattern": "^sha256:[0-9a-f]{64}$"
+      "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
     },
     "previous": {
       "anyOf": [
@@ -69,7 +69,7 @@
               "type": "string",
               "minLength": 71,
               "maxLength": 71,
-              "pattern": "^sha256:[0-9a-f]{64}$"
+              "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
             },
             "bytes": {
               "type": "integer",
@@ -79,7 +79,7 @@
             "generation": {
               "type": "string",
               "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
             }
           },
           "required": [
@@ -113,7 +113,7 @@
           "type": "string",
           "minLength": 71,
           "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}$"
+          "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
         },
         "bytes": {
           "type": "integer",
@@ -123,7 +123,7 @@
         "generation": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         }
       },
       "required": [
@@ -147,12 +147,12 @@
         "id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "epoch": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         }
       },
       "required": [
@@ -191,7 +191,7 @@
         "id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "owner": {
           "type": "object",
@@ -205,12 +205,12 @@
             "id": {
               "type": "string",
               "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
             },
             "epoch": {
               "type": "string",
               "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
             }
           },
           "required": [
@@ -238,14 +238,14 @@
           "type": "string",
           "minLength": 71,
           "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}$"
+          "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
         },
         "workflow_id": {
           "anyOf": [
             {
               "type": "string",
               "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
             },
             {
               "type": "null"
@@ -267,7 +267,7 @@
             {
               "type": "string",
               "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
             },
             {
               "type": "null"
@@ -280,7 +280,7 @@
             "type": "string",
             "minLength": 71,
             "maxLength": 71,
-            "pattern": "^sha256:[0-9a-f]{64}$"
+            "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
           },
           "minItems": 0,
           "uniqueItems": true
@@ -292,13 +292,13 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 24,
-          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
         },
         "signature": {
           "type": "string",
           "minLength": 88,
           "maxLength": 88,
-          "pattern": "^[A-Za-z0-9+/]{86}==$"
+          "pattern": "^[A-Za-z0-9+/]{86}==(?![\\s\\S])"
         }
       },
       "required": [

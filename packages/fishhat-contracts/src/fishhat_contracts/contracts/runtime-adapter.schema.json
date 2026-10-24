@@ -111,14 +111,26 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 256
+        },
+        "barrier": {
+          "anyOf": [
+            {
+              "$ref": "adapter.schema.json#/$defs/ObservationBarrier"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
         "scope",
         "cursor",
-        "limit"
+        "limit",
+        "barrier"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "A null barrier requests ordinary observations only. A non-null barrier must match scope and its owner authority, and identifies a fresh owner-issued post-drain scan under continuously held native exclusion. Every continuation retains that exact challenge. Returned observations echo it unchanged; an earlier scan cannot be relabeled with a new challenge. The request data does not itself establish permission, exclusion or quiescence."
     },
     "reconcile": {
       "type": "object",
@@ -157,14 +169,26 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 256
+        },
+        "barrier": {
+          "anyOf": [
+            {
+              "$ref": "adapter.schema.json#/$defs/ObservationBarrier"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
         "scope",
         "cursor",
-        "limit"
+        "limit",
+        "barrier"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "A null barrier requests ordinary inventory only. A non-null barrier must match scope and its owner authority, and identifies a fresh owner-issued post-drain scan under continuously held native exclusion. Every continuation retains that exact challenge. Returned observations echo it unchanged; an earlier scan cannot be relabeled with a new challenge. The request data does not itself establish permission, exclusion or quiescence."
     },
     "Output": {
       "type": "object",

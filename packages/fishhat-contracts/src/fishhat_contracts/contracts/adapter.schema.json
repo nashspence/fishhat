@@ -10,7 +10,7 @@
       "type": "string",
       "minLength": 3,
       "maxLength": 160,
-      "pattern": "^[a-z][a-z0-9-]*(?:[./][a-z][a-z0-9-]*)+$"
+      "pattern": "^[a-z][a-z0-9-]*(?:[./][a-z][a-z0-9-]*)+(?![\\s\\S])"
     },
     "roles": {
       "type": "array",
@@ -41,10 +41,12 @@
       "$ref": "common.schema.json#/$defs/RelativePath"
     },
     "configuration_schema": {
-      "type": "object"
+      "type": "object",
+      "description": "A closed structural JSON Schema 2020-12 subset: every reachable arbitrary object value explicitly closes its fields and every array declares closed item schemas. Local acyclic JSON Pointer references resolve only to schema positions; remote or dynamic references, nested identities and unresolved targets reject. Conjunctions may refine an already closed boundary. const, enum, default and examples contain literal data, never nested schemas."
     },
     "component_schema": {
-      "type": "object"
+      "type": "object",
+      "description": "Uses the same closed structural subset as configuration_schema, including schema-aware literal handling and local acyclic references."
     },
     "implemented": {
       "type": "array",
@@ -52,7 +54,7 @@
         "type": "string",
         "minLength": 3,
         "maxLength": 160,
-        "pattern": "^[a-z][a-z0-9-]*(?:[./][a-z][a-z0-9-]*)+$"
+        "pattern": "^[a-z][a-z0-9-]*(?:[./][a-z][a-z0-9-]*)+(?![\\s\\S])"
       },
       "minItems": 0,
       "uniqueItems": true
@@ -61,7 +63,8 @@
       "const": false
     },
     "source_schema": {
-      "type": "object"
+      "type": "object",
+      "description": "Uses the same closed structural subset as configuration_schema. Source-owned data cannot supply unconstrained nested objects or arrays to an accepted implementation."
     }
   },
   "required": [
@@ -81,13 +84,13 @@
       "type": "string",
       "minLength": 3,
       "maxLength": 160,
-      "pattern": "^[a-z][a-z0-9-]*(?:[./][a-z][a-z0-9-]*)+$"
+      "pattern": "^[a-z][a-z0-9-]*(?:[./][a-z][a-z0-9-]*)+(?![\\s\\S])"
     },
     "Handle": {
       "type": "string",
       "minLength": 1,
       "maxLength": 160,
-      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*$"
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*(?![\\s\\S])"
     },
     "Generation": {
       "type": "integer",
@@ -146,7 +149,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 160,
-          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*$"
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*(?![\\s\\S])"
         }
       },
       "required": [
@@ -290,7 +293,7 @@
           "type": "string",
           "minLength": 3,
           "maxLength": 160,
-          "pattern": "^[a-z][a-z0-9-]*(?:[./][a-z][a-z0-9-]*)+$"
+          "pattern": "^[a-z][a-z0-9-]*(?:[./][a-z][a-z0-9-]*)+(?![\\s\\S])"
         },
         "artifact": {
           "$ref": "adapter.schema.json#/$defs/Artifact"
@@ -320,7 +323,7 @@
           "type": "string",
           "minLength": 3,
           "maxLength": 160,
-          "pattern": "^[a-z][a-z0-9-]*(?:[./][a-z][a-z0-9-]*)+$"
+          "pattern": "^[a-z][a-z0-9-]*(?:[./][a-z][a-z0-9-]*)+(?![\\s\\S])"
         },
         "installation_digest": {
           "$ref": "common.schema.json#/$defs/Digest"
@@ -437,7 +440,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 160,
-          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*$"
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*(?![\\s\\S])"
         },
         "release_digest": {
           "$ref": "common.schema.json#/$defs/Digest"
@@ -466,6 +469,39 @@
         "components"
       ],
       "additionalProperties": false
+    },
+    "ObservationBarrier": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "scope": {
+          "$ref": "adapter.schema.json#/$defs/Scope"
+        },
+        "binding_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "admission_generation": {
+          "$ref": "adapter.schema.json#/$defs/Generation"
+        },
+        "exclusion_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        }
+      },
+      "required": [
+        "id",
+        "owner",
+        "scope",
+        "binding_digest",
+        "admission_generation",
+        "exclusion_id"
+      ],
+      "additionalProperties": false,
+      "description": "A fresh observation challenge issued by the controlling owner only after admission is closed and every previously accepted effect in the scope has settled. owner and scope identify the exact authority epoch; binding_digest pins the complete accepted runtime binding, including its approved executor configuration and grants, independently of the separately named admission_generation. exclusion_id identifies one continuously held, independently verified native exclusion of every writer capable of changing that scope. Releasing and reacquiring exclusion changes that identity. These fields are correlation data, never bearer authority or a caller assertion that exclusion is held. The adapter begins its complete scan after receiving this challenge and echoes it unchanged. Native exclusion remains held through proof consumption and the protected action. New accepted work, dispatch, settlement, binding or admission changes invalidate outstanding challenges and cached clearance for the affected scope. A challenge is consumed at most once; process restart and restored state require a fresh challenge. Wall-clock timestamps or an admission generation alone do not establish this causal ordering."
     },
     "Observation": {
       "type": "object",
@@ -519,7 +555,7 @@
               "type": "string",
               "minLength": 1,
               "maxLength": 160,
-              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*$"
+              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*(?![\\s\\S])"
             },
             {
               "type": "null"
@@ -544,6 +580,17 @@
             "unknown"
           ],
           "description": "Whether this adapter can perform the relevant health check. Unsupported or unknown capability cannot establish healthy or unhealthy."
+        },
+        "barrier": {
+          "anyOf": [
+            {
+              "$ref": "adapter.schema.json#/$defs/ObservationBarrier"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The exact request challenge echoed after the complete native scan. Null identifies an ordinary observation, which cannot establish protected quiescence. The receiving owner must independently verify the still-current challenge, approved binding, permission and continuously held native exclusion before consuming this evidence."
         }
       },
       "required": [
@@ -559,7 +606,8 @@
         "instance",
         "installation_digest",
         "admission_generation",
-        "health_check"
+        "health_check",
+        "barrier"
       ],
       "additionalProperties": false,
       "allOf": [
@@ -639,7 +687,7 @@
           "type": "string",
           "minLength": 3,
           "maxLength": 160,
-          "pattern": "^[a-z][a-z0-9-]*(?:[./][a-z][a-z0-9-]*)+$"
+          "pattern": "^[a-z][a-z0-9-]*(?:[./][a-z][a-z0-9-]*)+(?![\\s\\S])"
         },
         "method": {
           "$ref": "common.schema.json#/$defs/Entry"
@@ -683,7 +731,7 @@
               "type": "string",
               "minLength": 1,
               "maxLength": 160,
-              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*$"
+              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*(?![\\s\\S])"
             },
             {
               "type": "null"
@@ -769,7 +817,7 @@
               "type": "string",
               "minLength": 1,
               "maxLength": 160,
-              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*$"
+              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*(?![\\s\\S])"
             },
             {
               "type": "null"
@@ -808,7 +856,7 @@
           "type": "string",
           "minLength": 3,
           "maxLength": 160,
-          "pattern": "^[a-z][a-z0-9-]*(?:[./][a-z][a-z0-9-]*)+$"
+          "pattern": "^[a-z][a-z0-9-]*(?:[./][a-z][a-z0-9-]*)+(?![\\s\\S])"
         },
         "cases": {
           "type": "array",
@@ -867,7 +915,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 160,
-          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*$"
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*(?![\\s\\S])"
         },
         "dataset": {
           "$ref": "common.schema.json#/$defs/Id"
@@ -876,7 +924,7 @@
           "type": "string",
           "minLength": 3,
           "maxLength": 160,
-          "pattern": "^[a-z][a-z0-9-]*(?:[./][a-z][a-z0-9-]*)+$"
+          "pattern": "^[a-z][a-z0-9-]*(?:[./][a-z][a-z0-9-]*)+(?![\\s\\S])"
         },
         "consistency": {
           "enum": [
@@ -898,7 +946,7 @@
             "type": "string",
             "minLength": 3,
             "maxLength": 160,
-            "pattern": "^[a-z][a-z0-9-]*(?:[./][a-z][a-z0-9-]*)+$"
+            "pattern": "^[a-z][a-z0-9-]*(?:[./][a-z][a-z0-9-]*)+(?![\\s\\S])"
           },
           "minItems": 0,
           "uniqueItems": true
@@ -1576,13 +1624,13 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 160,
-          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*$"
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*(?![\\s\\S])"
         },
         "accounting_domain": {
           "type": "string",
           "minLength": 1,
           "maxLength": 160,
-          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*$"
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*(?![\\s\\S])"
         },
         "purposes": {
           "type": "array",
@@ -1651,13 +1699,13 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 160,
-          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*$"
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*(?![\\s\\S])"
         },
         "value_handle": {
           "type": "string",
           "minLength": 1,
           "maxLength": 160,
-          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*$"
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*(?![\\s\\S])"
         },
         "validity": {
           "enum": [

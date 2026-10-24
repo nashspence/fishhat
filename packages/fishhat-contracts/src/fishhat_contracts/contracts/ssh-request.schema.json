@@ -11,7 +11,7 @@
         "message_id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "method": {
           "const": "discover"
@@ -40,7 +40,7 @@
         "message_id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "method": {
           "const": "observe"
@@ -127,7 +127,7 @@
         "message_id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "method": {
           "const": "check"
@@ -214,7 +214,7 @@
         "message_id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "method": {
           "const": "logs"
@@ -299,7 +299,7 @@
         "message_id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "method": {
           "const": "plan.prepare"
@@ -322,12 +322,12 @@
                 "id": {
                   "type": "string",
                   "format": "uuid",
-                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
                 },
                 "epoch": {
                   "type": "string",
                   "format": "uuid",
-                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
                 }
               },
               "required": [
@@ -362,7 +362,7 @@
         "message_id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "method": {
           "const": "plan.get"
@@ -373,7 +373,7 @@
             "plan_id": {
               "type": "string",
               "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
             }
           },
           "required": [
@@ -399,7 +399,7 @@
         "message_id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "method": {
           "const": "operation.submit"
@@ -419,12 +419,12 @@
                 "id": {
                   "type": "string",
                   "format": "uuid",
-                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
                 },
                 "epoch": {
                   "type": "string",
                   "format": "uuid",
-                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
                 }
               },
               "required": [
@@ -437,24 +437,24 @@
             "request_id": {
               "type": "string",
               "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
             },
             "plan_id": {
               "type": "string",
               "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
             },
             "plan_digest": {
               "type": "string",
               "minLength": 71,
               "maxLength": 71,
-              "pattern": "^sha256:[0-9a-f]{64}$"
+              "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
             },
             "subject_digest": {
               "type": "string",
               "minLength": 71,
               "maxLength": 71,
-              "pattern": "^sha256:[0-9a-f]{64}$"
+              "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
             },
             "confirmed": {
               "const": true
@@ -476,7 +476,7 @@
                 {
                   "type": "string",
                   "format": "uuid",
-                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
                 },
                 {
                   "type": "null"
@@ -527,7 +527,7 @@
         "message_id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "method": {
           "const": "operation.get"
@@ -547,12 +547,12 @@
                 "id": {
                   "type": "string",
                   "format": "uuid",
-                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
                 },
                 "epoch": {
                   "type": "string",
                   "format": "uuid",
-                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
                 }
               },
               "required": [
@@ -565,7 +565,7 @@
             "request_id": {
               "type": "string",
               "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
             }
           },
           "required": [
@@ -592,7 +592,7 @@
         "message_id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "method": {
           "const": "operation.list"
@@ -661,7 +661,7 @@
         "message_id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "method": {
           "const": "operation.cancel"
@@ -681,12 +681,12 @@
                 "id": {
                   "type": "string",
                   "format": "uuid",
-                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
                 },
                 "epoch": {
                   "type": "string",
                   "format": "uuid",
-                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
                 }
               },
               "required": [
@@ -699,12 +699,12 @@
             "request_id": {
               "type": "string",
               "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
             },
             "cancellation_id": {
               "type": "string",
               "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
             }
           },
           "required": [
@@ -732,137 +732,13 @@
         "message_id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "method": {
           "const": "workflow.prepare"
         },
         "params": {
-          "type": "object",
-          "properties": {
-            "expected_owner": {
-              "$ref": "common.schema.json#/$defs/Owner"
-            },
-            "workflow_id": {
-              "$ref": "common.schema.json#/$defs/UUID"
-            },
-            "type": {
-              "enum": [
-                "host-drain",
-                "interface-binding",
-                "ingress-publication",
-                "secret-rotation",
-                "checkpoint",
-                "relocation",
-                "source-publication",
-                "dns-change",
-                "secret-publication",
-                "raw-maintenance",
-                "runtime-upgrade"
-              ]
-            },
-            "target_digest": {
-              "$ref": "common.schema.json#/$defs/Digest"
-            },
-            "participants": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "owner": {
-                    "type": "object",
-                    "properties": {
-                      "tool": {
-                        "enum": [
-                          "host-ops",
-                          "app-ops"
-                        ]
-                      },
-                      "id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-                      },
-                      "epoch": {
-                        "type": "string",
-                        "format": "uuid",
-                        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-                      }
-                    },
-                    "required": [
-                      "tool",
-                      "id",
-                      "epoch"
-                    ],
-                    "additionalProperties": false
-                  },
-                  "resource": {
-                    "type": "object",
-                    "properties": {
-                      "kind": {
-                        "enum": [
-                          "domain",
-                          "host",
-                          "app",
-                          "source",
-                          "dns",
-                          "recovery",
-                          "publisher",
-                          "backend",
-                          "adapter",
-                          "interface",
-                          "dataset",
-                          "component"
-                        ]
-                      },
-                      "id": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 160
-                      }
-                    },
-                    "required": [
-                      "kind",
-                      "id"
-                    ],
-                    "additionalProperties": false
-                  },
-                  "expected_generation": {
-                    "type": "integer",
-                    "minimum": 0,
-                    "maximum": 9007199254740991
-                  },
-                  "request_ids": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "format": "uuid",
-                      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-                    },
-                    "minItems": 1,
-                    "uniqueItems": true
-                  }
-                },
-                "required": [
-                  "owner",
-                  "resource",
-                  "expected_generation",
-                  "request_ids"
-                ],
-                "additionalProperties": false
-              },
-              "minItems": 1
-            }
-          },
-          "required": [
-            "expected_owner",
-            "workflow_id",
-            "type",
-            "target_digest",
-            "participants"
-          ],
-          "additionalProperties": false,
-          "description": "Prepare a non-effectful owner capsule under the actual receiving principal. The owner supplies generation zero, initial driver term, prepared state and phase; caller claims cannot supply observed witnesses or an execution outcome. Repeating the same workflow ID and immutable proposal returns the authorized existing capsule; changed closure conflicts. Every required participant must durably prepare before child effects."
+          "$ref": "workflow.schema.json#/$defs/InputReference"
         }
       },
       "required": [
@@ -882,7 +758,7 @@
         "message_id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "method": {
           "const": "workflow.get"
@@ -893,7 +769,7 @@
             "workflow_id": {
               "type": "string",
               "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
             },
             "owner": {
               "$ref": "common.schema.json#/$defs/Owner"
@@ -923,56 +799,13 @@
         "message_id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "method": {
           "const": "workflow.advance"
         },
         "params": {
-          "type": "object",
-          "properties": {
-            "workflow_id": {
-              "type": "string",
-              "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-            },
-            "driver_term": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
-            },
-            "phase": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 24,
-              "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
-            },
-            "expected_generation": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 9007199254740991,
-              "description": "Exact generation from this receiving owner Workflow record, not a participant resource generation or driver term."
-            },
-            "witnesses": {
-              "type": "array",
-              "items": {
-                "$ref": "records.schema.json#/$defs/Witness"
-              },
-              "minItems": 0
-            },
-            "owner": {
-              "$ref": "common.schema.json#/$defs/Owner"
-            }
-          },
-          "required": [
-            "workflow_id",
-            "driver_term",
-            "phase",
-            "expected_generation",
-            "witnesses",
-            "owner"
-          ],
-          "additionalProperties": false
+          "$ref": "workflow.schema.json#/$defs/InputReference"
         }
       },
       "required": [
@@ -992,13 +825,13 @@
         "message_id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "method": {
           "const": "workflow.transfer"
         },
         "params": {
-          "$ref": "records.schema.json#/$defs/WorkflowTransferRequest"
+          "$ref": "workflow.schema.json#/$defs/InputReference"
         }
       },
       "required": [
@@ -1018,7 +851,7 @@
         "message_id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "method": {
           "const": "content.begin"
@@ -1042,7 +875,8 @@
                 "restore-input",
                 "source-proposal",
                 "native-config",
-                "secret-candidate"
+                "secret-candidate",
+                "workflow-input"
               ]
             },
             "digest": {
@@ -1051,7 +885,7 @@
             "size": {
               "type": "integer",
               "minimum": 0,
-              "maximum": 10737418240
+              "maximum": 9007199254740991
             }
           },
           "required": [
@@ -1083,7 +917,7 @@
         "message_id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "method": {
           "const": "content.chunk"
@@ -1100,12 +934,12 @@
             "offset": {
               "type": "integer",
               "minimum": 0,
-              "maximum": 10737418240
+              "maximum": 9007199254740991
             },
             "base64": {
               "type": "string",
               "maxLength": 262144,
-              "pattern": "^[A-Za-z0-9+/]*={0,2}$"
+              "pattern": "^[A-Za-z0-9+/]*={0,2}(?![\\s\\S])"
             }
           },
           "required": [
@@ -1135,7 +969,7 @@
         "message_id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "method": {
           "const": "content.commit"
@@ -1175,7 +1009,7 @@
         "message_id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "method": {
           "const": "content.get"
@@ -1222,7 +1056,7 @@
         "message_id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "method": {
           "const": "resources.observe"

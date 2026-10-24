@@ -48,7 +48,8 @@
     "tool-release.schema.json",
     "tracking-profile.schema.json",
     "tracking-records.schema.json",
-    "workspace.schema.json"
+    "workspace.schema.json",
+    "workflow.schema.json"
   ],
   "catalogues": [
     "actions.json",
@@ -60,6 +61,16 @@
     "receipts-api.openapi.json"
   ],
   "fixtures": [
+    {
+      "path": "workflow/proposal.json",
+      "schema": "workflow.schema.json",
+      "definition": "WorkflowProposal"
+    },
+    {
+      "path": "workflow/prepared.json",
+      "schema": "records.schema.json",
+      "definition": "Workflow"
+    },
     {
       "path": "bundle-manifest.json",
       "schema": "bundle-manifest.schema.json"

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Callable, Mapping
 from datetime import datetime
 from typing import Any
 from urllib.parse import unquote, urldefrag, urljoin
@@ -122,8 +123,10 @@ def schema_identity(uri: str, installed: dict[str, dict[str, Any]] | None = None
 
 def validate_workflow(value: dict[str, Any]) -> None:
     from .transfers import validate_workflow_transfer
+    from .workflows import validate_workflow_proposal_binding
 
     validate("records.schema.json", value, "Workflow")
+    validate_workflow_proposal_binding(value)
     _require(value["phase"] in PHASES[value["type"]], "workflow phase outside installed procedure")
     if value["state"] == "completed":
         _require(value["phase"] == PHASES[value["type"]][-1], "workflow completion phase mismatch")
@@ -260,8 +263,16 @@ def validate_result_payload(
     return value
 
 
-def validate_cli_result(result: Any) -> None:
-    """Check shared decoded result relationships for both CLI and SSH consumers."""
+def validate_cli_result(
+    result: Any,
+    *,
+    retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None = None,
+) -> None:
+    """Check CLI and SSH results with the receiving owner's installed readers.
+
+    Propagate the same trusted context through pages and chunks. Reference shape
+    does not grant authority to install a reader or to accept new historical work.
+    """
     if not isinstance(result, dict):
         return
     kind = result.get("kind")
@@ -280,9 +291,9 @@ def validate_cli_result(result: Any) -> None:
         )
 
         if kind == "RecordReference":
-            validate_record_reference(result)
+            validate_record_reference(result, retained_readers=retained_readers)
         elif kind == "RecordChunk":
-            validate_record_reference(result["reference"])
+            validate_record_reference(result["reference"], retained_readers=retained_readers)
             validate_record_chunk(
                 result, result["reference"], offset=result["offset"], length=CHUNK_BYTES
             )
@@ -296,4 +307,4 @@ def validate_cli_result(result: Any) -> None:
             identity = item["record"]["id"] if item.get("kind") == "RecordReference" else item["id"]
             _require(identity not in identities, "page repeats retained work")
             identities.add(identity)
-            validate_cli_result(item)
+            validate_cli_result(item, retained_readers=retained_readers)

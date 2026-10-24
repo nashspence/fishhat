@@ -1,0 +1,682 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fishhat.invalid/contracts/workflow.schema.json",
+  "$defs": {
+    "ChildReference": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "request_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        }
+      },
+      "required": [
+        "owner",
+        "request_id"
+      ],
+      "additionalProperties": false,
+      "description": "Select one exact child request in this proposal. The request maps to a complete retained Plan; a UUID without that binding is not an executable target."
+    },
+    "RequestBinding": {
+      "type": "object",
+      "properties": {
+        "request_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "plan": {
+          "$ref": "records.schema.json#/$defs/Plan"
+        },
+        "adapter": {
+          "$ref": "workflow.schema.json#/$defs/AdapterInput"
+        }
+      },
+      "required": [
+        "request_id",
+        "plan"
+      ],
+      "additionalProperties": false,
+      "description": "An exact future request identity bound to its complete reviewed Plan. The Plan owner and subject resource equal its participant and its resource precondition equals expected_generation. Native receivers independently authenticate and admit the Plan; preparation is not acceptance of the child operation. Every precondition naming another proposal participant also matches that participant generation; unrelated read-only preconditions need not become mutation participants. An adapter.execute child requires its complete AdapterInput; other child actions forbid that field.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "plan": {
+                "properties": {
+                  "subject": {
+                    "properties": {
+                      "action": {
+                        "const": "adapter.execute"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "adapter"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "adapter"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "Participant": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "resource": {
+          "$ref": "common.schema.json#/$defs/Resource"
+        },
+        "expected_generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "requests": {
+          "type": "array",
+          "items": {
+            "$ref": "workflow.schema.json#/$defs/RequestBinding"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "owner",
+        "resource",
+        "expected_generation",
+        "requests"
+      ],
+      "additionalProperties": false
+    },
+    "HostDrainTarget": {
+      "type": "object",
+      "properties": {
+        "host_change": {
+          "$ref": "workflow.schema.json#/$defs/ChildReference"
+        }
+      },
+      "required": [
+        "host_change"
+      ],
+      "additionalProperties": false,
+      "description": "The exact host change whose reviewed Plan binds disruption, live scope and recovery. Participant Plans contain all admitted application draining and reconciliation work."
+    },
+    "InterfaceBindingTarget": {
+      "type": "object",
+      "properties": {
+        "provider": {
+          "$ref": "workflow.schema.json#/$defs/ChildReference"
+        },
+        "consumers": {
+          "type": "array",
+          "items": {
+            "$ref": "workflow.schema.json#/$defs/ChildReference"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "provider",
+        "consumers"
+      ],
+      "additionalProperties": false,
+      "description": "The exact typed application provider deployment, upgrade or repair Plan and each intended consumer Plan bind the reviewed interface configuration through their retained release/input material. Native phase admission verifies the produced binding and each consumer obligation."
+    },
+    "IngressPublicationTarget": {
+      "type": "object",
+      "properties": {
+        "publication": {
+          "$ref": "workflow.schema.json#/$defs/ChildReference"
+        }
+      },
+      "required": [
+        "publication"
+      ],
+      "additionalProperties": false,
+      "description": "The publication child is adapter.execute with the exact approved ingress executor and fishhat.ingress publish AdapterInput, retaining complete candidate routes and expected generation. An unrelated mutation method cannot satisfy this role."
+    },
+    "SecretRotationTarget": {
+      "type": "object",
+      "properties": {
+        "issuer_change": {
+          "$ref": "workflow.schema.json#/$defs/ChildReference"
+        },
+        "consumer_adoptions": {
+          "type": "array",
+          "items": {
+            "$ref": "workflow.schema.json#/$defs/ChildReference"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "issuer_change",
+        "consumer_adoptions"
+      ],
+      "additionalProperties": false,
+      "description": "The issuer_change child is adapter.execute with the exact approved credential-issuer executor and fishhat.credential-issuer issue AdapterInput. Every intended consumer adoption is a separate app.secrets-adopt or host.secrets-adopt Plan. Publishing an existing secret is not issuer rotation. Secret bytes remain in protected content custody; native phases verify the issued value, publication and adoption evidence rather than treating these Plans as success."
+    },
+    "CheckpointTarget": {
+      "type": "object",
+      "properties": {
+        "capture": {
+          "$ref": "workflow.schema.json#/$defs/ChildReference"
+        }
+      },
+      "required": [
+        "capture"
+      ],
+      "additionalProperties": false,
+      "description": "The exact capture Plan, including the accepted source and complete native data/secret/release recovery inputs. Capture is distinct from a successful restore drill."
+    },
+    "RelocationTarget": {
+      "type": "object",
+      "properties": {
+        "relocation": {
+          "$ref": "workflow.schema.json#/$defs/ChildReference"
+        }
+      },
+      "required": [
+        "relocation"
+      ],
+      "additionalProperties": false,
+      "description": "The exact relocation Plan binds the source application identity, destination, fencing and checkpoint or release recovery basis."
+    },
+    "SourcePublicationTarget": {
+      "type": "object",
+      "properties": {
+        "publication": {
+          "$ref": "workflow.schema.json#/$defs/ChildReference"
+        }
+      },
+      "required": [
+        "publication"
+      ],
+      "additionalProperties": false,
+      "description": "The exact source.publish Plan binds the intended source, base and complete proposal content before a client can disappear."
+    },
+    "DnsChangeTarget": {
+      "type": "object",
+      "properties": {
+        "change": {
+          "$ref": "workflow.schema.json#/$defs/ChildReference"
+        }
+      },
+      "required": [
+        "change"
+      ],
+      "additionalProperties": false,
+      "description": "The exact dns.reconcile Plan binds the complete changeset and approved provider scope."
+    },
+    "SecretPublicationTarget": {
+      "type": "object",
+      "properties": {
+        "publication": {
+          "$ref": "workflow.schema.json#/$defs/ChildReference"
+        }
+      },
+      "required": [
+        "publication"
+      ],
+      "additionalProperties": false,
+      "description": "The exact publisher publication or recovery Plan binds the immutable secret candidate and selected predecessor."
+    },
+    "RawMaintenanceTarget": {
+      "type": "object",
+      "properties": {
+        "maintenance": {
+          "$ref": "workflow.schema.json#/$defs/ChildReference"
+        }
+      },
+      "required": [
+        "maintenance"
+      ],
+      "additionalProperties": false,
+      "description": "The exact reviewed maintenance Plan binds the admitted task or approved adapter method, its scope, expected disruption and reconciliation. This target is not a caller-supplied command or procedure graph."
+    },
+    "RuntimeUpgradeTarget": {
+      "type": "object",
+      "properties": {
+        "installation": {
+          "$ref": "workflow.schema.json#/$defs/ChildReference"
+        }
+      },
+      "required": [
+        "installation"
+      ],
+      "additionalProperties": false,
+      "description": "The exact host.runtime-install Plan binds the management release, selected tools and state-preserving migration scope."
+    },
+    "WorkflowProposal": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/workflow-proposal/v1"
+        },
+        "workflow_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "type": {
+          "enum": [
+            "host-drain",
+            "interface-binding",
+            "ingress-publication",
+            "secret-rotation",
+            "checkpoint",
+            "relocation",
+            "source-publication",
+            "dns-change",
+            "secret-publication",
+            "raw-maintenance",
+            "runtime-upgrade"
+          ]
+        },
+        "target": {},
+        "participants": {
+          "type": "array",
+          "items": {
+            "$ref": "workflow.schema.json#/$defs/Participant"
+          },
+          "minItems": 1
+        },
+        "content": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/Handle"
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "format",
+        "workflow_id",
+        "type",
+        "target",
+        "participants",
+        "content"
+      ],
+      "additionalProperties": false,
+      "description": "The complete immutable intended procedure, not a digest-only promise. target has a closed schema for the installed procedure and refers to exact child request identities. Every child binds its full reviewed Plan, including the selected action, source, recovery basis, effect scope and input digests. content retains exact owner-minted handles for all Plan input digests and handles referenced by those Plans. Every receiver independently verifies the complete proposal and its locally owned Plans and content, authorizes the full local participant/resource closure, and pins that custody before acknowledging preparation or admitting any child effect. Other participants prepare the same proposal digest. Stored proposal bytes and required local content remain retrievable under current permission through preparation, transfer, interruption and recovery; a client or optional tracker is never their only custodian. Supplied Plans and handles alone grant no authority. Changed intent or recovery disposition requires a new reviewed proposal and Plans, not an edit to this capsule. Procedure phases are installed, never a caller-defined graph. MaterialDigest arguments are part of each Plan input closure; integrity-only hashes are not substituted for retained material. Generic adapter children also retain their typed selected instance and method input, independently verified against protected owner enrollment.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "host-drain"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "target": {
+                "$ref": "workflow.schema.json#/$defs/HostDrainTarget"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "interface-binding"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "target": {
+                "$ref": "workflow.schema.json#/$defs/InterfaceBindingTarget"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "ingress-publication"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "target": {
+                "$ref": "workflow.schema.json#/$defs/IngressPublicationTarget"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "secret-rotation"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "target": {
+                "$ref": "workflow.schema.json#/$defs/SecretRotationTarget"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "checkpoint"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "target": {
+                "$ref": "workflow.schema.json#/$defs/CheckpointTarget"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "relocation"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "target": {
+                "$ref": "workflow.schema.json#/$defs/RelocationTarget"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "source-publication"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "target": {
+                "$ref": "workflow.schema.json#/$defs/SourcePublicationTarget"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "dns-change"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "target": {
+                "$ref": "workflow.schema.json#/$defs/DnsChangeTarget"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "secret-publication"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "target": {
+                "$ref": "workflow.schema.json#/$defs/SecretPublicationTarget"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "raw-maintenance"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "target": {
+                "$ref": "workflow.schema.json#/$defs/RawMaintenanceTarget"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "runtime-upgrade"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "target": {
+                "$ref": "workflow.schema.json#/$defs/RuntimeUpgradeTarget"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "PrepareRequest": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "proposal": {
+          "$ref": "workflow.schema.json#/$defs/WorkflowProposal"
+        }
+      },
+      "required": [
+        "owner",
+        "proposal"
+      ],
+      "additionalProperties": false,
+      "description": "The complete decoded preparation payload. The selected receiver must be a participant. Repeating the same workflow_id and immutable proposal under current permission returns its retained capsule; any changed proposal conflicts. New input is checked for current custody and admission deadlines before preparation. Preparation starts at generation zero, driver term one and the installed prepared phase; it is not child-effect acceptance."
+    },
+    "TransferCompletion": {
+      "type": "object",
+      "properties": {
+        "transfer_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "proposal_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "witnesses": {
+          "type": "array",
+          "items": {
+            "$ref": "records.schema.json#/$defs/WorkflowTransferWitness"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "transfer_id",
+        "proposal_digest",
+        "witnesses"
+      ],
+      "additionalProperties": false,
+      "description": "The full independently authenticated commit closure. Every distinct participant owner appears exactly once with state transferred, the original proposal digest and workflow ID. The local witness equals the receiving owner retained commit; another signature, later generation, substitute epoch or omitted owner does not complete this transfer."
+    },
+    "AdvanceRequest": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "workflow_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "advance_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "driver_term": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "expected_generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "phase": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "witnesses": {
+          "type": "array",
+          "items": {
+            "$ref": "records.schema.json#/$defs/Witness"
+          },
+          "minItems": 0
+        },
+        "transfer_completion": {
+          "anyOf": [
+            {
+              "$ref": "workflow.schema.json#/$defs/TransferCompletion"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "owner",
+        "workflow_id",
+        "advance_id",
+        "driver_term",
+        "expected_generation",
+        "phase",
+        "witnesses",
+        "transfer_completion"
+      ],
+      "additionalProperties": false,
+      "description": "One immutable advance identity. The receiving owner reauthorizes the actual principal, resolves advance_id and exact retained input before current generation/term or new-input expiry checks, and replays an identical accepted transition without executing it again. Changed input under the same advance_id conflicts. A new request compares the exact local capsule generation and current driver term and follows the installed next phase; it cannot skip phases or revive terminal/recovery-required work. Every prerequisite witness is independently authenticated and checked against its local procedure obligations. When a transfer is pending in commit phase, transfer_completion must contain the complete transferred-witness closure for the exact proposal and the unchanged retained local commit. The owner atomically retains that evidence, marks the transfer completed, records the advance outcome and increments its capsule generation once. Completion may preserve the current procedure phase, or enter its immediate successor. It never implies rollback, release of holds or completion of a child operation. An unavailable epoch or incomplete evidence remains unresolved and cannot be replaced by timeout."
+    },
+    "AdvanceReceipt": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "workflow.schema.json#/$defs/AdvanceRequest"
+        },
+        "request_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "driver_term": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "phase": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "state": {
+          "enum": [
+            "active",
+            "completed"
+          ]
+        }
+      },
+      "required": [
+        "request",
+        "request_digest",
+        "generation",
+        "driver_term",
+        "phase",
+        "state"
+      ],
+      "additionalProperties": false,
+      "description": "The original complete accepted advance and its immutable finite outcome, not a recursive Workflow snapshot. generation is the local atomic transition generation and remains fixed after later advances or transfers. The capsule retains these receipts so another authorized caller can reconstruct exact replay without client files. A replay returns the current capsule containing this original receipt and never reapplies the transition."
+    },
+    "InputReference": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "input": {
+          "allOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Handle"
+            },
+            {
+              "properties": {
+                "purpose": {
+                  "const": "workflow-input"
+                },
+                "binding": {
+                  "properties": {
+                    "kind": {
+                      "const": "staging"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "owner",
+        "input"
+      ],
+      "additionalProperties": false,
+      "description": "The sole wire input shape for workflow.prepare, workflow.advance and workflow.transfer. Complete canonical-JSON payloads are staged through content.begin/chunk/commit under resource {kind: workflow, id: workflow_id}; the RPC carries only this bounded immutable reference. The method owns the payload schema: PrepareRequest, AdvanceRequest or records.WorkflowTransferRequest respectively. No caller-selected schema, inline alternate, subset or truncated witness closure is accepted. Verify complete bytes, digest, size, exact owner epoch, protected staging scope and current principal before interpreting the payload. Resolve a previously retained exact semantic request before new-admission expiry checks; original accepted content remains pinned. An authorized replacement caller may restage the identical canonical request: the handle is a transport locator, while the decoded immutable request defines replay identity. New requests require fresh committed custody and independently approved receiving capacity. Chunk bounds do not bound the complete proposal or evidence set. Before acknowledgment the receiving owner authorizes every participant resource it owns and retains the decoded original input plus all needed content. These declarations do not implement staging, native authorization or persistence."
+    },
+    "AdapterInput": {
+      "type": "object",
+      "properties": {
+        "executor": {
+          "$ref": "adapter.schema.json#/$defs/InstanceReference"
+        },
+        "request": {
+          "$ref": "adapter.schema.json#/$defs/MutationRequest"
+        }
+      },
+      "required": [
+        "executor",
+        "request"
+      ],
+      "additionalProperties": false,
+      "description": "Exact receiving-owner-approved selected executor and complete typed mutation planning input. The executor role equals the request contract and its scope equals request.input.scope. The child Plan adapter_id, adapter_release and action equal the executor instance, installation digest and request method. Its input handle contains canonical request bytes, with matching digest and size; input_schema_digest pins the complete installed role schema closure rooted at MutationRequest and result_schema pins the same role Output. The receiver independently checks this binding, method support, configuration, grants and native controlling authority against protected approved enrollment before preparation; supplied identity data never approves or enrolls an adapter. Child admission still requires its own owner-authored Invocation and current authorization. This input does not create or dispatch an effect. installation_digest and adapter_release identify the immutable artifact key used by approved Installation; descriptor and configuration approval are separate protected owner facts."
+    }
+  }
+}

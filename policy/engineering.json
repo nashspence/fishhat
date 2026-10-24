@@ -82,7 +82,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/record_delivery.py": "880d023366588672154fc8e679381fcf545840dd8cc08e9806fc631bd0e4d873",
-        "tests/test_record_delivery.py": "ea036ce02e522f4728c35c1fb5ca3acb5711f46f124c87471b108571fc0a3f67"
+        "tests/test_record_delivery.py": "a246e5d500b0aedc191da69cd6b6bbc374d02b43918927eab660a73f4d1648f5"
       },
       "symbol": "fishhat_contracts.record_delivery:RecordSnapshot.chunk",
       "work": "O(chunk_bytes)"

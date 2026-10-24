@@ -9,6 +9,7 @@ from __future__ import annotations
 import copy
 from collections.abc import Callable
 from typing import Any, cast
+from uuid import uuid4
 
 from fishhat_adapters import (
     ROLES,
@@ -33,11 +34,19 @@ class AdapterCoordinator:
         owner: dict[str, Any],
         registry: Registry,
         commit: Callable[[dict[str, Any]], None],
+        *,
+        native_exclusion: Callable[[dict[str, Any]], str | None] | None = None,
     ) -> None:
         validate("common.schema.json", owner, "Owner")
         self.registry = registry
         self.commit = commit
+        # This callback is trusted supervisor context, never a request field. Its
+        # identity covers one continuously held exclusion of all native writers;
+        # releasing and reacquiring that exclusion must return a new identity.
+        self.native_exclusion = native_exclusion
         self._poisoned = False
+        self._observation_barriers: dict[str, dict[str, Any]] = {}
+        self._quiescence_proofs: dict[str, dict[str, Any]] = {}
         self.state: dict[str, Any] = {
             "owner": copy.deepcopy(owner),
             "bindings": {},
@@ -50,6 +59,7 @@ class AdapterCoordinator:
 
     def _publish(self, candidate: dict[str, Any]) -> None:
         require(not self._poisoned, "OWNER_COMMIT_UNCERTAIN")
+        self._invalidate_observations(candidate)
         canonical(candidate)
         try:
             self.commit(copy.deepcopy(candidate))
@@ -58,6 +68,51 @@ class AdapterCoordinator:
             self._poisoned = True
             raise
         self.state = candidate
+
+    def _invalidate_observations(self, candidate: dict[str, Any]) -> None:
+        """A changed local execution boundary invalidates its scans and clearance."""
+        bindings = {**self.state["bindings"], **candidate["bindings"]}
+        changed = {
+            subject
+            for subject in bindings
+            if self.state["owner"] != candidate["owner"]
+            or self.state["bindings"].get(subject) != candidate["bindings"].get(subject)
+            or self.state["admission"].get(subject) != candidate["admission"].get(subject)
+        }
+        scopes = {canonical(binding["scope"]): subject for subject, binding in bindings.items()}
+        for attempt_id in self.state["attempts"].keys() | candidate["attempts"].keys():
+            if all(
+                self.state[key].get(attempt_id) == candidate[key].get(attempt_id)
+                for key in ("attempts", "requests", "results")
+            ):
+                continue
+            for state in (self.state, candidate):
+                attempt = state["attempts"].get(attempt_id)
+                if attempt is not None and canonical(attempt["scope"]) in scopes:
+                    changed.add(scopes[canonical(attempt["scope"])])
+        for subject in changed:
+            self._observation_barriers.pop(subject, None)
+            self._quiescence_proofs.pop(subject, None)
+            if subject in candidate["quiescent"]:
+                candidate["quiescent"][subject] = False
+
+    def _exclusion_identity(self, scope: dict[str, Any]) -> str:
+        require(self.native_exclusion is not None, "NATIVE_EXCLUSION_REQUIRED")
+        assert self.native_exclusion is not None
+        identity = self.native_exclusion(copy.deepcopy(scope))
+        require(identity is not None, "NATIVE_EXCLUSION_REQUIRED")
+        assert identity is not None
+        validate("common.schema.json", identity, "UUID")
+        return identity
+
+    def _require_drained(self, scope: dict[str, Any]) -> None:
+        require(
+            not any(
+                attempt["scope"] == scope and attempt["state"] != "resolved"
+                for attempt in self.state["attempts"].values()
+            ),
+            "PENDING_NATIVE_WORK",
+        )
 
     def bind(
         self,
@@ -128,7 +183,20 @@ class AdapterCoordinator:
     def open_admission(self, subject: str, *, owner_approved: bool) -> None:
         require(owner_approved, "ADMISSION_NOT_AUTHORIZED")
         require(self.state["quiescent"].get(subject) is True, "QUIESCENCE_REQUIRED")
-        self._instance_matches(self.state["bindings"][subject])
+        binding = self.state["bindings"][subject]
+        self._instance_matches(binding)
+        self._require_drained(binding["scope"])
+        proof = self._quiescence_proofs.get(subject)
+        require(proof is not None, "QUIESCENCE_PROOF_REQUIRED")
+        assert proof is not None
+        require(
+            proof["owner"] == self.state["owner"]
+            and proof["scope"] == binding["scope"]
+            and proof["binding_digest"] == runtime_binding_digest(binding)
+            and proof["admission_generation"] == binding["admission_generation"]
+            and proof["exclusion_id"] == self._exclusion_identity(binding["scope"]),
+            "STALE_QUIESCENCE_PROOF",
+        )
         candidate = copy.deepcopy(self.state)
         candidate["admission"][subject] = True
         candidate["quiescent"][subject] = False
@@ -458,13 +526,72 @@ class AdapterCoordinator:
                 "RESTORE_RESULT_STATE",
             )
 
-    def prove_quiescent(self, subject: str, observation: dict[str, Any]) -> None:
+    def observation_request(
+        self,
+        subject: str,
+        *,
+        owner_approved: bool,
+        method: str = "observe",
+        limit: int = 256,
+    ) -> dict[str, Any]:
+        """Issue a fresh scan after draining, under independently held native exclusion.
+
+        The nonce and resulting clearance are transient evidence, not accepted
+        work. A process restart or restored state always requires a fresh scan.
+        """
+        require(not self._poisoned, "OWNER_COMMIT_UNCERTAIN")
+        require(owner_approved, "OBSERVATION_NOT_AUTHORIZED")
+        require(method in {"observe", "inventory"}, "INVALID_OBSERVATION_METHOD")
+        binding = self.state["bindings"].get(subject)
+        require(
+            binding is not None and not self.state["admission"][subject], "ADMISSION_NOT_CLOSED"
+        )
+        assert binding is not None
+        self._instance_matches(binding)
+        self._require_drained(binding["scope"])
+        barrier = {
+            "id": str(uuid4()),
+            "owner": copy.deepcopy(self.state["owner"]),
+            "scope": copy.deepcopy(binding["scope"]),
+            "binding_digest": runtime_binding_digest(binding),
+            "admission_generation": binding["admission_generation"],
+            "exclusion_id": self._exclusion_identity(binding["scope"]),
+        }
+        query = {
+            "contract": "fishhat.runtime",
+            "method": method,
+            "input": {
+                "scope": copy.deepcopy(binding["scope"]),
+                "cursor": None,
+                "limit": limit,
+                "barrier": barrier,
+            },
+        }
+        self.registry.authorize_request(
+            binding["instance"], "runtime", query, owner_approved=owner_approved
+        )
+        if self.state["quiescent"][subject]:
+            candidate = copy.deepcopy(self.state)
+            candidate["quiescent"][subject] = False
+            self._publish(candidate)
+        self._quiescence_proofs.pop(subject, None)
+        self._observation_barriers[subject] = copy.deepcopy(barrier)
+        return query
+
+    def prove_quiescent(
+        self, subject: str, observation: dict[str, Any], *, owner_approved: bool
+    ) -> None:
+        """Consume one authenticated post-drain result while its exclusion remains held."""
+        require(not self._poisoned, "OWNER_COMMIT_UNCERTAIN")
+        require(owner_approved, "OBSERVATION_NOT_AUTHORIZED")
         validate("adapter.schema.json", observation, "Observation")
         binding = self.state["bindings"].get(subject)
         require(
             binding is not None and not self.state["admission"][subject], "ADMISSION_NOT_CLOSED"
         )
         assert binding is not None
+        self._instance_matches(binding)
+        self._require_drained(binding["scope"])
         require(
             observation["scope"] == binding["scope"]
             and observation["generation"] == binding["generation"]
@@ -474,6 +601,18 @@ class AdapterCoordinator:
             and observation["admission_generation"] == binding["admission_generation"],
             "OBSERVATION_IDENTITY",
         )
+        barrier = self._observation_barriers.get(subject)
+        require(barrier is not None, "OBSERVATION_BARRIER_REQUIRED")
+        assert barrier is not None
+        require(
+            observation["barrier"] == barrier
+            and barrier["owner"] == self.state["owner"]
+            and barrier["scope"] == binding["scope"]
+            and barrier["binding_digest"] == runtime_binding_digest(binding)
+            and barrier["admission_generation"] == binding["admission_generation"]
+            and barrier["exclusion_id"] == self._exclusion_identity(binding["scope"]),
+            "STALE_OBSERVATION_BARRIER",
+        )
         require(
             observation["coverage"] == "complete"
             and observation["continuation"] is None
@@ -481,16 +620,11 @@ class AdapterCoordinator:
             and observation["quiescence"] == "verified",
             "INCOMPLETE_QUIESCENCE",
         )
-        require(
-            not any(
-                a["scope"] == binding["scope"] and a["state"] != "resolved"
-                for a in self.state["attempts"].values()
-            ),
-            "PENDING_NATIVE_WORK",
-        )
         candidate = copy.deepcopy(self.state)
         candidate["quiescent"][subject] = True
         self._publish(candidate)
+        self._observation_barriers.pop(subject, None)
+        self._quiescence_proofs[subject] = copy.deepcopy(barrier)
 
     def snapshot(self) -> dict[str, Any]:
         require(not self._poisoned, "OWNER_COMMIT_UNCERTAIN")
@@ -498,6 +632,8 @@ class AdapterCoordinator:
 
     def restore(self, snapshot: dict[str, Any]) -> None:
         """Load owner-verified state; cached observations never restore start authority."""
+        self._observation_barriers.clear()
+        self._quiescence_proofs.clear()
         canonical(snapshot)
         require(
             set(snapshot) == set(self.state) and snapshot["owner"] == self.state["owner"],

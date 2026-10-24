@@ -10,9 +10,11 @@ import copy
 import hashlib
 import json
 import re
+from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
+from urllib.parse import urldefrag, urljoin
 
 import yaml
 from jsonschema import Draft202012Validator, FormatChecker
@@ -458,7 +460,16 @@ def require_acyclic(edges: dict[str, list[str]]) -> None:
         visit(node)
 
 
-def validate_cli(value: dict[str, Any]) -> None:
+def validate_cli(
+    value: dict[str, Any],
+    *,
+    retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None = None,
+) -> None:
+    """Validate a CLI envelope using independently installed historical readers.
+
+    The registry is trusted receiving context; an envelope cannot supply it. Old
+    records remain read-only references and cannot assert fresh execution success.
+    """
     validate("cli-output.schema.json", value)
     if value["ok"] != (value["problem"] is None):
         raise ContractError("CLI success/problem mismatch")
@@ -481,7 +492,7 @@ def validate_cli(value: dict[str, Any]) -> None:
     result = value["result"]
     from .handoffs import validate_cli_result
 
-    validate_cli_result(result)
+    validate_cli_result(result, retained_readers=retained_readers)
     operation = result if isinstance(result, dict) and result.get("kind") == "Operation" else None
     owner_states = {
         "accepted",
@@ -556,6 +567,41 @@ def validate_cli(value: dict[str, Any]) -> None:
         )
 
 
+def _material_digests(value: Any, schema: Any, base: str) -> set[str]:
+    """Follow only installed schema positions to find semantically typed inputs.
+
+    Literal data in enum, const, examples and defaults never declares custody.
+    The subject is already schema-valid; only applicable union branches count.
+    """
+    if not isinstance(schema, dict):
+        return set()
+    found: set[str] = set()
+    if "$ref" in schema:
+        target = urljoin(base, schema["$ref"])
+        material = SCHEMAS["common.schema.json"]["$id"] + "#/$defs/MaterialDigest"
+        if target == material:
+            return {value} if isinstance(value, str) else set()
+        resolved = REGISTRY.resolver(base_uri=base).lookup(schema["$ref"])
+        found.update(_material_digests(value, resolved.contents, urldefrag(target)[0]))
+    if isinstance(value, dict):
+        for key, child in schema.get("properties", {}).items():
+            if key in value:
+                found.update(_material_digests(value[key], child, base))
+    if isinstance(value, list) and "items" in schema:
+        for child in value:
+            found.update(_material_digests(child, schema["items"], base))
+    for keyword in ("allOf", "anyOf", "oneOf"):
+        for child in schema.get(keyword, []):
+            validator = Draft202012Validator(
+                REGISTRY.resolver().lookup(base).contents,
+                registry=REGISTRY,
+                format_checker=FORMAT_CHECKER,
+            ).evolve(schema=child)
+            if validator.is_valid(value):
+                found.update(_material_digests(value, child, base))
+    return found
+
+
 def validate_plan(value: dict[str, Any]) -> None:
     validate("records.schema.json", value, "Plan")
     expected = digest({k: v for k, v in value.items() if k not in ("digest", "witness")})
@@ -576,6 +622,10 @@ def validate_plan(value: dict[str, Any]) -> None:
     if canonical([value["owner"], value["subject"]["resource"]]) not in preconditions:
         raise ContractError("subject lacks resource precondition")
     inputs = set(value["input_digests"])
+    actions = SCHEMAS["actions.schema.json"]
+    arguments = actions["$defs"][value["subject"]["action"]]
+    if not _material_digests(value["subject"]["arguments"], arguments, actions["$id"]) <= inputs:
+        raise ContractError("subject material input outside reviewed plan")
     for effect in value["effects"]:
         if canonical([effect["executor"], effect["resource"]]) not in preconditions:
             raise ContractError("effect lacks resource precondition")

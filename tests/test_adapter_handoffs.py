@@ -16,8 +16,9 @@ from fishhat_owner.adapter_state import AdapterCoordinator
 from tests.adapter_support import (
     OWNER,
     binding,
+    fresh_observation,
     identifier,
-    observation,
+    native_exclusion,
     request,
     runtime_registry,
     runtime_sources,
@@ -57,6 +58,8 @@ def installed(role, *, observe_only=False, endpoint="protected-target", generati
         scope["kind"] = "allocation"
     elif role == "backup":
         scope["kind"] = "backup-repository"
+    elif role == "repository":
+        scope["kind"] = "repository"
     elif role == "build":
         scope["kind"] = "builder"
     elif role == "dns":
@@ -251,9 +254,14 @@ def reconciliation():
 def test_lost_activation_reply_is_settled_without_a_second_dispatch():
     registry, _, _ = runtime_registry()
     commits = []
-    owner = AdapterCoordinator(OWNER, registry, lambda value: commits.append(copy.deepcopy(value)))
+    owner = AdapterCoordinator(
+        OWNER,
+        registry,
+        lambda value: commits.append(copy.deepcopy(value)),
+        native_exclusion=native_exclusion,
+    )
     owner.bind(binding(), **runtime_sources(registry), owner_approved=True)
-    owner.prove_quiescent("demo", observation())
+    owner.prove_quiescent("demo", fresh_observation(owner), owner_approved=True)
     owner.open_admission("demo", owner_approved=True)
     prepared = owner.prepare(
         "demo",

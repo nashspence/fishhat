@@ -124,6 +124,28 @@ def validate_workflow_transfer(workflow: dict[str, Any]) -> None:
         principal, term = proposal["new_principal"], proposal["expected_term"] + 1
     if phase == "completed":
         _require(committed == owners, "completed transfer lacks participant commits")
+        receipts = [
+            receipt
+            for receipt in workflow["advances"]
+            if receipt["request"]["transfer_completion"] is not None
+            and receipt["request"]["transfer_completion"]["transfer_id"] == proposal["transfer_id"]
+        ]
+        _require(len(receipts) == 1, "completed transfer lacks exact advance receipt")
+        receipt = receipts[0]
+        completion = receipt["request"]["transfer_completion"]
+        local = next(
+            witness
+            for witness in transfer["commit_witnesses"]
+            if witness["owner"] == workflow["owner"]
+        )
+        _require(
+            completion["proposal_digest"] == transfer["proposal_digest"]
+            and sorted(canonical(item) for item in completion["witnesses"])
+            == sorted(canonical(item) for item in transfer["commit_witnesses"])
+            and receipt["driver_term"] == proposal["expected_term"] + 1
+            and local["generation"] < receipt["generation"],
+            "completed transfer advance evidence or generation changed",
+        )
     _require(
         workflow["driver_principal"] == principal and workflow["driver_term"] == term,
         "transfer driver preimage mismatch",

@@ -1198,10 +1198,7 @@
       "type": "object",
       "properties": {
         "release_digest": {
-          "type": "string",
-          "minLength": 71,
-          "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}$"
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
         }
       },
       "required": [
@@ -1214,10 +1211,7 @@
       "type": "object",
       "properties": {
         "release_digest": {
-          "type": "string",
-          "minLength": 71,
-          "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}$"
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
         }
       },
       "required": [
@@ -1263,7 +1257,7 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 24,
-            "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+            "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
           },
           "minItems": 0,
           "uniqueItems": true
@@ -1282,7 +1276,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 24,
-          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
         }
       },
       "required": [
@@ -1295,10 +1289,7 @@
       "type": "object",
       "properties": {
         "bundle_receipt": {
-          "type": "string",
-          "minLength": 71,
-          "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}$"
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
         }
       },
       "required": [
@@ -1311,10 +1302,7 @@
       "type": "object",
       "properties": {
         "checkpoint": {
-          "type": "string",
-          "minLength": 71,
-          "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}$"
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
         }
       },
       "required": [
@@ -1327,10 +1315,7 @@
       "type": "object",
       "properties": {
         "checkpoint": {
-          "type": "string",
-          "minLength": 71,
-          "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}$"
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
         }
       },
       "required": [
@@ -1345,7 +1330,7 @@
         "operation_id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "disposition": {
           "enum": [
@@ -1357,10 +1342,7 @@
         "checkpoint": {
           "anyOf": [
             {
-              "type": "string",
-              "minLength": 71,
-              "maxLength": 71,
-              "pattern": "^sha256:[0-9a-f]{64}$"
+              "$ref": "common.schema.json#/$defs/MaterialDigest"
             },
             {
               "type": "null"
@@ -1383,7 +1365,7 @@
           "type": "string",
           "minLength": 71,
           "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}$"
+          "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
         },
         "candidates": {
           "type": "array",
@@ -1391,7 +1373,7 @@
             "type": "string",
             "minLength": 71,
             "maxLength": 71,
-            "pattern": "^sha256:[0-9a-f]{64}$"
+            "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
           },
           "minItems": 1,
           "uniqueItems": true
@@ -1408,10 +1390,7 @@
       "type": "object",
       "properties": {
         "retention_receipt": {
-          "type": "string",
-          "minLength": 71,
-          "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}$"
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
         }
       },
       "required": [
@@ -1427,7 +1406,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 24,
-          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
         },
         "recovery_basis": {
           "oneOf": [
@@ -1438,7 +1417,7 @@
                   "const": "checkpoint"
                 },
                 "checkpoint_digest": {
-                  "$ref": "common.schema.json#/$defs/Digest"
+                  "$ref": "common.schema.json#/$defs/MaterialDigest"
                 }
               },
               "required": [
@@ -1454,7 +1433,7 @@
                   "const": "release"
                 },
                 "release_digest": {
-                  "$ref": "common.schema.json#/$defs/Digest"
+                  "$ref": "common.schema.json#/$defs/MaterialDigest"
                 }
               },
               "required": [
@@ -1490,7 +1469,7 @@
               "type": "string",
               "minLength": 1,
               "maxLength": 24,
-              "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+              "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
             },
             "repository": {
               "type": "object",
@@ -1498,7 +1477,7 @@
                 "instance": {
                   "type": "string",
                   "format": "uuid",
-                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
                 },
                 "repository_id": {
                   "type": "integer",
@@ -1509,7 +1488,7 @@
                   "type": "string",
                   "minLength": 3,
                   "maxLength": 160,
-                  "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+                  "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?![\\s\\S])"
                 }
               },
               "required": [
@@ -1523,19 +1502,16 @@
               "type": "string",
               "minLength": 40,
               "maxLength": 64,
-              "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+              "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})(?![\\s\\S])"
             },
             "entrypoint": {
               "type": "string",
               "minLength": 1,
               "maxLength": 240,
-              "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*$"
+              "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*(?![\\s\\S])"
             },
             "closure_digest": {
-              "type": "string",
-              "minLength": 71,
-              "maxLength": 71,
-              "pattern": "^sha256:[0-9a-f]{64}$"
+              "$ref": "common.schema.json#/$defs/MaterialDigest"
             }
           },
           "required": [
@@ -1558,10 +1534,7 @@
       "type": "object",
       "properties": {
         "tool_release": {
-          "type": "string",
-          "minLength": 71,
-          "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}$"
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
         },
         "tools": {
           "type": "array",
@@ -1604,7 +1577,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 24,
-          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
         }
       },
       "required": [
@@ -1620,7 +1593,7 @@
           "type": "string",
           "minLength": 40,
           "maxLength": 64,
-          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})(?![\\s\\S])"
         },
         "paths": {
           "type": "array",
@@ -1628,7 +1601,7 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 240,
-            "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*$"
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*(?![\\s\\S])"
           },
           "minItems": 0,
           "uniqueItems": true
@@ -1648,13 +1621,13 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 24,
-          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
         },
         "commit": {
           "type": "string",
           "minLength": 40,
           "maxLength": 64,
-          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})(?![\\s\\S])"
         }
       },
       "required": [
@@ -1668,10 +1641,7 @@
       "type": "object",
       "properties": {
         "bundle_receipt": {
-          "type": "string",
-          "minLength": 71,
-          "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}$"
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
         }
       },
       "required": [
@@ -1686,7 +1656,7 @@
         "operation_id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "disposition": {
           "enum": [
@@ -1712,16 +1682,13 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 24,
-            "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+            "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
           },
           "minItems": 1,
           "uniqueItems": true
         },
         "retention_receipt": {
-          "type": "string",
-          "minLength": 71,
-          "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}$"
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
         }
       },
       "required": [
@@ -1738,13 +1705,13 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 24,
-          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
         },
         "base": {
           "type": "string",
           "minLength": 40,
           "maxLength": 64,
-          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})(?![\\s\\S])"
         },
         "proposal": {
           "$ref": "common.schema.json#/$defs/Handle"
@@ -1783,7 +1750,7 @@
               "type": "string",
               "minLength": 71,
               "maxLength": 71,
-              "pattern": "^sha256:[0-9a-f]{64}$"
+              "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
             },
             {
               "type": "null"
@@ -1804,13 +1771,10 @@
         "publication_id": {
           "type": "string",
           "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "candidate_digest": {
-          "type": "string",
-          "minLength": 71,
-          "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}$"
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
         }
       },
       "required": [
@@ -1844,10 +1808,7 @@
       "type": "object",
       "properties": {
         "retention_receipt": {
-          "type": "string",
-          "minLength": 71,
-          "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}$"
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
         }
       },
       "required": [
@@ -1863,19 +1824,17 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 24,
-          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
         },
         "adapter_release": {
-          "type": "string",
-          "minLength": 71,
-          "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}$"
+          "$ref": "common.schema.json#/$defs/MaterialDigest",
+          "description": "Exact immutable artifact digest used as the approved Installation key and InstanceReference.installation_digest. The receiver separately verifies the descriptor, configuration, grants and scoped instance; this artifact pin alone supplies no authority."
         },
         "action": {
           "type": "string",
           "minLength": 1,
           "maxLength": 24,
-          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
         },
         "input": {
           "$ref": "common.schema.json#/$defs/Handle"
@@ -1884,7 +1843,7 @@
           "type": "string",
           "minLength": 71,
           "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}$"
+          "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
         },
         "result_schema": {
           "$ref": "common.schema.json#/$defs/SchemaIdentity"

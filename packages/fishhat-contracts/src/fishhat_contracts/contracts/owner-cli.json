@@ -465,7 +465,7 @@
         "--json"
       ],
       "use_case": "workflow.prepare",
-      "description": "Validate a closed workflow preparation proposal on stdin and retain a non-effectful owner capsule. Preparation is not acceptance of child effects."
+      "description": "Read a complete workflow PrepareRequest from stdin, stage its canonical bytes as workflow-input through content.begin/chunk/commit, and submit the bounded InputReference. Retain its typed immutable proposal and locally owned content before acknowledging the non-effectful capsule. Preparation is not acceptance of child effects; stdin or frame bounds cannot silently cut its complete closure."
     },
     {
       "name": "workflow-advance",
@@ -477,7 +477,7 @@
         "--json"
       ],
       "use_case": "workflow.advance",
-      "description": "Advance an exact retained capsule using its current owner generation, driver term and verified prerequisites from a closed stdin request."
+      "description": "Read a complete AdvanceRequest from stdin and submit it through staged workflow-input custody using the bounded InputReference. New advances compare the exact local generation and driver term. Transfer completion requires every participant's verified transferred witness and atomically retains the completion evidence, procedure phase and immutable advance receipt. Exact accepted advance IDs replay before new-admission expiry or generation checks."
     },
     {
       "name": "workflow-transfer",
@@ -489,7 +489,7 @@
         "--json"
       ],
       "use_case": "workflow.transfer",
-      "description": "Request an exact freeze or commit phase using WorkflowTransferRequest from closed stdin input. New phases compare the current local generation; an identical accepted phase replays its discoverable original generation, proposal and witnesses. Timeout never releases custody."
+      "description": "Read a complete WorkflowTransferRequest from stdin and submit it through staged workflow-input custody using the bounded InputReference. Preserve every participant and prerequisite witness, regardless of frame size. New phases compare the current local generation; an identical accepted phase replays its discoverable original generation, proposal and witnesses. The new driver completes the transfer through workflow.advance with the complete commit closure. Timeout never releases custody."
     },
     {
       "name": "record-read",

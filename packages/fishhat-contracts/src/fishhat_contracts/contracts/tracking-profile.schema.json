@@ -20,7 +20,7 @@
             "api_origin": {
               "type": "string",
               "format": "uri",
-              "pattern": "^https://[^/?#@]+$"
+              "pattern": "^https://[^/?#@]+(?![\\s\\S])"
             },
             "credential_file": {
               "$ref": "common.schema.json#/$defs/AbsolutePath"
@@ -54,7 +54,7 @@
             },
             "base_url": {
               "type": "string",
-              "pattern": "^http://127\\.0\\.0\\.1:[0-9]{1,5}$"
+              "pattern": "^http://127\\.0\\.0\\.1:[0-9]{1,5}(?![\\s\\S])"
             },
             "credential_file": {
               "$ref": "common.schema.json#/$defs/AbsolutePath"

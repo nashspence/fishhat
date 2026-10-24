@@ -1,0 +1,137 @@
+{
+  "format": "deployment-ops/workflow-proposal/v1",
+  "workflow_id": "11111111-1111-4111-8111-111111111111",
+  "type": "host-drain",
+  "target": {
+    "host_change": {
+      "owner": {
+        "tool": "host-ops",
+        "id": "58735bda-2152-5b96-9fcf-5a1ffd14872e",
+        "epoch": "37de5c4a-33ee-55a5-adff-564fd3748ac8"
+      },
+      "request_id": "22222222-2222-4222-8222-222222222222"
+    }
+  },
+  "participants": [
+    {
+      "owner": {
+        "tool": "host-ops",
+        "id": "58735bda-2152-5b96-9fcf-5a1ffd14872e",
+        "epoch": "37de5c4a-33ee-55a5-adff-564fd3748ac8"
+      },
+      "resource": {
+        "kind": "host",
+        "id": "node-a"
+      },
+      "expected_generation": 9,
+      "requests": [
+        {
+          "request_id": "22222222-2222-4222-8222-222222222222",
+          "plan": {
+            "format": "deployment-ops/record/v1",
+            "kind": "Plan",
+            "id": "eab76305-c3b1-550f-9a61-30ccc23ac8fc",
+            "owner": {
+              "tool": "host-ops",
+              "id": "58735bda-2152-5b96-9fcf-5a1ffd14872e",
+              "epoch": "37de5c4a-33ee-55a5-adff-564fd3748ac8"
+            },
+            "subject": {
+              "action": "host.reboot",
+              "resource": {
+                "kind": "host",
+                "id": "node-a"
+              },
+              "arguments": {}
+            },
+            "summary": "Reboot the selected synthetic host through its exact reviewed scope.",
+            "data_consequences": "Keep stored application data; normal writes may resume after restart.",
+            "recovery_limits": "Inspect the accepted operation before retrying; restart does not undo writes.",
+            "created_at": "2026-10-17T00:00:00Z",
+            "expires_at": "2026-10-17T01:00:00Z",
+            "input_digests": [
+              "sha256:f60fa8fdf1458e0573e731e274de6789c98a7955a8d39e20b31adb8c3063f9d1"
+            ],
+            "preconditions": [
+              {
+                "owner": {
+                  "tool": "host-ops",
+                  "id": "58735bda-2152-5b96-9fcf-5a1ffd14872e",
+                  "epoch": "37de5c4a-33ee-55a5-adff-564fd3748ac8"
+                },
+                "resource": {
+                  "kind": "host",
+                  "id": "node-a"
+                },
+                "generation": 9,
+                "source_digests": [],
+                "holds_digest": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+              }
+            ],
+            "effects": [
+              {
+                "step": "restart",
+                "executor": {
+                  "tool": "host-ops",
+                  "id": "58735bda-2152-5b96-9fcf-5a1ffd14872e",
+                  "epoch": "37de5c4a-33ee-55a5-adff-564fd3748ac8"
+                },
+                "resource": {
+                  "kind": "host",
+                  "id": "node-a"
+                },
+                "summary": "Restart the web component; leave other components running.",
+                "action": "admitted-reboot",
+                "input_digest": "sha256:f60fa8fdf1458e0573e731e274de6789c98a7955a8d39e20b31adb8c3063f9d1",
+                "reconciliation": "inspect-runtime"
+              }
+            ],
+            "checkpoint_required": false,
+            "interruption": "One admitted component restart",
+            "recovery": [
+              "native-reconcile"
+            ],
+            "blockers": [],
+            "digest": "sha256:b07d92a90c0fb543c9a011656faa054edca8d5a2e251e0edfbd4ddf6b156b550",
+            "witness": {
+              "format": "deployment-ops/witness/v1",
+              "id": "5018df02-0aaa-5c56-90ff-5afcd81bf3f6",
+              "owner": {
+                "tool": "host-ops",
+                "id": "58735bda-2152-5b96-9fcf-5a1ffd14872e",
+                "epoch": "37de5c4a-33ee-55a5-adff-564fd3748ac8"
+              },
+              "kind": "plan",
+              "subject_digest": "sha256:b07d92a90c0fb543c9a011656faa054edca8d5a2e251e0edfbd4ddf6b156b550",
+              "workflow_id": null,
+              "generation": 9,
+              "state": "planned",
+              "boot_id": null,
+              "evidence_digests": [],
+              "created_at": "2026-10-17T00:00:00Z",
+              "key_id": "test-owner",
+              "signature": "QhX1hJ34z3HscqIt2vaGiaJ92QSwiNV3nl6Xu0Zd8oFlTzvQQFgX428YN9CD/zN3OIdEpYLzjZJWA9u5M9mXAQ=="
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "content": [
+    {
+      "owner": {
+        "tool": "host-ops",
+        "id": "58735bda-2152-5b96-9fcf-5a1ffd14872e",
+        "epoch": "37de5c4a-33ee-55a5-adff-564fd3748ac8"
+      },
+      "id": "62b35a76-841d-5668-b620-5c0c9bdad224",
+      "purpose": "content",
+      "binding": {
+        "kind": "staging",
+        "staging_id": "07d4a591-7521-57f1-af9e-4ae25cceefba"
+      },
+      "digest": "sha256:f60fa8fdf1458e0573e731e274de6789c98a7955a8d39e20b31adb8c3063f9d1",
+      "size": 1
+    }
+  ]
+}

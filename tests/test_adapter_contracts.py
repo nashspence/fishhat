@@ -202,7 +202,7 @@ def test_read_response_is_bound_to_request_and_complete_coverage():
     query = {
         "contract": "fishhat.runtime",
         "method": "observe",
-        "input": {"scope": SCOPE, "cursor": None, "limit": 10},
+        "input": {"scope": SCOPE, "cursor": None, "limit": 10, "barrier": None},
     }
     response = {
         "contract": query["contract"],
@@ -244,5 +244,5 @@ def test_read_response_is_bound_to_request_and_complete_coverage():
     ids=["unresolved-local-reference", "recursive-local-reference"],
 )
 def test_invalid_local_schema_resolution_is_a_redacted_contract_rejection(schema):
-    with pytest.raises(ContractError, match=r"^CONFIGURATION_REJECTED$"):
+    with pytest.raises(ContractError, match=r"^(UNRESOLVED|RECURSIVE)_SCHEMA_REFERENCE$"):
         check_configuration(schema, {}, digest(schema))

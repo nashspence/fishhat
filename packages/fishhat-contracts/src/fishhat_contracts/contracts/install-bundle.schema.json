@@ -27,7 +27,7 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 64,
-      "pattern": "^cpython-3\\.[0-9]+$"
+      "pattern": "^cpython-3\\.[0-9]+(?![\\s\\S])"
     },
     "native_requirements": {
       "type": "array",

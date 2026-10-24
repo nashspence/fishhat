@@ -9,24 +9,24 @@
     "id": {
       "type": "string",
       "format": "uuid",
-      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
     },
     "operation_id": {
       "type": "string",
       "format": "uuid",
-      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
     },
     "release_digest": {
       "type": "string",
       "minLength": 71,
       "maxLength": 71,
-      "pattern": "^sha256:[0-9a-f]{64}$"
+      "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
     },
     "executor_component": {
       "type": "string",
       "minLength": 1,
       "maxLength": 24,
-      "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?$"
+      "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
     },
     "subject": {
       "type": "object",
@@ -90,7 +90,7 @@
             "type": "string",
             "minLength": 2,
             "maxLength": 512,
-            "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+$"
+            "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+(?![\\s\\S])"
           },
           "mode": {
             "enum": [
@@ -110,20 +110,20 @@
       "type": "object",
       "minProperties": 0,
       "propertyNames": {
-        "pattern": "^[a-z][a-z0-9-]{0,63}$"
+        "pattern": "^[a-z][a-z0-9-]{0,63}(?![\\s\\S])"
       },
       "additionalProperties": {
         "type": "string",
         "minLength": 2,
         "maxLength": 512,
-        "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+$"
+        "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+(?![\\s\\S])"
       }
     },
     "endpoint_bindings": {
       "type": "object",
       "minProperties": 0,
       "propertyNames": {
-        "pattern": "^[a-z][a-z0-9-]{0,63}$"
+        "pattern": "^[a-z][a-z0-9-]{0,63}(?![\\s\\S])"
       },
       "additionalProperties": {
         "type": "string",
@@ -135,7 +135,7 @@
       "type": "string",
       "minLength": 2,
       "maxLength": 512,
-      "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+$"
+      "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+(?![\\s\\S])"
     },
     "timeout_seconds": {
       "type": "integer",

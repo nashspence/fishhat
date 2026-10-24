@@ -38,7 +38,7 @@
               "type": "string",
               "minLength": 2,
               "maxLength": 254,
-              "pattern": "^(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?\\.)+$"
+              "pattern": "^(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?\\.)+(?![\\s\\S])"
             },
             "class": {
               "const": "IN"
@@ -115,7 +115,7 @@
               "type": "string",
               "minLength": 2,
               "maxLength": 254,
-              "pattern": "^(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?\\.)+$"
+              "pattern": "^(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?\\.)+(?![\\s\\S])"
             },
             "class": {
               "const": "IN"
@@ -192,7 +192,7 @@
               "type": "string",
               "minLength": 2,
               "maxLength": 254,
-              "pattern": "^(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?\\.)+$"
+              "pattern": "^(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?\\.)+(?![\\s\\S])"
             },
             "class": {
               "const": "IN"
@@ -243,7 +243,7 @@
                     "type": "string",
                     "minLength": 2,
                     "maxLength": 254,
-                    "pattern": "^(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?\\.)+$"
+                    "pattern": "^(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?\\.)+(?![\\s\\S])"
                   }
                 },
                 "required": [
@@ -271,7 +271,7 @@
               "type": "string",
               "minLength": 2,
               "maxLength": 254,
-              "pattern": "^(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?\\.)+$"
+              "pattern": "^(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?\\.)+(?![\\s\\S])"
             },
             "class": {
               "const": "IN"
@@ -322,7 +322,7 @@
                     "type": "string",
                     "minLength": 2,
                     "maxLength": 254,
-                    "pattern": "^(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?\\.)+$"
+                    "pattern": "^(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?\\.)+(?![\\s\\S])"
                   }
                 },
                 "required": [
@@ -350,7 +350,7 @@
               "type": "string",
               "minLength": 2,
               "maxLength": 254,
-              "pattern": "^(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?\\.)+$"
+              "pattern": "^(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?\\.)+(?![\\s\\S])"
             },
             "class": {
               "const": "IN"
@@ -406,7 +406,7 @@
                     "type": "string",
                     "minLength": 2,
                     "maxLength": 254,
-                    "pattern": "^(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?\\.)+$"
+                    "pattern": "^(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?\\.)+(?![\\s\\S])"
                   }
                 },
                 "required": [
@@ -435,7 +435,7 @@
               "type": "string",
               "minLength": 2,
               "maxLength": 254,
-              "pattern": "^(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?\\.)+$"
+              "pattern": "^(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?\\.)+(?![\\s\\S])"
             },
             "class": {
               "const": "IN"
@@ -501,7 +501,7 @@
                     "type": "string",
                     "minLength": 2,
                     "maxLength": 254,
-                    "pattern": "^(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?\\.)+$"
+                    "pattern": "^(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?\\.)+(?![\\s\\S])"
                   }
                 },
                 "required": [
@@ -532,7 +532,7 @@
               "type": "string",
               "minLength": 2,
               "maxLength": 254,
-              "pattern": "^(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?\\.)+$"
+              "pattern": "^(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?\\.)+(?![\\s\\S])"
             },
             "class": {
               "const": "IN"
@@ -613,7 +613,7 @@
               "type": "string",
               "minLength": 2,
               "maxLength": 254,
-              "pattern": "^(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?\\.)+$"
+              "pattern": "^(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?\\.)+(?![\\s\\S])"
             },
             "class": {
               "const": "IN"
@@ -667,7 +667,7 @@
                   },
                   "tag": {
                     "type": "string",
-                    "pattern": "^[a-z0-9]{1,15}$"
+                    "pattern": "^[a-z0-9]{1,15}(?![\\s\\S])"
                   },
                   "value": {
                     "type": "string",
