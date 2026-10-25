@@ -92,7 +92,7 @@ image_id="$(user_run podman image inspect localhost/fishhat-ci:local --format '{
 unit_image_id="$(user_run systemd-run --user --quiet --wait --pipe --collect --property=Delegate=yes /usr/bin/podman image inspect localhost/fishhat-ci:local --format '{{.Id}}')"
 [[ "$unit_image_id" == "$image_id" ]]
 # Exercise the native rootless Quadlet generator, not a hand-written replacement unit.
-sudo install -d -o "$account" -g "$account" "/home/$account/.config/containers/systemd"
+sudo install -d -o "$account" -g "$account" "/home/$account/.config" "/home/$account/.config/containers" "/home/$account/.config/containers/systemd"
 cat <<'EOF' | sudo tee "/home/$account/.config/containers/systemd/ci-probe.container" >/dev/null
 [Container]
 Image=localhost/fishhat-ci:local
@@ -195,38 +195,40 @@ PY
 # Independent loopback sshd fixture; do not alter the runner's global sshd config.
 ssh-keygen -q -t ed25519 -N '' -f "$work/server"
 ssh-keygen -q -t ed25519 -N '' -f "$work/client"
-cp "$work/client.pub" "$work/authorized_keys"
+sudo install -d -m 0700 -o "$account" -g "$account" "/home/$account/.ssh"
+sudo install -m 0600 -o "$account" -g "$account" "$work/client.pub" "/home/$account/.ssh/authorized_keys"
 cat > "$work/sshd_config" <<EOF
 Port 22229
 ListenAddress 127.0.0.1
 HostKey $work/server
 PidFile $work/sshd.pid
-AuthorizedKeysFile $work/authorized_keys
-StrictModes no
-UsePAM no
+AuthorizedKeysFile /home/$account/.ssh/authorized_keys
+StrictModes yes
+UsePAM yes
 PubkeyAuthentication yes
+AuthenticationMethods publickey
 PasswordAuthentication no
 KbdInteractiveAuthentication no
 PermitRootLogin no
-AllowUsers $(id -un)
+AllowUsers $account
 DisableForwarding yes
 PermitTTY no
 PermitUserEnvironment no
 PermitUserRC no
 ForceCommand /usr/bin/printf ssh-fixture-ok
-LogLevel ERROR
+LogLevel VERBOSE
 EOF
 sudo mkdir -p /run/sshd
 sudo /usr/sbin/sshd -t -f "$work/sshd_config"
 sudo /usr/sbin/sshd -f "$work/sshd_config" -E "$work/sshd.log"
 ssh_pid="$(cat "$work/sshd.pid")"
 printf '[127.0.0.1]:22229 %s\n' "$(cut -d' ' -f1,2 "$work/server.pub")" > "$work/known_hosts"
-if ! result="$(ssh -F /dev/null -T -p 22229 -i "$work/client" -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$work/known_hosts" "$(id -un)@127.0.0.1" arbitrary-input)"; then
+if ! result="$(ssh -F /dev/null -T -p 22229 -i "$work/client" -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$work/known_hosts" "${account}@127.0.0.1" arbitrary-input)"; then
   sudo /usr/bin/tail -n 40 "$work/sshd.log"
   exit 1
 fi
 [[ "$result" == ssh-fixture-ok ]]
-if ssh -F /dev/null -T -p 22229 -i "$work/client" -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/dev/null "$(id -un)@127.0.0.1" info 2>/dev/null; then
+if ssh -F /dev/null -T -p 22229 -i "$work/client" -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/dev/null "${account}@127.0.0.1" info 2>/dev/null; then
   echo 'Unknown SSH host key was accepted' >&2; exit 1
 fi
 printf '%s\n' '{"scope":"hosted-runner-prerequisites-only","systemd_cgroup2":true,"rootless_overlay":true,"quadlet":true,"xfs_byte_inode_quotas":true,"loopback_ssh":true,"native_tools_qualified":false}'
