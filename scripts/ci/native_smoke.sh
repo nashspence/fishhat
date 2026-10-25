@@ -49,13 +49,29 @@ sudo install -d -m 0755 "$(dirname "$manager_environment")"
 cat <<EOF | sudo tee "$manager_environment" >/dev/null
 #!/bin/sh
 [ "\$(/usr/bin/id -u)" = "$uid" ] || exit 0
-printf '%s\n' 'XDG_CONFIG_HOME=/home/$account/.config'
+/usr/bin/cat <<'PROBE_ENV'
+HOME=/home/$account
+USER=$account
+LOGNAME=$account
+PATH=/usr/bin:/bin
+XDG_CONFIG_HOME=/home/$account/.config
+XDG_DATA_HOME=/home/$account/.local/share
+XDG_CACHE_HOME=/home/$account/.cache
+XDG_STATE_HOME=/home/$account/.local/state
+XDG_RUNTIME_DIR=/run/user/$uid
+DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$uid/bus
+TMPDIR=/home/$account/tmp
+PROBE_ENV
 EOF
 sudo chmod 0755 "$manager_environment"
+sudo install -d -m 0700 -o "$account" -g "$account" "/home/$account/tmp"
+probe_context_text="$(sudo runuser -u "$account" -- "$manager_environment")"
+[[ -n "$probe_context_text" ]]
+mapfile -t probe_context <<< "$probe_context_text"
 sudo loginctl enable-linger "$account"
 sudo systemctl start "user@$uid.service"
 user_run() {
-  sudo runuser -u "$account" -- env -i HOME="/home/$account" USER="$account" LOGNAME="$account" PATH=/usr/bin:/bin XDG_RUNTIME_DIR="/run/user/$uid" "$@"
+  sudo runuser -u "$account" -- env -i "${probe_context[@]}" "$@"
 }
 [[ "$(user_run podman info --format '{{.Host.Security.Rootless}}')" == true ]]
 [[ "$(user_run podman info --format '{{.Host.CgroupsVersion}}')" == v2 ]]
@@ -70,6 +86,10 @@ user_run podman build --network=none --pull=never --layers=false -t localhost/fi
 sudo systemctl set-property --runtime "user-$uid.slice" MemoryHigh=384M MemoryMax=512M TasksMax=256 CPUQuota=100%
 [[ "$(cat "/sys/fs/cgroup/user.slice/user-$uid.slice/memory.max")" == 536870912 ]]
 [[ "$(cat "/sys/fs/cgroup/user.slice/user-$uid.slice/pids.max")" == 256 ]]
+# Require direct commands and native user services to resolve the same owned image.
+image_id="$(user_run podman image inspect localhost/fishhat-ci:local --format '{{.Id}}')"
+unit_image_id="$(user_run systemd-run --user --quiet --wait --pipe --collect --property=Delegate=yes /usr/bin/podman image inspect localhost/fishhat-ci:local --format '{{.Id}}')"
+[[ "$unit_image_id" == "$image_id" ]]
 # Exercise the native rootless Quadlet generator, not a hand-written replacement unit.
 sudo install -d -o "$account" -g "$account" "/home/$account/.config/containers/systemd"
 cat <<'EOF' | sudo tee "/home/$account/.config/containers/systemd/ci-probe.container" >/dev/null
@@ -81,11 +101,15 @@ Exec=echo quadlet-ok
 [Service]
 Type=oneshot
 Restart=no
+StandardOutput=append:%t/ci-probe.stdout
+StandardError=append:%t/ci-probe.stderr
 EOF
 sudo chown "$account:$account" "/home/$account/.config/containers/systemd/ci-probe.container"
 user_run env "QUADLET_UNIT_DIRS=/home/$account/.config/containers/systemd" /usr/libexec/podman/quadlet --user --dryrun
 user_run systemctl --user daemon-reload
 if ! user_run systemctl --user start ci-probe.service; then
+  user_run systemctl --user show ci-probe.service -p Result -p ExecMainStatus
+  user_run /usr/bin/tail -n 40 "/run/user/$uid/ci-probe.stderr" || true
   user_run systemd-analyze --user --generators=true verify ci-probe.service
   exit 1
 fi
@@ -98,6 +122,7 @@ done
 [[ "$state" == inactive ]]
 [[ "$(user_run systemctl --user show ci-probe.service -p Result --value)" == success ]]
 [[ "$(user_run systemctl --user show ci-probe.service -p ExecMainStatus --value)" == 0 ]]
+[[ "$(user_run /usr/bin/cat "/run/user/$uid/ci-probe.stdout")" == quadlet-ok ]]
 # XFS is a disposable loop device only; never format a physical block device.
 truncate -s 768M "$work/xfs.img"
 sudo mkfs.xfs -q -f "$work/xfs.img"
