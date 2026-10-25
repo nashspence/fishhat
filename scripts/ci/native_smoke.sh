@@ -19,21 +19,47 @@ account="dtci$(id -u)"; account_created=0; mounted=0; ssh_pid=''; manager_enviro
 cleanup() {
   status=$?
   set +e
-  if [[ -n "$ssh_pid" ]]; then sudo kill "$ssh_pid"; fi
+  cleanup_failed=0
+  if [[ -n "$ssh_pid" ]]; then sudo kill "$ssh_pid" || cleanup_failed=1; fi
   if ((account_created)); then
     uid="$(id -u "$account")"
     sudo runuser -u "$account" -- env -i HOME="/home/$account" PATH=/usr/bin:/bin XDG_RUNTIME_DIR="/run/user/$uid" systemctl --user stop ci-probe.service
-    if declare -F user_run >/dev/null; then user_run podman system reset --force; fi
-    sudo loginctl terminate-user "$account"
-    sudo loginctl disable-linger "$account"
-    sudo userdel -r "$account"
+    if declare -F user_run >/dev/null; then
+      user_run podman system reset --force || cleanup_failed=1
+    fi
+    # Prevent manager respawn, then wait for its stop and pending session teardown.
+    sudo loginctl disable-linger "$account" || cleanup_failed=1
+    sudo loginctl terminate-user "$account" || cleanup_failed=1
+    sudo systemctl stop "user@$uid.service" || cleanup_failed=1
+    account_removed=0
+    for ((attempt=0; attempt<40; attempt++)); do
+      sudo userdel -r "$account" 2>"$work/userdel.stderr"
+      account_remove_status=$?
+      if ((account_remove_status == 0)); then
+        account_removed=1
+        break
+      fi
+      # Ubuntu userdel reports a still-busy account with exit status 8.
+      if ((account_remove_status != 8)); then break; fi
+      sleep 0.25
+    done
+    if ((!account_removed)); then
+      cat "$work/userdel.stderr" >&2
+      cleanup_failed=1
+    fi
   fi
   if [[ -n "$manager_environment" ]]; then
-    sudo rm -f -- "$manager_environment"
+    sudo rm -f -- "$manager_environment" || cleanup_failed=1
   fi
-  if ((mounted)); then sudo umount "$work/xfs"; fi
+  if ((mounted)); then sudo umount "$work/xfs" || cleanup_failed=1; fi
   # Keep no private keys/logs as CI artifacts. The VM is discarded after this job.
-  sudo rm -rf -- "$work"
+  sudo rm -rf -- "$work" || cleanup_failed=1
+  if ((cleanup_failed)); then
+    echo 'Native prerequisite cleanup failed' >&2
+    if ((status == 0)); then status=1; fi
+  else
+    echo 'Disposable probe resources removed.'
+  fi
   exit "$status"
 }
 trap cleanup EXIT
