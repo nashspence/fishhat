@@ -15,7 +15,7 @@ sudo apt-get update -qq
 sudo apt-get install -y --no-install-recommends podman uidmap fuse-overlayfs slirp4netns passt xfsprogs openssh-server busybox-static
 # Shared probe paths must be traversable outside the runner's private home.
 work="$(mktemp -d /tmp/fishhat-native.XXXXXXXX)"
-account="dtci$(id -u)"; account_created=0; mounted=0; ssh_pid=''; manager_dropin=''
+account="dtci$(id -u)"; account_created=0; mounted=0; ssh_pid=''; manager_environment=''
 cleanup() {
   status=$?
   set +e
@@ -27,10 +27,8 @@ cleanup() {
     sudo loginctl disable-linger "$account"
     sudo userdel -r "$account"
   fi
-  if [[ -n "$manager_dropin" ]]; then
-    sudo rm -f -- "$manager_dropin"
-    sudo rmdir -- "$(dirname "$manager_dropin")"
-    sudo systemctl daemon-reload
+  if [[ -n "$manager_environment" ]]; then
+    sudo rm -f -- "$manager_environment"
   fi
   if ((mounted)); then sudo umount "$work/xfs"; fi
   # Keep no private keys/logs as CI artifacts. The VM is discarded after this job.
@@ -43,13 +41,17 @@ sudo useradd -m -s /bin/bash "$account"; account_created=1
 uid="$(id -u "$account")"
 grep -q "^$account:" /etc/subuid
 grep -q "^$account:" /etc/subgid
-# Generators inherit the manager's startup context, not each systemctl caller's.
-probe_dropin="/run/systemd/system/user@$uid.service.d/50-fishhat-probe.conf"
-[[ ! -e "$probe_dropin" ]]
-manager_dropin="$probe_dropin"
-sudo install -d "$(dirname "$manager_dropin")"
-printf '[Service]\nEnvironment=XDG_CONFIG_HOME=/home/%s/.config\n' "$account" | sudo tee "$manager_dropin" >/dev/null
-sudo systemctl daemon-reload
+# Run after the image's environment import, and affect only the probe account.
+probe_environment="/run/systemd/user-environment-generators/99-fishhat-probe-$uid"
+[[ ! -e "$probe_environment" && ! -L "$probe_environment" ]]
+manager_environment="$probe_environment"
+sudo install -d -m 0755 "$(dirname "$manager_environment")"
+cat <<EOF | sudo tee "$manager_environment" >/dev/null
+#!/bin/sh
+[ "\$(/usr/bin/id -u)" = "$uid" ] || exit 0
+printf '%s\n' 'XDG_CONFIG_HOME=/home/$account/.config'
+EOF
+sudo chmod 0755 "$manager_environment"
 sudo loginctl enable-linger "$account"
 sudo systemctl start "user@$uid.service"
 user_run() {
