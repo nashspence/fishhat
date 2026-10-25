@@ -8,6 +8,8 @@ fi
 [[ -d "${RUNNER_TEMP:?}" && "$(ps -p 1 -o comm= | xargs)" == systemd ]]
 [[ "$(stat -fc %T /sys/fs/cgroup)" == cgroup2fs ]]
 sudo -n true
+# Cross-user and rootless namespace commands need a universally traversable cwd.
+cd /
 export DEBIAN_FRONTEND=noninteractive
 sudo apt-get update -qq
 sudo apt-get install -y --no-install-recommends podman uidmap fuse-overlayfs slirp4netns passt xfsprogs openssh-server busybox-static
