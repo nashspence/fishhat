@@ -37,8 +37,17 @@
   "native_qualified": false,
   "source_schema": {
     "type": "object",
-    "properties": {},
-    "required": [],
+    "properties": {
+      "service": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]*(?![\\s\\S])"
+      }
+    },
+    "required": [
+      "service"
+    ],
     "additionalProperties": false
   }
 }

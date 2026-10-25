@@ -66,12 +66,12 @@
           "epoch": "44444444-4444-4444-8444-444444444444"
         },
         "account": "app-demo-app",
-        "policy_digest": "sha256:b7d699c9d756bee391479915cdaf729cef20e5de74db36b0130be4673be78163",
+        "policy_digest": "sha256:90d8403640cdc7e79202c20fd71935fad8f902463a6481aa27a8435caf3a788d",
         "release_digest": "sha256:8d3b141fc65bf5426f78fb6e1dc4584f64ea2e1f310a4a6fd8bf2ccbc7a5760d",
         "archive_digest": "sha256:23c3770cb3abca0d3c5002c17db54feb608da819fe348f89a3a250da1f059c9a",
         "protection_generation": 7
       }
     }
   ],
-  "policy_digest": "sha256:b7d699c9d756bee391479915cdaf729cef20e5de74db36b0130be4673be78163"
+  "policy_digest": "sha256:90d8403640cdc7e79202c20fd71935fad8f902463a6481aa27a8435caf3a788d"
 }

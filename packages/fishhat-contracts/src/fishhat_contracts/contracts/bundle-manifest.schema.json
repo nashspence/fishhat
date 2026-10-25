@@ -63,5 +63,6 @@
     "generation",
     "entries"
   ],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "description": "Manifest of the complete logical secret entry set, in canonical sorted order. The canonical plaintext USTAR profile permits up to 1048576 bytes per regular member, including this canonical JSON manifest, and up to 33554432 total archive bytes including headers and padding. These byte capacities apply equally to readers and writers; there is no separate entry-count ceiling. Every declared entry must be inspected, and noncanonical members, ordering, headers or trailing data are rejected."
 }

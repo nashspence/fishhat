@@ -2064,6 +2064,27 @@
         "request"
       ],
       "additionalProperties": false
+    },
+    "SourceTargetBinding": {
+      "type": "object",
+      "properties": {
+        "selection": {
+          "$ref": "adapter.schema.json#/$defs/Selection"
+        },
+        "executor": {
+          "$ref": "adapter.schema.json#/$defs/InstanceReference"
+        },
+        "namespace": {
+          "$ref": "adapter.schema.json#/$defs/MutationNamespace"
+        }
+      },
+      "required": [
+        "selection",
+        "executor",
+        "namespace"
+      ],
+      "additionalProperties": false,
+      "description": "Receiving-owner-approved mapping of a host service or software source selector to its exact enrolled executor and canonical native mutation target. The executor role is service or software; its scope and the selected instance must agree, and its change grant must contain the namespace. The owner independently resolves native aliases and verifies the mapping before enrolling it. Source bytes cannot create, replace or authorize this mapping. Different selector spellings or instances that resolve to one namespace remain one target; a host may prescribe that target only once. Native side effects remain confined to the complete accepted mutation grant."
     }
   },
   "description": "Descriptor for a separately approved implementation. Provider-owned configuration, component and source schemas retain their JSON Schema format semantics. Bare date-time asserts RFC3339 syntax and Gregorian calendar validity without normalizing strings or inheriting core Time precision/UTC restrictions. Leap-second syntax is checked only at the offset-adjusted UTC end of a month; actual insertion or negative-leap schedules require provider authority and are not qualification supplied by this validator."

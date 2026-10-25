@@ -26,6 +26,7 @@ from .validation import (
 
 INPUT_SCHEMAS = {
     "workflow.prepare": ("workflow.schema.json", "PrepareRequest"),
+    "workflow.bind": ("workflow.schema.json", "BindRequest"),
     "workflow.advance": ("workflow.schema.json", "AdvanceRequest"),
     "workflow.transfer": ("records.schema.json", "WorkflowTransferRequest"),
 }
@@ -43,6 +44,7 @@ TARGET_ACTIONS = {
     "ingress-publication": {"publication": {"adapter.execute"}},
     "secret-rotation": {
         "issuer_change": {"adapter.execute"},
+        "publication": {"publisher.publish"},
         "consumer_adoptions": {"app.secrets-adopt", "host.secrets-adopt"},
     },
     "checkpoint": {"capture": {"app.backup"}},
@@ -53,6 +55,122 @@ TARGET_ACTIONS = {
     "raw-maintenance": {"maintenance": {"app.maintenance-run", "adapter.execute"}},
     "runtime-upgrade": {"installation": {"host.runtime-install"}},
 }
+
+PHASE_ACTIONS = {
+    "host-drain": {
+        "draining": {"app.maintenance-run", "adapter.execute"},
+        "host-effect": TARGET_ACTIONS["host-drain"]["host_change"],
+        "reconciling": {"app.repair", "app.restart", "app.maintenance-run", "adapter.execute"},
+    },
+    "interface-binding": {
+        "provider-verified": TARGET_ACTIONS["interface-binding"]["provider"],
+        "consumer-adopting": TARGET_ACTIONS["interface-binding"]["consumers"],
+    },
+    "ingress-publication": {"published": {"adapter.execute"}, "reloaded": {"adapter.execute"}},
+    "secret-rotation": {
+        "issuer-changing": {"adapter.execute"},
+        "publishing": {"publisher.publish"},
+        "consumers-adopting": {"app.secrets-adopt", "host.secrets-adopt"},
+    },
+    "checkpoint": {"native-capturing": {"app.backup"}},
+    "relocation": {"source-quiescing": {"app.relocate"}},
+    "source-publication": {"ref-updating": {"source.publish"}},
+    "dns-change": {"applying": {"dns.reconcile"}},
+    "secret-publication": {"replacing": {"publisher.publish", "publisher.recover"}},
+    "raw-maintenance": {"external-work": {"app.maintenance-run", "adapter.execute"}},
+    "runtime-upgrade": {"migrating": {"host.runtime-install"}},
+}
+
+TARGET_PHASES = {
+    "host-drain": {"host_change": "host-effect"},
+    "interface-binding": {"provider": "provider-verified", "consumers": "consumer-adopting"},
+    "ingress-publication": {"publication": "published"},
+    "secret-rotation": {
+        "issuer_change": "issuer-changing",
+        "publication": "publishing",
+        "consumer_adoptions": "consumers-adopting",
+    },
+    "checkpoint": {"capture": "native-capturing"},
+    "relocation": {"relocation": "source-quiescing"},
+    "source-publication": {"publication": "ref-updating"},
+    "dns-change": {"change": "applying"},
+    "secret-publication": {"publication": "replacing"},
+    "raw-maintenance": {"maintenance": "external-work"},
+    "runtime-upgrade": {"installation": "migrating"},
+}
+
+
+def child_action(binding: dict[str, Any]) -> str:
+    if "plan" in binding:
+        return str(binding["plan"]["subject"]["action"])
+    intent = binding["intent"]
+    if intent["kind"] == "reviewed-successor":
+        return str(intent["subject"]["action"])
+    return "publisher.publish" if intent["kind"] == "secret-publication" else str(intent["action"])
+
+
+def proposal_children(
+    proposal: dict[str, Any],
+) -> dict[bytes, tuple[dict[str, Any], dict[str, Any]]]:
+    return {
+        _request_key(participant["owner"], binding["request_id"]): (participant, binding)
+        for participant in proposal["participants"]
+        for binding in participant["requests"]
+    }
+
+
+def _intent_binding(
+    binding: dict[str, Any], participant: dict[str, Any], index: int, proposal: dict[str, Any]
+) -> None:
+    intent = binding["intent"]
+    if intent["kind"] == "reviewed-successor":
+        _require(index > 0, "workflow successor has no prior participant request")
+        previous = participant["requests"][index - 1]
+        _require(
+            intent["predecessor"]
+            == {"owner": participant["owner"], "request_id": previous["request_id"]}
+            and intent["subject"]["resource"] == participant["resource"],
+            "workflow successor changed predecessor or resource",
+        )
+        _require(
+            PHASES[proposal["type"]].index(previous["phase"])
+            <= PHASES[proposal["type"]].index(binding["phase"]),
+            "workflow successor reverses installed phase order",
+        )
+        return
+    _require(index == 0, "later participant output requires reviewed successor")
+    _require(proposal["type"] == "secret-rotation", "secret continuation outside rotation")
+    target = proposal["target"]
+    _require(intent["issuer"] == target["issuer_change"], "rotation issuer child changed")
+    if intent["kind"] == "secret-adoption":
+        _require(intent["publication"] == target["publication"], "rotation publication changed")
+
+
+def _validate_child(
+    binding: dict[str, Any],
+    participant: dict[str, Any],
+    index: int,
+    proposal: dict[str, Any],
+    generations: dict[bytes, int],
+    content: set[bytes],
+) -> None:
+    _require(
+        child_action(binding) in PHASE_ACTIONS[proposal["type"]].get(binding["phase"], set()),
+        "workflow child action outside installed phase",
+    )
+    if "plan" in binding:
+        _require(index == 0, "later participant child requires reviewed continuation")
+        _plan_binding(binding, participant, generations, content)
+        available = {canonical([h["owner"], h["digest"]]) for h in proposal["content"]}
+        _require(
+            all(
+                canonical([binding["plan"]["owner"], d]) in available
+                for d in binding["plan"]["input_digests"]
+            ),
+            "workflow Plan input lacks retained content handle",
+        )
+    else:
+        _intent_binding(binding, participant, index, proposal)
 
 
 def _require(condition: bool, message: str) -> None:
@@ -155,18 +273,12 @@ def validate_workflow_proposal(proposal: dict[str, Any]) -> None:
     _require(len(content) == len(proposal["content"]), "duplicate workflow content handle")
     content_ids = {_request_key(h["owner"], h["id"]) for h in proposal["content"]}
     _require(len(content_ids) == len(content), "workflow content identity changed")
-    available = {canonical([h["owner"], h["digest"]]) for h in proposal["content"]}
     requests: dict[bytes, dict[str, Any]] = {}
     for participant in participants:
-        for binding in participant["requests"]:
+        for index, binding in enumerate(participant["requests"]):
             key = _request_key(participant["owner"], binding["request_id"])
             _require(key not in requests, "duplicate workflow child request")
-            _plan_binding(binding, participant, generations, content)
-            plan = binding["plan"]
-            _require(
-                all(canonical([plan["owner"], d]) in available for d in plan["input_digests"]),
-                "workflow Plan input lacks retained content handle",
-            )
+            _validate_child(binding, participant, index, proposal, generations, content)
             requests[key] = binding
     seen: set[bytes] = set()
     for role, reference in proposal["target"].items():
@@ -179,23 +291,45 @@ def validate_workflow_proposal(proposal: dict[str, Any]) -> None:
             seen.add(key)
             binding = requests[key]
             _require(
-                binding["plan"]["subject"]["action"] in TARGET_ACTIONS[proposal["type"]][role],
+                child_action(binding) in TARGET_ACTIONS[proposal["type"]][role],
                 "workflow target child action does not match procedure role",
             )
-            if proposal["type"] in {"ingress-publication", "secret-rotation"} and role in {
-                "publication",
-                "issuer_change",
+            _target_binding(proposal, role, binding)
+            if (proposal["type"], role) in {
+                ("ingress-publication", "publication"),
+                ("secret-rotation", "issuer_change"),
             }:
                 expected = (
                     ("fishhat.ingress", "publish")
                     if proposal["type"] == "ingress-publication"
                     else ("fishhat.credential-issuer", "issue")
                 )
+                _require(
+                    "adapter" in binding,
+                    "workflow adapter producer must retain its initial Plan",
+                )
                 request = binding["adapter"]["request"]
                 _require(
                     (request["contract"], request["method"]) == expected,
                     "workflow adapter method does not match procedure role",
                 )
+
+
+def _target_binding(proposal: dict[str, Any], role: str, binding: dict[str, Any]) -> None:
+    _require(
+        binding["phase"] == TARGET_PHASES[proposal["type"]][role],
+        "workflow target changed installed procedure phase",
+    )
+    if proposal["type"] != "secret-rotation":
+        return
+    if role == "issuer_change":
+        _require("plan" in binding, "rotation issuer requires ready reviewed Plan")
+        return
+    kind = "secret-publication" if role == "publication" else "secret-adoption"
+    _require(
+        "intent" in binding and binding["intent"]["kind"] == kind,
+        "rotation output requires a later reviewed continuation",
+    )
 
 
 def _participants(proposal: dict[str, Any]) -> list[dict[str, Any]]:
@@ -224,7 +358,18 @@ def validate_workflow_proposal_binding(workflow: dict[str, Any]) -> None:
     )
     observed = [{**participant, "last_witness": None} for participant in workflow["participants"]]
     _require(observed == _participants(proposal), "workflow participant Plan closure changed")
+    if workflow["driver_term"] == 1:
+        _require(
+            workflow["driver_principal"] == proposal["initial_driver"]["principal"],
+            "workflow initial driver preimage agreement changed",
+        )
+    from .workflow_bindings import require_bound_phase, validate_workflow_bindings
+
+    validate_workflow_bindings(workflow)
     _validate_advance_history(workflow)
+    phases = PHASES[workflow["type"]]
+    if workflow["phase"] in phases and phases.index(workflow["phase"]) > 0:
+        require_bound_phase(workflow, phases[phases.index(workflow["phase"]) - 1])
 
 
 def prepare_workflow(
@@ -232,13 +377,14 @@ def prepare_workflow(
     *,
     expected_owner: dict[str, Any],
     principal: str,
+    verified_driver: dict[str, Any],
     verified_content: list[dict[str, Any]],
     verified_adapters: list[dict[str, Any]] | None = None,
     retained: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build/replay a pure capsule after independent receiving checks.
 
-    verified_content, verified_adapters and retained come from protected owner
+    verified_driver, verified_content, verified_adapters and retained come from protected owner
     state, never from the request. Equality models custody and enrollment joins,
     not authentication, authorization, native method support or durable pinning.
     """
@@ -260,6 +406,10 @@ def prepare_workflow(
             "workflow preparation identity conflict",
         )
         return copy.deepcopy(retained)
+    _require(
+        proposal["initial_driver"] == verified_driver,
+        "workflow initial driver is not independently authorized",
+    )
     local = {canonical(h) for h in proposal["content"] if h["owner"] == expected_owner}
     _require(
         local <= {canonical(h) for h in verified_content},
@@ -286,7 +436,7 @@ def prepare_workflow(
         "proposal": copy.deepcopy(proposal),
         "proposal_digest": digest(proposal),
         "driver_term": 1,
-        "driver_principal": principal,
+        "driver_principal": proposal["initial_driver"]["principal"],
         "state": "prepared",
         "phase": PHASES[proposal["type"]][0],
         "participants": _participants(proposal),
@@ -295,6 +445,7 @@ def prepare_workflow(
         "recovery_digests": [],
         "transfer": None,
         "advances": [],
+        "bindings": [],
     }
     validate_workflow(result)
     return result
@@ -383,6 +534,8 @@ def validate_workflow_input_custody(
 
 
 def _validate_advance_history(workflow: dict[str, Any]) -> None:
+    from .workflow_bindings import require_bound_phase
+
     identities: set[str] = set()
     generation = 0
     for receipt in workflow["advances"]:
@@ -408,6 +561,12 @@ def _validate_advance_history(workflow: dict[str, Any]) -> None:
             == (receipt["phase"] == PHASES[workflow["type"]][-1]),
             "retained workflow advance outcome changed",
         )
+        phases = PHASES[workflow["type"]]
+        position = phases.index(receipt["phase"])
+        if position > 0:
+            require_bound_phase(
+                workflow, phases[position - 1], before_generation=receipt["generation"]
+            )
 
 
 def _completion_witnesses(request: dict[str, Any], workflow: dict[str, Any]) -> None:
@@ -466,6 +625,10 @@ def validate_advance_request(request: dict[str, Any], workflow: dict[str, Any]) 
         or (request["transfer_completion"] is not None and request["phase"] == workflow["phase"]),
         "workflow advance skips installed phase",
     )
+    from .workflow_bindings import require_bound_phase
+
+    if request["phase"] != workflow["phase"]:
+        require_bound_phase(workflow, workflow["phase"])
     owners = {canonical(item["owner"]) for item in workflow["participants"]}
     for witness in request["witnesses"]:
         _require(

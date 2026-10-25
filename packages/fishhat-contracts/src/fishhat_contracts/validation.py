@@ -252,16 +252,17 @@ def _source_target(value: str) -> str:
 
 def _validate_host_concerns(host: dict[str, Any], catalogue: dict[str, Any] | None) -> None:
     services: set[str] = set()
-    units: set[str] = set()
+    units: set[bytes] = set()
     destinations: set[str] = set()
-    packages: set[tuple[str, str]] = set()
+    packages: set[bytes] = set()
     membership_users: set[str] = set()
     for concern in host["concerns"].values():
         for key, service in concern["services"].items():
             _require(key not in services, "duplicate service binding")
             services.add(key)
-            _require(service["unit"] not in units, "duplicate native service target")
-            units.add(service["unit"])
+            identity = _host_target_selection(host, service, "service")
+            _require(identity not in units, "duplicate native service target")
+            units.add(identity)
     for concern in host["concerns"].values():
         for kind in ("files", "secret_files", "artifacts"):
             for entry in concern[kind].values():
@@ -277,14 +278,28 @@ def _validate_host_concerns(host: dict[str, Any], catalogue: dict[str, Any] | No
                         raise ContractError("missing secret catalogue")
                     _require(entry["entry"] in catalogue["entries"], "unknown host secret entry")
         for pkg in concern["packages"].values():
-            identity = pkg["manager"], pkg["name"]
+            identity = _host_target_selection(host, pkg, "software")
             _require(identity not in packages, "duplicate package target")
             packages.add(identity)
-            _require(not (pkg["manager"] == "brew" and pkg["held"]), "brew hold unsupported")
         for membership in concern["groups"].values():
             user = membership["user"]
             _require(user not in membership_users, "duplicate group membership target")
             membership_users.add(user)
+
+
+def _host_target_selection(host: dict[str, Any], value: dict[str, Any], role: str) -> bytes:
+    """Join source declarations only; approved native mappings remain with the receiver."""
+    selection, scope = value["adapter"], value["scope"]
+    instance = host["adapter_instances"].get(selection["instance"])
+    _require(instance is not None and instance["role"] == role, "unknown host target adapter")
+    assert instance is not None
+    _require(
+        any(
+            grant["scope"] == scope and "observe" in grant["access"] for grant in instance["grants"]
+        ),
+        "host target scope not granted",
+    )
+    return canonical([selection["instance"], selection["source"]])
 
 
 def validate_host(host: dict[str, Any], catalogue: dict[str, Any] | None = None) -> None:
@@ -626,6 +641,9 @@ def validate_plan(value: dict[str, Any]) -> None:
     arguments = actions["$defs"][value["subject"]["action"]]
     if not _material_digests(value["subject"]["arguments"], arguments, actions["$id"]) <= inputs:
         raise ContractError("subject material input outside reviewed plan")
+    from .history import validate_recovery_plan_origin
+
+    validate_recovery_plan_origin(value)
     for effect in value["effects"]:
         if canonical([effect["executor"], effect["resource"]]) not in preconditions:
             raise ContractError("effect lacks resource precondition")

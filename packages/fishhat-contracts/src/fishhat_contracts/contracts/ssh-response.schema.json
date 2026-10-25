@@ -866,7 +866,12 @@
             "resources.observe",
             "workflow.list",
             "content.status",
-            "record.read"
+            "record.read",
+            "owner.history",
+            "history.list",
+            "history.read",
+            "history.content",
+            "workflow.bind"
           ]
         },
         "ok": {
@@ -988,6 +993,178 @@
         },
         "result": {
           "$ref": "common.schema.json#/$defs/RecordChunk"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "ok",
+        "result"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "owner.history"
+        },
+        "ok": {
+          "const": true
+        },
+        "result": {
+          "$ref": "owner-history.schema.json#/$defs/OwnerHistoryPage"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "ok",
+        "result"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "history.list"
+        },
+        "ok": {
+          "const": true
+        },
+        "result": {
+          "$ref": "owner-history.schema.json#/$defs/HistoricalRecordPage"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "ok",
+        "result"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "history.read"
+        },
+        "ok": {
+          "const": true
+        },
+        "result": {
+          "$ref": "owner-history.schema.json#/$defs/HistoricalRecordChunk"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "ok",
+        "result"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "history.content"
+        },
+        "ok": {
+          "const": true
+        },
+        "result": {
+          "$ref": "owner-history.schema.json#/$defs/HistoricalContentChunk"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "ok",
+        "result"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "workflow.bind"
+        },
+        "ok": {
+          "const": true
+        },
+        "result": {
+          "oneOf": [
+            {
+              "$ref": "records.schema.json#/$defs/Workflow"
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "common.schema.json#/$defs/RecordReference"
+                },
+                {
+                  "properties": {
+                    "record": {
+                      "properties": {
+                        "kind": {
+                          "const": "Workflow"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
         }
       },
       "required": [

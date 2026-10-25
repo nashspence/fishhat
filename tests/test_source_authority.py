@@ -7,6 +7,7 @@ import copy
 import pytest
 from fishhat_contracts.validation import ContractError, strict_yaml, validate_app, validate_host
 
+from tests.source_target_support import host_target
 from tests.support import FIXTURES
 
 CHECK_PURPOSE = {
@@ -88,12 +89,10 @@ def test_service_binding_names_cannot_claim_the_same_native_unit(another_concern
 def test_independent_native_units_and_cross_concern_notifications_are_valid():
     host, catalogue = host_source()
     host["concerns"]["maintenance"] = concern()
-    host["concerns"]["maintenance"]["services"]["agent-timer"] = {
-        "unit": "example-agent.timer",
-        "enabled": True,
-        "activity": "running",
-        "reason": "Independent synthetic timer",
-    }
+    timer = copy.deepcopy(host["concerns"]["base"]["services"]["agent"])
+    timer["adapter"]["source"]["unit"] = "example-agent.timer"
+    timer["reason"] = "Independent synthetic timer"
+    host["concerns"]["maintenance"]["services"]["agent-timer"] = timer
     host["concerns"]["base"]["files"]["motd"]["notify"] = [
         {"service": "agent-timer", "action": "restart"}
     ]
@@ -103,14 +102,7 @@ def test_independent_native_units_and_cross_concern_notifications_are_valid():
 @pytest.mark.parametrize("change", [{}, {"version": "2"}, {"state": "retired"}])
 def test_package_aliases_cannot_compete_across_concerns(change):
     host, catalogue = host_source()
-    package = {
-        "manager": "apt",
-        "name": "example-package",
-        "version": "1",
-        "held": False,
-        "state": "present",
-        "reason": "Synthetic package selection",
-    }
+    _, package, _ = host_target(host, "apt", {"package": "example-package"})
     host["concerns"]["base"]["packages"]["first"] = package
     host["concerns"]["maintenance"] = concern()
     host["concerns"]["maintenance"]["packages"]["second"] = {**package, **change}
@@ -120,15 +112,10 @@ def test_package_aliases_cannot_compete_across_concerns(change):
 
 def test_package_identity_preserves_the_declared_manager_namespace():
     host, catalogue = host_source()
-    for manager in ("apt", "brew"):
-        host["concerns"]["base"]["packages"][manager] = {
-            "manager": manager,
-            "name": "example-package",
-            "version": None,
-            "held": False,
-            "state": "present",
-            "reason": "Independent declared package-manager target",
-        }
+    for manager, selector in (("apt", "package"), ("homebrew", "formula")):
+        _, package, _ = host_target(host, manager, {selector: "example-package"})
+        package["version"] = None
+        host["concerns"]["base"]["packages"][manager] = package
     validate_host(host, catalogue)
 
 

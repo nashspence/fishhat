@@ -51,6 +51,7 @@
       "prepared",
       "participants-quiescent",
       "issuer-changing",
+      "publishing",
       "consumers-adopting",
       "verifying",
       "completed"

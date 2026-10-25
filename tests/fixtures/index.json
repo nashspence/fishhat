@@ -27,6 +27,7 @@
     "install-bundle.schema.json",
     "network-adapter.schema.json",
     "onboarding.schema.json",
+    "owner-history.schema.json",
     "publisher-receipt.schema.json",
     "readiness.schema.json",
     "receipts-service.schema.json",
@@ -48,8 +49,8 @@
     "tool-release.schema.json",
     "tracking-profile.schema.json",
     "tracking-records.schema.json",
-    "workspace.schema.json",
-    "workflow.schema.json"
+    "workflow.schema.json",
+    "workspace.schema.json"
   ],
   "catalogues": [
     "actions.json",

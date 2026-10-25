@@ -37,8 +37,17 @@
   "native_qualified": false,
   "source_schema": {
     "type": "object",
-    "properties": {},
-    "required": [],
+    "properties": {
+      "formula": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[a-zA-Z0-9][a-zA-Z0-9@+._/-]*(?![\\s\\S])"
+      }
+    },
+    "required": [
+      "formula"
+    ],
     "additionalProperties": false
   }
 }

@@ -513,6 +513,66 @@
       ],
       "use_case": "logs",
       "description": "Read a bounded log page using exact owner epoch, resource, nullable opaque cursor and limit from closed stdin input. Every page, including an empty page, retains owner/resource identity and explicit continuation."
+    },
+    {
+      "name": "owner-history",
+      "tokens": [
+        "{tool}",
+        "owner",
+        "history",
+        "--request-stdin",
+        "--json"
+      ],
+      "use_case": "owner.history",
+      "description": "Enumerate all authorized retained origin epochs through the independently authenticated current owner. The owner filters before disclosure. Opaque continuation pins current custodian, actual receiving principal, original filters and traversal snapshot. Revoked permission or a changed custodian invalidates continuation; a fresh client needs no previous epoch or client cache. Read the exact closed request from stdin."
+    },
+    {
+      "name": "history-list",
+      "tokens": [
+        "{tool}",
+        "history",
+        "list",
+        "--request-stdin",
+        "--json"
+      ],
+      "use_case": "history.list",
+      "description": "Enumerate original immutable record references under one verified custody descriptor, using current principal permission. Native filtering retains terminal work with unresolved effects or holds, and non-effectful prepared workflow capsules. active_only is false for Plans. A page is not a total collection cap; permission, exact filters and custody remain pinned across continuation. References disclose no execution authority. Read the exact closed request from stdin."
+    },
+    {
+      "name": "history-read",
+      "tokens": [
+        "{tool}",
+        "history",
+        "read",
+        "--request-stdin",
+        "--json"
+      ],
+      "use_case": "history.read",
+      "description": "Read exact original snapshot bytes after current-owner authorization of its protected resource and verified custody membership. The reference retains the original owner epoch and exact installed historical schema closure. It cannot register a reader or authorize new work. Read the exact closed request from stdin."
+    },
+    {
+      "name": "history-content",
+      "tokens": [
+        "{tool}",
+        "history",
+        "content",
+        "--request-stdin",
+        "--json"
+      ],
+      "use_case": "history.content",
+      "description": "Read original retained input or result bytes after current-owner authorization of the handle's protected resource and its membership in the verified restoration closure. A known handle or former principal permission is insufficient. Original handle identity and digest remain unchanged; complete bytes must be verified before use. Read the exact closed request from stdin."
+    },
+    {
+      "name": "workflow-bind",
+      "tokens": [
+        "{tool}",
+        "workflow",
+        "bind",
+        "--request-stdin",
+        "--json"
+      ],
+      "use_case": "workflow.bind",
+      "description": "Read a complete reviewed BindRequest from stdin, stage its canonical workflow-input bytes and submit the bounded InputReference. Bind a declared continuation to actual verified predecessor outputs and current participant generation, retain exact content and immutable replay receipt, and preserve installed phase ordering. Binding does not accept child effects."
     }
   ],
   "parser": "bounded tokens; no shell evaluation",

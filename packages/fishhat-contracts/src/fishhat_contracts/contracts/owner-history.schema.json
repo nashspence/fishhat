@@ -1,0 +1,430 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fishhat.invalid/contracts/owner-history.schema.json",
+  "$defs": {
+    "OwnerCustody": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner-history/v1"
+        },
+        "kind": {
+          "const": "OwnerCustody"
+        },
+        "id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "custodian": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "origin": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "manifest": {
+          "type": "object",
+          "properties": {
+            "schema": {
+              "$ref": "common.schema.json#/$defs/SchemaIdentity"
+            },
+            "digest": {
+              "$ref": "common.schema.json#/$defs/MaterialDigest"
+            }
+          },
+          "required": [
+            "schema",
+            "digest"
+          ],
+          "additionalProperties": false,
+          "description": "Exact independently verified restoration manifest; its installed schema and content identify the complete retained record, input, hold, witness-key and reader closure. It is not a bearer capability."
+        },
+        "created_at": {
+          "$ref": "common.schema.json#/$defs/Time"
+        },
+        "digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "id",
+        "custodian",
+        "origin",
+        "manifest",
+        "created_at",
+        "digest"
+      ],
+      "additionalProperties": false,
+      "description": "Immutable custody descriptor created by the current owner after independently verifying a restored manifest. Custodian and origin share tool and logical owner id but have distinct epochs. The digest covers this entire descriptor except digest. Original records, snapshots, handles, witnesses, schema identities, request identities, confirmed outcomes and unresolved holds retain their original bytes and epoch. Restoration fences original execution authority; custody grants only explicitly reauthorized reads. A subsequent restore creates descriptors under its new custodian for every retained origin, without rewriting original material. Missing closure or readers is an explicit recovery gap, never permission to discard work."
+    },
+    "HistoryRequest": {
+      "type": "object",
+      "properties": {
+        "custodian": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "cursor": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Cursor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 128
+        }
+      },
+      "required": [
+        "custodian",
+        "cursor",
+        "limit"
+      ],
+      "additionalProperties": false,
+      "description": "Enumerate all authorized retained origin epochs through the independently authenticated current owner. The owner filters before disclosure. Opaque continuation pins current custodian, actual receiving principal, original filters and traversal snapshot. Revoked permission or a changed custodian invalidates continuation; a fresh client needs no previous epoch or client cache."
+    },
+    "ListRequest": {
+      "type": "object",
+      "properties": {
+        "custodian": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "custody_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "record_kind": {
+          "enum": [
+            "Plan",
+            "Operation",
+            "Workflow"
+          ]
+        },
+        "resource": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Resource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "active_only": {
+          "type": "boolean"
+        },
+        "cursor": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Cursor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 128
+        }
+      },
+      "required": [
+        "custodian",
+        "custody_id",
+        "record_kind",
+        "resource",
+        "active_only",
+        "cursor",
+        "limit"
+      ],
+      "additionalProperties": false,
+      "description": "Enumerate original immutable record references under one verified custody descriptor, using current principal permission. Native filtering retains terminal work with unresolved effects or holds, and non-effectful prepared workflow capsules. active_only is false for Plans. A page is not a total collection cap; permission, exact filters and custody remain pinned across continuation. References disclose no execution authority.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "record_kind": {
+                "const": "Plan"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "active_only": {
+                "const": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ReadRequest": {
+      "type": "object",
+      "properties": {
+        "custodian": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "custody_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "reference": {
+          "$ref": "common.schema.json#/$defs/RecordReference"
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 196608
+        }
+      },
+      "required": [
+        "custodian",
+        "custody_id",
+        "reference",
+        "offset",
+        "length"
+      ],
+      "additionalProperties": false,
+      "description": "Read exact original snapshot bytes after current-owner authorization of its protected resource and verified custody membership. The reference retains the original owner epoch and exact installed historical schema closure. It cannot register a reader or authorize new work."
+    },
+    "ContentRequest": {
+      "type": "object",
+      "properties": {
+        "custodian": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "custody_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "handle": {
+          "$ref": "common.schema.json#/$defs/Handle"
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 196608
+        }
+      },
+      "required": [
+        "custodian",
+        "custody_id",
+        "handle",
+        "offset",
+        "length"
+      ],
+      "additionalProperties": false,
+      "description": "Read original retained input or result bytes after current-owner authorization of the handle's protected resource and its membership in the verified restoration closure. A known handle or former principal permission is insufficient. Original handle identity and digest remain unchanged; complete bytes must be verified before use."
+    },
+    "OwnerHistoryPage": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner-history/v1"
+        },
+        "kind": {
+          "const": "OwnerHistoryPage"
+        },
+        "request": {
+          "$ref": "owner-history.schema.json#/$defs/HistoryRequest"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "owner-history.schema.json#/$defs/OwnerCustody"
+          },
+          "maxItems": 128
+        },
+        "next_cursor": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Cursor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "history_complete": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "request",
+        "items",
+        "next_cursor",
+        "history_complete"
+      ],
+      "additionalProperties": false,
+      "description": "Echo the exact independently retained request, including on an empty page. next_cursor null ends this traversal of retained authorized custody descriptors. history_complete false exposes a retention/restoration gap and must not be presented as proof that no earlier accepted work exists. Never silently omit an epoch with unresolved custody."
+    },
+    "HistoricalRecordPage": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner-history/v1"
+        },
+        "kind": {
+          "const": "HistoricalRecordPage"
+        },
+        "request": {
+          "$ref": "owner-history.schema.json#/$defs/ListRequest"
+        },
+        "origin": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/RecordReference"
+          },
+          "maxItems": 128
+        },
+        "next_cursor": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Cursor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "history_complete": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "request",
+        "origin",
+        "items",
+        "next_cursor",
+        "history_complete"
+      ],
+      "additionalProperties": false,
+      "description": "All references belong to the selected custody origin and record kind. References are read through history.read and verified with the exact installed retained reader before interpreting their resource, state or result. Current native authorization and filtering precede disclosure. history_complete false exposes unavailable retained history; unresolved custody must not be reported as absent. Return one latest retained authoritative snapshot per logical record per traversal; older pinned snapshots remain readable by exact reference. A selected recovery origin must include all later confirmed outcomes and unresolved holds."
+    },
+    "HistoricalRecordChunk": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner-history/v1"
+        },
+        "kind": {
+          "const": "HistoricalRecordChunk"
+        },
+        "request": {
+          "$ref": "owner-history.schema.json#/$defs/ReadRequest"
+        },
+        "origin": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "chunk": {
+          "$ref": "common.schema.json#/$defs/RecordChunk"
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "request",
+        "origin",
+        "chunk"
+      ],
+      "additionalProperties": false,
+      "description": "Read-only original record bytes with exact request, origin, reference and range correlation. This wrapper records current custody, not renewed acceptance or successful execution. Preserve original signatures and schema identity."
+    },
+    "HistoricalContentChunk": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner-history/v1"
+        },
+        "kind": {
+          "const": "HistoricalContentChunk"
+        },
+        "request": {
+          "$ref": "owner-history.schema.json#/$defs/ContentRequest"
+        },
+        "origin": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "base64": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 262144,
+          "pattern": "^[A-Za-z0-9+/]*={0,2}(?![\\s\\S])"
+        },
+        "next_offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "complete": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "request",
+        "origin",
+        "base64",
+        "next_offset",
+        "complete"
+      ],
+      "additionalProperties": false,
+      "description": "Read-only exact input/result range correlated with the independently retained handle and request. A complete chunk transfer is not evidence of execution, nor permission to use these bytes for a new operation."
+    },
+    "RecoveryOrigin": {
+      "type": "object",
+      "properties": {
+        "custody_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "reference": {
+          "allOf": [
+            {
+              "$ref": "common.schema.json#/$defs/RecordReference"
+            },
+            {
+              "properties": {
+                "record": {
+                  "properties": {
+                    "kind": {
+                      "const": "Operation"
+                    }
+                  }
+                },
+                "digest": {
+                  "$ref": "common.schema.json#/$defs/MaterialDigest"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "custody_id",
+        "reference"
+      ],
+      "additionalProperties": false,
+      "description": "Exact historical Operation selected for a newly reviewed current-epoch recovery Plan. operation_id must match this reference. The verified original operation and its accepted input/hold closure remain in custody; its digest is an explicit Plan material input. Receiving permission to read does not authorize recovery. Fresh owner authority, resource generation, native reconciliation and recovery admission are required; neither old execution tokens nor old driver terms are revived. The owner independently selects the latest retained authoritative Operation snapshot from verified custody; an older valid member cannot replace later known outcomes or holds."
+    }
+  }
+}

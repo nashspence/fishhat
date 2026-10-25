@@ -8,11 +8,11 @@
   },
   "account": "app-demo-app",
   "store_binding": "sha256:f1651f39f8b68d4ee7e9d1071289b20e36a2ce72893db19ef77fa7da4cd21e69",
-  "inventory_digest": "sha256:ded6f7870b75ea7483ba45a854af4a44fc9d5418ae443ce122ed89038a606aca",
-  "policy_digest": "sha256:b7d699c9d756bee391479915cdaf729cef20e5de74db36b0130be4673be78163",
-  "retention_inventory_digest": "sha256:82cee3d0d9a6efe3b4e3068c4083291b8ccaf25ec1af2afc772f2d4c0cc074b3",
+  "inventory_digest": "sha256:0b30c5d500d20f7205a8f36382d4420f7155164d8b1781d00148d4fd162cae08",
+  "policy_digest": "sha256:90d8403640cdc7e79202c20fd71935fad8f902463a6481aa27a8435caf3a788d",
+  "retention_inventory_digest": "sha256:646da8e03c12caaac12969284f5108718014eacc3e8c1ee8996db75053b0baa7",
   "protection_generation": 7,
-  "protection_digest": "sha256:e69639efc54637cff8705ed3321ccf76550efa9c0e99b880bb27d2e4e160c174",
+  "protection_digest": "sha256:b02ca93f6af1a4f8336b93f558bcfbc7448405ad4c2daa93adeb18bfe0443e88",
   "generation": 3,
   "created_at": "2026-10-19T12:00:00Z",
   "expires_at": "2026-10-19T12:05:00Z",
@@ -33,5 +33,6 @@
       "native_id": "0000000000000000000000000000000000000000000000000000000000000006"
     }
   ],
-  "blocked": []
+  "blocked": [],
+  "retention_custody_digest": "sha256:e43d6ba961065390935eea776956765b928debb96f91e9466cdbf4d997c226df"
 }

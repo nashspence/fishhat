@@ -455,7 +455,6 @@ def plan_cleanup(
     accepted_policy: dict[str, Any],
     retention_inventory: dict[str, Any],
     now: str,
-    max_age_seconds: int = 30,
     ttl_seconds: int = 300,
 ) -> dict[str, Any]:
     """Derive protection from current owner inputs, then add native protections.
@@ -469,7 +468,6 @@ def plan_cleanup(
         retention_inventory,
         accepted_policy=accepted_policy,
         now=now,
-        max_age_seconds=max_age_seconds,
     )
     require(
         inventory["owner"] == accepted_policy["owner"]
@@ -483,7 +481,7 @@ def plan_cleanup(
     when = instant(now)
     age = (when - instant(inventory["observed_at"])).total_seconds()
     blockers: list[str] = []
-    if not 0 <= age <= max_age_seconds:
+    if not 0 <= age <= accepted_policy["max_observation_age_seconds"]:
         blockers.append("STALE_INVENTORY")
     if inventory["account_kind"] == "user":
         blockers.append("USER_STORE_REPORT_ONLY")
@@ -536,11 +534,12 @@ def plan_cleanup(
         "inventory_digest": digest(inventory),
         "policy_digest": retention["policy_digest"],
         "retention_inventory_digest": retention["inventory_digest"],
+        "retention_custody_digest": retention["custody_digest"],
         "protection_generation": retention["protection_generation"],
         "protection_digest": digest(
             {
                 "policy_digest": retention["policy_digest"],
-                "retention_inventory_digest": retention["inventory_digest"],
+                "retention_custody_digest": retention["custody_digest"],
                 "protection_generation": retention["protection_generation"],
                 "protected_roots": sorted(protected),
             }
@@ -611,7 +610,7 @@ def revalidate_cleanup(
     require(
         all(
             plan[key] == current[key]
-            for key in ("policy_digest", "retention_inventory_digest", "protection_generation")
+            for key in ("policy_digest", "retention_custody_digest", "protection_generation")
         ),
         "cleanup owner protection changed",
     )
@@ -636,7 +635,6 @@ def retained_runtime_handles(
     *,
     accepted_policy: dict[str, Any],
     now: str,
-    max_age_seconds: int = 30,
 ) -> dict[str, Any]:
     """Derive retention under current owner policy, never policy from a scan.
 
@@ -657,7 +655,9 @@ def retained_runtime_handles(
     require(inventory["complete"], "incomplete retention closure")
     when = instant(now)
     require(
-        0 <= (when - instant(inventory["observed_at"])).total_seconds() <= max_age_seconds,
+        0
+        <= (when - instant(inventory["observed_at"])).total_seconds()
+        <= accepted_policy["max_observation_age_seconds"],
         "stale retention accounting",
     )
     releases = inventory["releases"]
@@ -727,4 +727,9 @@ def retained_runtime_handles(
         "policy_digest": policy_digest,
         "protection_generation": inventory["protection_generation"],
         "inventory_digest": digest(inventory),
+        # Only the scan timestamp is observational metadata. Release ordering,
+        # archive validity/evidence, holds and every authority field remain pinned.
+        "custody_digest": digest(
+            {key: value for key, value in inventory.items() if key != "observed_at"}
+        ),
     }
