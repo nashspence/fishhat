@@ -13,8 +13,9 @@ cd /
 export DEBIAN_FRONTEND=noninteractive
 sudo apt-get update -qq
 sudo apt-get install -y --no-install-recommends podman uidmap fuse-overlayfs slirp4netns passt xfsprogs openssh-server busybox-static
-work="$(mktemp -d "$RUNNER_TEMP/fishhat-native.XXXXXXXX")"
-account="dtci$(id -u)"; account_created=0; mounted=0; ssh_pid=''
+# Shared probe paths must be traversable outside the runner's private home.
+work="$(mktemp -d /tmp/fishhat-native.XXXXXXXX)"
+account="dtci$(id -u)"; account_created=0; mounted=0; ssh_pid=''; manager_dropin=''
 cleanup() {
   status=$?
   set +e
@@ -25,6 +26,11 @@ cleanup() {
     sudo loginctl terminate-user "$account"
     sudo loginctl disable-linger "$account"
     sudo userdel -r "$account"
+  fi
+  if [[ -n "$manager_dropin" ]]; then
+    sudo rm -f -- "$manager_dropin"
+    sudo rmdir -- "$(dirname "$manager_dropin")"
+    sudo systemctl daemon-reload
   fi
   if ((mounted)); then sudo umount "$work/xfs"; fi
   # Keep no private keys/logs as CI artifacts. The VM is discarded after this job.
@@ -37,6 +43,13 @@ sudo useradd -m -s /bin/bash "$account"; account_created=1
 uid="$(id -u "$account")"
 grep -q "^$account:" /etc/subuid
 grep -q "^$account:" /etc/subgid
+# Generators inherit the manager's startup context, not each systemctl caller's.
+probe_dropin="/run/systemd/system/user@$uid.service.d/50-fishhat-probe.conf"
+[[ ! -e "$probe_dropin" ]]
+manager_dropin="$probe_dropin"
+sudo install -d "$(dirname "$manager_dropin")"
+printf '[Service]\nEnvironment=XDG_CONFIG_HOME=/home/%s/.config\n' "$account" | sudo tee "$manager_dropin" >/dev/null
+sudo systemctl daemon-reload
 sudo loginctl enable-linger "$account"
 sudo systemctl start "user@$uid.service"
 user_run() {
@@ -64,11 +77,17 @@ Pull=never
 Network=none
 Exec=echo quadlet-ok
 [Service]
+Type=oneshot
 Restart=no
 EOF
 sudo chown "$account:$account" "/home/$account/.config/containers/systemd/ci-probe.container"
+user_run env "QUADLET_UNIT_DIRS=/home/$account/.config/containers/systemd" /usr/libexec/podman/quadlet --user --dryrun
 user_run systemctl --user daemon-reload
-user_run systemctl --user start ci-probe.service
+if ! user_run systemctl --user start ci-probe.service; then
+  user_run systemd-analyze --user --generators=true verify ci-probe.service
+  exit 1
+fi
+[[ "$(user_run systemctl --user show ci-probe.service -p FragmentPath --value)" == "/run/user/$uid/systemd/generator/ci-probe.service" ]]
 for _ in $(seq 1 40); do
   state="$(user_run systemctl --user show ci-probe.service -p ActiveState --value)"
   [[ "$state" != active && "$state" != activating ]] && break
