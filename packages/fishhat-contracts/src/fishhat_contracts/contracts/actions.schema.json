@@ -1348,15 +1348,26 @@
               "type": "null"
             }
           ]
+        },
+        "origin": {
+          "anyOf": [
+            {
+              "$ref": "owner-history.schema.json#/$defs/RecoveryOrigin"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
         "operation_id",
         "disposition",
-        "checkpoint"
+        "checkpoint",
+        "origin"
       ],
       "additionalProperties": false,
-      "description": "Resolve the named interrupted or quarantined operation using an explicit disposition and any selected checkpoint. Preserve confirmed effects and reconcile uncertainty; recovery is not a fresh attempt with forgotten request identity."
+      "description": "Resolve the named interrupted or quarantined operation using an explicit disposition and any selected checkpoint. Preserve confirmed effects and reconcile uncertainty; recovery is not a fresh attempt with forgotten request identity. origin is null for an operation of the current epoch; historical recovery requires the exact retained Operation reference and verified custody under a new current-epoch Plan. The old operation is immutable and retains its original authority identity."
     },
     "app.cleanup": {
       "type": "object",
@@ -1664,14 +1675,25 @@
             "restore-journal",
             "native-reconcile"
           ]
+        },
+        "origin": {
+          "anyOf": [
+            {
+              "$ref": "owner-history.schema.json#/$defs/RecoveryOrigin"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
         "operation_id",
-        "disposition"
+        "disposition",
+        "origin"
       ],
       "additionalProperties": false,
-      "description": "Resolve the named interrupted host operation with an explicit disposition, retaining confirmed outcomes and unresolved custody. Do not replace the original request merely because its reply was lost."
+      "description": "Resolve the named interrupted host operation with an explicit disposition, retaining confirmed outcomes and unresolved custody. Do not replace the original request merely because its reply was lost. origin is null for an operation of the current epoch; historical recovery requires the exact retained Operation reference and verified custody under a new current-epoch Plan. The old operation is immutable and retains its original authority identity."
     },
     "host.retire": {
       "type": "object",

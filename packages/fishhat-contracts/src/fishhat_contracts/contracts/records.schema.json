@@ -1942,6 +1942,12 @@
             "$ref": "workflow.schema.json#/$defs/AdvanceReceipt"
           },
           "minItems": 0
+        },
+        "bindings": {
+          "type": "array",
+          "items": {
+            "$ref": "workflow.schema.json#/$defs/BindReceipt"
+          }
         }
       },
       "required": [
@@ -1962,10 +1968,11 @@
         "transfer",
         "proposal",
         "proposal_digest",
-        "advances"
+        "advances",
+        "bindings"
       ],
       "additionalProperties": false,
-      "description": "A finite procedure coordinating exact participant operations while each local owner retains authority and accepted state. A workflow is not a permanent central controller or an authorization supplied by an optional tracker. Each receiving owner retains its own identified, generation-checked capsule before child effects. Preparation records no accepted native operation. An authorized caller can enumerate these capsules without knowing a workflow ID; optional tracking is never required. A transfer-pending capsule includes its complete retained transfer proposal and original locally accepted phase inputs. workflow.get and workflow.list expose them under current receiving authorization so recovery never depends on the original client or an optional report. The complete immutable proposal and its canonical digest survive original-client loss; its type, workflow ID and complete child-request/Plan closure match this capsule. advances retains original accepted advance inputs and finite outcomes. Transfer completion is performed only through workflow.advance with the full commit closure; it preserves or advances the installed procedure phase atomically with transfer completion.",
+      "description": "A finite procedure coordinating exact participant operations while each local owner retains authority and accepted state. A workflow is not a permanent central controller or an authorization supplied by an optional tracker. Each receiving owner retains its own identified, generation-checked capsule before child effects. Preparation records no accepted native operation. An authorized caller can enumerate these capsules without knowing a workflow ID; optional tracking is never required. A transfer-pending capsule includes its complete retained transfer proposal and original locally accepted phase inputs. workflow.get and workflow.list expose them under current receiving authorization so recovery never depends on the original client or an optional report. The complete immutable proposal and its canonical digest survive original-client loss; its type, workflow ID and complete child-request/Plan closure match this capsule. advances retains original accepted advance inputs and finite outcomes. Transfer completion is performed only through workflow.advance with the full commit closure; it preserves or advances the installed procedure phase atomically with transfer completion. bindings retains complete later-reviewed child Plans, authenticated predecessor/material lineage and original binding requests without changing the immutable proposal. Unbound continuation slots cannot authorize child work or be skipped when completing their installed phase.",
       "allOf": [
         {
           "if": {

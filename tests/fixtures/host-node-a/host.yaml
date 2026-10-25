@@ -33,7 +33,15 @@ concerns:
     groups: {}
     services:
       agent:
-        unit: example-agent.service
+        adapter:
+          instance: host-services
+          source_schema_digest: sha256:67ecab27bf4975de9c8d74c56ab4f14cccd993924482057bd2b6b5f4670d2ac5
+          source:
+            unit: example-agent.service
+        scope:
+          authority: 00000000-0000-4000-8000-000000000001
+          kind: service
+          handle: host-services
         enabled: true
         activity: running
         reason: Synthetic service
@@ -195,6 +203,30 @@ resources:
     gc_jitter_seconds: 300
 platform_profile: qualified-linux
 adapter_instances:
+  host-services:
+    id: host-services
+    implementation: fishhat.systemd
+    installation_digest: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    role: service
+    schema_digest: sha256:9a2a3ee478cdf233e2124cd1edbfe5c65556f4881c73f407f5684ae4b8dec14d
+    configuration:
+      manager_handle: host-service-manager
+      unit_scope: managed-services
+    grants:
+    - scope:
+        authority: 00000000-0000-4000-8000-000000000001
+        kind: service
+        handle: host-services
+      access:
+      - observe
+      - change
+      mutation:
+        controller: host-services
+        namespaces:
+        - authority: 00000000-0000-4000-8000-000000000001
+          resource: example-agent.service
+          facet: lifecycle
+    generation: 1
   quadlet:
     id: quadlet
     implementation: fishhat.podman-quadlet

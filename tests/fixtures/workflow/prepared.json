@@ -150,7 +150,8 @@
                 "key_id": "test-owner",
                 "signature": "QhX1hJ34z3HscqIt2vaGiaJ92QSwiNV3nl6Xu0Zd8oFlTzvQQFgX428YN9CD/zN3OIdEpYLzjZJWA9u5M9mXAQ=="
               }
-            }
+            },
+            "phase": "host-effect"
           }
         ]
       }
@@ -171,7 +172,12 @@
         "digest": "sha256:f60fa8fdf1458e0573e731e274de6789c98a7955a8d39e20b31adb8c3063f9d1",
         "size": 1
       }
-    ]
+    ],
+    "initial_driver": {
+      "principal": "ops-app-operate",
+      "term": 1
+    }
   },
-  "proposal_digest": "sha256:e5c27417675e4df247f383d0e3a49a580682e71987d3177a8aa13d287dd80abf"
+  "proposal_digest": "sha256:10c5f8378ee488acefdf89452405883a778503abc64e9cb01cad9497d1618bf9",
+  "bindings": []
 }

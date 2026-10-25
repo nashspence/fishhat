@@ -1153,6 +1153,57 @@
       "use_case": "static-help"
     },
     {
+      "id": "owner-form:history-content",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-owner-form",
+      "tests": {
+        "failure": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops",
+        "app-ops"
+      ],
+      "use_case": "history.content"
+    },
+    {
+      "id": "owner-form:history-list",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-owner-form",
+      "tests": {
+        "failure": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops",
+        "app-ops"
+      ],
+      "use_case": "history.list"
+    },
+    {
+      "id": "owner-form:history-read",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-owner-form",
+      "tests": {
+        "failure": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops",
+        "app-ops"
+      ],
+      "use_case": "history.read"
+    },
+    {
       "id": "owner-form:info",
       "implementation": null,
       "recovery": "required",
@@ -1323,6 +1374,23 @@
       "use_case": "operation.list"
     },
     {
+      "id": "owner-form:owner-history",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-owner-form",
+      "tests": {
+        "failure": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops",
+        "app-ops"
+      ],
+      "use_case": "owner.history"
+    },
+    {
       "id": "owner-form:plan-stdin",
       "implementation": null,
       "recovery": "required",
@@ -1474,6 +1542,23 @@
         "app-ops"
       ],
       "use_case": "workflow.advance"
+    },
+    {
+      "id": "owner-form:workflow-bind",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-owner-form",
+      "tests": {
+        "failure": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops",
+        "app-ops"
+      ],
+      "use_case": "workflow.bind"
     },
     {
       "id": "owner-form:workflow-list-active",
@@ -1775,6 +1860,54 @@
       ]
     },
     {
+      "id": "rpc:history.content",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-rpc",
+      "tests": {
+        "failure": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops",
+        "app-ops"
+      ]
+    },
+    {
+      "id": "rpc:history.list",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-rpc",
+      "tests": {
+        "failure": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops",
+        "app-ops"
+      ]
+    },
+    {
+      "id": "rpc:history.read",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-rpc",
+      "tests": {
+        "failure": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops",
+        "app-ops"
+      ]
+    },
+    {
       "id": "rpc:logs",
       "implementation": null,
       "recovery": "required",
@@ -1871,6 +2004,22 @@
       ]
     },
     {
+      "id": "rpc:owner.history",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-rpc",
+      "tests": {
+        "failure": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops",
+        "app-ops"
+      ]
+    },
+    {
       "id": "rpc:plan.get",
       "implementation": null,
       "recovery": "required",
@@ -1936,6 +2085,22 @@
     },
     {
       "id": "rpc:workflow.advance",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-rpc",
+      "tests": {
+        "failure": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops",
+        "app-ops"
+      ]
+    },
+    {
+      "id": "rpc:workflow.bind",
       "implementation": null,
       "recovery": "required",
       "status": "unimplemented",
@@ -2026,10 +2191,10 @@
     "fishhat/host-ops/src/fishhat_host/cli.py": "d8457ca822e6d01be0b1301fb439ef9f5ed74b6224aca2d85feb189dadeb611c",
     "packages/fishhat-contracts/src/fishhat_contracts/contracts/actions.json": "1fe1d813add57b1593586a90765b6ba2a5932329716efc4b977254b93482d15b",
     "packages/fishhat-contracts/src/fishhat_contracts/contracts/client-commands.json": "a8e2c6238b3942b68c82a7ea21c5d01540dbedf468518d4495fdbd4337ea878e",
-    "packages/fishhat-contracts/src/fishhat_contracts/contracts/owner-cli.json": "a6f1ce19c56a8b0bae9b66656020132933e6efbe214f0fee80650db139385f23",
-    "packages/fishhat-contracts/src/fishhat_contracts/contracts/ssh-methods.json": "ae4f19b2df0716249d30e18a2f0db8dd92198cbd7d51be2f7152ceffcc9d2cbe",
+    "packages/fishhat-contracts/src/fishhat_contracts/contracts/owner-cli.json": "7e4369ea43bf285ab93c8ea3f3bb212016c719e7e75b819b023567393e20760a",
+    "packages/fishhat-contracts/src/fishhat_contracts/contracts/ssh-methods.json": "7d2313f96880e566d848ad65e6d365d17580c887a4103eccba908dc23af75f19",
     "policy/components.toml": "d83506dc63602aec3932e1ac35244efca0db494a38a5d4cd9ec94c68476b235c",
-    "policy/interfaces.json": "650eba8b330a51d62a55862758d639221cfe7e2b6e7afc545a6905dafb7e9be1",
+    "policy/interfaces.json": "7a60a1879242b189a73276c8c516d628262038ba06335bb6a43c582567cb1fc5",
     "policy/operation-coverage.toml": "9fdd2320914eaf5ae615e199a73169afe0451c6826e164a30652550b4070ca92",
     "release.toml": "d53f1d09e5900fc08ed71dbf7321674a9460b5d029a8f863b2b012819c99f743",
     "some-implementations/fishhat/backup/restic/pyproject.toml": "665f88e34c00d431e829678503ae3bb7075294d0db3f303c318f87dbdab651e8",
@@ -2068,6 +2233,6 @@
     "some-implementations/fishhat/storage/ext4-filesystem/pyproject.toml": "c44f077b5697e948c3a6c2f7bcd4d2061d60521f45ad5b3596c67cbd0d9c1e3f",
     "some-implementations/fishhat/storage/xfs-project/pyproject.toml": "73e00e3691845add0fc45f4d7286bb87bff35a62083f3d310b63694b61da03af",
     "tests/test_component_policy.py": "c8fa537f8926fa978509c928a3f1d50c7954a12c2d8abadaa3d80f93a090977b",
-    "tests/test_operation_coverage.py": "dde37123fb18130895c524741771576aee4d4c6f778ec2e44c60a9593cad6e92"
+    "tests/test_operation_coverage.py": "013ff17df8325343a34f200371a997f9d65771f38a80044f53e71bd1eaa91709"
   }
 }

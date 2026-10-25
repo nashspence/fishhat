@@ -899,12 +899,17 @@
           "$ref": "common.schema.json#/$defs/Digest"
         },
         "retention_inventory_digest": {
-          "$ref": "common.schema.json#/$defs/Digest"
+          "$ref": "common.schema.json#/$defs/Digest",
+          "description": "Digest of the complete retention observation reviewed when this plan was prepared. It preserves provenance; a later timestamp-only refresh need not reproduce it."
         },
         "protection_generation": {
           "type": "integer",
           "minimum": 0,
           "maximum": 9007199254740991
+        },
+        "retention_custody_digest": {
+          "$ref": "common.schema.json#/$defs/Digest",
+          "description": "Digest of the complete RetentionInventory canonical JSON with only its top-level observed_at omitted. Every other field remains pinned, including policy and owner identity, protection generation, completeness, release ordering timestamps, runtime references, holds, archive validity/evidence and cold-demotion receipts."
         }
       },
       "required": [
@@ -922,10 +927,11 @@
         "blocked",
         "policy_digest",
         "retention_inventory_digest",
-        "protection_generation"
+        "protection_generation",
+        "retention_custody_digest"
       ],
       "additionalProperties": false,
-      "description": "Exact cleanup proposal bound to the accepted policy, retention inventory and protection generation. protection_digest binds those identities together with the full protected root closure. Before each deletion the owner must revalidate against independently loaded current policy, retention state and native inventory; a reviewed plan cannot override policy or release holds. The native executor must serialize final revalidation and deletion with accepted policy, hold and recovery-reference changes, retaining that exclusion until the native outcome is known. If it cannot maintain exclusion, it must stop and reconcile rather than delete under a stale observation. The pure reference revalidation helper supplies no lock or continuing authorization."
+      "description": "Exact cleanup proposal bound to the accepted policy, stable retention custody and protection generation. inventory_digest and retention_inventory_digest retain the original complete observations for review provenance. retention_custody_digest excludes only the top-level retention observed_at; refreshed scans do not change protection authority. protection_digest binds policy_digest, retention_custody_digest, protection_generation and the full protected root closure. Before each deletion the owner must revalidate current policy, retention custody and native inventory under the accepted max_observation_age_seconds, preserving exact candidate identities and confirmed own deletions. A reviewed plan cannot override policy or release holds. The native executor must serialize final revalidation and deletion with accepted policy, hold and recovery-reference changes, retaining that exclusion until the native outcome is known. If it cannot maintain exclusion, it must stop and reconcile rather than delete under a stale observation. The pure reference revalidation helper supplies no lock or continuing authorization."
     },
     "CleanupReceipt": {
       "type": "object",
@@ -1633,6 +1639,12 @@
         },
         "policy": {
           "$ref": "resources.schema.json#/$defs/RetentionPolicy"
+        },
+        "max_observation_age_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991,
+          "description": "Maximum permitted age of both complete retention and native cleanup observations, independently approved by the receiving owner. Planning and every deletion revalidation use this same current setting. A requester, adapter or plan cannot relax it; a change creates a new accepted policy generation."
         }
       },
       "required": [
@@ -1642,10 +1654,11 @@
         "account",
         "generation",
         "release_digest",
-        "policy"
+        "policy",
+        "max_observation_age_seconds"
       ],
       "additionalProperties": false,
-      "description": "Current retention policy read from the receiving owner's accepted state. policy is the exact retention object from the accepted application source, and release_digest identifies that accepted release. The owner changes generation whenever this accepted policy changes. Supplied fields and schema validation do not authorize acceptance or a policy change; callers must obtain this record independently from current owner state, not from the cleanup requester or adapter."
+      "description": "Current retention policy read from the receiving owner's accepted state. policy is the exact retention object from the accepted application source, and release_digest identifies that accepted release. max_observation_age_seconds is the receiving owner's independently approved observation-freshness setting. The owner changes generation whenever any accepted policy setting changes. Supplied fields and schema validation do not authorize acceptance or a policy change; callers must obtain this record independently from current owner state, not from the cleanup requester or adapter."
     },
     "ColdDemotionReceipt": {
       "type": "object",

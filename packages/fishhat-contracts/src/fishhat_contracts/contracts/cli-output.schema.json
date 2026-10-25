@@ -115,6 +115,18 @@
             },
             {
               "$ref": "common.schema.json#/$defs/RecordChunk"
+            },
+            {
+              "$ref": "owner-history.schema.json#/$defs/OwnerHistoryPage"
+            },
+            {
+              "$ref": "owner-history.schema.json#/$defs/HistoricalRecordPage"
+            },
+            {
+              "$ref": "owner-history.schema.json#/$defs/HistoricalRecordChunk"
+            },
+            {
+              "$ref": "owner-history.schema.json#/$defs/HistoricalContentChunk"
             }
           ]
         },
@@ -169,7 +181,11 @@
               "kind": {
                 "enum": [
                   "RecordReference",
-                  "RecordChunk"
+                  "RecordChunk",
+                  "OwnerHistoryPage",
+                  "HistoricalRecordPage",
+                  "HistoricalRecordChunk",
+                  "HistoricalContentChunk"
                 ]
               }
             },

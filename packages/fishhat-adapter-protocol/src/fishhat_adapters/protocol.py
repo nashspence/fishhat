@@ -150,7 +150,7 @@ def check_invocation(role: str, value: dict[str, Any]) -> None:
 def _handoff_binding(role: str, request: dict[str, Any]) -> dict[str, Any] | None:
     method, inputs = request["method"], request["input"]
     if (role == "capture" and method in {"assess", "capture", "restore", "verify"}) or (
-        role == "secret-source" and method == "publish"
+        role == "secret-source" and method in {"resolve", "publish"}
     ):
         return cast(dict[str, Any], inputs["binding"])
     if role == "credential-issuer":
@@ -237,6 +237,22 @@ def _succeeded(effect: dict[str, Any]) -> bool:
 
 def _check_handoff_response(role: str, request: dict[str, Any], response: dict[str, Any]) -> None:
     method, inputs, output = request["method"], request["input"], response["output"]
+    if role == "secret-source" and method == "resolve":
+        version = output["version"]
+        require(
+            response["coverage"] == ("unknown" if output["state"] == "unknown" else "complete")
+            and response["continuation"] is None,
+            "SECRET_RESOLUTION_COVERAGE",
+        )
+        require(
+            version is None
+            or (
+                version["source"] == inputs["binding"]["instance"]
+                and version["entry"] == inputs["entry"]
+                and version["version"] == inputs["version"]
+            ),
+            "SECRET_RESOLUTION_IDENTITY",
+        )
     if role == "capture" and method in {"assess", "capture", "restore", "verify"}:
         for snapshot in output["snapshots"]:
             require(snapshot["dataset"] == inputs["dataset"], "SNAPSHOT_OUTPUT_IDENTITY")
@@ -493,6 +509,7 @@ class Registry:
         self._instances: dict[str, dict[str, Any]] = {}
         self._repositories: dict[bytes, dict[str, Any]] = {}
         self._repository_targets: dict[bytes, bytes] = {}
+        self._source_targets: dict[bytes, dict[str, Any]] = {}
 
     def install(
         self, installation: dict[str, Any], descriptor: dict[str, Any], *, owner_approved: bool
@@ -570,6 +587,59 @@ class Registry:
             self._repositories.get(self._repository_key(reference)) == reference,
             "UNAPPROVED_REPOSITORY_MAPPING",
         )
+
+    @staticmethod
+    def _source_target_key(selection: dict[str, Any], role: str, scope: dict[str, Any]) -> bytes:
+        return canonical([selection, role, scope])
+
+    def enroll_source_target(self, target: dict[str, Any], *, owner_approved: bool) -> None:
+        """Retain an independently verified native target mapping, not source authority."""
+        require(owner_approved, "SOURCE_TARGET_MAPPING_NOT_AUTHORIZED")
+        validate("adapter.schema.json", target, "SourceTargetBinding")
+        selection, executor = target["selection"], target["executor"]
+        role, scope = executor["role"], executor["scope"]
+        require(role in {"service", "software"}, "SOURCE_TARGET_ROLE")
+        instance = self.resolve_source(selection, role, scope)
+        require(executor == instance_reference(instance, scope), "HANDOFF_INSTANCE_IDENTITY")
+        grant = self._grant(instance, scope, "change")
+        require(target["namespace"] in grant["mutation"]["namespaces"], "SOURCE_TARGET_NAMESPACE")
+        key = self._source_target_key(selection, role, scope)
+        previous = self._source_targets.get(key)
+        require(previous is None or previous == target, "EXPLICIT_SOURCE_TARGET_REBIND_REQUIRED")
+        self._source_targets[key] = copy.deepcopy(target)
+
+    def resolve_host_targets(self, host: dict[str, Any]) -> list[dict[str, Any]]:
+        """Join host declarations to approved selectors and reject aliased native writers.
+
+        This read-only resolution grants no native dispatch permission. The owner
+        separately validates the complete source and rechecks current permissions,
+        target identity, side effects and exclusion at mutation or notification.
+        """
+        validate("source.schema.json", host, "Host")
+        resolved: list[dict[str, Any]] = []
+        namespaces: set[bytes] = set()
+        for concern in host["concerns"].values():
+            for kind, role in (("services", "service"), ("packages", "software")):
+                for declaration in concern[kind].values():
+                    selection, scope = declaration["adapter"], declaration["scope"]
+                    instance = self.resolve_source(selection, role, scope)
+                    require(
+                        host["adapter_instances"].get(instance["id"]) == instance,
+                        "SOURCE_INSTANCE_REBIND_REQUIRED",
+                    )
+                    key = self._source_target_key(selection, role, scope)
+                    target = self._source_targets.get(key)
+                    require(target is not None, "UNAPPROVED_SOURCE_TARGET_MAPPING")
+                    assert target is not None
+                    require(
+                        target["executor"] == instance_reference(instance, scope),
+                        "HANDOFF_INSTANCE_IDENTITY",
+                    )
+                    namespace = canonical(target["namespace"])
+                    require(namespace not in namespaces, "DUPLICATE_NATIVE_SOURCE_TARGET")
+                    namespaces.add(namespace)
+                    resolved.append(copy.deepcopy(target))
+        return resolved
 
     def _check_mutation_authority(self, instance: dict[str, Any]) -> None:
         """Scan local enrolled facts; native admission still owns alias resolution/exclusion."""

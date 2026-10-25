@@ -30,14 +30,18 @@
         },
         "adapter": {
           "$ref": "workflow.schema.json#/$defs/AdapterInput"
+        },
+        "phase": {
+          "$ref": "common.schema.json#/$defs/Id"
         }
       },
       "required": [
         "request_id",
-        "plan"
+        "plan",
+        "phase"
       ],
       "additionalProperties": false,
-      "description": "An exact future request identity bound to its complete reviewed Plan. The Plan owner and subject resource equal its participant and its resource precondition equals expected_generation. Native receivers independently authenticate and admit the Plan; preparation is not acceptance of the child operation. Every precondition naming another proposal participant also matches that participant generation; unrelated read-only preconditions need not become mutation participants. An adapter.execute child requires its complete AdapterInput; other child actions forbid that field.",
+      "description": "One exact child request with a complete reviewed Plan, assigned to an installed procedure phase. Initial ready Plans are the first request for their participant and use its initial expected_generation. Later reviewed Plans are retained through workflow.bind, with current independently verified preconditions. The Plan owner and subject resource match its participant; every effect remains within the immutable participant closure. adapter.execute requires the complete approved AdapterInput; other actions forbid it.",
       "allOf": [
         {
           "if": {
@@ -87,7 +91,14 @@
         "requests": {
           "type": "array",
           "items": {
-            "$ref": "workflow.schema.json#/$defs/RequestBinding"
+            "oneOf": [
+              {
+                "$ref": "workflow.schema.json#/$defs/RequestBinding"
+              },
+              {
+                "$ref": "workflow.schema.json#/$defs/DeferredBinding"
+              }
+            ]
           },
           "minItems": 1
         }
@@ -159,14 +170,18 @@
             "$ref": "workflow.schema.json#/$defs/ChildReference"
           },
           "minItems": 1
+        },
+        "publication": {
+          "$ref": "workflow.schema.json#/$defs/ChildReference"
         }
       },
       "required": [
         "issuer_change",
-        "consumer_adoptions"
+        "consumer_adoptions",
+        "publication"
       ],
       "additionalProperties": false,
-      "description": "The issuer_change child is adapter.execute with the exact approved credential-issuer executor and fishhat.credential-issuer issue AdapterInput. Every intended consumer adoption is a separate app.secrets-adopt or host.secrets-adopt Plan. Publishing an existing secret is not issuer rotation. Secret bytes remain in protected content custody; native phases verify the issued value, publication and adoption evidence rather than treating these Plans as success."
+      "description": "The ready issuer_change is the exact credential-issuer issue child. publication is a secret-publication continuation for that issuer, in the installed publishing phase. Every consumer_adoption is a secret-adoption continuation referring to those same issuer and publisher children. Real output material is bound only after it exists and is independently verified, reviewed and retained. Preparation never invents a future receipt."
     },
     "CheckpointTarget": {
       "type": "object",
@@ -297,6 +312,9 @@
             "$ref": "common.schema.json#/$defs/Handle"
           },
           "minItems": 0
+        },
+        "initial_driver": {
+          "$ref": "workflow.schema.json#/$defs/InitialDriver"
         }
       },
       "required": [
@@ -305,10 +323,11 @@
         "type",
         "target",
         "participants",
-        "content"
+        "content",
+        "initial_driver"
       ],
       "additionalProperties": false,
-      "description": "The complete immutable intended procedure, not a digest-only promise. target has a closed schema for the installed procedure and refers to exact child request identities. Every child binds its full reviewed Plan, including the selected action, source, recovery basis, effect scope and input digests. content retains exact owner-minted handles for all Plan input digests and handles referenced by those Plans. Every receiver independently verifies the complete proposal and its locally owned Plans and content, authorizes the full local participant/resource closure, and pins that custody before acknowledging preparation or admitting any child effect. Other participants prepare the same proposal digest. Stored proposal bytes and required local content remain retrievable under current permission through preparation, transfer, interruption and recovery; a client or optional tracker is never their only custodian. Supplied Plans and handles alone grant no authority. Changed intent or recovery disposition requires a new reviewed proposal and Plans, not an edit to this capsule. Procedure phases are installed, never a caller-defined graph. MaterialDigest arguments are part of each Plan input closure; integrity-only hashes are not substituted for retained material. Generic adapter children also retain their typed selected instance and method input, independently verified against protected owner enrollment.",
+      "description": "The immutable installed procedure, participant/resource closure, initial driver agreement and child request slots. A ready child retains its complete reviewed Plan and material; a closed continuation intent retains exact scope, predecessor and allowed action without inventing future material or a stale future Plan. Every receiver independently authorizes the full local closure and initial driver, and pins existing local content before preparation. Other participants retain the same proposal digest. Later reviewed Plans and actual output material are attached only by workflow.bind under current authority and exact retained lineage; this does not edit the proposal or admit a child effect. Stored initial intent and accepted bindings survive client loss, transfer and recovery. Procedure phase order is installed, never caller-defined.",
       "allOf": [
         {
           "if": {
@@ -503,7 +522,7 @@
         "proposal"
       ],
       "additionalProperties": false,
-      "description": "The complete decoded preparation payload. The selected receiver must be a participant. Repeating the same workflow_id and immutable proposal under current permission returns its retained capsule; any changed proposal conflicts. New input is checked for current custody and admission deadlines before preparation. Preparation starts at generation zero, driver term one and the installed prepared phase; it is not child-effect acceptance."
+      "description": "The complete decoded preparation payload. The selected receiver is a participant and independently approves the immutable initial_driver assignment. A transport caller never implicitly becomes driver. Repeating the exact workflow_id and proposal under current permission returns retained custody, including any transferred driver; changed intent conflicts. Fresh local content, approval and current admission checks precede preparation. Generation starts at zero and initial driver term at one; no child effect is accepted."
     },
     "TransferCompletion": {
       "type": "object",
@@ -659,7 +678,7 @@
         "input"
       ],
       "additionalProperties": false,
-      "description": "The sole wire input shape for workflow.prepare, workflow.advance and workflow.transfer. Complete canonical-JSON payloads are staged through content.begin/chunk/commit under resource {kind: workflow, id: workflow_id}; the RPC carries only this bounded immutable reference. The method owns the payload schema: PrepareRequest, AdvanceRequest or records.WorkflowTransferRequest respectively. No caller-selected schema, inline alternate, subset or truncated witness closure is accepted. Verify complete bytes, digest, size, exact owner epoch, protected staging scope and current principal before interpreting the payload. Resolve a previously retained exact semantic request before new-admission expiry checks; original accepted content remains pinned. An authorized replacement caller may restage the identical canonical request: the handle is a transport locator, while the decoded immutable request defines replay identity. New requests require fresh committed custody and independently approved receiving capacity. Chunk bounds do not bound the complete proposal or evidence set. Before acknowledgment the receiving owner authorizes every participant resource it owns and retains the decoded original input plus all needed content. These declarations do not implement staging, native authorization or persistence."
+      "description": "The sole wire input shape for workflow.prepare, workflow.bind, workflow.advance and workflow.transfer. Complete canonical-JSON payloads are staged through content.begin/chunk/commit under resource {kind: workflow, id: workflow_id}; the RPC carries only this bounded immutable reference. The method owns the payload schema: PrepareRequest, BindRequest, AdvanceRequest or records.WorkflowTransferRequest respectively. No caller-selected schema, inline alternate, subset or truncated witness closure is accepted. Verify complete bytes, digest, size, exact owner epoch, protected staging scope and current principal before interpreting the payload. Resolve a previously retained exact semantic request before new-admission expiry checks; original accepted content remains pinned. An authorized replacement caller may restage the identical canonical request: the handle is a transport locator, while the decoded immutable request defines replay identity. New requests require fresh committed custody and independently approved receiving capacity. Chunk bounds do not bound the complete proposal or evidence set. Before acknowledgment the receiving owner authorizes every participant resource it owns and retains the decoded original input plus all needed content. These declarations do not implement staging, native authorization or persistence."
     },
     "AdapterInput": {
       "type": "object",
@@ -677,6 +696,251 @@
       ],
       "additionalProperties": false,
       "description": "Exact receiving-owner-approved selected executor and complete typed mutation planning input. The executor role equals the request contract and its scope equals request.input.scope. The child Plan adapter_id, adapter_release and action equal the executor instance, installation digest and request method. Its input handle contains canonical request bytes, with matching digest and size; input_schema_digest pins the complete installed role schema closure rooted at MutationRequest and result_schema pins the same role Output. The receiver independently checks this binding, method support, configuration, grants and native controlling authority against protected approved enrollment before preparation; supplied identity data never approves or enrolls an adapter. Child admission still requires its own owner-authored Invocation and current authorization. This input does not create or dispatch an effect. installation_digest and adapter_release identify the immutable artifact key used by approved Installation; descriptor and configuration approval are separate protected owner facts."
+    },
+    "InitialDriver": {
+      "type": "object",
+      "properties": {
+        "principal": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "term": {
+          "const": 1
+        }
+      },
+      "required": [
+        "principal",
+        "term"
+      ],
+      "additionalProperties": false,
+      "description": "The immutable initial driver agreement shared by all participant owners. The caller transporting preparation need not be this principal. Each receiver independently authorizes this exact assignment against protected local policy; the proposal is not a delegation grant. Accepted replay preserves the retained driver and any later transfer."
+    },
+    "ContinuationIntent": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "reviewed-successor"
+            },
+            "predecessor": {
+              "$ref": "workflow.schema.json#/$defs/ChildReference"
+            },
+            "subject": {
+              "$ref": "actions.schema.json"
+            }
+          },
+          "required": [
+            "kind",
+            "predecessor",
+            "subject"
+          ],
+          "additionalProperties": false,
+          "description": "A later reviewed Plan for this exact subject, after the immediately preceding request on the same participant succeeds with known effects. This declares ordering inside an installed phase sequence, never a caller-defined procedure graph. Fresh Plan preconditions, review and custody are required after the predecessor; initial generations are not reused."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "secret-publication"
+            },
+            "issuer": {
+              "$ref": "workflow.schema.json#/$defs/ChildReference"
+            },
+            "expected_previous": {
+              "anyOf": [
+                {
+                  "$ref": "common.schema.json#/$defs/Digest"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "issuer",
+            "expected_previous"
+          ],
+          "additionalProperties": false,
+          "description": "Publish the actual complete ciphertext candidate produced from the exact successful issuer child. The selected publisher is this participant; expected_previous is immutable. The candidate does not exist at preparation and is admitted only with an independently verified ProducedMaterial binding, complete content custody and a new reviewed publisher.publish Plan. This output intent may only be the first request for its participant. Every later request must be a reviewed-successor tied to the immediately preceding successful child, so two output slots cannot bind against one unchanged resource generation."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "secret-adoption"
+            },
+            "action": {
+              "enum": [
+                "app.secrets-adopt",
+                "host.secrets-adopt"
+              ]
+            },
+            "issuer": {
+              "$ref": "workflow.schema.json#/$defs/ChildReference"
+            },
+            "publication": {
+              "$ref": "workflow.schema.json#/$defs/ChildReference"
+            }
+          },
+          "required": [
+            "kind",
+            "action",
+            "issuer",
+            "publication"
+          ],
+          "additionalProperties": false,
+          "description": "Adopt only the bundle produced by this workflow exact issuer and publication children. The later Plan pins the real completed publication receipt and retained ciphertext closure, with independently verified producer lineage and local material custody; a preexisting or unrelated receipt cannot fill this intent. This output intent may only be the first request for its participant. Every later request must be a reviewed-successor tied to the immediately preceding successful child, so two output slots cannot bind against one unchanged resource generation."
+        }
+      ]
+    },
+    "DeferredBinding": {
+      "type": "object",
+      "properties": {
+        "request_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "phase": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "intent": {
+          "$ref": "workflow.schema.json#/$defs/ContinuationIntent"
+        }
+      },
+      "required": [
+        "request_id",
+        "phase",
+        "intent"
+      ],
+      "additionalProperties": false,
+      "description": "An immutable request slot requiring later owner-reviewed Plan binding. It is not a Plan, accepted operation or fabricated material handle. The installed procedure and declared predecessor constrain when it can be bound. A phase cannot finish with unresolved required slots. Secret-output intents are first-only; later participant requests always use reviewed-successor ordering."
+    },
+    "ProducedMaterial": {
+      "type": "object",
+      "properties": {
+        "producer": {
+          "$ref": "workflow.schema.json#/$defs/ChildReference"
+        },
+        "operation": {
+          "$ref": "records.schema.json#/$defs/Operation"
+        },
+        "material": {
+          "$ref": "common.schema.json#/$defs/Handle"
+        },
+        "publication_receipt": {
+          "anyOf": [
+            {
+              "$ref": "publisher-receipt.schema.json"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "witness": {
+          "$ref": "records.schema.json#/$defs/Witness"
+        },
+        "producer_output": {
+          "$ref": "common.schema.json#/$defs/Handle"
+        }
+      },
+      "required": [
+        "producer",
+        "operation",
+        "material",
+        "publication_receipt",
+        "witness",
+        "producer_output"
+      ],
+      "additionalProperties": false,
+      "description": "An independently verified material derivation retained by its receiving custodian. The witness owner equals material.owner, kind binding, state verified, exact workflow ID, and subject_digest covers the complete canonical body excluding witness. For publication, producer is the exact succeeded issuer operation and material is the complete ciphertext candidate derived from its issued credential. For adoption, producer is the exact succeeded publication operation, material contains the complete publication receipt, and that receipt names the exact published candidate and custodian. A receiver independently authenticates this lineage and byte custody before placing it in verified_materials; neither a signature-shaped object nor the request supplies that approval. The issuer-to-publication binding is retained transitively, never replaced by a coincidental receipt digest. producer_output is a verified receiving-custodian copy of the exact non-null Operation result handle bytes, matching digest and size and retained in the new Plan input closure. For adoption it equals material and therefore the canonical receipt is the exact publication Operation output, not another publication of equal ciphertext."
+    },
+    "BindRequest": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "workflow_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "bind_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "expected_generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "driver_term": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "child": {
+          "$ref": "workflow.schema.json#/$defs/ChildReference"
+        },
+        "binding": {
+          "$ref": "workflow.schema.json#/$defs/RequestBinding"
+        },
+        "content": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/Handle"
+          }
+        },
+        "predecessors": {
+          "type": "array",
+          "items": {
+            "$ref": "records.schema.json#/$defs/Operation"
+          },
+          "minItems": 1
+        },
+        "materials": {
+          "type": "array",
+          "items": {
+            "$ref": "workflow.schema.json#/$defs/ProducedMaterial"
+          }
+        }
+      },
+      "required": [
+        "owner",
+        "workflow_id",
+        "bind_id",
+        "expected_generation",
+        "driver_term",
+        "child",
+        "binding",
+        "content",
+        "predecessors",
+        "materials"
+      ],
+      "additionalProperties": false,
+      "description": "One exact later-reviewed child binding. The receiver resolves bind_id replay before freshness, checks the immutable slot and installed phase, current driver, authentic complete predecessor evidence and the protected current resource generations, then independently approves the full new Plan. Every material and selected adapter is verified and retained before acknowledgment. Input is staged through workflow-input custody. The binding atomically increments only the local workflow capsule generation and retains its original request; it does not admit native effects. Plan admission still checks current owner/resource generation, deadline and permission. The same child cannot acquire a different Plan. Other replicas retain the same owner-approved binding and producer lineage under their own exact local request identity; transport alone supplies no approval."
+    },
+    "BindReceipt": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "workflow.schema.json#/$defs/BindRequest"
+        },
+        "request_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "request",
+        "request_digest",
+        "generation"
+      ],
+      "additionalProperties": false,
+      "description": "The complete accepted binding request and local committed capsule generation. Retained exact input supports replay after deadline, generation or driver changes; current access remains required. Binding receipts are append-only, unique by bind_id and child, and preserve preceding output lineage."
     }
   }
 }

@@ -22,19 +22,24 @@ def build_tar(manifest: dict[str, Any], values: dict[str, bytes]) -> bytes:
         manifest["entries"]
     ):
         raise ContractError("manifest entry set/order mismatch")
-    if (
-        any(type(v) is not bytes for v in values.values())
-        or sum(len(v) for v in values.values()) + 1024 * (len(values) + 2) > MAX_ARCHIVE
-    ):
-        raise ContractError("aggregate size/type limit")
+    manifest_data = canonical(manifest)
+    if len(manifest_data) > MAX_ENTRY:
+        raise ContractError("manifest limit")
+    contents = [("bundle.json", manifest_data)]
+    for entry in manifest["entries"]:
+        value = values[entry]
+        if type(value) is not bytes or len(value) > MAX_ENTRY:
+            raise ContractError("entry limit/type")
+        contents.append(("secrets/" + entry, value))
+    # Count actual USTAR headers, block padding, end markers and record padding.
+    # Byte capacity must not become an incidental ceiling on small entry counts.
+    block, record = tarfile.BLOCKSIZE, tarfile.RECORDSIZE
+    payload_size = sum(block + ((len(v) + block - 1) // block) * block for _, v in contents)
+    archive_size = ((payload_size + 2 * block + record - 1) // record) * record
+    if archive_size > MAX_ARCHIVE:
+        raise ContractError("archive limit")
     buffer = io.BytesIO()
     with tarfile.open(fileobj=buffer, mode="w", format=tarfile.USTAR_FORMAT) as archive:
-        contents = [("bundle.json", canonical(manifest))]
-        for entry in manifest["entries"]:
-            data = values[entry]
-            if type(data) is not bytes or len(data) > MAX_ENTRY:
-                raise ContractError("entry limit/type")
-            contents.append(("secrets/" + entry, data))
         for name, data in contents:
             info = tarfile.TarInfo(name)
             info.size = len(data)
@@ -59,13 +64,11 @@ def inspect_tar(
         raise ContractError("invalid archive size")
     try:
         with tarfile.open(fileobj=io.BytesIO(data), mode="r:") as archive:
-            members = []
-            for member in archive:
-                members.append(member)
-                if len(members) > 257:
-                    raise ContractError("archive entry count")
-            if not members or len(members) > 257:
-                raise ContractError("archive entry count")
+            # The uncompressed archive byte bound also bounds header traversal;
+            # all members remain visible regardless of the logical entry count.
+            members = list(archive)
+            if not members:
+                raise ContractError("missing manifest")
             seen = set()
             for member in members:
                 if member.name in seen or member.type != tarfile.REGTYPE or member.size > MAX_ENTRY:
@@ -78,7 +81,7 @@ def inspect_tar(
             stream = archive.extractfile(members[0])
             if stream is None:
                 raise ContractError("no manifest")
-            manifest = strict_json(stream.read(MAX_ENTRY + 1))
+            manifest = strict_json(stream.read(MAX_ENTRY + 1), max_bytes=MAX_ENTRY)
             validate("bundle-manifest.schema.json", manifest)
             if (
                 manifest["repository"] != expected_repository

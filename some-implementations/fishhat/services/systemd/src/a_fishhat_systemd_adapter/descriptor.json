@@ -37,8 +37,17 @@
   "native_qualified": false,
   "source_schema": {
     "type": "object",
-    "properties": {},
-    "required": [],
+    "properties": {
+      "unit": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128,
+        "pattern": "^[A-Za-z0-9_.@-]+\\.(service|timer)(?![\\s\\S])"
+      }
+    },
+    "required": [
+      "unit"
+    ],
     "additionalProperties": false
   }
 }

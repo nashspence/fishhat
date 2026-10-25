@@ -282,6 +282,15 @@ def validate_cli_result(
         validate_workflow(result)
     elif kind == "ContentStaging":
         validate_staging(result)
+    elif kind in (
+        "OwnerHistoryPage",
+        "HistoricalRecordPage",
+        "HistoricalRecordChunk",
+        "HistoricalContentChunk",
+    ):
+        from .history import validate_history_result
+
+        validate_history_result(result, retained_readers=retained_readers)
     elif kind in ("RecordReference", "RecordChunk", "EventPage"):
         from .record_delivery import (
             CHUNK_BYTES,

@@ -1278,6 +1278,136 @@
         "params"
       ],
       "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "owner.history"
+        },
+        "params": {
+          "$ref": "owner-history.schema.json#/$defs/HistoryRequest"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "params"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "history.list"
+        },
+        "params": {
+          "$ref": "owner-history.schema.json#/$defs/ListRequest"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "params"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "history.read"
+        },
+        "params": {
+          "$ref": "owner-history.schema.json#/$defs/ReadRequest"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "params"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "history.content"
+        },
+        "params": {
+          "$ref": "owner-history.schema.json#/$defs/ContentRequest"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "params"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "workflow.bind"
+        },
+        "params": {
+          "$ref": "workflow.schema.json#/$defs/InputReference"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "params"
+      ],
+      "additionalProperties": false
     }
   ]
 }

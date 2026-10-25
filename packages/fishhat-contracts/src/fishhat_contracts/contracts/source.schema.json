@@ -363,7 +363,7 @@
         },
         "concerns": {
           "type": "object",
-          "description": "Concern and binding names label declarations; they do not partition native targets. Within one host, each native service unit, package-manager/name target and user named by a group-membership declaration has exactly one declaration. Ordinary files, secret files and artifacts share one absolute destination namespace. Duplicate targets are rejected even when their prescriptions agree; declaration order grants no precedence. Destination paths use canonical absolute spelling without empty, dot or parent segments or a trailing slash. These are lexical source checks; native admission must resolve provider, user and filesystem aliases and reject overlapping writers.",
+          "description": "Concern and binding names label declarations; they do not partition native targets. Services and packages explicitly select receiving-owner-enrolled adapters and exact grant scopes. Provider-owned pinned source schemas define native selectors, including service units, labels and package names. Before planning or dispatch, the receiver resolves each declaration through an independently approved SourceTargetBinding and rejects duplicate canonical native mutation targets across concerns, selectors and instances, even when prescriptions agree. Declaration order grants no precedence. Notifications name exactly one validated service binding and use that same accepted target; they cannot select another executor. Ordinary files, secret files and artifacts share one absolute destination namespace. Destination paths use canonical absolute spelling without empty, dot or parent segments or a trailing slash. Lexical source checks cannot establish native separation; native admission must resolve aliases, confine all side effects and reject overlapping writers.",
           "minProperties": 0,
           "propertyNames": {
             "pattern": "^[a-z][a-z0-9-]{0,63}(?![\\s\\S])"
@@ -577,17 +577,6 @@
                 "additionalProperties": {
                   "type": "object",
                   "properties": {
-                    "manager": {
-                      "enum": [
-                        "apt",
-                        "brew"
-                      ]
-                    },
-                    "name": {
-                      "type": "string",
-                      "minLength": 1,
-                      "maxLength": 160
-                    },
                     "version": {
                       "anyOf": [
                         {
@@ -613,17 +602,26 @@
                       "type": "string",
                       "minLength": 1,
                       "maxLength": 512
+                    },
+                    "adapter": {
+                      "$ref": "adapter.schema.json#/$defs/Selection",
+                      "description": "Explicit selection of an already receiving-owner-enrolled software instance. Native target syntax belongs to its pinned source schema; source cannot enroll or reconfigure that instance."
+                    },
+                    "scope": {
+                      "$ref": "adapter.schema.json#/$defs/Scope",
+                      "description": "Exact accepted software grant scope. Planning and notifications resolve this selector through the independently approved SourceTargetBinding; no platform default or inferred executor is permitted."
                     }
                   },
                   "required": [
-                    "manager",
-                    "name",
+                    "adapter",
+                    "scope",
                     "version",
                     "held",
                     "state",
                     "reason"
                   ],
-                  "additionalProperties": false
+                  "additionalProperties": false,
+                  "description": "Desired state for one native target selected through an exact owner-approved adapter and canonical namespace mapping. The source selector identifies the native target; desired changes do not create a different target. Native capability and current mutation permission are checked separately before execution."
                 }
               },
               "artifacts": {
@@ -728,12 +726,6 @@
                 "additionalProperties": {
                   "type": "object",
                   "properties": {
-                    "unit": {
-                      "type": "string",
-                      "minLength": 1,
-                      "maxLength": 128,
-                      "pattern": "^[A-Za-z0-9_.@-]+\\.(service|timer)(?![\\s\\S])"
-                    },
                     "enabled": {
                       "type": "boolean"
                     },
@@ -748,15 +740,25 @@
                       "type": "string",
                       "minLength": 1,
                       "maxLength": 512
+                    },
+                    "adapter": {
+                      "$ref": "adapter.schema.json#/$defs/Selection",
+                      "description": "Explicit selection of an already receiving-owner-enrolled service instance. Native target syntax belongs to its pinned source schema; source cannot enroll or reconfigure that instance."
+                    },
+                    "scope": {
+                      "$ref": "adapter.schema.json#/$defs/Scope",
+                      "description": "Exact accepted service grant scope. Planning and notifications resolve this selector through the independently approved SourceTargetBinding; no platform default or inferred executor is permitted."
                     }
                   },
                   "required": [
-                    "unit",
+                    "adapter",
+                    "scope",
                     "enabled",
                     "activity",
                     "reason"
                   ],
-                  "additionalProperties": false
+                  "additionalProperties": false,
+                  "description": "Desired state for one native target selected through an exact owner-approved adapter and canonical namespace mapping. The source selector identifies the native target; desired changes do not create a different target. Native capability and current mutation permission are checked separately before execution."
                 }
               }
             },

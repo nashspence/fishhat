@@ -14,5 +14,6 @@
     "minimum_prior_age_seconds": 604800,
     "unused_candidate_grace_seconds": 86400,
     "cold_archive": "verified-independent-archive"
-  }
+  },
+  "max_observation_age_seconds": 30
 }

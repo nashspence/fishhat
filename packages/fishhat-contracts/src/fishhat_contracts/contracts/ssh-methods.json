@@ -66,6 +66,21 @@
     },
     {
       "name": "record.read"
+    },
+    {
+      "name": "owner.history"
+    },
+    {
+      "name": "history.list"
+    },
+    {
+      "name": "history.read"
+    },
+    {
+      "name": "history.content"
+    },
+    {
+      "name": "workflow.bind"
     }
   ],
   "max_frame_bytes": 1048576,

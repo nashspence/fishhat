@@ -158,6 +158,7 @@ def adapter_proposal(role="ingress"):
         plan["input_digests"].append(item["digest"])
     reseal(plan)
     binding["adapter"] = {"executor": executor, "request": selected}
+    binding["phase"] = "published" if role == "ingress" else "issuer-changing"
     reference = {"owner": copy.deepcopy(participant["owner"]), "request_id": binding["request_id"]}
     intent.update(type="ingress-publication", target={"publication": reference})
     return intent
@@ -181,6 +182,7 @@ def test_preparation_retains_typed_plans_and_content_after_client_loss():
         decoded,
         expected_owner=expected["owner"],
         principal=expected["driver_principal"],
+        verified_driver=expected["proposal"]["initial_driver"],
         verified_content=expected["proposal"]["content"],
     )
     assert retained == expected
@@ -196,6 +198,7 @@ def test_preparation_retains_typed_plans_and_content_after_client_loss():
             recovered,
             expected_owner=retained["owner"],
             principal="replacement-operator",
+            verified_driver=expected["proposal"]["initial_driver"],
             verified_content=[],
             retained=retained,
         )
@@ -229,6 +232,7 @@ def test_capsule_cannot_substitute_a_different_proposal_or_unverified_local_cont
             preparation(value),
             expected_owner=value["owner"],
             principal=value["driver_principal"],
+            verified_driver=value["proposal"]["initial_driver"],
             verified_content=[],
         )
     value["proposal"]["participants"][0]["requests"][0]["request_id"] = U
@@ -244,6 +248,7 @@ def test_relocation_target_recovers_the_exact_planned_recovery_basis():
     value = workflow()
     binding = value["proposal"]["participants"][0]
     binding["owner"]["tool"] = "app-ops"
+    binding["requests"][0]["phase"] = "source-quiescing"
     binding["resource"] = {"kind": "app", "id": "demo-app"}
     plan = binding["requests"][0]["plan"]
     plan["owner"] = copy.deepcopy(binding["owner"])
@@ -329,6 +334,7 @@ def test_runtime_release_must_be_reviewed_and_retained_material():
         action="host.runtime-install", arguments={"tool_release": release, "tools": ["host-ops"]}
     )
     intent.update(type="runtime-upgrade", target={"installation": intent["target"]["host_change"]})
+    intent["participants"][0]["requests"][0]["phase"] = "migrating"
     reseal(plan)
     with pytest.raises(ContractError, match="material input"):
         validate_workflow_proposal(intent)
@@ -351,12 +357,14 @@ def test_generic_adapter_role_retains_typed_input_and_requires_independent_selec
             payload,
             expected_owner=payload["owner"],
             principal="operator",
+            verified_driver=intent["initial_driver"],
             verified_content=intent["content"],
         )
     prepared = prepare_workflow(
         payload,
         expected_owner=payload["owner"],
         principal="operator",
+        verified_driver=intent["initial_driver"],
         verified_content=intent["content"],
         verified_adapters=[copy.deepcopy(selected)],
     )
@@ -396,46 +404,65 @@ def test_generic_adapter_target_cannot_substitute_an_unrelated_selected_method(c
         validate_workflow_proposal(intent)
 
 
-def test_secret_rotation_requires_issuer_mutation_and_separate_consumer_adoption():
+def rotation_intent():
     intent = adapter_proposal("credential-issuer")
-    issuer = intent["participants"][0]
     issuer_reference = intent["target"]["publication"]
-    consumer = copy.deepcopy(workflow()["proposal"]["participants"][0])
-    consumer["owner"] = {**consumer["owner"], "tool": "app-ops", "id": uid("consumer-owner")}
-    consumer["resource"] = {"kind": "app", "id": "demo-app"}
-    adoption = consumer["requests"][0]
-    adoption["request_id"] = uid("consumer-adoption")
-    plan = adoption["plan"]
-    receipt = "sha256:" + "f" * 64
-    plan["owner"] = copy.deepcopy(consumer["owner"])
-    plan["subject"] = {
-        "action": "app.secrets-adopt",
-        "resource": copy.deepcopy(consumer["resource"]),
-        "arguments": {"bundle_receipt": receipt},
-    }
-    for condition in plan["preconditions"]:
-        condition.update(
-            owner=copy.deepcopy(plan["owner"]), resource=copy.deepcopy(consumer["resource"])
-        )
-    for effect in plan["effects"]:
-        effect.update(
-            executor=copy.deepcopy(plan["owner"]), resource=copy.deepcopy(consumer["resource"])
-        )
-    plan["input_digests"].append(receipt)
-    plan["witness"]["owner"] = copy.deepcopy(plan["owner"])
-    reseal(plan)
-    intent["content"].extend(material_handle(plan["owner"], d) for d in plan["input_digests"])
-    intent["participants"].append(consumer)
+    publisher_owner = {**issuer_reference["owner"], "id": uid("publisher-owner")}
+    publication = {"owner": publisher_owner, "request_id": uid("rotation-publication")}
+    consumer_owner = {**publisher_owner, "tool": "app-ops", "id": uid("consumer-owner")}
+    adoption = {"owner": consumer_owner, "request_id": uid("consumer-adoption")}
+    intent["participants"].extend(
+        [
+            {
+                "owner": publisher_owner,
+                "resource": {"kind": "publisher", "id": "bundle-publisher"},
+                "expected_generation": 0,
+                "requests": [
+                    {
+                        "request_id": publication["request_id"],
+                        "phase": "publishing",
+                        "intent": {
+                            "kind": "secret-publication",
+                            "issuer": issuer_reference,
+                            "expected_previous": None,
+                        },
+                    }
+                ],
+            },
+            {
+                "owner": consumer_owner,
+                "resource": {"kind": "app", "id": "demo-app"},
+                "expected_generation": 0,
+                "requests": [
+                    {
+                        "request_id": adoption["request_id"],
+                        "phase": "consumers-adopting",
+                        "intent": {
+                            "kind": "secret-adoption",
+                            "action": "app.secrets-adopt",
+                            "issuer": issuer_reference,
+                            "publication": publication,
+                        },
+                    }
+                ],
+            },
+        ]
+    )
     intent.update(
         type="secret-rotation",
         target={
             "issuer_change": issuer_reference,
-            "consumer_adoptions": [
-                {"owner": consumer["owner"], "request_id": adoption["request_id"]}
-            ],
+            "publication": publication,
+            "consumer_adoptions": [adoption],
         },
     )
+    return intent
+
+
+def test_secret_rotation_requires_issuer_mutation_and_separate_consumer_adoption():
+    intent = rotation_intent()
     validate_workflow_proposal(intent)
+    issuer = intent["participants"][0]
     publication = issuer["requests"][0]
     selected = publication["plan"]
     candidate = selected["subject"]["arguments"]["input"]
@@ -451,7 +478,7 @@ def test_secret_rotation_requires_issuer_mutation_and_separate_consumer_adoption
         effect["resource"] = copy.deepcopy(issuer["resource"])
     del publication["adapter"]
     reseal(selected)
-    with pytest.raises(ContractError, match="procedure role"):
+    with pytest.raises(ContractError, match=r"installed phase|procedure role"):
         validate_workflow_proposal(intent)
 
 

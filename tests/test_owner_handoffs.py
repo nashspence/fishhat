@@ -112,6 +112,7 @@ def workflow():
         "recovery_digests": [],
         "transfer": None,
         "advances": [],
+        "bindings": [],
     }
     rebind_workflow_proposal(value)
     return value
@@ -155,7 +156,7 @@ def rebind_workflow_proposal(value):
                 generation=participant["expected_generation"],
             )
             plan["witness"] = sign(body, Ed25519PrivateKey.from_private_bytes(b"\x17" * 32))
-            requests.append({"request_id": request_id, "plan": plan})
+            requests.append({"request_id": request_id, "phase": "host-effect", "plan": plan})
             for input_digest in plan["input_digests"]:
                 identity = canonical([plan["owner"], input_digest]).decode()
                 content[identity] = {
@@ -178,6 +179,7 @@ def rebind_workflow_proposal(value):
     value["proposal"] = {
         "format": "deployment-ops/workflow-proposal/v1",
         "workflow_id": value["id"],
+        "initial_driver": {"principal": "ops-app-operate", "term": 1},
         "type": value["type"],
         "target": {
             "host_change": {
