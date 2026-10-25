@@ -23,6 +23,7 @@ cleanup() {
   if ((account_created)); then
     uid="$(id -u "$account")"
     sudo runuser -u "$account" -- env -i HOME="/home/$account" PATH=/usr/bin:/bin XDG_RUNTIME_DIR="/run/user/$uid" systemctl --user stop ci-probe.service
+    if declare -F user_run >/dev/null; then user_run podman system reset --force; fi
     sudo loginctl terminate-user "$account"
     sudo loginctl disable-linger "$account"
     sudo userdel -r "$account"
@@ -128,30 +129,68 @@ truncate -s 768M "$work/xfs.img"
 sudo mkfs.xfs -q -f "$work/xfs.img"
 mkdir "$work/xfs"; chmod 0755 "$work"
 sudo mount -o loop,prjquota,nosuid,nodev "$work/xfs.img" "$work/xfs"; mounted=1
-sudo mkdir "$work/xfs/account"
+sudo mkdir "$work/xfs/account" "$work/xfs/control"
 sudo xfs_quota -x -c "project -s -p $work/xfs/account 1001" "$work/xfs"
-sudo xfs_quota -x -c 'limit -p bhard=8m ihard=64 1001' "$work/xfs"
-sudo chown "$account:$account" "$work/xfs/account"
-user_run /usr/bin/python3 - "$work/xfs/account" <<'PY'
+sudo chown "$account:$account" "$work/xfs/account" "$work/xfs/control"
+# Isolate each quota dimension; outside-project controls must still succeed.
+sudo xfs_quota -x -c 'limit -p bhard=8m ihard=0 1001' "$work/xfs"
+user_run /usr/bin/python3 - "$work/xfs/account" "$work/xfs/control" <<'PY'
 import errno, os, pathlib, sys
-p=pathlib.Path(sys.argv[1])
+p, control = map(pathlib.Path, sys.argv[1:])
+def grow(path):
+    target = 16 * 1048576
+    with path.open('wb', buffering=0) as stream:
+        while stream.tell() < target:
+            written = stream.write(b'x' * min(1048576, target - stream.tell()))
+            assert written and written > 0, 'write made no progress'
+        os.fsync(stream.fileno())
+    assert path.stat().st_size == target
+
+grow(control / 'before')
 try:
-    with (p/'grow').open('wb',buffering=0) as f:
-        for _ in range(16): f.write(b'x' * 1048576)
-        os.fsync(f.fileno())
-except OSError as e:
-    if e.errno != errno.EDQUOT: raise
-else: raise AssertionError('byte quota not enforced')
-(p/'grow').unlink()
-created=[]
+    grow(p / 'grow')
+except OSError as exc:
+    if exc.errno != errno.ENOSPC:
+        raise
+else:
+    raise AssertionError('byte quota not enforced')
+size = (p / 'grow').stat().st_size
+assert 0 < size <= 8 * 1048576
+# A full backing filesystem must fail this independent post-limit control.
+grow(control / 'after')
+for path in (p / 'grow', control / 'before', control / 'after'):
+    path.unlink()
+print('xfs-byte-quota-ok', size)
+PY
+sudo xfs_quota -x -c 'limit -p bhard=0 ihard=64 1001' "$work/xfs"
+user_run /usr/bin/python3 - "$work/xfs/account" "$work/xfs/control" <<'PY'
+import errno, pathlib, sys
+p, control = map(pathlib.Path, sys.argv[1:])
+def controls(prefix):
+    paths = [control / f'{prefix}-{i}' for i in range(256)]
+    for path in paths:
+        path.touch(exist_ok=False)
+    return paths
+
+before = controls('before')
+created = []
 try:
     for i in range(256):
-        f=p/str(i); f.touch(exist_ok=False); created.append(f)
-except OSError as e:
-    if e.errno != errno.EDQUOT: raise
-else: raise AssertionError('inode quota not enforced')
-for f in created:f.unlink()
-print('xfs-byte-and-inode-quota-ok')
+        path = p / str(i)
+        path.touch(exist_ok=False)
+        created.append(path)
+except OSError as exc:
+    if exc.errno != errno.ENOSPC:
+        raise
+else:
+    raise AssertionError('inode quota not enforced')
+# The project directory also consumes one of its 64 admitted inodes.
+assert 0 < len(created) < 64
+# Global inode or block exhaustion must fail this independent control.
+after = controls('after')
+for path in before + created + after:
+    path.unlink()
+print('xfs-inode-quota-ok', len(created))
 PY
 # Independent loopback sshd fixture; do not alter the runner's global sshd config.
 ssh-keygen -q -t ed25519 -N '' -f "$work/server"
@@ -182,7 +221,10 @@ sudo /usr/sbin/sshd -t -f "$work/sshd_config"
 sudo /usr/sbin/sshd -f "$work/sshd_config" -E "$work/sshd.log"
 ssh_pid="$(cat "$work/sshd.pid")"
 printf '[127.0.0.1]:22229 %s\n' "$(cut -d' ' -f1,2 "$work/server.pub")" > "$work/known_hosts"
-result="$(ssh -F /dev/null -T -p 22229 -i "$work/client" -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$work/known_hosts" "$(id -un)@127.0.0.1" arbitrary-input)"
+if ! result="$(ssh -F /dev/null -T -p 22229 -i "$work/client" -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$work/known_hosts" "$(id -un)@127.0.0.1" arbitrary-input)"; then
+  sudo /usr/bin/tail -n 40 "$work/sshd.log"
+  exit 1
+fi
 [[ "$result" == ssh-fixture-ok ]]
 if ssh -F /dev/null -T -p 22229 -i "$work/client" -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/dev/null "$(id -un)@127.0.0.1" info 2>/dev/null; then
   echo 'Unknown SSH host key was accepted' >&2; exit 1
