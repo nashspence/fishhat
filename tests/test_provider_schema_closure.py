@@ -163,3 +163,108 @@ def test_local_pointer_escaping_preserves_exact_schema_identity():
     check_configuration(schema, 2, digest(schema))
     with pytest.raises(ContractError, match="CONFIGURATION_REJECTED"):
         check_configuration(schema, {"unapproved": True}, digest(schema))
+
+
+@pytest.mark.parametrize(
+    "name", ["hostname", "uri", "duration", "json-pointer", "time", "regex", "unknown-format"]
+)
+def test_unsupported_format_assertions_fail_at_descriptor_approval(name):
+    with pytest.raises(ContractError, match="UNSUPPORTED_SCHEMA_FORMAT"):
+        check_schema({"type": "string", "format": name})
+
+
+@pytest.mark.parametrize(
+    "name,good,bad",
+    [
+        ("date", "2024-02-29", "2025-02-29"),
+        ("date-time", "2026-10-25T12:30:00.123456+02:00", "2026-02-30T12:00:00Z"),
+        ("ipv4", "192.0.2.1", "192.0.2.999"),
+        ("ipv6", "2001:db8::1", "2001:::1"),
+        ("uuid", "00000000-0000-4000-8000-000000000001", "not-a-uuid"),
+    ],
+    ids=["date", "date-time", "ipv4", "ipv6", "uuid"],
+)
+def test_every_supported_provider_format_asserts_its_declared_semantics(name, good, bad):
+    schema = {"type": "string", "format": name}
+    check_configuration(schema, good, digest(schema))
+    with pytest.raises(ContractError, match="CONFIGURATION_REJECTED"):
+        check_configuration(schema, bad, digest(schema))
+
+
+@pytest.mark.parametrize(
+    "keyword",
+    ["$vocabulary", "unknownAssertion", "unevaluatedItems", "unevaluatedProperties"],
+    ids=["vocabulary", "unknown-assertion", "unevaluated-items", "unevaluated-properties"],
+)
+def test_unimplemented_schema_assertion_or_vocabulary_is_not_silently_ignored(keyword):
+    schema = {"type": "string", keyword: {"https://example.invalid/assertions": True}}
+    with pytest.raises(ContractError, match="UNSUPPORTED_SCHEMA_KEYWORD"):
+        check_schema(schema)
+
+
+def test_nested_dialect_cannot_replace_the_budgeted_validator():
+    schema = object_schema(
+        {
+            "value": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "array",
+                "items": {"type": "integer"},
+                "uniqueItems": True,
+            }
+        }
+    )
+    with pytest.raises(ContractError, match="NESTED_SCHEMA_DIALECT"):
+        check_schema(schema)
+
+
+def test_acyclic_references_cannot_hide_exponential_schema_expansion():
+    definitions = {"L0": {"type": "string", "const": "x"}}
+    for level in range(1, 5):
+        definitions["L" + str(level)] = {"allOf": [{"$ref": "#/$defs/L" + str(level - 1)}] * 8}
+    schema = {"$defs": definitions, "$ref": "#/$defs/L4"}
+    with pytest.raises(ContractError, match="SCHEMA_EXPANSION_CAPACITY"):
+        check_schema(schema)
+
+
+@pytest.mark.parametrize(
+    "pattern",
+    [r"(a+)+$", r"(a|aa)+$", r"a*a*a*", r"(a)\1", r"(?<=a)b", r"(?i)a"],
+    ids=["nested-repeat", "branch-repeat", "three-repeats", "backreference", "lookbehind", "flags"],
+)
+def test_provider_regex_cannot_enter_unbounded_backtracking_or_nonportable_features(pattern):
+    with pytest.raises(ContractError, match=r"(?:UNSUPPORTED_SCHEMA_REGEX|SCHEMA_REGEX_CAPACITY)"):
+        check_schema({"type": "string", "pattern": pattern})
+
+
+@pytest.mark.parametrize(
+    "schema,value",
+    [
+        (
+            {"type": "array", "items": {"type": "integer"}, "uniqueItems": True},
+            list(range(1500)),
+        ),
+        (
+            {
+                "type": "array",
+                "items": {"type": "array", "items": {"type": "integer"}},
+                "uniqueItems": True,
+            },
+            [[0] * 1000 + [index] for index in range(100)],
+        ),
+        ({"type": "string", "pattern": "^x|a*a*$"}, "a" * 250 + "!"),
+    ],
+    ids=["pair-count", "compared-bytes", "unanchored-branch"],
+)
+def test_provider_value_work_limit_is_explicit_rejection_not_partial_success(schema, value):
+    with pytest.raises(ContractError, match="SCHEMA_EVALUATION_CAPACITY"):
+        check_configuration(schema, value, digest(schema))
+
+
+def test_pattern_property_names_share_the_bounded_regex_input_contract():
+    schema = {
+        "type": "object",
+        "additionalProperties": False,
+        "patternProperties": {"^x-": {"type": "integer"}},
+    }
+    with pytest.raises(ContractError, match="SCHEMA_REGEX_INPUT_CAPACITY"):
+        check_configuration(schema, {"x-" + "a" * 4096: 1}, digest(schema))

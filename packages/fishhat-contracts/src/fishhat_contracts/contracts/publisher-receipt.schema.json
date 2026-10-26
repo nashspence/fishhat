@@ -7,89 +7,35 @@
       "const": "deployment-ops/publication/v1"
     },
     "id": {
-      "type": "string",
-      "format": "uuid",
-      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+      "$ref": "common.schema.json#/$defs/UUID"
     },
-    "repository": {
-      "type": "object",
-      "properties": {
-        "instance": {
-          "type": "string",
-          "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+    "source": {
+      "allOf": [
+        {
+          "$ref": "adapter.schema.json#/$defs/InstanceReference"
         },
-        "repository_id": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 9007199254740991
-        },
-        "name": {
-          "type": "string",
-          "minLength": 3,
-          "maxLength": 160,
-          "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?![\\s\\S])"
+        {
+          "properties": {
+            "role": {
+              "const": "secret-source"
+            }
+          }
         }
-      },
-      "required": [
-        "instance",
-        "repository_id",
-        "name"
-      ],
-      "additionalProperties": false
+      ]
     },
-    "tag": {
-      "const": "secrets-bundle"
+    "entry": {
+      "$ref": "common.schema.json#/$defs/Entry"
     },
-    "asset": {
-      "const": "secrets.tar.age"
+    "consumer": {
+      "$ref": "common.schema.json#/$defs/Id"
     },
     "catalogue_digest": {
-      "type": "string",
-      "minLength": 71,
-      "maxLength": 71,
-      "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
+      "$ref": "common.schema.json#/$defs/Digest"
     },
     "previous": {
       "anyOf": [
         {
-          "type": "object",
-          "properties": {
-            "release_id": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
-            },
-            "asset_id": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
-            },
-            "ciphertext_digest": {
-              "type": "string",
-              "minLength": 71,
-              "maxLength": 71,
-              "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
-            },
-            "bytes": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 67108864
-            },
-            "generation": {
-              "type": "string",
-              "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-            }
-          },
-          "required": [
-            "release_id",
-            "asset_id",
-            "ciphertext_digest",
-            "bytes",
-            "generation"
-          ],
-          "additionalProperties": false
+          "$ref": "adapter.schema.json#/$defs/SecretPublicationPredecessor"
         },
         {
           "type": "null"
@@ -97,70 +43,37 @@
       ]
     },
     "current": {
-      "type": "object",
-      "properties": {
-        "release_id": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 9007199254740991
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "version": {
+              "$ref": "adapter.schema.json#/$defs/Handle"
+            },
+            "artifact_digest": {
+              "$ref": "common.schema.json#/$defs/Digest"
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "version",
+            "artifact_digest",
+            "bytes"
+          ],
+          "additionalProperties": false,
+          "description": "Immutable provider version and protected artifact identity. The digest never identifies low-entropy plaintext."
         },
-        "asset_id": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 9007199254740991
-        },
-        "ciphertext_digest": {
-          "type": "string",
-          "minLength": 71,
-          "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
-        },
-        "bytes": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 67108864
-        },
-        "generation": {
-          "type": "string",
-          "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        {
+          "type": "null"
         }
-      },
-      "required": [
-        "release_id",
-        "asset_id",
-        "ciphertext_digest",
-        "bytes",
-        "generation"
-      ],
-      "additionalProperties": false
+      ]
     },
     "custodian": {
-      "type": "object",
-      "properties": {
-        "tool": {
-          "enum": [
-            "host-ops",
-            "app-ops"
-          ]
-        },
-        "id": {
-          "type": "string",
-          "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-        },
-        "epoch": {
-          "type": "string",
-          "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-        }
-      },
-      "required": [
-        "tool",
-        "id",
-        "epoch"
-      ],
-      "additionalProperties": false
+      "$ref": "common.schema.json#/$defs/Owner"
     },
     "recovery_handle": {
       "$ref": "common.schema.json#/$defs/Handle"
@@ -182,149 +95,45 @@
         }
       ]
     },
-    "witness": {
+    "provider_evidence": {
       "type": "object",
       "properties": {
-        "format": {
-          "const": "deployment-ops/witness/v1"
+        "schema": {
+          "$ref": "common.schema.json#/$defs/SchemaIdentity"
         },
-        "id": {
-          "type": "string",
-          "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-        },
-        "owner": {
-          "type": "object",
-          "properties": {
-            "tool": {
-              "enum": [
-                "host-ops",
-                "app-ops"
-              ]
-            },
-            "id": {
-              "type": "string",
-              "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-            },
-            "epoch": {
-              "type": "string",
-              "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-            }
-          },
-          "required": [
-            "tool",
-            "id",
-            "epoch"
-          ],
-          "additionalProperties": false
-        },
-        "kind": {
-          "enum": [
-            "plan",
-            "acceptance",
-            "effect",
-            "hold",
-            "drain",
-            "binding",
-            "checkpoint",
-            "publication",
-            "transfer",
-            "approval"
-          ]
-        },
-        "subject_digest": {
-          "type": "string",
-          "minLength": 71,
-          "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
-        },
-        "workflow_id": {
+        "handle": {
           "anyOf": [
             {
-              "type": "string",
-              "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+              "$ref": "common.schema.json#/$defs/Handle"
             },
             {
               "type": "null"
             }
           ]
-        },
-        "generation": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991
-        },
-        "state": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 64
-        },
-        "boot_id": {
-          "anyOf": [
-            {
-              "type": "string",
-              "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "evidence_digests": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 71,
-            "maxLength": 71,
-            "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
-          },
-          "minItems": 0,
-          "uniqueItems": true
-        },
-        "created_at": {
-          "$ref": "common.schema.json#/$defs/Time"
-        },
-        "key_id": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 24,
-          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
-        },
-        "signature": {
-          "type": "string",
-          "minLength": 88,
-          "maxLength": 88,
-          "pattern": "^[A-Za-z0-9+/]{86}==(?![\\s\\S])"
         }
       },
       "required": [
-        "format",
-        "id",
-        "owner",
-        "kind",
-        "subject_digest",
-        "workflow_id",
-        "generation",
-        "state",
-        "boot_id",
-        "evidence_digests",
-        "created_at",
-        "key_id",
-        "signature"
+        "schema",
+        "handle"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "Complete immutable provider-specific publication evidence in custodian-owned protected content, validated against this independently installed pinned schema. Provider release IDs, asset IDs, paths and transaction receipts belong here; generic readers never invent backend identifiers. These bytes remain available for reconciliation and are verified independently before trusting publication. The schema identity is retained even before publication is verified; handle is null until complete protected evidence exists. It must equal the reviewed publish evidence_schema."
+    },
+    "witness": {
+      "$ref": "records.schema.json#/$defs/Witness"
+    },
+    "version": {
+      "$ref": "adapter.schema.json#/$defs/Handle",
+      "description": "Exact reviewed immutable destination version, retained even when publication acceptance is unknown and current is null."
     }
   },
   "required": [
     "format",
     "id",
-    "repository",
-    "tag",
-    "asset",
+    "source",
+    "entry",
+    "consumer",
+    "version",
     "catalogue_digest",
     "previous",
     "current",
@@ -332,7 +141,37 @@
     "recovery_handle",
     "state",
     "verified_at",
+    "provider_evidence",
     "witness"
   ],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "description": "Provider-neutral publication outcome for one reviewed secret-source binding, entry, consumer and immutable version. Publication does not prove issuer rotation or consumer adoption. The exact candidate stays under custodian recovery responsibility for every state. Completion requires independently verified provider evidence and the exact requested protected material. Source/entry in a predecessor must match this destination. The publication witness binds the entire canonical receipt except witness, uses kind publication, the custodian owner including epoch and the receipt state. Signature verification, provider schema installation and current authority remain independent receiver checks. The requested version differs from the predecessor even when acceptance is unknown. A completed receipt is immutable; explicit recovery returns the exact retained completion rather than replacing its state, verification time or provider evidence.",
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "const": "completed"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "current": {
+            "type": "object"
+          },
+          "provider_evidence": {
+            "properties": {
+              "handle": {
+                "type": "object"
+              }
+            }
+          },
+          "verified_at": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  ]
 }

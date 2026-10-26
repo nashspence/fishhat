@@ -124,7 +124,10 @@
     "Unknown effects cannot succeed.",
     "Quarantined work needs a new exact recovery operation.",
     "Transfer requires all participant freeze and commit witnesses.",
-    "Replays are checked before new-admission expiry/generation checks."
+    "Replays are checked before new-admission expiry/generation checks.",
+    "An accepted request identity and its exact immutable payload identity remain reserved for the lifetime of its owner epoch, including after terminal Operation history is pruned. Exact accepted replay resolves to the retained outcome before new-admission checks; the identity is never admitted again as fresh work.",
+    "History retention and request deduplication are independent. Collection may compact terminal detail into a retained replay record, but must preserve original attribution, payload identity, terminal state and effect certainty, required Plan/result custody, and unresolved holds. Explicit receiver capacity may refuse new identities; it never evicts accepted identity reservations to admit more work.",
+    "A restored owner epoch does not recreate historical acceptance authority. Historical request identities, original outcomes and workflow recovery lineage remain attributable to their original epochs; current-authority recovery uses new exact identities."
   ],
   "owner_meanings": {
     "accepted": "The local owner has durably accepted responsibility for this exact request. Execution has not been established as complete.",

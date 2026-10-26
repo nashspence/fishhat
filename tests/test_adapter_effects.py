@@ -70,7 +70,16 @@ def result(owner, attempt, **overrides):
     output = (
         {"deployment": query["input"]["deployment"], "observation": None, "objects": []}
         if query["contract"] == "fishhat.runtime"
-        else {"activity": query["input"]["activity"]}
+        else {
+            "services": [
+                {
+                    "target": copy.deepcopy(query["input"]["target"]),
+                    "enabled": query["input"]["intent"]["enabled"],
+                    "activity": query["input"]["intent"]["activity"],
+                }
+            ],
+            "transition": None,
+        }
     )
     return query, {
         "contract": query["contract"],

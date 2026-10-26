@@ -28,6 +28,7 @@ CHECK_PURPOSE = {
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/owner-history.schema.json",
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/actions.schema.json#/$defs/app.recover",
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/actions.schema.json#/$defs/host.recover",
+        "packages/fishhat-contracts/src/fishhat_contracts/contracts/actions.schema.json#/$defs/operation.recover",
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/ssh-request.schema.json",
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/ssh-response.schema.json",
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/owner-cli.json",
@@ -359,8 +360,13 @@ def recover(custody, original, reviewed, **overrides):
     return validate_historical_recovery(reviewed, canonical(original), **context)
 
 
-def test_historical_recovery_is_a_new_current_plan_with_exact_original_material():
+@pytest.mark.parametrize("action", ["app.recover", "operation.recover"])
+def test_historical_recovery_is_a_new_current_plan_with_exact_original_material(action):
     custody, original, reviewed = recovery_plan()
+    if action == "operation.recover":
+        reviewed["subject"]["action"] = action
+        del reviewed["subject"]["arguments"]["checkpoint"]
+        reseal(reviewed)
     untouched = copy.deepcopy(original)
     assert recover(custody, original, reviewed) == untouched
     assert original == untouched

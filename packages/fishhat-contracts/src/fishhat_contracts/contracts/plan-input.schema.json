@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fishhat.invalid/contracts/plan-input.schema.json",
+  "$defs": {
+    "PrepareRequest": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/plan-input/v1"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "subject": {
+          "$ref": "actions.schema.json"
+        }
+      },
+      "required": [
+        "format",
+        "owner",
+        "subject"
+      ],
+      "additionalProperties": false,
+      "description": "Complete canonical input for one exact Plan. Every selected component, path and cleanup candidate remains in this immutable Subject; transport chunks never split it into distinct operations. The receiving owner authorizes the actual principal and exact subject resource before planning, validates installed action semantics and native prerequisites, and retains complete input custody with the resulting Plan. Preparation does not admit execution. Independently approved local capacity may reject explicitly; incomplete input cannot produce a Plan."
+    },
+    "InputReference": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "input": {
+          "allOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Handle"
+            },
+            {
+              "properties": {
+                "purpose": {
+                  "const": "plan-input"
+                },
+                "binding": {
+                  "properties": {
+                    "kind": {
+                      "const": "staging"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "owner",
+        "input"
+      ],
+      "additionalProperties": false,
+      "description": "Bounded plan.prepare wire input. The owner verifies the complete staged PrepareRequest size, digest, canonical encoding, receiving owner, actual principal, subject resource and plan-input purpose before constructing a Plan. All upload chunks, including resumed chunks, belong to the same committed staging identity. A handle is not bearer authority; expired unaccepted custody cannot prepare new work. No inline Subject alternative or implicit per-frame selection truncation is accepted."
+    },
+    "LookupRequest": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "plan_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        }
+      },
+      "required": [
+        "owner",
+        "plan_digest"
+      ],
+      "additionalProperties": false,
+      "description": "Read the exact retained immutable Plan after current owner authorization. The Operation supplies both fields, so client loss does not lose the original review. The reply must match owner and digest; that digest commits the complete Plan including its original ID. Admission expiry does not expire accepted Plan custody; every accepted Operation retains this Plan and its required evidence for as long as accepted replay or recovery needs it. An old epoch uses historical custody routes rather than rebinding to the current owner."
+    }
+  }
+}

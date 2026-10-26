@@ -404,18 +404,46 @@ def test_generic_adapter_target_cannot_substitute_an_unrelated_selected_method(c
         validate_workflow_proposal(intent)
 
 
-def rotation_intent():
+def publication_evidence(provider):
+    if provider == "forgejo-age":
+        payload = {"release_id": 17, "asset_id": 23, "repository_id": 1}
+    else:
+        payload = {"mount": "kv", "path": "demo/database", "version": 7}
+    uri = f"https://providers.example/{provider}/publication.schema.json"
+    schema = {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": uri,
+        "type": "object",
+        "properties": {
+            key: {"type": "integer" if isinstance(item, int) else "string"}
+            for key, item in payload.items()
+        },
+        "required": list(payload),
+        "additionalProperties": False,
+    }
+    return payload, schema
+
+
+def rotation_intent(provider="forgejo-age"):
     intent = adapter_proposal("credential-issuer")
     issuer_reference = intent["target"]["publication"]
     publisher_owner = {**issuer_reference["owner"], "id": uid("publisher-owner")}
     publication = {"owner": publisher_owner, "request_id": uid("rotation-publication")}
     consumer_owner = {**publisher_owner, "tool": "app-ops", "id": uid("consumer-owner")}
     adoption = {"owner": consumer_owner, "request_id": uid("consumer-adoption")}
+    source = copy.deepcopy(intent["participants"][0]["requests"][0]["adapter"]["executor"])
+    source.update(instance=provider, role="secret-source")
+    source["scope"] = {
+        "authority": publisher_owner["id"],
+        "kind": "secret-source",
+        "handle": "selected-secrets",
+    }
+    _, evidence_schema = publication_evidence(provider)
     intent["participants"].extend(
         [
             {
                 "owner": publisher_owner,
-                "resource": {"kind": "publisher", "id": "bundle-publisher"},
+                "resource": {"kind": "publisher", "id": "selected-publisher"},
                 "expected_generation": 0,
                 "requests": [
                     {
@@ -424,6 +452,14 @@ def rotation_intent():
                         "intent": {
                             "kind": "secret-publication",
                             "issuer": issuer_reference,
+                            "source": source,
+                            "entry": "database",
+                            "consumer": "demo-app",
+                            "version": "opaque:" + provider + ":new-version",
+                            "catalogue_digest": digest({"catalogue": 1}),
+                            "evidence_schema": schema_identity(
+                                evidence_schema["$id"], {evidence_schema["$id"]: evidence_schema}
+                            ),
                             "expected_previous": None,
                         },
                     }
@@ -470,7 +506,14 @@ def test_secret_rotation_requires_issuer_mutation_and_separate_consumer_adoption
     selected["subject"] = {
         "action": "publisher.publish",
         "resource": copy.deepcopy(issuer["resource"]),
-        "arguments": {"candidate": candidate, "expected_previous": None},
+        "arguments": {
+            **{
+                key: value
+                for key, value in intent["participants"][1]["requests"][0]["intent"].items()
+                if key not in {"kind", "issuer"}
+            },
+            "candidate": {**candidate, "purpose": "secret-candidate"},
+        },
     }
     for condition in selected["preconditions"]:
         condition["resource"] = copy.deepcopy(issuer["resource"])
@@ -700,7 +743,7 @@ def test_transfer_completion_requires_local_commit_and_replay_is_immutable():
     query["phase"] = value["phase"]
     complete = advance_workflow(query, value)
     assert complete["phase"] == "prepared"
-    assert complete["state"] == "active"
+    assert complete["state"] == "prepared"
     assert complete["holds"] == value["holds"]
     original_receipt = copy.deepcopy(complete["advances"][0])
     following = normal_advance(complete)

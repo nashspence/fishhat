@@ -29,6 +29,7 @@ INPUT_SCHEMAS = {
     "workflow.bind": ("workflow.schema.json", "BindRequest"),
     "workflow.advance": ("workflow.schema.json", "AdvanceRequest"),
     "workflow.transfer": ("records.schema.json", "WorkflowTransferRequest"),
+    "workflow.recover": ("workflow-recovery.schema.json", "RecoveryRequest"),
 }
 
 # Semantic joins belong here because JSON Schema cannot follow a ChildReference
@@ -101,12 +102,40 @@ TARGET_PHASES = {
 
 
 def child_action(binding: dict[str, Any]) -> str:
+    if "completed" in binding:
+        return str(binding["completed"]["plan"]["subject"]["action"])
     if "plan" in binding:
         return str(binding["plan"]["subject"]["action"])
     intent = binding["intent"]
     if intent["kind"] == "reviewed-successor":
         return str(intent["subject"]["action"])
     return "publisher.publish" if intent["kind"] == "secret-publication" else str(intent["action"])
+
+
+def bound_plan(binding: dict[str, Any]) -> dict[str, Any]:
+    """Return exact Plan identity without granting a completed slot execution."""
+    return dict(binding["completed"]["plan"] if "completed" in binding else binding["plan"])
+
+
+def validate_completed_binding(binding: dict[str, Any], participant: dict[str, Any]) -> None:
+    from .operations import validate_operation
+
+    retained = binding["completed"]
+    plan, operation = retained["plan"], retained["operation"]
+    validate_plan(plan)
+    validate_operation(operation)
+    _require(
+        all(plan["owner"][key] == participant["owner"][key] for key in ("tool", "id"))
+        and plan["subject"]["resource"] == participant["resource"]
+        and operation["owner"] == plan["owner"]
+        and operation["plan_digest"] == plan["digest"]
+        and operation["subject"] == plan["subject"]
+        and operation["state"] == "succeeded"
+        and operation["effect_certainty"] == "known",
+        "completed workflow slot changed original successful work",
+    )
+    if "adapter" in retained:
+        _adapter_binding(retained)
 
 
 def proposal_children(
@@ -153,13 +182,22 @@ def _validate_child(
     proposal: dict[str, Any],
     generations: dict[bytes, int],
     content: set[bytes],
+    *,
+    recovery: bool = False,
 ) -> None:
     _require(
         child_action(binding) in PHASE_ACTIONS[proposal["type"]].get(binding["phase"], set()),
         "workflow child action outside installed phase",
     )
-    if "plan" in binding:
-        _require(index == 0, "later participant child requires reviewed continuation")
+    if "completed" in binding:
+        _require(recovery, "completed workflow slots require explicit recovery")
+        validate_completed_binding(binding, participant)
+    elif "plan" in binding:
+        _require(
+            index == 0
+            or (recovery and all("completed" in b for b in participant["requests"][:index])),
+            "later participant child requires reviewed continuation",
+        )
         _plan_binding(binding, participant, generations, content)
         available = {canonical([h["owner"], h["digest"]]) for h in proposal["content"]}
         _require(
@@ -261,7 +299,7 @@ def _adapter_binding(binding: dict[str, Any]) -> None:
         _require(request["input"]["issuer"] == executor, "workflow issuer binding changed")
 
 
-def validate_workflow_proposal(proposal: dict[str, Any]) -> None:
+def validate_workflow_proposal(proposal: dict[str, Any], *, recovery: bool = False) -> None:
     """Check complete decoded intent and exact child/content joins, not authority."""
     validate("workflow.schema.json", proposal, "WorkflowProposal")
     participants = proposal["participants"]
@@ -278,7 +316,9 @@ def validate_workflow_proposal(proposal: dict[str, Any]) -> None:
         for index, binding in enumerate(participant["requests"]):
             key = _request_key(participant["owner"], binding["request_id"])
             _require(key not in requests, "duplicate workflow child request")
-            _validate_child(binding, participant, index, proposal, generations, content)
+            _validate_child(
+                binding, participant, index, proposal, generations, content, recovery=recovery
+            )
             requests[key] = binding
     seen: set[bytes] = set()
     for role, reference in proposal["target"].items():
@@ -304,11 +344,12 @@ def validate_workflow_proposal(proposal: dict[str, Any]) -> None:
                     if proposal["type"] == "ingress-publication"
                     else ("fishhat.credential-issuer", "issue")
                 )
+                selected = binding.get("completed", binding)
                 _require(
-                    "adapter" in binding,
+                    "adapter" in selected,
                     "workflow adapter producer must retain its initial Plan",
                 )
-                request = binding["adapter"]["request"]
+                request = selected["adapter"]["request"]
                 _require(
                     (request["contract"], request["method"]) == expected,
                     "workflow adapter method does not match procedure role",
@@ -321,6 +362,8 @@ def _target_binding(proposal: dict[str, Any], role: str, binding: dict[str, Any]
         "workflow target changed installed procedure phase",
     )
     if proposal["type"] != "secret-rotation":
+        return
+    if "completed" in binding:
         return
     if role == "issuer_change":
         _require("plan" in binding, "rotation issuer requires ready reviewed Plan")
@@ -349,7 +392,7 @@ def _participants(proposal: dict[str, Any]) -> list[dict[str, Any]]:
 def validate_workflow_proposal_binding(workflow: dict[str, Any]) -> None:
     """Require the discoverable capsule to preserve its entire immutable proposal."""
     proposal = workflow["proposal"]
-    validate_workflow_proposal(proposal)
+    validate_workflow_proposal(proposal, recovery="recovery" in workflow)
     _require(
         proposal["workflow_id"] == workflow["id"]
         and proposal["type"] == workflow["type"]
@@ -370,6 +413,9 @@ def validate_workflow_proposal_binding(workflow: dict[str, Any]) -> None:
     phases = PHASES[workflow["type"]]
     if workflow["phase"] in phases and phases.index(workflow["phase"]) > 0:
         require_bound_phase(workflow, phases[phases.index(workflow["phase"]) - 1])
+    from .workflow_recovery import validate_recovery_custody
+
+    validate_recovery_custody(workflow)
 
 
 def prepare_workflow(
@@ -426,7 +472,14 @@ def prepare_workflow(
         local_adapters <= {canonical(item) for item in verified_adapters or []},
         "workflow local adapter selection is not independently verified",
     )
-    result = {
+    result = prepared_capsule(proposal, expected_owner)
+    validate_workflow(result)
+    return result
+
+
+def prepared_capsule(proposal: dict[str, Any], expected_owner: dict[str, Any]) -> dict[str, Any]:
+    """Construct decoded fields only; callers establish custody before validation."""
+    return {
         "format": "deployment-ops/record/v1",
         "kind": "Workflow",
         "id": proposal["workflow_id"],
@@ -447,8 +500,6 @@ def prepare_workflow(
         "advances": [],
         "bindings": [],
     }
-    validate_workflow(result)
-    return result
 
 
 def decode_workflow_input(
@@ -573,7 +624,7 @@ def _completion_witnesses(request: dict[str, Any], workflow: dict[str, Any]) -> 
     from .transfers import _proofs
 
     completion, transfer = request["transfer_completion"], workflow["transfer"]
-    if workflow["state"] != "transfer-pending":
+    if transfer is None or transfer["phase"] == "completed":
         _require(completion is None, "no pending workflow transfer to complete")
         return
     _require(
@@ -581,6 +632,10 @@ def _completion_witnesses(request: dict[str, Any], workflow: dict[str, Any]) -> 
         "workflow transfer has not committed locally",
     )
     assert completion is not None and transfer is not None
+    _require(
+        request["phase"] == workflow["phase"],
+        "driver transfer completion must preserve procedure phase",
+    )
     _require(
         completion["transfer_id"] == transfer["proposal"]["transfer_id"]
         and completion["proposal_digest"] == transfer["proposal_digest"],
@@ -613,9 +668,16 @@ def validate_advance_request(request: dict[str, Any], workflow: dict[str, Any]) 
         "workflow advance generation or driver term changed",
     )
     _require(
-        workflow["state"] in {"prepared", "active", "paused", "transfer-pending"},
-        "workflow cannot advance in this state",
+        workflow.get("recovery", {}).get("phase", "committed") == "committed",
+        "workflow recovery preparation is not committed",
     )
+    completion_only = (
+        request["transfer_completion"] is not None and request["phase"] == workflow["phase"]
+    )
+    allowed = {"prepared", "active", "paused"}
+    if completion_only:
+        allowed.add("recovery-required")
+    _require(workflow["state"] in allowed, "workflow cannot advance in this state")
     _completion_witnesses(request, workflow)
     phases = PHASES[workflow["type"]]
     position = phases.index(workflow["phase"])
@@ -652,7 +714,10 @@ def advance_workflow(request: dict[str, Any], workflow: dict[str, Any]) -> dict[
         result["transfer"]["phase"] = "completed"
     result["generation"] += 1
     result["phase"] = request["phase"]
-    result["state"] = "completed" if request["phase"] == PHASES[workflow["type"]][-1] else "active"
+    if request["phase"] != workflow["phase"]:
+        result["state"] = (
+            "completed" if request["phase"] == PHASES[workflow["type"]][-1] else "active"
+        )
     known = {canonical(witness) for witness in result["prerequisite_witnesses"]}
     for witness in request["witnesses"]:
         if canonical(witness) not in known:

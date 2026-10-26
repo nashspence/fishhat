@@ -3,9 +3,13 @@
   "actions": [
     {
       "name": "app.deploy",
-      "owner": "app-ops",
+      "owners": [
+        "app-ops"
+      ],
       "minimum_role": "operator",
-      "resource_kind": "app",
+      "resource_kinds": [
+        "app"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/app.deploy"
       },
@@ -16,9 +20,13 @@
     },
     {
       "name": "app.upgrade",
-      "owner": "app-ops",
+      "owners": [
+        "app-ops"
+      ],
       "minimum_role": "operator",
-      "resource_kind": "app",
+      "resource_kinds": [
+        "app"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/app.upgrade"
       },
@@ -29,9 +37,13 @@
     },
     {
       "name": "app.repair",
-      "owner": "app-ops",
+      "owners": [
+        "app-ops"
+      ],
       "minimum_role": "operator",
-      "resource_kind": "app",
+      "resource_kinds": [
+        "app"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/app.repair"
       },
@@ -42,9 +54,13 @@
     },
     {
       "name": "app.undeploy",
-      "owner": "app-ops",
+      "owners": [
+        "app-ops"
+      ],
       "minimum_role": "operator",
-      "resource_kind": "app",
+      "resource_kinds": [
+        "app"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/app.undeploy"
       },
@@ -55,9 +71,13 @@
     },
     {
       "name": "app.backup",
-      "owner": "app-ops",
+      "owners": [
+        "app-ops"
+      ],
       "minimum_role": "operator",
-      "resource_kind": "app",
+      "resource_kinds": [
+        "app"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/app.backup"
       },
@@ -72,9 +92,13 @@
     },
     {
       "name": "app.backup-check",
-      "owner": "app-ops",
+      "owners": [
+        "app-ops"
+      ],
       "minimum_role": "operator",
-      "resource_kind": "app",
+      "resource_kinds": [
+        "app"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/app.backup-check"
       },
@@ -85,9 +109,13 @@
     },
     {
       "name": "app.restart",
-      "owner": "app-ops",
+      "owners": [
+        "app-ops"
+      ],
       "minimum_role": "operator",
-      "resource_kind": "app",
+      "resource_kinds": [
+        "app"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/app.restart"
       },
@@ -98,9 +126,13 @@
     },
     {
       "name": "app.maintenance-run",
-      "owner": "app-ops",
+      "owners": [
+        "app-ops"
+      ],
       "minimum_role": "operator",
-      "resource_kind": "app",
+      "resource_kinds": [
+        "app"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/app.maintenance-run"
       },
@@ -111,9 +143,13 @@
     },
     {
       "name": "app.secrets-adopt",
-      "owner": "app-ops",
+      "owners": [
+        "app-ops"
+      ],
       "minimum_role": "operator",
-      "resource_kind": "app",
+      "resource_kinds": [
+        "app"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/app.secrets-adopt"
       },
@@ -124,9 +160,13 @@
     },
     {
       "name": "app.restore",
-      "owner": "app-ops",
+      "owners": [
+        "app-ops"
+      ],
       "minimum_role": "administrator",
-      "resource_kind": "app",
+      "resource_kinds": [
+        "app"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/app.restore"
       },
@@ -137,9 +177,13 @@
     },
     {
       "name": "app.drill",
-      "owner": "app-ops",
+      "owners": [
+        "app-ops"
+      ],
       "minimum_role": "administrator",
-      "resource_kind": "app",
+      "resource_kinds": [
+        "app"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/app.drill"
       },
@@ -150,9 +194,13 @@
     },
     {
       "name": "app.recover",
-      "owner": "app-ops",
+      "owners": [
+        "app-ops"
+      ],
       "minimum_role": "administrator",
-      "resource_kind": "app",
+      "resource_kinds": [
+        "app"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/app.recover"
       },
@@ -163,9 +211,13 @@
     },
     {
       "name": "app.cleanup",
-      "owner": "app-ops",
+      "owners": [
+        "app-ops"
+      ],
       "minimum_role": "administrator",
-      "resource_kind": "app",
+      "resource_kinds": [
+        "app"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/app.cleanup"
       },
@@ -180,9 +232,13 @@
     },
     {
       "name": "app.retire",
-      "owner": "app-ops",
+      "owners": [
+        "app-ops"
+      ],
       "minimum_role": "administrator",
-      "resource_kind": "app",
+      "resource_kinds": [
+        "app"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/app.retire"
       },
@@ -193,9 +249,13 @@
     },
     {
       "name": "app.relocate",
-      "owner": "app-ops",
+      "owners": [
+        "app-ops"
+      ],
       "minimum_role": "administrator",
-      "resource_kind": "app",
+      "resource_kinds": [
+        "app"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/app.relocate"
       },
@@ -206,9 +266,13 @@
     },
     {
       "name": "host.apply",
-      "owner": "host-ops",
+      "owners": [
+        "host-ops"
+      ],
       "minimum_role": "administrator",
-      "resource_kind": "host",
+      "resource_kinds": [
+        "host"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/host.apply"
       },
@@ -219,9 +283,13 @@
     },
     {
       "name": "host.runtime-install",
-      "owner": "host-ops",
+      "owners": [
+        "host-ops"
+      ],
       "minimum_role": "administrator",
-      "resource_kind": "host",
+      "resource_kinds": [
+        "host"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/host.runtime-install"
       },
@@ -232,9 +300,13 @@
     },
     {
       "name": "host.reboot",
-      "owner": "host-ops",
+      "owners": [
+        "host-ops"
+      ],
       "minimum_role": "administrator",
-      "resource_kind": "host",
+      "resource_kinds": [
+        "host"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/host.reboot"
       },
@@ -245,9 +317,13 @@
     },
     {
       "name": "host.sleep",
-      "owner": "host-ops",
+      "owners": [
+        "host-ops"
+      ],
       "minimum_role": "administrator",
-      "resource_kind": "host",
+      "resource_kinds": [
+        "host"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/host.sleep"
       },
@@ -258,9 +334,13 @@
     },
     {
       "name": "host.wake",
-      "owner": "host-ops",
+      "owners": [
+        "host-ops"
+      ],
       "minimum_role": "operator",
-      "resource_kind": "host",
+      "resource_kinds": [
+        "host"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/host.wake"
       },
@@ -271,9 +351,13 @@
     },
     {
       "name": "host.capture-changes",
-      "owner": "host-ops",
+      "owners": [
+        "host-ops"
+      ],
       "minimum_role": "operator",
-      "resource_kind": "host",
+      "resource_kinds": [
+        "host"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/host.capture-changes"
       },
@@ -288,9 +372,13 @@
     },
     {
       "name": "host.source-update",
-      "owner": "host-ops",
+      "owners": [
+        "host-ops"
+      ],
       "minimum_role": "administrator",
-      "resource_kind": "host",
+      "resource_kinds": [
+        "host"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/host.source-update"
       },
@@ -301,9 +389,13 @@
     },
     {
       "name": "host.secrets-adopt",
-      "owner": "host-ops",
+      "owners": [
+        "host-ops"
+      ],
       "minimum_role": "administrator",
-      "resource_kind": "host",
+      "resource_kinds": [
+        "host"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/host.secrets-adopt"
       },
@@ -314,9 +406,13 @@
     },
     {
       "name": "host.recover",
-      "owner": "host-ops",
+      "owners": [
+        "host-ops"
+      ],
       "minimum_role": "administrator",
-      "resource_kind": "host",
+      "resource_kinds": [
+        "host"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/host.recover"
       },
@@ -327,9 +423,13 @@
     },
     {
       "name": "host.retire",
-      "owner": "host-ops",
+      "owners": [
+        "host-ops"
+      ],
       "minimum_role": "administrator",
-      "resource_kind": "host",
+      "resource_kinds": [
+        "host"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/host.retire"
       },
@@ -340,9 +440,13 @@
     },
     {
       "name": "source.publish",
-      "owner": "host-ops",
+      "owners": [
+        "host-ops"
+      ],
       "minimum_role": "administrator",
-      "resource_kind": "source",
+      "resource_kinds": [
+        "source"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/source.publish"
       },
@@ -353,9 +457,13 @@
     },
     {
       "name": "dns.reconcile",
-      "owner": "host-ops",
+      "owners": [
+        "host-ops"
+      ],
       "minimum_role": "administrator",
-      "resource_kind": "dns",
+      "resource_kinds": [
+        "dns"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/dns.reconcile"
       },
@@ -366,9 +474,13 @@
     },
     {
       "name": "publisher.publish",
-      "owner": "host-ops",
+      "owners": [
+        "host-ops"
+      ],
       "minimum_role": "administrator",
-      "resource_kind": "publisher",
+      "resource_kinds": [
+        "publisher"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/publisher.publish"
       },
@@ -383,9 +495,13 @@
     },
     {
       "name": "publisher.recover",
-      "owner": "host-ops",
+      "owners": [
+        "host-ops"
+      ],
       "minimum_role": "administrator",
-      "resource_kind": "publisher",
+      "resource_kinds": [
+        "publisher"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/publisher.recover"
       },
@@ -400,9 +516,13 @@
     },
     {
       "name": "recovery.publish",
-      "owner": "host-ops",
+      "owners": [
+        "host-ops"
+      ],
       "minimum_role": "operator",
-      "resource_kind": "recovery",
+      "resource_kinds": [
+        "recovery"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/recovery.publish"
       },
@@ -413,9 +533,13 @@
     },
     {
       "name": "backend.check",
-      "owner": "host-ops",
+      "owners": [
+        "host-ops"
+      ],
       "minimum_role": "operator",
-      "resource_kind": "backend",
+      "resource_kinds": [
+        "backend"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/backend.check"
       },
@@ -426,9 +550,13 @@
     },
     {
       "name": "backend.prune",
-      "owner": "host-ops",
+      "owners": [
+        "host-ops"
+      ],
       "minimum_role": "administrator",
-      "resource_kind": "backend",
+      "resource_kinds": [
+        "backend"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/backend.prune"
       },
@@ -439,9 +567,13 @@
     },
     {
       "name": "adapter.execute",
-      "owner": "host-ops",
+      "owners": [
+        "host-ops"
+      ],
       "minimum_role": "administrator",
-      "resource_kind": "adapter",
+      "resource_kinds": [
+        "adapter"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/adapter.execute"
       },
@@ -454,11 +586,40 @@
     },
     {
       "name": "backend.enroll",
-      "owner": "host-ops",
+      "owners": [
+        "host-ops"
+      ],
       "minimum_role": "administrator",
-      "resource_kind": "backend",
+      "resource_kinds": [
+        "backend"
+      ],
       "arguments_schema": {
         "$ref": "actions.schema.json#/$defs/backend.enroll"
+      },
+      "requires_plan": true,
+      "result": {
+        "mode": "receipt-only"
+      }
+    },
+    {
+      "name": "operation.recover",
+      "owners": [
+        "app-ops",
+        "host-ops"
+      ],
+      "minimum_role": "administrator",
+      "resource_kinds": [
+        "adapter",
+        "app",
+        "backend",
+        "dns",
+        "host",
+        "publisher",
+        "recovery",
+        "source"
+      ],
+      "arguments_schema": {
+        "$ref": "actions.schema.json#/$defs/operation.recover"
       },
       "requires_plan": true,
       "result": {

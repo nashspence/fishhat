@@ -239,7 +239,8 @@
             "source-proposal",
             "native-config",
             "secret-candidate",
-            "workflow-input"
+            "workflow-input",
+            "plan-input"
           ]
         },
         "binding": {
@@ -393,7 +394,9 @@
               "enum": [
                 "Plan",
                 "Operation",
-                "Workflow"
+                "Workflow",
+                "Discovery",
+                "ResourceReport"
               ]
             },
             "id": {
@@ -442,7 +445,7 @@
         "size"
       ],
       "additionalProperties": false,
-      "description": "An owner-minted immutable canonical-JSON snapshot of one complete record, independently of operation admission. The record identity, exact owner epoch, record-declared generation, installed schema closure, complete byte digest and size are inseparable. Immutable Plans use null generation; Operations and Workflows use their declared generation, with the digest distinguishing every snapshot. Possession grants no read or execution authority: every record.read rechecks the actual receiving principal and the protected snapshot resource closure. The owner commits complete retrievable snapshot custody before advertising this reference. Later generations never replace its bytes. Plan expiry affects admission, not completion of an already advertised traversal; accepted, active, uncertain and recovery-required custody cannot lose its only retrievable evidence. An explicit expired or restored snapshot requires a fresh record lookup, never silent rebinding. Accepted work must remain discoverable and fully retrievable through its current record even if old completed traversals are collected. This reference does not establish plan review, acceptance or execution success before its complete payload is verified. Size describes the record and adds no total-size limit beyond its owning contract; transfers use bounded chunks and local capacity failures must be explicit. A historical schema closure is readable only through an immutable reader independently installed by the receiver for that exact digest and the declared record-kind URI. CLI envelopes, SSH results, pages and chunks propagate the same trusted reader context; neither the record nor its caller can install a reader. Historical retrieval does not admit new work under an obsolete schema.",
+      "description": "An owner-minted immutable canonical-JSON snapshot of one complete record, independently of operation admission. The record identity, exact owner epoch, record-declared generation, installed schema closure, complete byte digest and size are inseparable. Immutable Plans use null generation; Operations and Workflows use their declared generation, with the digest distinguishing every snapshot. Possession grants no read or execution authority: every record.read rechecks the actual receiving principal and the protected snapshot resource closure. The owner commits complete retrievable snapshot custody before advertising this reference. Later generations never replace its bytes. Plan expiry affects admission, not completion of an already advertised traversal; accepted, active, uncertain and recovery-required custody cannot lose its only retrievable evidence. An explicit expired or restored snapshot requires a fresh record lookup, never silent rebinding. Accepted work must remain discoverable and fully retrievable through its current record even if old completed traversals are collected. This reference does not establish plan review, acceptance or execution success before its complete payload is verified. Size describes the record and adds no total-size limit beyond its owning contract; transfers use bounded chunks and local capacity failures must be explicit. A historical schema closure is readable only through an immutable reader independently installed by the receiver for that exact digest and the declared record-kind URI. CLI envelopes, SSH results, pages and chunks propagate the same trusted reader context; neither the record nor its caller can install a reader. Historical retrieval does not admit new work under an obsolete schema. Discovery and ResourceReport use immutable observation snapshot identities: record.id equals snapshot_id and generation is null, because neither invents a ledger generation. Discovery pins records.schema.json#/$defs/Info; ResourceReport pins resource-records.schema.json#/$defs/ResourceReport. Reassembly yields exactly the complete inline payload under that schema. Each read reauthorizes its protected disclosure scope and snapshot; later observations never change these bytes. A retained reader is selected by this exact kind URI and closure digest, not by treating an observation as an Operation.",
       "allOf": [
         {
           "if": {
@@ -450,7 +453,11 @@
               "record": {
                 "properties": {
                   "kind": {
-                    "const": "Plan"
+                    "enum": [
+                      "Plan",
+                      "Discovery",
+                      "ResourceReport"
+                    ]
                   }
                 }
               }

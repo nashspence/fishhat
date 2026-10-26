@@ -20,6 +20,7 @@ from tests.adapter_support import (
     runtime_sources,
     service_instance,
     service_request,
+    service_source_target,
 )
 from tests.test_adapter_effects import coordinator, prepare, result
 
@@ -51,7 +52,9 @@ def prepare_service(c, activity="running", **changes):
         **runtime_sources(c.registry),
         **changes,
     }
-    return c.prepare_service("demo", "service-demo", service_request(activity), **values)
+    return c.prepare_service(
+        "demo", "service-demo", service_request(activity, c.registry), **values
+    )
 
 
 def test_binding_identity_survives_close_and_restore_admission_fences():
@@ -356,7 +359,7 @@ def test_disjoint_service_namespace_can_remain_independently_owned():
     instance["grants"][0]["mutation"]["namespaces"][0]["resource"] = "host-agent.service"
     registry.enroll(instance, owner_approved=True)
     assert (
-        registry.authorize("service-demo", "service", "set-activity", SCOPE, owner_approved=True)
+        registry.authorize("service-demo", "service", "apply", SCOPE, owner_approved=True)
         == instance
     )
 
@@ -393,7 +396,7 @@ def test_subordinate_cannot_use_generic_authorization_as_a_dispatch_bypass():
     registry, _, _ = runtime_registry()
     registry.enroll(service_instance(registry), owner_approved=True)
     with pytest.raises(ContractError, match="MUTATION_OWNER_REQUIRED"):
-        registry.authorize("service-demo", "service", "set-activity", SCOPE, owner_approved=True)
+        registry.authorize("service-demo", "service", "apply", SCOPE, owner_approved=True)
 
 
 @pytest.mark.parametrize("field", ["controller", "mutation", "runtime_control"])
@@ -434,7 +437,7 @@ def test_delegated_service_target_is_confined_to_enrolled_lifecycle_namespace():
     c, _ = coordinator()
     delegated(c)
     value = service_request()
-    value["input"]["service"] = "unrelated.service"
+    value["input"]["target"]["namespace"]["resource"] = "unrelated.service"
     with pytest.raises(ContractError, match="SERVICE_OUTSIDE_MUTATION_NAMESPACE"):
         c.prepare_service(
             "demo",
@@ -509,6 +512,7 @@ def test_restored_service_attempt_stays_pinned_to_accepted_executor_instance(cha
     elif changed == "configuration":
         replacement["configuration"]["manager_handle"] = "another-manager"
     registry.enroll(replacement, owner_approved=True)
+    service_source_target(registry)
     restored = AdapterCoordinator(OWNER, registry, lambda value: None)
     restored.restore(saved)
     assert restored.snapshot()["attempts"] == saved["attempts"]
@@ -525,7 +529,7 @@ def test_retained_service_activity_cannot_be_relabelled_as_a_containment_effect(
     delegated(c)
     attempt = prepare_service(c)
     state = c.snapshot()
-    state["attempts"][attempt["attempt_id"]]["runtime_control"]["activity"] = "stopped"
+    state["attempts"][attempt["attempt_id"]]["runtime_control"]["intent"]["activity"] = "stopped"
     with pytest.raises(ContractError, match="DELEGATED_INPUT_IDENTITY"):
         c.restore(state)
 

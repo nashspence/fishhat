@@ -20,77 +20,29 @@
           "const": true
         },
         "result": {
-          "type": "object",
-          "properties": {
-            "owner": {
-              "type": "object",
-              "properties": {
-                "tool": {
-                  "enum": [
-                    "host-ops",
-                    "app-ops"
-                  ]
+          "oneOf": [
+            {
+              "$ref": "records.schema.json#/$defs/Info"
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "common.schema.json#/$defs/RecordReference"
                 },
-                "id": {
-                  "type": "string",
-                  "format": "uuid",
-                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-                },
-                "epoch": {
-                  "type": "string",
-                  "format": "uuid",
-                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+                {
+                  "properties": {
+                    "record": {
+                      "properties": {
+                        "kind": {
+                          "const": "Discovery"
+                        }
+                      }
+                    }
+                  }
                 }
-              },
-              "required": [
-                "tool",
-                "id",
-                "epoch"
-              ],
-              "additionalProperties": false
-            },
-            "wire": {
-              "const": "deployment-ops/owner/v1"
-            },
-            "source_formats": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 128
-              },
-              "minItems": 1
-            },
-            "actions": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 96
-              },
-              "minItems": 0,
-              "uniqueItems": true
-            },
-            "adapters": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "minLength": 71,
-                "maxLength": 71,
-                "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
-              },
-              "minItems": 0,
-              "uniqueItems": true
+              ]
             }
-          },
-          "required": [
-            "owner",
-            "wire",
-            "source_formats",
-            "actions",
-            "adapters"
-          ],
-          "additionalProperties": false
+          ]
         }
       },
       "required": [
@@ -871,7 +823,8 @@
             "history.list",
             "history.read",
             "history.content",
-            "workflow.bind"
+            "workflow.bind",
+            "workflow.recover"
           ]
         },
         "ok": {
@@ -908,7 +861,29 @@
           "const": true
         },
         "result": {
-          "$ref": "resource-records.schema.json#/$defs/ResourceReport"
+          "oneOf": [
+            {
+              "$ref": "resource-records.schema.json#/$defs/ResourceReport"
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "common.schema.json#/$defs/RecordReference"
+                },
+                {
+                  "properties": {
+                    "record": {
+                      "properties": {
+                        "kind": {
+                          "const": "ResourceReport"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
         }
       },
       "required": [
@@ -1163,6 +1138,61 @@
                   }
                 }
               ]
+            }
+          ]
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "ok",
+        "result"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "workflow.recover"
+        },
+        "ok": {
+          "const": true
+        },
+        "result": {
+          "oneOf": [
+            {
+              "$ref": "records.schema.json#/$defs/Workflow"
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "common.schema.json#/$defs/RecordReference"
+                },
+                {
+                  "properties": {
+                    "record": {
+                      "properties": {
+                        "kind": {
+                          "const": "Workflow"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "$ref": "workflow-recovery.schema.json#/$defs/Abandonment"
             }
           ]
         }

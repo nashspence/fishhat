@@ -254,18 +254,24 @@ class AdapterCoordinator:
         )
 
     def _service_instance(
-        self, binding: dict[str, Any], instance_id: str, service: str
+        self, binding: dict[str, Any], instance_id: str, target: dict[str, Any]
     ) -> dict[str, Any]:
         instance = self.registry.inspect_delegation(
-            binding["instance"], instance_id, "service", "set-activity", binding["scope"]
+            binding["instance"], instance_id, "service", "apply", binding["scope"]
         )
         grant = next(g for g in instance["grants"] if g["scope"] == binding["scope"])
         require(
-            any(
-                n["resource"] == service and n["facet"] == "lifecycle"
-                for n in grant["mutation"]["namespaces"]
-            ),
+            target["namespace"] in grant["mutation"]["namespaces"]
+            and target["namespace"]["facet"] == "lifecycle",
             "SERVICE_OUTSIDE_MUTATION_NAMESPACE",
+        )
+        require(
+            target["executor"] == instance_reference(instance, binding["scope"]),
+            "STALE_EXECUTOR_INSTANCE",
+        )
+        require(
+            self.registry.source_target(target["selection"], "service", binding["scope"]) == target,
+            "SOURCE_TARGET_MAPPING_IDENTITY",
         )
         return instance
 
@@ -286,14 +292,14 @@ class AdapterCoordinator:
         require(not self._poisoned, "OWNER_COMMIT_UNCERTAIN")
         require(owner_approved, "OPERATION_NOT_AUTHORIZED")
         check_request("service", request)
-        require(request["method"] == "set-activity", "UNSUPPORTED_DELEGATED_EFFECT")
+        require(request["method"] == "apply", "UNSUPPORTED_DELEGATED_EFFECT")
         binding = self.state["bindings"].get(subject)
         require(binding is not None, "UNKNOWN_BINDING")
         assert binding is not None
         require(request["input"]["scope"] == binding["scope"], "REQUEST_SCOPE")
         self._instance_matches(binding)
         self._source_matches(binding, host, app)
-        instance = self._service_instance(binding, instance_id, request["input"]["service"])
+        instance = self._service_instance(binding, instance_id, request["input"]["target"])
         return self._prepare(
             binding,
             instance,
@@ -303,8 +309,8 @@ class AdapterCoordinator:
             attempt_id=attempt_id,
             runtime_control={
                 "binding_digest": runtime_binding_digest(binding),
-                "service": request["input"]["service"],
-                "activity": request["input"]["activity"],
+                "target": copy.deepcopy(request["input"]["target"]),
+                "intent": copy.deepcopy(request["input"]["intent"]),
             },
         )
 
@@ -418,7 +424,7 @@ class AdapterCoordinator:
             )
         control = self._service_control(binding, attempt)
         instance = self._service_instance(
-            binding, attempt["executor"]["instance"], control["service"]
+            binding, attempt["executor"]["instance"], control["target"]
         )
         require(
             attempt["executor"] == instance_reference(instance, binding["scope"]),
@@ -426,7 +432,7 @@ class AdapterCoordinator:
         )
         return (
             instance,
-            "closed" if control["activity"] == "stopped" else "open",
+            "closed" if control["intent"]["activity"] == "stopped" else "open",
         )
 
     @staticmethod
@@ -434,7 +440,7 @@ class AdapterCoordinator:
         """Check retained input identity without requiring a currently available executor."""
         require(
             attempt["contract"] == "fishhat.service"
-            and attempt["method"] == "set-activity"
+            and attempt["method"] == "apply"
             and "runtime_control" in attempt,
             "RUNTIME_CONTROL_REQUIRED",
         )
@@ -442,11 +448,11 @@ class AdapterCoordinator:
         require(control["binding_digest"] == runtime_binding_digest(binding), "STALE_DISPATCH")
         request = {
             "contract": "fishhat.service",
-            "method": "set-activity",
+            "method": "apply",
             "input": {
                 "scope": binding["scope"],
-                "service": control["service"],
-                "activity": control["activity"],
+                "target": control["target"],
+                "intent": control["intent"],
             },
         }
         require(digest(request) == attempt["input_digest"], "DELEGATED_INPUT_IDENTITY")

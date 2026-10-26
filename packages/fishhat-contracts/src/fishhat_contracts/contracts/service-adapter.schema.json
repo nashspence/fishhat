@@ -8,51 +8,17 @@
         "scope": {
           "$ref": "adapter.schema.json#/$defs/Scope"
         },
-        "service": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 160,
-          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*(?![\\s\\S])"
+        "target": {
+          "$ref": "adapter.schema.json#/$defs/SourceTargetBinding"
         },
-        "activity": {
-          "enum": [
-            "running",
-            "stopped",
-            "oneshot-complete"
-          ]
+        "intent": {
+          "$ref": "#/$defs/Intent"
         }
       },
       "required": [
         "scope",
-        "service",
-        "activity"
-      ],
-      "additionalProperties": false
-    },
-    "set-activity": {
-      "type": "object",
-      "properties": {
-        "scope": {
-          "$ref": "adapter.schema.json#/$defs/Scope"
-        },
-        "service": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 160,
-          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*(?![\\s\\S])"
-        },
-        "activity": {
-          "enum": [
-            "running",
-            "stopped",
-            "oneshot-complete"
-          ]
-        }
-      },
-      "required": [
-        "scope",
-        "service",
-        "activity"
+        "target",
+        "intent"
       ],
       "additionalProperties": false
     },
@@ -76,14 +42,19 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 256
+        },
+        "binding": {
+          "$ref": "adapter.schema.json#/$defs/InstanceReference"
         }
       },
       "required": [
         "scope",
         "cursor",
-        "limit"
+        "limit",
+        "binding"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "List exact service observations within one approved scope. limit bounds returned services per response; a continuation advances within one stable observation snapshot and binds executor, scope and query. Changed snapshot identity requires explicit restart, never omission. Complete coverage has no continuation; incomplete pages advance their cursor. Different services may have different activity and enablement."
     },
     "reconcile": {
       "type": "object",
@@ -105,17 +76,29 @@
     "Output": {
       "type": "object",
       "properties": {
-        "activity": {
-          "enum": [
-            "running",
-            "stopped",
-            "oneshot-complete",
-            "unknown"
+        "services": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ServiceObservation"
+          },
+          "minItems": 0,
+          "uniqueItems": true,
+          "maxItems": 256
+        },
+        "transition": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TransitionReceipt"
+            },
+            {
+              "type": "null"
+            }
           ]
         }
       },
       "required": [
-        "activity"
+        "services",
+        "transition"
       ],
       "additionalProperties": false
     },
@@ -177,7 +160,20 @@
             "proposal",
             "output"
           ],
-          "additionalProperties": false
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "properties": {
+                "output": {
+                  "properties": {
+                    "transition": {
+                      "type": "null"
+                    }
+                  }
+                }
+              }
+            }
+          ]
         },
         {
           "type": "object",
@@ -186,7 +182,7 @@
               "const": "fishhat.service"
             },
             "method": {
-              "const": "set-activity"
+              "const": "apply"
             },
             "request_digest": {
               "$ref": "common.schema.json#/$defs/Digest"
@@ -277,12 +273,9 @@
                   },
                   "output": {
                     "properties": {
-                      "activity": {
-                        "enum": [
-                          "running",
-                          "stopped",
-                          "oneshot-complete"
-                        ]
+                      "services": {
+                        "minItems": 1,
+                        "maxItems": 1
                       }
                     }
                   }
@@ -348,7 +341,20 @@
             "proposal",
             "output"
           ],
-          "additionalProperties": false
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "properties": {
+                "output": {
+                  "properties": {
+                    "transition": {
+                      "type": "null"
+                    }
+                  }
+                }
+              }
+            }
+          ]
         },
         {
           "type": "object",
@@ -424,10 +430,10 @@
               "const": "fishhat.service"
             },
             "method": {
-              "const": "set-activity"
+              "const": "apply"
             },
             "input": {
-              "$ref": "#/$defs/set-activity"
+              "$ref": "#/$defs/apply"
             }
           },
           "required": [
@@ -438,6 +444,184 @@
           "additionalProperties": false
         }
       ]
+    },
+    "Intent": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "activity": {
+          "enum": [
+            "running",
+            "stopped",
+            "oneshot-complete"
+          ]
+        },
+        "transition": {
+          "enum": [
+            "ensure",
+            "reload",
+            "restart"
+          ]
+        }
+      },
+      "required": [
+        "enabled",
+        "activity",
+        "transition"
+      ],
+      "additionalProperties": false,
+      "description": "Desired boot enablement and current activity are independent. ensure converges those states and permits a verified no-op. reload and restart are explicit events, require desired running activity, and cannot be proved merely by observing a running service. Unsupported reload is a no-effect rejection, never an implicit restart. A restart may use one native restart or an ordered separately confirmed stop/start compound.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "transition": {
+                "enum": [
+                  "reload",
+                  "restart"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "activity": {
+                "const": "running"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ServiceObservation": {
+      "type": "object",
+      "properties": {
+        "target": {
+          "$ref": "adapter.schema.json#/$defs/SourceTargetBinding"
+        },
+        "enabled": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "activity": {
+          "enum": [
+            "running",
+            "stopped",
+            "oneshot-complete",
+            "unknown"
+          ]
+        }
+      },
+      "required": [
+        "target",
+        "enabled",
+        "activity"
+      ],
+      "additionalProperties": false,
+      "description": "One exact approved native service target. enabled reports observed boot policy independently of current activity; null means unknown policy. No aggregate activity substitutes for separate services in a shared scope. Native interpretation and accepted namespace identity stay with the selected executor."
+    },
+    "TransitionReceipt": {
+      "type": "object",
+      "properties": {
+        "attempt_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "target": {
+          "$ref": "adapter.schema.json#/$defs/SourceTargetBinding"
+        },
+        "transition": {
+          "enum": [
+            "reload",
+            "restart"
+          ]
+        },
+        "outcome": {
+          "enum": [
+            "succeeded",
+            "unsupported",
+            "failed",
+            "unknown"
+          ]
+        },
+        "mode": {
+          "anyOf": [
+            {
+              "enum": [
+                "native",
+                "stop-start"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "confirmations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "enum": [
+                  "reload",
+                  "restart",
+                  "stop",
+                  "start"
+                ]
+              },
+              "receipt": {
+                "$ref": "adapter.schema.json#/$defs/Artifact"
+              }
+            },
+            "required": [
+              "action",
+              "receipt"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "uniqueItems": true,
+          "maxItems": 2
+        }
+      },
+      "required": [
+        "attempt_id",
+        "target",
+        "transition",
+        "outcome",
+        "mode",
+        "confirmations"
+      ],
+      "additionalProperties": false,
+      "description": "Owner-retained native completion evidence for the exact event attempt, not current activity or a new dispatch token. Native reload/restart requires its own action confirmation. stop-start restart requires ordered stop and start confirmations; each receipt is immutable retained native evidence bound to this attempt and target. Unsupported events contain no confirmations and require a rejected terminal no-effect response. Unknown or partial effects retain prior confirmations and cannot authorize repetition."
+    },
+    "apply": {
+      "type": "object",
+      "properties": {
+        "scope": {
+          "$ref": "adapter.schema.json#/$defs/Scope"
+        },
+        "target": {
+          "$ref": "adapter.schema.json#/$defs/SourceTargetBinding"
+        },
+        "intent": {
+          "$ref": "#/$defs/Intent"
+        }
+      },
+      "required": [
+        "scope",
+        "target",
+        "intent"
+      ],
+      "additionalProperties": false
     }
   },
   "oneOf": [
@@ -468,10 +652,10 @@
           "const": "fishhat.service"
         },
         "method": {
-          "const": "set-activity"
+          "const": "apply"
         },
         "input": {
-          "$ref": "#/$defs/set-activity"
+          "$ref": "#/$defs/apply"
         }
       },
       "required": [
@@ -522,5 +706,5 @@
       "additionalProperties": false
     }
   ],
-  "description": "Service identity resolves to an owner-verified native target and mutation facet. Service lifecycle and runtime lifecycle cannot have independent controllers for the same target. A service executor enrolled under a runtime controller must act only through that controller's durable attempt, accepted binding, admission and recovery protections. Direct set-activity, reconcile or generic adapter dispatch cannot supply competing authority. Native target alias resolution and exclusion remain receiving-owner obligations. Mutation request objects are typed planning payloads. Native execution requires the owner-authored adapter Invocation with its exact attempt and accepted executor; a bare role request is not an alternate executable boundary."
+  "description": "Service identity resolves to an owner-verified native target and mutation facet. Service lifecycle and runtime lifecycle cannot have independent controllers for the same target. A service executor enrolled under a runtime controller must act only through that controller's durable attempt, accepted binding, admission and recovery protections. Direct apply, reconcile or generic adapter dispatch cannot supply competing authority. Native target alias resolution and exclusion remain receiving-owner obligations. Mutation request objects are typed planning payloads. Native execution requires the owner-authored adapter Invocation with its exact attempt and accepted executor; a bare role request is not an alternate executable boundary. Every apply retains the exact independently approved SourceTargetBinding and complete typed intent. A requested boot-policy change changes the request identity even when activity remains running. Reconciliation must return the original intent result and event confirmations without executing it again."
 }

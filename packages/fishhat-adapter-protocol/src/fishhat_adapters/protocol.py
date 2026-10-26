@@ -9,12 +9,12 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, cast
 
-from fishhat_contracts.validation import FORMAT_CHECKER, ContractError, canonical, digest, validate
-from jsonschema import Draft202012Validator
+from fishhat_contracts.validation import ContractError, canonical, digest, validate
 from referencing.exceptions import Unresolvable
 
 from .dns import validate_changes, validate_rrsets
-from .schemas import check_closed_schema
+from .schemas import check_closed_schema, validate_configuration
+from .targets import check_target_request, check_target_response
 
 ROLES: dict[str, dict[str, dict[str, Any]]] = json.loads(
     Path(__file__).with_name("roles.json").read_text(encoding="utf-8")
@@ -51,8 +51,7 @@ def check_configuration(schema: dict[str, Any], value: Any, expected_digest: str
     require(digest(schema) == expected_digest, "SCHEMA_IDENTITY")
     require(len(canonical(value)) <= 1048576, "CONFIGURATION_CAPACITY")
     try:
-        errors = Draft202012Validator(schema, format_checker=FORMAT_CHECKER).iter_errors(value)
-        require(next(errors, None) is None, "CONFIGURATION_REJECTED")
+        require(validate_configuration(schema, value), "CONFIGURATION_REJECTED")
     except (RecursionError, Unresolvable):
         raise ContractError("CONFIGURATION_REJECTED") from None
 
@@ -74,6 +73,7 @@ def check_request(role: str, value: dict[str, Any]) -> None:
             "RECONCILIATION_IDENTITY",
         )
         return
+    check_target_request(role, value)
     if role == "compute" and method in {"plan", "set-limits"}:
         _check_limits(inputs["limits"])
     if role == "dns" and method in {"plan", "publish"}:
@@ -149,6 +149,11 @@ def check_invocation(role: str, value: dict[str, Any]) -> None:
 
 def _handoff_binding(role: str, request: dict[str, Any]) -> dict[str, Any] | None:
     method, inputs = request["method"], request["input"]
+    if role in {"service", "software"} and method != "reconcile":
+        return cast(
+            dict[str, Any],
+            inputs["binding"] if method == "observe" else inputs["target"]["executor"],
+        )
     if (role == "capture" and method in {"assess", "capture", "restore", "verify"}) or (
         role == "secret-source" and method in {"resolve", "publish"}
     ):
@@ -220,6 +225,7 @@ def check_response(
         check_result(invocation["attempt"], response["effect"])
     _check_handoff_response(role, request, response)
     _check_observed_quantities(role, response["output"])
+    check_target_response(role, request, response, invocation["attempt"] if invocation else None)
     if "effect" in response and _succeeded(response["effect"]):
         assert invocation is not None
         _check_success_output(role, request, response["output"], invocation["attempt"]["executor"])
@@ -397,10 +403,6 @@ def _check_success_output(
             and output["objects"][0]["repository"] == inputs["repository"]
             and _same_set(output["objects"][0]["artifacts"], inputs["artifacts"])
         ),
-        "software": lambda: (
-            output["selections"] == [inputs["selection"]]
-            and _same_set(output["artifacts"], inputs["artifacts"])
-        ),
         "ingress": lambda: output["serving_generation"] == inputs["generation_digest"],
         "network": lambda: output["policy_generation"] == inputs["policy_digest"],
         "dns": lambda: _same_set(
@@ -411,7 +413,6 @@ def _check_success_output(
                 if change["after"] is not None
             ],
         ),
-        "service": lambda: output["activity"] == inputs["activity"],
         "secret-source": lambda: all(
             item["source"] == executor["instance"]
             and item["entry"] == inputs["entry"]
@@ -608,6 +609,25 @@ class Registry:
         require(previous is None or previous == target, "EXPLICIT_SOURCE_TARGET_REBIND_REQUIRED")
         self._source_targets[key] = copy.deepcopy(target)
 
+    def source_target(
+        self, selection: dict[str, Any], role: str, scope: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Read the independently approved exact target; this does not authorize dispatch."""
+        self.resolve_source(selection, role, scope)
+        target = self._source_targets.get(self._source_target_key(selection, role, scope))
+        require(target is not None, "UNAPPROVED_SOURCE_TARGET_MAPPING")
+        assert target is not None
+        return copy.deepcopy(target)
+
+    def _check_source_target_mapping(self, role: str, request: dict[str, Any]) -> None:
+        inputs = request["input"]
+        if role in {"service", "software"} and "target" in inputs:
+            target = inputs["target"]
+            require(
+                self.source_target(target["selection"], role, inputs["scope"]) == target,
+                "SOURCE_TARGET_MAPPING_IDENTITY",
+            )
+
     def resolve_host_targets(self, host: dict[str, Any]) -> list[dict[str, Any]]:
         """Join host declarations to approved selectors and reject aliased native writers.
 
@@ -777,6 +797,12 @@ class Registry:
             )
             if original["method"] in {"resolve", "fetch", "publish"}:
                 self._check_repository_mapping(original["input"]["repository"])
+        original = (
+            request["input"]["invocation"]["request"]
+            if request["method"] == "reconcile"
+            else request
+        )
+        self._check_source_target_mapping(role, original)
         return instance
 
     def authorize_invocation(
@@ -808,6 +834,7 @@ class Registry:
         )
         if role == "repository":
             self._check_repository_mapping(request["input"]["repository"])
+        self._check_source_target_mapping(role, request)
         return instance
 
     def authorize(

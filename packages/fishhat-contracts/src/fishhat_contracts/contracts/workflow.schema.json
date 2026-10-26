@@ -97,6 +97,9 @@
               },
               {
                 "$ref": "workflow.schema.json#/$defs/DeferredBinding"
+              },
+              {
+                "$ref": "workflow.schema.json#/$defs/CompletedBinding"
               }
             ]
           },
@@ -603,7 +606,7 @@
         "transfer_completion"
       ],
       "additionalProperties": false,
-      "description": "One immutable advance identity. The receiving owner reauthorizes the actual principal, resolves advance_id and exact retained input before current generation/term or new-input expiry checks, and replays an identical accepted transition without executing it again. Changed input under the same advance_id conflicts. A new request compares the exact local capsule generation and current driver term and follows the installed next phase; it cannot skip phases or revive terminal/recovery-required work. Every prerequisite witness is independently authenticated and checked against its local procedure obligations. When a transfer is pending in commit phase, transfer_completion must contain the complete transferred-witness closure for the exact proposal and the unchanged retained local commit. The owner atomically retains that evidence, marks the transfer completed, records the advance outcome and increments its capsule generation once. Completion may preserve the current procedure phase, or enter its immediate successor. It never implies rollback, release of holds or completion of a child operation. An unavailable epoch or incomplete evidence remains unresolved and cannot be replaced by timeout."
+      "description": "One immutable advance identity. The receiving owner reauthorizes the actual principal, resolves advance_id and exact retained input before current generation/term or new-input expiry checks, and replays an identical accepted transition without executing it again. Changed input under the same advance_id conflicts. A new request compares the exact local capsule generation and current driver term and follows the installed next phase; it cannot skip phases or revive terminal/recovery-required work. Every prerequisite witness is independently authenticated and checked against its local procedure obligations. When a transfer is pending in commit phase, transfer_completion must contain the complete transferred-witness closure for the exact proposal and the unchanged retained local commit. The owner atomically retains that evidence, marks the transfer completed, records the advance outcome and increments its capsule generation once. Transfer completion must preserve the current procedure phase and exact lifecycle state; subsequent phase progress requires a separate ordinarily authorized advance. It never implies rollback, release of holds or completion of a child operation. An unavailable epoch or incomplete evidence remains unresolved and cannot be replaced by timeout. Driver transfer is orthogonal to lifecycle. Completion preserves the exact prior lifecycle state, including paused and recovery-required. No transfer is permitted to reactivate cancelled or completed work. A successor with recovery preparation not yet committed cannot advance."
     },
     "AdvanceReceipt": {
       "type": "object",
@@ -629,7 +632,10 @@
         },
         "state": {
           "enum": [
+            "prepared",
             "active",
+            "paused",
+            "recovery-required",
             "completed"
           ]
         }
@@ -678,7 +684,7 @@
         "input"
       ],
       "additionalProperties": false,
-      "description": "The sole wire input shape for workflow.prepare, workflow.bind, workflow.advance and workflow.transfer. Complete canonical-JSON payloads are staged through content.begin/chunk/commit under resource {kind: workflow, id: workflow_id}; the RPC carries only this bounded immutable reference. The method owns the payload schema: PrepareRequest, BindRequest, AdvanceRequest or records.WorkflowTransferRequest respectively. No caller-selected schema, inline alternate, subset or truncated witness closure is accepted. Verify complete bytes, digest, size, exact owner epoch, protected staging scope and current principal before interpreting the payload. Resolve a previously retained exact semantic request before new-admission expiry checks; original accepted content remains pinned. An authorized replacement caller may restage the identical canonical request: the handle is a transport locator, while the decoded immutable request defines replay identity. New requests require fresh committed custody and independently approved receiving capacity. Chunk bounds do not bound the complete proposal or evidence set. Before acknowledgment the receiving owner authorizes every participant resource it owns and retains the decoded original input plus all needed content. These declarations do not implement staging, native authorization or persistence."
+      "description": "The sole wire input shape for workflow.prepare, workflow.bind, workflow.advance, workflow.transfer and workflow.recover. Complete canonical-JSON payloads are staged through content.begin/chunk/commit under resource {kind: workflow, id: workflow_id}; the RPC carries only this bounded immutable reference. The method owns the payload schema: PrepareRequest, BindRequest, AdvanceRequest, records.WorkflowTransferRequest or workflow-recovery.RecoveryRequest respectively. No caller-selected schema, inline alternate, subset or truncated witness closure is accepted. Verify complete bytes, digest, size, exact owner epoch, protected staging scope and current principal before interpreting the payload. Resolve a previously retained exact semantic request before new-admission expiry checks; original accepted content remains pinned. An authorized replacement caller may restage the identical canonical request: the handle is a transport locator, while the decoded immutable request defines replay identity. New requests require fresh committed custody and independently approved receiving capacity. Chunk bounds do not bound the complete proposal or evidence set. Before acknowledgment the receiving owner authorizes every participant resource it owns and retains the decoded original input plus all needed content. These declarations do not implement staging, native authorization or persistence."
     },
     "AdapterInput": {
       "type": "object",
@@ -749,21 +755,56 @@
             "expected_previous": {
               "anyOf": [
                 {
-                  "$ref": "common.schema.json#/$defs/Digest"
+                  "$ref": "adapter.schema.json#/$defs/SecretPublicationPredecessor"
                 },
                 {
                   "type": "null"
                 }
               ]
+            },
+            "source": {
+              "allOf": [
+                {
+                  "$ref": "adapter.schema.json#/$defs/InstanceReference"
+                },
+                {
+                  "properties": {
+                    "role": {
+                      "const": "secret-source"
+                    }
+                  }
+                }
+              ]
+            },
+            "entry": {
+              "$ref": "common.schema.json#/$defs/Entry"
+            },
+            "consumer": {
+              "$ref": "common.schema.json#/$defs/Id"
+            },
+            "version": {
+              "$ref": "adapter.schema.json#/$defs/Handle"
+            },
+            "catalogue_digest": {
+              "$ref": "common.schema.json#/$defs/Digest"
+            },
+            "evidence_schema": {
+              "$ref": "common.schema.json#/$defs/SchemaIdentity"
             }
           },
           "required": [
             "kind",
             "issuer",
-            "expected_previous"
+            "expected_previous",
+            "source",
+            "entry",
+            "consumer",
+            "version",
+            "catalogue_digest",
+            "evidence_schema"
           ],
           "additionalProperties": false,
-          "description": "Publish the actual complete ciphertext candidate produced from the exact successful issuer child. The selected publisher is this participant; expected_previous is immutable. The candidate does not exist at preparation and is admitted only with an independently verified ProducedMaterial binding, complete content custody and a new reviewed publisher.publish Plan. This output intent may only be the first request for its participant. Every later request must be a reviewed-successor tied to the immediately preceding successful child, so two output slots cannot bind against one unchanged resource generation."
+          "description": "Publish the actual complete ciphertext candidate produced from the exact successful issuer child. The selected publisher is this participant; source, entry, consumer, immutable version, catalogue digest and expected_previous are immutable. The candidate does not exist at preparation and is admitted only with an independently verified ProducedMaterial binding, complete content custody and a new reviewed publisher.publish Plan. This output intent may only be the first request for its participant. Every later request must be a reviewed-successor tied to the immediately preceding successful child, so two output slots cannot bind against one unchanged resource generation."
         },
         {
           "type": "object",
@@ -941,6 +982,74 @@
       ],
       "additionalProperties": false,
       "description": "The complete accepted binding request and local committed capsule generation. Retained exact input supports replay after deadline, generation or driver changes; current access remains required. Binding receipts are append-only, unique by bind_id and child, and preserve preceding output lineage."
+    },
+    "CompletedBinding": {
+      "type": "object",
+      "properties": {
+        "request_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "phase": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "completed": {
+          "type": "object",
+          "properties": {
+            "plan": {
+              "$ref": "records.schema.json#/$defs/Plan"
+            },
+            "operation": {
+              "$ref": "records.schema.json#/$defs/Operation"
+            },
+            "adapter": {
+              "$ref": "workflow.schema.json#/$defs/AdapterInput"
+            }
+          },
+          "required": [
+            "plan",
+            "operation"
+          ],
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "plan": {
+                    "properties": {
+                      "subject": {
+                        "properties": {
+                          "action": {
+                            "const": "adapter.execute"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "adapter"
+                ]
+              },
+              "else": {
+                "not": {
+                  "required": [
+                    "adapter"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "request_id",
+        "phase",
+        "completed"
+      ],
+      "additionalProperties": false,
+      "description": "A nonexecutable successor slot fulfilled by an exact previously succeeded operation and its original Plan. The new slot identity is a workflow reference, never a new operation request. Original owner epoch, request identity, Plan and outcome remain unchanged. Only workflow.recover may introduce this slot after independently verifying the complete predecessor closure. A fresh prepare cannot turn a supplied receipt into fulfillment. Later continuations use the retained original successful operation as their predecessor evidence."
     }
   }
 }

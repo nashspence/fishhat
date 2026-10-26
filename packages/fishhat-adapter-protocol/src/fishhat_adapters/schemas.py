@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Any
+import re
+from collections.abc import Callable, Iterable
+from contextvars import ContextVar
+from datetime import datetime
+from typing import Any, cast
 from urllib.parse import unquote
 
-from fishhat_contracts.validation import ContractError, canonical
-from jsonschema import Draft202012Validator
+from fishhat_contracts.validation import FORMAT_CHECKER, ContractError, canonical
+from jsonschema import Draft202012Validator, FormatChecker, validators
 from jsonschema.exceptions import SchemaError
 
 Path = tuple[str, ...]
@@ -26,6 +30,164 @@ SINGLE = (
 )
 MAPPINGS = ("properties", "patternProperties", "$defs", "definitions", "dependentSchemas")
 SEQUENCES = ("allOf", "anyOf", "oneOf", "prefixItems")
+FORMATS = frozenset({"date", "date-time", "ipv4", "ipv6", "uuid"})
+PROVIDER_FORMAT_CHECKER = FormatChecker()
+PROVIDER_FORMAT_CHECKER.checkers = {name: FORMAT_CHECKER.checkers[name] for name in FORMATS}
+KEYWORDS = (
+    frozenset(Draft202012Validator.VALIDATORS) - {"unevaluatedItems", "unevaluatedProperties"}
+) | frozenset(
+    {
+        "$schema",
+        "$id",
+        "$ref",
+        "$defs",
+        "definitions",
+        "$comment",
+        "title",
+        "description",
+        "default",
+        "examples",
+        "deprecated",
+        "readOnly",
+        "writeOnly",
+        "then",
+        "else",
+        "minContains",
+        "maxContains",
+    }
+)
+MAX_EXPANDED_SCHEMA = 4096
+MAX_EVALUATION_WORK = 2_000_000
+_WORK: ContextVar[list[int] | None] = ContextVar("provider_schema_work", default=None)
+
+
+@PROVIDER_FORMAT_CHECKER.checks("date", raises=ValueError)
+def _calendar_date(value: Any) -> bool:
+    if not isinstance(value, str):
+        return True
+    if re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", value) is None:
+        return False
+    year, month, day = map(int, value.split("-"))
+    datetime(2000 + year % 400, month, day)
+    return True
+
+
+def _regex_degree(pattern: str) -> int:
+    """Admit a bounded regular-expression subset, never backtracking group repeats.
+
+    Variable repetition is restricted to single characters/classes, except a
+    single optional group. There are at most two variable repetitions and eight
+    total alternatives. Lookbehind, backreferences and inline flags reject.
+    """
+    require(len(pattern) <= 256, "SCHEMA_REGEX_CAPACITY")
+    require(
+        not any(marker in pattern for marker in ("(?P", "(?#", r"\A", r"\Z", r"\N")),
+        "UNSUPPORTED_SCHEMA_REGEX",
+    )
+    parser: Any = vars(re)["_parser"]
+    try:
+        parsed = parser.parse(pattern, 0)
+    except re.error as exc:
+        raise ContractError("INVALID_SCHEMA_REGEX") from exc
+    require(parsed.state.flags == re.UNICODE, "UNSUPPORTED_SCHEMA_REGEX")
+    repetitions, alternatives = 0, 1
+
+    def walk(tokens: Any) -> None:
+        nonlocal repetitions, alternatives
+        for operation, argument in tokens:
+            name = str(operation)
+            if name in {"LITERAL", "NOT_LITERAL", "ANY", "IN", "AT", "CATEGORY"}:
+                continue
+            if name == "SUBPATTERN":
+                require(argument[1] == argument[2] == 0, "UNSUPPORTED_SCHEMA_REGEX")
+                walk(argument[3])
+            elif name == "BRANCH":
+                alternatives *= len(argument[1])
+                require(alternatives <= 8, "SCHEMA_REGEX_CAPACITY")
+                for branch in argument[1]:
+                    walk(branch)
+            elif name in {"MAX_REPEAT", "MIN_REPEAT"}:
+                minimum, maximum, child = argument
+                atom = len(child) == 1 and str(child[0][0]) in {
+                    "LITERAL",
+                    "NOT_LITERAL",
+                    "ANY",
+                    "IN",
+                    "CATEGORY",
+                }
+                require(atom or (minimum == 0 and maximum == 1), "UNSUPPORTED_SCHEMA_REGEX")
+                if not atom:
+                    alternatives *= 2
+                    require(alternatives <= 8, "SCHEMA_REGEX_CAPACITY")
+                    walk(child)
+                elif minimum != maximum:
+                    repetitions += 1
+                require(repetitions <= 2, "SCHEMA_REGEX_CAPACITY")
+            elif name in {"ASSERT", "ASSERT_NOT"}:
+                require(argument[0] >= 0, "UNSUPPORTED_SCHEMA_REGEX")
+                walk(argument[1])
+            else:
+                raise ContractError("UNSUPPORTED_SCHEMA_REGEX")
+
+    walk(parsed)
+    anchored = (
+        bool(parsed)
+        and str(parsed[0][0]) == "AT"
+        and str(parsed[0][1]) in {"AT_BEGINNING", "AT_BEGINNING_STRING"}
+    )
+    return max(1, repetitions + (not anchored))
+
+
+def _charge(keyword: str, constraint: Any, value: Any, schema: Any) -> None:
+    work = _WORK.get()
+    if work is None:
+        return
+    cost = 1
+    if keyword == "uniqueItems" and constraint and isinstance(value, list):
+        cost += len(value) ** 2 + len(value) * len(canonical(value))
+    elif keyword == "const":
+        cost += len(canonical(value)) + len(canonical(constraint))
+    elif keyword == "enum":
+        cost += len(constraint) * len(canonical(value)) + len(canonical(constraint))
+    patterns: Iterable[tuple[str, str]] = ()
+    if keyword == "pattern" and isinstance(value, str):
+        patterns = [(constraint, value)]
+    elif keyword == "patternProperties" and isinstance(value, dict):
+        patterns = ((pattern, key) for pattern in constraint for key in value)
+    elif keyword == "additionalProperties" and isinstance(value, dict):
+        patterns = (
+            (pattern, key) for pattern in schema.get("patternProperties", {}) for key in value
+        )
+    work[0] += cost
+    require(work[0] <= MAX_EVALUATION_WORK, "SCHEMA_EVALUATION_CAPACITY")
+    for pattern, subject in patterns:
+        require(len(subject) <= 4096, "SCHEMA_REGEX_INPUT_CAPACITY")
+        work[0] += 8 * (len(subject) + 1) ** _regex_degree(pattern)
+        require(work[0] <= MAX_EVALUATION_WORK, "SCHEMA_EVALUATION_CAPACITY")
+
+
+def _bounded(keyword: str, function: Any) -> Any:
+    def check(validator: Any, constraint: Any, value: Any, schema: Any) -> Any:
+        _charge(keyword, constraint, value, schema)
+        yield from function(validator, constraint, value, schema)
+
+    return check
+
+
+_VALIDATOR = cast(Callable[..., Any], validators.extend)(
+    Draft202012Validator,
+    {key: _bounded(key, function) for key, function in Draft202012Validator.VALIDATORS.items()},
+)
+
+
+def validate_configuration(schema: dict[str, Any], value: Any) -> bool:
+    """Apply the declared assertion profile under an explicit work admission limit."""
+    token = _WORK.set([0])
+    try:
+        errors = _VALIDATOR(schema, format_checker=PROVIDER_FORMAT_CHECKER).iter_errors(value)
+        return next(errors, None) is None
+    finally:
+        _WORK.reset(token)
 
 
 def require(ok: bool, code: str) -> None:
@@ -66,6 +228,7 @@ class _ClosedSchema:
             require(target in self.nodes, "UNRESOLVED_SCHEMA_REFERENCE")
             self.edges[path].append(target)
         self._acyclic(())
+        self._expanded((), {})
         self._shape(())
 
     def _walk(self, node: Any, path: Path = (), depth: int = 0) -> None:
@@ -74,6 +237,7 @@ class _ClosedSchema:
         if isinstance(node, bool):
             return
         require(not path or "$id" not in node, "NESTED_SCHEMA_IDENTITY")
+        require(not path or "$schema" not in node, "NESTED_SCHEMA_DIALECT")
         require(
             not {"$dynamicRef", "$recursiveRef", "$dynamicAnchor", "$recursiveAnchor"}
             & node.keys(),
@@ -84,6 +248,16 @@ class _ClosedSchema:
             or node["$schema"] == "https://json-schema.org/draft/2020-12/schema",
             "UNSUPPORTED_SCHEMA_DIALECT",
         )
+        require(not node.keys() - KEYWORDS, "UNSUPPORTED_SCHEMA_KEYWORD")
+        if "format" in node:
+            require(
+                node["format"] in FORMATS and node["format"] in FORMAT_CHECKER.checkers,
+                "UNSUPPORTED_SCHEMA_FORMAT",
+            )
+        for pattern in ([node["pattern"]] if "pattern" in node else []) + list(
+            node.get("patternProperties", {})
+        ):
+            _regex_degree(pattern)
         if "$ref" in node:
             self.references[path] = self._target(node["$ref"])
         children: list[tuple[Path, Any]] = [((key,), node[key]) for key in SINGLE if key in node]
@@ -117,6 +291,12 @@ class _ClosedSchema:
             self._acyclic(child)
         self.active.remove(path)
         self.done.add(path)
+
+    def _expanded(self, path: Path, sizes: dict[Path, int]) -> int:
+        if path not in sizes:
+            sizes[path] = 1 + sum(self._expanded(child, sizes) for child in self.edges[path])
+            require(sizes[path] <= MAX_EXPANDED_SCHEMA, "SCHEMA_EXPANSION_CAPACITY")
+        return sizes[path]
 
     @staticmethod
     def _literal_type(value: Any) -> str:

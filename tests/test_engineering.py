@@ -41,7 +41,7 @@ def event():
 
 
 def subject():
-    return json.loads((FIXTURES / "owner-request.json").read_text())["params"]["subject"]
+    return json.loads((FIXTURES / "plan-input.json").read_text())["subject"]
 
 
 def replay(journal):

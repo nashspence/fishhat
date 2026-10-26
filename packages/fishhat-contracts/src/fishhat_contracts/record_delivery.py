@@ -14,7 +14,8 @@ from collections.abc import Callable, Mapping
 from typing import Any, cast
 
 from .bounds import Bounds, bounds
-from .handoffs import schema_identity, validate_result_reference, validate_workflow
+from .handoffs import schema_identity, validate_workflow
+from .operations import validate_operation
 from .validation import (
     MAX_BYTES,
     SCHEMAS,
@@ -26,7 +27,14 @@ from .validation import (
 )
 
 CHUNK_BYTES = 196608
-RECORD_KINDS = ("Plan", "Operation", "Workflow")
+RECORD_SCHEMAS = {
+    "Plan": ("records.schema.json", "Plan"),
+    "Operation": ("records.schema.json", "Operation"),
+    "Workflow": ("records.schema.json", "Workflow"),
+    "Discovery": ("records.schema.json", "Info"),
+    "ResourceReport": ("resource-records.schema.json", "ResourceReport"),
+}
+OBSERVATION_KINDS = {"Discovery", "ResourceReport"}
 
 
 def _require(condition: bool, message: str) -> None:
@@ -34,23 +42,31 @@ def _require(condition: bool, message: str) -> None:
         raise ContractError(message)
 
 
-def _identity(record: dict[str, Any]) -> dict[str, Any]:
+def _identity(record: dict[str, Any], kind: str, snapshot_id: str) -> dict[str, Any]:
     return {
-        "kind": record["kind"],
-        "id": record["id"],
-        "generation": None if record["kind"] == "Plan" else record["generation"],
+        "kind": kind,
+        "id": snapshot_id if kind in OBSERVATION_KINDS else record["id"],
+        "generation": None if kind == "Plan" or kind in OBSERVATION_KINDS else record["generation"],
     }
 
 
-def _validate_record(record: dict[str, Any]) -> None:
-    kind = record.get("kind")
-    _require(kind in RECORD_KINDS, "unsupported record snapshot kind")
+def _schema_uri(kind: str) -> str:
+    _require(kind in RECORD_SCHEMAS, "unsupported record snapshot kind")
+    schema, definition = RECORD_SCHEMAS[kind]
+    return str(SCHEMAS[schema]["$id"]) + "#/$defs/" + definition
+
+
+def _validate_record(record: dict[str, Any], kind: str) -> None:
+    _require(kind in RECORD_SCHEMAS, "unsupported record snapshot kind")
     if kind == "Plan":
         validate_plan(record)
     elif kind == "Workflow":
         validate_workflow(record)
+    elif kind == "Operation":
+        validate_operation(record)
     else:
-        validate_result_reference(record)
+        schema, definition = RECORD_SCHEMAS[kind]
+        validate(schema, record, definition)
 
 
 def validate_record_reference(
@@ -66,7 +82,13 @@ def validate_record_reference(
     or permission. A newer record generation cannot silently replace a pinned one.
     """
     validate("common.schema.json", reference, "RecordReference")
-    uri = SCHEMAS["records.schema.json"]["$id"] + "#/$defs/" + reference["record"]["kind"]
+    kind = reference["record"]["kind"]
+    uri = _schema_uri(kind)
+    if kind in OBSERVATION_KINDS:
+        _require(
+            reference["record"]["id"] == reference["snapshot_id"],
+            "observation snapshot identity changed",
+        )
     current = reference["schema"] == schema_identity(uri)
     # Historical documents are read-only. The independent receiving owner installs
     # and qualifies an immutable reader against the exact prior closure digest;
@@ -90,18 +112,23 @@ class RecordSnapshot:
     retention or signature authenticity. Native stores must provide those boundaries.
     """
 
-    def __init__(self, record: dict[str, Any], snapshot_id: str) -> None:
-        _validate_record(record)
+    def __init__(
+        self, record: dict[str, Any], snapshot_id: str, *, record_kind: str | None = None
+    ) -> None:
+        # Info has no kind discriminator. Its only valid snapshot kind is the
+        # explicitly schema-pinned Discovery projection, never a ledger record.
+        kind = record_kind if record_kind is not None else record.get("kind", "Discovery")
+        _validate_record(record, kind)
         validate("common.schema.json", snapshot_id, "UUID")
         self._record = copy.deepcopy(record)
         self._data = canonical(self._record)
-        uri = SCHEMAS["records.schema.json"]["$id"] + "#/$defs/" + record["kind"]
+        uri = _schema_uri(kind)
         self._reference = {
             "format": "deployment-ops/record-reference/v1",
             "kind": "RecordReference",
             "snapshot_id": snapshot_id,
             "owner": copy.deepcopy(record["owner"]),
-            "record": _identity(record),
+            "record": _identity(record, kind, snapshot_id),
             "schema": schema_identity(uri),
             "digest": "sha256:" + hashlib.sha256(self._data).hexdigest(),
             "size": len(self._data),
@@ -220,14 +247,16 @@ def validate_record_payload(
     )
     value = strict_json(data, max_bytes=reference["size"])
     _require(isinstance(value, dict), "record payload must be object")
-    uri = SCHEMAS["records.schema.json"]["$id"] + "#/$defs/" + reference["record"]["kind"]
+    kind = reference["record"]["kind"]
+    uri = _schema_uri(kind)
     if reference["schema"] == schema_identity(uri):
-        _validate_record(value)
+        _validate_record(value, kind)
     else:
         assert retained_readers is not None
         retained_readers[reference["schema"]["digest"]](value)
     _require(
-        value["owner"] == reference["owner"] and _identity(value) == reference["record"],
+        value["owner"] == reference["owner"]
+        and _identity(value, kind, reference["snapshot_id"]) == reference["record"],
         "record payload binding mismatch",
     )
     _require(canonical(value) == data, "record payload encoding is not canonical")

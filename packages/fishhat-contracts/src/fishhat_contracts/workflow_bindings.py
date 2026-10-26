@@ -11,9 +11,17 @@ import copy
 from datetime import datetime
 from typing import Any
 
-from .handoffs import PHASES, validate_result_reference
+from .handoffs import PHASES
+from .operations import validate_operation
 from .validation import ContractError, canonical, digest, validate
-from .workflows import _pair, _plan_binding, _request_key, child_action, proposal_children
+from .workflows import (
+    _pair,
+    _plan_binding,
+    _request_key,
+    bound_plan,
+    child_action,
+    proposal_children,
+)
 
 
 def _require(condition: bool, message: str) -> None:
@@ -29,7 +37,7 @@ def _ready(workflow: dict[str, Any]) -> dict[bytes, dict[str, Any]]:
     return {
         key: binding
         for key, (_, binding) in proposal_children(workflow["proposal"]).items()
-        if "plan" in binding
+        if "plan" in binding or "completed" in binding
     }
 
 
@@ -43,16 +51,20 @@ def _predecessor(intent: dict[str, Any]) -> dict[str, Any]:
 
 
 def _operation(record: dict[str, Any], reference: dict[str, Any], binding: dict[str, Any]) -> None:
-    validate_result_reference(record)
-    plan = binding["plan"]
-    _require(
-        record["owner"] == reference["owner"]
+    validate_operation(record)
+    plan = bound_plan(binding)
+    identity_matches = (
+        record == binding["completed"]["operation"]
+        if "completed" in binding
+        else record["owner"] == reference["owner"]
         and record["request_id"] == reference["request_id"]
+    )
+    _require(
+        identity_matches
         and record["subject"] == plan["subject"]
         and record["plan_digest"] == plan["digest"]
         and record["state"] == "succeeded"
-        and record["effect_certainty"] == "known"
-        and record["witness"]["owner"] == record["owner"],
+        and record["effect_certainty"] == "known",
         "workflow predecessor does not prove exact successful child",
     )
 
@@ -95,27 +107,43 @@ def _material(
     _require(handle in request["content"], "workflow produced material lacks retained custody")
     arguments = request["binding"]["plan"]["subject"]["arguments"]
     if intent["kind"] == "secret-publication":
+        destination = {
+            key: intent[key]
+            for key in (
+                "source",
+                "entry",
+                "consumer",
+                "version",
+                "catalogue_digest",
+                "evidence_schema",
+                "expected_previous",
+            )
+        }
         _require(
             material["publication_receipt"] is None
             and handle["purpose"] == "secret-candidate"
-            and arguments
-            == {"candidate": handle, "expected_previous": intent["expected_previous"]},
+            and arguments == {**destination, "candidate": handle},
             "workflow publication candidate or predecessor changed",
         )
     else:
         receipt = material["publication_receipt"]
         _require(receipt is not None, "workflow adoption lacks completed publication receipt")
         assert receipt is not None
-        candidate = ready[_key(reference)]["plan"]["subject"]["arguments"]["candidate"]
+        from .publication import validate_publication_result
+
+        publication_plan = bound_plan(ready[_key(reference)])
+        candidate = publication_plan["subject"]["arguments"]["candidate"]
+        validate_publication_result(
+            receipt, publication_plan["subject"], expected_custodian=publication_plan["owner"]
+        )
         _require(
             receipt["state"] == "completed"
-            and receipt["custodian"] == reference["owner"]
-            and receipt["current"]["ciphertext_digest"] == candidate["digest"]
+            and receipt["current"]["artifact_digest"] == candidate["digest"]
             and receipt["current"]["bytes"] == candidate["size"]
             and handle["digest"] == digest(receipt)
             and handle["size"] == len(canonical(receipt))
             and copied == handle
-            and arguments == {"bundle_receipt": digest(receipt)},
+            and arguments == {"publication_receipt": digest(receipt)},
             "workflow adoption substituted publication receipt or candidate",
         )
 
@@ -240,6 +268,14 @@ def validate_bind_request(request: dict[str, Any], workflow: dict[str, Any]) -> 
         and request["driver_term"] == workflow["driver_term"]
         and workflow["state"] in {"prepared", "active", "paused"},
         "workflow binding generation, driver or state changed",
+    )
+    _require(
+        workflow["transfer"] is None or workflow["transfer"]["phase"] == "completed",
+        "workflow driver transfer is incomplete",
+    )
+    _require(
+        workflow.get("recovery", {}).get("phase", "committed") == "committed",
+        "workflow recovery preparation is not committed",
     )
     phases = PHASES[workflow["type"]]
     phase = request["binding"]["phase"]

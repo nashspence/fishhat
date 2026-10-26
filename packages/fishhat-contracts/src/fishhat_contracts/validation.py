@@ -530,14 +530,6 @@ def validate_cli(
     if operation is not None:
         _require(state == operation["state"], "CLI/owner execution state mismatch")
         _require(value["request_id"] == operation["request_id"], "CLI/owner request mismatch")
-        _require(
-            operation["witness"]["owner"] == operation["owner"],
-            "CLI/owner witness identity mismatch",
-        )
-        _require(
-            state != "succeeded" or operation["effect_certainty"] == "known",
-            "successful operation has unverified effects",
-        )
         if value["problem"] is not None:
             _require(
                 value["problem"]["owner"] == operation["owner"]

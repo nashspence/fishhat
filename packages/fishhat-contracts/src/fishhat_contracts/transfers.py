@@ -91,7 +91,6 @@ def validate_workflow_transfer(workflow: dict[str, Any]) -> None:
     """Check a schema-validated capsule's retained transfer joins and discoverable inputs."""
     transfer = workflow["transfer"]
     if transfer is None:
-        _require(workflow["state"] != "transfer-pending", "pending transfer lacks retained input")
         return
     proposal = transfer["proposal"]
     validate_transfer_proposal(proposal)
@@ -107,10 +106,6 @@ def validate_workflow_transfer(workflow: dict[str, Any]) -> None:
     phases = _accepted_phases(transfer, workflow["generation"])
     _local_commits(transfer, phases, workflow)
     phase = transfer["phase"]
-    _require(
-        (workflow["state"] == "transfer-pending") == (phase != "completed"),
-        "transfer progress state mismatch",
-    )
     if phase == "freeze":
         _require(not committed, "transfer commits before freeze closure")
         principal, term = proposal["current_principal"], proposal["expected_term"]
@@ -182,7 +177,15 @@ def validate_transfer_request(request: dict[str, Any], workflow: dict[str, Any])
     elif retained is not None:
         _require(retained["phase"] == "completed", "another transfer retains custody")
     _require(
-        request["expected_generation"] == workflow["generation"],
+        workflow["state"] in {"prepared", "active", "paused", "recovery-required"},
+        "terminal workflow cannot begin a driver transfer",
+    )
+    _require(
+        workflow.get("recovery", {}).get("phase", "committed") == "committed",
+        "workflow recovery preparation is not committed",
+    )
+    _require(
+        request["expected_generation"] == workflow["generation"] < 9007199254740991,
         "transfer capsule generation changed",
     )
     _require(

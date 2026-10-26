@@ -2,6 +2,10 @@
 
 The `authorized` argument represents an already trusted receiver decision in a
 unit test. A production caller cannot assert that decision in request JSON.
+
+The minimal requests rows are epoch-lifetime replay reservations, independent of
+optional terminal-detail history. They are never garbage-collected or reused;
+capacity refusal for new identities must preserve these accepted commitments.
 """
 
 from __future__ import annotations

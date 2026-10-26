@@ -305,44 +305,7 @@
           "const": "plan.prepare"
         },
         "params": {
-          "type": "object",
-          "properties": {
-            "subject": {
-              "$ref": "actions.schema.json"
-            },
-            "expected_owner": {
-              "type": "object",
-              "properties": {
-                "tool": {
-                  "enum": [
-                    "host-ops",
-                    "app-ops"
-                  ]
-                },
-                "id": {
-                  "type": "string",
-                  "format": "uuid",
-                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-                },
-                "epoch": {
-                  "type": "string",
-                  "format": "uuid",
-                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-                }
-              },
-              "required": [
-                "tool",
-                "id",
-                "epoch"
-              ],
-              "additionalProperties": false
-            }
-          },
-          "required": [
-            "subject",
-            "expected_owner"
-          ],
-          "additionalProperties": false
+          "$ref": "plan-input.schema.json#/$defs/InputReference"
         }
       },
       "required": [
@@ -368,18 +331,7 @@
           "const": "plan.get"
         },
         "params": {
-          "type": "object",
-          "properties": {
-            "plan_id": {
-              "type": "string",
-              "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-            }
-          },
-          "required": [
-            "plan_id"
-          ],
-          "additionalProperties": false
+          "$ref": "plan-input.schema.json#/$defs/LookupRequest"
         }
       },
       "required": [
@@ -876,7 +828,8 @@
                 "source-proposal",
                 "native-config",
                 "secret-candidate",
-                "workflow-input"
+                "workflow-input",
+                "plan-input"
               ]
             },
             "digest": {
@@ -1159,7 +1112,7 @@
             },
             "active_only": {
               "type": "boolean",
-              "description": "True includes nonterminal work and retained recovery obligations, including terminal operations with unresolved effects or holds and prepared, paused, transfer-pending or recovery-required workflow capsules. False additionally includes retained terminal history. This selection never treats cancellation as release of custody."
+              "description": "True includes nonterminal work and retained recovery obligations, including terminal operations with unresolved effects or holds and prepared, paused or recovery-required workflow capsules and capsules with an incomplete driver transfer. False additionally includes retained terminal history. This selection never treats cancellation as release of custody."
             },
             "cursor": {
               "anyOf": [
@@ -1185,7 +1138,7 @@
             "limit"
           ],
           "additionalProperties": false,
-          "description": "Enumerate authorized work with optional exact resource filtering and both active and retained terminal history. The owner filters before disclosure. Active workflows include prepared, paused, transfer-pending and recovery-required capsules even before any child operation exists. Keep the same filters on continuation."
+          "description": "Enumerate authorized work with optional exact resource filtering and both active and retained terminal history. The owner filters before disclosure. Active workflows include prepared, paused and recovery-required capsules, including capsules with an incomplete driver transfer even before any child operation exists. Keep the same filters on continuation."
         }
       },
       "required": [
@@ -1396,6 +1349,32 @@
         },
         "method": {
           "const": "workflow.bind"
+        },
+        "params": {
+          "$ref": "workflow.schema.json#/$defs/InputReference"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "params"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "workflow.recover"
         },
         "params": {
           "$ref": "workflow.schema.json#/$defs/InputReference"

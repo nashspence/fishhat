@@ -3,22 +3,25 @@
   "message_id": "fe65cce1-bc12-56e5-baa1-1124b0a3ca38",
   "method": "plan.prepare",
   "params": {
-    "subject": {
-      "action": "app.restart",
-      "resource": {
-        "kind": "app",
-        "id": "demo-app"
-      },
-      "arguments": {
-        "components": [
-          "web"
-        ]
-      }
-    },
-    "expected_owner": {
+    "owner": {
       "tool": "app-ops",
       "id": "ba5b6d5e-b99f-54b0-aa13-313a5a66ce56",
       "epoch": "3eded73b-a782-5f71-952f-d915b376de10"
+    },
+    "input": {
+      "owner": {
+        "tool": "app-ops",
+        "id": "ba5b6d5e-b99f-54b0-aa13-313a5a66ce56",
+        "epoch": "3eded73b-a782-5f71-952f-d915b376de10"
+      },
+      "id": "a88e3846-299e-5348-94e0-30d1878984d8",
+      "purpose": "plan-input",
+      "binding": {
+        "kind": "staging",
+        "staging_id": "01c1e7e3-bcb3-552a-bf9f-ea84b6e752f9"
+      },
+      "digest": "sha256:c065faec946dc6ffba9574260ea74f564467695692c4a1cc099f4baa00b336ae",
+      "size": 271
     }
   }
 }
