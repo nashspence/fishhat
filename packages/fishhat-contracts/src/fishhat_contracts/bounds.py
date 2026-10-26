@@ -18,6 +18,8 @@ class Bounds:
     limits: tuple[tuple[str, int], ...]
     capacity: tuple[str, ...]
     proofs: tuple[str, ...]
+    linear_proofs: tuple[str, ...] = ()
+    growth: str = "linear"
     qualification: str = "reference-model"
 
 

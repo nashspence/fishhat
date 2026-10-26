@@ -55,7 +55,7 @@
             "pattern": "^/[^/]"
           },
           {
-            "pattern": "[^/]+\\.git$"
+            "pattern": "[^/]\\.git$"
           },
           {
             "not": {

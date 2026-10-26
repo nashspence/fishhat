@@ -181,6 +181,7 @@ class RecordSnapshot:
     @bounds(
         Bounds(
             id="record-delivery.chunk",
+            linear_proofs=("tests/test_linear_growth.py::test_record_chunk_linear_work",),
             work="O(chunk_bytes)",
             extent="one-record-chunk",
             limits=(("chunk_bytes", CHUNK_BYTES),),

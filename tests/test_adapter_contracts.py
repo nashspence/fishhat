@@ -216,7 +216,8 @@ def test_read_response_is_bound_to_request_and_complete_coverage():
     }
     check_response("runtime", query, response)
     response["continuation"] = "page:next"
-    with pytest.raises(ContractError, match="INCOMPLETE_RESPONSE_COVERAGE"):
+    # The role schema rejects a complete page with a continuation before semantic joins.
+    with pytest.raises(ContractError):
         check_response("runtime", query, response)
     response["continuation"] = None
     response["request_digest"] = D

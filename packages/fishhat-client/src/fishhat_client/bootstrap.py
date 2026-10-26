@@ -43,6 +43,7 @@ def validate_selection(selection: dict[str, Any]) -> dict[str, Any]:
 @bounds(
     Bounds(
         id="bootstrap.catalogue",
+        linear_proofs=("tests/test_linear_growth.py::test_catalogue_linear_work",),
         work="O(B + S) bounded reference record validation and one source identity pass",
         extent="All S sources in the catalogue; no prefix selection or silent truncation",
         limits=(),

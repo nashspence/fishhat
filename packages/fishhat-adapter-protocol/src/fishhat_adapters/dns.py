@@ -12,6 +12,18 @@ def rrset_key(value: dict[str, Any]) -> tuple[str, str, str]:
     return value["name"], value["class"], value["type"]
 
 
+def _rrset_identity(value: dict[str, Any]) -> tuple[bytes, frozenset[bytes]]:
+    """Compare validated RRsets by unordered members, retaining each member's structure.
+
+    TXT chunks and other ordered data inside one member keep their order. This
+    projection does not rewrite the exact request bytes retained for invocation.
+    """
+    return (
+        canonical({key: field for key, field in value.items() if key != "rdata"}),
+        frozenset(canonical(member) for member in value["rdata"]),
+    )
+
+
 def validate_rrsets(values: list[dict[str, Any]]) -> None:
     keys: set[tuple[str, str, str]] = set()
     cnames: set[str] = set()
@@ -55,7 +67,11 @@ def validate_changes(value: dict[str, Any]) -> None:
     before, after, changed = [], [], set()
     for change in value["changes"]:
         a, b = change["before"], change["after"]
-        if a == b or (a is not None and b is not None and rrset_key(a) != rrset_key(b)):
+        if (a is None and b is None) or (
+            a is not None
+            and b is not None
+            and (_rrset_identity(a) == _rrset_identity(b) or rrset_key(a) != rrset_key(b))
+        ):
             raise ContractError("INVALID_RRSET_REPLACEMENT")
         identity = rrset_key(a if a is not None else b)
         if identity in changed:

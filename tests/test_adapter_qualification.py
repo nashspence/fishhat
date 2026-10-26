@@ -29,7 +29,10 @@ def qualification():
         "configuration_digest": D,
         "environment_digest": D,
         "runner": "local.disposable-runner",
-        "cases": [{"id": "failure-reconciliation", "outcome": "passed"}],
+        "cases": [
+            {"id": name, "outcome": "passed"}
+            for name in ("failure-reconciliation", "linear-growth", "complete-extent")
+        ],
         "external_accounts": False,
         "native_dependencies": [{"digest": D, "media_type": "application/zip", "size_bytes": 1}],
     }
@@ -101,3 +104,17 @@ def test_all_supplied_scaffolds_are_importable_with_independent_entrypoints(path
     with contextlib.redirect_stdout(out):
         assert main(str(path.with_name("cli.py")), ["info", "--json"]) == 0
     assert json.loads(out.getvalue())["native_mutations"] is False
+
+
+@pytest.mark.parametrize("case", ["linear-growth", "complete-extent"])
+@pytest.mark.parametrize("outcome", ["missing", "failed", "skipped", "not-executed"])
+def test_engineering_cases_cannot_be_omitted_by_the_receiving_caller(case, outcome):
+    value = qualification()
+    if outcome == "missing":
+        value["cases"] = [item for item in value["cases"] if item["id"] != case]
+    else:
+        next(item for item in value["cases"] if item["id"] == case)["outcome"] = outcome
+    with pytest.raises(
+        ContractError, match=r"MISSING_QUALIFICATION_CASE|UNQUALIFIED_NATIVE_BEHAVIOR"
+    ):
+        check(value)

@@ -13,7 +13,7 @@ from fishhat_contracts.publication import validate_publication_intent
 from fishhat_contracts.validation import ContractError, canonical, digest, validate
 from referencing.exceptions import Unresolvable
 
-from .dns import validate_changes, validate_rrsets
+from .dns import _rrset_identity, validate_changes, validate_rrsets
 from .schemas import check_closed_schema, validate_configuration
 from .targets import check_target_request, check_target_response
 
@@ -112,6 +112,11 @@ def check_request(role: str, value: dict[str, Any]) -> None:
                 and barrier["owner"]["id"] == inputs["scope"]["authority"],
                 "OBSERVATION_BARRIER_SCOPE",
             )
+    if role == "bootstrap-source" and method in {"recover", "verify"}:
+        require(
+            inputs["scope"]["handle"] == inputs["selection"]["source_id"],
+            "BOOTSTRAP_SCOPE_IDENTITY",
+        )
 
 
 def instance_reference(instance: dict[str, Any], scope: dict[str, Any]) -> dict[str, Any]:
@@ -146,6 +151,15 @@ def check_invocation(role: str, value: dict[str, Any]) -> None:
     )
     binding = _handoff_binding(role, request)
     require(binding is None or binding == executor, "INVOCATION_EXECUTOR_IDENTITY")
+    if role == "bootstrap-source":
+        selected = request["input"]["selection"]["adapter"]
+        require(
+            all(
+                executor[key] == selected[key]
+                for key in ("installation_digest", "configuration_digest")
+            ),
+            "BOOTSTRAP_EXECUTOR_IDENTITY",
+        )
 
 
 def _handoff_binding(role: str, request: dict[str, Any]) -> dict[str, Any] | None:
@@ -225,6 +239,7 @@ def check_response(
         )
         check_result(invocation["attempt"], response["effect"])
     _check_handoff_response(role, request, response)
+    _check_observation_page(request, response)
     _check_observed_quantities(role, response["output"])
     check_target_response(role, request, response, invocation["attempt"] if invocation else None)
     if "effect" in response and _succeeded(response["effect"]):
@@ -240,6 +255,26 @@ def _succeeded(effect: dict[str, Any]) -> bool:
         and effect["effect_certainty"] == "known"
         and effect["postcondition"] == "satisfied"
     )
+
+
+def _check_observation_page(request: dict[str, Any], response: dict[str, Any]) -> None:
+    """Bound returned top-level collection entries and require resumable progress.
+
+    Opaque cursors still need receiver-owned snapshot, executor and query checks;
+    structural progress is not evidence of native completeness or authorization.
+    """
+    if request["method"] not in {"observe", "inventory"}:
+        return
+    inputs, output = request["input"], response["output"]
+    count = sum(len(value) for value in output.values() if isinstance(value, list))
+    require(count <= inputs["limit"], "OBSERVATION_PAGE_CAPACITY")
+    if response["coverage"] == "incomplete":
+        require(
+            response["continuation"] is not None and response["continuation"] != inputs["cursor"],
+            "OBSERVATION_CURSOR_PROGRESS",
+        )
+    else:
+        require(response["continuation"] is None, "OBSERVATION_NOT_RESUMABLE")
 
 
 def _check_handoff_response(role: str, request: dict[str, Any], response: dict[str, Any]) -> None:
@@ -406,13 +441,13 @@ def _check_success_output(
         ),
         "ingress": lambda: output["serving_generation"] == inputs["generation_digest"],
         "network": lambda: output["policy_generation"] == inputs["policy_digest"],
-        "dns": lambda: _same_set(
-            output["rrsets"],
-            [
-                change["after"]
+        "dns": lambda: (
+            {_rrset_identity(value) for value in output["rrsets"]}
+            == {
+                _rrset_identity(change["after"])
                 for change in inputs["change"]["changes"]
                 if change["after"] is not None
-            ],
+            }
         ),
         "secret-source": lambda: all(
             item["source"] == executor["instance"]
@@ -588,6 +623,23 @@ class Registry:
         require(
             self._repositories.get(self._repository_key(reference)) == reference,
             "UNAPPROVED_REPOSITORY_MAPPING",
+        )
+
+    def _check_bootstrap_binding(
+        self, role: str, request: dict[str, Any], instance: dict[str, Any]
+    ) -> None:
+        """Join pinned recovery selection to independently loaded installation records."""
+        if role != "bootstrap-source":
+            return
+        selected = request["input"]["selection"]["adapter"]
+        installation, descriptor = self._installations[instance["installation_digest"]]
+        require(
+            descriptor["id"] == selected["implementation"]
+            and installation["artifact"]["digest"] == selected["installation_digest"]
+            and installation["descriptor_digest"] == selected["descriptor_digest"]
+            and digest(instance["configuration"]) == selected["configuration_digest"]
+            and digest(descriptor["source_schema"]) == selected["source_schema_digest"],
+            "BOOTSTRAP_BINDING_IDENTITY",
         )
 
     @staticmethod
@@ -804,6 +856,7 @@ class Registry:
             else request
         )
         self._check_source_target_mapping(role, original)
+        self._check_bootstrap_binding(role, original, instance)
         return instance
 
     def authorize_invocation(
@@ -836,6 +889,7 @@ class Registry:
         if role == "repository":
             self._check_repository_mapping(request["input"]["repository"])
         self._check_source_target_mapping(role, request)
+        self._check_bootstrap_binding(role, request, instance)
         return instance
 
     def authorize(
@@ -902,6 +956,8 @@ def require_qualification(
         all(value[k] == v for k, v in expected.items()) and value["runner"] == trusted_runner,
         "QUALIFICATION_IDENTITY",
     )
+    require(bool(required_cases), "MISSING_QUALIFICATION_CASE")
+    required_cases = required_cases | {"linear-growth", "complete-extent"}
     cases = {case["id"]: case["outcome"] for case in value["cases"]}
     require(len(cases) == len(value["cases"]), "DUPLICATE_QUALIFICATION_CASE")
     require(bool(required_cases) and required_cases <= cases.keys(), "MISSING_QUALIFICATION_CASE")

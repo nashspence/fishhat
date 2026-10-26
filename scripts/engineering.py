@@ -22,6 +22,9 @@ MAP = "policy/engineering.json"
 
 
 def declarations(root: Path = ROOT) -> dict[str, Any]:
+    policy = read_toml(root / "release.toml")["engineering"]
+    if policy != {"growth": "linear", "implementations": "all"}:
+        raise ValueError("all implementations require linear growth")
     found: dict[str, Any] = {}
     for component in components(root):
         source = root / component["path"] / "src"
@@ -49,6 +52,8 @@ def declarations(root: Path = ROOT) -> dict[str, Any]:
                 if (
                     declaration.id in found
                     or not declaration.proofs
+                    or declaration.growth != policy["growth"]
+                    or not declaration.linear_proofs
                     or declaration.qualification != "reference-model"
                 ):
                     raise ValueError("duplicate or incomplete operation bounds declaration")
@@ -59,11 +64,14 @@ def declarations(root: Path = ROOT) -> dict[str, Any]:
                 ):
                     raise ValueError("operation bounds do not resolve to their owner")
                 sources = {str(path.relative_to(root)): fingerprint(path)}
-                for reference in declaration.proofs:
+                for reference in (*declaration.proofs, *declaration.linear_proofs):
                     test = test_path(reference, root)
                     sources[test] = fingerprint(root / test)
                 found[declaration.id] = {
                     **asdict(declaration),
+                    "proofs": list(
+                        dict.fromkeys((*declaration.proofs, *declaration.linear_proofs))
+                    ),
                     "symbol": symbol,
                     "sources": sources,
                 }
@@ -151,7 +159,7 @@ def report() -> dict[str, Any]:
         summary(selected["tests"]["evidence"]["groups"]) if selected else None
     )
     data["scope"] = (
-        "local reference-model growth, extent, crash and migration assertions; no native deployment or recovery"
+        "required linear work, extent, crash and migration assertions; evidence is scoped to the measured implementation and inputs; no native deployment or recovery"
     )
     return data
 

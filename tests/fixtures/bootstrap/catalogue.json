@@ -11,9 +11,9 @@
       "adapter": {
         "implementation": "fishhat.forgejo-restic",
         "installation_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-        "descriptor_digest": "sha256:cb79b26945db330c01934b14aea2c26a5c6539d87fddfceb2b4684dbe0006da9",
+        "descriptor_digest": "sha256:ec67720ff0e8d92de9cfeedd8fb453edb2bb39609d829636919c05401577f5b5",
         "configuration_digest": "sha256:0eae6fab2afd04f8c5485ed22106ec804b3f49c8d23465341ad4e293328d7d49",
-        "source_schema_digest": "sha256:47fb03e79b10f28072cbd651a330580e89811fda9feffec9d65f3ad9580ba2fc"
+        "source_schema_digest": "sha256:c5bd614d26dfac7acfdfec3cfd1b695970f29534353b37546350b00c63ae82cd"
       },
       "capture": {
         "digest": "sha256:1eb53009adbe60d42d3d028b1cc9b0455907c7ef3d2231bcfcd33f82569f13cd",

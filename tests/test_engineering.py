@@ -208,22 +208,30 @@ store.put(sample, principal="child-reporter", scopes={"append"})
         store.close()
 
 
-def test_reporting_capacity_rejects_new_identity_but_allows_replay(tmp_path):
+def test_reporting_accepts_complete_extent_and_preserves_replay(tmp_path):
     original = event()
     store = EventStore(
-        restore_fixture(tmp_path, "reporting"),
-        original["domain_id"],
-        SERVICE,
-        max_events=1,
-        max_workflows=1,
+        tmp_path / "complete.sqlite", original["domain_id"], SERVICE, initialize=True
     )
     try:
-        assert store.put(original, principal="reader", scopes={"append"})[0] == 200
-        changed = {**original, "id": str(uuid.uuid4())}
-        with pytest.raises(ContractError, match="quota"):
-            store.put(changed, principal="reader", scopes={"append"})
-        assert store.db.execute("SELECT count(*) FROM events").fetchone() == (1,)
-        assert store.events(original["workflow_id"], **AUTH)["items"][0]["event"] == original
+        for count in (16, 64, 256):
+            seed(store, count, workflows=True)
+            accepted = {**original, "id": str(uuid.uuid4()), "workflow_id": str(uuid.uuid4())}
+            status, first = store.put(accepted, principal="reader", scopes={"append"})
+            assert status == 201
+            status, replayed = store.put(accepted, principal="another-reader", scopes={"append"})
+            assert status == 200 and replayed == first
+            assert store.events(accepted["workflow_id"], **AUTH)["items"] == [first]
+        expected = store.db.execute("SELECT count(DISTINCT workflow_id) FROM events").fetchone()[0]
+        seen, after = [], 0
+        while True:
+            page = store.workflows(limit=7, after=after, expected_store_epoch=store.epoch, **AUTH)
+            seen.extend(row["workflow_id"] for row in page["items"])
+            if page["next_after"] is None:
+                break
+            assert page["next_after"] > after
+            after = page["next_after"]
+        assert len(seen) == len(set(seen)) == expected
     finally:
         store.close()
 
@@ -325,10 +333,27 @@ def test_operation_owned_bounds_are_discovered_and_never_claim_native_qualificat
         "reporting.put",
         "reporting.events",
         "reporting.workflows",
+        "workflow.phase-evidence",
     }
     assert all(item["qualification"] == "reference-model" for item in found.values())
     assert "reference-scan" in found["reporting.put"]["work"]
     assert all(item["proofs"] and item["sources"] for item in found.values())
+    phase_evidence = found["workflow.phase-evidence"]
+    assert phase_evidence["symbol"] == "fishhat_contracts.workflow_evidence:validate_phase_evidence"
+    assert phase_evidence["limits"] == ()
+    assert phase_evidence["proofs"] == [
+        "tests/test_workflow_evidence.py::test_phase_evidence_checks_complete_child_extent",
+        "tests/test_linear_growth.py::test_phase_evidence_linear_work",
+    ]
+    assert phase_evidence["growth"] == "linear"
+    assert phase_evidence["linear_proofs"] == (
+        "tests/test_linear_growth.py::test_phase_evidence_linear_work",
+    )
+    assert set(phase_evidence["sources"]) == {
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_evidence.py",
+        "tests/test_workflow_evidence.py",
+        "tests/test_linear_growth.py",
+    }
 
 
 def test_event_byte_capacity_continues_or_rejects_explicitly(tmp_path):
@@ -394,7 +419,7 @@ CHECK_OVERRIDES = {
         "reason": "Fixed fixture values, explicit rejection, counted work and complete pagination assertions independently challenge the operation-owned bounds.",
         "claims": ["engineering:journal.submit"],
     },
-    "test_reporting_capacity_rejects_new_identity_but_allows_replay": {
+    "test_reporting_accepts_complete_extent_and_preserves_replay": {
         "purpose": "implementation",
         "authority": [
             "some-implementations/fishhat/applications/receipts/src/fishhat_reporting/store.py#EventStore.put"

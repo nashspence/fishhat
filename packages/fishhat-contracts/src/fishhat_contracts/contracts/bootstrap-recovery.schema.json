@@ -99,7 +99,7 @@
         "source_schema_digest"
       ],
       "additionalProperties": false,
-      "description": "Offline selection of pinned adapter records. This record grants no execution authority and does not prove artifact authenticity or native qualification."
+      "description": "Offline selection of pinned adapter records. This record grants no execution authority and does not prove artifact authenticity or native qualification. Initial dispatch and reconciliation must join every pin to the actual independently approved bootstrap executor and installed descriptor; approving another instance does not replace this selection. The request repository scope handle equals source_id."
     }
   }
 }

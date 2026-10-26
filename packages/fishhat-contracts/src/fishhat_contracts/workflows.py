@@ -450,9 +450,13 @@ def validate_workflow_proposal_binding(
             "workflow initial driver preimage agreement changed",
         )
     from .workflow_bindings import require_bound_phase, validate_workflow_bindings
+    from .workflow_preparation import validate_workflow_agreement
 
     validate_workflow_bindings(workflow, recovery_readers=recovery_readers)
-    _validate_advance_history(workflow)
+    validate_workflow_agreement(
+        workflow, require_complete=workflow["phase"] != PHASES[workflow["type"]][0]
+    )
+    _validate_advance_history(workflow, recovery_readers=recovery_readers)
     phases = PHASES[workflow["type"]]
     if workflow["phase"] in phases and phases.index(workflow["phase"]) > 0:
         require_bound_phase(workflow, phases[phases.index(workflow["phase"]) - 1])
@@ -468,8 +472,10 @@ def prepare_workflow(
     principal: str,
     verified_driver: dict[str, Any],
     verified_content: list[dict[str, Any]],
+    verified_preparation: dict[str, Any] | None,
     verified_adapters: list[dict[str, Any]] | None = None,
     retained: dict[str, Any] | None = None,
+    retained_retirement: dict[str, Any] | None = None,
     recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> dict[str, Any]:
     """Build/replay a pure capsule after independent receiving checks.
@@ -477,6 +483,8 @@ def prepare_workflow(
     verified_driver, verified_content, verified_adapters and retained come from protected owner
     state, never from the request. Equality models custody and enrollment joins,
     not authentication, authorization, native method support or durable pinning.
+    verified_preparation is issued only with durable custody; retained_retirement
+    is independently resolved by workflow identity, including restored tombstones.
     """
     from .handoffs import validate_workflow
 
@@ -489,6 +497,16 @@ def prepare_workflow(
         any(item["owner"] == expected_owner for item in proposal["participants"]),
         "workflow receiver is not a participant",
     )
+    if retained_retirement is not None:
+        from .workflow_unprepared import validate_never_prepared
+
+        validate_never_prepared(retained_retirement)
+        _require(
+            all(retained_retirement["owner"][k] == expected_owner[k] for k in ("tool", "id"))
+            and retained_retirement["workflow_id"] == proposal["workflow_id"],
+            "initial workflow retirement selection changed",
+        )
+        raise ContractError("retired initial workflow cannot prepare again")
     if retained is not None:
         validate_workflow(retained, recovery_readers=recovery_readers)
         _require(
@@ -516,7 +534,13 @@ def prepare_workflow(
         local_adapters <= {canonical(item) for item in verified_adapters or []},
         "workflow local adapter selection is not independently verified",
     )
+    from .workflow_preparation import validate_preparation_witness
+
+    _require(verified_preparation is not None, "workflow local preparation proof required")
+    assert verified_preparation is not None
+    validate_preparation_witness(verified_preparation, proposal, owner=expected_owner)
     result = prepared_capsule(proposal, expected_owner)
+    result["prerequisite_witnesses"] = [copy.deepcopy(verified_preparation)]
     validate_workflow(result, recovery_readers=recovery_readers)
     return result
 
@@ -628,19 +652,59 @@ def validate_workflow_input_custody(
     )
 
 
-def _validate_advance_history(workflow: dict[str, Any]) -> None:
+def _driver_transfer_window(workflow: dict[str, Any]) -> tuple[int, int | None] | None:
+    """Locate the retained transfer's closed driver-admission interval."""
+    transfer = workflow["transfer"]
+    if transfer is None:
+        return None
+    freezes = [item for item in transfer["accepted_phases"] if item["phase"] == "freeze"]
+    _require(len(freezes) == 1, "retained transfer lacks its exact freeze input")
+    completions = [
+        receipt
+        for receipt in workflow["advances"]
+        if receipt["authority"] == "driver"
+        and receipt["request"]["transfer_completion"] is not None
+        and receipt["request"]["transfer_completion"]["transfer_id"]
+        == transfer["proposal"]["transfer_id"]
+    ]
+    if transfer["phase"] == "completed":
+        _require(len(completions) == 1, "completed transfer lacks exact advance receipt")
+        end = int(completions[0]["generation"])
+    else:
+        _require(not completions, "pending transfer has a retained completion receipt")
+        end = None
+    return int(freezes[0]["expected_generation"]), end
+
+
+def _validate_advance_history(
+    workflow: dict[str, Any],
+    *,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
+) -> None:
     from .workflow_bindings import require_bound_phase
+    from .workflow_evidence import validate_phase_evidence
+    from .workflow_settlement import validate_native_completion
 
     identities: set[str] = set()
     generation = 0
+    phases = PHASES[workflow["type"]]
+    _require(workflow["phase"] in phases, "workflow phase outside installed procedure")
+    phase_position = 0
+    transfer_window = _driver_transfer_window(workflow)
     for receipt in workflow["advances"]:
-        original = receipt["request"]
+        _require(
+            phase_position < len(phases) - 1,
+            "workflow transition follows terminal settlement",
+        )
+        native = receipt["authority"] == "native-owner"
+        original = receipt["completion"] if native else receipt["request"]
+        original_digest = receipt["completion_digest"] if native else receipt["request_digest"]
         _require(original["advance_id"] not in identities, "duplicate retained workflow advance")
         identities.add(original["advance_id"])
         _require(
             original["owner"] == workflow["owner"]
             and original["workflow_id"] == workflow["id"]
-            and receipt["request_digest"] == digest(original),
+            and original_digest == digest(original),
             "retained workflow advance identity changed",
         )
         _require(
@@ -650,18 +714,47 @@ def _validate_advance_history(workflow: dict[str, Any]) -> None:
             "retained workflow advance generation changed",
         )
         generation = receipt["generation"]
+        destination = phases[-1] if native else original["phase"]
         _require(
-            original["phase"] == receipt["phase"] in PHASES[workflow["type"]]
+            destination == receipt["phase"] in phases
             and (receipt["state"] == "completed")
             == (receipt["phase"] == PHASES[workflow["type"]][-1]),
             "retained workflow advance outcome changed",
         )
-        phases = PHASES[workflow["type"]]
+        if native or original["transfer_completion"] is None:
+            phase_position += 1
+        _require(
+            phase_position < len(phases) and destination == phases[phase_position],
+            "retained workflow phase history is incomplete or reordered",
+        )
+        if native:
+            validate_native_completion(
+                original,
+                workflow,
+                before_generation=receipt["generation"],
+                recovery_readers=recovery_readers,
+            )
+        else:
+            if transfer_window is not None and receipt["generation"] > transfer_window[0]:
+                _require(
+                    transfer_window[1] is not None and receipt["generation"] >= transfer_window[1],
+                    "driver advance was recorded inside a pending transfer",
+                )
+            validate_phase_evidence(
+                original,
+                workflow,
+                before_generation=receipt["generation"],
+                recovery_readers=recovery_readers,
+            )
         position = phases.index(receipt["phase"])
         if position > 0:
             require_bound_phase(
                 workflow, phases[position - 1], before_generation=receipt["generation"]
             )
+    _require(
+        workflow["phase"] == phases[phase_position],
+        "workflow phase lacks its complete retained transition history",
+    )
 
 
 def _completion_witnesses(request: dict[str, Any], workflow: dict[str, Any]) -> None:
@@ -708,8 +801,14 @@ def validate_advance_request(
         "workflow advance receiver changed",
     )
     for receipt in workflow["advances"]:
-        if receipt["request"]["advance_id"] == request["advance_id"]:
-            _require(receipt["request"] == request, "accepted workflow advance input changed")
+        original = (
+            receipt["completion"] if receipt["authority"] == "native-owner" else receipt["request"]
+        )
+        if original["advance_id"] == request["advance_id"]:
+            _require(
+                receipt["authority"] == "driver", "workflow transition identity changed authority"
+            )
+            _require(original == request, "accepted workflow advance input changed")
             return "replay"
     _require(
         request["expected_generation"] == workflow["generation"] < 9007199254740991
@@ -740,12 +839,18 @@ def validate_advance_request(
 
     if request["phase"] != workflow["phase"]:
         require_bound_phase(workflow, workflow["phase"])
+        from .workflow_preparation import validate_workflow_agreement
+
+        validate_workflow_agreement(workflow, witnesses=request["witnesses"], require_complete=True)
     owners = {canonical(item["owner"]) for item in workflow["participants"]}
     for witness in request["witnesses"]:
         _require(
             witness["workflow_id"] == workflow["id"] and canonical(witness["owner"]) in owners,
             "workflow advance prerequisite outside closure",
         )
+    from .workflow_evidence import validate_phase_evidence
+
+    validate_phase_evidence(request, workflow, recovery_readers=recovery_readers)
     return "new"
 
 
@@ -753,6 +858,8 @@ def advance_workflow(
     request: dict[str, Any],
     workflow: dict[str, Any],
     *,
+    verified_phase_evidence: dict[str, Any] | None = None,
+    verified_preparations: list[dict[str, Any]] | None = None,
     recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> dict[str, Any]:
     """Model one atomic record transition; this does not execute or release anything."""
@@ -762,6 +869,11 @@ def advance_workflow(
     result = copy.deepcopy(workflow)
     if disposition == "replay":
         return result
+    from .workflow_evidence import require_verified_phase_evidence
+    from .workflow_preparation import require_verified_preparations
+
+    require_verified_phase_evidence(request, verified_phase_evidence)
+    require_verified_preparations(request, workflow, verified_preparations)
     completion = request["transfer_completion"]
     if completion is not None:
         result["transfer"]["commit_witnesses"] = copy.deepcopy(completion["witnesses"])
@@ -779,6 +891,7 @@ def advance_workflow(
             known.add(canonical(witness))
     result["advances"].append(
         {
+            "authority": "driver",
             "request": copy.deepcopy(request),
             "request_digest": digest(request),
             **{key: result[key] for key in ("generation", "driver_term", "phase", "state")},

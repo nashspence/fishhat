@@ -148,6 +148,7 @@ def validate_directory(v: dict[str, Any]) -> dict[str, Any]:
 @bounds(
     Bounds(
         id="directory.load",
+        linear_proofs=("tests/test_linear_growth.py::test_directory_linear_work",),
         work="O(input_bytes)-bounded-parser-depth",
         extent="complete-document-or-rejection",
         limits=(("input_bytes", 65536), ("nesting", 16)),

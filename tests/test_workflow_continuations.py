@@ -16,14 +16,19 @@ from fishhat_contracts.validation import MAX_BYTES, ContractError, canonical, di
 from fishhat_contracts.witness import sign
 from fishhat_contracts.workflow_bindings import bind_workflow, validate_bind_request
 from fishhat_contracts.workflows import (
-    advance_workflow,
     prepare_workflow,
     validate_workflow_proposal,
 )
 
 from tests.operation_support import seal_operation
 from tests.test_contracts import uid
-from tests.test_owner_handoffs import operation, request, staged_workflow_input, workflow
+from tests.test_owner_handoffs import (
+    operation,
+    preparation_witness,
+    request,
+    staged_workflow_input,
+    workflow,
+)
 from tests.test_plan_review import reseal
 from tests.test_workflow_inputs import (
     adapter_proposal,
@@ -32,11 +37,14 @@ from tests.test_workflow_inputs import (
     rotation_intent,
 )
 from tests.test_workflow_transfer import capsule, proposal
+from tests.workflow_evidence_support import advance_request
+from tests.workflow_evidence_support import advance_with_evidence as advance_workflow
 
 CHECK_PURPOSE = {
     "purpose": "public-contract",
     "authority": [
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/workflow.schema.json",
+        "packages/fishhat-contracts/src/fishhat_contracts/contracts/workflow-evidence.schema.json",
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/records.schema.json#/$defs/Workflow",
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/states.json#/workflow_phases",
     ],
@@ -59,6 +67,7 @@ def prepare(intent, owner=None, principal="transport-operator", retained=None):
         expected_owner=owner,
         principal=principal,
         verified_driver=intent["initial_driver"],
+        verified_preparation=preparation_witness(intent, owner),
         verified_content=intent["content"],
         verified_adapters=adapters,
         retained=retained,
@@ -69,19 +78,7 @@ def move(value, phase):
     phases = PHASES[value["type"]]
     while value["phase"] != phase:
         following = phases[phases.index(value["phase"]) + 1]
-        value = advance_workflow(
-            {
-                "owner": value["owner"],
-                "workflow_id": value["id"],
-                "advance_id": uid(f"advance-{following}-{value['generation']}"),
-                "driver_term": value["driver_term"],
-                "expected_generation": value["generation"],
-                "phase": following,
-                "witnesses": [],
-                "transfer_completion": None,
-            },
-            value,
-        )
+        value = advance_workflow(advance_request(value, following), value)
     return value
 
 
@@ -339,6 +336,7 @@ def test_partial_preparation_retains_one_independently_authorized_initial_driver
             expected_owner=owner_b,
             principal="bob",
             verified_driver={"principal": "bob", "term": 1},
+            verified_preparation=preparation_witness(intent, owner_b),
             verified_content=intent["content"],
         )
 

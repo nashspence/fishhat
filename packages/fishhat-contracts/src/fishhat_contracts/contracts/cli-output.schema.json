@@ -130,6 +130,9 @@
             },
             {
               "$ref": "workflow-recovery.schema.json#/$defs/Abandonment"
+            },
+            {
+              "$ref": "workflow-recovery.schema.json#/$defs/NeverPrepared"
             }
           ]
         },
@@ -189,7 +192,8 @@
                   "HistoricalRecordPage",
                   "HistoricalRecordChunk",
                   "HistoricalContentChunk",
-                  "WorkflowAbandonment"
+                  "WorkflowAbandonment",
+                  "WorkflowNeverPrepared"
                 ]
               }
             },

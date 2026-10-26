@@ -17,8 +17,6 @@
     "max_requests": 4,
     "busy_ms": 250,
     "request_seconds": 2,
-    "max_workflows": 10000,
-    "max_events": 100000,
     "database_bytes": 1073741824,
     "free_reserve_bytes": 67108864
   },

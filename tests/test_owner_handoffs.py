@@ -85,6 +85,26 @@ def cli(result):
     }
 
 
+def preparation_witness(proposal, owner):
+    body = {k: v for k, v in operation()["witness"].items() if k != "signature"}
+    body.update(
+        id=uid("preparation-" + owner["id"] + digest(proposal)),
+        owner=copy.deepcopy(owner),
+        kind="approval",
+        subject_digest=digest(proposal),
+        workflow_id=proposal["workflow_id"],
+        generation=0,
+        state="workflow-prepared",
+        evidence_digests=[],
+    )
+    return sign(body, Ed25519PrivateKey.from_private_bytes(b"\x17" * 32))
+
+
+def preparation_witnesses(proposal):
+    owners = {canonical(p["owner"]): p["owner"] for p in proposal["participants"]}
+    return [preparation_witness(proposal, owner) for owner in owners.values()]
+
+
 def workflow():
     op = operation()
     owner = {**op["owner"], "tool": "host-ops"}
@@ -192,6 +212,7 @@ def rebind_workflow_proposal(value):
         "content": list(content.values()),
     }
     value["proposal_digest"] = digest(value["proposal"])
+    value["prerequisite_witnesses"] = [preparation_witness(value["proposal"], value["owner"])]
 
 
 def staged_workflow_input(method, payload):
@@ -350,22 +371,15 @@ def test_prepare_cannot_supply_observed_owner_state():
 
 
 def test_workflow_capsule_generation_is_separate_from_participant_generation():
+    from tests.workflow_evidence_support import advance_request
+
     value = workflow()
     value["generation"] = 4
     validate_workflow(value)
-    staged_workflow_input(
-        "workflow.advance",
-        {
-            "owner": value["owner"],
-            "workflow_id": value["id"],
-            "advance_id": U,
-            "driver_term": 1,
-            "phase": "draining",
-            "expected_generation": 4,
-            "witnesses": [],
-            "transfer_completion": None,
-        },
-    )
+    query = advance_request(value, "draining", advance_id=U)
+    staged_workflow_input("workflow.advance", query)
+    assert query["expected_generation"] == 4
+    assert query["phase_evidence"]["participants"][0]["resource_generation"] == 9
     assert value["participants"][0]["expected_generation"] == 9
     foreign = copy.deepcopy(value)
     foreign["owner"]["epoch"] = V

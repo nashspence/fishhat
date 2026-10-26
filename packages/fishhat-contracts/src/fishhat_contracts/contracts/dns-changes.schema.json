@@ -64,5 +64,6 @@
     "changes",
     "custodian"
   ],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "description": "Each change adds, deletes or replaces one RRset identity. Before and after cannot both be null, and non-null replacements retain the same name, class and type. RDATA member order is insignificant: a reorder-only before/after pair is a no-op and rejects. TTL policy and ordered content inside each member remain significant."
 }

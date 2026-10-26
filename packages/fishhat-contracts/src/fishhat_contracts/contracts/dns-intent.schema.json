@@ -694,7 +694,8 @@
           ],
           "additionalProperties": false
         }
-      ]
+      ],
+      "description": "An RRset has one owner name, class, type and TTL policy, with unordered unique RDATA members. Wire arrays may use any member order. Semantic comparison uses canonical JSON for the non-RDATA fields and set equality of canonical member JSON bytes, while preserving ordered fields inside each member, including TXT chunks. Different TTL policy or RDATA membership is a different RRset. Invocation identity still covers the exact original canonical request bytes; semantic comparison does not rewrite retained input or relax request-digest correlation."
     }
   }
 }

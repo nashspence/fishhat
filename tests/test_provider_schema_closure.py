@@ -236,13 +236,15 @@ def test_provider_regex_cannot_enter_unbounded_backtracking_or_nonportable_featu
         check_schema({"type": "string", "pattern": pattern})
 
 
-@pytest.mark.parametrize(
-    "schema,value",
-    [
-        (
-            {"type": "array", "items": {"type": "integer"}, "uniqueItems": True},
-            list(range(1500)),
-        ),
+def test_provider_value_work_limit_is_explicit_rejection_not_partial_success():
+    schema = {"type": "array", "items": {"allOf": [{"type": "integer"}] * 128}}
+    with pytest.raises(ContractError, match="SCHEMA_EVALUATION_CAPACITY"):
+        check_configuration(schema, list(range(20000)), digest(schema))
+
+
+def test_provider_uniqueness_does_not_charge_for_pairwise_work():
+    for schema, value in [
+        ({"type": "array", "items": {"type": "integer"}, "uniqueItems": True}, list(range(1500))),
         (
             {
                 "type": "array",
@@ -251,13 +253,18 @@ def test_provider_regex_cannot_enter_unbounded_backtracking_or_nonportable_featu
             },
             [[0] * 1000 + [index] for index in range(100)],
         ),
-        ({"type": "string", "pattern": "^x|a*a*$"}, "a" * 250 + "!"),
-    ],
-    ids=["pair-count", "compared-bytes", "unanchored-branch"],
-)
-def test_provider_value_work_limit_is_explicit_rejection_not_partial_success(schema, value):
-    with pytest.raises(ContractError, match="SCHEMA_EVALUATION_CAPACITY"):
+    ]:
         check_configuration(schema, value, digest(schema))
+
+
+@pytest.mark.parametrize(
+    "pattern",
+    ["^a*a*$", "a*$", "^x|a*a*$"],
+    ids=["anchored-pair", "unanchored-repeat", "branch-pair"],
+)
+def test_nonlinear_regex_requires_a_different_implementation(pattern):
+    with pytest.raises(ContractError, match="NONLINEAR_SCHEMA_REGEX"):
+        check_schema({"type": "string", "pattern": pattern})
 
 
 def test_pattern_property_names_share_the_bounded_regex_input_contract():

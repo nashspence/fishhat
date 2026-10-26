@@ -69,7 +69,8 @@ class Journal:
     @bounds(
         Bounds(
             id="journal.submit",
-            work="O(retained_requests)-reference-scan",
+            linear_proofs=("tests/test_linear_growth.py::test_journal_linear_work",),
+            work="O(retained_requests + input_bytes)-reference-scan",
             extent="one-durable-request-identity",
             limits=(),
             capacity=(),

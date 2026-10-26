@@ -1,0 +1,302 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fishhat.invalid/contracts/workflow-evidence.schema.json",
+  "$defs": {
+    "Transition": {
+      "type": "object",
+      "properties": {
+        "authority": {
+          "enum": [
+            "driver",
+            "native-owner"
+          ]
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "workflow_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "advance_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "proposal_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "procedure": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "requirements_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "expected_generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "driver_term": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "from_phase": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "to_phase": {
+          "$ref": "common.schema.json#/$defs/Id"
+        }
+      },
+      "required": [
+        "authority",
+        "owner",
+        "workflow_id",
+        "advance_id",
+        "proposal_digest",
+        "procedure",
+        "requirements_digest",
+        "expected_generation",
+        "driver_term",
+        "from_phase",
+        "to_phase"
+      ],
+      "additionalProperties": false,
+      "description": "One exact receiving-owner transition, including its immutable proposal, local capsule generation, retained driver term and transition identity advance_id. The signed authority distinguishes an ordinary driver advance from native-owner settlement of already accepted work. Native-owner authority permits only the final adjacent phase transition with every required child succeeded and effects known; it grants no driver, child-admission or transfer authority and is never a workflow.advance transport input. requirements_digest is the canonical digest of this procedure's complete installed InstalledProcedureRequirements.const entry, never caller-selected semantics. from_phase and to_phase are consecutive installed phases. Retained accepted transitions keep these original bytes after later advances, owner observations or driver changes."
+    },
+    "ChildOutcome": {
+      "type": "object",
+      "properties": {
+        "child": {
+          "$ref": "workflow.schema.json#/$defs/ChildReference"
+        },
+        "operation": {
+          "$ref": "records.schema.json#/$defs/Operation"
+        }
+      },
+      "required": [
+        "child",
+        "operation"
+      ],
+      "additionalProperties": false,
+      "description": "Complete owner-authenticated Operation for exactly this retained child slot and Plan. Every child whose start phase precedes to_phase appears once. The installed completion barrier requires succeeded with known effects and required result custody; a reviewed Plan or accepted/running/waiting receipt is insufficient there. Before that barrier, only accepted/running/waiting/succeeded with none or known effects can accompany positive native milestone evidence. Failed, cancelled, quarantined or unknown work blocks phase progress. A recovered completed slot preserves its exact original successful Operation and epoch, without reexecution or retargeting."
+    },
+    "ParticipantEvidence": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "resource": {
+          "$ref": "common.schema.json#/$defs/Resource"
+        },
+        "resource_generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "$ref": "workflow-evidence.schema.json#/$defs/ChildOutcome"
+          }
+        },
+        "native_evidence": {
+          "type": "array",
+          "items": {
+            "allOf": [
+              {
+                "$ref": "common.schema.json#/$defs/Handle"
+              },
+              {
+                "properties": {
+                  "purpose": {
+                    "const": "content"
+                  }
+                }
+              }
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "witness": {
+          "$ref": "records.schema.json#/$defs/Witness"
+        }
+      },
+      "required": [
+        "owner",
+        "resource",
+        "resource_generation",
+        "operations",
+        "native_evidence",
+        "witness"
+      ],
+      "additionalProperties": false,
+      "description": "Exactly one proof per immutable participant owner/resource pair. Native evidence contains complete retained owner-held material proving this participant's obligations for the selected transition, including actual target identity, current resource generation and applicable exclusion, quiescence, fencing, candidate or result verification. Its owner equals this participant. The owner authenticates every Operation and verifies each required result's complete bytes under its action-owned schema before signing. The approval witness has state workflow-phase-verified, this owner epoch, resource_generation and workflow ID; evidence_digests is empty. Its subject_digest covers canonical {transition: PhaseEvidence.transition, participant: this complete ParticipantEvidence with witness omitted}. This binds actual child snapshots and native custody to the exact transition, not an unrelated digest or generic true assertion. The receiver independently authenticates the witness and obtains current native verification before supplying trusted phase evidence. A signature-shaped object or matching digest supplies neither."
+    },
+    "PhaseEvidence": {
+      "type": "object",
+      "properties": {
+        "transition": {
+          "$ref": "workflow-evidence.schema.json#/$defs/Transition"
+        },
+        "participants": {
+          "type": "array",
+          "items": {
+            "$ref": "workflow-evidence.schema.json#/$defs/ParticipantEvidence"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "transition",
+        "participants"
+      ],
+      "additionalProperties": false,
+      "description": "Required complete evidence for one ordinary driver phase advance or separately recorded native-owner final settlement. Installed phase order is owned by states.json; native obligations and child completion barriers are owned once by InstalledProcedureRequirements.const in this schema. Every participant owner/resource appears exactly once, and every child started before the destination phase has its exact retained Operation. A participant without a child in that phase still proves its applicable generation, admission and custody obligations; silence does not remove it. Native owners retain required exclusions and fences through the corresponding effects, revalidate current evidence atomically with admission, and stop for reconciliation if they cannot maintain them. Evidence cannot authorize another Plan, release a hold, replace missing material or fabricate observed success. Native settlement preserves driver authority, incomplete transfer custody and holds; it cannot admit another child or advance an intermediate phase. Same-phase driver-transfer completion carries null phase_evidence and grants no procedure progress. Exact accepted transition replay uses retained evidence without requiring new signatures, observations or input custody; changed evidence or authority under the same transition identity conflicts. Pure schema and relationship checks do not authenticate owners, observe native state, establish freshness, pin content or qualify a native implementation."
+    },
+    "InstalledProcedureRequirements": {
+      "const": {
+        "host-drain": {
+          "child_completion": {
+            "draining": "quiescent",
+            "host-effect": "reconciling",
+            "reconciling": "completed"
+          },
+          "phases": {
+            "draining": "Resolve the complete affected live application scope from the reviewed host change and current owner state; close conflicting admission before draining. Every participant proves its current generation and retained recovery inputs.",
+            "quiescent": "Verify every affected application and writer has reached its required drained state, all draining children succeeded, and the exact host change is protected by continuing owner-enforced exclusion. An omitted or unreachable participant is not quiescent.",
+            "host-effect": "Revalidate the same complete quiescence and exclusion immediately before the reviewed host effect, including current host preimages and capture custody where required by the Plan. Retain those protections through the native outcome.",
+            "reconciling": "Verify the exact host-change child succeeded with known effects and current host or boot identity. Reconcile every affected application against its accepted release, permissions and recovery obligations before reopening admission.",
+            "completed": "Verify all reconciliation children and required application checks succeeded, account for the complete affected scope and retain all unresolved holds and recovery inputs. Completion alone does not release a hold."
+          }
+        },
+        "interface-binding": {
+          "child_completion": {
+            "provider-verified": "consumer-adopting",
+            "consumer-adopting": "consumer-verified"
+          },
+          "phases": {
+            "provider-verified": "Verify the exact reviewed provider input, current owner/resource generations and typed interface scope before provider work; retain every declared consumer obligation.",
+            "consumer-adopting": "Require the exact provider child to have succeeded; independently verify its produced interface binding against the retained provider release and intended consumer configuration before any consumer adoption.",
+            "consumer-verified": "Require every selected consumer child to have succeeded and verify each accepted consumer release or secret generation uses the exact produced binding. A provider success does not establish consumer adoption or health.",
+            "completed": "Verify the complete provider/consumer closure remains coherent at the selected generations, including the required interface and consumer checks; retain explicit recovery obligations."
+          }
+        },
+        "ingress-publication": {
+          "child_completion": {
+            "published": "reloaded",
+            "reloaded": "serving-verified"
+          },
+          "phases": {
+            "candidate-validated": "Validate the complete candidate route set against the approved ingress executor, scope, current generation and accepted binding obligations; retain its exact bytes without publishing it.",
+            "published": "Revalidate the exact candidate and expected generation under publication exclusion before the selected ingress publish child; no unrelated adapter method or scope can satisfy this role.",
+            "reloaded": "Require the exact publication child to have succeeded and verify installed route/configuration identity before the selected reload work. Retain the prior recovery basis and any required traffic exclusion.",
+            "serving-verified": "Require every reload child to have succeeded; verify the actual serving generation and complete routes under the approved ingress scope, including required upstream bindings and checks.",
+            "completed": "Verify the published, loaded and observed serving identities agree for the complete selected route set; account for retained prior-generation recovery and holds."
+          }
+        },
+        "secret-rotation": {
+          "child_completion": {
+            "issuer-changing": "publishing",
+            "publishing": "consumers-adopting",
+            "consumers-adopting": "verifying"
+          },
+          "phases": {
+            "participants-quiescent": "Resolve the exact issuer, publisher and complete consumer set; enforce the rotation's required consumer quiescence or exclusion and pin accepted secret generations and recovery custody.",
+            "issuer-changing": "Revalidate continuing participant exclusion, current generations and the exact credential-issuer issue input immediately before the issuer child. No prior credential receipt can stand in for its future result.",
+            "publishing": "Require the exact issuer child to have succeeded with committed output; verify the real ciphertext derivation and later-reviewed publisher Plan through workflow.bind, preserving issuer identity and native credential custody.",
+            "consumers-adopting": "Require the exact publisher child to have succeeded with its complete retained receipt; verify publication of this issuer's candidate and exact predecessor before reviewing each consumer adoption.",
+            "verifying": "Require every selected consumer adoption child to have succeeded; verify each actual accepted consumer secret generation and required native checks against that exact publication receipt.",
+            "completed": "Verify the entire issuer/publication/consumer lineage and required consumer checks, with no omitted consumer or unresolved rotation effect. Retire old secret material only through its owning retention and recovery conditions."
+          }
+        },
+        "checkpoint": {
+          "child_completion": {
+            "native-capturing": "complete"
+          },
+          "phases": {
+            "native-capturing": "Resolve all preserved app-owned datasets, accepted release and secret generations from current accepted source. Establish the declared consistency scope and any required writer fence/capture cohort before native capture.",
+            "sealed": "Verify complete dataset capture receipts and immutable sealed checkpoint identity, including capture cohort or explicit independent-datasets consistency. The running backup Operation does not yet imply transferred or recoverable material.",
+            "transferred": "Verify exact sealed-object transfer, immutable backend identity and retained retrieval evidence for every required object; no incomplete or missing dataset may be omitted. Preserve native capture and secret/release custody.",
+            "complete": "Require the exact backup child to have succeeded with complete committed checkpoint result and declared retrieval custody. Verify every preserved dataset and selected release/secret closure. Capture success does not establish a restore drill."
+          }
+        },
+        "relocation": {
+          "child_completion": {
+            "source-quiescing": "completed"
+          },
+          "phases": {
+            "source-quiescing": "Resolve current placement generation, exact destination and reviewed checkpoint or release recovery basis against accepted source; close conflicting production admission and account for every writer and externally owned dependency.",
+            "source-fenced": "Positively verify complete source-writer cessation and durable fencing under the original placement identity. Timeout, disconnection or a changed owner epoch is not proof that the source stopped.",
+            "destination-restoring": "Maintain source fencing; verify destination isolation, approved resource bindings and exact retained recovery basis before restoration or declared reconstruction. A release basis cannot replace preserved data or waive external custody.",
+            "destination-verifying": "Verify complete restored or reconstructed dataset, release and secret identity in isolation, with the source still fenced. Required verification must not activate another production writer.",
+            "placement-committing": "Require positive destination verification and a current compare-and-swap of the exact reviewed placement generation while retaining source exclusion and recovery custody.",
+            "activated": "Verify committed destination ownership and actual production activation with the source still fenced. Establish that the same application has at most one admitted production writer.",
+            "completed": "Require the exact relocation child to have succeeded; verify placement, destination checks, source fencing and complete data/secret/release custody. Completion does not authorize source data deletion."
+          }
+        },
+        "source-publication": {
+          "child_completion": {
+            "ref-updating": "ref-verified"
+          },
+          "phases": {
+            "candidate-verified": "Verify the complete retained source proposal, immutable repository identity, exact base/ref and candidate content under the approved source provider; source text cannot enroll a provider or authorize adoption.",
+            "ref-updating": "Revalidate the exact expected predecessor and candidate under provider-native compare-and-swap or equivalent exclusion before the selected source.publish child. A stale observation cannot authorize replacement.",
+            "ref-verified": "Require the exact source.publish child to have succeeded and verify the actual ref points to its complete candidate with the declared publication receipt and immutable repository identity.",
+            "completed": "Verify exact published ref/content and retained publication custody. Publication does not establish host or application adoption of that source."
+          }
+        },
+        "dns-change": {
+          "child_completion": {
+            "applying": "verifying"
+          },
+          "phases": {
+            "provider-observed": "Observe the complete reviewed DNS changeset under the approved provider, zone and authority; verify exact current before-RRsets and generation with no silently omitted record or changed scope.",
+            "applying": "Revalidate exact before-RRsets and expected generation under native atomic prerequisites or equivalent exclusion immediately before the dns.reconcile child. Required semantics include TTL and complete RDATA membership.",
+            "verifying": "Require the exact DNS child to have succeeded; verify authoritative after-RRsets, deletions and generation for the complete changeset under DNS set semantics, not merely adapter acceptance.",
+            "completed": "Verify the complete requested authoritative state and retained provider evidence. Success does not assert unrelated recursive-cache propagation or erase recovery obligations."
+          }
+        },
+        "secret-publication": {
+          "child_completion": {
+            "replacing": "verifying"
+          },
+          "phases": {
+            "candidate-verified": "Verify the exact complete immutable ciphertext candidate, catalogue, consumer/version identity and provider evidence against the approved publisher and selected predecessor; retain all bytes before replacement.",
+            "replacing": "Revalidate the exact expected predecessor under the publisher's native compare-and-swap or equivalent exclusion, current scoped authority and required recovery custody before the selected publication or recovery child.",
+            "verifying": "Require the exact publisher child to have succeeded with the completed retained receipt; verify current publication identity, ciphertext digest/size and exact predecessor against the selected candidate.",
+            "completed": "Verify the complete publication receipt and retained ciphertext/provider evidence closure. Publication does not establish consumer adoption or authorize old secret deletion."
+          }
+        },
+        "raw-maintenance": {
+          "child_completion": {
+            "external-work": "reconciling"
+          },
+          "phases": {
+            "admission-closed": "Resolve the exact reviewed task or approved adapter method to its actual controlling owner and mutation scope; close conflicting admission under current administrator authority and preserve accepted work and holds.",
+            "quiescent": "Positively verify all affected writers have stopped or reached the reviewed safe state, with complete controlling-owner exclusion and recovery inputs. A generic adapter name cannot bypass typed owner obligations.",
+            "external-work": "Revalidate continuing exclusion, exact task/method inputs, current generations and retained recovery basis immediately before external work; no caller-supplied command expands the reviewed scope.",
+            "reconciling": "Require the exact maintenance child to have succeeded with known effects; reconcile actual target state and all affected accepted resource bindings before reopening admission.",
+            "completed": "Verify the complete reviewed reconciliation and required checks, preserving every unresolved hold and recovery reference. External command exit alone is insufficient."
+          }
+        },
+        "runtime-upgrade": {
+          "child_completion": {
+            "migrating": "completed"
+          },
+          "phases": {
+            "draining": "Resolve the exact management release, selected tools and owned durable-state closure; close conflicting tool admission and retain all accepted work, replay identities, holds and recovery inputs.",
+            "checkpointed": "Verify all required tool-state checkpoints and recovery custody after complete safe draining. State checkpoints are owner-owned tool recovery material, not fabricated application backup checkpoints.",
+            "candidate-verified": "Verify exact installed management artifact identity, platform capability and supported state migration paths against the retained source version and reviewed Plan before migration.",
+            "migrating": "Revalidate native exclusion and checkpoint custody before forward-only state migration. Preserve accepted outcomes and protected commitments across interruption; no destructive reinitialization or implicit downgrade is permitted.",
+            "switched": "Verify complete durable migration outcome and atomic selection of the reviewed tool release, with original state and accepted-work custody retained. Unknown migration effects block switch.",
+            "verified": "Verify the selected native release can open the migrated owner state and recover all required accepted work, exact replay identities and retained evidence under its installed schemas and permissions.",
+            "completed": "Require the exact host.runtime-install child to have succeeded and verify current release/state identity plus complete accepted-work and recovery continuity before restoring ordinary admission."
+          }
+        }
+      },
+      "description": "The sole installed native phase obligations and child completion barriers for all v1 procedures. Every phase after prepared is covered; every admitted child start phase has a later completion barrier no later than the terminal phase. Phase order remains owned by states.json. This normative constant is part of the complete JSON Schema closure pinned by record delivery and independently installed historical readers; altering an obligation changes that identity. Requirements are never supplied or relaxed by a workflow proposal or phase-evidence caller."
+    }
+  },
+  "$ref": "workflow-evidence.schema.json#/$defs/PhaseEvidence"
+}
