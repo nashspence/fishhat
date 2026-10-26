@@ -19,6 +19,7 @@ from fishhat_contracts.workflow_recovery import (
 )
 from fishhat_contracts.workflows import advance_workflow, decode_workflow_input, prepare_workflow
 
+from tests.operation_support import seal_operation
 from tests.test_contracts import uid
 from tests.test_owner_handoffs import operation, request, staged_workflow_input, workflow
 from tests.test_owner_history import custody_for
@@ -82,8 +83,7 @@ def child_operation(binding, owner, *, state="succeeded"):
         effect_certainty="known" if state == "succeeded" else "unknown",
         result_handle=None,
     )
-    value["witness"].update(owner=copy.deepcopy(owner), state=state)
-    return value
+    return seal_operation(value)
 
 
 def selected_binding(record, participant, slot):
@@ -306,7 +306,7 @@ def prepare(proposal, records, *, owner=None, **overrides):
     return prepare_workflow_recovery(query, **arguments)
 
 
-def commit(value, proposal):
+def commit(value, proposal, **context):
     preparations = [preparation(proposal, p["owner"]) for p in proposal["participants"]]
     query = {
         "owner": value["owner"],
@@ -318,7 +318,7 @@ def commit(value, proposal):
         "preparations": preparations,
     }
     return query, commit_workflow_recovery(
-        query, value, recovery_authorized=True, verified_preparations=preparations
+        query, value, recovery_authorized=True, verified_preparations=preparations, **context
     )
 
 
@@ -579,6 +579,7 @@ def test_successor_cannot_omit_or_retarget_protected_predecessor_closure(change)
 def test_failed_child_requires_separate_exact_successful_recovery(change):
     proposal, records = scenario(kinds=["recovered"])
     disposition = proposal["children"][0]
+    changed = disposition["recovery"]
     if change == "failed-recovery":
         disposition["recovery"]["operation"]["state"] = "failed"
     elif change == "unknown-recovery":
@@ -586,8 +587,14 @@ def test_failed_child_requires_separate_exact_successful_recovery(change):
     elif change == "different-operation":
         disposition["recovery"]["plan"]["subject"]["arguments"]["operation_id"] = uid("unrelated")
         reseal(disposition["recovery"]["plan"])
+        changed["operation"]["plan_digest"] = changed["plan"]["digest"]
+        changed["operation"]["subject"] = copy.deepcopy(changed["plan"]["subject"])
     else:
         disposition["operation"]["operation"]["plan_digest"] = digest({"other": "plan"})
+        changed = disposition["operation"]
+    seal_operation(changed["operation"])
+    data = canonical(changed["operation"])
+    changed["reference"].update(digest=digest(changed["operation"]), size=len(data))
     with pytest.raises(ContractError):
         validate_recovery_proposal(proposal, verified_origins=records)
 

@@ -17,12 +17,14 @@
         "capacity_bytes": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 9007199254740991
+          "maximum": 9007199254740991,
+          "description": "Exact owner-approved enforced byte ceiling for this allocation, not a minimum provisioned size. Zero is a hard zero-sized allocation. A larger backing store does not permit a larger effective ceiling."
         },
         "capacity_inodes": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 9007199254740991
+          "maximum": 9007199254740991,
+          "description": "Exact owner-approved enforced inode ceiling for this allocation, not a minimum provisioned count. Zero permits no inodes."
         },
         "purposes": {
           "type": "array",
@@ -40,7 +42,7 @@
         },
         "hard_isolation": {
           "type": "boolean",
-          "description": "Whether the exact allocation requires enforced byte and inode isolation, independently approved by the receiving owner."
+          "description": "Whether the exact approved byte and inode ceilings must be enforced for the entire independently verified allocation domain."
         }
       },
       "required": [
@@ -51,7 +53,8 @@
         "purposes",
         "hard_isolation"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "Plan the exact approved allocation identity and enforced byte/inode ceilings. Native granularity or provider rounding that changes either ceiling must be disclosed and separately reviewed; it cannot be silently accepted as extra capacity."
     },
     "allocate": {
       "type": "object",
@@ -68,12 +71,14 @@
         "capacity_bytes": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 9007199254740991
+          "maximum": 9007199254740991,
+          "description": "Exact owner-approved enforced byte ceiling for this allocation, not a minimum provisioned size. Zero is a hard zero-sized allocation. A larger backing store does not permit a larger effective ceiling."
         },
         "capacity_inodes": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 9007199254740991
+          "maximum": 9007199254740991,
+          "description": "Exact owner-approved enforced inode ceiling for this allocation, not a minimum provisioned count. Zero permits no inodes."
         },
         "purposes": {
           "type": "array",
@@ -91,7 +96,7 @@
         },
         "hard_isolation": {
           "type": "boolean",
-          "description": "Whether the exact allocation requires enforced byte and inode isolation, independently approved by the receiving owner."
+          "description": "Whether the exact approved byte and inode ceilings must be enforced for the entire independently verified allocation domain."
         }
       },
       "required": [
@@ -102,7 +107,8 @@
         "purposes",
         "hard_isolation"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "Establish the exact approved enforced byte and inode ceilings on the independently verified allocation. For an existing allocation this updates quotas under current owner resource preconditions and exclusion; it does not recreate, retarget or change its native incarnation. A change of allocation identity requires separate owner approval. Reject unsupported exact enforcement or a reduction that cannot be achieved safely without discarding retained data. The backing store may be larger, but successful effective ceilings must equal the reviewed request, including after reconciliation."
     },
     "retire": {
       "type": "object",
@@ -119,12 +125,14 @@
         "capacity_bytes": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 9007199254740991
+          "maximum": 9007199254740991,
+          "description": "Exact owner-approved enforced byte ceiling for this allocation, not a minimum provisioned size. Zero is a hard zero-sized allocation. A larger backing store does not permit a larger effective ceiling."
         },
         "capacity_inodes": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 9007199254740991
+          "maximum": 9007199254740991,
+          "description": "Exact owner-approved enforced inode ceiling for this allocation, not a minimum provisioned count. Zero permits no inodes."
         },
         "purposes": {
           "type": "array",
@@ -142,7 +150,7 @@
         },
         "hard_isolation": {
           "type": "boolean",
-          "description": "Whether the exact allocation requires enforced byte and inode isolation, independently approved by the receiving owner."
+          "description": "Whether the exact approved byte and inode ceilings must be enforced for the entire independently verified allocation domain."
         }
       },
       "required": [
@@ -153,7 +161,8 @@
         "purposes",
         "hard_isolation"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "Retire only the exact independently verified allocation under its current owner preconditions and retained-data rules. capacity_bytes and capacity_inodes identify its reviewed enforced ceilings; they do not authorize resizing, retargeting or deleting unrelated data."
     },
     "observe": {
       "type": "object",

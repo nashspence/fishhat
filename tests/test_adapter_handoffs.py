@@ -465,8 +465,37 @@ def test_publication_requires_same_source_and_exact_predecessor():
     changed["input"]["expected_previous"]["source"]["configuration_digest"] = artifact("e")[
         "digest"
     ]
-    with pytest.raises(ContractError, match="PUBLICATION_PREDECESSOR_IDENTITY"):
+    with pytest.raises(ContractError, match="publication predecessor destination mismatch"):
         check_request("secret-source", changed)
+
+
+@pytest.mark.parametrize("change", ["source", "entry", "version"])
+def test_publication_rejects_contradictory_intent_before_invocation_authorization(change):
+    registry, query = handoff("secret-source", "publish")
+    previous = query["input"]["expected_previous"]
+    if change == "source":
+        previous["source"]["configuration_digest"] = artifact("e")["digest"]
+    elif change == "entry":
+        previous["entry"] = "another-entry"
+    else:
+        query["input"]["version"] = previous["version"]
+        assert query["input"]["candidate"]["digest"] != previous["artifact_digest"]
+    with pytest.raises(ContractError, match="publication"):
+        check_request("secret-source", query)
+    with pytest.raises(ContractError, match="publication"):
+        registry.authorize_invocation("secret-source", invocation_for(query), owner_approved=True)
+
+
+@pytest.mark.parametrize(
+    "predecessor", [False, True], ids=["verified-absence", "exact-predecessor"]
+)
+def test_publication_allows_distinct_new_version_without_inventing_predecessor_authority(
+    predecessor,
+):
+    registry, query = handoff("secret-source", "publish")
+    if not predecessor:
+        query["input"]["expected_previous"] = None
+    registry.authorize_invocation("secret-source", invocation_for(query), owner_approved=True)
 
 
 @pytest.mark.parametrize(

@@ -21,16 +21,20 @@
         },
         "held": {
           "type": "boolean"
+        },
+        "version": {
+          "$ref": "#/$defs/VersionSelection"
         }
       },
       "required": [
         "scope",
         "target",
         "artifacts",
-        "held"
+        "held",
+        "version"
       ],
       "additionalProperties": false,
-      "description": "The exact approved software source target and desired held policy are independent of version artifact selection. held is an explicit native package policy, never inferred from an artifact digest. Retire preserves its requested final held policy while removing the selected installation; unsupported native policy requires rejection, not omission."
+      "description": "Resolve the requested version for the exact approved software source target, independently of desired held policy. The provider interprets version and verifies that every selected artifact belongs to the requested resolution. Null version selects the preferred eligible version under the pinned source and approved configuration. The stable target does not change when version intent changes. Resolution returns exact immutable artifacts for review and does not install software or change native hold policy."
     },
     "install": {
       "type": "object",
@@ -690,16 +694,20 @@
           },
           "minItems": 0,
           "uniqueItems": true
+        },
+        "requested_version": {
+          "$ref": "#/$defs/VersionSelection"
         }
       },
       "required": [
         "target",
         "requested_held",
         "state",
-        "artifacts"
+        "artifacts",
+        "requested_version"
       ],
       "additionalProperties": false,
-      "description": "Read-only selection of exact software artifacts. requested_held echoes requested future policy; resolution supplies no evidence that native hold or installation state has changed.",
+      "description": "Read-only selection of exact software artifacts. requested_version and requested_held echo the exact request independently of target identity and resolved artifacts. A resolved result has a complete immutable artifact set satisfying the requested version under provider semantics; absent means that selection has no eligible result, and unknown supplies no artifacts. Resolution supplies no evidence that native hold or installation state has changed.",
       "allOf": [
         {
           "if": {
@@ -723,6 +731,19 @@
               }
             }
           }
+        }
+      ]
+    },
+    "VersionSelection": {
+      "description": "Provider-owned version selection for one stable approved software target. A non-null string is the exact requested version spelling, interpreted by the selected adapter; core does not reinterpret it. Null requests the preferred eligible version under the pinned source and approved instance configuration, not permission to change an accepted artifact set later. Resolution fixes the complete immutable artifact set for review before installation.",
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        {
+          "type": "null"
         }
       ]
     }

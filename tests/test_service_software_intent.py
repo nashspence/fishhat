@@ -1,4 +1,4 @@
-"""Exact service events, boot policy and package holds across owner handoffs."""
+"""Exact service events, boot policy and software selection across owner handoffs."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ CHECK_PURPOSE = {
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/service-adapter.schema.json",
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/software-adapter.schema.json",
     ],
-    "scope": "exact target, independent boot/hold policy and attempt-bound service-event custody",
+    "scope": "exact target, independent software version and boot/hold policy, and attempt-bound service-event custody",
     "relationship": "candidate",
     "reason": "Synthetic native evidence tests the contract and durable reference boundary, not actual supervisors or package managers.",
     "claims": [],
@@ -323,7 +323,8 @@ def test_software_hold_policy_round_trips_without_artifact_inference(method, rec
     assert digest(changed) != digest(original)
 
 
-def test_software_resolution_echoes_requested_policy_without_claiming_it_is_enforced():
+@pytest.mark.parametrize("version", [None, "1:2.3-4"], ids=["provider-selection", "exact-version"])
+def test_software_resolution_echoes_requested_policy_without_claiming_it_is_enforced(version):
     registry, (target,) = selected("software", ("package",))
     query = {
         "contract": "fishhat.software",
@@ -333,6 +334,7 @@ def test_software_resolution_echoes_requested_policy_without_claiming_it_is_enfo
             "target": target,
             "artifacts": [],
             "held": True,
+            "version": version,
         },
     }
     registry.authorize_request("selected", "software", query, owner_approved=True)
@@ -347,12 +349,83 @@ def test_software_resolution_echoes_requested_policy_without_claiming_it_is_enfo
         "output": {
             "target": target,
             "requested_held": True,
+            "requested_version": version,
             "state": "resolved",
             "artifacts": [artifact("b")],
         },
     }
     check_response("software", query, response)
     response["output"]["held"] = True
+    with pytest.raises(ContractError):
+        check_response("software", query, response)
+
+
+def test_software_version_selection_changes_request_without_rebinding_target():
+    registry, (target,) = selected("software", ("package",))
+    requests = []
+    for version in ["1", "2", None]:
+        query = {
+            "contract": "fishhat.software",
+            "method": "resolve",
+            "input": {
+                "scope": target["executor"]["scope"],
+                "target": copy.deepcopy(target),
+                "artifacts": [],
+                "held": False,
+                "version": version,
+            },
+        }
+        registry.authorize_request("selected", "software", query, owner_approved=True)
+        assert (
+            registry.source_target(target["selection"], "software", target["executor"]["scope"])
+            == target
+        )
+        requests.append(query)
+    assert len({digest(query) for query in requests}) == 3
+    assert all(query["input"]["target"] == target for query in requests)
+    # Resolution carries an explicit selection, including provider selection as null.
+    missing = copy.deepcopy(requests[0])
+    del missing["input"]["version"]
+    with pytest.raises(ContractError):
+        check_request("software", missing)
+
+
+@pytest.mark.parametrize("state", ["resolved", "absent", "unknown"])
+@pytest.mark.parametrize("version", [None, "1"], ids=["provider-selection", "exact-version"])
+def test_software_resolution_cannot_substitute_another_requested_version(state, version):
+    _, (target,) = selected("software", ("package",))
+    query = {
+        "contract": "fishhat.software",
+        "method": "resolve",
+        "input": {
+            "scope": target["executor"]["scope"],
+            "target": target,
+            "artifacts": [],
+            "held": False,
+            "version": version,
+        },
+    }
+    response = {
+        "contract": query["contract"],
+        "method": "resolve",
+        "request_digest": digest(query),
+        "scope": query["input"]["scope"],
+        "coverage": "unknown" if state == "unknown" else "complete",
+        "continuation": None,
+        "proposal": None,
+        "output": {
+            "target": target,
+            "requested_held": False,
+            "requested_version": version,
+            "state": state,
+            "artifacts": [artifact("b")] if state == "resolved" else [],
+        },
+    }
+    check_response("software", query, response)
+    response["output"]["requested_version"] = "2"
+    with pytest.raises(ContractError, match="SOFTWARE_RESOLUTION_IDENTITY"):
+        check_response("software", query, response)
+    del response["output"]["requested_version"]
     with pytest.raises(ContractError):
         check_response("software", query, response)
 

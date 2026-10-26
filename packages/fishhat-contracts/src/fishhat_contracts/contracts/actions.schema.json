@@ -1279,7 +1279,7 @@
       "properties": {},
       "required": [],
       "additionalProperties": false,
-      "description": "Capture and publish an application recovery checkpoint using its declared data procedures. A successful capture is distinct from evidence that restoration has been tested."
+      "description": "Capture and publish an application recovery checkpoint using its declared data procedures. Reject before admission when the accepted application release declares no application-owned dataset with preserve recovery policy; a stateless, rebuild-only or externally owned dataset set cannot produce an empty or fabricated checkpoint. A successful capture is distinct from evidence that restoration has been tested."
     },
     "app.backup-check": {
       "type": "object",

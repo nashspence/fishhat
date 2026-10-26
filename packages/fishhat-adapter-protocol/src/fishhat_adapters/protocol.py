@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, cast
 
+from fishhat_contracts.publication import validate_publication_intent
 from fishhat_contracts.validation import ContractError, canonical, digest, validate
 from referencing.exceptions import Unresolvable
 
@@ -92,11 +93,11 @@ def check_request(role: str, value: dict[str, Any]) -> None:
             "SNAPSHOT_INPUT_IDENTITY",
         )
     if role == "secret-source" and method == "publish":
-        previous = inputs["expected_previous"]
-        require(
-            previous is None
-            or (previous["source"] == binding and previous["entry"] == inputs["entry"]),
-            "PUBLICATION_PREDECESSOR_IDENTITY",
+        validate_publication_intent(
+            source=inputs["binding"],
+            entry=inputs["entry"],
+            version=inputs["version"],
+            expected_previous=inputs["expected_previous"],
         )
     if role == "repository" and method == "publish":
         require(
@@ -395,8 +396,8 @@ def _check_success_output(
             output["allocations"][0]["handle"] == inputs["allocation"]
             and _same_set(output["allocations"][0]["purposes"], inputs["purposes"])
             and (not inputs["hard_isolation"] or output["allocations"][0]["hard_isolation"])
-            and output["allocations"][0]["capacity_bytes"] >= inputs.get("capacity_bytes", 0)
-            and output["allocations"][0]["capacity_inodes"] >= inputs.get("capacity_inodes", 0)
+            and output["allocations"][0]["capacity_bytes"] == inputs["capacity_bytes"]
+            and output["allocations"][0]["capacity_inodes"] == inputs["capacity_inodes"]
         ),
         "backup": lambda: (
             output["objects"][0]["handle"] == inputs["object"]

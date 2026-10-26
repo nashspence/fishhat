@@ -12,19 +12,45 @@ def _require(condition: bool, message: str) -> None:
         raise ContractError(message)
 
 
+def validate_publication_intent(
+    *,
+    source: dict[str, Any],
+    entry: str,
+    version: str,
+    expected_previous: dict[str, Any] | None,
+) -> None:
+    """Reject contradictory publication intent before admission or native effects.
+
+    The receiver still independently checks current provider state, protected
+    candidate custody and permission. Null means verified absence is required;
+    these data checks do not establish it or authorize a publication.
+    """
+    validate("adapter.schema.json", source, "InstanceReference")
+    validate("common.schema.json", entry, "Entry")
+    validate("adapter.schema.json", version, "Handle")
+    _require(source["role"] == "secret-source", "publication source role mismatch")
+    if expected_previous is None:
+        return
+    validate("adapter.schema.json", expected_previous, "SecretPublicationPredecessor")
+    _require(
+        expected_previous["source"] == source and expected_previous["entry"] == entry,
+        "publication predecessor destination mismatch",
+    )
+    _require(
+        version != expected_previous["version"],
+        "publication cannot replace an immutable version",
+    )
+
+
 def validate_publication(value: dict[str, Any]) -> None:
     """Validate immutable publication identity without trusting embedded authority."""
     validate("publisher-receipt.schema.json", value)
-    previous = value["previous"]
-    if previous is not None:
-        _require(
-            previous["source"] == value["source"] and previous["entry"] == value["entry"],
-            "publication predecessor destination mismatch",
-        )
-        _require(
-            value["version"] != previous["version"],
-            "publication cannot replace an immutable version",
-        )
+    validate_publication_intent(
+        source=value["source"],
+        entry=value["entry"],
+        version=value["version"],
+        expected_previous=value["previous"],
+    )
     candidate = value["recovery_handle"]
     _require(
         candidate["owner"] == value["custodian"] and candidate["purpose"] == "secret-candidate",
@@ -74,6 +100,12 @@ def validate_publication_result(
     arguments = subject["arguments"]
     action = subject["action"]
     if action == "publisher.publish":
+        validate_publication_intent(
+            source=arguments["source"],
+            entry=arguments["entry"],
+            version=arguments["version"],
+            expected_previous=arguments["expected_previous"],
+        )
         _require(
             all(
                 value[key] == arguments[key]

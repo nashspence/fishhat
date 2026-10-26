@@ -1661,13 +1661,13 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 9007199254740991,
-          "description": "Native observed effective enforced allocation capacity in bytes. Zero means a hard zero-sized allocation, never unlimited."
+          "description": "Native observed effective enforced allocation ceiling in bytes, distinct from backing-store provisioning. Successful allocation requires equality with the exact reviewed ceiling; unsupported granularity or rounding requires renewed review. Zero means a hard zero-sized allocation, never unlimited."
         },
         "capacity_inodes": {
           "type": "integer",
           "minimum": 0,
           "maximum": 9007199254740991,
-          "description": "Native observed effective enforced allocation capacity in inodes. Zero means no inodes, never unlimited."
+          "description": "Native observed effective enforced allocation ceiling in inodes, distinct from backing-store provisioning. Successful allocation requires equality with the exact reviewed ceiling; unsupported granularity or rounding requires renewed review. Zero means no inodes, never unlimited."
         }
       },
       "required": [
@@ -1943,7 +1943,7 @@
       "additionalProperties": false
     },
     "SecretPublicationPredecessor": {
-      "description": "Exact prior published artifact in one secret-source instance and entry. Publication must independently compare this predecessor before changing its target; a mismatch requires renewed review. artifact_digest identifies the protected publication artifact, not a hash of a low-entropy plaintext secret.",
+      "description": "Exact prior published artifact in one secret-source instance and entry. Publication intent must match this source and entry and select a different immutable version before admission or dispatch. The receiver independently compares this predecessor with current provider state before changing its target; a mismatch requires renewed review. Null predecessor requires verified absence, never disables comparison. artifact_digest identifies the protected publication artifact, not a hash of a low-entropy plaintext secret.",
       "type": "object",
       "properties": {
         "source": {

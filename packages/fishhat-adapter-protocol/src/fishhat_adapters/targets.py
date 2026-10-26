@@ -50,7 +50,9 @@ def check_target_response(
     inputs, output, method = request["input"], response["output"], request["method"]
     if role == "software" and method == "resolve":
         _require(
-            output["target"] == inputs["target"] and output["requested_held"] == inputs["held"],
+            output["target"] == inputs["target"]
+            and output["requested_held"] == inputs["held"]
+            and output["requested_version"] == inputs["version"],
             "SOFTWARE_RESOLUTION_IDENTITY",
         )
         _require(
