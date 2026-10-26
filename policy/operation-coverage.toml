@@ -12,6 +12,7 @@ read_only = true
 success = ["tests/test_operation_coverage.py::test_info_success_for_every_tool"]
 failure = ["tests/test_operation_coverage.py::test_info_failure_for_every_tool"]
 recovery = []
+growth = ["tests/test_linear_growth.py::test_cli_linear_work"]
 
 [[implementations]]
 id = "cli:domain-ops:validate"
@@ -22,6 +23,7 @@ read_only = true
 success = ["tests/test_operation_coverage.py::test_validate_success_for_every_tool"]
 failure = ["tests/test_operation_coverage.py::test_validate_failure_for_every_tool"]
 recovery = []
+growth = ["tests/test_linear_growth.py::test_cli_linear_work"]
 
 [[implementations]]
 id = "cli:host-ops:info"
@@ -32,6 +34,7 @@ read_only = true
 success = ["tests/test_operation_coverage.py::test_info_success_for_every_tool"]
 failure = ["tests/test_operation_coverage.py::test_info_failure_for_every_tool"]
 recovery = []
+growth = ["tests/test_linear_growth.py::test_cli_linear_work"]
 
 [[implementations]]
 id = "cli:host-ops:validate"
@@ -42,6 +45,7 @@ read_only = true
 success = ["tests/test_operation_coverage.py::test_validate_success_for_every_tool"]
 failure = ["tests/test_operation_coverage.py::test_validate_failure_for_every_tool"]
 recovery = []
+growth = ["tests/test_linear_growth.py::test_cli_linear_work"]
 
 [[implementations]]
 id = "cli:app-ops:info"
@@ -52,6 +56,7 @@ read_only = true
 success = ["tests/test_operation_coverage.py::test_info_success_for_every_tool"]
 failure = ["tests/test_operation_coverage.py::test_info_failure_for_every_tool"]
 recovery = []
+growth = ["tests/test_linear_growth.py::test_cli_linear_work"]
 
 [[implementations]]
 id = "cli:app-ops:validate"
@@ -62,3 +67,4 @@ read_only = true
 success = ["tests/test_operation_coverage.py::test_validate_success_for_every_tool"]
 failure = ["tests/test_operation_coverage.py::test_validate_failure_for_every_tool"]
 recovery = []
+growth = ["tests/test_linear_growth.py::test_cli_linear_work"]

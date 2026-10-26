@@ -120,16 +120,6 @@
           "minimum": 1,
           "maximum": 2
         },
-        "max_workflows": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 10000
-        },
-        "max_events": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 100000
-        },
         "database_bytes": {
           "type": "integer",
           "minimum": 1048576,
@@ -148,8 +138,6 @@
         "max_requests",
         "busy_ms",
         "request_seconds",
-        "max_workflows",
-        "max_events",
         "database_bytes",
         "free_reserve_bytes"
       ],

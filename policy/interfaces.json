@@ -258,7 +258,7 @@
     },
     "adapter.schema.json": {
       "id": "https://fishhat.invalid/contracts/adapter.schema.json",
-      "sha256": "fd078f59104b157413d7dfbf73a1d1f9a14c40bd15af5e81a4df1308e4006db5"
+      "sha256": "67ea01c5c1bc1574dfd14054622e73d3fdcf602c69472b970a806d1174ebf236"
     },
     "backup-adapter.schema.json": {
       "id": "https://fishhat.invalid/contracts/backup-adapter.schema.json",
@@ -378,7 +378,7 @@
     },
     "receipts-service.schema.json": {
       "id": "https://fishhat.invalid/contracts/receipts-service.schema.json",
-      "sha256": "7ca8a11045dba33510ebb54dfcbe777613aa075a4bd2ba72a7f7c797ebcdc4f8"
+      "sha256": "8a196deaf7a3e3c04b021ab32eea36cbaf8cf6351dcccf9d04dd6ebcfd55c25b"
     },
     "records.schema.json": {
       "id": "https://fishhat.invalid/contracts/records.schema.json",

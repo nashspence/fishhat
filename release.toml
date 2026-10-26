@@ -8,6 +8,10 @@ python_tests = ["3.11", "3.12", "3.13"]
 scaffold_install_tests = ["ubuntu-24.04", "macos-15", "windows-2025"]
 native_qualified_profiles = []
 
+[engineering]
+growth = "linear"
+implementations = "all"
+
 [interfaces]
 python_modules = ["fishhat_contracts", "fishhat_adapters"]
 cli_tools = ["domain-ops", "host-ops", "app-ops"]

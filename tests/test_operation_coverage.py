@@ -244,3 +244,15 @@ CHECK_OVERRIDES = {
         "claims": ["cli:domain-ops:validate", "cli:host-ops:validate", "cli:app-ops:validate"],
     },
 }
+
+
+def test_every_implementation_binding_requires_growth_tests(tmp_path):
+    root = copy_sources(tmp_path)
+    registry = root / REGISTRY
+    registry.write_text(
+        registry.read_text().replace(
+            'growth = ["tests/test_linear_growth.py::test_cli_linear_work"]', "growth = []", 1
+        )
+    )
+    with pytest.raises(ValueError, match="proof requirements"):
+        build_map(root)

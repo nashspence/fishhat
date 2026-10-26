@@ -9,6 +9,7 @@ from datetime import datetime
 from typing import Any, cast
 from urllib.parse import unquote
 
+from fishhat_contracts.json_work import unique_items
 from fishhat_contracts.validation import FORMAT_CHECKER, ContractError, canonical
 from jsonschema import Draft202012Validator, FormatChecker, validators
 from jsonschema.exceptions import SchemaError
@@ -72,6 +73,79 @@ def _calendar_date(value: Any) -> bool:
     return True
 
 
+def _atom_accepts(atom: Any, character: int) -> bool:
+    operation, argument = atom
+    name = str(operation)
+    if name == "LITERAL":
+        return bool(character == argument)
+    if name == "NOT_LITERAL":
+        return bool(character != argument)
+    if name == "ANY":
+        return character != 10
+    if name != "IN":
+        return True
+    negated = bool(argument and str(argument[0][0]) == "NEGATE")
+    matches = False
+    for kind, value in argument:
+        if str(kind) == "LITERAL":
+            matches |= character == value
+        elif str(kind) == "RANGE":
+            matches |= value[0] <= character <= value[1]
+        elif str(kind) != "NEGATE":
+            # Unknown/category alphabets cannot establish delimiter exclusion.
+            return True
+    return not matches if negated else matches
+
+
+def _separated_repetitions(tokens: Any) -> bool:
+    """Prove that two variable runs cannot backtrack across their delimiter.
+
+    Branches and assertions do not supply a delimiter proof. An optional group
+    can supply a delimiter to a run inside it, never to a run after that group.
+    """
+    previous: Any = None
+    delimiters: list[int] = []
+    runs = 0
+    separated = False
+    supported = True
+
+    def walk(parts: Any) -> None:
+        nonlocal previous, runs, separated, supported, delimiters
+        for operation, argument in parts:
+            name = str(operation)
+            if name == "LITERAL":
+                delimiters.append(argument)
+            elif name == "SUBPATTERN":
+                walk(argument[3])
+            elif name == "BRANCH":
+                supported = False
+            elif name in {"ASSERT", "ASSERT_NOT"}:
+                if argument[1].getwidth() != (1, 1):
+                    supported = False
+            elif name in {"MAX_REPEAT", "MIN_REPEAT"}:
+                minimum, maximum, child = argument
+                if len(child) == 1 and str(child[0][0]) in {
+                    "LITERAL",
+                    "NOT_LITERAL",
+                    "ANY",
+                    "IN",
+                    "CATEGORY",
+                }:
+                    if minimum != maximum and maximum > 1:
+                        if previous is not None:
+                            separated = any(not _atom_accepts(previous, c) for c in delimiters)
+                        previous, delimiters = child[0], []
+                        runs += 1
+                else:
+                    before, saved = runs, delimiters.copy()
+                    walk(child)
+                    if minimum == 0 and before == runs:
+                        delimiters = saved
+
+    walk(tokens)
+    return supported and runs == 2 and separated
+
+
 def _regex_degree(pattern: str) -> int:
     """Admit a bounded regular-expression subset, never backtracking group repeats.
 
@@ -120,7 +194,7 @@ def _regex_degree(pattern: str) -> int:
                     alternatives *= 2
                     require(alternatives <= 8, "SCHEMA_REGEX_CAPACITY")
                     walk(child)
-                elif minimum != maximum:
+                elif minimum != maximum and maximum > 1:
                     repetitions += 1
                 require(repetitions <= 2, "SCHEMA_REGEX_CAPACITY")
             elif name in {"ASSERT", "ASSERT_NOT"}:
@@ -135,7 +209,11 @@ def _regex_degree(pattern: str) -> int:
         and str(parsed[0][0]) == "AT"
         and str(parsed[0][1]) in {"AT_BEGINNING", "AT_BEGINNING_STRING"}
     )
-    return max(1, repetitions + (not anchored))
+    if repetitions == 2 and anchored and _separated_repetitions(parsed):
+        repetitions = 1
+    degree = max(1, repetitions + (not anchored))
+    require(degree == 1, "NONLINEAR_SCHEMA_REGEX")
+    return degree
 
 
 def _charge(keyword: str, constraint: Any, value: Any, schema: Any) -> None:
@@ -144,7 +222,7 @@ def _charge(keyword: str, constraint: Any, value: Any, schema: Any) -> None:
         return
     cost = 1
     if keyword == "uniqueItems" and constraint and isinstance(value, list):
-        cost += len(value) ** 2 + len(value) * len(canonical(value))
+        cost += len(canonical(value))
     elif keyword == "const":
         cost += len(canonical(value)) + len(canonical(constraint))
     elif keyword == "enum":
@@ -176,7 +254,10 @@ def _bounded(keyword: str, function: Any) -> Any:
 
 _VALIDATOR = cast(Callable[..., Any], validators.extend)(
     Draft202012Validator,
-    {key: _bounded(key, function) for key, function in Draft202012Validator.VALIDATORS.items()},
+    {
+        key: _bounded(key, unique_items if key == "uniqueItems" else function)
+        for key, function in Draft202012Validator.VALIDATORS.items()
+    },
 )
 
 

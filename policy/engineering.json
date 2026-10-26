@@ -11,15 +11,21 @@
         "native readers enforce explicitly approved capacity without omitting sources"
       ],
       "extent": "All S sources in the catalogue; no prefix selection or silent truncation",
+      "growth": "linear",
       "id": "bootstrap.catalogue",
       "limits": [],
+      "linear_proofs": [
+        "tests/test_linear_growth.py::test_catalogue_linear_work"
+      ],
       "proofs": [
-        "tests/test_bootstrap.py::test_catalogue_extent_and_source_visits"
+        "tests/test_bootstrap.py::test_catalogue_extent_and_source_visits",
+        "tests/test_linear_growth.py::test_catalogue_linear_work"
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-client/src/fishhat_client/bootstrap.py": "f8c8d08e23129898563a3cb77bf7140f004dba9b569ed192356e5b769953539b",
-        "tests/test_bootstrap.py": "3ec324d68e8cff12d672e2f32de4fab55bb898aa204e5dd58a078913755f9161"
+        "packages/fishhat-client/src/fishhat_client/bootstrap.py": "d4fda41960674e5b8c04c5f092005fcd1a89bebb9c83dbef3eaa113b394d3080",
+        "tests/test_bootstrap.py": "3ec324d68e8cff12d672e2f32de4fab55bb898aa204e5dd58a078913755f9161",
+        "tests/test_linear_growth.py": "67b21abf8e8197aa2a60a98171690536e35ced69adb38fbb10fbe5b59fab10c8"
       },
       "symbol": "fishhat_client.bootstrap:validate_catalogue",
       "work": "O(B + S) bounded reference record validation and one source identity pass"
@@ -27,6 +33,7 @@
     "directory.load": {
       "capacity": [],
       "extent": "complete-document-or-rejection",
+      "growth": "linear",
       "id": "directory.load",
       "limits": [
         [
@@ -38,13 +45,18 @@
           16
         ]
       ],
+      "linear_proofs": [
+        "tests/test_linear_growth.py::test_directory_linear_work"
+      ],
       "proofs": [
-        "tests/test_engineering.py::test_directory_capacity_is_rejection_not_silent_truncation"
+        "tests/test_engineering.py::test_directory_capacity_is_rejection_not_silent_truncation",
+        "tests/test_linear_growth.py::test_directory_linear_work"
       ],
       "qualification": "reference-model",
       "sources": {
-        "some-implementations/fishhat/applications/directory/src/fishhat_directory/projection.py": "94a39d8fd9d82f63721d78f6f2e4fcbfcf57aeff4f00b1c256c0ebb84d8eb3f3",
-        "tests/test_engineering.py": "c2990f48e206d6528fb8cd0a5003cc8a502d2f172c8ed97c5671d12606ba7cf5"
+        "some-implementations/fishhat/applications/directory/src/fishhat_directory/projection.py": "0d59131faae4d3af36206a4dfd18603b5acb09dc6d962157ae3d9e4a680dcdd1",
+        "tests/test_engineering.py": "852a6e0b9add6ae1b2b6540b52c9a5e80a294884bf73b8f3840196a95b3d69ae",
+        "tests/test_linear_growth.py": "67b21abf8e8197aa2a60a98171690536e35ced69adb38fbb10fbe5b59fab10c8"
       },
       "symbol": "fishhat_directory.projection:load_directory",
       "work": "O(input_bytes)-bounded-parser-depth"
@@ -52,23 +64,30 @@
     "journal.submit": {
       "capacity": [],
       "extent": "one-durable-request-identity",
+      "growth": "linear",
       "id": "journal.submit",
       "limits": [],
+      "linear_proofs": [
+        "tests/test_linear_growth.py::test_journal_linear_work"
+      ],
       "proofs": [
         "tests/test_engineering.py::test_journal_reference_scan_and_replay_identity",
-        "tests/test_engineering.py::test_owner_crash_replay_preserves_state"
+        "tests/test_engineering.py::test_owner_crash_replay_preserves_state",
+        "tests/test_linear_growth.py::test_journal_linear_work"
       ],
       "qualification": "reference-model",
       "sources": {
-        "fishhat/owner-support/src/fishhat_owner/journal.py": "fb68a9393ccc95fd76a965a17dd8dd6d0bea8ccee0eb29fcc582203244361df8",
-        "tests/test_engineering.py": "c2990f48e206d6528fb8cd0a5003cc8a502d2f172c8ed97c5671d12606ba7cf5"
+        "fishhat/owner-support/src/fishhat_owner/journal.py": "846509423ba4127a1c0900fd33996d9c7294508dceb855a958563178d4683fe7",
+        "tests/test_engineering.py": "852a6e0b9add6ae1b2b6540b52c9a5e80a294884bf73b8f3840196a95b3d69ae",
+        "tests/test_linear_growth.py": "67b21abf8e8197aa2a60a98171690536e35ced69adb38fbb10fbe5b59fab10c8"
       },
       "symbol": "fishhat_owner.journal:Journal.submit",
-      "work": "O(retained_requests)-reference-scan"
+      "work": "O(retained_requests + input_bytes)-reference-scan"
     },
     "record-delivery.chunk": {
       "capacity": [],
       "extent": "one-record-chunk",
+      "growth": "linear",
       "id": "record-delivery.chunk",
       "limits": [
         [
@@ -76,12 +95,17 @@
           196608
         ]
       ],
+      "linear_proofs": [
+        "tests/test_linear_growth.py::test_record_chunk_linear_work"
+      ],
       "proofs": [
-        "tests/test_record_delivery.py::test_record_chunk_work_tracks_requested_range"
+        "tests/test_record_delivery.py::test_record_chunk_work_tracks_requested_range",
+        "tests/test_linear_growth.py::test_record_chunk_linear_work"
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/record_delivery.py": "892fc6b20977aeec256f2dc83fe6a3c3743c19ef5ea784a7d2153ef11d36cacf",
+        "packages/fishhat-contracts/src/fishhat_contracts/record_delivery.py": "04d94df25a9bfadac80ab92fccc68d9a6b5b39cccf12490cb0d673ee455a6fb6",
+        "tests/test_linear_growth.py": "67b21abf8e8197aa2a60a98171690536e35ced69adb38fbb10fbe5b59fab10c8",
         "tests/test_record_delivery.py": "29ae96e27fcb9e8197d5bc7d20b8eca0a747e5c58cdcb0dff5c65ef983e50cc2"
       },
       "symbol": "fishhat_contracts.record_delivery:RecordSnapshot.chunk",
@@ -90,6 +114,7 @@
     "reporting.events": {
       "capacity": [],
       "extent": "complete-page-with-resume-cursor",
+      "growth": "linear",
       "id": "reporting.events",
       "limits": [
         [
@@ -101,41 +126,50 @@
           1000000
         ]
       ],
+      "linear_proofs": [
+        "tests/test_linear_growth.py::test_event_page_linear_work"
+      ],
       "proofs": [
         "tests/test_engineering.py::test_event_pages_use_bounded_indexed_work_and_preserve_full_extent",
-        "tests/test_engineering.py::test_event_byte_capacity_continues_or_rejects_explicitly"
+        "tests/test_engineering.py::test_event_byte_capacity_continues_or_rejects_explicitly",
+        "tests/test_linear_growth.py::test_event_page_linear_work"
       ],
       "qualification": "reference-model",
       "sources": {
-        "some-implementations/fishhat/applications/receipts/src/fishhat_reporting/store.py": "219bc2a64296dcadfd0f3fceb52bf4010f6879042e097e3a611881b9f7ad2caf",
-        "tests/test_engineering.py": "c2990f48e206d6528fb8cd0a5003cc8a502d2f172c8ed97c5671d12606ba7cf5"
+        "some-implementations/fishhat/applications/receipts/src/fishhat_reporting/store.py": "94c5a454ee4160e6c35ffae110c6c6450ef6b78e7c94e90204c3477c8714d16f",
+        "tests/test_engineering.py": "852a6e0b9add6ae1b2b6540b52c9a5e80a294884bf73b8f3840196a95b3d69ae",
+        "tests/test_linear_growth.py": "67b21abf8e8197aa2a60a98171690536e35ced69adb38fbb10fbe5b59fab10c8"
       },
       "symbol": "fishhat_reporting.store:EventStore.events",
-      "work": "O(log(retained_events)+page_items^2*event_bytes)"
+      "work": "O(log(retained_events) + page_bytes) indexed seek and linear page construction with one serialization per returned event"
     },
     "reporting.put": {
-      "capacity": [
-        "max_events",
-        "max_workflows"
-      ],
+      "capacity": [],
       "extent": "one-immutable-event",
+      "growth": "linear",
       "id": "reporting.put",
       "limits": [],
+      "linear_proofs": [
+        "tests/test_linear_growth.py::test_event_put_linear_work"
+      ],
       "proofs": [
-        "tests/test_engineering.py::test_reporting_capacity_rejects_new_identity_but_allows_replay",
-        "tests/test_engineering.py::test_reporting_crash_replay_preserves_committed_event"
+        "tests/test_engineering.py::test_reporting_accepts_complete_extent_and_preserves_replay",
+        "tests/test_engineering.py::test_reporting_crash_replay_preserves_committed_event",
+        "tests/test_linear_growth.py::test_event_put_linear_work"
       ],
       "qualification": "reference-model",
       "sources": {
-        "some-implementations/fishhat/applications/receipts/src/fishhat_reporting/store.py": "219bc2a64296dcadfd0f3fceb52bf4010f6879042e097e3a611881b9f7ad2caf",
-        "tests/test_engineering.py": "c2990f48e206d6528fb8cd0a5003cc8a502d2f172c8ed97c5671d12606ba7cf5"
+        "some-implementations/fishhat/applications/receipts/src/fishhat_reporting/store.py": "94c5a454ee4160e6c35ffae110c6c6450ef6b78e7c94e90204c3477c8714d16f",
+        "tests/test_engineering.py": "852a6e0b9add6ae1b2b6540b52c9a5e80a294884bf73b8f3840196a95b3d69ae",
+        "tests/test_linear_growth.py": "67b21abf8e8197aa2a60a98171690536e35ced69adb38fbb10fbe5b59fab10c8"
       },
       "symbol": "fishhat_reporting.store:EventStore.put",
-      "work": "O(retained_events*log(retained_events)+correction_depth*(log(retained_events)+event_bytes))-reference-scan"
+      "work": "O(retained_bytes + event_bytes) reference-scan for corrections with hash-indexed traversal; ordinary appends use indexed identity lookup"
     },
     "reporting.workflows": {
       "capacity": [],
       "extent": "complete-page-with-resume-cursor",
+      "growth": "linear",
       "id": "reporting.workflows",
       "limits": [
         [
@@ -143,20 +177,26 @@
           100
         ]
       ],
+      "linear_proofs": [
+        "tests/test_linear_growth.py::test_workflow_pages_linear_work"
+      ],
       "proofs": [
-        "tests/test_engineering.py::test_workflow_pagination_preserves_logical_extent"
+        "tests/test_engineering.py::test_workflow_pagination_preserves_logical_extent",
+        "tests/test_linear_growth.py::test_workflow_pages_linear_work"
       ],
       "qualification": "reference-model",
       "sources": {
-        "some-implementations/fishhat/applications/receipts/src/fishhat_reporting/store.py": "219bc2a64296dcadfd0f3fceb52bf4010f6879042e097e3a611881b9f7ad2caf",
-        "tests/test_engineering.py": "c2990f48e206d6528fb8cd0a5003cc8a502d2f172c8ed97c5671d12606ba7cf5"
+        "some-implementations/fishhat/applications/receipts/src/fishhat_reporting/store.py": "94c5a454ee4160e6c35ffae110c6c6450ef6b78e7c94e90204c3477c8714d16f",
+        "tests/test_engineering.py": "852a6e0b9add6ae1b2b6540b52c9a5e80a294884bf73b8f3840196a95b3d69ae",
+        "tests/test_linear_growth.py": "67b21abf8e8197aa2a60a98171690536e35ced69adb38fbb10fbe5b59fab10c8"
       },
       "symbol": "fishhat_reporting.store:EventStore.workflows",
-      "work": "O(retained_events*log(retained_events))-reference-grouping"
+      "work": "O(retained_events + page_items) one cold reference scan, constant-work issued cursors and linear page output; database changes rebuild the index"
     },
     "wire.read-frame": {
       "capacity": [],
       "extent": "one-complete-frame",
+      "growth": "linear",
       "id": "wire.read-frame",
       "limits": [
         [
@@ -164,13 +204,18 @@
           1048576
         ]
       ],
+      "linear_proofs": [
+        "tests/test_linear_growth.py::test_frame_linear_work"
+      ],
       "proofs": [
-        "tests/test_engineering.py::test_frame_work_tracks_current_frame_not_stream_extent"
+        "tests/test_engineering.py::test_frame_work_tracks_current_frame_not_stream_extent",
+        "tests/test_linear_growth.py::test_frame_linear_work"
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-client/src/fishhat_client/wire.py": "2e8e26926f39bf53954769d9a46f87b99b7963287850297f0bb8aadbb6233e81",
-        "tests/test_engineering.py": "c2990f48e206d6528fb8cd0a5003cc8a502d2f172c8ed97c5671d12606ba7cf5"
+        "packages/fishhat-client/src/fishhat_client/wire.py": "8391b4890946e69c6b31b6233d3f12ecbfdefe21e1c91b0d5f10a84e8661a202",
+        "tests/test_engineering.py": "852a6e0b9add6ae1b2b6540b52c9a5e80a294884bf73b8f3840196a95b3d69ae",
+        "tests/test_linear_growth.py": "67b21abf8e8197aa2a60a98171690536e35ced69adb38fbb10fbe5b59fab10c8"
       },
       "symbol": "fishhat_client.wire:read_frame",
       "work": "O(frame_bytes)"
@@ -180,18 +225,24 @@
         "native owners may explicitly refuse capacity without truncating evidence"
       ],
       "extent": "Every participant resource, every child started before the destination phase and every native evidence handle; no prefix selection or total-size cap",
+      "growth": "linear",
       "id": "workflow.phase-evidence",
       "limits": [],
+      "linear_proofs": [
+        "tests/test_linear_growth.py::test_phase_evidence_linear_work"
+      ],
       "proofs": [
-        "tests/test_workflow_evidence.py::test_phase_evidence_checks_complete_child_extent"
+        "tests/test_workflow_evidence.py::test_phase_evidence_checks_complete_child_extent",
+        "tests/test_linear_growth.py::test_phase_evidence_linear_work"
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_evidence.py": "a44c0e14c058c9ca7c070e446f6f92527e09eac761a7d1a5181f39feecf74f53",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_evidence.py": "60f1b14dee717d9a5d2e8469195400d08b501907004dbad54f87a0f6c7e07c07",
+        "tests/test_linear_growth.py": "67b21abf8e8197aa2a60a98171690536e35ced69adb38fbb10fbe5b59fab10c8",
         "tests/test_workflow_evidence.py": "9f352ee6e9109a57743bd88ab0695219fd912c54609bc9f3d99ff86f6ca51cb7"
       },
       "symbol": "fishhat_contracts.workflow_evidence:validate_phase_evidence",
-      "work": "O(B + P + C + K) complete-input reference validation for fixed installed schema/phase closure; B serialized proposal/evidence/Plan bytes, P participants, C child slots and K retained bindings"
+      "work": "O(B + P + C + K) complete-input validation with hash-indexed structural uniqueness for fixed installed schema/phase closure; B serialized proposal/evidence/Plan bytes, P participants, C child slots and K retained bindings"
     }
   },
   "production_qualified": false,

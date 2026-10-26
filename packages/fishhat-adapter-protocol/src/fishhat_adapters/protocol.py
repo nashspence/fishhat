@@ -956,6 +956,8 @@ def require_qualification(
         all(value[k] == v for k, v in expected.items()) and value["runner"] == trusted_runner,
         "QUALIFICATION_IDENTITY",
     )
+    require(bool(required_cases), "MISSING_QUALIFICATION_CASE")
+    required_cases = required_cases | {"linear-growth", "complete-extent"}
     cases = {case["id"]: case["outcome"] for case in value["cases"]}
     require(len(cases) == len(value["cases"]), "DUPLICATE_QUALIFICATION_CASE")
     require(bool(required_cases) and required_cases <= cases.keys(), "MISSING_QUALIFICATION_CASE")

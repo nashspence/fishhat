@@ -7,6 +7,7 @@ qualify path custody, tokens, disk quotas, actual deadlines and shutdown.
 
 from __future__ import annotations
 
+import bisect
 import json
 import sqlite3
 import uuid
@@ -29,8 +30,6 @@ class EventStore:
         service_id: str,
         *,
         initialize: bool = False,
-        max_events: int = 100000,
-        max_workflows: int = 10000,
     ) -> None:
         new = not path.exists()
         if new and not initialize:
@@ -67,7 +66,10 @@ class EventStore:
             self.db.close()
             raise
         self.domain, self.service = domain_id, service_id
-        self.max_events, self.max_workflows = max_events, max_workflows
+        self._workflow_marker: tuple[int, int] | None = None
+        self._workflow_rows: list[tuple[str, int, str]] = []
+        self._workflow_sequences: list[int] = []
+        self._workflow_positions: dict[int, int] = {}
 
     def _auth(self, principal: str, scopes: set[str], action: str, domain: str | None) -> None:
         # Trusted server auth output in tests, never read from event payload.
@@ -90,12 +92,13 @@ class EventStore:
     @bounds(
         Bounds(
             id="reporting.put",
-            work="O(retained_events*log(retained_events)+correction_depth*(log(retained_events)+event_bytes))-reference-scan",
+            linear_proofs=("tests/test_linear_growth.py::test_event_put_linear_work",),
+            work="O(retained_bytes + event_bytes) reference-scan for corrections with hash-indexed traversal; ordinary appends use indexed identity lookup",
             extent="one-immutable-event",
             limits=(),
-            capacity=("max_events", "max_workflows"),
+            capacity=(),
             proofs=(
-                "tests/test_engineering.py::test_reporting_capacity_rejects_new_identity_but_allows_replay",
+                "tests/test_engineering.py::test_reporting_accepts_complete_extent_and_preserves_replay",
                 "tests/test_engineering.py::test_reporting_crash_replay_preserves_committed_event",
             ),
         )
@@ -128,27 +131,24 @@ class EventStore:
                     raise ContractError("immutable event conflict")
                 self.db.commit()
                 return 200, self._envelope(row)
-            count = self.db.execute("SELECT count(*) FROM events").fetchone()[0]
-            workflows = self.db.execute(
-                "SELECT count(DISTINCT workflow_id) FROM events"
-            ).fetchone()[0]
-            known = self.db.execute(
-                "SELECT 1 FROM events WHERE workflow_id=? LIMIT 1", (event["workflow_id"],)
-            ).fetchone()
-            if count >= self.max_events or (not known and workflows >= self.max_workflows):
-                raise ContractError("index quota")
-            # Corrections may reference reports that arrived later; cycles are not valid.
+            # Correction admission reads the complete relevant graph once;
+            # ordinary appends do not scan retained history.
             successor = event["supersedes"]
-            seen = {event["id"]}
-            while successor:
-                if successor in seen:
-                    raise ContractError("correction cycle")
-                seen.add(successor)
-                parent = self.db.execute(
-                    "SELECT canonical_event FROM events WHERE domain_id=? AND workflow_id=? AND event_id=?",
-                    (self.domain, event["workflow_id"], successor),
-                ).fetchone()
-                successor = json.loads(parent[0])["supersedes"] if parent else None
+            if successor:
+                parents = {
+                    identity: json.loads(encoded)["supersedes"]
+                    for identity, encoded in self.db.execute(
+                        "SELECT event_id,canonical_event FROM events "
+                        "WHERE domain_id=? AND workflow_id=?",
+                        (self.domain, event["workflow_id"]),
+                    )
+                }
+                seen = {event["id"]}
+                while successor:
+                    if successor in seen:
+                        raise ContractError("correction cycle")
+                    seen.add(successor)
+                    successor = parents.get(successor)
             now = datetime.now(UTC).isoformat(timespec="microseconds").replace("+00:00", "Z")
             self.db.execute(
                 "INSERT INTO events(domain_id,workflow_id,event_id,content_digest,canonical_event,reporter,received_at) VALUES(?,?,?,?,?,?,?)",
@@ -176,7 +176,8 @@ class EventStore:
     @bounds(
         Bounds(
             id="reporting.events",
-            work="O(log(retained_events)+page_items^2*event_bytes)",
+            linear_proofs=("tests/test_linear_growth.py::test_event_page_linear_work",),
+            work="O(log(retained_events) + page_bytes) indexed seek and linear page construction with one serialization per returned event",
             extent="complete-page-with-resume-cursor",
             limits=(("page_items", 100), ("page_items_bytes", 1000000)),
             capacity=(),
@@ -203,13 +204,16 @@ class EventStore:
             (self.domain, workflow_id, after, limit + 1),
         ).fetchall()
         items: list[dict[str, Any]] = []
+        size = 2  # JSON array brackets; each additional item contributes one comma.
         for row in rows[:limit]:
-            candidate = [*items, self._envelope(row)]
-            if len(canonical(candidate)) > 1000000:
+            item = self._envelope(row)
+            added = len(canonical(item)) + bool(items)
+            if size + added > 1000000:
                 if not items:
                     raise ContractError("record exceeds response capacity")
                 break
-            items = candidate
+            items.append(item)
+            size += added
         more = len(rows) > len(items)
         return {
             "format": "deployment-ops/index-page/v1",
@@ -223,7 +227,8 @@ class EventStore:
     @bounds(
         Bounds(
             id="reporting.workflows",
-            work="O(retained_events*log(retained_events))-reference-grouping",
+            linear_proofs=("tests/test_linear_growth.py::test_workflow_pages_linear_work",),
+            work="O(retained_events + page_items) one cold reference scan, constant-work issued cursors and linear page output; database changes rebuild the index",
             extent="complete-page-with-resume-cursor",
             limits=(("page_items", 100),),
             capacity=(),
@@ -243,16 +248,31 @@ class EventStore:
     ) -> dict[str, Any]:
         self._auth(principal, scopes, "read", self.domain)
         self._page_args(after, limit, expected_store_epoch)
-        rows = self.db.execute(
-            """SELECT e.workflow_id,e.sequence,e.received_at FROM events e
-            JOIN (SELECT workflow_id,min(sequence) AS first_sequence FROM events
-                  WHERE domain_id=? GROUP BY workflow_id) f ON e.sequence=f.first_sequence
-            WHERE e.sequence>? ORDER BY e.sequence LIMIT ?""",
-            (self.domain, after, limit + 1),
-        ).fetchall()
+        marker = (self.db.total_changes, self.db.execute("PRAGMA data_version").fetchone()[0])
+        if marker != self._workflow_marker:
+            seen: set[str] = set()
+            rows: list[tuple[str, int, str]] = []
+            for workflow, sequence, received in self.db.execute(
+                "SELECT workflow_id,sequence,received_at FROM events NOT INDEXED "
+                "WHERE domain_id=? ORDER BY sequence",
+                (self.domain,),
+            ):
+                if workflow not in seen:
+                    seen.add(workflow)
+                    rows.append((workflow, sequence, received))
+            self._workflow_rows = rows
+            self._workflow_sequences = [row[1] for row in rows]
+            self._workflow_positions = {row[1]: index + 1 for index, row in enumerate(rows)}
+            self._workflow_marker = marker
+        # Issued continuation cursors resume in constant work. Arbitrary accepted
+        # positions use one seek. A changed database rebuilds the complete index.
+        start = self._workflow_positions.get(after)
+        if start is None:
+            start = bisect.bisect_right(self._workflow_sequences, after)
+        selected = self._workflow_rows[start : start + limit + 1]
         items = [
             {"workflow_id": r[0], "first_sequence": r[1], "first_received_at": r[2]}
-            for r in rows[:limit]
+            for r in selected[:limit]
         ]
         return {
             "format": "deployment-ops/workflow-index-page/v1",
@@ -260,7 +280,7 @@ class EventStore:
             "store_epoch": self.epoch,
             "authority": "reported",
             "items": items,
-            "next_after": items[-1]["first_sequence"] if len(rows) > limit else None,
+            "next_after": items[-1]["first_sequence"] if len(selected) > limit else None,
         }
 
     def _page_args(self, after: int, limit: int, epoch: str | None) -> None:

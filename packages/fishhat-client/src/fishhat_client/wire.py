@@ -35,6 +35,7 @@ def _exact(stream: BinaryIO, length: int) -> bytes:
 @bounds(
     Bounds(
         id="wire.read-frame",
+        linear_proofs=("tests/test_linear_growth.py::test_frame_linear_work",),
         work="O(frame_bytes)",
         extent="one-complete-frame",
         limits=(("frame_bytes", 1048576),),

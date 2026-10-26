@@ -13,13 +13,16 @@ import re
 from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urldefrag, urljoin
 
 import yaml
-from jsonschema import Draft202012Validator, FormatChecker
+from jsonschema import Draft202012Validator, FormatChecker, validators
 from referencing import Registry, Resource
+from referencing.jsonschema import DRAFT202012
 from yaml.events import AliasEvent, DocumentStartEvent
+
+from .json_work import unique_items
 
 ROOT = Path(__file__).resolve().parent
 MAX_BYTES = 1_048_576
@@ -187,7 +190,21 @@ def strict_yaml(data: str, *, capacity_bytes: int | None = None) -> Any:
 
 SCHEMAS = {p.name: json.loads(p.read_text()) for p in (ROOT / "contracts").glob("*.schema.json")}
 REGISTRY = Registry().with_resources(
-    (d["$id"], Resource.from_contents(d)) for d in SCHEMAS.values()
+    # The installed dialect is fixed. Keep its declaration in SCHEMAS and its
+    # published bytes; omit it only from evaluation resources so $ref evolution
+    # retains our uniqueness validator instead of selecting the stock class.
+    (
+        d["$id"],
+        Resource.from_contents(
+            {key: value for key, value in d.items() if key != "$schema"},
+            default_specification=DRAFT202012,
+        ),
+    )
+    for d in SCHEMAS.values()
+)
+
+_SCHEMA_VALIDATOR = cast(Any, validators.extend)(
+    Draft202012Validator, {"uniqueItems": unique_items}
 )
 
 
@@ -196,7 +213,7 @@ def validate(schema: str, value: Any, definition: str | None = None) -> None:
     base = SCHEMAS[schema]
     target = base if definition is None else {"$ref": base["$id"] + "#/$defs/" + definition}
     errors = list(
-        Draft202012Validator(target, registry=REGISTRY, format_checker=FORMAT_CHECKER).iter_errors(
+        _SCHEMA_VALIDATOR(target, registry=REGISTRY, format_checker=FORMAT_CHECKER).iter_errors(
             value
         )
     )

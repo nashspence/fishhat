@@ -464,22 +464,49 @@ class OptionalIndex(unittest.TestCase):
         self.assertEqual(item["first_sequence"], first["sequence"])
         self.assertEqual(item["first_received_at"], first["received_at"])
 
-    def test_quota_affects_new_events_not_existing(self):
-        self.s.max_events = 1
-        self.s.put(self.e, **self.auth)
-        e = copy.deepcopy(self.e)
-        e["id"] = str(uuid.uuid4())
-        with self.assertRaises(ContractError):
-            self.s.put(e, **self.auth)
-        self.assertEqual(self.s.put(self.e, **self.auth)[0], 200)
+    def test_event_extent_and_exact_replay(self):
+        accepted = []
+        for _ in range(13):
+            value = copy.deepcopy(self.e)
+            value["id"] = str(uuid.uuid4())
+            status, receipt = self.s.put(value, **self.auth)
+            self.assertEqual(status, 201)
+            self.assertEqual(self.s.put(value, **self.auth), (200, receipt))
+            accepted.append(receipt["sequence"])
+        found, after = [], 0
+        while True:
+            page = self.s.events(
+                self.e["workflow_id"],
+                limit=4,
+                after=after,
+                expected_store_epoch=self.s.epoch,
+                **self.auth,
+            )
+            found.extend(row["sequence"] for row in page["items"])
+            if page["next_after"] is None:
+                break
+            self.assertGreater(page["next_after"], after)
+            after = page["next_after"]
+        self.assertEqual(found, accepted)
 
-    def test_workflow_quota(self):
-        self.s.max_workflows = 1
-        self.s.put(self.e, **self.auth)
-        e = copy.deepcopy(self.e)
-        e["workflow_id"] = str(uuid.uuid4())
-        with self.assertRaises(ContractError):
-            self.s.put(e, **self.auth)
+    def test_workflow_extent_across_pages(self):
+        accepted = []
+        for _ in range(13):
+            value = copy.deepcopy(self.e)
+            value["workflow_id"] = str(uuid.uuid4())
+            self.assertEqual(self.s.put(value, **self.auth)[0], 201)
+            accepted.append(value["workflow_id"])
+        found, after = [], 0
+        while True:
+            page = self.s.workflows(
+                limit=4, after=after, expected_store_epoch=self.s.epoch, **self.auth
+            )
+            found.extend(row["workflow_id"] for row in page["items"])
+            if page["next_after"] is None:
+                break
+            self.assertGreater(page["next_after"], after)
+            after = page["next_after"]
+        self.assertEqual(found, accepted)
 
     def test_missing_commissioned_store_not_created(self):
         with self.assertRaises(ContractError):

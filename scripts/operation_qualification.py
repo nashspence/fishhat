@@ -158,7 +158,7 @@ def build_map(root: Path = ROOT) -> dict[str, Any]:
         entry = by_id.get(identity)
         row.update(
             implementation=None,
-            tests={"success": [], "failure": [], "recovery": []},
+            tests={"success": [], "failure": [], "recovery": [], "growth": []},
             recovery="required",
             status="unimplemented",
         )
@@ -173,7 +173,7 @@ def build_map(root: Path = ROOT) -> dict[str, Any]:
         row["implementation"] = {"symbol": entry["symbol"], "path": path, "stage": entry["stage"]}
         row["status"] = "implemented-" + entry["stage"]
         row["recovery"] = "not-applicable-read-only" if entry["read_only"] else "required"
-        for kind in ("success", "failure", "recovery"):
+        for kind in ("success", "failure", "recovery", "growth"):
             tests = entry["tests"][kind]
             required = kind != "recovery" or not entry["read_only"]
             if (

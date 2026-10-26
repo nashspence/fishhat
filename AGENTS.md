@@ -52,7 +52,7 @@ Never expose secrets or private deployment identity in public code, fixtures, lo
 
 Large collections should not require processing everything at once. *Bounded work* handles a limited portion at a time; a page of results does not limit the total number of results. Long operations progress through bounded steps that can resume after interruption.
 
-Do not introduce a total limit unless the owning contract declares it. Resource limits may explicitly reject, delay, or slow work, but must not silently omit data. Limits that depend on the deployment and affect accepted work belong in operator configuration.
+List bounds may limit a chunk or page only while preserving the complete collection. Any other list bound requires explicit maintainer approval before acceptance or merge, including a total-count cap or a cap enforced through explicit rejection. An operation-owned declaration or operator configuration does not supply that approval. Record the exact proposed bound and its effect on extent in the pull request. Resource limits must not silently omit data; deployment-specific limits that affect accepted work belong in operator configuration.
 
 The operation-owned declarations, [engineering projection](scripts/engineering.py), and [engineering tests](tests/test_engineering.py) identify the maintained bounds and extent proofs.
 
@@ -60,9 +60,11 @@ The operation-owned declarations, [engineering projection](scripts/engineering.p
 
 Limiting the size of each step does not guarantee that the total work stays manageable.
 
-A *growth bound* describes how an operation’s work increases as its input grows. Costs must be declared and justified by the operation’s owner. Keep reference-model scan costs explicit; do not present them as bounded native implementations.
+A *growth bound* describes how an operation’s work increases as its input grows. All implementations must meet the linear-growth requirement in [release policy](release.toml). Costs must be declared and justified by the operation’s owner with measured work at increasing input extents, including complete runs across pages and retries. Extent checks alone are not growth evidence. Reference models have no exemption; missing or failing growth proofs block an implementation. Keep their scan costs explicit; do not present them as bounded native implementations.
 
 Reason about these bounds and test them with the maintained implementation. Include difficult inputs, resource limits being reached, interruptions, and retries. Do not hide repeated whole-resource work behind batching, concurrency, or caches.
+
+If linear growth cannot be achieved, stop and obtain explicit maintainer approval before accepting a different bound or merging the implementation. Record the measured gap and proposed exception in the pull request; do not infer approval from passing correctness tests, timing observations, or a request to integrate.
 
 Violating a declared growth bound is a validation failure. Machine-dependent timing targets remain performance observations, not product guarantees. Neither permits incomplete results, weaker custody or authorization, or hidden total-size limits.
 
