@@ -52,7 +52,8 @@
         "generation_digest",
         "routes"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "Routes have unique names and unique listener handles within a generation. A listener has one upstream and policy; multi-upstream or overlapping routing must be represented by one independently approved upstream/policy object, never duplicate route entries. Array order grants no precedence. The receiver resolves native listener aliases and rejects overlap not made explicit by the approved policy. generation_digest identifies the complete owner-held generation artifact; routes and each retained policy digest must agree with it before admission."
     },
     "publish": {
       "type": "object",
@@ -104,7 +105,8 @@
         "generation_digest",
         "routes"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "Routes have unique names and unique listener handles within a generation. A listener has one upstream and policy; multi-upstream or overlapping routing must be represented by one independently approved upstream/policy object, never duplicate route entries. Array order grants no precedence. The receiver resolves native listener aliases and rejects overlap not made explicit by the approved policy. generation_digest identifies the complete owner-held generation artifact; routes and each retained policy digest must agree with it before admission."
     },
     "observe": {
       "type": "object",

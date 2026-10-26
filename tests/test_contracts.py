@@ -51,7 +51,7 @@ def uid(name):
 
 
 OWNER = {"tool": "app-ops", "id": uid("owner"), "epoch": uid("epoch")}
-SUBJECT = load("examples/owner-request.json")["params"]["subject"]
+SUBJECT = load("examples/plan-input.json")["subject"]
 
 
 def wb(subject):

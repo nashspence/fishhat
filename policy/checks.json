@@ -1841,6 +1841,38 @@
       "purpose_sha256": "d942b13fa2165c508185cd33d09e5612ef4f18ad774323f6ce969306fbf0650f"
     },
     {
+      "node": "tests/test_adapter_routing_identity.py::test_contradictory_network_decisions_cannot_depend_on_array_order[forward-plan]",
+      "purpose_sha256": "41dabd4bbac39ae12d7e6c359b44d3e367135e9d73567a37b06728d715cb81bb"
+    },
+    {
+      "node": "tests/test_adapter_routing_identity.py::test_contradictory_network_decisions_cannot_depend_on_array_order[forward-publish]",
+      "purpose_sha256": "41dabd4bbac39ae12d7e6c359b44d3e367135e9d73567a37b06728d715cb81bb"
+    },
+    {
+      "node": "tests/test_adapter_routing_identity.py::test_contradictory_network_decisions_cannot_depend_on_array_order[reversed-plan]",
+      "purpose_sha256": "41dabd4bbac39ae12d7e6c359b44d3e367135e9d73567a37b06728d715cb81bb"
+    },
+    {
+      "node": "tests/test_adapter_routing_identity.py::test_contradictory_network_decisions_cannot_depend_on_array_order[reversed-publish]",
+      "purpose_sha256": "41dabd4bbac39ae12d7e6c359b44d3e367135e9d73567a37b06728d715cb81bb"
+    },
+    {
+      "node": "tests/test_adapter_routing_identity.py::test_disjoint_routing_records_have_no_array_order_precedence[ingress]",
+      "purpose_sha256": "41dabd4bbac39ae12d7e6c359b44d3e367135e9d73567a37b06728d715cb81bb"
+    },
+    {
+      "node": "tests/test_adapter_routing_identity.py::test_disjoint_routing_records_have_no_array_order_precedence[network]",
+      "purpose_sha256": "41dabd4bbac39ae12d7e6c359b44d3e367135e9d73567a37b06728d715cb81bb"
+    },
+    {
+      "node": "tests/test_adapter_routing_identity.py::test_ingress_names_and_listener_targets_are_unique_independently[plan]",
+      "purpose_sha256": "41dabd4bbac39ae12d7e6c359b44d3e367135e9d73567a37b06728d715cb81bb"
+    },
+    {
+      "node": "tests/test_adapter_routing_identity.py::test_ingress_names_and_listener_targets_are_unique_independently[publish]",
+      "purpose_sha256": "41dabd4bbac39ae12d7e6c359b44d3e367135e9d73567a37b06728d715cb81bb"
+    },
+    {
       "node": "tests/test_adapter_workspace.py::test_concrete_packages_do_not_depend_on_unrelated_implementations",
       "purpose_sha256": "a4cc3c057cddd75af07798ff1c46f06ea417ba72da781cdf160580391083ccc9"
     },
@@ -4049,6 +4081,62 @@
       "purpose_sha256": "d4e9eac4267898275c972bf7e361b8e67522c1db40bb30fde3647423865bb640"
     },
     {
+      "node": "tests/test_operation_semantics.py::test_accepted_plan_is_retrievable_with_only_an_owner_discovered_operation",
+      "purpose_sha256": "ce4556c2bca9ee73597bf5ff68d4e9795c16e56f8beac61cd88595840dd94b09"
+    },
+    {
+      "node": "tests/test_operation_semantics.py::test_all_current_operation_paths_reject_the_same_invalid_record[unknown-success]",
+      "purpose_sha256": "ce4556c2bca9ee73597bf5ff68d4e9795c16e56f8beac61cd88595840dd94b09"
+    },
+    {
+      "node": "tests/test_operation_semantics.py::test_all_current_operation_paths_reject_the_same_invalid_record[witness-epoch]",
+      "purpose_sha256": "ce4556c2bca9ee73597bf5ff68d4e9795c16e56f8beac61cd88595840dd94b09"
+    },
+    {
+      "node": "tests/test_operation_semantics.py::test_all_current_operation_paths_reject_the_same_invalid_record[witness-owner]",
+      "purpose_sha256": "ce4556c2bca9ee73597bf5ff68d4e9795c16e56f8beac61cd88595840dd94b09"
+    },
+    {
+      "node": "tests/test_operation_semantics.py::test_plan_lookup_cannot_substitute_original_accepted_review[digest]",
+      "purpose_sha256": "ce4556c2bca9ee73597bf5ff68d4e9795c16e56f8beac61cd88595840dd94b09"
+    },
+    {
+      "node": "tests/test_operation_semantics.py::test_plan_lookup_cannot_substitute_original_accepted_review[owner]",
+      "purpose_sha256": "ce4556c2bca9ee73597bf5ff68d4e9795c16e56f8beac61cd88595840dd94b09"
+    },
+    {
+      "node": "tests/test_operation_semantics.py::test_plan_lookup_cannot_substitute_original_accepted_review[subject]",
+      "purpose_sha256": "ce4556c2bca9ee73597bf5ff68d4e9795c16e56f8beac61cd88595840dd94b09"
+    },
+    {
+      "node": "tests/test_operation_semantics.py::test_plan_lookup_requires_owner_and_digest",
+      "purpose_sha256": "ce4556c2bca9ee73597bf5ff68d4e9795c16e56f8beac61cd88595840dd94b09"
+    },
+    {
+      "node": "tests/test_operation_semantics.py::test_success_requires_known_effects_in_the_schema_itself[none]",
+      "purpose_sha256": "ce4556c2bca9ee73597bf5ff68d4e9795c16e56f8beac61cd88595840dd94b09"
+    },
+    {
+      "node": "tests/test_operation_semantics.py::test_success_requires_known_effects_in_the_schema_itself[unknown]",
+      "purpose_sha256": "ce4556c2bca9ee73597bf5ff68d4e9795c16e56f8beac61cd88595840dd94b09"
+    },
+    {
+      "node": "tests/test_operation_semantics.py::test_valid_known_success_preserves_exact_operation_across_all_read_forms",
+      "purpose_sha256": "ce4556c2bca9ee73597bf5ff68d4e9795c16e56f8beac61cd88595840dd94b09"
+    },
+    {
+      "node": "tests/test_operation_semantics.py::test_workflow_predecessors_enforce_the_same_operation_invariants[unknown-success]",
+      "purpose_sha256": "ce4556c2bca9ee73597bf5ff68d4e9795c16e56f8beac61cd88595840dd94b09"
+    },
+    {
+      "node": "tests/test_operation_semantics.py::test_workflow_predecessors_enforce_the_same_operation_invariants[witness-epoch]",
+      "purpose_sha256": "ce4556c2bca9ee73597bf5ff68d4e9795c16e56f8beac61cd88595840dd94b09"
+    },
+    {
+      "node": "tests/test_operation_semantics.py::test_workflow_predecessors_enforce_the_same_operation_invariants[witness-owner]",
+      "purpose_sha256": "ce4556c2bca9ee73597bf5ff68d4e9795c16e56f8beac61cd88595840dd94b09"
+    },
+    {
       "node": "tests/test_owner_handoffs.py::test_committed_inputs_reject_epoch_principal_resource_and_purpose_substitution",
       "purpose_sha256": "1b27229e83e1f19dba46c975999e03c6bda493010e05a68c69bdacf5dd1d5bb5"
     },
@@ -4102,175 +4190,239 @@
     },
     {
       "node": "tests/test_owner_history.py::test_custody_descriptor_cannot_substitute_identity[custodian]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_custody_descriptor_cannot_substitute_identity[digest]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_custody_descriptor_cannot_substitute_identity[owner-id]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_custody_descriptor_cannot_substitute_identity[same-epoch]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_direct_owner_history_and_binding_commands_use_closed_stdin[history.content]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_direct_owner_history_and_binding_commands_use_closed_stdin[history.list]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_direct_owner_history_and_binding_commands_use_closed_stdin[history.read]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_direct_owner_history_and_binding_commands_use_closed_stdin[owner.history]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_direct_owner_history_and_binding_commands_use_closed_stdin[workflow.bind]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_fresh_client_discovers_every_retained_epoch_without_previous_owner_identity",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_historical_content_rejects_substitution_and_incomplete_ranges[completion]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_historical_content_rejects_substitution_and_incomplete_ranges[handle]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_historical_content_rejects_substitution_and_incomplete_ranges[no-progress]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_historical_content_rejects_substitution_and_incomplete_ranges[range]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_historical_reads_cannot_bypass_new_recovery_admission[bytes]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_historical_reads_cannot_bypass_new_recovery_admission[current-epoch]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_historical_reads_cannot_bypass_new_recovery_admission[custody]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_historical_reads_cannot_bypass_new_recovery_admission[generation]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_historical_reads_cannot_bypass_new_recovery_admission[material]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_historical_reads_cannot_bypass_new_recovery_admission[operation]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_historical_reads_cannot_bypass_new_recovery_admission[permission]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_historical_reads_cannot_bypass_new_recovery_admission[resource]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
-      "node": "tests/test_owner_history.py::test_historical_recovery_is_a_new_current_plan_with_exact_original_material",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "node": "tests/test_owner_history.py::test_historical_recovery_is_a_new_current_plan_with_exact_original_material[app.recover]",
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
+    },
+    {
+      "node": "tests/test_owner_history.py::test_historical_recovery_is_a_new_current_plan_with_exact_original_material[operation.recover]",
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_historical_schema_reader_is_installed_independently_and_remains_read_only",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_history_listing_does_not_present_two_generations_as_independent_operations",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_history_pages_preserve_exact_query_origin_and_complete_continuation[cursor]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_history_pages_preserve_exact_query_origin_and_complete_continuation[custody]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_history_pages_preserve_exact_query_origin_and_complete_continuation[duplicate]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_history_pages_preserve_exact_query_origin_and_complete_continuation[filter]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_history_pages_preserve_exact_query_origin_and_complete_continuation[limit]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_history_pages_preserve_exact_query_origin_and_complete_continuation[origin]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_known_historical_reference_never_supplies_current_read_or_write_authority[current-epoch]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_known_historical_reference_never_supplies_current_read_or_write_authority[custody]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_known_historical_reference_never_supplies_current_read_or_write_authority[origin]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_known_historical_reference_never_supplies_current_read_or_write_authority[permission]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_known_historical_reference_never_supplies_current_read_or_write_authority[write-route]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_missing_history_is_explicit_even_for_an_empty_authorized_page",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_original_bytes_and_unresolved_custody_survive_current_owner_reads[accepted]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_original_bytes_and_unresolved_custody_survive_current_owner_reads[cancelled]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_original_bytes_and_unresolved_custody_survive_current_owner_reads[quarantined]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_recovery_cannot_select_its_own_snapshot_or_forget_later_outcomes[later-confirmed-work]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_recovery_cannot_select_its_own_snapshot_or_forget_later_outcomes[unverified-member]",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
     },
     {
       "node": "tests/test_owner_history.py::test_retained_input_content_uses_current_permission_and_original_handle_identity",
-      "purpose_sha256": "d27c283203b115d5951f46c224e64e0139e6dc1eca2affb4e445acbedf186d55"
+      "purpose_sha256": "96b3c4eedd1e353187600027082098e4c512292b5b3a000d30a72cc4bd411a7c"
+    },
+    {
+      "node": "tests/test_owner_transport_extents.py::test_large_exact_cleanup_selection_uses_one_staged_plan_input",
+      "purpose_sha256": "8f2f779bfa0481466bb7b3c3418230bb55e71ebec8214b46c4143e2fbc8fcc7c"
+    },
+    {
+      "node": "tests/test_owner_transport_extents.py::test_large_read_payload_retains_complete_typed_snapshot[discover]",
+      "purpose_sha256": "8f2f779bfa0481466bb7b3c3418230bb55e71ebec8214b46c4143e2fbc8fcc7c"
+    },
+    {
+      "node": "tests/test_owner_transport_extents.py::test_large_read_payload_retains_complete_typed_snapshot[resources.observe]",
+      "purpose_sha256": "8f2f779bfa0481466bb7b3c3418230bb55e71ebec8214b46c4143e2fbc8fcc7c"
+    },
+    {
+      "node": "tests/test_owner_transport_extents.py::test_observation_snapshot_never_invents_generation_or_reinterprets_a_prior_schema",
+      "purpose_sha256": "8f2f779bfa0481466bb7b3c3418230bb55e71ebec8214b46c4143e2fbc8fcc7c"
+    },
+    {
+      "node": "tests/test_owner_transport_extents.py::test_plan_input_rejects_changed_bytes_and_payload[digest]",
+      "purpose_sha256": "8f2f779bfa0481466bb7b3c3418230bb55e71ebec8214b46c4143e2fbc8fcc7c"
+    },
+    {
+      "node": "tests/test_owner_transport_extents.py::test_plan_input_rejects_changed_bytes_and_payload[noncanonical]",
+      "purpose_sha256": "8f2f779bfa0481466bb7b3c3418230bb55e71ebec8214b46c4143e2fbc8fcc7c"
+    },
+    {
+      "node": "tests/test_owner_transport_extents.py::test_plan_input_rejects_changed_bytes_and_payload[owner]",
+      "purpose_sha256": "8f2f779bfa0481466bb7b3c3418230bb55e71ebec8214b46c4143e2fbc8fcc7c"
+    },
+    {
+      "node": "tests/test_owner_transport_extents.py::test_plan_input_rejects_changed_bytes_and_payload[size]",
+      "purpose_sha256": "8f2f779bfa0481466bb7b3c3418230bb55e71ebec8214b46c4143e2fbc8fcc7c"
+    },
+    {
+      "node": "tests/test_owner_transport_extents.py::test_plan_input_rejects_changed_bytes_and_payload[subject]",
+      "purpose_sha256": "8f2f779bfa0481466bb7b3c3418230bb55e71ebec8214b46c4143e2fbc8fcc7c"
+    },
+    {
+      "node": "tests/test_owner_transport_extents.py::test_plan_input_requires_exact_current_custody[epoch]",
+      "purpose_sha256": "8f2f779bfa0481466bb7b3c3418230bb55e71ebec8214b46c4143e2fbc8fcc7c"
+    },
+    {
+      "node": "tests/test_owner_transport_extents.py::test_plan_input_requires_exact_current_custody[expired]",
+      "purpose_sha256": "8f2f779bfa0481466bb7b3c3418230bb55e71ebec8214b46c4143e2fbc8fcc7c"
+    },
+    {
+      "node": "tests/test_owner_transport_extents.py::test_plan_input_requires_exact_current_custody[principal]",
+      "purpose_sha256": "8f2f779bfa0481466bb7b3c3418230bb55e71ebec8214b46c4143e2fbc8fcc7c"
+    },
+    {
+      "node": "tests/test_owner_transport_extents.py::test_plan_input_requires_exact_current_custody[purpose]",
+      "purpose_sha256": "8f2f779bfa0481466bb7b3c3418230bb55e71ebec8214b46c4143e2fbc8fcc7c"
+    },
+    {
+      "node": "tests/test_owner_transport_extents.py::test_plan_input_requires_exact_current_custody[resource]",
+      "purpose_sha256": "8f2f779bfa0481466bb7b3c3418230bb55e71ebec8214b46c4143e2fbc8fcc7c"
+    },
+    {
+      "node": "tests/test_owner_transport_extents.py::test_plan_prepare_requires_committed_input_reference",
+      "purpose_sha256": "8f2f779bfa0481466bb7b3c3418230bb55e71ebec8214b46c4143e2fbc8fcc7c"
     },
     {
       "node": "tests/test_performance_measurement.py::test_failed_stats_publication_retains_complete_history[chmod]",
@@ -4605,6 +4757,10 @@
       "purpose_sha256": "45c39bca4ce7c7165b08bbbbd0fa07a59aaff8103327277042325475b0b86cd7"
     },
     {
+      "node": "tests/test_provider_schema_closure.py::test_acyclic_references_cannot_hide_exponential_schema_expansion",
+      "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
+    },
+    {
       "node": "tests/test_provider_schema_closure.py::test_closed_compositions_validate_their_declared_values[closed-tuple]",
       "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
     },
@@ -4637,7 +4793,31 @@
       "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
     },
     {
+      "node": "tests/test_provider_schema_closure.py::test_every_supported_provider_format_asserts_its_declared_semantics[date-time]",
+      "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
+    },
+    {
+      "node": "tests/test_provider_schema_closure.py::test_every_supported_provider_format_asserts_its_declared_semantics[date]",
+      "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
+    },
+    {
+      "node": "tests/test_provider_schema_closure.py::test_every_supported_provider_format_asserts_its_declared_semantics[ipv4]",
+      "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
+    },
+    {
+      "node": "tests/test_provider_schema_closure.py::test_every_supported_provider_format_asserts_its_declared_semantics[ipv6]",
+      "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
+    },
+    {
+      "node": "tests/test_provider_schema_closure.py::test_every_supported_provider_format_asserts_its_declared_semantics[uuid]",
+      "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
+    },
+    {
       "node": "tests/test_provider_schema_closure.py::test_local_pointer_escaping_preserves_exact_schema_identity",
+      "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
+    },
+    {
+      "node": "tests/test_provider_schema_closure.py::test_nested_dialect_cannot_replace_the_budgeted_validator",
       "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
     },
     {
@@ -4717,6 +4897,46 @@
       "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
     },
     {
+      "node": "tests/test_provider_schema_closure.py::test_pattern_property_names_share_the_bounded_regex_input_contract",
+      "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
+    },
+    {
+      "node": "tests/test_provider_schema_closure.py::test_provider_regex_cannot_enter_unbounded_backtracking_or_nonportable_features[backreference]",
+      "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
+    },
+    {
+      "node": "tests/test_provider_schema_closure.py::test_provider_regex_cannot_enter_unbounded_backtracking_or_nonportable_features[branch-repeat]",
+      "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
+    },
+    {
+      "node": "tests/test_provider_schema_closure.py::test_provider_regex_cannot_enter_unbounded_backtracking_or_nonportable_features[flags]",
+      "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
+    },
+    {
+      "node": "tests/test_provider_schema_closure.py::test_provider_regex_cannot_enter_unbounded_backtracking_or_nonportable_features[lookbehind]",
+      "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
+    },
+    {
+      "node": "tests/test_provider_schema_closure.py::test_provider_regex_cannot_enter_unbounded_backtracking_or_nonportable_features[nested-repeat]",
+      "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
+    },
+    {
+      "node": "tests/test_provider_schema_closure.py::test_provider_regex_cannot_enter_unbounded_backtracking_or_nonportable_features[three-repeats]",
+      "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
+    },
+    {
+      "node": "tests/test_provider_schema_closure.py::test_provider_value_work_limit_is_explicit_rejection_not_partial_success[compared-bytes]",
+      "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
+    },
+    {
+      "node": "tests/test_provider_schema_closure.py::test_provider_value_work_limit_is_explicit_rejection_not_partial_success[pair-count]",
+      "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
+    },
+    {
+      "node": "tests/test_provider_schema_closure.py::test_provider_value_work_limit_is_explicit_rejection_not_partial_success[unanchored-branch]",
+      "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
+    },
+    {
       "node": "tests/test_provider_schema_closure.py::test_schema_looking_literal_values_are_not_interpreted_as_schemas[const]",
       "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
     },
@@ -4730,6 +4950,50 @@
     },
     {
       "node": "tests/test_provider_schema_closure.py::test_schema_looking_literal_values_are_not_interpreted_as_schemas[examples]",
+      "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
+    },
+    {
+      "node": "tests/test_provider_schema_closure.py::test_unimplemented_schema_assertion_or_vocabulary_is_not_silently_ignored[unevaluated-items]",
+      "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
+    },
+    {
+      "node": "tests/test_provider_schema_closure.py::test_unimplemented_schema_assertion_or_vocabulary_is_not_silently_ignored[unevaluated-properties]",
+      "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
+    },
+    {
+      "node": "tests/test_provider_schema_closure.py::test_unimplemented_schema_assertion_or_vocabulary_is_not_silently_ignored[unknown-assertion]",
+      "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
+    },
+    {
+      "node": "tests/test_provider_schema_closure.py::test_unimplemented_schema_assertion_or_vocabulary_is_not_silently_ignored[vocabulary]",
+      "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
+    },
+    {
+      "node": "tests/test_provider_schema_closure.py::test_unsupported_format_assertions_fail_at_descriptor_approval[duration]",
+      "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
+    },
+    {
+      "node": "tests/test_provider_schema_closure.py::test_unsupported_format_assertions_fail_at_descriptor_approval[hostname]",
+      "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
+    },
+    {
+      "node": "tests/test_provider_schema_closure.py::test_unsupported_format_assertions_fail_at_descriptor_approval[json-pointer]",
+      "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
+    },
+    {
+      "node": "tests/test_provider_schema_closure.py::test_unsupported_format_assertions_fail_at_descriptor_approval[regex]",
+      "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
+    },
+    {
+      "node": "tests/test_provider_schema_closure.py::test_unsupported_format_assertions_fail_at_descriptor_approval[time]",
+      "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
+    },
+    {
+      "node": "tests/test_provider_schema_closure.py::test_unsupported_format_assertions_fail_at_descriptor_approval[unknown-format]",
+      "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
+    },
+    {
+      "node": "tests/test_provider_schema_closure.py::test_unsupported_format_assertions_fail_at_descriptor_approval[uri]",
       "purpose_sha256": "3158b63638f7ded44552b955132d40d2f4eaa8839eace98af4cb0e25db34e8aa"
     },
     {
@@ -4751,6 +5015,102 @@
     {
       "node": "tests/test_public_safety.py::test_private_identifier_checks_still_cover_git_identity_headers",
       "purpose_sha256": "f9ce5d769535d030faa9dec9770e8b3b8c2fe86b8b252ab698a46805568a6631"
+    },
+    {
+      "node": "tests/test_publication.py::test_completed_publication_rejects_freshly_signed_substitution[artifact]",
+      "purpose_sha256": "1e74def186283234c1f5ccc4a123d890ebe6327a664a1d916aa51a8776ff399d"
+    },
+    {
+      "node": "tests/test_publication.py::test_completed_publication_rejects_freshly_signed_substitution[bytes]",
+      "purpose_sha256": "1e74def186283234c1f5ccc4a123d890ebe6327a664a1d916aa51a8776ff399d"
+    },
+    {
+      "node": "tests/test_publication.py::test_completed_publication_rejects_freshly_signed_substitution[candidate-handle]",
+      "purpose_sha256": "1e74def186283234c1f5ccc4a123d890ebe6327a664a1d916aa51a8776ff399d"
+    },
+    {
+      "node": "tests/test_publication.py::test_completed_publication_rejects_freshly_signed_substitution[catalogue]",
+      "purpose_sha256": "1e74def186283234c1f5ccc4a123d890ebe6327a664a1d916aa51a8776ff399d"
+    },
+    {
+      "node": "tests/test_publication.py::test_completed_publication_rejects_freshly_signed_substitution[consumer]",
+      "purpose_sha256": "1e74def186283234c1f5ccc4a123d890ebe6327a664a1d916aa51a8776ff399d"
+    },
+    {
+      "node": "tests/test_publication.py::test_completed_publication_rejects_freshly_signed_substitution[custodian]",
+      "purpose_sha256": "1e74def186283234c1f5ccc4a123d890ebe6327a664a1d916aa51a8776ff399d"
+    },
+    {
+      "node": "tests/test_publication.py::test_completed_publication_rejects_freshly_signed_substitution[entry]",
+      "purpose_sha256": "1e74def186283234c1f5ccc4a123d890ebe6327a664a1d916aa51a8776ff399d"
+    },
+    {
+      "node": "tests/test_publication.py::test_completed_publication_rejects_freshly_signed_substitution[evidence-owner]",
+      "purpose_sha256": "1e74def186283234c1f5ccc4a123d890ebe6327a664a1d916aa51a8776ff399d"
+    },
+    {
+      "node": "tests/test_publication.py::test_completed_publication_rejects_freshly_signed_substitution[evidence-schema]",
+      "purpose_sha256": "1e74def186283234c1f5ccc4a123d890ebe6327a664a1d916aa51a8776ff399d"
+    },
+    {
+      "node": "tests/test_publication.py::test_completed_publication_rejects_freshly_signed_substitution[missing-current]",
+      "purpose_sha256": "1e74def186283234c1f5ccc4a123d890ebe6327a664a1d916aa51a8776ff399d"
+    },
+    {
+      "node": "tests/test_publication.py::test_completed_publication_rejects_freshly_signed_substitution[missing-evidence]",
+      "purpose_sha256": "1e74def186283234c1f5ccc4a123d890ebe6327a664a1d916aa51a8776ff399d"
+    },
+    {
+      "node": "tests/test_publication.py::test_completed_publication_rejects_freshly_signed_substitution[predecessor]",
+      "purpose_sha256": "1e74def186283234c1f5ccc4a123d890ebe6327a664a1d916aa51a8776ff399d"
+    },
+    {
+      "node": "tests/test_publication.py::test_completed_publication_rejects_freshly_signed_substitution[source]",
+      "purpose_sha256": "1e74def186283234c1f5ccc4a123d890ebe6327a664a1d916aa51a8776ff399d"
+    },
+    {
+      "node": "tests/test_publication.py::test_completed_publication_rejects_freshly_signed_substitution[version]",
+      "purpose_sha256": "1e74def186283234c1f5ccc4a123d890ebe6327a664a1d916aa51a8776ff399d"
+    },
+    {
+      "node": "tests/test_publication.py::test_core_publication_and_adoption_reject_bundle_specific_fields",
+      "purpose_sha256": "1e74def186283234c1f5ccc4a123d890ebe6327a664a1d916aa51a8776ff399d"
+    },
+    {
+      "node": "tests/test_publication.py::test_publication_result_retains_exact_provider_evidence_without_backend_translation[forgejo-age]",
+      "purpose_sha256": "1e74def186283234c1f5ccc4a123d890ebe6327a664a1d916aa51a8776ff399d"
+    },
+    {
+      "node": "tests/test_publication.py::test_publication_result_retains_exact_provider_evidence_without_backend_translation[openbao-kv]",
+      "purpose_sha256": "1e74def186283234c1f5ccc4a123d890ebe6327a664a1d916aa51a8776ff399d"
+    },
+    {
+      "node": "tests/test_publication.py::test_publication_witness_must_bind_receipt_owner_kind_state_and_complete_body[kind]",
+      "purpose_sha256": "1e74def186283234c1f5ccc4a123d890ebe6327a664a1d916aa51a8776ff399d"
+    },
+    {
+      "node": "tests/test_publication.py::test_publication_witness_must_bind_receipt_owner_kind_state_and_complete_body[owner]",
+      "purpose_sha256": "1e74def186283234c1f5ccc4a123d890ebe6327a664a1d916aa51a8776ff399d"
+    },
+    {
+      "node": "tests/test_publication.py::test_publication_witness_must_bind_receipt_owner_kind_state_and_complete_body[state]",
+      "purpose_sha256": "1e74def186283234c1f5ccc4a123d890ebe6327a664a1d916aa51a8776ff399d"
+    },
+    {
+      "node": "tests/test_publication.py::test_publication_witness_must_bind_receipt_owner_kind_state_and_complete_body[subject_digest]",
+      "purpose_sha256": "1e74def186283234c1f5ccc4a123d890ebe6327a664a1d916aa51a8776ff399d"
+    },
+    {
+      "node": "tests/test_publication.py::test_recovery_replays_completed_publication_without_losing_confirmed_evidence",
+      "purpose_sha256": "1e74def186283234c1f5ccc4a123d890ebe6327a664a1d916aa51a8776ff399d"
+    },
+    {
+      "node": "tests/test_publication.py::test_unknown_outcome_does_not_authorize_overwriting_the_predecessor_version",
+      "purpose_sha256": "1e74def186283234c1f5ccc4a123d890ebe6327a664a1d916aa51a8776ff399d"
+    },
+    {
+      "node": "tests/test_publication.py::test_unknown_publication_can_reconcile_only_its_retained_exact_destination_and_candidate",
+      "purpose_sha256": "1e74def186283234c1f5ccc4a123d890ebe6327a664a1d916aa51a8776ff399d"
     },
     {
       "node": "tests/test_record_delivery.py::test_cli_reference_and_chunk_only_report_completed_observation",
@@ -4863,6 +5223,34 @@
     {
       "node": "tests/test_relocation_contracts.py::test_relocation_rejects_ambiguous_or_implicit_recovery_bases[mixed]",
       "purpose_sha256": "929afbe512c31da4c5980902447b54a572d7caa813359f8204c4923ddaef1cd3"
+    },
+    {
+      "node": "tests/test_replay_retention.py::test_later_successful_work_cannot_make_original_identity_new",
+      "purpose_sha256": "6d122344502cf95901f4abd885185b4a785a2d5a09a6951f7ba9b060d56e171d"
+    },
+    {
+      "node": "tests/test_replay_retention.py::test_terminal_identity_is_reserved_after_restart_and_admission_expiry[cancelled-known]",
+      "purpose_sha256": "6d122344502cf95901f4abd885185b4a785a2d5a09a6951f7ba9b060d56e171d"
+    },
+    {
+      "node": "tests/test_replay_retention.py::test_terminal_identity_is_reserved_after_restart_and_admission_expiry[cancelled-none]",
+      "purpose_sha256": "6d122344502cf95901f4abd885185b4a785a2d5a09a6951f7ba9b060d56e171d"
+    },
+    {
+      "node": "tests/test_replay_retention.py::test_terminal_identity_is_reserved_after_restart_and_admission_expiry[failed-none]",
+      "purpose_sha256": "6d122344502cf95901f4abd885185b4a785a2d5a09a6951f7ba9b060d56e171d"
+    },
+    {
+      "node": "tests/test_replay_retention.py::test_terminal_identity_is_reserved_after_restart_and_admission_expiry[failed-unknown]",
+      "purpose_sha256": "6d122344502cf95901f4abd885185b4a785a2d5a09a6951f7ba9b060d56e171d"
+    },
+    {
+      "node": "tests/test_replay_retention.py::test_terminal_identity_is_reserved_after_restart_and_admission_expiry[quarantined-unknown]",
+      "purpose_sha256": "6d122344502cf95901f4abd885185b4a785a2d5a09a6951f7ba9b060d56e171d"
+    },
+    {
+      "node": "tests/test_replay_retention.py::test_terminal_identity_is_reserved_after_restart_and_admission_expiry[succeeded-known]",
+      "purpose_sha256": "6d122344502cf95901f4abd885185b4a785a2d5a09a6951f7ba9b060d56e171d"
     },
     {
       "node": "tests/test_repository_contracts.py::test_annotated_tag_publication_compares_the_raw_tag_object_and_writes_a_direct_commit",
@@ -5949,6 +6337,78 @@
       "purpose_sha256": "41a8dce0f9dda3cfad0f4cf2ff69c7659bd75a03a3d3dd242207b75dbb89fbed"
     },
     {
+      "node": "tests/test_service_software_intent.py::test_compound_restart_requires_ordered_stop_then_start_confirmations",
+      "purpose_sha256": "a1a5cc561f26fb05c89966b659228f48d920bb5b53ee9daa50771385b12a8e82"
+    },
+    {
+      "node": "tests/test_service_software_intent.py::test_delegated_reload_lost_reply_reconciles_without_a_second_dispatch",
+      "purpose_sha256": "a1a5cc561f26fb05c89966b659228f48d920bb5b53ee9daa50771385b12a8e82"
+    },
+    {
+      "node": "tests/test_service_software_intent.py::test_running_disabled_service_has_independent_boot_policy_intent_and_evidence",
+      "purpose_sha256": "a1a5cc561f26fb05c89966b659228f48d920bb5b53ee9daa50771385b12a8e82"
+    },
+    {
+      "node": "tests/test_service_software_intent.py::test_service_event_requires_exact_attempt_bound_completion[direct-reload-native]",
+      "purpose_sha256": "a1a5cc561f26fb05c89966b659228f48d920bb5b53ee9daa50771385b12a8e82"
+    },
+    {
+      "node": "tests/test_service_software_intent.py::test_service_event_requires_exact_attempt_bound_completion[direct-restart-native]",
+      "purpose_sha256": "a1a5cc561f26fb05c89966b659228f48d920bb5b53ee9daa50771385b12a8e82"
+    },
+    {
+      "node": "tests/test_service_software_intent.py::test_service_event_requires_exact_attempt_bound_completion[direct-restart-stop-start]",
+      "purpose_sha256": "a1a5cc561f26fb05c89966b659228f48d920bb5b53ee9daa50771385b12a8e82"
+    },
+    {
+      "node": "tests/test_service_software_intent.py::test_service_event_requires_exact_attempt_bound_completion[lost-reply-reload-native]",
+      "purpose_sha256": "a1a5cc561f26fb05c89966b659228f48d920bb5b53ee9daa50771385b12a8e82"
+    },
+    {
+      "node": "tests/test_service_software_intent.py::test_service_event_requires_exact_attempt_bound_completion[lost-reply-restart-native]",
+      "purpose_sha256": "a1a5cc561f26fb05c89966b659228f48d920bb5b53ee9daa50771385b12a8e82"
+    },
+    {
+      "node": "tests/test_service_software_intent.py::test_service_event_requires_exact_attempt_bound_completion[lost-reply-restart-stop-start]",
+      "purpose_sha256": "a1a5cc561f26fb05c89966b659228f48d920bb5b53ee9daa50771385b12a8e82"
+    },
+    {
+      "node": "tests/test_service_software_intent.py::test_service_observation_keeps_mixed_states_keyed_and_paged",
+      "purpose_sha256": "a1a5cc561f26fb05c89966b659228f48d920bb5b53ee9daa50771385b12a8e82"
+    },
+    {
+      "node": "tests/test_service_software_intent.py::test_software_hold_policy_round_trips_without_artifact_inference[direct-install]",
+      "purpose_sha256": "a1a5cc561f26fb05c89966b659228f48d920bb5b53ee9daa50771385b12a8e82"
+    },
+    {
+      "node": "tests/test_service_software_intent.py::test_software_hold_policy_round_trips_without_artifact_inference[direct-retire]",
+      "purpose_sha256": "a1a5cc561f26fb05c89966b659228f48d920bb5b53ee9daa50771385b12a8e82"
+    },
+    {
+      "node": "tests/test_service_software_intent.py::test_software_hold_policy_round_trips_without_artifact_inference[lost-reply-install]",
+      "purpose_sha256": "a1a5cc561f26fb05c89966b659228f48d920bb5b53ee9daa50771385b12a8e82"
+    },
+    {
+      "node": "tests/test_service_software_intent.py::test_software_hold_policy_round_trips_without_artifact_inference[lost-reply-retire]",
+      "purpose_sha256": "a1a5cc561f26fb05c89966b659228f48d920bb5b53ee9daa50771385b12a8e82"
+    },
+    {
+      "node": "tests/test_service_software_intent.py::test_software_resolution_echoes_requested_policy_without_claiming_it_is_enforced",
+      "purpose_sha256": "a1a5cc561f26fb05c89966b659228f48d920bb5b53ee9daa50771385b12a8e82"
+    },
+    {
+      "node": "tests/test_service_software_intent.py::test_target_mapping_cannot_be_replaced_inside_accepted_intent[service]",
+      "purpose_sha256": "a1a5cc561f26fb05c89966b659228f48d920bb5b53ee9daa50771385b12a8e82"
+    },
+    {
+      "node": "tests/test_service_software_intent.py::test_target_mapping_cannot_be_replaced_inside_accepted_intent[software]",
+      "purpose_sha256": "a1a5cc561f26fb05c89966b659228f48d920bb5b53ee9daa50771385b12a8e82"
+    },
+    {
+      "node": "tests/test_service_software_intent.py::test_unsupported_reload_is_explicit_no_effect_rejection_and_never_a_restart",
+      "purpose_sha256": "a1a5cc561f26fb05c89966b659228f48d920bb5b53ee9daa50771385b12a8e82"
+    },
+    {
       "node": "tests/test_source_authority.py::test_all_host_destination_kinds_share_one_target_namespace[artifacts-artifacts]",
       "purpose_sha256": "c36a6c44a0c93ecdeb0378ed2a0f5a6e84bb16337bba78f9af6c1a4ab48a100b"
     },
@@ -6877,6 +7337,50 @@
       "purpose_sha256": "67217fd9e4aef33e7514d26f751657107d9703eb4b64518b27b09d5d23e5cb0c"
     },
     {
+      "node": "tests/test_workflow_abandonment.py::test_abandoned_absent_peer_cannot_later_prepare_the_old_successor",
+      "purpose_sha256": "ccfe975d4805a265a3ccf8b8479a3bdb8b7fb11c2598bd59f3b89498838c0c44"
+    },
+    {
+      "node": "tests/test_workflow_abandonment.py::test_abandonment_bounded_route_replay_and_observed_cli_result",
+      "purpose_sha256": "ccfe975d4805a265a3ccf8b8479a3bdb8b7fb11c2598bd59f3b89498838c0c44"
+    },
+    {
+      "node": "tests/test_workflow_abandonment.py::test_abandonment_refuses_any_accepted_child_and_replay_never_revives_commit",
+      "purpose_sha256": "ccfe975d4805a265a3ccf8b8479a3bdb8b7fb11c2598bd59f3b89498838c0c44"
+    },
+    {
+      "node": "tests/test_workflow_abandonment.py::test_exclusive_selection_requires_all_owner_abandonment_before_replacement",
+      "purpose_sha256": "ccfe975d4805a265a3ccf8b8479a3bdb8b7fb11c2598bd59f3b89498838c0c44"
+    },
+    {
+      "node": "tests/test_workflow_abandonment.py::test_partial_or_substituted_abandonment_cannot_release_selection[changed-selection]",
+      "purpose_sha256": "ccfe975d4805a265a3ccf8b8479a3bdb8b7fb11c2598bd59f3b89498838c0c44"
+    },
+    {
+      "node": "tests/test_workflow_abandonment.py::test_partial_or_substituted_abandonment_cannot_release_selection[missing-peer]",
+      "purpose_sha256": "ccfe975d4805a265a3ccf8b8479a3bdb8b7fb11c2598bd59f3b89498838c0c44"
+    },
+    {
+      "node": "tests/test_workflow_abandonment.py::test_partial_or_substituted_abandonment_cannot_release_selection[old-epoch]",
+      "purpose_sha256": "ccfe975d4805a265a3ccf8b8479a3bdb8b7fb11c2598bd59f3b89498838c0c44"
+    },
+    {
+      "node": "tests/test_workflow_abandonment.py::test_partial_or_substituted_abandonment_cannot_release_selection[unverified]",
+      "purpose_sha256": "ccfe975d4805a265a3ccf8b8479a3bdb8b7fb11c2598bd59f3b89498838c0c44"
+    },
+    {
+      "node": "tests/test_workflow_abandonment.py::test_repeated_selection_summaries_do_not_nest_previous_proposals",
+      "purpose_sha256": "ccfe975d4805a265a3ccf8b8479a3bdb8b7fb11c2598bd59f3b89498838c0c44"
+    },
+    {
+      "node": "tests/test_workflow_abandonment.py::test_restoration_during_partial_preparation_keeps_historical_bytes_and_closes_selection",
+      "purpose_sha256": "ccfe975d4805a265a3ccf8b8479a3bdb8b7fb11c2598bd59f3b89498838c0c44"
+    },
+    {
+      "node": "tests/test_workflow_abandonment.py::test_stale_peer_outcome_can_be_reviewed_only_after_unused_selection_is_closed",
+      "purpose_sha256": "ccfe975d4805a265a3ccf8b8479a3bdb8b7fb11c2598bd59f3b89498838c0c44"
+    },
+    {
       "node": "tests/test_workflow_continuations.py::test_complete_late_binding_larger_than_frame_retains_all_staged_input",
       "purpose_sha256": "f49c8be8f39e787e1b3523b37760985db95db14792909cdf174410d1eb335349"
     },
@@ -6973,11 +7477,15 @@
       "purpose_sha256": "f49c8be8f39e787e1b3523b37760985db95db14792909cdf174410d1eb335349"
     },
     {
-      "node": "tests/test_workflow_continuations.py::test_rotation_prepares_without_future_receipt_then_retains_exact_issued_publication",
+      "node": "tests/test_workflow_continuations.py::test_rotation_prepares_without_future_receipt_then_retains_exact_issued_publication[forgejo-age]",
       "purpose_sha256": "f49c8be8f39e787e1b3523b37760985db95db14792909cdf174410d1eb335349"
     },
     {
-      "node": "tests/test_workflow_continuations.py::test_same_ciphertext_other_publication_receipt_is_not_the_exact_child_output",
+      "node": "tests/test_workflow_continuations.py::test_rotation_prepares_without_future_receipt_then_retains_exact_issued_publication[openbao-kv]",
+      "purpose_sha256": "f49c8be8f39e787e1b3523b37760985db95db14792909cdf174410d1eb335349"
+    },
+    {
+      "node": "tests/test_workflow_continuations.py::test_same_material_other_publication_receipt_is_not_the_exact_child_output",
       "purpose_sha256": "f49c8be8f39e787e1b3523b37760985db95db14792909cdf174410d1eb335349"
     },
     {
@@ -7163,6 +7671,210 @@
     {
       "node": "tests/test_workflow_inputs.py::test_workflow_proposal_rejects_incomplete_or_changed_target_closure[request-id]",
       "purpose_sha256": "2f6f9c8e054664224e554057127bc1f7182ab9d44864871707531f9f590f668f"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_driver_transfer_preserves_lifecycle_and_exact_replay[active]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_driver_transfer_preserves_lifecycle_and_exact_replay[paused]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_driver_transfer_preserves_lifecycle_and_exact_replay[prepared]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_driver_transfer_preserves_lifecycle_and_exact_replay[recovery-required]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_expired_bound_child_gets_fresh_request_after_completed_predecessor",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_failed_child_requires_separate_exact_successful_recovery[changed-original-plan]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_failed_child_requires_separate_exact_successful_recovery[different-operation]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_failed_child_requires_separate_exact_successful_recovery[failed-recovery]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_failed_child_requires_separate_exact_successful_recovery[unknown-recovery]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_generic_recovery_links_adapter_and_publisher_failure_to_exact_original_operation[issuer]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_generic_recovery_links_adapter_and_publisher_failure_to_exact_original_operation[publisher]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_historical_prepared_capsule_recovers_partial_transfer_without_an_operation",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_other_historical_schema_reader_is_inspection_only_for_workflow_recovery[Operation]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_other_historical_schema_reader_is_inspection_only_for_workflow_recovery[Workflow]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_partial_preparation_blocks_progress_and_all_participants_are_required",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_preparation_and_commit_replay_keep_original_inputs_after_expiry",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_recovery_request_cannot_supply_its_own_authority_or_custody[recovery_authorized]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_recovery_request_cannot_supply_its_own_authority_or_custody[verified_content]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_recovery_request_cannot_supply_its_own_authority_or_custody[verified_origins]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_recovery_request_cannot_supply_its_own_authority_or_custody[verified_proposal]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_recovery_uses_bounded_staged_transport_and_discoverable_workflow_output",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_restored_partial_commit_requires_both_current_custodians",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_retained_success_is_not_executable_through_ordinary_prepare",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_rotation_recovery_keeps_completed_output_and_rebinds_only_unused_child[adoption-current]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_rotation_recovery_keeps_completed_output_and_rebinds_only_unused_child[adoption-restored]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_rotation_recovery_keeps_completed_output_and_rebinds_only_unused_child[publication-current]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_rotation_recovery_keeps_completed_output_and_rebinds_only_unused_child[publication-restored]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_successor_cannot_omit_or_retarget_protected_predecessor_closure[missing-child]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_successor_cannot_omit_or_retarget_protected_predecessor_closure[missing-origin]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_successor_cannot_omit_or_retarget_protected_predecessor_closure[old-id]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_successor_cannot_omit_or_retarget_protected_predecessor_closure[stale-reference]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_successor_cannot_omit_or_retarget_protected_predecessor_closure[wrong-epoch]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_successor_cannot_omit_or_retarget_protected_predecessor_closure[wrong-resource]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_successor_retains_original_outcomes_and_current_authority[completed-current]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_successor_retains_original_outcomes_and_current_authority[completed-restored]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_successor_retains_original_outcomes_and_current_authority[recovered-current]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_successor_retains_original_outcomes_and_current_authority[recovered-restored]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_successor_retains_original_outcomes_and_current_authority[unaccepted-current]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_successor_retains_original_outcomes_and_current_authority[unaccepted-restored]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_terminal_lifecycle_keeps_exact_accepted_transfer_replay[cancelled-commit]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_terminal_lifecycle_keeps_exact_accepted_transfer_replay[cancelled-completed]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_terminal_lifecycle_keeps_exact_accepted_transfer_replay[cancelled-freeze]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_terminal_lifecycle_keeps_exact_accepted_transfer_replay[completed-commit]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_terminal_lifecycle_keeps_exact_accepted_transfer_replay[completed-completed]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_terminal_lifecycle_keeps_exact_accepted_transfer_replay[completed-freeze]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_terminal_workflow_cannot_begin_new_driver_transfer[cancelled]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_terminal_workflow_cannot_begin_new_driver_transfer[completed]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_transfer_completion_cannot_combine_driver_change_with_phase_progress[active]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_transfer_completion_cannot_combine_driver_change_with_phase_progress[paused]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_transfer_completion_cannot_combine_driver_change_with_phase_progress[prepared]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
+    },
+    {
+      "node": "tests/test_workflow_recovery.py::test_transfer_completion_cannot_combine_driver_change_with_phase_progress[recovery-required]",
+      "purpose_sha256": "f7a61158ac9dcf32f5029b54cd51fa1f854defc24cbee44079fbac8bccbb55af"
     },
     {
       "node": "tests/test_workflow_transfer.py::test_commit_requires_every_participant_owner_freeze_before_new_driver",

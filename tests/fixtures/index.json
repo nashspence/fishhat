@@ -28,6 +28,7 @@
     "network-adapter.schema.json",
     "onboarding.schema.json",
     "owner-history.schema.json",
+    "plan-input.schema.json",
     "publisher-receipt.schema.json",
     "readiness.schema.json",
     "receipts-service.schema.json",
@@ -49,6 +50,7 @@
     "tool-release.schema.json",
     "tracking-profile.schema.json",
     "tracking-records.schema.json",
+    "workflow-recovery.schema.json",
     "workflow.schema.json",
     "workspace.schema.json"
   ],
@@ -336,6 +338,11 @@
     {
       "path": "bootstrap/git-bundle-selection.json",
       "schema": "bootstrap-recovery.schema.json"
+    },
+    {
+      "path": "plan-input.json",
+      "schema": "plan-input.schema.json",
+      "definition": "PrepareRequest"
     }
   ],
   "semantic_entrypoints": [

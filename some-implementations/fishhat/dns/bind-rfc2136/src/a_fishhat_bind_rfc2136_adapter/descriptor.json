@@ -16,7 +16,16 @@
       },
       "zone": {
         "type": "string",
-        "pattern": "^(?:[a-z0-9-]+\\.)+$"
+        "allOf": [
+          {
+            "pattern": "^[a-z0-9.-]+\\.$"
+          },
+          {
+            "not": {
+              "pattern": "^\\.|\\.\\."
+            }
+          }
+        ]
       },
       "tsig_handle": {
         "type": "string",

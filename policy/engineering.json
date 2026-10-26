@@ -44,7 +44,7 @@
       "qualification": "reference-model",
       "sources": {
         "some-implementations/fishhat/applications/directory/src/fishhat_directory/projection.py": "94a39d8fd9d82f63721d78f6f2e4fcbfcf57aeff4f00b1c256c0ebb84d8eb3f3",
-        "tests/test_engineering.py": "b3d00a53acb8092753e09876a0583e534f3152392447796be2f080bc3017997c"
+        "tests/test_engineering.py": "efd903aa37d01fd1899e669c81257ca8396202c8093ebd616e263e408bc7b7be"
       },
       "symbol": "fishhat_directory.projection:load_directory",
       "work": "O(input_bytes)-bounded-parser-depth"
@@ -60,8 +60,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "fishhat/owner-support/src/fishhat_owner/journal.py": "3683b50821bfb6205e2c5414c4cefcdb49bce7a2c89051ce58cac1e0d6a241d2",
-        "tests/test_engineering.py": "b3d00a53acb8092753e09876a0583e534f3152392447796be2f080bc3017997c"
+        "fishhat/owner-support/src/fishhat_owner/journal.py": "fb68a9393ccc95fd76a965a17dd8dd6d0bea8ccee0eb29fcc582203244361df8",
+        "tests/test_engineering.py": "efd903aa37d01fd1899e669c81257ca8396202c8093ebd616e263e408bc7b7be"
       },
       "symbol": "fishhat_owner.journal:Journal.submit",
       "work": "O(retained_requests)-reference-scan"
@@ -81,7 +81,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/record_delivery.py": "880d023366588672154fc8e679381fcf545840dd8cc08e9806fc631bd0e4d873",
+        "packages/fishhat-contracts/src/fishhat_contracts/record_delivery.py": "cd561e190f7ca9221f9ded0c3ad7cd4819c77341b2422b64b3851c8725696425",
         "tests/test_record_delivery.py": "a246e5d500b0aedc191da69cd6b6bbc374d02b43918927eab660a73f4d1648f5"
       },
       "symbol": "fishhat_contracts.record_delivery:RecordSnapshot.chunk",
@@ -108,7 +108,7 @@
       "qualification": "reference-model",
       "sources": {
         "some-implementations/fishhat/applications/receipts/src/fishhat_reporting/store.py": "219bc2a64296dcadfd0f3fceb52bf4010f6879042e097e3a611881b9f7ad2caf",
-        "tests/test_engineering.py": "b3d00a53acb8092753e09876a0583e534f3152392447796be2f080bc3017997c"
+        "tests/test_engineering.py": "efd903aa37d01fd1899e669c81257ca8396202c8093ebd616e263e408bc7b7be"
       },
       "symbol": "fishhat_reporting.store:EventStore.events",
       "work": "O(log(retained_events)+page_items^2*event_bytes)"
@@ -128,7 +128,7 @@
       "qualification": "reference-model",
       "sources": {
         "some-implementations/fishhat/applications/receipts/src/fishhat_reporting/store.py": "219bc2a64296dcadfd0f3fceb52bf4010f6879042e097e3a611881b9f7ad2caf",
-        "tests/test_engineering.py": "b3d00a53acb8092753e09876a0583e534f3152392447796be2f080bc3017997c"
+        "tests/test_engineering.py": "efd903aa37d01fd1899e669c81257ca8396202c8093ebd616e263e408bc7b7be"
       },
       "symbol": "fishhat_reporting.store:EventStore.put",
       "work": "O(retained_events*log(retained_events)+correction_depth*(log(retained_events)+event_bytes))-reference-scan"
@@ -149,7 +149,7 @@
       "qualification": "reference-model",
       "sources": {
         "some-implementations/fishhat/applications/receipts/src/fishhat_reporting/store.py": "219bc2a64296dcadfd0f3fceb52bf4010f6879042e097e3a611881b9f7ad2caf",
-        "tests/test_engineering.py": "b3d00a53acb8092753e09876a0583e534f3152392447796be2f080bc3017997c"
+        "tests/test_engineering.py": "efd903aa37d01fd1899e669c81257ca8396202c8093ebd616e263e408bc7b7be"
       },
       "symbol": "fishhat_reporting.store:EventStore.workflows",
       "work": "O(retained_events*log(retained_events))-reference-grouping"
@@ -170,7 +170,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-client/src/fishhat_client/wire.py": "2e8e26926f39bf53954769d9a46f87b99b7963287850297f0bb8aadbb6233e81",
-        "tests/test_engineering.py": "b3d00a53acb8092753e09876a0583e534f3152392447796be2f080bc3017997c"
+        "tests/test_engineering.py": "efd903aa37d01fd1899e669c81257ca8396202c8093ebd616e263e408bc7b7be"
       },
       "symbol": "fishhat_client.wire:read_frame",
       "work": "O(frame_bytes)"

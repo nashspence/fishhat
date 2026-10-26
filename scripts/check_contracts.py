@@ -3,6 +3,7 @@
 import json
 from urllib.parse import unquote, urldefrag, urljoin
 
+from fishhat_contracts.operations import validate_operation
 from fishhat_contracts.validation import (
     SCHEMAS,
     strict_json,
@@ -60,6 +61,8 @@ def run():
             validate_cli(value)
         if item.get("definition") == "Plan":
             validate_plan(value)
+        if item.get("definition") == "Operation":
+            validate_operation(value)
     validate_domain(load("domain/domain.yaml"))
     validate_host(load("host-node-a/host.yaml"), load("host-node-a/secrets.yaml"))
     for name in ["demo-app", "stateless", "receipts-app"]:

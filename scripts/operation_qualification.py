@@ -44,7 +44,7 @@ def inventory(root: Path = ROOT) -> tuple[dict[str, dict[str, Any]], set[str]]:
         add(
             "action:" + item["name"],
             "declared-action",
-            tools=[item["owner"]],
+            tools=item["owners"],
             schema=item["arguments_schema"]["$ref"],
         )
     for item in load("ssh-methods.json")["methods"]:

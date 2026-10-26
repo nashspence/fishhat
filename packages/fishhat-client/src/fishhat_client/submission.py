@@ -11,6 +11,7 @@ import uuid
 from collections.abc import Callable
 from typing import Any
 
+from fishhat_contracts.operations import validate_operation
 from fishhat_contracts.validation import ContractError, digest, validate
 
 
@@ -51,11 +52,11 @@ def submit_once(
         receipt = owner_transport(copy.deepcopy(value))
     except (TimeoutError, ConnectionError):
         return unknown
-    try:
-        validate("records.schema.json", receipt, "Operation")
-    except ContractError:
-        return unknown
     if not isinstance(receipt, dict):
+        return unknown
+    try:
+        validate_operation(receipt)
+    except ContractError:
         return unknown
     bindings = (
         receipt["request_id"] == value["request_id"],
@@ -64,11 +65,8 @@ def submit_once(
         digest(receipt["subject"]) == value["subject_digest"],
         receipt["subject"]["action"] == value["action"],
         receipt["subject"]["resource"] == value["resource"],
-        receipt["witness"]["owner"] == receipt["owner"],
     )
-    if not all(bindings) or (
-        receipt["state"] == "succeeded" and receipt["effect_certainty"] != "known"
-    ):
+    if not all(bindings):
         return unknown
     value["state"] = "accepted"
     return {

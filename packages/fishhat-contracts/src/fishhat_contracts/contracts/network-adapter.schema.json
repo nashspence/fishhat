@@ -58,7 +58,8 @@
         "policy_digest",
         "rules"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "Rules have unique handles and unique (direction, endpoint) decisions. A policy cannot both allow and deny one approved endpoint/direction, even under different handles. Array order grants no precedence. The receiver independently resolves endpoint aliases and overlapping native traffic selectors and rejects unresolved overlap; distinct opaque endpoint strings do not prove disjointness. policy_digest identifies the exact complete owner-held policy artifact; these rules must agree with that artifact before admission."
     },
     "publish": {
       "type": "object",
@@ -116,7 +117,8 @@
         "policy_digest",
         "rules"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "Rules have unique handles and unique (direction, endpoint) decisions. A policy cannot both allow and deny one approved endpoint/direction, even under different handles. Array order grants no precedence. The receiver independently resolves endpoint aliases and overlapping native traffic selectors and rejects unresolved overlap; distinct opaque endpoint strings do not prove disjointness. policy_digest identifies the exact complete owner-held policy artifact; these rules must agree with that artifact before admission."
     },
     "observe": {
       "type": "object",

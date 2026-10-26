@@ -8,11 +8,8 @@
         "scope": {
           "$ref": "adapter.schema.json#/$defs/Scope"
         },
-        "selection": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 160,
-          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*(?![\\s\\S])"
+        "target": {
+          "$ref": "adapter.schema.json#/$defs/SourceTargetBinding"
         },
         "artifacts": {
           "type": "array",
@@ -21,14 +18,19 @@
           },
           "minItems": 0,
           "uniqueItems": true
+        },
+        "held": {
+          "type": "boolean"
         }
       },
       "required": [
         "scope",
-        "selection",
-        "artifacts"
+        "target",
+        "artifacts",
+        "held"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "The exact approved software source target and desired held policy are independent of version artifact selection. held is an explicit native package policy, never inferred from an artifact digest. Retire preserves its requested final held policy while removing the selected installation; unsupported native policy requires rejection, not omission."
     },
     "install": {
       "type": "object",
@@ -36,27 +38,29 @@
         "scope": {
           "$ref": "adapter.schema.json#/$defs/Scope"
         },
-        "selection": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 160,
-          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*(?![\\s\\S])"
+        "target": {
+          "$ref": "adapter.schema.json#/$defs/SourceTargetBinding"
         },
         "artifacts": {
           "type": "array",
           "items": {
             "$ref": "adapter.schema.json#/$defs/Artifact"
           },
-          "minItems": 0,
+          "minItems": 1,
           "uniqueItems": true
+        },
+        "held": {
+          "type": "boolean"
         }
       },
       "required": [
         "scope",
-        "selection",
-        "artifacts"
+        "target",
+        "artifacts",
+        "held"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "The exact approved software source target and desired held policy are independent of version artifact selection. held is an explicit native package policy, never inferred from an artifact digest. Retire preserves its requested final held policy while removing the selected installation; unsupported native policy requires rejection, not omission."
     },
     "retire": {
       "type": "object",
@@ -64,11 +68,8 @@
         "scope": {
           "$ref": "adapter.schema.json#/$defs/Scope"
         },
-        "selection": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 160,
-          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*(?![\\s\\S])"
+        "target": {
+          "$ref": "adapter.schema.json#/$defs/SourceTargetBinding"
         },
         "artifacts": {
           "type": "array",
@@ -77,14 +78,19 @@
           },
           "minItems": 0,
           "uniqueItems": true
+        },
+        "held": {
+          "type": "boolean"
         }
       },
       "required": [
         "scope",
-        "selection",
-        "artifacts"
+        "target",
+        "artifacts",
+        "held"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "The exact approved software source target and desired held policy are independent of version artifact selection. held is an explicit native package policy, never inferred from an artifact digest. Retire preserves its requested final held policy while removing the selected installation; unsupported native policy requires rejection, not omission."
     },
     "observe": {
       "type": "object",
@@ -106,14 +112,19 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 256
+        },
+        "binding": {
+          "$ref": "adapter.schema.json#/$defs/InstanceReference"
         }
       },
       "required": [
         "scope",
         "cursor",
-        "limit"
+        "limit",
+        "binding"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "List keyed package observations within an approved scope, bounded by limit. Continuations bind one stable executor/scope/query snapshot and advance; changed snapshots require an explicit restart. Complete coverage has no continuation."
     },
     "reconcile": {
       "type": "object",
@@ -135,26 +146,18 @@
     "Output": {
       "type": "object",
       "properties": {
-        "artifacts": {
+        "packages": {
           "type": "array",
           "items": {
-            "$ref": "adapter.schema.json#/$defs/Artifact"
+            "$ref": "#/$defs/PackageObservation"
           },
           "minItems": 0,
-          "uniqueItems": true
-        },
-        "selections": {
-          "type": "array",
-          "items": {
-            "$ref": "adapter.schema.json#/$defs/Handle"
-          },
-          "minItems": 0,
-          "uniqueItems": true
+          "uniqueItems": true,
+          "maxItems": 256
         }
       },
       "required": [
-        "artifacts",
-        "selections"
+        "packages"
       ],
       "additionalProperties": false
     },
@@ -203,7 +206,7 @@
               ]
             },
             "output": {
-              "$ref": "#/$defs/Output"
+              "$ref": "#/$defs/Resolution"
             }
           },
           "required": [
@@ -316,7 +319,7 @@
                   },
                   "output": {
                     "properties": {
-                      "selections": {
+                      "packages": {
                         "minItems": 1,
                         "maxItems": 1
                       }
@@ -426,7 +429,7 @@
                   },
                   "output": {
                     "properties": {
-                      "selections": {
+                      "packages": {
                         "minItems": 1,
                         "maxItems": 1
                       }
@@ -604,6 +607,124 @@
           "additionalProperties": false
         }
       ]
+    },
+    "PackageObservation": {
+      "type": "object",
+      "properties": {
+        "target": {
+          "$ref": "adapter.schema.json#/$defs/SourceTargetBinding"
+        },
+        "state": {
+          "enum": [
+            "present",
+            "absent",
+            "unknown"
+          ]
+        },
+        "held": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "adapter.schema.json#/$defs/Artifact"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "target",
+        "state",
+        "held",
+        "artifacts"
+      ],
+      "additionalProperties": false,
+      "description": "Observed installed package and native held policy. Unknown policy is null; resolved artifact availability alone cannot claim that a package is installed or held. Absence has an empty installed artifact set.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "absent"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "artifacts": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Resolution": {
+      "type": "object",
+      "properties": {
+        "target": {
+          "$ref": "adapter.schema.json#/$defs/SourceTargetBinding"
+        },
+        "requested_held": {
+          "type": "boolean"
+        },
+        "state": {
+          "enum": [
+            "resolved",
+            "absent",
+            "unknown"
+          ]
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "adapter.schema.json#/$defs/Artifact"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "target",
+        "requested_held",
+        "state",
+        "artifacts"
+      ],
+      "additionalProperties": false,
+      "description": "Read-only selection of exact software artifacts. requested_held echoes requested future policy; resolution supplies no evidence that native hold or installation state has changed.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "resolved"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "artifacts": {
+                "minItems": 1
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "artifacts": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ]
     }
   },
   "oneOf": [
@@ -708,5 +829,5 @@
       "additionalProperties": false
     }
   ],
-  "description": "Mutation request objects are typed planning payloads. Native execution requires the owner-authored adapter Invocation with its exact attempt and accepted executor; a bare role request is not an alternate executable boundary."
+  "description": "Mutation request objects are typed planning payloads. Native execution requires the owner-authored adapter Invocation with its exact attempt and accepted executor; a bare role request is not an alternate executable boundary. Software target identity, desired hold policy, resolved candidate artifacts, and observed installed/held state are distinct. Successful install/retire proves the exact requested target and final hold policy; recovery uses the retained original request."
 }

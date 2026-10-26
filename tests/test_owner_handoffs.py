@@ -13,11 +13,11 @@ from fishhat_contracts.handoffs import (
     schema_identity,
     validate_cli_result,
     validate_result_payload,
-    validate_result_reference,
     validate_staged_input,
     validate_staging,
     validate_workflow,
 )
+from fishhat_contracts.operations import validate_operation
 from fishhat_contracts.validation import ContractError, canonical, digest, validate, validate_cli
 from fishhat_contracts.witness import sign
 from fishhat_contracts.workflows import decode_workflow_input
@@ -499,11 +499,11 @@ def test_typed_adapter_result_checks_bytes_schema_and_exact_operation_binding():
         changed = copy.deepcopy(op)
         changed["result_handle"]["handle"]["binding"] = replacement
         with pytest.raises(ContractError):
-            validate_result_reference(changed)
+            validate_operation(changed)
     changed = copy.deepcopy(op)
     changed["result_handle"]["schema"]["digest"] = D
     with pytest.raises(ContractError):
-        validate_result_reference(changed)
+        validate_operation(changed)
 
 
 def test_valid_content_digest_cannot_substitute_a_different_result_shape():
@@ -520,7 +520,7 @@ def test_receipt_only_action_cannot_return_an_untyped_or_adapter_payload():
     op, _, _ = adapter_result()
     op["subject"] = operation()["subject"]
     with pytest.raises(ContractError):
-        validate_result_reference(op)
+        validate_operation(op)
 
 
 def test_result_schema_closure_rejects_uninstalled_nested_or_unresolved_references():

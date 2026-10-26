@@ -81,6 +81,9 @@
     },
     {
       "name": "workflow.bind"
+    },
+    {
+      "name": "workflow.recover"
     }
   ],
   "max_frame_bytes": 1048576,

@@ -87,7 +87,7 @@
         "--json"
       ],
       "use_case": "plan.prepare",
-      "description": "Prepare a reviewable plan from the exact supplied action and resource, including affected scope, disruption, data consequences and recovery limits."
+      "description": "Read the complete exact Subject from stdin and independently resolve this local owner identity. Stage the canonical PrepareRequest under plan-input custody and submit one bounded plan.prepare reference. Preserve the complete selection across upload interruption; no items are truncated or divided into separate Plans to fit a frame. The owner binds current principal, resource, owner epoch and byte identity before preparing the reviewable Plan."
     },
     {
       "name": "app-check",
@@ -573,6 +573,30 @@
       ],
       "use_case": "workflow.bind",
       "description": "Read a complete reviewed BindRequest from stdin, stage its canonical workflow-input bytes and submit the bounded InputReference. Bind a declared continuation to actual verified predecessor outputs and current participant generation, retain exact content and immutable replay receipt, and preserve installed phase ordering. Binding does not accept child effects."
+    },
+    {
+      "name": "plan-get",
+      "tokens": [
+        "{tool}",
+        "plan",
+        "show",
+        "--request-stdin",
+        "--json"
+      ],
+      "use_case": "plan.get",
+      "description": "Read the exact closed owner/plan_digest lookup from stdin. All fields are discoverable from the accepted Operation. Current read authorization and retained immutable Plan identity apply even after its admission deadline; client state is not required."
+    },
+    {
+      "name": "workflow-recover",
+      "tokens": [
+        "{tool}",
+        "workflow",
+        "recover",
+        "--request-stdin",
+        "--json"
+      ],
+      "use_case": "workflow.recover",
+      "description": "Read a complete closed workflow recovery phase input, stage its canonical workflow-input bytes and submit the bounded reference. Preparation durably reserves one exact successor and retires the original child-admission set; commit requires the independently authenticated complete participant preparation closure. Abandonment irreversibly closes an unused successor at every current participant, including peers that never prepared it, before a different successor may be reviewed. An accepted successor child forbids abandonment. Current scoped recovery authority, settled original effects and retained holds remain required. Old work and abandoned child requests never regain execution authority."
     }
   ],
   "parser": "bounded tokens; no shell evaluation",

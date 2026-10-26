@@ -101,11 +101,12 @@ def copy_sources(tmp_path):
 def test_map_exhaustively_tracks_current_surfaces_and_native_gaps():
     coverage = check()
     rows = {row["id"]: row for row in coverage["operations"]}
-    assert len([key for key in rows if key.startswith("action:")]) == 34
-    assert len([key for key in rows if key.startswith("rpc:")]) == 27
+    assert len([key for key in rows if key.startswith("action:")]) == 35
+    assert len([key for key in rows if key.startswith("rpc:")]) == 28
     assert {
         "rpc:workflow.list",
         "rpc:workflow.bind",
+        "rpc:workflow.recover",
         "rpc:content.status",
         "rpc:record.read",
         "rpc:owner.history",
@@ -113,6 +114,7 @@ def test_map_exhaustively_tracks_current_surfaces_and_native_gaps():
         "rpc:history.read",
         "rpc:history.content",
     } <= rows.keys()
+    assert rows["action:operation.recover"]["tools"] == ["app-ops", "host-ops"]
     assert all(
         row["status"] == "unimplemented" and row["implementation"] is None
         for key, row in rows.items()

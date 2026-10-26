@@ -636,29 +636,25 @@
       ]
     },
     "RuntimeControl": {
-      "description": "Durable owner-authored control for a delegated service lifecycle attempt. This record is retained with the original attempt, not accepted as dispatch authority from a request. Starts and oneshots require open admission; stops require closed admission. The service handle must equal an enrolled lifecycle namespace resource under the accepted runtime controller.",
       "type": "object",
       "properties": {
         "binding_digest": {
           "$ref": "common.schema.json#/$defs/Digest"
         },
-        "activity": {
-          "enum": [
-            "running",
-            "stopped",
-            "oneshot-complete"
-          ]
+        "target": {
+          "$ref": "adapter.schema.json#/$defs/SourceTargetBinding"
         },
-        "service": {
-          "$ref": "adapter.schema.json#/$defs/Handle"
+        "intent": {
+          "$ref": "service-adapter.schema.json#/$defs/Intent"
         }
       },
       "required": [
         "binding_digest",
-        "activity",
-        "service"
+        "target",
+        "intent"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "Durable owner-authored control for one delegated service apply attempt. The exact source target and complete enablement/activity/event intent remain with the attempt. Running or oneshot intent requires open admission; stopped intent requires closed admission. The target must equal an independently enrolled lifecycle namespace under the accepted runtime controller. No caller-supplied control creates dispatch authority."
     },
     "EffectAttempt": {
       "type": "object",
@@ -767,7 +763,7 @@
               "const": "fishhat.service"
             },
             "method": {
-              "const": "set-activity"
+              "const": "apply"
             }
           }
         }
@@ -2087,5 +2083,5 @@
       "description": "Receiving-owner-approved mapping of a host service or software source selector to its exact enrolled executor and canonical native mutation target. The executor role is service or software; its scope and the selected instance must agree, and its change grant must contain the namespace. The owner independently resolves native aliases and verifies the mapping before enrolling it. Source bytes cannot create, replace or authorize this mapping. Different selector spellings or instances that resolve to one namespace remain one target; a host may prescribe that target only once. Native side effects remain confined to the complete accepted mutation grant."
     }
   },
-  "description": "Descriptor for a separately approved implementation. Provider-owned configuration, component and source schemas retain their JSON Schema format semantics. Bare date-time asserts RFC3339 syntax and Gregorian calendar validity without normalizing strings or inheriting core Time precision/UTC restrictions. Leap-second syntax is checked only at the offset-adjusted UTC end of a month; actual insertion or negative-leap schedules require provider authority and are not qualification supplied by this validator."
+  "description": "Descriptor for a separately approved implementation. Provider-owned configuration, component and source schemas retain their JSON Schema format semantics. Bare date-time asserts RFC3339 syntax and Gregorian calendar validity without normalizing strings or inheriting core Time precision/UTC restrictions. Leap-second syntax is checked only at the offset-adjusted UTC end of a month; actual insertion or negative-leap schedules require provider authority and are not qualification supplied by this validator. Provider schemas assert only date, date-time, ipv4, ipv6 and uuid formats. Unknown formats, nested dialect declarations, dialect vocabularies and unsupported keywords (including unevaluatedItems and unevaluatedProperties) reject during descriptor approval. The profile permits at most 262144 schema bytes, depth 32 and 4096 expanded schema positions. Pattern strings are at most 256 characters, contain no backreferences, lookbehind or inline flags, and variable repetition applies only to character atoms (apart from optional groups), with at most two variable repetitions and eight alternative paths. Pattern inputs are at most 4096 characters. Configuration evaluation admits at most 2000000 charged work units including regex polynomial bounds and compared bytes for const, enum and pairwise uniqueness; exhausted capacity is an explicit rejection, never successful partial validation. Source configuration bytes retain the separate 1048576-byte boundary."
 }

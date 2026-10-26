@@ -97,7 +97,6 @@ def frozen(value=None):
     }
     assert validate_transfer_request(original, value) == "new"
     value["generation"] += 1
-    value["state"] = "transfer-pending"
     value["transfer"] = {
         "proposal": copy.deepcopy(preimage),
         "proposal_digest": digest(preimage),
@@ -178,7 +177,7 @@ def test_pending_transfer_exposes_exact_original_input_without_client_state():
 def test_pending_transfer_cannot_omit_proposal_or_local_freeze_custody():
     value, _ = frozen()
     missing = copy.deepcopy(value)
-    missing["transfer"] = None
+    del missing["transfer"]["proposal"]
     with pytest.raises(ContractError):
         validate("records.schema.json", missing, "Workflow")
     missing = copy.deepcopy(value)
@@ -254,7 +253,7 @@ def completion_request(value):
         "advance_id": uid("transfer-completion-advance"),
         "driver_term": value["driver_term"],
         "expected_generation": value["generation"],
-        "phase": "draining",
+        "phase": value["phase"],
         "witnesses": [],
         "transfer_completion": {
             "transfer_id": transfer["proposal"]["transfer_id"],
@@ -280,7 +279,7 @@ def test_local_commit_replays_original_generation_and_completion_needs_all_commi
     assert recovered == original
     assert validate_transfer_request(recovered, value) == "replay"
     assert validate_transfer_request(reconstruct(value, "freeze"), value) == "replay"
-    assert value["state"] == "transfer-pending"
+    assert value["state"] == "prepared"
     assert value["driver_term"] == 2
     advance = completion_request(value)
     incomplete = copy.deepcopy(advance)
@@ -290,7 +289,7 @@ def test_local_commit_replays_original_generation_and_completion_needs_all_commi
     staged_workflow_input("workflow.advance", advance)
     complete = advance_workflow(advance, value)
     assert complete["generation"] == value["generation"] + 1
-    assert complete["state"] == "active"
+    assert complete["state"] == "prepared"
     assert complete["transfer"]["phase"] == "completed"
     assert complete["advances"][0]["request"] == advance
     validate_workflow(complete)

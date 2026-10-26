@@ -1191,6 +1191,46 @@
         "arguments"
       ],
       "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "action": {
+          "const": "operation.recover"
+        },
+        "resource": {
+          "allOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Resource"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "adapter",
+                    "app",
+                    "backend",
+                    "dns",
+                    "host",
+                    "publisher",
+                    "recovery",
+                    "source"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "arguments": {
+          "$ref": "actions.schema.json#/$defs/operation.recover"
+        }
+      },
+      "required": [
+        "action",
+        "resource",
+        "arguments"
+      ],
+      "additionalProperties": false
     }
   ],
   "$defs": {
@@ -1288,15 +1328,15 @@
     "app.secrets-adopt": {
       "type": "object",
       "properties": {
-        "bundle_receipt": {
+        "publication_receipt": {
           "$ref": "common.schema.json#/$defs/MaterialDigest"
         }
       },
       "required": [
-        "bundle_receipt"
+        "publication_receipt"
       ],
       "additionalProperties": false,
-      "description": "Adopt the exact published secret generation identified by its bundle receipt for this application. Publishing a secret and switching a consumer to it are separate operations."
+      "description": "Adopt the exact completed provider-neutral publication receipt under current local authorization. Verify its accepted secret-source binding, catalogue, entry, immutable version and protected material custody before changing consumers. Publication success alone does not establish adoption or application health."
     },
     "app.restore": {
       "type": "object",
@@ -1651,15 +1691,15 @@
     "host.secrets-adopt": {
       "type": "object",
       "properties": {
-        "bundle_receipt": {
+        "publication_receipt": {
           "$ref": "common.schema.json#/$defs/MaterialDigest"
         }
       },
       "required": [
-        "bundle_receipt"
+        "publication_receipt"
       ],
       "additionalProperties": false,
-      "description": "Adopt the exact published secret generation identified by its bundle receipt for the host. Consumer adoption remains distinct from publishing or rotating the secret value."
+      "description": "Adopt the exact completed provider-neutral publication receipt under current local authorization. Verify its accepted secret-source binding, catalogue, entry, immutable version and protected material custody before changing consumers. Publication success alone does not establish adoption or application health."
     },
     "host.recover": {
       "type": "object",
@@ -1763,29 +1803,61 @@
     "publisher.publish": {
       "type": "object",
       "properties": {
+        "source": {
+          "allOf": [
+            {
+              "$ref": "adapter.schema.json#/$defs/InstanceReference"
+            },
+            {
+              "properties": {
+                "role": {
+                  "const": "secret-source"
+                }
+              }
+            }
+          ]
+        },
+        "entry": {
+          "$ref": "common.schema.json#/$defs/Entry"
+        },
+        "consumer": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "version": {
+          "$ref": "adapter.schema.json#/$defs/Handle"
+        },
+        "catalogue_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
         "candidate": {
           "$ref": "common.schema.json#/$defs/Handle"
         },
         "expected_previous": {
           "anyOf": [
             {
-              "type": "string",
-              "minLength": 71,
-              "maxLength": 71,
-              "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
+              "$ref": "adapter.schema.json#/$defs/SecretPublicationPredecessor"
             },
             {
               "type": "null"
             }
           ]
+        },
+        "evidence_schema": {
+          "$ref": "common.schema.json#/$defs/SchemaIdentity"
         }
       },
       "required": [
+        "source",
+        "entry",
+        "consumer",
+        "version",
+        "catalogue_digest",
         "candidate",
-        "expected_previous"
+        "expected_previous",
+        "evidence_schema"
       ],
       "additionalProperties": false,
-      "description": "Publish the exact secret-bundle candidate against its expected predecessor. Publication alone neither rotates an issuer value nor confirms that consumers have adopted the new generation."
+      "description": "Publish this exact protected secret-candidate to the accepted secret-source instance, entry, consumer and immutable version under the reviewed catalogue digest. Independently compare the typed predecessor before publication and retain provider-specific evidence under its installed pinned schema. The candidate is held by the publishing owner. Publication alone neither rotates an issuer value nor confirms consumer adoption. Backend bundle, key-value and versioned-store details are opaque to this core action. evidence_schema is the independently installed provider publication-evidence schema pinned during review; output cannot select another schema."
     },
     "publisher.recover": {
       "type": "object",
@@ -1804,7 +1876,7 @@
         "candidate_digest"
       ],
       "additionalProperties": false,
-      "description": "Resolve the exact interrupted secret publication using its publication identity and candidate digest. A lost reply does not authorize publishing a different candidate."
+      "description": "Reconcile the exact interrupted publication using its retained receipt, publication identity and candidate digest. Retained source binding, entry, consumer, catalogue, predecessor and protected candidate cannot change. Recovery cannot invent a replacement destination or immutable version; a changed candidate requires fresh review. A lost reply is not proof of nonpublication."
     },
     "recovery.publish": {
       "type": "object",
@@ -1901,6 +1973,34 @@
       ],
       "additionalProperties": false,
       "description": "Explicitly attach a known backup repository or initialize the selected new one under the reviewed mode. Unknown initialization outcomes require reconciliation rather than another initialization attempt."
+    },
+    "operation.recover": {
+      "type": "object",
+      "properties": {
+        "operation_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "disposition": {
+          "const": "native-reconcile"
+        },
+        "origin": {
+          "anyOf": [
+            {
+              "$ref": "owner-history.schema.json#/$defs/RecoveryOrigin"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "operation_id",
+        "disposition",
+        "origin"
+      ],
+      "additionalProperties": false,
+      "description": "Reconcile one exact original Operation through its receiving local owner and independently installed native recovery procedure. The reviewed resource must equal the original Operation resource, including adapter, publisher, source, DNS and backend resources. Resolve the original action, retained invocation, protected inputs and effects from owner custody; do not choose a new executor or infer no effect from a timeout. Planning explicitly refuses unsupported native reconciliation. Current scoped administrator approval, positive native cessation/fencing and retained holds are required. The original Operation remains immutable; this new request has its own Plan and identity. origin is null only for a current-epoch Operation; historical work requires exact retained reference and current-authority custody."
     }
   }
 }

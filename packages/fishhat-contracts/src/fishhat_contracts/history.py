@@ -193,7 +193,7 @@ def validate_history_result(
 def validate_recovery_plan_origin(plan: dict[str, Any]) -> None:
     """Check historical recovery provenance already covered by the complete Plan digest."""
     subject = plan["subject"]
-    if subject["action"] not in ("app.recover", "host.recover"):
+    if subject["action"] not in ("app.recover", "host.recover", "operation.recover"):
         return
     origin = subject["arguments"]["origin"]
     if origin is None:
@@ -205,7 +205,10 @@ def validate_recovery_plan_origin(plan: dict[str, Any]) -> None:
         "historical recovery operation substitution",
     )
     expected_action = "app.recover" if plan["owner"]["tool"] == "app-ops" else "host.recover"
-    _require(subject["action"] == expected_action, "historical recovery owner tool mismatch")
+    _require(
+        subject["action"] in {expected_action, "operation.recover"},
+        "historical recovery owner tool mismatch",
+    )
 
 
 def validate_historical_recovery(
@@ -236,7 +239,7 @@ def validate_historical_recovery(
     _require(plan["owner"] == current_owner, "historical recovery needs current owner")
     validate_owner_custody(verified_custody, expected_custodian=current_owner)
     _require(
-        plan["subject"]["action"] in ("app.recover", "host.recover"),
+        plan["subject"]["action"] in ("app.recover", "host.recover", "operation.recover"),
         "historical recovery requires a recovery action",
     )
     origin = plan["subject"]["arguments"]["origin"]

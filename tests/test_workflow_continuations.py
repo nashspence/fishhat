@@ -10,6 +10,7 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from fishhat_client.wire import frame
 from fishhat_contracts.handoffs import PHASES, schema_identity, validate_workflow
+from fishhat_contracts.publication import validate_publication_result
 from fishhat_contracts.transfers import validate_transfer_request
 from fishhat_contracts.validation import MAX_BYTES, ContractError, canonical, digest, validate
 from fishhat_contracts.witness import sign
@@ -23,7 +24,12 @@ from fishhat_contracts.workflows import (
 from tests.test_contracts import uid
 from tests.test_owner_handoffs import operation, request, staged_workflow_input, workflow
 from tests.test_plan_review import reseal
-from tests.test_workflow_inputs import adapter_proposal, material_handle, rotation_intent
+from tests.test_workflow_inputs import (
+    adapter_proposal,
+    material_handle,
+    publication_evidence,
+    rotation_intent,
+)
 from tests.test_workflow_transfer import capsule, proposal
 
 CHECK_PURPOSE = {
@@ -169,8 +175,8 @@ def context(query):
     }
 
 
-def publication_stage():
-    intent = rotation_intent()
+def publication_stage(provider="forgejo-age"):
+    intent = rotation_intent(provider)
     value = move(prepare(intent), "issuer-changing")
     issuer, publisher, _ = intent["participants"]
     reference = intent["target"]["issuer_change"]
@@ -211,7 +217,14 @@ def publication_stage():
     subject = {
         "action": "publisher.publish",
         "resource": publisher["resource"],
-        "arguments": {"candidate": candidate, "expected_previous": None},
+        "arguments": {
+            **{
+                key: item
+                for key, item in publisher["requests"][0]["intent"].items()
+                if key not in {"kind", "issuer"}
+            },
+            "candidate": candidate,
+        },
     }
     query = bind_request(
         value, publisher, subject, issued, content=[candidate, copied_output], material=material
@@ -219,37 +232,59 @@ def publication_stage():
     return value, query
 
 
-def adoption_stage():
-    value, publication = publication_stage()
+def seal_publication(receipt):
+    body = {k: v for k, v in operation()["witness"].items() if k != "signature"}
+    body.update(
+        owner=receipt["custodian"],
+        kind="publication",
+        state=receipt["state"],
+        subject_digest=digest({k: v for k, v in receipt.items() if k != "witness"}),
+    )
+    receipt["witness"] = sign(body, Ed25519PrivateKey.from_private_bytes(b"\x18" * 32))
+    return receipt
+
+
+def adoption_stage(provider="forgejo-age"):
+    value, publication = publication_stage(provider)
     value = bind_workflow(publication, value, **context(publication))
     value = move(value, "publishing")
     intent = value["proposal"]
     publisher, consumer = intent["participants"][1:]
     reference = intent["target"]["publication"]
     published = successful(reference, publication["binding"])
-    candidate = publication["binding"]["plan"]["subject"]["arguments"]["candidate"]
+    subject = publication["binding"]["plan"]["subject"]
+    arguments = subject["arguments"]
+    candidate = arguments["candidate"]
+    evidence, evidence_schema = publication_evidence(provider)
     receipt = {
         "format": "deployment-ops/publication/v1",
         "id": str(uuid.uuid4()),
-        "repository": {"instance": uid("repository"), "repository_id": 1, "name": "demo/secrets"},
-        "tag": "secrets-bundle",
-        "asset": "secrets.tar.age",
-        "catalogue_digest": digest({"catalogue": 1}),
-        "previous": None,
+        **{
+            key: copy.deepcopy(arguments[key])
+            for key in ("source", "entry", "consumer", "version", "catalogue_digest")
+        },
+        "previous": arguments["expected_previous"],
         "current": {
-            "release_id": 17,
-            "asset_id": 23,
-            "ciphertext_digest": candidate["digest"],
+            "version": arguments["version"],
+            "artifact_digest": candidate["digest"],
             "bytes": candidate["size"],
-            "generation": uid("new-secret-generation"),
         },
         "custodian": publisher["owner"],
         "recovery_handle": candidate,
         "state": "completed",
         "verified_at": NOW,
+        "provider_evidence": {
+            "schema": schema_identity(
+                evidence_schema["$id"], {evidence_schema["$id"]: evidence_schema}
+            ),
+            "handle": material_handle(
+                publisher["owner"], digest(evidence), size=len(canonical(evidence))
+            ),
+        },
         "witness": copy.deepcopy(published["witness"]),
     }
-    validate("publisher-receipt.schema.json", receipt)
+    seal_publication(receipt)
+    validate_publication_result(receipt, subject, expected_custodian=publisher["owner"])
     handle = attach_result(published, receipt, consumer["owner"])
     material = seal_material(
         {
@@ -264,7 +299,7 @@ def adoption_stage():
     subject = {
         "action": "app.secrets-adopt",
         "resource": consumer["resource"],
-        "arguments": {"bundle_receipt": digest(receipt)},
+        "arguments": {"publication_receipt": digest(receipt)},
     }
     query = bind_request(value, consumer, subject, published, content=[handle], material=material)
     return value, query
@@ -307,11 +342,12 @@ def test_partial_preparation_retains_one_independently_authorized_initial_driver
         )
 
 
-def test_rotation_prepares_without_future_receipt_then_retains_exact_issued_publication():
-    intent = rotation_intent()
+@pytest.mark.parametrize("provider", ["forgejo-age", "openbao-kv"])
+def test_rotation_prepares_without_future_receipt_then_retains_exact_issued_publication(provider):
+    intent = rotation_intent(provider)
     assert all("intent" in p["requests"][0] for p in intent["participants"][1:])
     assert not any(h["owner"] == intent["participants"][2]["owner"] for h in intent["content"])
-    value, query = adoption_stage()
+    value, query = adoption_stage(provider)
     original = copy.deepcopy(value["proposal"])
     completed = bind_workflow(query, value, **context(query))
     completed = move(completed, "completed")
@@ -320,9 +356,9 @@ def test_rotation_prepares_without_future_receipt_then_retains_exact_issued_publ
     assert len(completed["bindings"]) == 2
     assert (
         completed["bindings"][-1]["request"]["materials"][0]["publication_receipt"]["current"][
-            "asset_id"
+            "version"
         ]
-        == 23
+        == "opaque:" + provider + ":new-version"
     )
     # The complete accepted continuation is retrievable without the original client.
     restored = copy.deepcopy(completed)
@@ -394,14 +430,14 @@ def test_output_binding_rejects_substitution_without_independent_review_and_cust
     elif change in {"issuer", "publisher"}:
         query["materials"][0]["producer"]["request_id"] = uid("different-" + change)
     elif change == "changed-subject":
-        query["binding"]["plan"]["subject"]["arguments"]["bundle_receipt"] = digest(
+        query["binding"]["plan"]["subject"]["arguments"]["publication_receipt"] = digest(
             {"unrelated": 1}
         )
         reseal(query["binding"]["plan"])
     else:
         receipt = query["materials"][0]["publication_receipt"]
         if change == "receipt-candidate":
-            receipt["current"]["ciphertext_digest"] = digest({"old": 1})
+            receipt["current"]["artifact_digest"] = digest({"old": 1})
         elif change == "receipt-bytes":
             receipt["current"]["bytes"] += 1
         elif change == "receipt-custodian":
@@ -484,12 +520,13 @@ def test_retained_phase_history_cannot_erase_or_backdate_its_required_binding(ch
         validate_workflow(finished)
 
 
-def test_same_ciphertext_other_publication_receipt_is_not_the_exact_child_output():
+def test_same_material_other_publication_receipt_is_not_the_exact_child_output():
     value, query = adoption_stage()
     changed = copy.deepcopy(query)
     material = changed["materials"][0]
     receipt = material["publication_receipt"]
-    receipt["current"]["asset_id"] += 1
+    receipt["id"] = uid("another-publication")
+    seal_publication(receipt)
     replacement = material_handle(
         material["material"]["owner"], digest(receipt), size=len(canonical(receipt))
     )
@@ -502,7 +539,7 @@ def test_same_ciphertext_other_publication_receipt_is_not_the_exact_child_output
     plan["input_digests"] = [
         digest(receipt) if d == old_digest else d for d in plan["input_digests"]
     ]
-    plan["subject"]["arguments"]["bundle_receipt"] = digest(receipt)
+    plan["subject"]["arguments"]["publication_receipt"] = digest(receipt)
     reseal(plan)
     seal_material(material, value["id"])
     # Even a newly reviewed envelope cannot substitute another operation output.

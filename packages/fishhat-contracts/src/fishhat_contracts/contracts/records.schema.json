@@ -756,7 +756,8 @@
           "type": "string",
           "minLength": 71,
           "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
+          "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])",
+          "description": "Digest of the exact retained reviewed Plan, including its original ID. Together with this owner it is the complete plan.get lookup, independently recoverable from this Operation without client state."
         },
         "generation": {
           "type": "integer",
@@ -988,7 +989,25 @@
         "result_handle"
       ],
       "additionalProperties": false,
-      "description": "An exact request accepted by a local management program. Its execution state and effect certainty answer different questions; failed, cancelled or quarantined work can still retain effects and resource holds. The human caller can disconnect without erasing the accepted responsibility."
+      "description": "An exact request accepted by a local management program. Its execution state and effect certainty answer different questions; failed, cancelled or quarantined work can still retain effects and resource holds. Succeeded requires known effect certainty in every representation, including pages and transferred snapshots. The witness owner identity and epoch equal this owner; shared semantic validation enforces that join. Signature authentication, record-digest verification, current authority and native outcome verification remain independently required receiving boundaries. The exact retained Plan is identified by owner and plan_digest and remains readable despite admission expiry while this Operation requires accepted replay or recovery custody. The human caller can disconnect without erasing the accepted responsibility.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "succeeded"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "effect_certainty": {
+                "const": "known"
+              }
+            }
+          }
+        }
+      ]
     },
     "Event": {
       "type": "object",
@@ -1505,7 +1524,6 @@
             "prepared",
             "active",
             "paused",
-            "transfer-pending",
             "recovery-required",
             "completed",
             "cancelled"
@@ -1948,6 +1966,9 @@
           "items": {
             "$ref": "workflow.schema.json#/$defs/BindReceipt"
           }
+        },
+        "recovery": {
+          "$ref": "workflow-recovery.schema.json#/$defs/RecoveryCustody"
         }
       },
       "required": [
@@ -1972,25 +1993,7 @@
         "bindings"
       ],
       "additionalProperties": false,
-      "description": "A finite procedure coordinating exact participant operations while each local owner retains authority and accepted state. A workflow is not a permanent central controller or an authorization supplied by an optional tracker. Each receiving owner retains its own identified, generation-checked capsule before child effects. Preparation records no accepted native operation. An authorized caller can enumerate these capsules without knowing a workflow ID; optional tracking is never required. A transfer-pending capsule includes its complete retained transfer proposal and original locally accepted phase inputs. workflow.get and workflow.list expose them under current receiving authorization so recovery never depends on the original client or an optional report. The complete immutable proposal and its canonical digest survive original-client loss; its type, workflow ID and complete child-request/Plan closure match this capsule. advances retains original accepted advance inputs and finite outcomes. Transfer completion is performed only through workflow.advance with the full commit closure; it preserves or advances the installed procedure phase atomically with transfer completion. bindings retains complete later-reviewed child Plans, authenticated predecessor/material lineage and original binding requests without changing the immutable proposal. Unbound continuation slots cannot authorize child work or be skipped when completing their installed phase.",
-      "allOf": [
-        {
-          "if": {
-            "properties": {
-              "state": {
-                "const": "transfer-pending"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "transfer": {
-                "$ref": "records.schema.json#/$defs/WorkflowTransfer"
-              }
-            }
-          }
-        }
-      ]
+      "description": "A finite procedure coordinating exact participant operations while each local owner retains authority and accepted state. A workflow is not a permanent central controller or an authorization supplied by an optional tracker. Each receiving owner retains its own identified, generation-checked capsule before child effects. Preparation records no accepted native operation. An authorized caller can enumerate these capsules without knowing a workflow ID; optional tracking is never required. A capsule with an incomplete transfer includes its complete retained transfer proposal and original locally accepted phase inputs. workflow.get and workflow.list expose them under current receiving authorization so recovery never depends on the original client or an optional report. The complete immutable proposal and its canonical digest survive original-client loss; its type, workflow ID and complete child-request/Plan closure match this capsule. advances retains original accepted advance inputs and finite outcomes. Transfer completion is performed only through workflow.advance with the full commit closure; it preserves the installed procedure phase and lifecycle state atomically with transfer completion. A separate normally authorized advance owns subsequent phase progress. bindings retains complete later-reviewed child Plans, authenticated predecessor/material lineage and original binding requests without changing the immutable proposal. Unbound continuation slots cannot authorize child work or be skipped when completing their installed phase. Driver-transfer progress is orthogonal to lifecycle state. Freeze and commit preserve prepared, active, paused or recovery-required status; completion changes only transfer custody and driver authority. Terminal capsules reject new transfers, while exact previously accepted transfer requests remain replayable. Recovery custody is present only on a newly identified successor prepared through workflow.recover; incomplete recovery preparation forbids child admission, binding, phase advance and transfer. Its committed lineage never retargets original records or reexecutes completed child slots."
     },
     "Hold": {
       "type": "object",
@@ -4407,7 +4410,7 @@
         },
         "history_complete": {
           "type": "boolean",
-          "description": "False explicitly reports that terminal history has been pruned. Active, uncertain and recovery-required work must remain discoverable. Neither page exhaustion nor historical absence proves no earlier effect."
+          "description": "False explicitly reports that terminal history has been pruned. Active, uncertain and recovery-required work must remain discoverable. Neither page exhaustion nor historical absence proves no earlier effect. Terminal detail collection never frees accepted request identities. The original owner epoch retains exact replay and changed-payload rejection independently of this listing; capacity exhaustion refuses new identities instead of reusing accepted ones."
         }
       },
       "required": [
@@ -4604,7 +4607,8 @@
             "source-proposal",
             "native-config",
             "secret-candidate",
-            "workflow-input"
+            "workflow-input",
+            "plan-input"
           ]
         },
         "digest": {
@@ -4845,7 +4849,7 @@
         "commit_witnesses"
       ],
       "additionalProperties": false,
-      "description": "Discoverable transfer custody retained in every receiving Workflow. accepted_phases preserves each locally accepted input; freeze_witnesses and commit_witnesses retain independently verified evidence with states frozen and transferred respectively. Missing evidence remains missing. Freeze retains the original driver; commit records this owner's durable new term only after the complete freeze closure; completed additionally requires every participant-owner commit witness. A partial transfer remains transfer-pending and cannot silently restore old admission or authorize a different transfer. An owner keeps exact replay results in protected history even after this field records a later transfer. Restored epochs require explicit recovery rather than inventing or retargeting the original transfer. Freeze phase includes this receiving owner's frozen witness; an input accepted without its retrievable local prerequisite is not a completed freeze. Transfer witnesses use the same proposal digest and exact owner epoch, and their generation identifies the local durable phase commit; later capsule changes preserve them. Each local phase witness generation is greater than its original expected_generation and no greater than the current capsule generation; the local freeze witness generation is no greater than the original commit expected_generation. The new driver delivers the complete transferred-witness closure through workflow.advance.transfer_completion. That advance atomically marks this transfer completed and retains its immutable AdvanceReceipt; exact accepted replay cannot repeat the transition."
+      "description": "Discoverable transfer custody retained in every receiving Workflow. accepted_phases preserves each locally accepted input; freeze_witnesses and commit_witnesses retain independently verified evidence with states frozen and transferred respectively. Missing evidence remains missing. Freeze retains the original driver; commit records this owner's durable new term only after the complete freeze closure; completed additionally requires every participant-owner commit witness. A partial transfer remains incomplete in this orthogonal transfer record and cannot silently restore old admission or authorize a different transfer. An owner keeps exact replay results in protected history even after this field records a later transfer. Restored epochs require explicit recovery rather than inventing or retargeting the original transfer. Freeze phase includes this receiving owner's frozen witness; an input accepted without its retrievable local prerequisite is not a completed freeze. Transfer witnesses use the same proposal digest and exact owner epoch, and their generation identifies the local durable phase commit; later capsule changes preserve them. Each local phase witness generation is greater than its original expected_generation and no greater than the current capsule generation; the local freeze witness generation is no greater than the original commit expected_generation. Lifecycle state is never overwritten by transfer progress. Paused and recovery-required restrictions survive completion; transfer is not a recovery action. The new driver delivers the complete transferred-witness closure through workflow.advance.transfer_completion. That advance atomically marks this transfer completed and retains its immutable AdvanceReceipt; exact accepted replay cannot repeat the transition. Lifecycle changes do not erase accepted freeze or commit custody: a later cancelled or completed capsule retains that incomplete evidence for inspection and exact accepted replay, without permission for a new phase. Completion preserves the current procedure phase; it cannot be combined with resumption or ordinary phase progress."
     },
     "WorkflowTransferWitness": {
       "allOf": [

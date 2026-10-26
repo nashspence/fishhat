@@ -180,7 +180,9 @@ def handoff(role, method):
 
 def attempt_for(query):
     inputs = query["input"]
-    executor = inputs.get("binding") or inputs.get("issuer")
+    executor = (
+        inputs.get("binding") or inputs.get("issuer") or inputs.get("target", {}).get("executor")
+    )
     if executor is None and "lease" in inputs:
         executor = inputs["lease"]["issuer"]
     if executor is None:

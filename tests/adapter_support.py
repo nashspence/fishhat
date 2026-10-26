@@ -4,7 +4,7 @@ import copy
 import json
 from pathlib import Path
 
-from fishhat_adapters import Registry, runtime_binding_digest
+from fishhat_adapters import Registry, instance_reference, runtime_binding_digest
 from fishhat_contracts.validation import digest, strict_yaml
 
 from tests.support import ROOT
@@ -92,7 +92,7 @@ def service_instance(registry: Registry, *, controller: str = "native-demo") -> 
     path = next(p for p in descriptors() if "services" in p.parts and "systemd" in p.parts)
     descriptor = json.loads(path.read_text())
     descriptor["id"] = "independent-author.example-service"
-    descriptor["implemented"] = ["service.set-activity"]
+    descriptor["implemented"] = ["service.apply", "service.observe", "service.reconcile"]
     installation_digest = "sha256:" + "b" * 64
     registry.install(
         {
@@ -129,11 +129,36 @@ def service_instance(registry: Registry, *, controller: str = "native-demo") -> 
     }
 
 
-def service_request(activity: str = "running") -> dict:
+def service_source_target(registry: Registry) -> dict:
+    instance = registry.inspect_instance("service-demo")
+    descriptor = json.loads(
+        next(p for p in descriptors() if "services" in p.parts and "systemd" in p.parts).read_text()
+    )
+    target = {
+        "selection": {
+            "instance": instance["id"],
+            "source_schema_digest": digest(descriptor["source_schema"]),
+            "source": {"unit": SERVICE},
+        },
+        "executor": instance_reference(instance, SCOPE),
+        "namespace": copy.deepcopy(NAMESPACE),
+    }
+    registry.enroll_source_target(target, owner_approved=True)
+    return target
+
+
+def service_request(activity: str = "running", registry: Registry | None = None) -> dict:
+    if registry is None:
+        registry, _, _ = runtime_registry()
+        registry.enroll(service_instance(registry), owner_approved=True)
     return {
         "contract": "fishhat.service",
-        "method": "set-activity",
-        "input": {"scope": copy.deepcopy(SCOPE), "service": SERVICE, "activity": activity},
+        "method": "apply",
+        "input": {
+            "scope": copy.deepcopy(SCOPE),
+            "target": service_source_target(registry),
+            "intent": {"enabled": True, "activity": activity, "transition": "ensure"},
+        },
     }
 
 

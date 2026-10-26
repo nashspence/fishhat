@@ -1,0 +1,20 @@
+{
+  "format": "deployment-ops/plan-input/v1",
+  "owner": {
+    "tool": "app-ops",
+    "id": "ba5b6d5e-b99f-54b0-aa13-313a5a66ce56",
+    "epoch": "3eded73b-a782-5f71-952f-d915b376de10"
+  },
+  "subject": {
+    "action": "app.restart",
+    "resource": {
+      "kind": "app",
+      "id": "demo-app"
+    },
+    "arguments": {
+      "components": [
+        "web"
+      ]
+    }
+  }
+}

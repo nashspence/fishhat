@@ -127,6 +127,9 @@
             },
             {
               "$ref": "owner-history.schema.json#/$defs/HistoricalContentChunk"
+            },
+            {
+              "$ref": "workflow-recovery.schema.json#/$defs/Abandonment"
             }
           ]
         },
@@ -185,7 +188,8 @@
                   "OwnerHistoryPage",
                   "HistoricalRecordPage",
                   "HistoricalRecordChunk",
-                  "HistoricalContentChunk"
+                  "HistoricalContentChunk",
+                  "WorkflowAbandonment"
                 ]
               }
             },

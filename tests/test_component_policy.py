@@ -65,7 +65,7 @@ def test_preserved_owner_journal_replays_and_retains_epoch(tmp_path):
     owner = "00000000-0000-4000-8000-000000000001"
     epoch = "00000000-0000-4000-8000-000000000002"
     request = "00000000-0000-4000-8000-000000000003"
-    subject = json.loads((FIXTURES / "owner-request.json").read_text())["params"]["subject"]
+    subject = json.loads((FIXTURES / "plan-input.json").read_text())["subject"]
     journal = Journal(path, owner, epoch)
     try:
         receipt = journal.submit(

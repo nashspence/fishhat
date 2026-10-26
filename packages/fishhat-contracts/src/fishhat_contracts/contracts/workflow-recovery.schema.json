@@ -1,0 +1,681 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fishhat.invalid/contracts/workflow-recovery.schema.json",
+  "$defs": {
+    "Origin": {
+      "type": "object",
+      "properties": {
+        "reference": {
+          "allOf": [
+            {
+              "$ref": "common.schema.json#/$defs/RecordReference"
+            },
+            {
+              "properties": {
+                "record": {
+                  "properties": {
+                    "kind": {
+                      "const": "Workflow"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "custody": {
+          "anyOf": [
+            {
+              "$ref": "owner-history.schema.json#/$defs/OwnerCustody"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "reference",
+        "custody"
+      ],
+      "additionalProperties": false,
+      "description": "The independently selected latest authoritative predecessor capsule snapshot, using the current v1 semantic record schema closure. Historical epochs require the current custodian OwnerCustody. Original bytes, partial transfer inputs/witnesses, bindings, outcomes and holds remain unchanged. A same-epoch origin has null custody. Client-selected older snapshots cannot erase later work. A different historical schema closure is explicitly unsupported for workflow recovery even when an installed reader can inspect it."
+    },
+    "Participant": {
+      "type": "object",
+      "properties": {
+        "origin": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        }
+      },
+      "required": [
+        "origin",
+        "owner"
+      ],
+      "additionalProperties": false,
+      "description": "One current custodian for every original participant owner. Tool and logical owner ID stay fixed; an epoch change requires verified restoration custody and native fencing. The complete owner/resource closure is retained, without inventing replacement participants or dropping unreachable originals."
+    },
+    "OperationEvidence": {
+      "type": "object",
+      "properties": {
+        "reference": {
+          "allOf": [
+            {
+              "$ref": "common.schema.json#/$defs/RecordReference"
+            },
+            {
+              "properties": {
+                "record": {
+                  "properties": {
+                    "kind": {
+                      "const": "Operation"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "operation": {
+          "$ref": "records.schema.json#/$defs/Operation"
+        }
+      },
+      "required": [
+        "reference",
+        "operation"
+      ],
+      "additionalProperties": false,
+      "description": "Exact independently verified latest Operation snapshot and complete decoded record. The reference binds its original bytes, owner epoch, operation ID and generation. The operation must join the original retained child Plan and request identity; shape and a caller-supplied digest are not authentication. The reference must pin the current v1 Operation semantic closure; differently shaped historical schemas remain inspection-only."
+    },
+    "RecoveryEvidence": {
+      "type": "object",
+      "properties": {
+        "reference": {
+          "allOf": [
+            {
+              "$ref": "common.schema.json#/$defs/RecordReference"
+            },
+            {
+              "properties": {
+                "record": {
+                  "properties": {
+                    "kind": {
+                      "const": "Operation"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "operation": {
+          "$ref": "records.schema.json#/$defs/Operation"
+        },
+        "plan": {
+          "$ref": "records.schema.json#/$defs/Plan"
+        }
+      },
+      "required": [
+        "reference",
+        "operation",
+        "plan"
+      ],
+      "additionalProperties": false,
+      "description": "A separate, already successful current-authority operation.recover operation, or a compatible scoped app.recover/host.recover operation, whose exact Plan targets the failed, cancelled or quarantined original operation on the same owned resource. Known success is required; native retirement additionally proves cessation, reconciled effects and continuing hold/material custody. The generic operation dispatches recovery to the original installed action owner and does not pretend an unsupported native procedure exists. This does not retroactively label the original child successful."
+    },
+    "ChildDisposition": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "origin": {
+              "$ref": "workflow.schema.json#/$defs/ChildReference"
+            },
+            "successor": {
+              "$ref": "workflow.schema.json#/$defs/ChildReference"
+            },
+            "kind": {
+              "const": "unaccepted"
+            }
+          },
+          "required": [
+            "origin",
+            "successor",
+            "kind"
+          ],
+          "additionalProperties": false,
+          "description": "The owner positively proves this exact old request was never accepted and durably closes future old-identity admission. Timeout, missing client records and an empty restored journal are not proof. The successor uses a fresh request ID and separately reviewed Plan."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "origin": {
+              "$ref": "workflow.schema.json#/$defs/ChildReference"
+            },
+            "successor": {
+              "$ref": "workflow.schema.json#/$defs/ChildReference"
+            },
+            "kind": {
+              "const": "completed"
+            },
+            "operation": {
+              "$ref": "workflow-recovery.schema.json#/$defs/OperationEvidence"
+            }
+          },
+          "required": [
+            "origin",
+            "successor",
+            "kind",
+            "operation"
+          ],
+          "additionalProperties": false,
+          "description": "Preserve exact succeeded/known original work as a nonexecutable CompletedBinding. A new driver or epoch cannot repeat it as a fresh child."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "origin": {
+              "$ref": "workflow.schema.json#/$defs/ChildReference"
+            },
+            "successor": {
+              "$ref": "workflow.schema.json#/$defs/ChildReference"
+            },
+            "kind": {
+              "const": "recovered"
+            },
+            "operation": {
+              "$ref": "workflow-recovery.schema.json#/$defs/OperationEvidence"
+            },
+            "recovery": {
+              "$ref": "workflow-recovery.schema.json#/$defs/RecoveryEvidence"
+            }
+          },
+          "required": [
+            "origin",
+            "successor",
+            "kind",
+            "operation",
+            "recovery"
+          ],
+          "additionalProperties": false,
+          "description": "Preserve the original terminal failure/uncertainty and the distinct successful recovery. The successor receives a new reviewed child request only after native retirement proves the original and recovery effects settled. Recovery success itself is not success of the original target."
+        }
+      ]
+    },
+    "RecoveryProposal": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/workflow-recovery/v1"
+        },
+        "recovery_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "workflow_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "origins": {
+          "type": "array",
+          "items": {
+            "$ref": "workflow-recovery.schema.json#/$defs/Origin"
+          },
+          "minItems": 1
+        },
+        "participants": {
+          "type": "array",
+          "items": {
+            "$ref": "workflow-recovery.schema.json#/$defs/Participant"
+          },
+          "minItems": 1
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "workflow-recovery.schema.json#/$defs/ChildDisposition"
+          },
+          "minItems": 1
+        },
+        "successor": {
+          "$ref": "workflow.schema.json#/$defs/WorkflowProposal"
+        },
+        "abandonments": {
+          "type": "array",
+          "items": {
+            "$ref": "workflow-recovery.schema.json#/$defs/AbandonmentClosure"
+          }
+        }
+      },
+      "required": [
+        "format",
+        "recovery_id",
+        "workflow_id",
+        "origins",
+        "participants",
+        "children",
+        "successor",
+        "abandonments"
+      ],
+      "additionalProperties": false,
+      "description": "One immutable, independently reviewed supersession intent. workflow_id is the new successor ID; every predecessor capsule belongs to the same original workflow/proposal. Every original participant resource and child appears exactly once in the successor mapping. Existing successes become nonexecutable fulfilled slots; positively unaccepted or separately recovered work gets fresh request identities. Current authority approves all new Plans/material/driver and preserves the complete old input, result, hold, transfer and recovery closure. Old epochs, failed results and driver terms are never rewritten or revived. abandonments is empty for an uncontested selection; replacing a reserved but unused successor requires the complete authenticated abandonment closure of each conflicting selection. The receiver resolves reservations by original lineage, never solely by a caller-chosen new ID. A failed partial preparation may be explicitly abandoned after all owners close it; the replacement selects fresh latest snapshots and dispositions. Recovery supports historical epochs whose records retain the current v1 semantic schema closure. Other installed historical readers provide inspection only and cannot silently reinterpret recovery evidence."
+    },
+    "Retirement": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/workflow-retirement/v1"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "origin": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "recovery_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "proposal_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "origin_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "children_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "native_evidence": {
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
+        },
+        "retained_closure_digest": {
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
+        },
+        "state": {
+          "const": "closed"
+        }
+      },
+      "required": [
+        "format",
+        "owner",
+        "origin",
+        "recovery_id",
+        "proposal_digest",
+        "origin_digest",
+        "children_digest",
+        "native_evidence",
+        "retained_closure_digest",
+        "state"
+      ],
+      "additionalProperties": false,
+      "description": "Protected receiving-owner proof for this exact recovery proposal and latest original capsule. Before acknowledging preparation, the owner durably closes every old child and driver admission, including both sides of an incomplete transfer, accounts for all accepted/in-flight work, proves native cessation/fencing, verifies every declared child disposition and retains original material/holds/evidence and readers. native_evidence and retained_closure_digest name independently verified retained material. A declaration, timeout, driver token, restored epoch or copied request cannot establish these facts. Closed old authority never reopens on timeout, failed successor preparation or replay; another supersession needs a separately reviewed procedure. Preparation atomically reserves this original lineage to the exact recovery_id, successor workflow ID and proposal digest. Another successor cannot prepare or commit until complete authenticated abandonment closes the previous unused selection at every current participant. Current authorization and exclusive selection are checked independently of any supplied witness."
+    },
+    "Preparation": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "recovery_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "proposal_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "retirement": {
+          "$ref": "workflow-recovery.schema.json#/$defs/Retirement"
+        },
+        "witness": {
+          "$ref": "records.schema.json#/$defs/Witness"
+        }
+      },
+      "required": [
+        "owner",
+        "recovery_id",
+        "proposal_digest",
+        "retirement",
+        "witness"
+      ],
+      "additionalProperties": false,
+      "description": "Durable local supersession preparation retained in the discoverable new Workflow before acknowledgment. Its independently authenticated approval witness has state workflow-supersession-prepared, the new workflow ID and subject_digest over this entire Preparation except witness. It covers exact current authority, native retirement and retained original custody. Every distinct current participant owner must provide this exact preparation before any successor capsule commits. It is not a general execution or hold-release capability. This is an exclusive durable successor reservation, not a reusable approval for multiple candidates. All old authority remains retired if preparation is interrupted. The same immutable nonexecutable proposal may be materialized after its Plans expire, but every actual child still requires normal fresh Plan and current-generation admission. An inconsistent or unusable partial selection requires explicit all-owner abandonment before replacement."
+    },
+    "PrepareRequest": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "phase": {
+          "const": "prepare"
+        },
+        "proposal": {
+          "$ref": "workflow-recovery.schema.json#/$defs/RecoveryProposal"
+        }
+      },
+      "required": [
+        "owner",
+        "phase",
+        "proposal"
+      ],
+      "additionalProperties": false,
+      "description": "Prepare one receiving owner successor and durable old-admission retirement, atomically retaining the exact request, local preparation and discoverable nonexecutable Workflow. Every original participant must participate under current authority. Identical accepted replay returns the retained successor before freshness checks; changed input under its identity conflicts. Native authorization, latest snapshot/custody selection, positive disposition and fencing checks are mandatory and separate from this reference model. Resolve the current protected reservation by original lineage before considering the new workflow ID. Exact accepted replay precedes freshness; another reserved proposal conflicts unless this request includes its complete independently authenticated abandonment closure. Preparing or committing a capsule never refreshes a Plan or admits an effect."
+    },
+    "CommitRequest": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "phase": {
+          "const": "commit"
+        },
+        "workflow_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "recovery_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "proposal_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "expected_generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "preparations": {
+          "type": "array",
+          "items": {
+            "$ref": "workflow-recovery.schema.json#/$defs/Preparation"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "owner",
+        "phase",
+        "workflow_id",
+        "recovery_id",
+        "proposal_digest",
+        "expected_generation",
+        "preparations"
+      ],
+      "additionalProperties": false,
+      "description": "Commit a previously prepared successor only with the independently authenticated preparation closure of every distinct current participant owner and the exact locally retained preparation. Atomically retain the original commit input, full closure and one generation increment. Resolve exact accepted replay before freshness; modified closure conflicts. No old request, epoch, driver or failed operation becomes newly executable. Each local child still requires current normal Plan admission; successful original work remains a nonexecutable slot. The current protected selection must still be this exact successor and not abandoned; stale preparation witnesses cannot override an abandonment tombstone."
+    },
+    "RecoveryRequest": {
+      "oneOf": [
+        {
+          "$ref": "workflow-recovery.schema.json#/$defs/PrepareRequest"
+        },
+        {
+          "$ref": "workflow-recovery.schema.json#/$defs/CommitRequest"
+        },
+        {
+          "$ref": "workflow-recovery.schema.json#/$defs/AbandonRequest"
+        }
+      ]
+    },
+    "CommitReceipt": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "workflow-recovery.schema.json#/$defs/CommitRequest"
+        },
+        "request_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "request",
+        "request_digest",
+        "generation"
+      ],
+      "additionalProperties": false
+    },
+    "RecoveryCustody": {
+      "type": "object",
+      "properties": {
+        "phase": {
+          "enum": [
+            "prepared",
+            "committed",
+            "abandoned"
+          ]
+        },
+        "request": {
+          "$ref": "workflow-recovery.schema.json#/$defs/PrepareRequest"
+        },
+        "request_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "preparations": {
+          "type": "array",
+          "items": {
+            "$ref": "workflow-recovery.schema.json#/$defs/Preparation"
+          },
+          "minItems": 1
+        },
+        "commit": {
+          "anyOf": [
+            {
+              "$ref": "workflow-recovery.schema.json#/$defs/CommitReceipt"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "abandonment": {
+          "anyOf": [
+            {
+              "$ref": "workflow-recovery.schema.json#/$defs/AbandonmentOutcome"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "phase",
+        "request",
+        "request_digest",
+        "preparations",
+        "commit",
+        "abandonment"
+      ],
+      "additionalProperties": false,
+      "description": "Immutable lineage retained in a newly identified successor capsule. Prepared custody includes exactly the local preparation and forbids child admission, binding, advance and driver transfer. Committed custody retains complete participant preparation closure and the exact accepted commit outcome. workflow.get/list expose partial preparation even when no Operation exists. Original capsules and historical records remain readable through their unchanged references; a successor is fresh current-authority work, never an in-place rewrite or revival. Abandoned custody preserves the exact preparation/commit receipts and adds the permanent local abandonment outcome; new bind, advance, transfer, commit and child admission remain forbidden. Replays can return old accepted facts without restoring authority. Historical capsules are not retargeted; current protected state applies the same irrevocable tombstone."
+    },
+    "AbandonRequest": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "phase": {
+          "const": "abandon"
+        },
+        "proposal": {
+          "$ref": "workflow-recovery.schema.json#/$defs/RecoveryProposal"
+        },
+        "custody": {
+          "anyOf": [
+            {
+              "$ref": "owner-history.schema.json#/$defs/OwnerCustody"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "owner",
+        "phase",
+        "proposal",
+        "custody"
+      ],
+      "additionalProperties": false,
+      "description": "Explicit current-authority abandonment of one selected successor, including at an owner that never prepared it. Match the exact retained or independently verified proposal; historical participant epochs require verified current custody. Before acknowledgment atomically close every future prepare, commit, transfer and child admission for that successor, keep or complete original admission retirement, and positively prove that no new successor child was ever accepted. Preserve all ancestor inputs, holds, native evidence and accepted replay results. A missing journal entry, timeout or expired Plan is insufficient. If any successor child was accepted, abandonment fails and recovery must use the complete materialized successor instead. Exact authorized replay returns the retained bounded proof without reopening authority."
+    },
+    "Abandonment": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/workflow-abandonment/v1"
+        },
+        "kind": {
+          "const": "WorkflowAbandonment"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "origin": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "custody": {
+          "anyOf": [
+            {
+              "$ref": "owner-history.schema.json#/$defs/OwnerCustody"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "workflow_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "recovery_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "proposal_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "request_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "native_evidence": {
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
+        },
+        "retained_closure_digest": {
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
+        },
+        "state": {
+          "const": "abandoned"
+        },
+        "witness": {
+          "allOf": [
+            {
+              "$ref": "records.schema.json#/$defs/Witness"
+            },
+            {
+              "properties": {
+                "evidence_digests": {
+                  "const": []
+                }
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "owner",
+        "origin",
+        "custody",
+        "workflow_id",
+        "recovery_id",
+        "proposal_digest",
+        "request_digest",
+        "native_evidence",
+        "retained_closure_digest",
+        "state",
+        "witness"
+      ],
+      "additionalProperties": false,
+      "description": "Bounded independently authenticated proof that this current owner has permanently closed the exact unused successor and original admission, even if no successor capsule existed locally. origin is the selected proposal participant owner; an epoch change preserves that identity and requires its current OwnerCustody. The approval witness has state workflow-supersession-abandoned, workflow_id matching the abandoned successor, and subject_digest over this complete object except witness. Its evidence_digests is empty because this signed body already pins native and retained closure material. The proof is not an effect rollback or permission to release holds. Repeating the exact staged abandon request rediscovers the proof after client loss. Full current-participant closure is required to select a different successor; no partial proof releases an exclusive reservation."
+    },
+    "AbandonmentClosure": {
+      "type": "object",
+      "properties": {
+        "selection": {
+          "$ref": "workflow-recovery.schema.json#/$defs/Selection"
+        },
+        "proofs": {
+          "type": "array",
+          "items": {
+            "$ref": "workflow-recovery.schema.json#/$defs/Abandonment"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "selection",
+        "proofs"
+      ],
+      "additionalProperties": false,
+      "description": "The exact nonrecursive selection summary and independently authenticated abandonment by every distinct current participant owner. Its original workflow and owner/resource lineage remain unchanged. Every proof closes that selection permanently before a different successor may prepare. Native owners retain the complete earlier proposal, accepted input and ancestor custody; later requests refer to that immutable identity without copying recursive history."
+    },
+    "AbandonmentOutcome": {
+      "type": "object",
+      "properties": {
+        "proof": {
+          "$ref": "workflow-recovery.schema.json#/$defs/Abandonment"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "proof",
+        "generation"
+      ],
+      "additionalProperties": false,
+      "description": "Discoverable same-epoch abandonment outcome. Attach it atomically with one capsule generation increment and cancelled lifecycle while preserving original preparation and any accepted commit. Historical capsule bytes remain unchanged; their current custodian retains the proof and tombstone independently."
+    },
+    "Selection": {
+      "type": "object",
+      "properties": {
+        "workflow_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "recovery_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "proposal_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "original_workflow_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "participants": {
+          "type": "array",
+          "items": {
+            "$ref": "workflow-recovery.schema.json#/$defs/Participant"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "workflow_id",
+        "recovery_id",
+        "proposal_digest",
+        "original_workflow_id",
+        "participants"
+      ],
+      "additionalProperties": false,
+      "description": "Nonrecursive exact identity of a retained successor selection and its original/current owner closure. The proposal_digest commits the complete immutable proposal, which remains retrievable from protected preparation or abandonment custody under its workflow identity. The receiver compares this summary to its independently loaded reserved successor; a caller-selected digest cannot release a reservation. Earlier proposals are retained by their owners without recursive inline nesting or a fixed recovery-chain depth limit."
+    }
+  }
+}

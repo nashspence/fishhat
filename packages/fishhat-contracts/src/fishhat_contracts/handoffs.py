@@ -16,6 +16,7 @@ from urllib.parse import unquote, urldefrag, urljoin
 from jsonschema import Draft202012Validator
 from referencing import Registry, Resource
 
+from .operations import validate_operation
 from .validation import (
     FORMAT_CHECKER,
     MAX_BYTES,
@@ -209,27 +210,6 @@ def validate_staged_input(
     )
 
 
-def validate_result_reference(operation: dict[str, Any]) -> None:
-    validate("records.schema.json", operation, "Operation")
-    result = operation["result_handle"]
-    if result is None:
-        return
-    spec = ACTIONS[operation["subject"]["action"]]["result"]
-    _require(spec["mode"] != "receipt-only", "action declares no result payload")
-    handle = result["handle"]
-    _require(
-        handle["owner"] == operation["owner"]
-        and handle["binding"] == {"kind": "operation", "operation_id": operation["id"]},
-        "result handle operation binding mismatch",
-    )
-    if spec["mode"] == "schema":
-        uri = urljoin(SCHEMAS["records.schema.json"]["$id"], spec["schema"]["$ref"])
-        expected = schema_identity(uri)
-    else:
-        expected = operation["subject"]["arguments"][spec["subject_field"]]
-    _require(result["schema"] == expected, "action result schema substitution")
-
-
 def validate_result_payload(
     operation: dict[str, Any],
     data: bytes,
@@ -238,7 +218,7 @@ def validate_result_payload(
     installed: dict[str, dict[str, Any]] | None = None,
 ) -> Any:
     """Check transferred bytes and their declared schema; this supplies no owner authenticity."""
-    validate_result_reference(operation)
+    validate_operation(operation)
     result = operation["result_handle"]
     _require(result is not None, "operation has no result payload")
     handle = result["handle"]
@@ -260,6 +240,16 @@ def validate_result_payload(
         {"$ref": identity["uri"]}, registry=registry, format_checker=FORMAT_CHECKER
     )
     _require(not any(validator.iter_errors(value)), "result payload violates action schema")
+    action = operation["subject"]["action"]
+    if action in {"publisher.publish", "publisher.recover"}:
+        from .publication import validate_publication, validate_publication_result
+
+        if action == "publisher.publish":
+            validate_publication_result(
+                value, operation["subject"], expected_custodian=operation["owner"]
+            )
+        else:
+            validate_publication(value)
     return value
 
 
@@ -277,11 +267,15 @@ def validate_cli_result(
         return
     kind = result.get("kind")
     if kind == "Operation":
-        validate_result_reference(result)
+        validate_operation(result)
     elif kind == "Workflow":
         validate_workflow(result)
     elif kind == "ContentStaging":
         validate_staging(result)
+    elif kind == "WorkflowAbandonment":
+        from .workflow_abandonment import validate_abandonment
+
+        validate_abandonment(result)
     elif kind in (
         "OwnerHistoryPage",
         "HistoricalRecordPage",

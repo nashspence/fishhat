@@ -302,7 +302,7 @@
       "repeat": "read-only",
       "admission": "any"
     },
-    "set-activity": {
+    "apply": {
       "effect": true,
       "repeat": "reconcile-before-repeat",
       "admission": "any"
