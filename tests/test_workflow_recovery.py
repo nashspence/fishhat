@@ -17,11 +17,19 @@ from fishhat_contracts.workflow_recovery import (
     prepare_workflow_recovery,
     validate_recovery_proposal,
 )
+from fishhat_contracts.workflow_settlement import record_native_completion
+from fishhat_contracts.workflow_unprepared import origin_digest, origin_owner
 from fishhat_contracts.workflows import advance_workflow, decode_workflow_input, prepare_workflow
 
 from tests.operation_support import seal_operation
 from tests.test_contracts import uid
-from tests.test_owner_handoffs import operation, request, staged_workflow_input, workflow
+from tests.test_owner_handoffs import (
+    operation,
+    preparation_witnesses,
+    request,
+    staged_workflow_input,
+    workflow,
+)
 from tests.test_owner_history import custody_for
 from tests.test_plan_review import reseal
 from tests.test_workflow_continuations import (
@@ -44,6 +52,7 @@ from tests.test_workflow_transfer import (
 from tests.test_workflow_transfer import (
     proposal as transfer_proposal,
 )
+from tests.workflow_evidence_support import phase_evidence, seal_phase_participant
 
 CHECK_PURPOSE = {
     "purpose": "public-contract",
@@ -151,6 +160,29 @@ def remap_children(value, changed_refs):
     return value
 
 
+def participant_capsule(original, owner):
+    """Construct independent synthetic receiver evidence for the same proposal."""
+    record = copy.deepcopy(original)
+    record["owner"] = copy.deepcopy(owner)
+    if "recovery" not in record:
+        existing = {canonical(w) for w in record["prerequisite_witnesses"]}
+        record["prerequisite_witnesses"].extend(
+            w for w in preparation_witnesses(record["proposal"]) if canonical(w) not in existing
+        )
+    for receipt in record["bindings"] + record["advances"]:
+        native = receipt.get("authority") == "native-owner"
+        source = "completion" if native else "request"
+        original = receipt[source]
+        original["owner"] = copy.deepcopy(record["owner"])
+        evidence = original.get("phase_evidence")
+        if evidence is not None:
+            evidence["transition"]["owner"] = copy.deepcopy(record["owner"])
+            for proof in evidence["participants"]:
+                seal_phase_participant(evidence, proof)
+        receipt[source + "_digest"] = digest(original)
+    return record
+
+
 def scenario(*, historical=False, kinds=None, original=None, multiple=False, outcomes=None):
     original = copy.deepcopy(original or (capsule() if multiple else workflow()))
     kinds = kinds or ["unaccepted"] * sum(
@@ -161,11 +193,7 @@ def scenario(*, historical=False, kinds=None, original=None, multiple=False, out
     for participant in original["proposal"]["participants"]:
         if any(p["origin"] == participant["owner"] for p in mappings):
             continue
-        record = copy.deepcopy(original)
-        record["owner"] = copy.deepcopy(participant["owner"])
-        for receipt in record["bindings"] + record["advances"]:
-            receipt["request"]["owner"] = copy.deepcopy(record["owner"])
-            receipt["request_digest"] = digest(receipt["request"])
+        record = participant_capsule(original, participant["owner"])
         custody = custody_for(record) if historical else None
         current = copy.deepcopy(custody["custodian"] if custody else record["owner"])
         reference = RecordSnapshot(record, uid("origin-" + record["owner"]["id"])).reference
@@ -255,7 +283,7 @@ def scenario(*, historical=False, kinds=None, original=None, multiple=False, out
 
 def preparation(proposal, owner):
     mapping = next(p for p in proposal["participants"] if p["owner"] == owner)
-    origin = next(o for o in proposal["origins"] if o["reference"]["owner"] == mapping["origin"])
+    origin = next(o for o in proposal["origins"] if origin_owner(o) == mapping["origin"])
     children = [c for c in proposal["children"] if c["origin"]["owner"] == mapping["origin"]]
     value = {
         "owner": copy.deepcopy(owner),
@@ -267,7 +295,7 @@ def preparation(proposal, owner):
             "origin": copy.deepcopy(mapping["origin"]),
             "recovery_id": proposal["recovery_id"],
             "proposal_digest": digest(proposal),
-            "origin_digest": origin["reference"]["digest"],
+            "origin_digest": origin_digest(origin),
             "children_digest": digest(children),
             "native_evidence": digest({"independently-verified": "closed-and-settled"}),
             "retained_closure_digest": digest({"retained": "old-inputs-holds-and-readers"}),
@@ -498,6 +526,7 @@ def test_restored_partial_commit_requires_both_current_custodians():
     committed_origin, accepted_commit = committed()
     peer = capsule()
     peer["owner"] = copy.deepcopy(peer["participants"][1]["owner"])
+    peer["prerequisite_witnesses"] = preparation_witnesses(peer["proposal"])
     frozen_origin, accepted_freeze = frozen(peer)
     for index, record in enumerate((committed_origin, frozen_origin)):
         custody = custody_for(record)
@@ -611,6 +640,7 @@ def test_partial_preparation_blocks_progress_and_all_participants_are_required()
         "phase": "draining",
         "witnesses": [],
         "transfer_completion": None,
+        "phase_evidence": None,
     }
     with pytest.raises(ContractError, match="not committed"):
         advance_workflow(advance, value)
@@ -662,6 +692,7 @@ def test_retained_success_is_not_executable_through_ordinary_prepare():
             principal="operator",
             verified_driver=successor["initial_driver"],
             verified_content=successor["content"],
+            verified_preparation=None,
         )
     validate_recovery_proposal(proposal, verified_origins=records)
 
@@ -722,9 +753,10 @@ def test_driver_transfer_preserves_lifecycle_and_exact_replay(state):
 @pytest.mark.parametrize("state", ["cancelled", "completed"])
 def test_terminal_workflow_cannot_begin_new_driver_transfer(state):
     value = workflow()
-    value["state"] = state
     if state == "completed":
-        value["phase"] = PHASES[value["type"]][-1]
+        value = move(value, PHASES[value["type"]][-1])
+    else:
+        value["state"] = state
     validate_workflow(value)
     query = {
         "owner": value["owner"],
@@ -737,18 +769,48 @@ def test_terminal_workflow_cannot_begin_new_driver_transfer(state):
         validate_transfer_request(query, value)
 
 
+def native_completion_input(value):
+    """Construct an explicit synthetic native event, never a driver request."""
+    query = {
+        "owner": copy.deepcopy(value["owner"]),
+        "workflow_id": value["id"],
+        "advance_id": uid(f"native-completion-{value['id']}-{value['generation']}"),
+        "expected_generation": value["generation"],
+        "driver_term": value["driver_term"],
+    }
+    query["phase_evidence"] = phase_evidence(
+        value, {**query, "phase": PHASES[value["type"]][-1]}, authority="native-owner"
+    )
+    return query
+
+
+def native_completion(value):
+    query = native_completion_input(value)
+    return record_native_completion(
+        query,
+        value,
+        expected_owner=value["owner"],
+        native_authorized=True,
+        verified_phase_evidence=copy.deepcopy(query["phase_evidence"]),
+    )
+
+
 @pytest.mark.parametrize("phase", ["freeze", "commit", "completed"])
 @pytest.mark.parametrize("state", ["cancelled", "completed"])
 def test_terminal_lifecycle_keeps_exact_accepted_transfer_replay(phase, state):
-    if phase == "freeze":
-        value, original = frozen()
-    elif phase == "commit":
-        value, original = committed()
-    else:
-        value, original = finish_transfer(workflow())
-    value["state"] = state
+    start = capsule()
     if state == "completed":
-        value["phase"] = PHASES[value["type"]][-1]
+        start = move(start, PHASES[start["type"]][-2])
+    if phase == "freeze":
+        value, original = frozen(start)
+    elif phase == "commit":
+        value, original = committed(start)
+    else:
+        value, original = finish_transfer(start)
+    if state == "completed":
+        value = native_completion(value)
+    else:
+        value["state"] = state
     value["generation"] += 1
     validate_workflow(value)
     if phase == "completed":

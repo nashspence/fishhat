@@ -215,7 +215,15 @@ def test_historical_publisher_output_remains_usable_through_successor_lifecycle(
         "witnesses": [],
         "transfer_completion": None,
     }
-    moved = advance_workflow(advance, value, recovery_readers=qualified)
+    from tests.workflow_evidence_support import phase_evidence
+
+    advance["phase_evidence"] = phase_evidence(value, advance)
+    moved = advance_workflow(
+        advance,
+        value,
+        verified_phase_evidence=copy.deepcopy(advance["phase_evidence"]),
+        recovery_readers=qualified,
+    )
     validate_workflow(moved, recovery_readers=qualified)
     kept = moved["proposal"]["participants"][1]["requests"][0]["completed"]["operation"]
     assert kept == published

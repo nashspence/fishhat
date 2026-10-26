@@ -46,6 +46,7 @@ from tests.test_owner_handoffs import (
     work_page,
 )
 from tests.test_owner_handoffs import workflow as workflow_record
+from tests.workflow_evidence_support import advance_request, advance_with_evidence
 
 CHECK_PURPOSE = {
     "purpose": "public-contract",
@@ -83,9 +84,9 @@ def expanded_workflow(*, witnesses):
             body["evidence_digests"] = ["sha256:" + f"{number:064x}" for number in range(256)]
             participant["last_witness"] = sign(body, key)
         value["participants"].append(participant)
-    if witnesses:
-        value.update(state="active", phase="draining", generation=1)
     rebind_workflow_proposal(value)
+    if witnesses:
+        value = advance_with_evidence(advance_request(value, "draining"), value)
     return value
 
 

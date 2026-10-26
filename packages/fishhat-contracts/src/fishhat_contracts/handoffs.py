@@ -302,6 +302,10 @@ def validate_cli_result(
         from .workflow_abandonment import validate_abandonment
 
         validate_abandonment(result)
+    elif kind == "WorkflowNeverPrepared":
+        from .workflow_unprepared import validate_never_prepared
+
+        validate_never_prepared(result)
     elif kind == "ObservationPage":
         from .record_delivery import validate_observation_page
 

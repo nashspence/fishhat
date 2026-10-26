@@ -10,7 +10,6 @@ from fishhat_contracts.handoffs import schema_identity, validate_workflow
 from fishhat_contracts.transfers import validate_transfer_proposal
 from fishhat_contracts.validation import MAX_BYTES, ContractError, canonical, digest, validate
 from fishhat_contracts.workflows import (
-    advance_workflow,
     decode_workflow_input,
     prepare_workflow,
     validate_advance_request,
@@ -24,6 +23,7 @@ from tests.test_owner_handoffs import (
     U,
     V,
     operation,
+    preparation_witness,
     rebind_workflow_proposal,
     request,
     staged_workflow_input,
@@ -31,11 +31,14 @@ from tests.test_owner_handoffs import (
 )
 from tests.test_plan_review import reseal
 from tests.test_workflow_transfer import committed, completion_request, frozen, proposal
+from tests.workflow_evidence_support import advance_request
+from tests.workflow_evidence_support import advance_with_evidence as advance_workflow
 
 CHECK_PURPOSE = {
     "purpose": "public-contract",
     "authority": [
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/workflow.schema.json",
+        "packages/fishhat-contracts/src/fishhat_contracts/contracts/workflow-evidence.schema.json",
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/records.schema.json#/$defs/Workflow",
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/records.schema.json#/$defs/WorkflowTransfer",
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/ssh-request.schema.json",
@@ -75,16 +78,7 @@ def stage(reference, workflow_id, *, pinned=0):
 
 
 def normal_advance(value):
-    return {
-        "owner": copy.deepcopy(value["owner"]),
-        "workflow_id": value["id"],
-        "advance_id": uid("ordinary-advance"),
-        "driver_term": value["driver_term"],
-        "expected_generation": value["generation"],
-        "phase": "draining",
-        "witnesses": [],
-        "transfer_completion": None,
-    }
+    return advance_request(value, "draining", advance_id=uid("ordinary-advance"))
 
 
 def material_handle(owner, identity, *, size=1):
@@ -183,6 +177,7 @@ def test_preparation_retains_typed_plans_and_content_after_client_loss():
         expected_owner=expected["owner"],
         principal=expected["driver_principal"],
         verified_driver=expected["proposal"]["initial_driver"],
+        verified_preparation=preparation_witness(expected["proposal"], expected["owner"]),
         verified_content=expected["proposal"]["content"],
     )
     assert retained == expected
@@ -199,6 +194,7 @@ def test_preparation_retains_typed_plans_and_content_after_client_loss():
             expected_owner=retained["owner"],
             principal="replacement-operator",
             verified_driver=expected["proposal"]["initial_driver"],
+            verified_preparation=None,
             verified_content=[],
             retained=retained,
         )
@@ -233,6 +229,7 @@ def test_capsule_cannot_substitute_a_different_proposal_or_unverified_local_cont
             expected_owner=value["owner"],
             principal=value["driver_principal"],
             verified_driver=value["proposal"]["initial_driver"],
+            verified_preparation=preparation_witness(value["proposal"], value["owner"]),
             verified_content=[],
         )
     value["proposal"]["participants"][0]["requests"][0]["request_id"] = U
@@ -358,6 +355,7 @@ def test_generic_adapter_role_retains_typed_input_and_requires_independent_selec
             expected_owner=payload["owner"],
             principal="operator",
             verified_driver=intent["initial_driver"],
+            verified_preparation=preparation_witness(intent, payload["owner"]),
             verified_content=intent["content"],
         )
     prepared = prepare_workflow(
@@ -365,6 +363,7 @@ def test_generic_adapter_role_retains_typed_input_and_requires_independent_selec
         expected_owner=payload["owner"],
         principal="operator",
         verified_driver=intent["initial_driver"],
+        verified_preparation=preparation_witness(intent, payload["owner"]),
         verified_content=intent["content"],
         verified_adapters=[copy.deepcopy(selected)],
     )

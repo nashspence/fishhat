@@ -1193,6 +1193,9 @@
             },
             {
               "$ref": "workflow-recovery.schema.json#/$defs/Abandonment"
+            },
+            {
+              "$ref": "workflow-recovery.schema.json#/$defs/NeverPrepared"
             }
           ]
         }

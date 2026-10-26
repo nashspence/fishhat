@@ -44,7 +44,7 @@
       "qualification": "reference-model",
       "sources": {
         "some-implementations/fishhat/applications/directory/src/fishhat_directory/projection.py": "94a39d8fd9d82f63721d78f6f2e4fcbfcf57aeff4f00b1c256c0ebb84d8eb3f3",
-        "tests/test_engineering.py": "efd903aa37d01fd1899e669c81257ca8396202c8093ebd616e263e408bc7b7be"
+        "tests/test_engineering.py": "c2990f48e206d6528fb8cd0a5003cc8a502d2f172c8ed97c5671d12606ba7cf5"
       },
       "symbol": "fishhat_directory.projection:load_directory",
       "work": "O(input_bytes)-bounded-parser-depth"
@@ -61,7 +61,7 @@
       "qualification": "reference-model",
       "sources": {
         "fishhat/owner-support/src/fishhat_owner/journal.py": "fb68a9393ccc95fd76a965a17dd8dd6d0bea8ccee0eb29fcc582203244361df8",
-        "tests/test_engineering.py": "efd903aa37d01fd1899e669c81257ca8396202c8093ebd616e263e408bc7b7be"
+        "tests/test_engineering.py": "c2990f48e206d6528fb8cd0a5003cc8a502d2f172c8ed97c5671d12606ba7cf5"
       },
       "symbol": "fishhat_owner.journal:Journal.submit",
       "work": "O(retained_requests)-reference-scan"
@@ -82,7 +82,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/record_delivery.py": "892fc6b20977aeec256f2dc83fe6a3c3743c19ef5ea784a7d2153ef11d36cacf",
-        "tests/test_record_delivery.py": "a246e5d500b0aedc191da69cd6b6bbc374d02b43918927eab660a73f4d1648f5"
+        "tests/test_record_delivery.py": "29ae96e27fcb9e8197d5bc7d20b8eca0a747e5c58cdcb0dff5c65ef983e50cc2"
       },
       "symbol": "fishhat_contracts.record_delivery:RecordSnapshot.chunk",
       "work": "O(chunk_bytes)"
@@ -108,7 +108,7 @@
       "qualification": "reference-model",
       "sources": {
         "some-implementations/fishhat/applications/receipts/src/fishhat_reporting/store.py": "219bc2a64296dcadfd0f3fceb52bf4010f6879042e097e3a611881b9f7ad2caf",
-        "tests/test_engineering.py": "efd903aa37d01fd1899e669c81257ca8396202c8093ebd616e263e408bc7b7be"
+        "tests/test_engineering.py": "c2990f48e206d6528fb8cd0a5003cc8a502d2f172c8ed97c5671d12606ba7cf5"
       },
       "symbol": "fishhat_reporting.store:EventStore.events",
       "work": "O(log(retained_events)+page_items^2*event_bytes)"
@@ -128,7 +128,7 @@
       "qualification": "reference-model",
       "sources": {
         "some-implementations/fishhat/applications/receipts/src/fishhat_reporting/store.py": "219bc2a64296dcadfd0f3fceb52bf4010f6879042e097e3a611881b9f7ad2caf",
-        "tests/test_engineering.py": "efd903aa37d01fd1899e669c81257ca8396202c8093ebd616e263e408bc7b7be"
+        "tests/test_engineering.py": "c2990f48e206d6528fb8cd0a5003cc8a502d2f172c8ed97c5671d12606ba7cf5"
       },
       "symbol": "fishhat_reporting.store:EventStore.put",
       "work": "O(retained_events*log(retained_events)+correction_depth*(log(retained_events)+event_bytes))-reference-scan"
@@ -149,7 +149,7 @@
       "qualification": "reference-model",
       "sources": {
         "some-implementations/fishhat/applications/receipts/src/fishhat_reporting/store.py": "219bc2a64296dcadfd0f3fceb52bf4010f6879042e097e3a611881b9f7ad2caf",
-        "tests/test_engineering.py": "efd903aa37d01fd1899e669c81257ca8396202c8093ebd616e263e408bc7b7be"
+        "tests/test_engineering.py": "c2990f48e206d6528fb8cd0a5003cc8a502d2f172c8ed97c5671d12606ba7cf5"
       },
       "symbol": "fishhat_reporting.store:EventStore.workflows",
       "work": "O(retained_events*log(retained_events))-reference-grouping"
@@ -170,10 +170,28 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-client/src/fishhat_client/wire.py": "2e8e26926f39bf53954769d9a46f87b99b7963287850297f0bb8aadbb6233e81",
-        "tests/test_engineering.py": "efd903aa37d01fd1899e669c81257ca8396202c8093ebd616e263e408bc7b7be"
+        "tests/test_engineering.py": "c2990f48e206d6528fb8cd0a5003cc8a502d2f172c8ed97c5671d12606ba7cf5"
       },
       "symbol": "fishhat_client.wire:read_frame",
       "work": "O(frame_bytes)"
+    },
+    "workflow.phase-evidence": {
+      "capacity": [
+        "native owners may explicitly refuse capacity without truncating evidence"
+      ],
+      "extent": "Every participant resource, every child started before the destination phase and every native evidence handle; no prefix selection or total-size cap",
+      "id": "workflow.phase-evidence",
+      "limits": [],
+      "proofs": [
+        "tests/test_workflow_evidence.py::test_phase_evidence_checks_complete_child_extent"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_evidence.py": "a44c0e14c058c9ca7c070e446f6f92527e09eac761a7d1a5181f39feecf74f53",
+        "tests/test_workflow_evidence.py": "9f352ee6e9109a57743bd88ab0695219fd912c54609bc9f3d99ff86f6ca51cb7"
+      },
+      "symbol": "fishhat_contracts.workflow_evidence:validate_phase_evidence",
+      "work": "O(B + P + C + K) complete-input reference validation for fixed installed schema/phase closure; B serialized proposal/evidence/Plan bytes, P participants, C child slots and K retained bindings"
     }
   },
   "production_qualified": false,

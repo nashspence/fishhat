@@ -17,7 +17,7 @@
         "change"
       ],
       "additionalProperties": false,
-      "description": "The change scope must exactly equal the outer scope and approved executor scope. Each change has one unique RRset key; before and after share that key when both exist. A successful publication returns exactly the affected non-null after RRsets, and omits every deleted key. served_generation alone is not a substitute for those postconditions."
+      "description": "The change scope must exactly equal the outer scope and approved executor scope. Each change has one unique RRset key; before and after share that key when both exist. A successful publication returns exactly the affected non-null after RRsets, and omits every deleted key. served_generation alone is not a substitute for those postconditions. Equality of returned and requested RRsets ignores RDATA member order, preserves ordered fields inside one member such as TXT chunks, and still requires the exact TTL policy and membership."
     },
     "publish": {
       "type": "object",
@@ -34,7 +34,7 @@
         "change"
       ],
       "additionalProperties": false,
-      "description": "The change scope must exactly equal the outer scope and approved executor scope. Each change has one unique RRset key; before and after share that key when both exist. A successful publication returns exactly the affected non-null after RRsets, and omits every deleted key. served_generation alone is not a substitute for those postconditions."
+      "description": "The change scope must exactly equal the outer scope and approved executor scope. Each change has one unique RRset key; before and after share that key when both exist. A successful publication returns exactly the affected non-null after RRsets, and omits every deleted key. served_generation alone is not a substitute for those postconditions. Equality of returned and requested RRsets ignores RDATA member order, preserves ordered fields inside one member such as TXT chunks, and still requires the exact TTL policy and membership."
     },
     "observe": {
       "type": "object",
@@ -63,7 +63,8 @@
         "cursor",
         "limit"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "The limit bounds the sum of returned top-level collection entries in rrsets; nested fields within one entry are not separate records. Other scalar or object output fields are fixed-shape metadata and do not count toward this limit. A continuation is an opaque receiver-issued cursor bound to the exact approved executor, scope, query and one stable native observation snapshot. The receiver verifies those bindings on every continuation. Incomplete coverage requires a non-null cursor different from the request cursor; complete coverage has no continuation. Unknown coverage is not resumable and has no continuation; an unavailable or changed snapshot is explicitly unknown and requires a new scan with cursor null. Known records may accompany unknown coverage, but cannot establish complete absence. These per-page bounds do not limit total collection extent or prove native bounded work."
     },
     "reconcile": {
       "type": "object",
@@ -335,7 +336,36 @@
             "proposal",
             "output"
           ],
-          "additionalProperties": false
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "coverage": {
+                    "const": "incomplete"
+                  }
+                },
+                "required": [
+                  "coverage"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "continuation": {
+                    "type": "string"
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "continuation": {
+                    "type": "null"
+                  }
+                }
+              }
+            }
+          ],
+          "description": "Observation page under the request limit and exact receiver-owned snapshot. Incomplete pages require an advancing continuation; complete and unknown coverage have no continuation. Unknown is not evidence of complete absence."
         },
         {
           "type": "object",

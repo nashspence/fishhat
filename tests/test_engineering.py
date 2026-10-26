@@ -325,10 +325,21 @@ def test_operation_owned_bounds_are_discovered_and_never_claim_native_qualificat
         "reporting.put",
         "reporting.events",
         "reporting.workflows",
+        "workflow.phase-evidence",
     }
     assert all(item["qualification"] == "reference-model" for item in found.values())
     assert "reference-scan" in found["reporting.put"]["work"]
     assert all(item["proofs"] and item["sources"] for item in found.values())
+    phase_evidence = found["workflow.phase-evidence"]
+    assert phase_evidence["symbol"] == "fishhat_contracts.workflow_evidence:validate_phase_evidence"
+    assert phase_evidence["limits"] == ()
+    assert phase_evidence["proofs"] == (
+        "tests/test_workflow_evidence.py::test_phase_evidence_checks_complete_child_extent",
+    )
+    assert set(phase_evidence["sources"]) == {
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_evidence.py",
+        "tests/test_workflow_evidence.py",
+    }
 
 
 def test_event_byte_capacity_continues_or_rejects_explicitly(tmp_path):

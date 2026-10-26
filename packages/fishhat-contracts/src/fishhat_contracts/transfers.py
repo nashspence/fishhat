@@ -97,6 +97,7 @@ def validate_workflow_transfer(workflow: dict[str, Any]) -> None:
     validate_transfer_proposal(proposal)
     _require(
         proposal["workflow_id"] == workflow["id"]
+        and proposal["workflow_proposal_digest"] == workflow["proposal_digest"]
         and transfer["proposal_digest"] == digest(proposal)
         and _pairs(proposal["participants"]) == _pairs(workflow["participants"]),
         "transfer workflow or participant closure mismatch",
@@ -123,7 +124,8 @@ def validate_workflow_transfer(workflow: dict[str, Any]) -> None:
         receipts = [
             receipt
             for receipt in workflow["advances"]
-            if receipt["request"]["transfer_completion"] is not None
+            if receipt["authority"] == "driver"
+            and receipt["request"]["transfer_completion"] is not None
             and receipt["request"]["transfer_completion"]["transfer_id"] == proposal["transfer_id"]
         ]
         _require(len(receipts) == 1, "completed transfer lacks exact advance receipt")
@@ -169,6 +171,7 @@ def validate_transfer_request(
     _require(
         request["owner"] == workflow["owner"]
         and proposal["workflow_id"] == workflow["id"]
+        and proposal["workflow_proposal_digest"] == workflow["proposal_digest"]
         and _pairs(proposal["participants"]) == _pairs(workflow["participants"]),
         "transfer request owner or closure mismatch",
     )

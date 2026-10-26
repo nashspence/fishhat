@@ -525,7 +525,7 @@
         "proposal"
       ],
       "additionalProperties": false,
-      "description": "The complete decoded preparation payload. The selected receiver is a participant and independently approves the immutable initial_driver assignment. A transport caller never implicitly becomes driver. Repeating the exact workflow_id and proposal under current permission returns retained custody, including any transferred driver; changed intent conflicts. Fresh local content, approval and current admission checks precede preparation. Generation starts at zero and initial driver term at one; no child effect is accepted."
+      "description": "The complete decoded preparation payload. The selected receiver is a participant and independently approves the immutable initial_driver assignment. A transport caller never implicitly becomes driver. Repeating the exact workflow_id and proposal under current permission returns retained custody, including any transferred driver; changed intent conflicts. Fresh local content, approval and current admission checks precede preparation. Generation starts at zero and initial driver term at one; no child effect is accepted. Before acknowledging initial preparation the receiver signs and retains its exact PreparationWitness in prerequisite_witnesses. That local preparation alone cannot admit children; every distinct owner must attest to the same proposal before first ordinary progress."
     },
     "TransferCompletion": {
       "type": "object",
@@ -593,6 +593,31 @@
               "type": "null"
             }
           ]
+        },
+        "phase_evidence": {
+          "anyOf": [
+            {
+              "allOf": [
+                {
+                  "$ref": "workflow-evidence.schema.json#/$defs/PhaseEvidence"
+                },
+                {
+                  "properties": {
+                    "transition": {
+                      "properties": {
+                        "authority": {
+                          "const": "driver"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -603,53 +628,11 @@
         "expected_generation",
         "phase",
         "witnesses",
-        "transfer_completion"
+        "transfer_completion",
+        "phase_evidence"
       ],
       "additionalProperties": false,
-      "description": "One immutable advance identity. The receiving owner reauthorizes the actual principal, resolves advance_id and exact retained input before current generation/term or new-input expiry checks, and replays an identical accepted transition without executing it again. Changed input under the same advance_id conflicts. A new request compares the exact local capsule generation and current driver term and follows the installed next phase; it cannot skip phases or revive terminal/recovery-required work. Every prerequisite witness is independently authenticated and checked against its local procedure obligations. When a transfer is pending in commit phase, transfer_completion must contain the complete transferred-witness closure for the exact proposal and the unchanged retained local commit. The owner atomically retains that evidence, marks the transfer completed, records the advance outcome and increments its capsule generation once. Transfer completion must preserve the current procedure phase and exact lifecycle state; subsequent phase progress requires a separate ordinarily authorized advance. It never implies rollback, release of holds or completion of a child operation. An unavailable epoch or incomplete evidence remains unresolved and cannot be replaced by timeout. Driver transfer is orthogonal to lifecycle. Completion preserves the exact prior lifecycle state, including paused and recovery-required. No transfer is permitted to reactivate cancelled or completed work. A successor with recovery preparation not yet committed cannot advance."
-    },
-    "AdvanceReceipt": {
-      "type": "object",
-      "properties": {
-        "request": {
-          "$ref": "workflow.schema.json#/$defs/AdvanceRequest"
-        },
-        "request_digest": {
-          "$ref": "common.schema.json#/$defs/Digest"
-        },
-        "generation": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 9007199254740991
-        },
-        "driver_term": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 9007199254740991
-        },
-        "phase": {
-          "$ref": "common.schema.json#/$defs/Id"
-        },
-        "state": {
-          "enum": [
-            "prepared",
-            "active",
-            "paused",
-            "recovery-required",
-            "completed"
-          ]
-        }
-      },
-      "required": [
-        "request",
-        "request_digest",
-        "generation",
-        "driver_term",
-        "phase",
-        "state"
-      ],
-      "additionalProperties": false,
-      "description": "The original complete accepted advance and its immutable finite outcome, not a recursive Workflow snapshot. generation is the local atomic transition generation and remains fixed after later advances or transfers. The capsule retains these receipts so another authorized caller can reconstruct exact replay without client files. A replay returns the current capsule containing this original receipt and never reapplies the transition."
+      "description": "One immutable advance identity. The receiving owner reauthorizes the actual principal, resolves advance_id and exact retained input before current generation/term or new-input expiry checks, and replays an identical accepted transition without executing it again. Changed input under the same advance_id conflicts. A new request compares the exact local capsule generation and current driver term and follows the installed next phase; it cannot skip phases or revive terminal/recovery-required work. Every prerequisite witness is independently authenticated and checked against its local procedure obligations. When a transfer is pending in commit phase, transfer_completion must contain the complete transferred-witness closure for the exact proposal and the unchanged retained local commit. The owner atomically retains that evidence, marks the transfer completed, records the advance outcome and increments its capsule generation once. Transfer completion must preserve the current procedure phase and exact lifecycle state; subsequent phase progress requires a separate ordinarily authorized advance. It never implies rollback, release of holds or completion of a child operation. An unavailable epoch or incomplete evidence remains unresolved and cannot be replaced by timeout. Driver transfer is orthogonal to lifecycle. Completion preserves the exact prior lifecycle state, including paused and recovery-required. No transfer is permitted to reactivate cancelled or completed work. A successor with recovery preparation not yet committed cannot advance. Before an ordinary phase transition, witnesses plus already retained prerequisites must contain complete authenticated PreparationWitness agreement for all distinct original participant owners. Retain each exact proof; a conflicting proposal digest, replacement local witness or omitted owner fails. A committed recovery successor uses its complete recovery preparation closure for this agreement. Every ordinary advance carries complete phase_evidence under workflow-evidence.schema.json: exact proposal-bound transition, participant native proofs and installed child success barriers. Receiving owners independently authenticate and currently verify that evidence before acceptance; merely bound Plans cannot complete a phase. The same-phase transfer-completion path requires null phase_evidence. This transport input cannot request owner-native authority; every non-null phase proof binds authority driver."
     },
     "InputReference": {
       "type": "object",
@@ -1050,6 +1033,181 @@
       ],
       "additionalProperties": false,
       "description": "A nonexecutable successor slot fulfilled by an exact previously succeeded operation and its original Plan. The new slot identity is a workflow reference, never a new operation request. Original owner epoch, request identity, Plan and outcome remain unchanged. Only workflow.recover may introduce this slot after independently verifying the complete predecessor closure. A fresh prepare cannot turn a supplied receipt into fulfillment. Later continuations use the retained original successful operation as their predecessor evidence."
+    },
+    "PreparationWitness": {
+      "allOf": [
+        {
+          "$ref": "records.schema.json#/$defs/Witness"
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "approval"
+            },
+            "state": {
+              "const": "workflow-prepared"
+            },
+            "generation": {
+              "const": 0
+            },
+            "evidence_digests": {
+              "const": []
+            }
+          }
+        }
+      ],
+      "description": "One finite signed local preparation attestation. Its exact owner epoch is a proposal participant, workflow_id equals the immutable proposal workflow_id and subject_digest equals the complete proposal digest. The owner issues and retains it atomically only after independent full local authorization and durable input custody. A caller cannot manufacture agreement. Before first ordinary phase progress or child admission every distinct participant owner must provide an authenticated attestation for this same proposal; the local witness must remain the exact originally retained one. Complete agreement survives later changes. Recovery successors instead establish agreement through their complete committed current-owner recovery preparation closure."
+    },
+    "DriverAdvanceReceipt": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "workflow.schema.json#/$defs/AdvanceRequest"
+        },
+        "request_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "driver_term": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "phase": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "state": {
+          "enum": [
+            "prepared",
+            "active",
+            "paused",
+            "recovery-required",
+            "completed"
+          ]
+        },
+        "authority": {
+          "const": "driver"
+        }
+      },
+      "required": [
+        "authority",
+        "request",
+        "request_digest",
+        "generation",
+        "driver_term",
+        "phase",
+        "state"
+      ],
+      "additionalProperties": false,
+      "description": "The original complete accepted driver advance and its immutable finite outcome. authority is driver and the exact request remains an AdvanceRequest. Ordinary phase admission cannot occur during a pending driver transfer; only its separately authorized same-phase completion can close that interval. generation identifies the local atomic transition and stays fixed after later observations or transfers. Exact accepted replay returns the current capsule without applying the transition again."
+    },
+    "NativeCompletion": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "workflow_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "advance_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "expected_generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "driver_term": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "phase_evidence": {
+          "allOf": [
+            {
+              "$ref": "workflow-evidence.schema.json#/$defs/PhaseEvidence"
+            },
+            {
+              "properties": {
+                "transition": {
+                  "properties": {
+                    "authority": {
+                      "const": "native-owner"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "owner",
+        "workflow_id",
+        "advance_id",
+        "expected_generation",
+        "driver_term",
+        "phase_evidence"
+      ],
+      "additionalProperties": false,
+      "description": "An independently retained owner-native completion identity, never a workflow.advance or other transport input. advance_id identifies this native transition and cannot be reused by a driver advance. Exact owner epoch, capsule generation and observed driver term are bound to authority native-owner in complete signed phase evidence. Only the final adjacent installed transition from an active or paused penultimate phase may settle already admitted work. Every required child has independently authenticated succeeded/known outcome and every terminal native obligation is verified. This records completed facts without admitting or executing new work, changing driver or transfer custody, reviving cancellation/recovery-required state, or releasing any hold. The native owner authorizes this protected path independently; client request fields and signatures alone cannot supply that authority. Exact accepted replay retains the original input and outcome before fresh evidence checks while current native authorization remains required."
+    },
+    "NativeCompletionReceipt": {
+      "type": "object",
+      "properties": {
+        "authority": {
+          "const": "native-owner"
+        },
+        "completion": {
+          "$ref": "workflow.schema.json#/$defs/NativeCompletion"
+        },
+        "completion_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "driver_term": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "phase": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "state": {
+          "const": "completed"
+        }
+      },
+      "required": [
+        "authority",
+        "completion",
+        "completion_digest",
+        "generation",
+        "driver_term",
+        "phase",
+        "state"
+      ],
+      "additionalProperties": false,
+      "description": "Exact protected owner-native settlement and immutable finite terminal outcome. This is not an accepted driver request. The complete native input and signed authority remain distinguishable through historical inspection and exact replay; transfer proposal, accepted phase inputs, driver identity/term and holds are preserved byte-for-byte."
+    },
+    "AdvanceReceipt": {
+      "oneOf": [
+        {
+          "$ref": "workflow.schema.json#/$defs/DriverAdvanceReceipt"
+        },
+        {
+          "$ref": "workflow.schema.json#/$defs/NativeCompletionReceipt"
+        }
+      ],
+      "description": "One retained ordered phase-history entry with explicit authority. Driver entries preserve actual accepted AdvanceRequest inputs; native-owner entries preserve independently authorized final settlement of already admitted work. Authority cannot be relabeled or requested by a transport caller. Both forms retain original input commitments and finite outcomes, with unique transition identities and strictly ordered capsule generations; no recursive snapshots are stored."
     }
   }
 }

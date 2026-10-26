@@ -57,6 +57,7 @@ def capsule():
 def proposal(value):
     return {
         "workflow_id": value["id"],
+        "workflow_proposal_digest": value["proposal_digest"],
         "transfer_id": V,
         "current_principal": value["driver_principal"],
         "expected_term": value["driver_term"],
@@ -131,8 +132,8 @@ def commit_input(value):
     }
 
 
-def committed():
-    value, _ = frozen()
+def committed(value=None):
+    value, _ = frozen(value)
     original = commit_input(value)
     assert validate_transfer_request(original, value) == "new"
     transfer = value["transfer"]
@@ -254,6 +255,7 @@ def completion_request(value):
         "driver_term": value["driver_term"],
         "expected_generation": value["generation"],
         "phase": value["phase"],
+        "phase_evidence": None,
         "witnesses": [],
         "transfer_completion": {
             "transfer_id": transfer["proposal"]["transfer_id"],

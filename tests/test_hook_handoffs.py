@@ -15,7 +15,7 @@ CHECK_PURPOSE = {
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/adapter.schema.json#/$defs/Snapshot",
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/source.schema.json#/$defs/App",
     ],
-    "scope": "exact selected restore snapshots, complete immutable materializations and role access",
+    "scope": "exact selected restore snapshots, complete immutable materializations, role access and disjoint output paths",
     "relationship": "candidate",
     "reason": "Adverse request substitutions and omitted input cases exercise pure schema and reference joins, without establishing materialization, native path identity or authority.",
     "claims": [],
@@ -23,6 +23,22 @@ CHECK_PURPOSE = {
 
 D = "sha256:" + "a" * 64
 OTHER = "sha256:" + "b" * 64
+ROLES = [
+    "health",
+    "configure",
+    "verify-config",
+    "dependency-check",
+    "busy",
+    "quiesce",
+    "transition-assess",
+    "transition-apply",
+    "transition-verify",
+    "capture",
+    "restore",
+    "verify-restore",
+    "rebuild",
+    "verify-rebuild",
+]
 
 
 def request(role="restore"):
@@ -224,3 +240,49 @@ def test_hook_source_does_not_give_the_caller_an_extra_input_channel():
     value["input_directory"] = "/synthetic/unbound-input"
     with pytest.raises(ContractError):
         validate("hook-request.schema.json", value)
+
+
+@pytest.mark.parametrize("role", ROLES)
+@pytest.mark.parametrize("protected", ["dataset", "secret"])
+@pytest.mark.parametrize(
+    "output",
+    ["/synthetic/protected", "/synthetic", "/synthetic/protected/out"],
+    ids=["equal", "ancestor", "descendant"],
+)
+def test_every_hook_role_keeps_output_disjoint_from_dataset_and_secret_paths(
+    role, protected, output
+):
+    value = request(role)
+    if protected == "dataset":
+        value["dataset_handles"]["state"]["path"] = "/synthetic/protected"
+    else:
+        value["secret_paths"]["credential"] = "/synthetic/protected"
+    value["output_directory"] = output
+    with pytest.raises(ContractError, match="hook output overlaps"):
+        validate_hook_request(value)
+
+
+@pytest.mark.parametrize("role", ROLES)
+def test_disjoint_hook_paths_with_common_string_prefix_remain_valid(role):
+    value = request(role)
+    value["dataset_handles"]["state"]["path"] = "/synthetic/output-data"
+    value["secret_paths"]["credential"] = "/synthetic/output-secret"
+    validate_hook_request(value)
+
+
+@pytest.mark.parametrize("field", ["output", "dataset", "secret"])
+@pytest.mark.parametrize(
+    "path",
+    ["/synthetic//input", "/synthetic/./input", "/synthetic/input/"],
+    ids=["empty-component", "dot-component", "trailing-separator"],
+)
+def test_nonrestore_hook_paths_cannot_hide_aliases_in_noncanonical_spelling(field, path):
+    value = request("capture")
+    if field == "output":
+        value["output_directory"] = path
+    elif field == "dataset":
+        value["dataset_handles"]["state"]["path"] = path
+    else:
+        value["secret_paths"]["credential"] = path
+    with pytest.raises(ContractError, match="noncanonical hook path"):
+        validate_hook_request(value)

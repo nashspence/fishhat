@@ -50,6 +50,7 @@
     "tool-release.schema.json",
     "tracking-profile.schema.json",
     "tracking-records.schema.json",
+    "workflow-evidence.schema.json",
     "workflow-recovery.schema.json",
     "workflow.schema.json",
     "workspace.schema.json"

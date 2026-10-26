@@ -13,6 +13,7 @@ from typing import Any
 
 from .history import validate_owner_custody
 from .validation import ContractError, canonical, digest, validate
+from .workflow_unprepared import origin_workflow_id
 
 
 def _require(condition: bool, message: str) -> None:
@@ -30,7 +31,7 @@ def recovery_selection(proposal: dict[str, Any]) -> dict[str, Any]:
         "workflow_id": proposal["workflow_id"],
         "recovery_id": proposal["recovery_id"],
         "proposal_digest": digest(proposal),
-        "original_workflow_id": proposal["origins"][0]["reference"]["record"]["id"],
+        "original_workflow_id": origin_workflow_id(proposal["origins"][0]),
         "participants": copy.deepcopy(proposal["participants"]),
     }
 
@@ -73,7 +74,7 @@ def validate_abandonment_closure(
 ) -> None:
     """Require every current participant to close each selected unused successor."""
     current = {_logical(p["owner"]): p["owner"] for p in proposal["participants"]}
-    original_ids = {o["reference"]["record"]["id"] for o in proposal["origins"]}
+    original_ids = {origin_workflow_id(o) for o in proposal["origins"]}
     origins = {canonical(p["origin"]) for p in proposal["participants"]}
     selected: set[str] = set()
     for closure in proposal["abandonments"]:

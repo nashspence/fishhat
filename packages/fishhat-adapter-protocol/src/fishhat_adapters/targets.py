@@ -75,16 +75,6 @@ def check_target_response(
             and ("binding" not in inputs or target["executor"] == inputs["binding"]),
             "TARGET_OBSERVATION_IDENTITY",
         )
-    if method == "observe":
-        _require(len(records) <= inputs["limit"], "OBSERVATION_PAGE_CAPACITY")
-        _require(
-            response["coverage"] != "incomplete"
-            or (
-                response["continuation"] is not None
-                and response["continuation"] != inputs["cursor"]
-            ),
-            "OBSERVATION_CURSOR_PROGRESS",
-        )
     if role == "service" and method == "apply":
         _check_service_transition(inputs, response, attempt)
     effect = response.get("effect")

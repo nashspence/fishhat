@@ -135,7 +135,8 @@
         "cursor",
         "limit"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": " The output has fixed scalar cardinality and no collection entries; limit does not create an additional collection or change that scalar shape. A continuation is an opaque receiver-issued cursor bound to the exact approved executor, scope, query and one stable native observation snapshot. The receiver verifies those bindings on every continuation. Incomplete coverage requires a non-null cursor different from the request cursor; complete coverage has no continuation. Unknown coverage is not resumable and has no continuation; an unavailable or changed snapshot is explicitly unknown and requires a new scan with cursor null. Known records may accompany unknown coverage, but cannot establish complete absence. These per-page bounds do not limit total collection extent or prove native bounded work."
     },
     "reconcile": {
       "type": "object",
@@ -398,7 +399,36 @@
             "proposal",
             "output"
           ],
-          "additionalProperties": false
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "coverage": {
+                    "const": "incomplete"
+                  }
+                },
+                "required": [
+                  "coverage"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "continuation": {
+                    "type": "string"
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "continuation": {
+                    "type": "null"
+                  }
+                }
+              }
+            }
+          ],
+          "description": "Observation page under the request limit and exact receiver-owned snapshot. Incomplete pages require an advancing continuation; complete and unknown coverage have no continuation. Unknown is not evidence of complete absence."
         },
         {
           "type": "object",

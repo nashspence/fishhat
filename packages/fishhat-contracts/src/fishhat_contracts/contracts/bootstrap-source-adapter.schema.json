@@ -17,7 +17,8 @@
         "scope",
         "selection"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "The repository scope handle equals selection.source_id. The executable Invocation pins the same installation and configuration as selection.adapter. Before initial dispatch or reconciliation, the receiving owner joins the selected implementation, installation artifact, descriptor, configuration and source-schema digests to its independently approved executor and installed descriptor. A different approved instance cannot substitute for those selected pins. Client preparation alone is not the receiver check; accepted recovery retains the original selection and executor."
     },
     "verify": {
       "type": "object",
@@ -37,7 +38,8 @@
         "selection",
         "output"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "The repository scope handle equals selection.source_id. The executable Invocation pins the same installation and configuration as selection.adapter. Before initial dispatch or reconciliation, the receiving owner joins the selected implementation, installation artifact, descriptor, configuration and source-schema digests to its independently approved executor and installed descriptor. A different approved instance cannot substitute for those selected pins. Client preparation alone is not the receiver check; accepted recovery retains the original selection and executor."
     },
     "reconcile": {
       "type": "object",

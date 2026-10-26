@@ -17,9 +17,24 @@ def _require(condition: bool, message: str) -> None:
 def _path(value: str) -> PurePosixPath:
     _require(
         value.startswith("/") and all(part not in ("", ".", "..") for part in value[1:].split("/")),
-        "noncanonical hook materialization path",
+        "noncanonical hook path",
     )
     return PurePosixPath(value)
+
+
+def _disjoint(first: PurePosixPath, second: PurePosixPath) -> bool:
+    return first != second and first not in second.parents and second not in first.parents
+
+
+def _output_targets(value: dict[str, Any]) -> list[PurePosixPath]:
+    output = _path(value["output_directory"])
+    datasets = [_path(target["path"]) for target in value["dataset_handles"].values()]
+    inputs = datasets + [_path(path) for path in value["secret_paths"].values()]
+    _require(
+        all(_disjoint(output, path) for path in inputs),
+        "hook output overlaps dataset target or secret",
+    )
+    return [output, *datasets]
 
 
 def validate_hook_request(value: dict[str, Any]) -> None:
@@ -30,6 +45,7 @@ def validate_hook_request(value: dict[str, Any]) -> None:
     input custody, actual artifact bytes, native aliases and read-only isolation.
     """
     validate("hook-request.schema.json", value)
+    targets = _output_targets(value)
     selected = value["restore_input"]
     if selected is None:
         return
@@ -37,9 +53,6 @@ def validate_hook_request(value: dict[str, Any]) -> None:
         set(selected["datasets"]) == set(value["dataset_handles"]),
         "restore input must cover every dataset target exactly",
     )
-    targets = [_path(value["output_directory"])] + [
-        _path(target["path"]) for target in value["dataset_handles"].values()
-    ]
     paths: dict[PurePosixPath, bytes] = {}
     for dataset, item in selected["datasets"].items():
         snapshot = item["snapshot"]
@@ -61,7 +74,7 @@ def validate_hook_request(value: dict[str, Any]) -> None:
                 "restore materialization path selects different artifacts",
             )
             _require(
-                all(path != p and path not in p.parents and p not in path.parents for p in targets),
+                all(_disjoint(path, target) for target in targets),
                 "restore materialization overlaps dataset target or output",
             )
             paths[path] = identity

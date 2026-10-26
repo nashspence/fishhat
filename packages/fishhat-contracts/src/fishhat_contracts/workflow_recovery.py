@@ -15,6 +15,12 @@ from typing import Any
 from .history import validate_owner_custody
 from .record_delivery import validate_record_payload
 from .validation import ContractError, canonical, digest, validate, validate_plan
+from .workflow_unprepared import (
+    origin_digest,
+    origin_owner,
+    origin_workflow_id,
+    validate_never_prepared,
+)
 from .workflows import (
     _pair,
     _request_key,
@@ -139,16 +145,28 @@ def _structure(
         "workflow recovery successor identity changed",
     )
     owners = _owners(proposal)
-    origins = {canonical(o["reference"]["owner"]): o for o in proposal["origins"]}
+    origins = {canonical(origin_owner(o)): o for o in proposal["origins"]}
     _require(
         len(origins) == len(proposal["origins"]) and set(origins) == set(owners),
         "workflow recovery origin owner closure changed",
     )
-    original_ids = {o["reference"]["record"]["id"] for o in origins.values()}
+    original_ids = {origin_workflow_id(o) for o in origins.values()}
     _require(
         len(original_ids) == 1 and proposal["workflow_id"] not in original_ids,
         "workflow recovery requires one distinct original workflow",
     )
+    _require(any("reference" in o for o in origins.values()), "recovery lacks an original capsule")
+    for key, origin in origins.items():
+        if "never_prepared" in origin:
+            validate_never_prepared(origin["never_prepared"], expected_owner=owners[key])
+            _require(
+                all(
+                    d["kind"] == "unaccepted"
+                    for d in proposal["children"]
+                    if canonical(d["origin"]["owner"]) == key
+                ),
+                "unprepared origin cannot supply accepted child work",
+            )
     children = proposal_children(proposal["successor"])
     old_identities = {
         (d["origin"]["owner"]["tool"], d["origin"]["owner"]["id"], d["origin"]["request_id"])
@@ -196,13 +214,19 @@ def _origin_records(
     recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
 ) -> dict[bytes, dict[str, Any]]:
     owners = _owners(proposal)
-    trusted = {canonical(o["reference"]["owner"]): o for o in verified_origins}
+    trusted = {canonical(origin_owner(o)): o for o in verified_origins}
     _require(len(trusted) == len(verified_origins), "duplicate independently verified origin")
     result: dict[bytes, dict[str, Any]] = {}
     proposals: set[bytes] = set()
     for origin in proposal["origins"]:
+        key = canonical(origin_owner(origin))
+        if "never_prepared" in origin:
+            _require(
+                trusted.get(key) == origin,
+                "unprepared retirement is not independently verified",
+            )
+            continue
         reference = origin["reference"]
-        key = canonical(reference["owner"])
         known = trusted.get(key)
         _require(
             known is not None and origin == {k: known[k] for k in ("reference", "custody")},
@@ -229,8 +253,15 @@ def _origin_records(
         result[key] = record
     _require(len(proposals) == 1, "original participant proposals disagree")
     original = next(iter(result.values()))["proposal"]
+    for origin in proposal["origins"]:
+        if "never_prepared" in origin:
+            validate_never_prepared(
+                origin["never_prepared"],
+                proposal=original,
+                expected_owner=owners[canonical(origin_owner(origin))],
+            )
     _require(
-        {canonical(p["owner"]) for p in original["participants"]} == set(result),
+        {canonical(p["owner"]) for p in original["participants"]} == set(owners),
         "workflow recovery omits an original participant owner",
     )
     expected = {
@@ -331,7 +362,7 @@ def _dispositions(
         for role, reference in original["target"].items()
     }
     _require(proposal["successor"]["target"] == target, "workflow recovery changed target lineage")
-    origins = {canonical(o["reference"]["owner"]): o for o in proposal["origins"]}
+    origins = {canonical(origin_owner(o)): o for o in proposal["origins"]}
     for disposition in proposal["children"]:
         old, new = disposition["origin"], disposition["successor"]
         participant, old_slot = original_children[_key(old)]
@@ -342,7 +373,11 @@ def _dispositions(
             and child_action(old_slot) == child_action(new_slot),
             "workflow recovery changed child procedure role",
         )
-        binding = _ready(records[canonical(old["owner"])]).get(_key(old))
+        record = records.get(canonical(old["owner"]))
+        if record is None:
+            _require(disposition["kind"] == "unaccepted", "unprepared origin has accepted child")
+            continue
+        binding = _ready(record).get(_key(old))
         if disposition["kind"] == "unaccepted":
             _require(
                 binding is None or "completed" not in binding,
@@ -400,9 +435,7 @@ def _preparation(value: dict[str, Any], proposal: dict[str, Any]) -> None:
     participant = next((p for p in proposal["participants"] if p["owner"] == owner), None)
     _require(participant is not None, "supersession preparation owner outside closure")
     assert participant is not None
-    origin = next(
-        o for o in proposal["origins"] if o["reference"]["owner"] == participant["origin"]
-    )
+    origin = next(o for o in proposal["origins"] if origin_owner(o) == participant["origin"])
     children = [d for d in proposal["children"] if d["origin"]["owner"] == participant["origin"]]
     _require(
         value["recovery_id"] == proposal["recovery_id"]
@@ -411,7 +444,7 @@ def _preparation(value: dict[str, Any], proposal: dict[str, Any]) -> None:
         and retirement["origin"] == participant["origin"]
         and retirement["recovery_id"] == value["recovery_id"]
         and retirement["proposal_digest"] == value["proposal_digest"]
-        and retirement["origin_digest"] == origin["reference"]["digest"]
+        and retirement["origin_digest"] == origin_digest(origin)
         and retirement["children_digest"] == digest(children),
         "supersession retirement preimage changed",
     )
