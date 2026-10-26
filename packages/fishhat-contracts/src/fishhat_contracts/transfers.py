@@ -6,6 +6,7 @@ permissions. Retained inputs model exact replay without mutating a store or driv
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
 from typing import Any
 
 from .validation import ContractError, canonical, digest, validate
@@ -147,7 +148,12 @@ def validate_workflow_transfer(workflow: dict[str, Any]) -> None:
     )
 
 
-def validate_transfer_request(request: dict[str, Any], workflow: dict[str, Any]) -> str:
+def validate_transfer_request(
+    request: dict[str, Any],
+    workflow: dict[str, Any],
+    *,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
+) -> str:
     """Return replay or new for decoded current-capsule input; never grant execution.
 
     A native owner also retains older transfer identities in protected history and
@@ -157,7 +163,7 @@ def validate_transfer_request(request: dict[str, Any], workflow: dict[str, Any])
     from .handoffs import validate_workflow
 
     validate("records.schema.json", request, "WorkflowTransferRequest")
-    validate_workflow(workflow)
+    validate_workflow(workflow, recovery_readers=recovery_readers)
     proposal = request["proposal"]
     validate_transfer_proposal(proposal)
     _require(

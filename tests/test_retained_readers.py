@@ -15,6 +15,7 @@ from fishhat_contracts.record_delivery import (
 )
 from fishhat_contracts.validation import ContractError, canonical, validate, validate_cli
 
+from tests.operation_support import seal_operation
 from tests.test_owner_handoffs import U, V, cli, operation, wire, work_page
 
 CHECK_PURPOSE = {
@@ -38,6 +39,7 @@ def retained_record():
     reference = RecordSnapshot(value, U).reference
     reference["schema"]["digest"] = "sha256:" + "e" * 64
     value["retained_extension"] = "read-only"
+    seal_operation(value)
     data = canonical(value)
     reference.update(size=len(data), digest="sha256:" + hashlib.sha256(data).hexdigest())
     return value, reference, data

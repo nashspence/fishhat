@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import copy
 import hashlib
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable, Mapping
 from typing import Any
 
 from .handoffs import PHASES, schema_identity, validate_staged_input, validate_staging
@@ -117,13 +117,18 @@ def bound_plan(binding: dict[str, Any]) -> dict[str, Any]:
     return dict(binding["completed"]["plan"] if "completed" in binding else binding["plan"])
 
 
-def validate_completed_binding(binding: dict[str, Any], participant: dict[str, Any]) -> None:
+def validate_completed_binding(
+    binding: dict[str, Any],
+    participant: dict[str, Any],
+    *,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
+) -> None:
     from .operations import validate_operation
 
     retained = binding["completed"]
     plan, operation = retained["plan"], retained["operation"]
     validate_plan(plan)
-    validate_operation(operation)
+    validate_operation(operation, recovery_readers=recovery_readers)
     _require(
         all(plan["owner"][key] == participant["owner"][key] for key in ("tool", "id"))
         and plan["subject"]["resource"] == participant["resource"]
@@ -135,7 +140,7 @@ def validate_completed_binding(binding: dict[str, Any], participant: dict[str, A
         "completed workflow slot changed original successful work",
     )
     if "adapter" in retained:
-        _adapter_binding(retained)
+        _adapter_binding(retained, recovery_readers=recovery_readers)
 
 
 def proposal_children(
@@ -184,6 +189,7 @@ def _validate_child(
     content: set[bytes],
     *,
     recovery: bool = False,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> None:
     _require(
         child_action(binding) in PHASE_ACTIONS[proposal["type"]].get(binding["phase"], set()),
@@ -191,14 +197,14 @@ def _validate_child(
     )
     if "completed" in binding:
         _require(recovery, "completed workflow slots require explicit recovery")
-        validate_completed_binding(binding, participant)
+        validate_completed_binding(binding, participant, recovery_readers=recovery_readers)
     elif "plan" in binding:
         _require(
             index == 0
             or (recovery and all("completed" in b for b in participant["requests"][:index])),
             "later participant child requires reviewed continuation",
         )
-        _plan_binding(binding, participant, generations, content)
+        _plan_binding(binding, participant, generations, content, recovery_readers=recovery_readers)
         available = {canonical([h["owner"], h["digest"]]) for h in proposal["content"]}
         _require(
             all(
@@ -242,6 +248,8 @@ def _plan_binding(
     participant: dict[str, Any],
     generations: dict[bytes, int],
     content: set[bytes],
+    *,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> None:
     plan = binding["plan"]
     validate_plan(plan)
@@ -266,10 +274,14 @@ def _plan_binding(
         "workflow Plan handle missing from content closure",
     )
     if "adapter" in binding:
-        _adapter_binding(binding)
+        _adapter_binding(binding, recovery_readers=recovery_readers)
 
 
-def _adapter_binding(binding: dict[str, Any]) -> None:
+def _adapter_binding(
+    binding: dict[str, Any],
+    *,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
+) -> None:
     adapter, plan = binding["adapter"], binding["plan"]
     executor, request = adapter["executor"], adapter["request"]
     arguments = plan["subject"]["arguments"]
@@ -289,17 +301,35 @@ def _adapter_binding(binding: dict[str, Any]) -> None:
         "workflow adapter input preimage changed",
     )
     role_schema = SCHEMAS[executor["role"] + "-adapter.schema.json"]["$id"]
+    input_schema = schema_identity(role_schema + "#/$defs/MutationRequest")
+    result_schema = schema_identity(role_schema + "#/$defs/Output")
+    input_key = (input_schema["uri"], arguments["input_schema_digest"])
+    result_key = (arguments["result_schema"]["uri"], arguments["result_schema"]["digest"])
+    input_current = arguments["input_schema_digest"] == input_schema["digest"]
     _require(
-        arguments["input_schema_digest"]
-        == schema_identity(role_schema + "#/$defs/MutationRequest")["digest"]
-        and arguments["result_schema"] == schema_identity(role_schema + "#/$defs/Output"),
+        (input_current or (recovery_readers is not None and input_key in recovery_readers))
+        and arguments["result_schema"]["uri"] == result_schema["uri"]
+        and (
+            arguments["result_schema"] == result_schema
+            or (recovery_readers is not None and result_key in recovery_readers)
+        ),
         "workflow adapter schema binding changed",
     )
+    if not input_current:
+        assert recovery_readers is not None
+        checked = copy.deepcopy(request)
+        recovery_readers[input_key](checked)
+        _require(canonical(checked) == data, "workflow adapter reader changed original input")
     if executor["role"] == "credential-issuer" and request["method"] == "issue":
         _require(request["input"]["issuer"] == executor, "workflow issuer binding changed")
 
 
-def validate_workflow_proposal(proposal: dict[str, Any], *, recovery: bool = False) -> None:
+def validate_workflow_proposal(
+    proposal: dict[str, Any],
+    *,
+    recovery: bool = False,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
+) -> None:
     """Check complete decoded intent and exact child/content joins, not authority."""
     validate("workflow.schema.json", proposal, "WorkflowProposal")
     participants = proposal["participants"]
@@ -317,7 +347,14 @@ def validate_workflow_proposal(proposal: dict[str, Any], *, recovery: bool = Fal
             key = _request_key(participant["owner"], binding["request_id"])
             _require(key not in requests, "duplicate workflow child request")
             _validate_child(
-                binding, participant, index, proposal, generations, content, recovery=recovery
+                binding,
+                participant,
+                index,
+                proposal,
+                generations,
+                content,
+                recovery=recovery,
+                recovery_readers=recovery_readers,
             )
             requests[key] = binding
     seen: set[bytes] = set()
@@ -389,10 +426,16 @@ def _participants(proposal: dict[str, Any]) -> list[dict[str, Any]]:
     ]
 
 
-def validate_workflow_proposal_binding(workflow: dict[str, Any]) -> None:
+def validate_workflow_proposal_binding(
+    workflow: dict[str, Any],
+    *,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
+) -> None:
     """Require the discoverable capsule to preserve its entire immutable proposal."""
     proposal = workflow["proposal"]
-    validate_workflow_proposal(proposal, recovery="recovery" in workflow)
+    validate_workflow_proposal(
+        proposal, recovery="recovery" in workflow, recovery_readers=recovery_readers
+    )
     _require(
         proposal["workflow_id"] == workflow["id"]
         and proposal["type"] == workflow["type"]
@@ -408,14 +451,14 @@ def validate_workflow_proposal_binding(workflow: dict[str, Any]) -> None:
         )
     from .workflow_bindings import require_bound_phase, validate_workflow_bindings
 
-    validate_workflow_bindings(workflow)
+    validate_workflow_bindings(workflow, recovery_readers=recovery_readers)
     _validate_advance_history(workflow)
     phases = PHASES[workflow["type"]]
     if workflow["phase"] in phases and phases.index(workflow["phase"]) > 0:
         require_bound_phase(workflow, phases[phases.index(workflow["phase"]) - 1])
     from .workflow_recovery import validate_recovery_custody
 
-    validate_recovery_custody(workflow)
+    validate_recovery_custody(workflow, recovery_readers=recovery_readers)
 
 
 def prepare_workflow(
@@ -427,6 +470,7 @@ def prepare_workflow(
     verified_content: list[dict[str, Any]],
     verified_adapters: list[dict[str, Any]] | None = None,
     retained: dict[str, Any] | None = None,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> dict[str, Any]:
     """Build/replay a pure capsule after independent receiving checks.
 
@@ -440,13 +484,13 @@ def prepare_workflow(
     validate("common.schema.json", principal, "Id")
     _require(request["owner"] == expected_owner, "workflow receiving owner changed")
     proposal = request["proposal"]
-    validate_workflow_proposal(proposal)
+    validate_workflow_proposal(proposal, recovery_readers=recovery_readers)
     _require(
         any(item["owner"] == expected_owner for item in proposal["participants"]),
         "workflow receiver is not a participant",
     )
     if retained is not None:
-        validate_workflow(retained)
+        validate_workflow(retained, recovery_readers=recovery_readers)
         _require(
             retained["owner"] == expected_owner and retained["proposal"] == proposal,
             "workflow preparation identity conflict",
@@ -473,7 +517,7 @@ def prepare_workflow(
         "workflow local adapter selection is not independently verified",
     )
     result = prepared_capsule(proposal, expected_owner)
-    validate_workflow(result)
+    validate_workflow(result, recovery_readers=recovery_readers)
     return result
 
 
@@ -648,12 +692,17 @@ def _completion_witnesses(request: dict[str, Any], workflow: dict[str, Any]) -> 
     _require(local in transfer["commit_witnesses"], "workflow transfer local commit changed")
 
 
-def validate_advance_request(request: dict[str, Any], workflow: dict[str, Any]) -> str:
+def validate_advance_request(
+    request: dict[str, Any],
+    workflow: dict[str, Any],
+    *,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
+) -> str:
     """Classify exact replay/new decoded input without changing owner state."""
     from .handoffs import validate_workflow
 
     validate("workflow.schema.json", request, "AdvanceRequest")
-    validate_workflow(workflow)
+    validate_workflow(workflow, recovery_readers=recovery_readers)
     _require(
         request["owner"] == workflow["owner"] and request["workflow_id"] == workflow["id"],
         "workflow advance receiver changed",
@@ -700,11 +749,16 @@ def validate_advance_request(request: dict[str, Any], workflow: dict[str, Any]) 
     return "new"
 
 
-def advance_workflow(request: dict[str, Any], workflow: dict[str, Any]) -> dict[str, Any]:
+def advance_workflow(
+    request: dict[str, Any],
+    workflow: dict[str, Any],
+    *,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
+) -> dict[str, Any]:
     """Model one atomic record transition; this does not execute or release anything."""
     from .handoffs import validate_workflow
 
-    disposition = validate_advance_request(request, workflow)
+    disposition = validate_advance_request(request, workflow, recovery_readers=recovery_readers)
     result = copy.deepcopy(workflow)
     if disposition == "replay":
         return result
@@ -730,5 +784,5 @@ def advance_workflow(request: dict[str, Any], workflow: dict[str, Any]) -> dict[
             **{key: result[key] for key in ("generation", "driver_term", "phase", "state")},
         }
     )
-    validate_workflow(result)
+    validate_workflow(result, recovery_readers=recovery_readers)
     return result

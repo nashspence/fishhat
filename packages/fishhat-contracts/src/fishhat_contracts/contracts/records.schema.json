@@ -989,7 +989,7 @@
         "result_handle"
       ],
       "additionalProperties": false,
-      "description": "An exact request accepted by a local management program. Its execution state and effect certainty answer different questions; failed, cancelled or quarantined work can still retain effects and resource holds. Succeeded requires known effect certainty in every representation, including pages and transferred snapshots. The witness owner identity and epoch equal this owner; shared semantic validation enforces that join. Signature authentication, record-digest verification, current authority and native outcome verification remain independently required receiving boundaries. The exact retained Plan is identified by owner and plan_digest and remains readable despite admission expiry while this Operation requires accepted replay or recovery custody. The human caller can disconnect without erasing the accepted responsibility.",
+      "description": "An exact request accepted by a local management program. Its execution state and effect certainty answer different questions; failed, cancelled or quarantined work can still retain effects and resource holds. Succeeded requires known effect certainty in every representation, including pages and transferred snapshots. The witness owner identity and epoch equal this owner; shared semantic validation enforces that join. Signature authentication, record-digest verification, current authority and native outcome verification remain independently required receiving boundaries. The exact retained Plan is identified by owner and plan_digest and remains readable despite admission expiry while this Operation requires accepted replay or recovery custody. The human caller can disconnect without erasing the accepted responsibility. The witness subject_digest is the digest of the complete canonical Operation object with only witness omitted; witness owner, state and generation equal the enclosing snapshot. Kind is acceptance only for accepted and effect for running, waiting and every terminal state; an effect witness may explicitly report uncertainty. These deterministic joins are required in every representation and do not authenticate the signing key or establish native truth. Schema and selected-adapter producer actions require a non-null committed result before succeeded. Native effect completion without that custody remains unresolved; terminal success is never an intermediate promise to attach output later. Independently installed recovery compatibility may admit an exact prior result schema with the same action-owned URI; complete payload verification against its pinned reader remains mandatory.",
       "allOf": [
         {
           "if": {
@@ -1003,6 +1003,67 @@
             "properties": {
               "effect_certainty": {
                 "const": "known"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "accepted"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "witness": {
+                "properties": {
+                  "kind": {
+                    "const": "acceptance"
+                  }
+                }
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "witness": {
+                "properties": {
+                  "kind": {
+                    "const": "effect"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "succeeded"
+              },
+              "subject": {
+                "properties": {
+                  "action": {
+                    "enum": [
+                      "app.backup",
+                      "app.cleanup",
+                      "host.capture-changes",
+                      "publisher.publish",
+                      "publisher.recover",
+                      "adapter.execute"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "result_handle": {
+                "type": "object"
               }
             }
           }
@@ -1048,7 +1109,7 @@
     },
     "Observation": {
       "type": "object",
-      "description": "An observation of a named resource with explicit provenance and time. Operating intent, reachability, power, activity, health-check support, health, and data protection remain separate facts. An observation is never permission to change or delete the resource.",
+      "description": "An observation of a named resource with explicit provenance and time. Operating intent, reachability, power, activity, health-check support, health, and data protection remain separate facts. An observation is never permission to change or delete the resource. A present witness must name this exact owner epoch; authentication and verification of what it attests remain independent receiving boundaries. A large observation may be delivered through an exact Observation RecordReference under the same protected resource, preserving every evidence digest and its original provenance and observation time.",
       "properties": {
         "resource": {
           "type": "object",
@@ -2845,35 +2906,7 @@
         "resource": {
           "anyOf": [
             {
-              "type": "object",
-              "properties": {
-                "kind": {
-                  "enum": [
-                    "domain",
-                    "host",
-                    "app",
-                    "source",
-                    "dns",
-                    "recovery",
-                    "publisher",
-                    "backend",
-                    "adapter",
-                    "interface",
-                    "dataset",
-                    "component"
-                  ]
-                },
-                "id": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 160
-                }
-              },
-              "required": [
-                "kind",
-                "id"
-              ],
-              "additionalProperties": false
+              "$ref": "common.schema.json#/$defs/Resource"
             },
             {
               "type": "null"
@@ -2881,15 +2914,39 @@
           ]
         },
         "evidence": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 71,
-            "maxLength": 71,
-            "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
-          },
-          "minItems": 0,
-          "uniqueItems": true
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 71,
+                "maxLength": 71,
+                "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
+              },
+              "minItems": 0,
+              "uniqueItems": true,
+              "maxItems": 64
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "common.schema.json#/$defs/RecordReference"
+                },
+                {
+                  "properties": {
+                    "record": {
+                      "properties": {
+                        "kind": {
+                          "const": "ProblemEvidence"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "description": "The complete evidence selection: at most 64 digests inline, or an exact ProblemEvidence RecordReference for the whole selection. The inline threshold bounds representation, not total evidence. A reference requires a non-null Problem owner and resource matching its protected owner/resource identity. Every read separately reauthorizes that disclosure scope; failure reporting grants no bearer access. Never silently drop evidence or divide one selection into unrelated errors to fit a frame."
         }
       },
       "required": [
@@ -2901,7 +2958,28 @@
         "evidence"
       ],
       "additionalProperties": false,
-      "description": "An actionable account of what is known and the permitted next step for the named owner/resource. Preserve uncertainty and exact request identity; a failure summary must not imply that earlier effects were undone."
+      "description": "An actionable account of what is known and the permitted next step for the named owner/resource. Preserve uncertainty and exact request identity; a failure summary must not imply that earlier effects were undone.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "evidence": {
+                "type": "object"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "owner": {
+                "$ref": "common.schema.json#/$defs/Owner"
+              },
+              "resource": {
+                "$ref": "common.schema.json#/$defs/Resource"
+              }
+            }
+          }
+        }
+      ]
     },
     "Info": {
       "type": "object",
@@ -3101,7 +3179,7 @@
             ],
             "additionalProperties": false
           },
-          "minItems": 1
+          "minItems": 0
         },
         "owner": {
           "type": "object",
@@ -3281,7 +3359,7 @@
         "witness"
       ],
       "additionalProperties": false,
-      "description": "Reviewable changes to source against an exact base. The proposal preserves live edits for review; it is distinct from publication, accepted configuration and activated application state."
+      "description": "Reviewable changes to source against an exact base. changes is complete for the requested capture scope; an empty list records a completed capture with no differences from that base in that scope. tree_digest still identifies the exact resulting captured tree. Missing or incomplete inspection cannot be reported as an empty successful capture. The proposal preserves live edits for review; it is distinct from publication, accepted configuration and activated application state."
     },
     "Grant": {
       "type": "object",
@@ -4504,7 +4582,29 @@
         "items": {
           "type": "array",
           "items": {
-            "$ref": "records.schema.json#/$defs/Observation"
+            "oneOf": [
+              {
+                "$ref": "records.schema.json#/$defs/Observation"
+              },
+              {
+                "allOf": [
+                  {
+                    "$ref": "common.schema.json#/$defs/RecordReference"
+                  },
+                  {
+                    "properties": {
+                      "record": {
+                        "properties": {
+                          "kind": {
+                            "const": "Observation"
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
           },
           "minItems": 0,
           "maxItems": 256
@@ -4518,16 +4618,20 @@
               "type": "null"
             }
           ]
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
         }
       },
       "required": [
         "format",
         "kind",
         "items",
-        "next_cursor"
+        "next_cursor",
+        "owner"
       ],
       "additionalProperties": false,
-      "description": "A bounded complete page of the permission-filtered owner traversal, with a type discriminator even when empty. Continuations retain the same owner epoch, authenticated principal, resource filter and active/history selection; concurrent changes must not silently omit retained entries. A non-null cursor requires continuation before claiming the traversal is complete."
+      "description": "A bounded complete page of one permission-filtered owner observation traversal, retaining the owner epoch even when empty. Each inline observation and exact Observation RecordReference names that same owner and one distinct resource within the independently retained request selection. References pin their resource before disclosure and their complete payload must be verified before claiming inspection. Continuations retain the authenticated principal, exact selection and owner epoch; concurrent changes must not silently omit retained entries. A non-null cursor requires continuation before claiming the traversal is complete. A single large observation uses its exact immutable reference, never truncated evidence or a new total collection limit. Page and snapshot owner identify the attributed observation owner, not an intermediary transport or cache. Cached and caller-reported observations preserve their declared origin, owner epoch and original time; snapshotting never relabels them as fresh evidence. Current custody of prior epochs uses the separate history protocol rather than rewriting original ownership."
     },
     "EventPage": {
       "type": "object",
@@ -4874,6 +4978,40 @@
         }
       ],
       "description": "A signed finite local freeze or commit attestation. The complete proposal digest binds the workflow, original and next drivers and every participant owner/resource. Together with this exact owner epoch, local capsule generation and frozen/transferred state, it supplies the transfer prerequisite. evidence_digests is empty because further recovery evidence is retained separately in the workflow, not in this bounded attestation. Native receivers independently authenticate the witness and verify the full proposal closure before changing admission or driver authority."
+    },
+    "ProblemEvidence": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/problem-evidence/v1"
+        },
+        "kind": {
+          "const": "ProblemEvidence"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "resource": {
+          "$ref": "common.schema.json#/$defs/Resource"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/Digest"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "owner",
+        "resource",
+        "evidence"
+      ],
+      "additionalProperties": false,
+      "description": "The complete immutable evidence digest selection of a Problem for one exact owner epoch and resource. The owner establishes durable retrievable custody before publishing its RecordReference, without admitting an operation. Complete size, digest, installed schema and owner/resource identity must verify before the selection is used. Each snapshot read independently authorizes the current receiving principal against protected disclosure scope. A rejection need not disclose private evidence, but any advertised selection is complete and retained for its advertised traversal. Evidence extent has no transport count limit; independently approved receiver capacity may explicitly reject new custody, never silently truncate it."
     }
   }
 }

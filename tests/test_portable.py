@@ -29,6 +29,7 @@ from fishhat_client.workspace import (
 from fishhat_contracts.validation import ContractError, digest, strict_yaml, validate, validate_cli
 from fishhat_owner.commands import FORMS, parse_command
 
+from tests.operation_support import seal_operation
 from tests.support import fixture_path
 
 CHECK_PURPOSE = {
@@ -305,6 +306,7 @@ class CliOutcomes(unittest.TestCase):
             }[state]
             value["result"]["effect_certainty"] = "unknown"
             value["result"]["holds"] = [value["request_id"]]
+        seal_operation(value["result"])
         return value
 
     def delivery(self, value):
@@ -360,6 +362,7 @@ class CliOutcomes(unittest.TestCase):
         for state in ("accepted", "running", "waiting", "failed", "cancelled", "quarantined"):
             value = self.result("succeeded")
             value["result"]["state"] = state
+            seal_operation(value["result"])
             with self.subTest(state=state), self.assertRaises(ContractError):
                 validate_cli(value)
 
@@ -370,6 +373,7 @@ class CliOutcomes(unittest.TestCase):
         ):
             value = self.result("succeeded")
             value["result"][field] = replacement
+            seal_operation(value["result"])
             with self.subTest(field=field), self.assertRaises(ContractError):
                 validate_cli(value)
 

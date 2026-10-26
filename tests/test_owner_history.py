@@ -18,6 +18,7 @@ from fishhat_contracts.record_delivery import RecordSnapshot, validate_record_pa
 from fishhat_contracts.validation import ContractError, canonical, digest, validate, validate_cli
 from fishhat_owner.commands import parse_command
 
+from tests.operation_support import seal_operation
 from tests.test_contracts import plan, uid
 from tests.test_owner_handoffs import NOW, cli, operation, request, wire
 from tests.test_plan_review import reseal
@@ -145,7 +146,7 @@ def test_fresh_client_discovers_every_retained_epoch_without_previous_owner_iden
 def test_original_bytes_and_unresolved_custody_survive_current_owner_reads(state):
     original = operation()
     original.update(state=state, effect_certainty="unknown", holds=[uid("unresolved")])
-    original["witness"]["state"] = state
+    seal_operation(original)
     original_bytes = canonical(original)
     custody = custody_for(original)
     snapshot = RecordSnapshot(original, uid("retained-snapshot"))
@@ -386,6 +387,7 @@ def test_recovery_cannot_select_its_own_snapshot_or_forget_later_outcomes(change
     else:
         authoritative["generation"] += 1
         authoritative["holds"].append(uid("later-accepted-hold"))
+    seal_operation(authoritative)
     verified = RecordSnapshot(authoritative, uid("authoritative-snapshot")).reference
     with pytest.raises(ContractError, match="authoritative record changed"):
         recover(custody, original, reviewed, verified_reference=verified)

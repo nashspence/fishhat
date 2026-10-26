@@ -10,7 +10,7 @@ from fishhat_contracts.validation import ROOT, ContractError
 FORMS = json.loads((ROOT / "contracts/owner-cli.json").read_text())["forms"]
 PATTERNS = {
     "{cursor}": r"[A-Za-z0-9_-]{1,256}",
-    "{kind}": r"(?:domain|host|app|source|dns|recovery|publisher|backend|adapter|interface|dataset|component)",
+    "{kind}": r"(?:domain|host|app|source|dns|recovery|publisher|backend|adapter|interface|dataset|component|workflow)",
     "{resource}": r"[A-Za-z0-9][A-Za-z0-9._:/@-]{0,159}",
     "{tool}": r"(?:host-ops|app-ops)",
     "{id}": r"[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?",

@@ -479,6 +479,7 @@ def validate_cli(
     value: dict[str, Any],
     *,
     retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None = None,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> None:
     """Validate a CLI envelope using independently installed historical readers.
 
@@ -507,7 +508,13 @@ def validate_cli(
     result = value["result"]
     from .handoffs import validate_cli_result
 
-    validate_cli_result(result, retained_readers=retained_readers)
+    validate_cli_result(
+        result, retained_readers=retained_readers, recovery_readers=recovery_readers
+    )
+    if value["problem"] is not None:
+        from .record_delivery import validate_problem
+
+        validate_problem(value["problem"], retained_readers=retained_readers)
     operation = result if isinstance(result, dict) and result.get("kind") == "Operation" else None
     owner_states = {
         "accepted",
@@ -611,6 +618,16 @@ def _material_digests(value: Any, schema: Any, base: str) -> set[str]:
 
 def validate_plan(value: dict[str, Any]) -> None:
     validate("records.schema.json", value, "Plan")
+    if value["subject"]["action"] == "publisher.publish":
+        from .publication import validate_publication_intent
+
+        arguments = value["subject"]["arguments"]
+        validate_publication_intent(
+            source=arguments["source"],
+            entry=arguments["entry"],
+            version=arguments["version"],
+            expected_previous=arguments["expected_previous"],
+        )
     expected = digest({k: v for k, v in value.items() if k not in ("digest", "witness")})
     if value["digest"] != expected or value["witness"]["subject_digest"] != expected:
         raise ContractError("plan digest mismatch")

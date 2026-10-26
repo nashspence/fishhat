@@ -23,6 +23,7 @@ from fishhat_contracts.witness import sign
 from fishhat_contracts.workflows import decode_workflow_input
 from fishhat_owner.commands import parse_command
 
+from tests.operation_support import seal_operation
 from tests.test_contracts import uid
 
 CHECK_PURPOSE = {
@@ -308,7 +309,7 @@ def adapter_result():
         },
         "schema": copy.deepcopy(identity),
     }
-    return op, data, installed
+    return seal_operation(op), data, installed
 
 
 def test_prepared_workflow_is_listable_before_any_child_is_accepted():
@@ -414,6 +415,7 @@ def test_resource_and_observation_continuations_share_cli_envelope():
         page = {
             "format": "deployment-ops/record/v1",
             "kind": "ObservationPage",
+            "owner": observation["owner"],
             "items": items,
             "next_cursor": "next_1",
         }
@@ -498,10 +500,12 @@ def test_typed_adapter_result_checks_bytes_schema_and_exact_operation_binding():
     ):
         changed = copy.deepcopy(op)
         changed["result_handle"]["handle"]["binding"] = replacement
+        seal_operation(changed)
         with pytest.raises(ContractError):
             validate_operation(changed)
     changed = copy.deepcopy(op)
     changed["result_handle"]["schema"]["digest"] = D
+    seal_operation(changed)
     with pytest.raises(ContractError):
         validate_operation(changed)
 
@@ -512,6 +516,7 @@ def test_valid_content_digest_cannot_substitute_a_different_result_shape():
     op["result_handle"]["handle"].update(
         size=len(data), digest="sha256:" + hashlib.sha256(data).hexdigest()
     )
+    seal_operation(op)
     with pytest.raises(ContractError):
         validate_result_payload(op, data, installed=installed)
 
@@ -519,6 +524,7 @@ def test_valid_content_digest_cannot_substitute_a_different_result_shape():
 def test_receipt_only_action_cannot_return_an_untyped_or_adapter_payload():
     op, _, _ = adapter_result()
     op["subject"] = operation()["subject"]
+    seal_operation(op)
     with pytest.raises(ContractError):
         validate_operation(op)
 

@@ -33,8 +33,11 @@ RECORD_SCHEMAS = {
     "Workflow": ("records.schema.json", "Workflow"),
     "Discovery": ("records.schema.json", "Info"),
     "ResourceReport": ("resource-records.schema.json", "ResourceReport"),
+    "Observation": ("records.schema.json", "Observation"),
+    "ProblemEvidence": ("records.schema.json", "ProblemEvidence"),
 }
-OBSERVATION_KINDS = {"Discovery", "ResourceReport"}
+SNAPSHOT_ID_KINDS = {"Discovery", "ResourceReport", "Observation", "ProblemEvidence"}
+SCOPED_KINDS = {"Observation", "ProblemEvidence"}
 
 
 def _require(condition: bool, message: str) -> None:
@@ -43,11 +46,14 @@ def _require(condition: bool, message: str) -> None:
 
 
 def _identity(record: dict[str, Any], kind: str, snapshot_id: str) -> dict[str, Any]:
-    return {
+    identity = {
         "kind": kind,
-        "id": snapshot_id if kind in OBSERVATION_KINDS else record["id"],
-        "generation": None if kind == "Plan" or kind in OBSERVATION_KINDS else record["generation"],
+        "id": snapshot_id if kind in SNAPSHOT_ID_KINDS else record["id"],
+        "generation": None if kind == "Plan" or kind in SNAPSHOT_ID_KINDS else record["generation"],
     }
+    if kind in SCOPED_KINDS:
+        identity["resource"] = copy.deepcopy(record["resource"])
+    return identity
 
 
 def _schema_uri(kind: str) -> str:
@@ -56,14 +62,21 @@ def _schema_uri(kind: str) -> str:
     return str(SCHEMAS[schema]["$id"]) + "#/$defs/" + definition
 
 
-def _validate_record(record: dict[str, Any], kind: str) -> None:
+def _validate_record(
+    record: dict[str, Any],
+    kind: str,
+    *,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
+) -> None:
     _require(kind in RECORD_SCHEMAS, "unsupported record snapshot kind")
     if kind == "Plan":
         validate_plan(record)
     elif kind == "Workflow":
-        validate_workflow(record)
+        validate_workflow(record, recovery_readers=recovery_readers)
     elif kind == "Operation":
-        validate_operation(record)
+        validate_operation(record, recovery_readers=recovery_readers)
+    elif kind == "Observation":
+        validate_observation(record)
     else:
         schema, definition = RECORD_SCHEMAS[kind]
         validate(schema, record, definition)
@@ -74,6 +87,7 @@ def validate_record_reference(
     *,
     expected_owner: dict[str, Any] | None = None,
     expected_record: dict[str, Any] | None = None,
+    expected_resource: dict[str, Any] | None = None,
     retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None = None,
 ) -> None:
     """Check exact installed/retained schema and independent owner/record expectations.
@@ -84,10 +98,10 @@ def validate_record_reference(
     validate("common.schema.json", reference, "RecordReference")
     kind = reference["record"]["kind"]
     uri = _schema_uri(kind)
-    if kind in OBSERVATION_KINDS:
+    if kind in SNAPSHOT_ID_KINDS:
         _require(
             reference["record"]["id"] == reference["snapshot_id"],
-            "observation snapshot identity changed",
+            "record snapshot identity changed",
         )
     current = reference["schema"] == schema_identity(uri)
     # Historical documents are read-only. The independent receiving owner installs
@@ -103,6 +117,11 @@ def validate_record_reference(
         _require(
             reference["record"] == expected_record, "record identity or generation substitution"
         )
+    if expected_resource is not None:
+        _require(
+            reference["record"].get("resource") == expected_resource,
+            "record disclosure resource substitution",
+        )
 
 
 class RecordSnapshot:
@@ -113,12 +132,17 @@ class RecordSnapshot:
     """
 
     def __init__(
-        self, record: dict[str, Any], snapshot_id: str, *, record_kind: str | None = None
+        self,
+        record: dict[str, Any],
+        snapshot_id: str,
+        *,
+        record_kind: str | None = None,
+        recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
     ) -> None:
         # Info has no kind discriminator. Its only valid snapshot kind is the
         # explicitly schema-pinned Discovery projection, never a ledger record.
         kind = record_kind if record_kind is not None else record.get("kind", "Discovery")
-        _validate_record(record, kind)
+        _validate_record(record, kind, recovery_readers=recovery_readers)
         validate("common.schema.json", snapshot_id, "UUID")
         self._record = copy.deepcopy(record)
         self._data = canonical(self._record)
@@ -227,7 +251,9 @@ def validate_record_payload(
     *,
     expected_owner: dict[str, Any],
     expected_record: dict[str, Any] | None = None,
+    expected_resource: dict[str, Any] | None = None,
     retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None = None,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> dict[str, Any]:
     """Verify complete transferred bytes once; a transport frame cap is not a record cap.
 
@@ -238,6 +264,7 @@ def validate_record_payload(
         reference,
         expected_owner=expected_owner,
         expected_record=expected_record,
+        expected_resource=expected_resource,
         retained_readers=retained_readers,
     )
     _require(
@@ -250,7 +277,7 @@ def validate_record_payload(
     kind = reference["record"]["kind"]
     uri = _schema_uri(kind)
     if reference["schema"] == schema_identity(uri):
-        _validate_record(value, kind)
+        _validate_record(value, kind, recovery_readers=recovery_readers)
     else:
         assert retained_readers is not None
         retained_readers[reference["schema"]["digest"]](value)
@@ -261,6 +288,69 @@ def validate_record_payload(
     )
     _require(canonical(value) == data, "record payload encoding is not canonical")
     return cast(dict[str, Any], value)
+
+
+def validate_observation(observation: dict[str, Any]) -> None:
+    """Check one complete observation without upgrading its provenance or authority."""
+    validate("records.schema.json", observation, "Observation")
+    witness = observation["witness"]
+    if witness is not None:
+        _require(witness["owner"] == observation["owner"], "observation witness owner mismatch")
+
+
+def validate_observation_page(
+    page: dict[str, Any],
+    *,
+    expected_owner: dict[str, Any],
+    resources: list[dict[str, Any]] | None = None,
+    retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None = None,
+) -> None:
+    """Join inline/reference observations to the retained query, including empty replies.
+
+    Query matching does not authorize disclosure. The native owner independently
+    checks current principal permission for each protected resource and snapshot.
+    """
+    validate("records.schema.json", page, "ObservationPage")
+    _require(page["owner"] == expected_owner, "observation page owner epoch changed")
+    selected = None if resources is None else {canonical(resource) for resource in resources}
+    seen: set[bytes] = set()
+    for item in page["items"]:
+        _require(item["owner"] == expected_owner, "observation page contains another owner epoch")
+        if item.get("kind") == "RecordReference":
+            validate_record_reference(
+                item, expected_owner=expected_owner, retained_readers=retained_readers
+            )
+            resource = item["record"]["resource"]
+        else:
+            validate_observation(item)
+            resource = item["resource"]
+        identity = canonical(resource)
+        _require(identity not in seen, "observation page repeats resource")
+        seen.add(identity)
+        _require(
+            selected is None or identity in selected, "observation outside requested selection"
+        )
+
+
+def validate_problem(
+    problem: dict[str, Any],
+    *,
+    retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None = None,
+) -> None:
+    """Check complete inline evidence or its exact owner/resource snapshot binding.
+
+    The Problem cannot install a historical reader or grant access to its evidence.
+    Retrieval must reauthorize the protected scope and verify the complete payload.
+    """
+    validate("records.schema.json", problem, "Problem")
+    evidence = problem["evidence"]
+    if isinstance(evidence, dict):
+        validate_record_reference(
+            evidence,
+            expected_owner=problem["owner"],
+            expected_resource=problem["resource"],
+            retained_readers=retained_readers,
+        )
 
 
 def validate_log_page(

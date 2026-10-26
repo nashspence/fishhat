@@ -8,6 +8,7 @@ authorization, durable transactions or material storage.
 from __future__ import annotations
 
 import copy
+from collections.abc import Callable, Mapping
 from datetime import datetime
 from typing import Any
 
@@ -50,8 +51,14 @@ def _predecessor(intent: dict[str, Any]) -> dict[str, Any]:
     return dict(intent[name])
 
 
-def _operation(record: dict[str, Any], reference: dict[str, Any], binding: dict[str, Any]) -> None:
-    validate_operation(record)
+def _operation(
+    record: dict[str, Any],
+    reference: dict[str, Any],
+    binding: dict[str, Any],
+    *,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
+) -> None:
+    validate_operation(record, recovery_readers=recovery_readers)
     plan = bound_plan(binding)
     identity_matches = (
         record == binding["completed"]["operation"]
@@ -152,6 +159,8 @@ def _binding_shape(
     request: dict[str, Any],
     workflow: dict[str, Any],
     ready: dict[bytes, dict[str, Any]],
+    *,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
 ) -> None:
     children = proposal_children(workflow["proposal"])
     key = _key(request["child"])
@@ -178,7 +187,7 @@ def _binding_shape(
     _require(len(content) == len(request["content"]), "duplicate workflow binding content")
     identities = {_request_key(h["owner"], h["id"]) for h in request["content"]}
     _require(len(identities) == len(content), "workflow binding content identity changed")
-    _plan_binding(binding, participant, generations, content)
+    _plan_binding(binding, participant, generations, content, recovery_readers=recovery_readers)
     available = {canonical([h["owner"], h["digest"]]) for h in request["content"]}
     _require(
         all(
@@ -191,7 +200,7 @@ def _binding_shape(
     _require(_key(reference) in ready, "workflow predecessor Plan is not retained")
     _require(len(request["predecessors"]) == 1, "workflow binding requires exact predecessor")
     predecessor = request["predecessors"][0]
-    _operation(predecessor, reference, ready[_key(reference)])
+    _operation(predecessor, reference, ready[_key(reference)], recovery_readers=recovery_readers)
     if intent["kind"] == "reviewed-successor":
         _require(
             binding["plan"]["subject"] == intent["subject"], "workflow successor subject changed"
@@ -204,7 +213,11 @@ def _binding_shape(
         _material(request["materials"][0], request, intent, predecessor, ready)
 
 
-def validate_workflow_bindings(workflow: dict[str, Any]) -> None:
+def validate_workflow_bindings(
+    workflow: dict[str, Any],
+    *,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
+) -> None:
     """Check retained exact bindings without reapplying current admission checks."""
     ready = _ready(workflow)
     ids: set[str] = set()
@@ -224,7 +237,7 @@ def validate_workflow_bindings(workflow: dict[str, Any]) -> None:
             and original["driver_term"] <= workflow["driver_term"],
             "retained workflow binding identity or generation changed",
         )
-        _binding_shape(original, workflow, ready)
+        _binding_shape(original, workflow, ready, recovery_readers=recovery_readers)
         ready[_key(original["child"])] = original["binding"]
         generation = receipt["generation"]
 
@@ -250,11 +263,16 @@ def require_bound_phase(
     )
 
 
-def validate_bind_request(request: dict[str, Any], workflow: dict[str, Any]) -> str:
+def validate_bind_request(
+    request: dict[str, Any],
+    workflow: dict[str, Any],
+    *,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
+) -> str:
     from .handoffs import validate_workflow
 
     validate("workflow.schema.json", request, "BindRequest")
-    validate_workflow(workflow)
+    validate_workflow(workflow, recovery_readers=recovery_readers)
     _require(
         request["owner"] == workflow["owner"] and request["workflow_id"] == workflow["id"],
         "workflow binding receiver changed",
@@ -287,7 +305,7 @@ def validate_bind_request(request: dict[str, Any], workflow: dict[str, Any]) -> 
     ready = _ready(workflow)
     for receipt in workflow["bindings"]:
         ready[_key(receipt["request"]["child"])] = receipt["request"]["binding"]
-    _binding_shape(request, workflow, ready)
+    _binding_shape(request, workflow, ready, recovery_readers=recovery_readers)
     return "new"
 
 
@@ -349,6 +367,7 @@ def bind_workflow(
     verified_content: list[dict[str, Any]],
     now: str,
     verified_adapters: list[dict[str, Any]] | None = None,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> dict[str, Any]:
     """Retain one independently reviewed continuation; never submit a native child.
 
@@ -358,7 +377,7 @@ def bind_workflow(
     """
     from .handoffs import validate_workflow
 
-    disposition = validate_bind_request(request, workflow)
+    disposition = validate_bind_request(request, workflow, recovery_readers=recovery_readers)
     result = copy.deepcopy(workflow)
     if disposition == "replay":
         return result
@@ -385,5 +404,5 @@ def bind_workflow(
             "generation": result["generation"],
         }
     )
-    validate_workflow(result)
+    validate_workflow(result, recovery_readers=recovery_readers)
     return result

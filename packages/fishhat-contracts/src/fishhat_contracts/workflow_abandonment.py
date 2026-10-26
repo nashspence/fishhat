@@ -8,6 +8,7 @@ was accepted, nor atomic admission fencing or durable reservation replacement.
 from __future__ import annotations
 
 import copy
+from collections.abc import Callable, Mapping
 from typing import Any
 
 from .history import validate_owner_custody
@@ -117,6 +118,7 @@ def abandon_workflow_recovery(
     verified_abandonment: dict[str, Any],
     verified_no_child_admission: bool,
     retained: dict[str, Any] | None = None,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> dict[str, Any]:
     """Return a retained local proof after positive native abandonment checks.
 
@@ -141,7 +143,7 @@ def abandon_workflow_recovery(
         )
         return copy.deepcopy(retained)
     _require(proposal == verified_proposal, "abandoned proposal is not independently selected")
-    _structure(proposal)
+    _structure(proposal, recovery_readers=recovery_readers)
     _require(verified_no_child_admission is True, "accepted successor child requires recovery")
     validate_abandonment(verified_abandonment, selection=recovery_selection(proposal))
     _require(
@@ -152,7 +154,12 @@ def abandon_workflow_recovery(
     return copy.deepcopy(verified_abandonment)
 
 
-def record_workflow_abandonment(workflow: dict[str, Any], proof: dict[str, Any]) -> dict[str, Any]:
+def record_workflow_abandonment(
+    workflow: dict[str, Any],
+    proof: dict[str, Any],
+    *,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
+) -> dict[str, Any]:
     """Expose same-epoch abandonment without erasing accepted preparation/commit.
 
     A current custodian preserves a historical capsule unchanged and keeps its
@@ -161,7 +168,7 @@ def record_workflow_abandonment(workflow: dict[str, Any], proof: dict[str, Any])
     """
     from .handoffs import validate_workflow
 
-    validate_workflow(workflow)
+    validate_workflow(workflow, recovery_readers=recovery_readers)
     custody = workflow.get("recovery")
     _require(custody is not None, "abandoned workflow has no successor preparation")
     assert custody is not None
@@ -191,5 +198,5 @@ def record_workflow_abandonment(workflow: dict[str, Any], proof: dict[str, Any])
         phase="abandoned",
         abandonment={"proof": copy.deepcopy(proof), "generation": result["generation"]},
     )
-    validate_workflow(result)
+    validate_workflow(result, recovery_readers=recovery_readers)
     return result

@@ -21,6 +21,7 @@ from fishhat_contracts.workflows import (
     validate_workflow_proposal,
 )
 
+from tests.operation_support import seal_operation
 from tests.test_contracts import uid
 from tests.test_owner_handoffs import operation, request, staged_workflow_input, workflow
 from tests.test_plan_review import reseal
@@ -96,8 +97,7 @@ def successful(reference, binding, generation=1):
         effect_certainty="known",
         generation=generation,
     )
-    result["witness"].update(owner=result["owner"], state="succeeded", generation=generation)
-    return result
+    return seal_operation(result)
 
 
 def seal_material(material, workflow_id):
@@ -122,6 +122,7 @@ def attach_result(record, value, custodian):
         else schema_identity("https://fishhat.invalid/contracts/publisher-receipt.schema.json")
     )
     record["result_handle"] = {"handle": handle, "schema": schema}
+    seal_operation(record)
     return material_handle(custodian, digest(value), size=len(canonical(value)))
 
 

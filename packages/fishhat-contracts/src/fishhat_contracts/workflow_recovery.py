@@ -35,16 +35,65 @@ def _key(reference: dict[str, Any]) -> bytes:
     return _request_key(reference["owner"], reference["request_id"])
 
 
-def _current_record_schema(reference: dict[str, Any], kind: str) -> None:
-    from .handoffs import schema_identity
-
+def _record_schema(reference: dict[str, Any], kind: str) -> None:
     validate("common.schema.json", reference, "RecordReference")
     _require(
         reference["record"]["kind"] == kind
-        and reference["schema"]
-        == schema_identity(f"https://fishhat.invalid/contracts/records.schema.json#/$defs/{kind}"),
-        "unsupported workflow recovery schema: historical evidence requires the current v1 semantic closure",
+        and reference["schema"]["uri"]
+        == f"https://fishhat.invalid/contracts/records.schema.json#/$defs/{kind}",
+        "workflow recovery record kind or schema URI changed",
     )
+
+
+def _recovery_record(
+    reference: dict[str, Any],
+    record: dict[str, Any],
+    kind: str,
+    *,
+    retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
+) -> dict[str, Any]:
+    """Read exact original bytes under independently installed recovery semantics.
+
+    Inspection support alone never qualifies historical evidence for recovery.
+    The receiving owner installs each recovery reader for one exact URI and
+    closure digest after establishing compatible v1 meanings and preserved
+    guarantees. It may validate, but never translate or rewrite, original bytes.
+    Current v1 semantic checks remain required after that independent reader.
+    This context provides neither record authentication nor execution authority.
+    """
+    from .handoffs import schema_identity, validate_workflow
+    from .operations import validate_operation
+
+    _record_schema(reference, kind)
+    schema = reference["schema"]
+    current = schema == schema_identity(schema["uri"])
+    reader = (
+        None
+        if recovery_readers is None
+        else recovery_readers.get((schema["uri"], schema["digest"]))
+    )
+    _require(
+        current or reader is not None,
+        "unsupported workflow recovery schema: independently installed compatible v1 reader required",
+    )
+    original = canonical(record)
+    result = validate_record_payload(
+        reference,
+        original,
+        expected_owner=reference["owner"],
+        retained_readers=retained_readers,
+        recovery_readers=recovery_readers,
+    )
+    if not current:
+        assert reader is not None
+        reader(result)
+        _require(canonical(result) == original, "workflow recovery reader changed original bytes")
+        if kind == "Workflow":
+            validate_workflow(result, recovery_readers=recovery_readers)
+        else:
+            validate_operation(result, recovery_readers=recovery_readers)
+    return result
 
 
 def _owners(proposal: dict[str, Any]) -> dict[bytes, dict[str, Any]]:
@@ -63,21 +112,28 @@ def _owners(proposal: dict[str, Any]) -> dict[bytes, dict[str, Any]]:
     return result
 
 
-def _structure(proposal: dict[str, Any]) -> None:
-    # Inspect references before validating embedded current-format evidence, so a
-    # different supported inspection reader is explicitly refused for recovery.
+def _structure(
+    proposal: dict[str, Any],
+    *,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
+) -> None:
+    # Retained accepted lineage preserves its exact historical schema identities.
+    # New recovery admission separately qualifies readers against protected state;
+    # merely inspecting retained custody never reauthorizes its original inputs.
     for origin in proposal.get("origins", []):
         if isinstance(origin, dict) and isinstance(origin.get("reference"), dict):
-            _current_record_schema(origin["reference"], "Workflow")
+            _record_schema(origin["reference"], "Workflow")
     for disposition in proposal.get("children", []):
         if not isinstance(disposition, dict):
             continue
         for name in ("operation", "recovery"):
             evidence = disposition.get(name)
             if isinstance(evidence, dict) and isinstance(evidence.get("reference"), dict):
-                _current_record_schema(evidence["reference"], "Operation")
+                _record_schema(evidence["reference"], "Operation")
     validate("workflow-recovery.schema.json", proposal, "RecoveryProposal")
-    validate_workflow_proposal(proposal["successor"], recovery=True)
+    validate_workflow_proposal(
+        proposal["successor"], recovery=True, recovery_readers=recovery_readers
+    )
     _require(
         proposal["workflow_id"] == proposal["successor"]["workflow_id"],
         "workflow recovery successor identity changed",
@@ -137,6 +193,7 @@ def _origin_records(
     proposal: dict[str, Any],
     verified_origins: list[dict[str, Any]],
     retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
 ) -> dict[bytes, dict[str, Any]]:
     owners = _owners(proposal)
     trusted = {canonical(o["reference"]["owner"]): o for o in verified_origins}
@@ -160,11 +217,12 @@ def _origin_records(
             assert custody is not None
             validate_owner_custody(custody, expected_custodian=current)
             _require(custody["origin"] == reference["owner"], "workflow recovery custody changed")
-        record = validate_record_payload(
+        record = _recovery_record(
             reference,
-            canonical(known["record"]),
-            expected_owner=reference["owner"],
+            known["record"],
+            "Workflow",
             retained_readers=retained_readers,
+            recovery_readers=recovery_readers,
         )
         _require(record["type"] == proposal["successor"]["type"], "recovery procedure changed")
         proposals.add(canonical(record["proposal"]))
@@ -198,13 +256,15 @@ def _evidence(
     evidence: dict[str, Any],
     *,
     retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
 ) -> dict[str, Any]:
     reference, record = evidence["reference"], evidence["operation"]
-    return validate_record_payload(
+    return _recovery_record(
         reference,
-        canonical(record),
-        expected_owner=reference["owner"],
+        record,
+        "Operation",
         retained_readers=retained_readers,
+        recovery_readers=recovery_readers,
     )
 
 
@@ -214,9 +274,12 @@ def _recovered_child(
     current_owner: dict[str, Any],
     origin: dict[str, Any],
     retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
 ) -> None:
     recovered = disposition["recovery"]
-    operation = _evidence(recovered, retained_readers=retained_readers)
+    operation = _evidence(
+        recovered, retained_readers=retained_readers, recovery_readers=recovery_readers
+    )
     plan = recovered["plan"]
     validate_plan(plan)
     scoped_action = "app.recover" if current_owner["tool"] == "app-ops" else "host.recover"
@@ -251,6 +314,7 @@ def _dispositions(
     proposal: dict[str, Any],
     records: dict[bytes, dict[str, Any]],
     retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
 ) -> None:
     original = next(iter(records.values()))["proposal"]
     original_children = proposal_children(original)
@@ -288,7 +352,11 @@ def _dispositions(
         _require(binding is not None, "accepted child lacks its exact retained Plan")
         assert binding is not None
         plan = bound_plan(binding)
-        operation = _evidence(disposition["operation"], retained_readers=retained_readers)
+        operation = _evidence(
+            disposition["operation"],
+            retained_readers=retained_readers,
+            recovery_readers=recovery_readers,
+        )
         identity_matches = (
             operation == binding["completed"]["operation"]
             if "completed" in binding
@@ -309,6 +377,7 @@ def _dispositions(
                 new["owner"],
                 origins[canonical(old["owner"])],
                 retained_readers,
+                recovery_readers,
             )
 
 
@@ -317,11 +386,12 @@ def validate_recovery_proposal(
     *,
     verified_origins: list[dict[str, Any]],
     retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None = None,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> None:
     """Check exact latest protected origin joins, without proving native retirement."""
-    _structure(proposal)
-    records = _origin_records(proposal, verified_origins, retained_readers)
-    _dispositions(proposal, records, retained_readers)
+    _structure(proposal, recovery_readers=recovery_readers)
+    records = _origin_records(proposal, verified_origins, retained_readers, recovery_readers)
+    _dispositions(proposal, records, retained_readers, recovery_readers)
 
 
 def _preparation(value: dict[str, Any], proposal: dict[str, Any]) -> None:
@@ -365,7 +435,11 @@ def _preparation_closure(values: list[dict[str, Any]], proposal: dict[str, Any])
     return found
 
 
-def validate_recovery_custody(workflow: dict[str, Any]) -> None:
+def validate_recovery_custody(
+    workflow: dict[str, Any],
+    *,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
+) -> None:
     """Validate discoverable immutable lineage without reauthorizing historical inputs."""
     custody = workflow.get("recovery")
     if custody is None:
@@ -373,7 +447,7 @@ def validate_recovery_custody(workflow: dict[str, Any]) -> None:
     validate("workflow-recovery.schema.json", custody, "RecoveryCustody")
     request = custody["request"]
     proposal = request["proposal"]
-    _structure(proposal)
+    _structure(proposal, recovery_readers=recovery_readers)
     _require(
         request["owner"] == workflow["owner"]
         and custody["request_digest"] == digest(request)
@@ -452,6 +526,7 @@ def prepare_workflow_recovery(
     verified_abandonments: list[dict[str, Any]],
     local_abandonments: list[dict[str, Any]],
     retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None = None,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> dict[str, Any]:
     """Model atomic successor preparation after independent local retirement.
 
@@ -473,6 +548,9 @@ def prepare_workflow_recovery(
     successor does not depend on keeping its original Plans fresh.
     Restored absence, expired input and a failed transfer never establish that an
     old request was unaccepted or that a dispatched native effect has ceased.
+    Noncurrent record closures additionally require independently installed
+    recovery_readers keyed by exact schema URI and digest; ordinary inspection
+    readers alone cannot qualify recovery. No reader may rewrite original bytes.
     """
     from .handoffs import validate_workflow
 
@@ -480,7 +558,7 @@ def prepare_workflow_recovery(
     _require(recovery_authorized is True, "current workflow recovery authority required")
     _require(request["owner"] == expected_owner, "workflow recovery receiver changed")
     if retained_preparation is not None:
-        validate_workflow(retained_preparation)
+        validate_workflow(retained_preparation, recovery_readers=recovery_readers)
         _require(
             retained_preparation["owner"] == expected_owner
             and retained_preparation.get("recovery", {}).get("request") == request,
@@ -490,7 +568,7 @@ def prepare_workflow_recovery(
     if reserved_successor is not None:
         from .workflow_abandonment import recovery_selection
 
-        validate_workflow(reserved_successor)
+        validate_workflow(reserved_successor, recovery_readers=recovery_readers)
         _require(
             all(reserved_successor["owner"][k] == expected_owner[k] for k in ("tool", "id")),
             "reserved successor belongs to a different receiving owner",
@@ -521,7 +599,10 @@ def prepare_workflow_recovery(
         )
     _require(proposal == verified_proposal, "successor proposal is not independently reviewed")
     validate_recovery_proposal(
-        proposal, verified_origins=verified_origins, retained_readers=retained_readers
+        proposal,
+        verified_origins=verified_origins,
+        retained_readers=retained_readers,
+        recovery_readers=recovery_readers,
     )
     validate_abandonment_closure(proposal, verified_abandonments=verified_abandonments)
     _preparation(verified_preparation, proposal)
@@ -539,7 +620,7 @@ def prepare_workflow_recovery(
         "commit": None,
         "abandonment": None,
     }
-    validate_workflow(result)
+    validate_workflow(result, recovery_readers=recovery_readers)
     return result
 
 
@@ -549,13 +630,14 @@ def commit_workflow_recovery(
     *,
     recovery_authorized: bool,
     verified_preparations: list[dict[str, Any]],
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> dict[str, Any]:
     """Model one local commit after authentication of complete current-owner closure."""
     from .handoffs import validate_workflow
 
     validate("workflow-recovery.schema.json", request, "CommitRequest")
     _require(recovery_authorized is True, "current workflow recovery authority required")
-    validate_workflow(workflow)
+    validate_workflow(workflow, recovery_readers=recovery_readers)
     custody = workflow.get("recovery")
     _require(custody is not None, "workflow has no supersession preparation")
     assert custody is not None
@@ -598,5 +680,5 @@ def commit_workflow_recovery(
             "generation": result["generation"],
         },
     )
-    validate_workflow(result)
+    validate_workflow(result, recovery_readers=recovery_readers)
     return result

@@ -587,7 +587,8 @@
                         {
                           "type": "null"
                         }
-                      ]
+                      ],
+                      "description": "Version selection passed unchanged to the selected software adapter for this stable target. A non-null value has provider-owned interpretation; null selects the preferred eligible version under the pinned source and approved instance configuration. The resolved immutable artifact set is reviewed before installation; changing the version does not rebind the target."
                     },
                     "held": {
                       "type": "boolean"

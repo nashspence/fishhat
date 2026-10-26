@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Callable, Mapping
+from copy import deepcopy
 from datetime import datetime
 from typing import Any
 from urllib.parse import unquote, urldefrag, urljoin
@@ -122,12 +123,16 @@ def schema_identity(uri: str, installed: dict[str, dict[str, Any]] | None = None
     return {"uri": uri, "digest": digest({"root": uri, "documents": documents})}
 
 
-def validate_workflow(value: dict[str, Any]) -> None:
+def validate_workflow(
+    value: dict[str, Any],
+    *,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
+) -> None:
     from .transfers import validate_workflow_transfer
     from .workflows import validate_workflow_proposal_binding
 
     validate("records.schema.json", value, "Workflow")
-    validate_workflow_proposal_binding(value)
+    validate_workflow_proposal_binding(value, recovery_readers=recovery_readers)
     _require(value["phase"] in PHASES[value["type"]], "workflow phase outside installed procedure")
     if value["state"] == "completed":
         _require(value["phase"] == PHASES[value["type"]][-1], "workflow completion phase mismatch")
@@ -216,9 +221,14 @@ def validate_result_payload(
     *,
     max_bytes: int = MAX_BYTES,
     installed: dict[str, dict[str, Any]] | None = None,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> Any:
-    """Check transferred bytes and their declared schema; this supplies no owner authenticity."""
-    validate_operation(operation)
+    """Check exact bytes with installed compatible readers and current v1 semantics.
+
+    Qualified historical readers may inspect unchanged payloads, never translate
+    them. Neither schema compatibility nor a transfer digest authenticates owners.
+    """
+    validate_operation(operation, recovery_readers=recovery_readers)
     result = operation["result_handle"]
     _require(result is not None, "operation has no result payload")
     handle = result["handle"]
@@ -229,9 +239,13 @@ def validate_result_payload(
     )
     value = strict_json(data, max_bytes=max_bytes)
     identity = result["schema"]
-    _require(
-        schema_identity(identity["uri"], installed) == identity, "installed result schema changed"
-    )
+    if schema_identity(identity["uri"], installed) != identity:
+        reader = (recovery_readers or {}).get((identity["uri"], identity["digest"]))
+        _require(reader is not None, "installed result schema changed")
+        assert reader is not None
+        inspected = deepcopy(value)
+        reader(inspected)
+        _require(canonical(inspected) == canonical(value), "result reader changed original bytes")
     documents = _schema_documents(identity["uri"], installed)
     registry = Registry().with_resources(
         (uri, Resource.from_contents(schema)) for uri, schema in documents.items()
@@ -250,6 +264,17 @@ def validate_result_payload(
             )
         else:
             validate_publication(value)
+            arguments = operation["subject"]["arguments"]
+            _require(
+                value["custodian"] == operation["owner"]
+                and value["id"] == arguments["publication_id"]
+                and value["recovery_handle"]["digest"] == arguments["candidate_digest"],
+                "publication recovery result identity mismatch",
+            )
+        _require(
+            operation["state"] != "succeeded" or value["state"] == "completed",
+            "successful publication lacks completed result",
+        )
     return value
 
 
@@ -257,6 +282,7 @@ def validate_cli_result(
     result: Any,
     *,
     retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None = None,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> None:
     """Check CLI and SSH results with the receiving owner's installed readers.
 
@@ -267,15 +293,26 @@ def validate_cli_result(
         return
     kind = result.get("kind")
     if kind == "Operation":
-        validate_operation(result)
+        validate_operation(result, recovery_readers=recovery_readers)
     elif kind == "Workflow":
-        validate_workflow(result)
+        validate_workflow(result, recovery_readers=recovery_readers)
     elif kind == "ContentStaging":
         validate_staging(result)
     elif kind == "WorkflowAbandonment":
         from .workflow_abandonment import validate_abandonment
 
         validate_abandonment(result)
+    elif kind == "ObservationPage":
+        from .record_delivery import validate_observation_page
+
+        owner = result.get("owner")
+        if not isinstance(owner, dict):
+            raise ContractError("observation page lacks its owner")
+        validate_observation_page(result, expected_owner=owner, retained_readers=retained_readers)
+    elif kind is None and "origin" in result and "resource" in result:
+        from .record_delivery import validate_observation
+
+        validate_observation(result)
     elif kind in (
         "OwnerHistoryPage",
         "HistoricalRecordPage",
@@ -310,4 +347,6 @@ def validate_cli_result(
             identity = item["record"]["id"] if item.get("kind") == "RecordReference" else item["id"]
             _require(identity not in identities, "page repeats retained work")
             identities.add(identity)
-            validate_cli_result(item, retained_readers=retained_readers)
+            validate_cli_result(
+                item, retained_readers=retained_readers, recovery_readers=recovery_readers
+            )

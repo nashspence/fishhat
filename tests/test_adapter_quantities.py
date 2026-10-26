@@ -15,7 +15,7 @@ CHECK_PURPOSE = {
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/adapter.schema.json",
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/storage-adapter.schema.json",
     ],
-    "scope": "named compute requirements, storage capacities and allocation-bound usage evidence",
+    "scope": "named compute requirements, exact approved storage ceilings and allocation-bound usage evidence",
     "relationship": "candidate",
     "reason": "Quantity/target, unit, coverage and time checks establish common data semantics, not native enforcement.",
     "claims": [],
@@ -210,8 +210,10 @@ def test_io_counters_have_separate_logical_targets_and_time_windows():
 
 
 @pytest.mark.parametrize("reconcile", [False, True], ids=["direct", "recovered"])
-@pytest.mark.parametrize("change", ["bytes", "inodes", "isolation"])
-def test_storage_success_meets_explicit_capacity_and_isolation(change, reconcile):
+@pytest.mark.parametrize(
+    "change", ["bytes-low", "bytes-high", "inodes-low", "inodes-high", "isolation"]
+)
+def test_storage_success_matches_exact_approved_ceiling_and_isolation(change, reconcile):
     _, executor = installed("storage")
     query = {
         "contract": "fishhat.storage",
@@ -246,10 +248,58 @@ def test_storage_success_meets_explicit_capacity_and_isolation(change, reconcile
     check_response("storage", query, reply, invocation=invocation)
     allocation.update(
         {"capacity_bytes": 2047}
-        if change == "bytes"
+        if change == "bytes-low"
+        else {"capacity_bytes": 2048000}
+        if change == "bytes-high"
         else {"capacity_inodes": 9}
-        if change == "inodes"
+        if change == "inodes-low"
+        else {"capacity_inodes": 10000}
+        if change == "inodes-high"
         else {"hard_isolation": False}
     )
+    with pytest.raises(ContractError, match="SUCCESS_OUTPUT_IDENTITY"):
+        check_response("storage", query, reply, invocation=invocation)
+
+
+@pytest.mark.parametrize("reconcile", [False, True], ids=["direct", "recovered"])
+def test_storage_quota_change_preserves_identity_and_requires_new_exact_result(reconcile):
+    _, executor = installed("storage")
+    original = {
+        "contract": "fishhat.storage",
+        "method": "allocate",
+        "input": {
+            "scope": executor["scope"],
+            "allocation": "allocation:demo",
+            "capacity_bytes": 2048,
+            "capacity_inodes": 10,
+            "purposes": ["state"],
+            "hard_isolation": True,
+        },
+    }
+    query = copy.deepcopy(original)
+    query["input"].update(capacity_bytes=0, capacity_inodes=0)
+    assert digest(query) != digest(original)
+    assert query["input"]["allocation"] == original["input"]["allocation"]
+    invocation = invocation_for(query)
+    allocation = {
+        "handle": "allocation:demo",
+        "accounting_domain": "domain:demo",
+        "purposes": ["state"],
+        "native_identity_digest": "sha256:" + "a" * 64,
+        "counters": [counter("storage-used", 0)],
+        "hard_isolation": True,
+        "capacity_bytes": 0,
+        "capacity_inodes": 0,
+    }
+    if reconcile:
+        query = {
+            "contract": query["contract"],
+            "method": "reconcile",
+            "input": {"scope": executor["scope"], "invocation": invocation},
+        }
+    reply = response_for(query, invocation["attempt"], {"allocations": [allocation]})
+    check_response("storage", query, reply, invocation=invocation)
+    # A prior nonzero ceiling is not an alternative spelling for a zero quota.
+    allocation.update(capacity_bytes=2048, capacity_inodes=10)
     with pytest.raises(ContractError, match="SUCCESS_OUTPUT_IDENTITY"):
         check_response("storage", query, reply, invocation=invocation)

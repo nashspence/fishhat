@@ -24,6 +24,7 @@ from fishhat_reporting.reports import (
 )
 from fishhat_reporting.store import EventStore
 
+from tests.operation_support import seal_operation
 from tests.support import ROOT, fixture_path
 
 CHECK_PURPOSE = {
@@ -527,14 +528,14 @@ class Noninterference(unittest.TestCase):
         )
 
     def receipt(self, delivery, state="accepted"):
-        # The injected transport represents authentication. Editing this fixture
-        # supplies decoded reference data, not a newly verified signed receipt.
+        # The injected transport represents authentication; the signed synthetic
+        # snapshot preserves the independent decoded-record integrity boundary.
         operation = copy.deepcopy(self.operation)
         operation["request_id"] = delivery["request_id"]
         operation["state"] = state
         if state == "succeeded":
             operation["effect_certainty"] = "known"
-        return operation
+        return seal_operation(operation)
 
     def test_no_files_required(self):
         with patch("pathlib.Path.open", side_effect=OSError("read-only client home")):
@@ -582,6 +583,7 @@ class Noninterference(unittest.TestCase):
                 receipt = self.receipt(d, state)
                 receipt["effect_certainty"] = "unknown"
                 receipt["holds"] = [str(uuid.uuid4())]
+                seal_operation(receipt)
                 r = submit_once(d, lambda _, receipt=receipt: receipt)
                 self.assertEqual(r["exit_code"], 1)
                 self.assertEqual(r["delivery"]["state"], "accepted")
@@ -629,6 +631,8 @@ class Noninterference(unittest.TestCase):
                 for key in path[:-1]:
                     target = target[key]
                 target[path[-1]] = replacement
+                if path[0] != "witness":
+                    seal_operation(receipt)
                 r = submit_once(d, lambda _, receipt=receipt: receipt)
                 self.assertEqual(r["exit_code"], 8)
                 self.assertEqual(r["delivery"]["state"], "acceptance_unknown")
@@ -639,6 +643,7 @@ class Noninterference(unittest.TestCase):
         d = prepare_delivery(self.template)
         receipt = self.receipt(d, "succeeded")
         receipt["effect_certainty"] = "unknown"
+        seal_operation(receipt)
         r = submit_once(d, lambda _: receipt)
         self.assertEqual(r["exit_code"], 8)
         self.assertEqual(r["delivery"]["state"], "acceptance_unknown")
