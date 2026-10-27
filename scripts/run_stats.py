@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import re
 import sys
 import time
 from pathlib import Path
@@ -72,9 +73,60 @@ class RunStats:
         }
 
 
+def parallel_stats(processes: dict[str, Any]) -> dict[str, Any]:
+    """Sum disjoint pytest processes; RSS peaks are an upper bound, not simultaneous."""
+    if (
+        "controller" not in processes
+        or len(processes) < 2
+        or any(not re.fullmatch(r"controller|gw[0-9]+", name) for name in processes)
+        or any(
+            not valid_stats(stats) or stats["scope"] != "process-excludes-children"
+            for stats in processes.values()
+        )
+    ):
+        raise ValueError("invalid parallel process statistics")
+    result = dict(processes["controller"])
+    for field in (
+        "cpu_user_seconds",
+        "cpu_system_seconds",
+        "rss_start_bytes",
+        "rss_end_bytes",
+        "rss_sampled_peak_bytes",
+        "rss_high_water_bytes",
+    ):
+        result[field] = sum(stats[field] for stats in processes.values())
+    available = all(stats["io_available"] for stats in processes.values())
+    result.update(
+        scope="pytest-controller-and-workers-excludes-other-children",
+        rss_sampled_peak_scope="sum-of-per-process-samples-upper-bound",
+        rss_high_water_scope="sum-of-process-lifetimes-upper-bound",
+        rss_high_water_method="sum-of-process-high-water-marks",
+        io_available=available,
+        io_bytes={
+            key: sum(stats["io_bytes"][key] for stats in processes.values())
+            for key in ("read_bytes", "write_bytes")
+        }
+        if available
+        else None,
+        processes=processes,
+    )
+    return result
+
+
 def valid_stats(value: Any) -> bool:
     if not isinstance(value, dict):
         return False
+    if value.get("scope") == "pytest-controller-and-workers-excludes-other-children":
+        try:
+            processes = value["processes"]
+            if not isinstance(processes, dict) or any(
+                not isinstance(stats, dict) or stats.get("scope") != "process-excludes-children"
+                for stats in processes.values()
+            ):
+                return False
+            return value == parallel_stats(processes)
+        except (KeyError, TypeError, ValueError):
+            return False
     numeric = (
         "elapsed_seconds",
         "cpu_user_seconds",
@@ -119,6 +171,8 @@ def comparison(
     policy = tomllib.loads((root / "policy/performance.toml").read_text())
     if policy["format"] != "fishhat-performance-targets/v1" or policy["report_only"] is not True:
         raise ValueError("invalid report-only performance targets")
+    if stats["scope"] != "process-excludes-children":
+        return {"report_only": True, "status": "not-compared", "reason": "measurement-scope"}
     selected = [(name, spec) for name, spec in policy["targets"].items() if spec["paths"] == paths]
     if not selected or filtered:
         return {"report_only": True, "status": "not-compared", "reason": "custom-selection"}

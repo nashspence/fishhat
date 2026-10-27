@@ -200,3 +200,152 @@ def test_failed_receipt_publication_keeps_prior_evidence_and_can_resume(
     assert list(directory.glob("*.json")) == [path]
     validation.write_receipt(path, completed)
     assert json.loads(path.read_text()) == completed
+
+
+def test_parallel_complete_run_retains_worker_phases_fixtures_subtests_and_scoped_proofs(checkout):
+    from scripts.check_evidence import encode_inventory, fingerprint, inventory
+    from scripts.run_stats import valid_stats
+
+    group = {
+        "purpose": "validation-tooling",
+        "authority": ["Makefile"],
+        "scope": "synthetic parallel assertions",
+        "relationship": "no-product-claim",
+        "reason": "Controlled independent assertion groups exercise worker evidence transfer",
+        "claims": [],
+    }
+    groups = {"first": group, "second": group}
+    (checkout / "tests/test_example.py").write_text(
+        "import pytest\nfrom scripts.check_evidence import evidence_group\n"
+        f"CHECK_OVERRIDES = {{'test_pass': {groups!r}}}\n"
+        "@pytest.fixture\ndef sample(): return 1\n"
+        "@pytest.mark.parametrize('case', range(8), ids=[f'case{i}' for i in range(8)])\n"
+        "def test_pass(case, sample, subtests):\n"
+        "    with evidence_group('first'): assert case >= 0\n"
+        "    with evidence_group('second'):\n"
+        "        for part in range(2):\n"
+        "            with subtests.test(part=part): assert sample == 1\n"
+    )
+    expected = {f"tests/test_example.py::test_pass[case{i}]" for i in range(8)}
+    inv = inventory(checkout)
+    inv["pytest"] = {node: fingerprint(groups) for node in expected}
+    (checkout / "policy/checks.json").write_text(json.dumps(encode_inventory(inv)))
+    subprocess.run(["git", "add", "."], cwd=checkout, check=True)
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=Fixture Maintainer",
+            "-c",
+            "user.email=maintainer@example.invalid",
+            "commit",
+            "--quiet",
+            "-m",
+            "Synthetic parallel fixture",
+        ],
+        cwd=checkout,
+        check=True,
+    )
+    command = [
+        *validation.CANONICAL["unit"],
+        "-n",
+        "4",
+        "--dist=worksteal",
+        "--max-worker-restart=0",
+    ]
+    assert validation.run("unit", command, checkout) == 0
+    value = latest(checkout)
+    assert value["full_check_passed"]
+    tests = value["tests"]
+    assert set(tests["outcomes"]) == expected
+    assert all(outcome == "passed" for outcome in tests["outcomes"].values())
+    assert set(tests["stats"]["processes"]) == {"controller", "gw0", "gw1", "gw2", "gw3"}
+    assert valid_stats(tests["stats"])
+    assert {
+        phase["process"] for phases in tests["phases"].values() for phase in phases.values()
+    } == {
+        "gw0",
+        "gw1",
+        "gw2",
+        "gw3",
+    }
+    assert tests["fixtures"]["sample"]["count"] == 8
+    assert sum(len(cases) for cases in tests["subtests"].values()) == 16
+    assert all(
+        group["outcome"] == "passed"
+        for groups in tests["evidence"]["groups"].values()
+        for group in groups.values()
+    )
+
+
+@pytest.mark.parametrize(
+    "failure",
+    [
+        "assertion",
+        "teardown",
+        "skip",
+        "crash",
+        "missing-evidence",
+        "duplicate",
+        "missing-phase",
+        "invalid-metrics",
+    ],
+)
+def test_parallel_failure_or_lost_evidence_cannot_qualify(checkout, failure):
+    bodies = {
+        "assertion": "def test_pass(): assert False\n",
+        "teardown": "import pytest\n"
+        "@pytest.fixture\ndef broken():\n    yield\n    assert False\ndef test_pass(broken): pass\n",
+        "skip": "import pytest\ndef test_pass(): pytest.skip('synthetic skip')\n",
+        "crash": "import os\ndef test_pass(): os._exit(13)\n",
+        "missing-evidence": "def test_pass(): pass\n",
+    }
+    (checkout / "tests/test_example.py").write_text(bodies.get(failure, "def test_pass(): pass\n"))
+    mutations = {
+        "missing-evidence": "session.config.workeroutput.pop('fishhat_results', None)",
+        "duplicate": "session.config.workeroutput['fishhat_results']['phases']['tests/test_example.py::test_pass'] = {'call': {}}",
+        "missing-phase": "session.config.workeroutput['fishhat_results']['phases']['tests/test_example.py::test_pass'] = {}",
+        "invalid-metrics": "session.config.workeroutput['fishhat_results']['stats']['cpu_user_seconds'] = -1",
+    }
+    if failure in mutations:
+        with (checkout / "conftest.py").open("a") as stream:
+            stream.write(
+                "import pytest\n"
+                "@pytest.hookimpl(trylast=True)\n"
+                "def pytest_sessionfinish(session):\n"
+                "    if hasattr(session.config, 'workeroutput'):\n"
+                f"        {mutations[failure]}\n"
+            )
+    status = validation.run(
+        "unit",
+        [*validation.CANONICAL["unit"], "-n4", "--dist=worksteal", "--max-worker-restart=0"],
+        checkout,
+    )
+    value = latest(checkout)
+    assert not value["full_check_passed"]
+    if failure == "crash" or failure in mutations:
+        assert status != 0 and value["tests"] is None
+    else:
+        assert status == (0 if failure == "skip" else 1)
+        node = "tests/test_example.py::test_pass"
+        assert value["tests"]["outcomes"][node] == ("skipped" if failure == "skip" else "failed")
+        assert value["tests"]["evidence"]["groups"][node]["check"]["outcome"] != "passed"
+
+
+def test_parallel_distribution_flags_preserve_selection_but_filtering_and_duplication_do_not(
+    monkeypatch,
+):
+    for key in validation.OVERRIDES:
+        monkeypatch.delenv(key, raising=False)
+    for flags in (
+        ["-n", "4", "--dist=worksteal"],
+        ["-n0"],
+        ["--numprocesses=4", "--max-worker-restart=0"],
+    ):
+        selected = validation.selection("unit", [*validation.CANONICAL["unit"], *flags])
+        assert selected["canonical"]
+        assert selected["work_sha256"] == validation.digest(validation.CANONICAL["unit"])
+    for flags in (["-n4", "-k", "pass"], ["-n4", "--dist=each"], ["-n", "auto"], ["-n4", "--lf"]):
+        assert not validation.selection("unit", [*validation.CANONICAL["unit"], *flags])[
+            "canonical"
+        ]

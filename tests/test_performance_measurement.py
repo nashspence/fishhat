@@ -131,3 +131,31 @@ def test_failed_stats_publication_retains_complete_history(tmp_path, monkeypatch
     assert json.loads(prior.read_text()) == {"observation": "complete"}
     recovered = write_stats(tmp_path, {"observation": "new"})
     assert recovered != prior and prior.exists()
+
+
+def test_parallel_metrics_account_for_workers_without_claiming_a_simultaneous_peak():
+    controller = run_stats.RunStats().finish()
+    worker = {**controller, "cpu_user_seconds": controller["cpu_user_seconds"] + 2}
+    observed = run_stats.parallel_stats({"controller": controller, "gw0": worker})
+    assert run_stats.valid_stats(observed)
+    assert observed["elapsed_seconds"] == controller["elapsed_seconds"]
+    assert (
+        observed["cpu_user_seconds"] == controller["cpu_user_seconds"] + worker["cpu_user_seconds"]
+    )
+    assert observed["rss_high_water_bytes"] == 2 * controller["rss_high_water_bytes"]
+    assert observed["rss_high_water_scope"] == "sum-of-process-lifetimes-upper-bound"
+    assert observed["rss_sampled_peak_scope"] == "sum-of-per-process-samples-upper-bound"
+    assert observed["scope"] == "pytest-controller-and-workers-excludes-other-children"
+    assert run_stats.comparison(ROOT, ["tests"], observed, success=True, filtered=False) == {
+        "report_only": True,
+        "status": "not-compared",
+        "reason": "measurement-scope",
+    }
+    for key in ("cpu_user_seconds", "rss_high_water_bytes", "elapsed_seconds"):
+        assert not run_stats.valid_stats({**observed, key: observed[key] + 1})
+    unavailable = {**worker, "io_available": False, "io_bytes": None}
+    assert (
+        run_stats.parallel_stats({"controller": controller, "gw0": unavailable})["io_bytes"] is None
+    )
+    with pytest.raises(ValueError):
+        run_stats.parallel_stats({"controller": controller, "gw0": {}})
