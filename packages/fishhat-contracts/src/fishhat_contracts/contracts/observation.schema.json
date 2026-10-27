@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fishhat.invalid/contracts/observation.schema.json",
+  "$defs": {
+    "SelectionInput": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/observation-selection/v1"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "method": {
+          "enum": [
+            "observe",
+            "check"
+          ]
+        },
+        "resources": {
+          "type": "array",
+          "items": {
+            "$ref": "records.schema.json#/$defs/Observation/properties/resource"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "format",
+        "owner",
+        "method",
+        "resources"
+      ],
+      "additionalProperties": false,
+      "description": "Complete exact observation selection in canonical JSON, committed once through content.begin/chunk/commit with purpose content. Empty resources explicitly selects nothing. Resource order defines traversal order. The owner checks complete bytes, current owner epoch, method and independently retained staging custody for the actual principal, including its protected staging resource. That staging permission does not authorize observing any selected resource. Each selected resource requires independent current disclosure permission. Missing authorized exact resources fail explicitly; neither missing nor unauthorized resources may silently narrow an exact selection. Frame and page limits do not cap its total extent."
+    },
+    "StartRequest": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "selection": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "all-authorized"
+                }
+              },
+              "required": [
+                "kind"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "exact"
+                },
+                "input": {
+                  "allOf": [
+                    {
+                      "$ref": "common.schema.json#/$defs/Handle"
+                    },
+                    {
+                      "properties": {
+                        "purpose": {
+                          "const": "content"
+                        },
+                        "binding": {
+                          "properties": {
+                            "kind": {
+                              "const": "staging"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "kind",
+                "input"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 256
+        }
+      },
+      "required": [
+        "owner",
+        "selection",
+        "limit"
+      ],
+      "additionalProperties": false,
+      "description": "Start one owner observation traversal. All-authorized resolves the authoritative managed-resource inventory once, filtering before disclosure by the actual principal's current permission; it is the status command selection and may be empty. Exact uses the complete committed SelectionInput for this owner and method. The owner retains the resolved exact selection and immutable observation snapshots before returning the first page. Later inventory additions or changes do not alter this traversal. Native initialization scans the complete inventory/selection once with linear aggregate work; an independently approved capacity refusal is explicit. Neither staging nor a read request admits native mutation."
+    },
+    "ContinueRequest": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "cursor": {
+          "$ref": "common.schema.json#/$defs/Cursor"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 256
+        }
+      },
+      "required": [
+        "owner",
+        "cursor",
+        "limit"
+      ],
+      "additionalProperties": false,
+      "description": "Resume only the owner-retained traversal identified by this opaque cursor, bound to its exact method, authenticated principal, owner epoch, selection and snapshot position. Do not resend, hash or rescan the complete original selection on each page. Each disclosure rechecks current permission for its page resources and snapshots. A revoked permission fails explicitly without dropping entries. Unknown, expired or restored cursors return RETENTION_GAP and require an explicit new start; changed owner epochs return OWNER_EPOCH_CHANGED. Never silently restart, rebind or return a fabricated completed page. Page retries preserve the same immutable bytes and position while current read permission remains required."
+    },
+    "Request": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/StartRequest"
+        },
+        {
+          "$ref": "#/$defs/ContinueRequest"
+        }
+      ]
+    },
+    "Traversal": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "method": {
+          "enum": [
+            "observe",
+            "check"
+          ]
+        },
+        "selection_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        }
+      },
+      "required": [
+        "id",
+        "method",
+        "selection_digest"
+      ],
+      "additionalProperties": false,
+      "description": "Immutable traversal identity. selection_digest covers the complete canonical resolved SelectionInput, including owner, method and ordered resources. All-authorized pins the permission-filtered inventory resolved at start. Every page retains this identity and its original owner epoch. These fields grant no read permission."
+    }
+  }
+}

@@ -5,7 +5,7 @@
     "Find the original owner ID, owner-store epoch and request ID in optional receipt references or authorized owner operation listings.",
     "Import preserved records as evidence, not bearer authorization. Reauthenticate to the original owner using independently trusted SSH configuration.",
     "Query the same request and reconcile its accepted or uncertain effects. A changed epoch or missing source requires recovery, not assumed non-execution.",
-    "Resume a cross-owner workflow only with explicit participant evidence and authorized driver transfer; do not automatically execute imported work."
+    "Inspect the exact workflow and retained driver. For a paused local capsule, request resume through workflow.lifecycle or the matching owner workflow lifecycle --request-stdin --json command, preserving the same request identity after uncertainty. The owner independently authorizes its native decision and reconciles before reopening admission; explicit participant evidence remains required. Change drivers only through authorized transfer; do not automatically execute imported work."
   ],
   "executes": false
 }

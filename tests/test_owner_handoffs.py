@@ -444,8 +444,14 @@ def test_resource_and_observation_continuations_share_cli_envelope():
             "format": "deployment-ops/record/v1",
             "kind": "ObservationPage",
             "owner": observation["owner"],
+            "traversal": {
+                "id": U,
+                "method": "observe",
+                "selection_digest": "sha256:" + "a" * 64,
+            },
+            "position": 0,
             "items": items,
-            "next_cursor": "next_1",
+            "next_cursor": "next_1" if items else None,
         }
         validate("ssh-response.schema.json", wire("observe", page))
         validate_cli(cli(page))

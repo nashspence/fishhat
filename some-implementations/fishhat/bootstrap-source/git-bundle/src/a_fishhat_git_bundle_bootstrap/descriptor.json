@@ -63,5 +63,6 @@
       "require_self_contained"
     ],
     "additionalProperties": false
-  }
+  },
+  "process_protocol": "fishhat.adapter-process/v1"
 }

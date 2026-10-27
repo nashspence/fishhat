@@ -1,6 +1,7 @@
 {
   "schemas": [
     "actions.schema.json",
+    "adapter-process.schema.json",
     "adapter.schema.json",
     "backup-adapter.schema.json",
     "bootstrap-catalogue.schema.json",
@@ -26,6 +27,7 @@
     "ingress-adapter.schema.json",
     "install-bundle.schema.json",
     "network-adapter.schema.json",
+    "observation.schema.json",
     "onboarding.schema.json",
     "owner-history.schema.json",
     "plan-input.schema.json",

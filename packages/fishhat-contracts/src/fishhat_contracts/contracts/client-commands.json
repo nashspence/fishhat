@@ -74,7 +74,7 @@
     {
       "name": "workflow resume",
       "scope": "reauthorized-owner-work",
-      "description": "Continue the exact recorded workflow after current owner authorization and reconciliation. A paused local capsule requires an owner-native NativeLifecycleDecision to resume under its current driver and exact generation; incomplete transfer, recovery-required and terminal states cannot be bypassed. Restoring client context alone does not change owner admission or silently create replacement work."
+      "description": "Continue the exact recorded workflow after current owner authorization and reconciliation. For a paused local capsule, issue a closed workflow.lifecycle resume request through the same direct-owner/SSH use case, retaining its exact request_id across uncertainty. The receiving owner independently authorizes and produces NativeLifecycleDecision under the current retained driver and exact generation. Current scoped administrator lifecycle permission is required; request fields cannot assert native authority or reconciliation. Read the typed original LifecycleResult or its complete referenced Workflow receipt. Incomplete transfer, recovery-required and terminal states cannot be bypassed. Restoring client context alone does not change owner admission or silently create replacement work."
     },
     {
       "name": "tracking record",

@@ -247,6 +247,21 @@ def _require(condition: bool, code: str) -> None:
         raise ContractError(code)
 
 
+def _source_bounds(name: str) -> Bounds:
+    return Bounds(
+        id="source." + name,
+        work="O(B + E) complete source bytes and declared reference edges; shared memberships indexed once",
+        extent="Every declared component, dataset, procedure, target and grant; no collection-count ceiling",
+        limits=(),
+        capacity=(
+            "The receiving owner admits the complete source under its explicit memory capacity",
+        ),
+        proofs=("tests/test_source_growth.py::test_" + name + "_semantics_linear_work",),
+        linear_proofs=("tests/test_source_growth.py::test_" + name + "_semantics_linear_work",),
+    )
+
+
+@bounds(_source_bounds("domain"))
 def validate_domain(
     domain: dict[str, Any], host_sources: dict[str, dict[str, Any]] | None = None
 ) -> None:
@@ -285,7 +300,11 @@ def _source_target(value: str) -> str:
     return value
 
 
-def _validate_host_concerns(host: dict[str, Any], catalogue: dict[str, Any] | None) -> None:
+def _validate_host_concerns(
+    host: dict[str, Any],
+    catalogue: dict[str, Any] | None,
+    observation_grants: dict[str, set[bytes]],
+) -> None:
     services: set[str] = set()
     units: set[bytes] = set()
     destinations: set[str] = set()
@@ -295,7 +314,7 @@ def _validate_host_concerns(host: dict[str, Any], catalogue: dict[str, Any] | No
         for key, service in concern["services"].items():
             _require(key not in services, "duplicate service binding")
             services.add(key)
-            identity = _host_target_selection(host, service, "service")
+            identity = _host_target_selection(host, service, "service", observation_grants)
             _require(identity not in units, "duplicate native service target")
             units.add(identity)
     for concern in host["concerns"].values():
@@ -313,7 +332,7 @@ def _validate_host_concerns(host: dict[str, Any], catalogue: dict[str, Any] | No
                         raise ContractError("missing secret catalogue")
                     _require(entry["entry"] in catalogue["entries"], "unknown host secret entry")
         for pkg in concern["packages"].values():
-            identity = _host_target_selection(host, pkg, "software")
+            identity = _host_target_selection(host, pkg, "software", observation_grants)
             _require(identity not in packages, "duplicate package target")
             packages.add(identity)
         for membership in concern["groups"].values():
@@ -322,38 +341,51 @@ def _validate_host_concerns(host: dict[str, Any], catalogue: dict[str, Any] | No
             membership_users.add(user)
 
 
-def _host_target_selection(host: dict[str, Any], value: dict[str, Any], role: str) -> bytes:
+def _host_target_selection(
+    host: dict[str, Any],
+    value: dict[str, Any],
+    role: str,
+    observation_grants: dict[str, set[bytes]],
+) -> bytes:
     """Join source declarations only; approved native mappings remain with the receiver."""
     selection, scope = value["adapter"], value["scope"]
     instance = host["adapter_instances"].get(selection["instance"])
     _require(instance is not None and instance["role"] == role, "unknown host target adapter")
     assert instance is not None
     _require(
-        any(
-            grant["scope"] == scope and "observe" in grant["access"] for grant in instance["grants"]
-        ),
+        canonical(scope) in observation_grants[selection["instance"]],
         "host target scope not granted",
     )
     return canonical([selection["instance"], selection["source"]])
 
 
+@bounds(_source_bounds("host"))
 def validate_host(host: dict[str, Any], catalogue: dict[str, Any] | None = None) -> None:
     validate("source.schema.json", host)
     _require(host["kind"] == "Host", "expected host")
     if catalogue is not None:
         _validate_secret_catalogue(catalogue)
-    _validate_host_concerns(host, catalogue)
+    observation_grants: dict[str, set[bytes]] = {}
+    application_grants: dict[str, set[str]] = {}
     for key, instance in host["adapter_instances"].items():
         _require(key == instance["id"], "adapter instance identity mismatch")
+        observation_grants[key] = {
+            canonical(grant["scope"])
+            for grant in instance["grants"]
+            if "observe" in grant["access"]
+        }
+        application_grants[key] = {
+            grant["scope"]["handle"]
+            for grant in instance["grants"]
+            if grant["scope"]["kind"] == "application"
+        }
+    _validate_host_concerns(host, catalogue, observation_grants)
     for app_id, account in host["app_accounts"].items():
         instance = host["adapter_instances"].get(account["runtime_instance"])
         _require(instance is not None and instance["role"] == "runtime", "unknown runtime instance")
         assert instance is not None
         _require(
-            any(
-                g["scope"]["kind"] == "application" and g["scope"]["handle"] == app_id
-                for g in instance["grants"]
-            ),
+            app_id in application_grants[account["runtime_instance"]],
             "runtime instance lacks application scope",
         )
     for grant in host["grants"].values():
@@ -376,6 +408,7 @@ def _validate_datasets(app: dict[str, Any]) -> None:
     actually be reconstructed. Native admission and recovery retain those duties.
     """
     components, hooks, datasets = app["components"], app["hooks"], app["datasets"]
+    hook_datasets = {key: set(hook["datasets"]) for key, hook in hooks.items()}
     procedures = {
         "preserve": (
             ("capture", "capture", "read"),
@@ -390,7 +423,8 @@ def _validate_datasets(app: dict[str, Any]) -> None:
     preserved = False
     for dataset_id, dataset in datasets.items():
         _require(
-            set(dataset["writers"] + dataset["readers"]) <= set(components),
+            all(component in components for component in dataset["writers"])
+            and all(component in components for component in dataset["readers"]),
             "unknown data consumer",
         )
         if dataset["custody"] == "reference":
@@ -408,7 +442,9 @@ def _validate_datasets(app: dict[str, Any]) -> None:
                 "missing/wrong dataset recovery procedure",
             )
             assert hook is not None
-            _require(dataset_id in hook["datasets"], "recovery procedure omits its dataset")
+            _require(
+                dataset_id in hook_datasets[dataset[field]], "recovery procedure omits its dataset"
+            )
     _require(
         not preserved or app["lifecycle"]["checkpoint_policy"] != "stateless",
         "preserved app data is incompatible with a stateless checkpoint policy",
@@ -429,6 +465,7 @@ def _validate_datasets(app: dict[str, Any]) -> None:
             )
 
 
+@bounds(_source_bounds("app"))
 def validate_app(app: dict[str, Any], catalogue: dict[str, Any] | None = None) -> None:
     validate("source.schema.json", app)
     _require(app["kind"] == "App", "expected app")
@@ -448,7 +485,10 @@ def validate_app(app: dict[str, Any], catalogue: dict[str, Any] | None = None) -
             "interface readiness requires read-only health hook",
         )
     for dependency in app["dependencies"].values():
-        _require(set(dependency["consumers"]) <= set(components), "unknown dependency consumer")
+        _require(
+            all(component in components for component in dependency["consumers"]),
+            "unknown dependency consumer",
+        )
     _validate_datasets(app)
     secret_targets: set[tuple[str, str]] = set()
     for binding in app["secret_bindings"].values():
@@ -461,8 +501,11 @@ def validate_app(app: dict[str, Any], catalogue: dict[str, Any] | None = None) -
         secret_targets.add(target)
     for hook in hooks.values():
         _require(hook["component"] in components, "unknown hook executor")
-        _require(set(hook["datasets"]) <= set(datasets), "unknown hook dataset")
-        _require(set(hook["secrets"]) <= set(app["secret_bindings"]), "unknown hook secret binding")
+        _require(all(dataset in datasets for dataset in hook["datasets"]), "unknown hook dataset")
+        _require(
+            all(binding in app["secret_bindings"] for binding in hook["secrets"]),
+            "unknown hook secret binding",
+        )
         for binding_id in hook["secrets"]:
             _require(
                 app["secret_bindings"][binding_id]["component"] == hook["component"],
@@ -490,24 +533,39 @@ def validate_app(app: dict[str, Any], catalogue: dict[str, Any] | None = None) -
     validate_requirements(app["resources"], app=app)
 
 
+@bounds(
+    Bounds(
+        id="source.dependencies",
+        work="O(V + E) declared nodes and edges with an explicit depth-first stack",
+        extent="Every dependency, including chains deeper than the interpreter call stack",
+        limits=(),
+        capacity=("The receiving owner admits the complete dependency graph",),
+        proofs=("tests/test_source_growth.py::test_dependency_graph_complete_depth_and_cycles",),
+        linear_proofs=("tests/test_source_growth.py::test_dependency_graph_linear_work",),
+    )
+)
 def require_acyclic(edges: dict[str, list[str]]) -> None:
     active: set[str] = set()
     done: set[str] = set()
-
-    def visit(node: str) -> None:
-        if node in active:
-            raise ContractError("hard dependency cycle")
-        if node in done:
-            return
-        active.add(node)
-        for dep in edges.get(node, []):
-            _require(dep in edges, "unknown graph prerequisite")
-            visit(dep)
-        active.remove(node)
-        done.add(node)
-
     for node in edges:
-        visit(node)
+        if node in done:
+            continue
+        active.add(node)
+        stack = [(node, iter(edges[node]))]
+        while stack:
+            current, dependencies = stack[-1]
+            dependency = next(dependencies, None)
+            if dependency is None:
+                stack.pop()
+                active.remove(current)
+                done.add(current)
+                continue
+            _require(dependency in edges, "unknown graph prerequisite")
+            _require(dependency not in active, "hard dependency cycle")
+            if dependency in done:
+                continue
+            active.add(dependency)
+            stack.append((dependency, iter(edges[dependency])))
 
 
 def validate_cli(

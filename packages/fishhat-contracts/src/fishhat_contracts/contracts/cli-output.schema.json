@@ -133,6 +133,9 @@
             },
             {
               "$ref": "workflow-recovery.schema.json#/$defs/NeverPrepared"
+            },
+            {
+              "$ref": "workflow.schema.json#/$defs/LifecycleResult"
             }
           ]
         },
@@ -193,7 +196,8 @@
                   "HistoricalRecordChunk",
                   "HistoricalContentChunk",
                   "WorkflowAbandonment",
-                  "WorkflowNeverPrepared"
+                  "WorkflowNeverPrepared",
+                  "WorkflowLifecycleResult"
                 ]
               }
             },

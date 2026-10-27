@@ -2,7 +2,7 @@
   "format": "deployment-ops/native-recovery-set/v1",
   "id": "11111111-1111-4111-8111-111111111111",
   "domain_id": "a6606aee-cb29-5360-a578-3502f7b0a12a",
-  "catalogue_digest": "sha256:eda85480652510b375a7c5ebb0484fe9d1446182e98e2102168fa33974c7ee4e",
+  "catalogue_digest": "sha256:9b28bc80ecb11072e31069f54086f9e9bb150ea01d1e12a30c862835262a7a80",
   "native_kit_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "installation_bundle_digest": "sha256:1615f27079c4be75b74f0e2aaa5e0259063edc13eba0ad5bbdf77a801179a23f",
   "platform": "linux-amd64",

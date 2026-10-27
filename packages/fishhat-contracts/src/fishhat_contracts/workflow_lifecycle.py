@@ -11,8 +11,9 @@ from __future__ import annotations
 
 import copy
 from collections.abc import Callable, Mapping
-from typing import Any
+from typing import Any, NoReturn
 
+from .bounds import Bounds, bounds
 from .handoffs import PHASES
 from .validation import ContractError, digest, validate
 
@@ -44,9 +45,29 @@ def validate_lifecycle_decision(decision: dict[str, Any], workflow: dict[str, An
     _require(
         decision["owner"] == workflow["owner"]
         and decision["workflow_id"] == workflow["id"]
-        and decision["proposal_digest"] == workflow["proposal_digest"],
+        and decision["proposal_digest"] == workflow["proposal_digest"]
+        and decision["procedure"] == workflow["type"],
         "workflow lifecycle identity changed",
     )
+    _require(decision["phase"] in PHASES[workflow["type"]], "workflow lifecycle phase changed")
+    attribution = decision["request"]
+    if attribution is not None:
+        request = attribution["input"]
+        _require(
+            request["request_id"] == decision["advance_id"]
+            and all(
+                request[key] == decision[key]
+                for key in (
+                    "owner",
+                    "workflow_id",
+                    "proposal_digest",
+                    "expected_generation",
+                    "driver_term",
+                    "action",
+                )
+            ),
+            "workflow lifecycle request changed native decision",
+        )
     destination = lifecycle_destination(decision, workflow)
     witness = decision["witness"]
     _require(
@@ -135,6 +156,193 @@ def record_native_lifecycle(
     )
     validate_workflow(result, recovery_readers=recovery_readers)
     return result
+
+
+class LifecycleRefusal(ContractError):
+    """Typed refusal of a new lifecycle request; no accepted transition is implied."""
+
+    def __init__(
+        self,
+        code: str,
+        summary: str,
+        *,
+        owner: dict[str, Any],
+        workflow_id: str,
+    ) -> None:
+        self.problem = {
+            "code": code,
+            "summary": summary,
+            "retry": "safe-read",
+            "owner": copy.deepcopy(owner),
+            "resource": {"kind": "workflow", "id": workflow_id},
+            "evidence": [],
+        }
+        validate("records.schema.json", self.problem, "Problem")
+        super().__init__(summary)
+
+
+def validate_lifecycle_result(value: dict[str, Any]) -> None:
+    """Check the complete retained outcome without authenticating its native witness."""
+    validate("workflow.schema.json", value, "LifecycleResult")
+    receipt = value["receipt"]
+    decision = receipt["decision"]
+    attribution = decision["request"]
+    _require(attribution is not None, "lifecycle result lacks its requested decision")
+    assert attribution is not None
+    request = attribution["input"]
+    _require(
+        value["owner"] == decision["owner"]
+        and value["workflow_id"] == decision["workflow_id"]
+        and value["procedure"] == decision["procedure"]
+        and value["request_id"] == request["request_id"]
+        and value["request_digest"] == digest(request)
+        and receipt["decision_digest"] == digest(decision)
+        and receipt["generation"] == decision["expected_generation"] + 1
+        and receipt["driver_term"] == decision["driver_term"]
+        and receipt["phase"] == decision["phase"],
+        "lifecycle result changed its accepted request or outcome",
+    )
+    destination = validate_lifecycle_decision(
+        decision,
+        {
+            "owner": value["owner"],
+            "id": value["workflow_id"],
+            "proposal_digest": decision["proposal_digest"],
+            "type": value["procedure"],
+        },
+    )
+    _require(receipt["state"] == destination, "lifecycle result changed destination state")
+
+
+def _request_result(workflow: dict[str, Any], receipt: dict[str, Any]) -> dict[str, Any]:
+    request = receipt["decision"]["request"]["input"]
+    result = {
+        "kind": "WorkflowLifecycleResult",
+        "owner": copy.deepcopy(workflow["owner"]),
+        "workflow_id": workflow["id"],
+        "request_id": request["request_id"],
+        "request_digest": digest(request),
+        "procedure": workflow["type"],
+        "receipt": copy.deepcopy(receipt),
+    }
+    validate_lifecycle_result(result)
+    return result
+
+
+def _request_decision(
+    request: dict[str, Any],
+    workflow: dict[str, Any],
+    principal: str,
+    verified_decision: dict[str, Any] | None,
+) -> dict[str, Any]:
+    """Join an independently produced decision to the actual authenticated request."""
+    _require(verified_decision is not None, "independent native lifecycle decision required")
+    assert verified_decision is not None
+    validate_lifecycle_decision(verified_decision, workflow)
+    _require(
+        verified_decision["request"] == {"input": request, "authenticated_principal": principal},
+        "lifecycle decision request attribution changed",
+    )
+    return verified_decision
+
+
+@bounds(
+    Bounds(
+        id="workflow.lifecycle-request",
+        work="O(B + H) complete capsule validation, exact history lookup and copying; B complete retained workflow/proposal/evidence bytes and H retained transition entries; the finite request never bounds retained result evidence",
+        extent="Complete current workflow history, exact original request attribution and complete accepted receipt/evidence; no history prefix selection",
+        limits=(),
+        capacity=(
+            "native owner capacity may refuse new requests without evicting accepted identities",
+        ),
+        proofs=(
+            "tests/test_workflow_lifecycle_requests.py::test_accepted_lifecycle_request_replay_preserves_original_result_and_attribution",
+        ),
+        linear_proofs=(
+            "tests/test_workflow_lifecycle_requests.py::test_lifecycle_request_linear_complete_history_work",
+        ),
+    )
+)
+def request_workflow_lifecycle(
+    request: dict[str, Any],
+    workflow: dict[str, Any],
+    *,
+    expected_owner: dict[str, Any],
+    principal: str,
+    read_authorized: bool,
+    request_authorized: bool,
+    native_authorized: bool,
+    verified_decision: dict[str, Any] | None = None,
+    verified_driver: dict[str, Any] | None = None,
+    verified_reconciled: bool = False,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Request a protected owner decision; the request supplies no native authority.
+
+    The receiving boundary independently authenticates principal and supplies every
+    authorization/verification argument. New requests require scoped administrator
+    lifecycle permission and a separately produced native decision. An administrator
+    may request resume on behalf of the retained driver only after that driver's
+    current authority and all native reconciliation facts are independently verified.
+    Exact replay first requires current read permission, then preserves the original
+    attribution and complete receipt even after generation, driver or lifecycle change.
+    Replay grants no mutation permission and does not require new native evidence.
+    A native implementation atomically retains the decision and request reservation
+    with local child admission before acknowledging success. This pure copy model
+    neither authenticates a caller nor qualifies native durability or reconciliation.
+    """
+    from .handoffs import validate_workflow
+    from .workflows import retained_transition_input
+
+    validate("workflow.schema.json", request, "LifecycleRequest")
+    validate("common.schema.json", principal, "Id")
+
+    def refuse(code: str, summary: str) -> NoReturn:
+        raise LifecycleRefusal(
+            code, summary, owner=expected_owner, workflow_id=request["workflow_id"]
+        )
+
+    if read_authorized is not True:
+        refuse("PERMISSION_DENIED", "current scoped workflow read permission required")
+    if request["owner"] != expected_owner or workflow["owner"] != expected_owner:
+        refuse("OWNER_EPOCH_CHANGED", "workflow lifecycle receiving owner changed")
+    if request["workflow_id"] != workflow["id"]:
+        refuse("NOT_FOUND", "workflow lifecycle identity is not present at this receiver")
+    validate_workflow(workflow, recovery_readers=recovery_readers)
+    for receipt in workflow["advances"]:
+        original = retained_transition_input(receipt)
+        if original["advance_id"] != request["request_id"]:
+            continue
+        if (
+            receipt["authority"] != "native-lifecycle"
+            or original["request"] is None
+            or original["request"]["input"] != request
+        ):
+            refuse("CONFLICT", "lifecycle request identity already selects different work")
+        return copy.deepcopy(workflow), _request_result(workflow, receipt)
+    if request_authorized is not True or native_authorized is not True:
+        refuse("PERMISSION_DENIED", "current scoped lifecycle and native authority required")
+    if (
+        request["proposal_digest"] != workflow["proposal_digest"]
+        or request["expected_generation"] != workflow["generation"]
+        or request["driver_term"] != workflow["driver_term"]
+    ):
+        refuse("PRECONDITION_FAILED", "workflow lifecycle proposal, generation or driver changed")
+    try:
+        decision = _request_decision(request, workflow, principal, verified_decision)
+        result = record_native_lifecycle(
+            decision,
+            workflow,
+            expected_owner=expected_owner,
+            native_authorized=native_authorized,
+            verified_decision=verified_decision,
+            verified_driver=verified_driver,
+            verified_reconciled=verified_reconciled,
+            recovery_readers=recovery_readers,
+        )
+    except ContractError as exc:
+        refuse("PRECONDITION_FAILED", str(exc))
+    return result, _request_result(result, result["advances"][-1])
 
 
 def require_workflow_child_admission(

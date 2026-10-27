@@ -66,6 +66,10 @@
     "source_schema": {
       "type": "object",
       "description": "Uses the same closed structural subset as configuration_schema. Source-owned data cannot supply unconstrained nested objects or arrays to an accepted implementation."
+    },
+    "process_protocol": {
+      "const": "fishhat.adapter-process/v1",
+      "description": "The fixed executable invocation boundary owned by adapter-process.schema.json. Every role uses the same launch, custody, response, failure and observational reconciliation rules; per-implementation command conventions are not permitted."
     }
   },
   "required": [
@@ -77,7 +81,8 @@
     "component_schema",
     "implemented",
     "native_qualified",
-    "source_schema"
+    "source_schema",
+    "process_protocol"
   ],
   "additionalProperties": false,
   "$defs": {

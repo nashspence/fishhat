@@ -72,7 +72,22 @@
           "const": true
         },
         "result": {
-          "$ref": "records.schema.json#/$defs/ObservationPage"
+          "allOf": [
+            {
+              "$ref": "records.schema.json#/$defs/ObservationPage"
+            },
+            {
+              "properties": {
+                "traversal": {
+                  "properties": {
+                    "method": {
+                      "const": "observe"
+                    }
+                  }
+                }
+              }
+            }
+          ]
         }
       },
       "required": [
@@ -102,7 +117,22 @@
           "const": true
         },
         "result": {
-          "$ref": "records.schema.json#/$defs/ObservationPage"
+          "allOf": [
+            {
+              "$ref": "records.schema.json#/$defs/ObservationPage"
+            },
+            {
+              "properties": {
+                "traversal": {
+                  "properties": {
+                    "method": {
+                      "const": "check"
+                    }
+                  }
+                }
+              }
+            }
+          ]
         }
       },
       "required": [
@@ -824,7 +854,8 @@
             "history.read",
             "history.content",
             "workflow.bind",
-            "workflow.recover"
+            "workflow.recover",
+            "workflow.lifecycle"
           ]
         },
         "ok": {
@@ -1196,6 +1227,58 @@
             },
             {
               "$ref": "workflow-recovery.schema.json#/$defs/NeverPrepared"
+            }
+          ]
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "ok",
+        "result"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "workflow.lifecycle"
+        },
+        "ok": {
+          "const": true
+        },
+        "result": {
+          "oneOf": [
+            {
+              "$ref": "workflow.schema.json#/$defs/LifecycleResult"
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "common.schema.json#/$defs/RecordReference"
+                },
+                {
+                  "properties": {
+                    "record": {
+                      "properties": {
+                        "kind": {
+                          "const": "Workflow"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
             }
           ]
         }

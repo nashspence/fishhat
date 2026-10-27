@@ -1219,6 +1219,24 @@
       "use_case": "operation.cancel"
     },
     {
+      "id": "owner-form:check-request",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-owner-form",
+      "tests": {
+        "failure": [],
+        "growth": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops",
+        "app-ops"
+      ],
+      "use_case": "check"
+    },
+    {
       "id": "owner-form:cleanup-plan",
       "implementation": null,
       "recovery": "required",
@@ -1378,6 +1396,24 @@
         "app-ops"
       ],
       "use_case": "logs"
+    },
+    {
+      "id": "owner-form:observe-request",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-owner-form",
+      "tests": {
+        "failure": [],
+        "growth": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops",
+        "app-ops"
+      ],
+      "use_case": "observe"
     },
     {
       "id": "owner-form:op-list-active-resource",
@@ -1702,6 +1738,24 @@
         "app-ops"
       ],
       "use_case": "workflow.bind"
+    },
+    {
+      "id": "owner-form:workflow-lifecycle",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-owner-form",
+      "tests": {
+        "failure": [],
+        "growth": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops",
+        "app-ops"
+      ],
+      "use_case": "workflow.lifecycle"
     },
     {
       "id": "owner-form:workflow-list-active",
@@ -2328,6 +2382,23 @@
       ]
     },
     {
+      "id": "rpc:workflow.lifecycle",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-rpc",
+      "tests": {
+        "failure": [],
+        "growth": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops",
+        "app-ops"
+      ]
+    },
+    {
       "id": "rpc:workflow.list",
       "implementation": null,
       "recovery": "required",
@@ -2406,11 +2477,11 @@
     "fishhat/host-ops/pyproject.toml": "3cc402bda8fd5e83e36d0bd5a299d0e6904535c69c992754e1aa169f37f88bd6",
     "fishhat/host-ops/src/fishhat_host/cli.py": "d8457ca822e6d01be0b1301fb439ef9f5ed74b6224aca2d85feb189dadeb611c",
     "packages/fishhat-contracts/src/fishhat_contracts/contracts/actions.json": "b1c648decfaafc846a0d137d5985daf21e2980ebbb32e8ffdd02bdf64503cb83",
-    "packages/fishhat-contracts/src/fishhat_contracts/contracts/client-commands.json": "934c5c78f20144f7ceba024b7374404a45d204c1f8d45b32d55fe374c64513e3",
-    "packages/fishhat-contracts/src/fishhat_contracts/contracts/owner-cli.json": "e17ccb02d490f04ac4838a80c903602c4cf6fbe4f367cf393012a636bed5d6d4",
-    "packages/fishhat-contracts/src/fishhat_contracts/contracts/ssh-methods.json": "5862d766a0f9bc68f172c4252b442a2c7982f9b91778def1ecffa466e62211d7",
+    "packages/fishhat-contracts/src/fishhat_contracts/contracts/client-commands.json": "2ac27c10f8320b37bcdd842ca3f94777a68d7c771986b3dfbc2d01fa67648c74",
+    "packages/fishhat-contracts/src/fishhat_contracts/contracts/owner-cli.json": "425d63b79f593817a1978aff7e3d7521f9e4bf9a68dacefd46009ceb39fd5851",
+    "packages/fishhat-contracts/src/fishhat_contracts/contracts/ssh-methods.json": "53006b087be8159e8354af141cde4d60559abc88f6b2883606fea37c2fb2595e",
     "policy/components.toml": "d83506dc63602aec3932e1ac35244efca0db494a38a5d4cd9ec94c68476b235c",
-    "policy/interfaces.json": "7c355ab778e7ae3717a0e2d709a125994c9c402c73c75cd8be08db4821124f95",
+    "policy/interfaces.json": "9bbbc5b792efcae2ee1a4d6dced0edeba13d8e7b71cb04f704ade8a19f4be35f",
     "policy/operation-coverage.toml": "a4f3f76cdbb755ea03ba39eb36ccc5ebcd682f6aabaacaa5fb88f849d42c54c4",
     "release.toml": "87a48bd19f97e977b2be6d6399b1d60a911dcf66ed9b81b59386d8fb7a624996",
     "some-implementations/fishhat/backup/restic/pyproject.toml": "665f88e34c00d431e829678503ae3bb7075294d0db3f303c318f87dbdab651e8",
@@ -2450,6 +2521,6 @@
     "some-implementations/fishhat/storage/xfs-project/pyproject.toml": "73e00e3691845add0fc45f4d7286bb87bff35a62083f3d310b63694b61da03af",
     "tests/test_component_policy.py": "c0dc4caac33970b91fd691000cef1e15ecf971c46704fa16f40b29023649856d",
     "tests/test_linear_growth.py": "238c554ee57c932a2b14c605a17d40bc17e40b979e3b4936cc5ae49f60b2885d",
-    "tests/test_operation_coverage.py": "349ee26855d8bb1770024322fa98402ab79dfcda65aecfbe7b431c47dfb70a10"
+    "tests/test_operation_coverage.py": "51381ca8f06504a816adc6a1ba5369069457c2a2efedc326b53326f7d29f14e3"
   }
 }

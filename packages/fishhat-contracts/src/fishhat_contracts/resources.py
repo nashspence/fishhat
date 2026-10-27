@@ -515,7 +515,7 @@ def validate_inventory(value: dict[str, Any]) -> dict[str, dict[str, Any]]:
     Bounds(
         id="resources.cleanup-plan",
         work="complete native graph and retained-release closure, including radix ordering",
-        extent="complete inventory, retention input and reviewed candidate extent across every dispatch batch",
+        extent="complete inventory, retention input and reviewed unreferenced candidate frontier across every dispatch batch; newly unreferenced dependencies require a new reviewed intent",
         limits=(),
         capacity=("receiving owner memory",),
         proofs=("tests/test_resources.py::Cleanup::test_expected_candidates",),
@@ -537,6 +537,9 @@ def plan_cleanup(
     The caller obtains accepted_policy and retention_inventory independently from
     the receiving owner's current state. A requester or adapter cannot supply
     replacement policy or remove retained roots through the native inventory.
+    Candidates are the currently unreferenced eligible frontier. Removal does not
+    enroll newly unreferenced dependencies into an already reviewed deletion plan.
+    Whole-store reclamation needs its own complete aggregate growth proof.
     """
     items = validate_inventory(inventory)
     retention = retained_runtime_handles(

@@ -19,11 +19,13 @@ def lifecycle_decision(value, action):
         "workflow_id": value["id"],
         "advance_id": uid(f"lifecycle-{value['id']}-{value['generation']}-{action}"),
         "proposal_digest": value["proposal_digest"],
+        "procedure": value["type"],
         "expected_generation": value["generation"],
         "driver_term": value["driver_term"],
         "phase": value["phase"],
         "from_state": value["state"],
         "action": action,
+        "request": None,
     }
     return seal_lifecycle(result, value)
 

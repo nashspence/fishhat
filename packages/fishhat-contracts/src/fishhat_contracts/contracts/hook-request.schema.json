@@ -151,6 +151,22 @@
           "type": "null"
         }
       ]
+    },
+    "procedure_digest": {
+      "$ref": "common.schema.json#/$defs/Digest",
+      "description": "Digest of the independently accepted exact hook procedure and its result requirements. The receiving owner supplies this binding from retained source; request fields cannot replace that source authority."
+    },
+    "required_checks": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64,
+        "pattern": "^[A-Z][A-Z0-9_]+(?![\\s\\S])"
+      },
+      "uniqueItems": true,
+      "minItems": 0,
+      "description": "Complete mandatory check codes selected by the receiving owner from the exact accepted procedure. Result diagnostics cannot replace, downgrade or omit these requirements. Verification, health, dependency, busy and assessment roles require at least one independently approved check."
     }
   },
   "required": [
@@ -166,7 +182,9 @@
     "endpoint_bindings",
     "output_directory",
     "timeout_seconds",
-    "restore_input"
+    "restore_input",
+    "procedure_digest",
+    "required_checks"
   ],
   "additionalProperties": false,
   "allOf": [
@@ -224,6 +242,31 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "role": {
+            "enum": [
+              "health",
+              "verify-config",
+              "dependency-check",
+              "busy",
+              "transition-assess",
+              "transition-verify",
+              "verify-restore",
+              "verify-rebuild"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "required_checks": {
+            "minItems": 1
           }
         }
       }
@@ -294,5 +337,5 @@
       "description": "Complete materialization of one exact captured dataset. Artifact identities match snapshot.artifacts without omissions, additions or duplicates. Paths must be canonical, remain read-only, and cannot overlap any dataset target or the output directory, including read-only verification targets. The receiver resolves native aliases and confines the materialization throughout execution; matching strings alone do not establish safe filesystem access."
     }
   },
-  "description": "A closed application-hook invocation under the receiving owner's retained operation and source grants. The owner joins the executor, role, exact dataset/secret/network scope and input selection to the approved procedure before dispatch. Observational roles receive only read dataset handles. For every role, all supplied filesystem paths are canonical absolute paths and the output directory must be disjoint from every dataset target, secret path and input materialization: equality and either ancestor relationship are forbidden. The receiving owner also establishes that native aliases, symlinks and mounts preserve this separation and the admitted access modes throughout execution. Restore input custody is separate from writable targets and output; no source declaration or caller-supplied path grants authority. Validation describes this handoff without implementing native materialization, isolation or hook execution."
+  "description": "A closed application-hook invocation under the receiving owner's retained operation and source grants. The owner joins the executor, role, exact dataset/secret/network scope and input selection to the approved procedure before dispatch. Observational roles receive only read dataset handles. For every role, all supplied filesystem paths are canonical absolute paths and the output directory must be disjoint from every dataset target, secret path and input materialization: equality and either ancestor relationship are forbidden. The receiving owner also establishes that native aliases, symlinks and mounts preserve this separation and the admitted access modes throughout execution. Restore input custody is separate from writable targets and output; no source declaration or caller-supplied path grants authority. Validation describes this handoff without implementing native materialization, isolation or hook execution. Required check codes and procedure_digest must equal independently retained accepted procedure requirements before invocation and result consumption. Read-only roles may create artifacts solely in the isolated output directory; effects describes mutations to managed targets or external systems, not those output artifacts. Every invocation has a fresh request id; replay retains its exact request digest and original result, while a new verification against changed state requires a new request."
 }

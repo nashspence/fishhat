@@ -520,6 +520,13 @@
         "native_qualified": false,
         "status": "unimplemented"
       },
+      "owner-form:check-request": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
       "owner-form:cleanup-plan": {
         "growth_proofs": [],
         "growth_requirement": "linear",
@@ -577,6 +584,13 @@
         "status": "unimplemented"
       },
       "owner-form:logs": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:observe-request": {
         "growth_proofs": [],
         "growth_requirement": "linear",
         "implementation": null,
@@ -703,6 +717,13 @@
         "status": "unimplemented"
       },
       "owner-form:workflow-bind": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:workflow-lifecycle": {
         "growth_proofs": [],
         "growth_requirement": "linear",
         "implementation": null,
@@ -955,6 +976,13 @@
         "status": "unimplemented"
       },
       "rpc:workflow.get": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:workflow.lifecycle": {
         "growth_proofs": [],
         "growth_requirement": "linear",
         "implementation": null,
@@ -1220,7 +1248,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
-        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+        "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_adapters.protocol:Registry.authorize",
       "work": "O(B + R) current complete input bytes and selected retained registry records"
@@ -1242,7 +1270,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
-        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+        "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_adapters.protocol:Registry.authorize_invocation",
       "work": "O(B + R) current complete input bytes and selected retained registry records"
@@ -1264,7 +1292,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
-        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+        "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_adapters.protocol:Registry.authorize_request",
       "work": "O(B + R) current complete input bytes and selected retained registry records"
@@ -1286,7 +1314,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
-        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+        "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_adapters.protocol:Registry.enroll",
       "work": "O(B + R) current complete input bytes and selected retained registry records"
@@ -1308,7 +1336,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
-        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+        "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_adapters.protocol:Registry.enroll_repository",
       "work": "O(B + R) current complete input bytes and selected retained registry records"
@@ -1330,7 +1358,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
-        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+        "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_adapters.protocol:Registry.enroll_source_target",
       "work": "O(B + R) current complete input bytes and selected retained registry records"
@@ -1352,7 +1380,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
-        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+        "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_adapters.protocol:Registry.inspect_delegation",
       "work": "O(B + R) current complete input bytes and selected retained registry records"
@@ -1374,7 +1402,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
-        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+        "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_adapters.protocol:Registry.inspect_instance",
       "work": "O(B + R) current complete input bytes and selected retained registry records"
@@ -1396,7 +1424,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
-        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+        "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_adapters.protocol:Registry.install",
       "work": "O(B + R) current complete input bytes and selected retained registry records"
@@ -1418,7 +1446,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
-        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+        "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_adapters.protocol:Registry.resolve",
       "work": "O(B + R) current complete input bytes and selected retained registry records"
@@ -1440,7 +1468,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
-        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+        "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_adapters.protocol:Registry.resolve_host_targets",
       "work": "O(B + R) current complete input bytes and selected retained registry records"
@@ -1462,7 +1490,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
-        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+        "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_adapters.protocol:Registry.resolve_source",
       "work": "O(B + R) current complete input bytes and selected retained registry records"
@@ -1484,7 +1512,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
-        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+        "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_adapters.protocol:Registry.source_target",
       "work": "O(B + R) current complete input bytes and selected retained registry records"
@@ -1506,7 +1534,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
-        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+        "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_adapters.protocol:check_configuration",
       "work": "O(B + R) current complete input bytes and selected retained registry records"
@@ -1528,7 +1556,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
-        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+        "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_adapters.protocol:check_descriptor",
       "work": "O(B + R) current complete input bytes and selected retained registry records"
@@ -1550,7 +1578,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py": "15405cdad6c4f6685d5bc2c58b2925ec01e0e6416b33c1a8736908e941187752",
-        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+        "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_contracts.adapter_semantics:check_invocation",
       "work": "O(B) complete typed request, retained invocation and response bytes"
@@ -1572,7 +1600,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py": "15405cdad6c4f6685d5bc2c58b2925ec01e0e6416b33c1a8736908e941187752",
-        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+        "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_contracts.adapter_semantics:check_request",
       "work": "O(B) complete typed request, retained invocation and response bytes"
@@ -1594,7 +1622,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py": "15405cdad6c4f6685d5bc2c58b2925ec01e0e6416b33c1a8736908e941187752",
-        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+        "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_contracts.adapter_semantics:check_response",
       "work": "O(B) complete typed request, retained invocation and response bytes"
@@ -1616,7 +1644,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py": "15405cdad6c4f6685d5bc2c58b2925ec01e0e6416b33c1a8736908e941187752",
-        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+        "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_contracts.adapter_semantics:check_result",
       "work": "O(B) complete typed request, retained invocation and response bytes"
@@ -1638,7 +1666,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
-        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+        "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_adapters.protocol:check_schema",
       "work": "O(B + R) current complete input bytes and selected retained registry records"
@@ -1660,10 +1688,118 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
-        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+        "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_adapters.protocol:instance_reference",
       "work": "O(B + R) current complete input bytes and selected retained registry records"
+    },
+    "adapters.process.receive_process_result": {
+      "capacity": [
+        "owner custody storage and proportional typed JSON decoding memory"
+      ],
+      "extent": "Complete admitted files and manifest entries; no additional transport extent ceiling",
+      "growth": "linear",
+      "id": "adapters.process.receive_process_result",
+      "limits": [
+        [
+          "chunk_bytes",
+          65536
+        ]
+      ],
+      "linear_proofs": [
+        "tests/test_adapter_process.py::test_process_boundaries_linear_work"
+      ],
+      "proofs": [
+        "tests/test_adapter_process.py::test_process_boundaries_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-adapter-protocol/src/fishhat_adapters/process.py": "ddd288d76a3ea11b040f3e8128312def74e182c5f86d6d022401f1dda1bf6383",
+        "tests/test_adapter_process.py": "d0f14c33d6ed66f6cbf52a3fe9803d113e72f347c6b8225f3e957d984ec26c2f"
+      },
+      "symbol": "fishhat_adapters.process:receive_process_result",
+      "work": "O(B) complete manifests, typed request/response and every selected artifact byte"
+    },
+    "adapters.process.validate_process_launch": {
+      "capacity": [
+        "owner custody storage and proportional typed JSON decoding memory"
+      ],
+      "extent": "Complete admitted files and manifest entries; no additional transport extent ceiling",
+      "growth": "linear",
+      "id": "adapters.process.validate_process_launch",
+      "limits": [
+        [
+          "chunk_bytes",
+          65536
+        ]
+      ],
+      "linear_proofs": [
+        "tests/test_adapter_process.py::test_process_boundaries_linear_work"
+      ],
+      "proofs": [
+        "tests/test_adapter_process.py::test_process_boundaries_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-adapter-protocol/src/fishhat_adapters/process.py": "ddd288d76a3ea11b040f3e8128312def74e182c5f86d6d022401f1dda1bf6383",
+        "tests/test_adapter_process.py": "d0f14c33d6ed66f6cbf52a3fe9803d113e72f347c6b8225f3e957d984ec26c2f"
+      },
+      "symbol": "fishhat_adapters.process:validate_process_launch",
+      "work": "O(B) complete manifests, typed request/response and every selected artifact byte"
+    },
+    "adapters.process.verify_process_inputs": {
+      "capacity": [
+        "owner custody storage and proportional typed JSON decoding memory"
+      ],
+      "extent": "Complete admitted files and manifest entries; no additional transport extent ceiling",
+      "growth": "linear",
+      "id": "adapters.process.verify_process_inputs",
+      "limits": [
+        [
+          "chunk_bytes",
+          65536
+        ]
+      ],
+      "linear_proofs": [
+        "tests/test_adapter_process.py::test_process_boundaries_linear_work"
+      ],
+      "proofs": [
+        "tests/test_adapter_process.py::test_process_boundaries_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-adapter-protocol/src/fishhat_adapters/process.py": "ddd288d76a3ea11b040f3e8128312def74e182c5f86d6d022401f1dda1bf6383",
+        "tests/test_adapter_process.py": "d0f14c33d6ed66f6cbf52a3fe9803d113e72f347c6b8225f3e957d984ec26c2f"
+      },
+      "symbol": "fishhat_adapters.process:verify_process_inputs",
+      "work": "O(B) complete manifests, typed request/response and every selected artifact byte"
+    },
+    "adapters.process.verify_process_outputs": {
+      "capacity": [
+        "owner custody storage and proportional typed JSON decoding memory"
+      ],
+      "extent": "Complete admitted files and manifest entries; no additional transport extent ceiling",
+      "growth": "linear",
+      "id": "adapters.process.verify_process_outputs",
+      "limits": [
+        [
+          "chunk_bytes",
+          65536
+        ]
+      ],
+      "linear_proofs": [
+        "tests/test_adapter_process.py::test_process_boundaries_linear_work"
+      ],
+      "proofs": [
+        "tests/test_adapter_process.py::test_process_boundaries_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-adapter-protocol/src/fishhat_adapters/process.py": "ddd288d76a3ea11b040f3e8128312def74e182c5f86d6d022401f1dda1bf6383",
+        "tests/test_adapter_process.py": "d0f14c33d6ed66f6cbf52a3fe9803d113e72f347c6b8225f3e957d984ec26c2f"
+      },
+      "symbol": "fishhat_adapters.process:verify_process_outputs",
+      "work": "O(B) complete manifests, typed request/response and every selected artifact byte"
     },
     "adapters.require_qualification": {
       "capacity": [
@@ -1682,7 +1818,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
-        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+        "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_adapters.protocol:require_qualification",
       "work": "O(B + R) current complete input bytes and selected retained registry records"
@@ -1704,7 +1840,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
-        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+        "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_adapters.protocol:runtime_binding_digest",
       "work": "O(B + R) current complete input bytes and selected retained registry records"
@@ -1733,6 +1869,79 @@
       "symbol": "fishhat_client.bootstrap:validate_catalogue",
       "work": "O(B + S) bounded reference record validation and one source identity pass"
     },
+    "checkpoints.resolve": {
+      "capacity": [
+        "Caller admits complete retained metadata under its explicit memory capacity"
+      ],
+      "extent": "All selected preserved datasets and every referenced capture, store, verification and artifact identity",
+      "growth": "linear",
+      "id": "checkpoints.resolve",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_checkpoint_resolution.py::test_checkpoint_resolution_linear_work"
+      ],
+      "proofs": [
+        "tests/test_checkpoint_resolution.py::test_fresh_owner_resolves_exact_historical_inputs",
+        "tests/test_checkpoint_resolution.py::test_checkpoint_resolution_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/checkpoints.py": "ee5395876870b2274bf15ef0d413898463dfbbbae3a516b1cde46d953a4f98f4",
+        "tests/test_checkpoint_resolution.py": "5b6877363e8b0ae123823d54f921f5525fd172e48c8cfed3f7c660681bb5232a"
+      },
+      "symbol": "fishhat_contracts.checkpoints:resolve_checkpoint",
+      "work": "Current-core O(S + B + E): per-resolution installed schema closure setup, complete checkpoint and distinct receipt/result bytes, and dataset-artifact incidences; each shared receipt and object indexed once. Historical pins use complete result validation under its fixed admitted schema profile and qualified reader bounds"
+    },
+    "checkpoints.validate": {
+      "capacity": [
+        "Caller admits complete retained metadata under its explicit memory capacity"
+      ],
+      "extent": "All selected preserved datasets and every referenced capture, store, verification and artifact identity",
+      "growth": "linear",
+      "id": "checkpoints.validate",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_checkpoint_resolution.py::test_checkpoint_resolution_linear_work"
+      ],
+      "proofs": [
+        "tests/test_checkpoint_resolution.py::test_fresh_owner_resolves_exact_historical_inputs",
+        "tests/test_checkpoint_resolution.py::test_checkpoint_resolution_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/checkpoints.py": "ee5395876870b2274bf15ef0d413898463dfbbbae3a516b1cde46d953a4f98f4",
+        "tests/test_checkpoint_resolution.py": "5b6877363e8b0ae123823d54f921f5525fd172e48c8cfed3f7c660681bb5232a"
+      },
+      "symbol": "fishhat_contracts.checkpoints:validate_checkpoint",
+      "work": "O(B + E) complete checkpoint bytes and dataset/closure identities"
+    },
+    "custody.verify-artifact-stream": {
+      "capacity": [
+        "owner-opened input and optional unpublished retention sink"
+      ],
+      "extent": "Complete owner-selected artifact, including empty files and trailing-byte rejection",
+      "growth": "linear",
+      "id": "custody.verify-artifact-stream",
+      "limits": [
+        [
+          "chunk_bytes",
+          65536
+        ]
+      ],
+      "linear_proofs": [
+        "tests/test_hook_results.py::test_artifact_stream_linear_work"
+      ],
+      "proofs": [
+        "tests/test_hook_results.py::test_artifact_stream_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/artifact_custody.py": "428728410778cac1fe87b1797fbf0bcc4d7f648cdad43f13434bd21e56638b49",
+        "tests/test_hook_results.py": "11401674708447c5a16720ae2e274ccdc5eaf92eb4649c13fba0accaee65bb45"
+      },
+      "symbol": "fishhat_contracts.artifact_custody:verify_artifact_stream",
+      "work": "O(B) each complete artifact byte once with a fixed-size hashing buffer"
+    },
     "data.canonical": {
       "capacity": [
         "JSON frame/source admission capacities remain explicit caller decisions"
@@ -1749,8 +1958,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "929b7a45ed81e0c394c885ee58956b13a2c65604cc74367dfcbc320183c613c0",
-        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "2d97b09355c5194c6106230afc03eb2ed05dcf37ddcaa5ea1e3c3d0915be667b",
+        "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_contracts.validation:canonical",
       "work": "O(B) complete JSON/source value bytes under the installed schema profile"
@@ -1771,8 +1980,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "929b7a45ed81e0c394c885ee58956b13a2c65604cc74367dfcbc320183c613c0",
-        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "2d97b09355c5194c6106230afc03eb2ed05dcf37ddcaa5ea1e3c3d0915be667b",
+        "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_contracts.validation:digest",
       "work": "O(B) complete JSON/source value bytes under the installed schema profile"
@@ -1793,8 +2002,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "929b7a45ed81e0c394c885ee58956b13a2c65604cc74367dfcbc320183c613c0",
-        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "2d97b09355c5194c6106230afc03eb2ed05dcf37ddcaa5ea1e3c3d0915be667b",
+        "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_contracts.validation:strict_json",
       "work": "O(B) complete JSON/source value bytes under the installed schema profile"
@@ -1815,8 +2024,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "929b7a45ed81e0c394c885ee58956b13a2c65604cc74367dfcbc320183c613c0",
-        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "2d97b09355c5194c6106230afc03eb2ed05dcf37ddcaa5ea1e3c3d0915be667b",
+        "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_contracts.validation:strict_yaml",
       "work": "O(B) complete JSON/source value bytes under the installed schema profile"
@@ -1837,8 +2046,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "929b7a45ed81e0c394c885ee58956b13a2c65604cc74367dfcbc320183c613c0",
-        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "2d97b09355c5194c6106230afc03eb2ed05dcf37ddcaa5ea1e3c3d0915be667b",
+        "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_contracts.validation:validate",
       "work": "O(B) complete JSON/source value bytes under the installed schema profile"
@@ -1867,7 +2076,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "some-implementations/fishhat/applications/directory/src/fishhat_directory/projection.py": "0d59131faae4d3af36206a4dfd18603b5acb09dc6d962157ae3d9e4a680dcdd1",
+        "some-implementations/fishhat/applications/directory/src/fishhat_directory/projection.py": "5f9ed5d0dbd45e7e503714fb54b8b1aeb74f78e00269e8646c2651cedb1ebd5b",
         "tests/test_engineering.py": "b848f13edf88900c94c6cc8ee30922f36a23705895dc239484d4caaffd21379c",
         "tests/test_linear_growth.py": "238c554ee57c932a2b14c605a17d40bc17e40b979e3b4936cc5ae49f60b2885d"
       },
@@ -1895,12 +2104,100 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/handoffs.py": "1ee27340682b351a06af32fdfe4c1cdbdd96569b5409bd1c9873a4938ee6ea13",
+        "packages/fishhat-contracts/src/fishhat_contracts/handoffs.py": "5aadc89d799db3fa88ce74393e2d5b28c4c3cb800b63793e1dcf6b27b77f0f63",
         "tests/test_result_schema_admission.py": "3dfa6a93b31496a1ddc74b6000e872791a0ef7f270c745a711c92ad9ba45a62e",
         "tests/test_retained_result_growth.py": "6b9ac27a2d0a04ca2e403cd8add2b194d592ab453f2c5442dd82b60c76e958d0"
       },
       "symbol": "fishhat_contracts.handoffs:validate_result_payload",
       "work": "Admission O(S + E) schema bytes and references without unfolding; payload O(B) complete bytes under a fixed admitted schema profile"
+    },
+    "hooks.require_hook_success": {
+      "capacity": [
+        "receiving owner memory and independently opened stable artifact custody"
+      ],
+      "extent": "Every required check, dataset, materialization and artifact; no collection truncation",
+      "growth": "linear",
+      "id": "hooks.require_hook_success",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_hook_results.py::test_hook_result_linear_work"
+      ],
+      "proofs": [
+        "tests/test_hook_results.py::test_hook_result_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/hooks.py": "be10a953d34ccd46420401bf3f5d4e8e33e9247eb5017b7098a61b1cd775fa5a",
+        "tests/test_hook_results.py": "11401674708447c5a16720ae2e274ccdc5eaf92eb4649c13fba0accaee65bb45"
+      },
+      "symbol": "fishhat_contracts.hooks:require_hook_success",
+      "work": "O(B) complete request, procedure, result, path components and selected artifact bytes"
+    },
+    "hooks.require_selected_restore_input": {
+      "capacity": [
+        "receiving owner memory and independently opened stable artifact custody"
+      ],
+      "extent": "Every required check, dataset, materialization and artifact; no collection truncation",
+      "growth": "linear",
+      "id": "hooks.require_selected_restore_input",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_hook_results.py::test_hook_result_linear_work"
+      ],
+      "proofs": [
+        "tests/test_hook_results.py::test_hook_result_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/hooks.py": "be10a953d34ccd46420401bf3f5d4e8e33e9247eb5017b7098a61b1cd775fa5a",
+        "tests/test_hook_results.py": "11401674708447c5a16720ae2e274ccdc5eaf92eb4649c13fba0accaee65bb45"
+      },
+      "symbol": "fishhat_contracts.hooks:require_selected_restore_input",
+      "work": "O(B) complete request, procedure, result, path components and selected artifact bytes"
+    },
+    "hooks.validate_hook_request": {
+      "capacity": [
+        "receiving owner memory and independently opened stable artifact custody"
+      ],
+      "extent": "Every required check, dataset, materialization and artifact; no collection truncation",
+      "growth": "linear",
+      "id": "hooks.validate_hook_request",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_hook_results.py::test_hook_result_linear_work"
+      ],
+      "proofs": [
+        "tests/test_hook_results.py::test_hook_result_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/hooks.py": "be10a953d34ccd46420401bf3f5d4e8e33e9247eb5017b7098a61b1cd775fa5a",
+        "tests/test_hook_results.py": "11401674708447c5a16720ae2e274ccdc5eaf92eb4649c13fba0accaee65bb45"
+      },
+      "symbol": "fishhat_contracts.hooks:validate_hook_request",
+      "work": "O(B) complete request, procedure, result, path components and selected artifact bytes"
+    },
+    "hooks.validate_hook_result": {
+      "capacity": [
+        "receiving owner memory and independently opened stable artifact custody"
+      ],
+      "extent": "Every required check, dataset, materialization and artifact; no collection truncation",
+      "growth": "linear",
+      "id": "hooks.validate_hook_result",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_hook_results.py::test_hook_result_linear_work"
+      ],
+      "proofs": [
+        "tests/test_hook_results.py::test_hook_result_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/hooks.py": "be10a953d34ccd46420401bf3f5d4e8e33e9247eb5017b7098a61b1cd775fa5a",
+        "tests/test_hook_results.py": "11401674708447c5a16720ae2e274ccdc5eaf92eb4649c13fba0accaee65bb45"
+      },
+      "symbol": "fishhat_contracts.hooks:validate_hook_result",
+      "work": "O(B) complete request, procedure, result, path components and selected artifact bytes"
     },
     "journal.submit": {
       "capacity": [],
@@ -1925,6 +2222,107 @@
       "symbol": "fishhat_owner.journal:Journal.submit",
       "work": "O(retained_requests + input_bytes)-reference-scan"
     },
+    "observations.decode": {
+      "capacity": [
+        "Receiver-approved staging and retained snapshot capacities reject explicitly"
+      ],
+      "extent": "complete exact selection, including an empty selection",
+      "growth": "linear",
+      "id": "observations.decode",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_observation_selection.py::test_complete_traversal_request_work_is_linear"
+      ],
+      "proofs": [
+        "tests/test_observation_selection.py::test_large_selection_roundtrips_once",
+        "tests/test_observation_selection.py::test_complete_traversal_request_work_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/observations.py": "3af80a5999c989cf159c2faaa984e6afa8917a2761feef1a47be340721861afd",
+        "tests/test_observation_selection.py": "fccd9c25cfe87be05fbc0b9bad58050720d53180b7b0f7665ad05fff0e909328"
+      },
+      "symbol": "fishhat_contracts.observations:decode_observation_selection",
+      "work": "O(B + N) complete admitted selection/inventory bytes and selected records"
+    },
+    "observations.page": {
+      "capacity": [],
+      "extent": "complete retained traversal through bounded independent pages",
+      "growth": "linear",
+      "id": "observations.page",
+      "limits": [
+        [
+          "page_items",
+          256
+        ],
+        [
+          "frame_bytes",
+          1048576
+        ]
+      ],
+      "linear_proofs": [
+        "tests/test_observation_selection.py::test_complete_traversal_request_work_is_linear"
+      ],
+      "proofs": [
+        "tests/test_observation_selection.py::test_large_selection_roundtrips_once",
+        "tests/test_observation_selection.py::test_complete_traversal_request_work_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/observations.py": "3af80a5999c989cf159c2faaa984e6afa8917a2761feef1a47be340721861afd",
+        "tests/test_observation_selection.py": "fccd9c25cfe87be05fbc0b9bad58050720d53180b7b0f7665ad05fff0e909328"
+      },
+      "symbol": "fishhat_contracts.observations:ObservationTraversal.page",
+      "work": "O(P) emitted page bytes and page-resource authorization checks"
+    },
+    "observations.record-chunk": {
+      "capacity": [],
+      "extent": "one complete retained observation through bounded chunks",
+      "growth": "linear",
+      "id": "observations.record-chunk",
+      "limits": [
+        [
+          "chunk_bytes",
+          196608
+        ]
+      ],
+      "linear_proofs": [
+        "tests/test_observation_selection.py::test_large_snapshot_chunks_reauthorize_original_custody"
+      ],
+      "proofs": [
+        "tests/test_observation_selection.py::test_large_snapshot_chunks_reauthorize_original_custody"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/observations.py": "3af80a5999c989cf159c2faaa984e6afa8917a2761feef1a47be340721861afd",
+        "tests/test_observation_selection.py": "fccd9c25cfe87be05fbc0b9bad58050720d53180b7b0f7665ad05fff0e909328"
+      },
+      "symbol": "fishhat_contracts.observations:ObservationTraversal.record_chunk",
+      "work": "O(C) requested immutable record chunk bytes"
+    },
+    "observations.start": {
+      "capacity": [
+        "Receiver-approved staging and retained snapshot capacities reject explicitly"
+      ],
+      "extent": "complete exact selection, including an empty selection",
+      "growth": "linear",
+      "id": "observations.start",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_observation_selection.py::test_complete_traversal_request_work_is_linear"
+      ],
+      "proofs": [
+        "tests/test_observation_selection.py::test_large_selection_roundtrips_once",
+        "tests/test_observation_selection.py::test_complete_traversal_request_work_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/observations.py": "3af80a5999c989cf159c2faaa984e6afa8917a2761feef1a47be340721861afd",
+        "tests/test_observation_selection.py": "fccd9c25cfe87be05fbc0b9bad58050720d53180b7b0f7665ad05fff0e909328"
+      },
+      "symbol": "fishhat_contracts.observations:ObservationTraversal.__init__",
+      "work": "O(B + N) complete admitted selection/inventory bytes and selected records"
+    },
     "record-delivery.chunk": {
       "capacity": [],
       "extent": "one-record-chunk",
@@ -1945,7 +2343,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/record_delivery.py": "04d94df25a9bfadac80ab92fccc68d9a6b5b39cccf12490cb0d673ee455a6fb6",
+        "packages/fishhat-contracts/src/fishhat_contracts/record_delivery.py": "50371c281c68ef56dfd946b11032cdfe34f62e991e8f05c6362aa540b9af4e56",
         "tests/test_linear_growth.py": "238c554ee57c932a2b14c605a17d40bc17e40b979e3b4936cc5ae49f60b2885d",
         "tests/test_record_delivery.py": "29ae96e27fcb9e8197d5bc7d20b8eca0a747e5c58cdcb0dff5c65ef983e50cc2"
       },
@@ -2038,7 +2436,7 @@
       "capacity": [
         "receiving owner memory"
       ],
-      "extent": "complete inventory, retention input and reviewed candidate extent across every dispatch batch",
+      "extent": "complete inventory, retention input and reviewed unreferenced candidate frontier across every dispatch batch; newly unreferenced dependencies require a new reviewed intent",
       "growth": "linear",
       "id": "resources.cleanup-plan",
       "limits": [],
@@ -2051,7 +2449,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/resources.py": "906f52721a34e07ad4f9c1248d954e2d4279c7f243df822da2c3e5592aecb925",
+        "packages/fishhat-contracts/src/fishhat_contracts/resources.py": "aedf05db57c7890295fe4f009d4349bbd41dcb4078a82d9403c10f514621becd",
         "tests/test_resource_growth.py": "d51e5ed7d70f6d12d820eafd714fb69c7c1c208c3869600e85f818de41579b35",
         "tests/test_resources.py": "e8671a3452f8a2590b509ea0acba4b6f674ccd09e76311646cd5ee5abdf68b3c"
       },
@@ -2075,7 +2473,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/resources.py": "906f52721a34e07ad4f9c1248d954e2d4279c7f243df822da2c3e5592aecb925",
+        "packages/fishhat-contracts/src/fishhat_contracts/resources.py": "aedf05db57c7890295fe4f009d4349bbd41dcb4078a82d9403c10f514621becd",
         "tests/test_cleanup_traversal.py": "2a9a60382d42d5602cb9cd572b57c2a682a00e7a8ec310ad75144d32ee486765",
         "tests/test_resource_growth.py": "d51e5ed7d70f6d12d820eafd714fb69c7c1c208c3869600e85f818de41579b35"
       },
@@ -2099,7 +2497,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/resources.py": "906f52721a34e07ad4f9c1248d954e2d4279c7f243df822da2c3e5592aecb925",
+        "packages/fishhat-contracts/src/fishhat_contracts/resources.py": "aedf05db57c7890295fe4f009d4349bbd41dcb4078a82d9403c10f514621becd",
         "tests/test_resource_growth.py": "d51e5ed7d70f6d12d820eafd714fb69c7c1c208c3869600e85f818de41579b35",
         "tests/test_resources.py": "e8671a3452f8a2590b509ea0acba4b6f674ccd09e76311646cd5ee5abdf68b3c"
       },
@@ -2123,7 +2521,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/resources.py": "906f52721a34e07ad4f9c1248d954e2d4279c7f243df822da2c3e5592aecb925",
+        "packages/fishhat-contracts/src/fishhat_contracts/resources.py": "aedf05db57c7890295fe4f009d4349bbd41dcb4078a82d9403c10f514621becd",
         "tests/test_resource_growth.py": "d51e5ed7d70f6d12d820eafd714fb69c7c1c208c3869600e85f818de41579b35",
         "tests/test_resources.py": "e8671a3452f8a2590b509ea0acba4b6f674ccd09e76311646cd5ee5abdf68b3c"
       },
@@ -2146,7 +2544,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/resources.py": "906f52721a34e07ad4f9c1248d954e2d4279c7f243df822da2c3e5592aecb925",
+        "packages/fishhat-contracts/src/fishhat_contracts/resources.py": "aedf05db57c7890295fe4f009d4349bbd41dcb4078a82d9403c10f514621becd",
         "tests/test_resource_growth.py": "d51e5ed7d70f6d12d820eafd714fb69c7c1c208c3869600e85f818de41579b35"
       },
       "symbol": "fishhat_contracts.resources:ReservationModel.release",
@@ -2168,7 +2566,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/resources.py": "906f52721a34e07ad4f9c1248d954e2d4279c7f243df822da2c3e5592aecb925",
+        "packages/fishhat-contracts/src/fishhat_contracts/resources.py": "aedf05db57c7890295fe4f009d4349bbd41dcb4078a82d9403c10f514621becd",
         "tests/test_resource_growth.py": "d51e5ed7d70f6d12d820eafd714fb69c7c1c208c3869600e85f818de41579b35"
       },
       "symbol": "fishhat_contracts.resources:ReservationModel.reserve",
@@ -2191,12 +2589,101 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/resources.py": "906f52721a34e07ad4f9c1248d954e2d4279c7f243df822da2c3e5592aecb925",
+        "packages/fishhat-contracts/src/fishhat_contracts/resources.py": "aedf05db57c7890295fe4f009d4349bbd41dcb4078a82d9403c10f514621becd",
         "tests/test_resource_growth.py": "d51e5ed7d70f6d12d820eafd714fb69c7c1c208c3869600e85f818de41579b35",
         "tests/test_retention_authority.py": "4dddffde9010e54841e10b85ac8aac47f649771cdbb3b13107453ce18d8bf5de"
       },
       "symbol": "fishhat_contracts.resources:retained_runtime_handles",
       "work": "complete release and runtime-handle custody; radix ordering in key bytes"
+    },
+    "source.app": {
+      "capacity": [
+        "The receiving owner admits the complete source under its explicit memory capacity"
+      ],
+      "extent": "Every declared component, dataset, procedure, target and grant; no collection-count ceiling",
+      "growth": "linear",
+      "id": "source.app",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_source_growth.py::test_app_semantics_linear_work"
+      ],
+      "proofs": [
+        "tests/test_source_growth.py::test_app_semantics_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "2d97b09355c5194c6106230afc03eb2ed05dcf37ddcaa5ea1e3c3d0915be667b",
+        "tests/test_source_growth.py": "67bd3327e4943aebfff2fe4db3757daf57c3a5c5cf9af55f7865f93ee14e1302"
+      },
+      "symbol": "fishhat_contracts.validation:validate_app",
+      "work": "O(B + E) complete source bytes and declared reference edges; shared memberships indexed once"
+    },
+    "source.dependencies": {
+      "capacity": [
+        "The receiving owner admits the complete dependency graph"
+      ],
+      "extent": "Every dependency, including chains deeper than the interpreter call stack",
+      "growth": "linear",
+      "id": "source.dependencies",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_source_growth.py::test_dependency_graph_linear_work"
+      ],
+      "proofs": [
+        "tests/test_source_growth.py::test_dependency_graph_complete_depth_and_cycles",
+        "tests/test_source_growth.py::test_dependency_graph_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "2d97b09355c5194c6106230afc03eb2ed05dcf37ddcaa5ea1e3c3d0915be667b",
+        "tests/test_source_growth.py": "67bd3327e4943aebfff2fe4db3757daf57c3a5c5cf9af55f7865f93ee14e1302"
+      },
+      "symbol": "fishhat_contracts.validation:require_acyclic",
+      "work": "O(V + E) declared nodes and edges with an explicit depth-first stack"
+    },
+    "source.domain": {
+      "capacity": [
+        "The receiving owner admits the complete source under its explicit memory capacity"
+      ],
+      "extent": "Every declared component, dataset, procedure, target and grant; no collection-count ceiling",
+      "growth": "linear",
+      "id": "source.domain",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_source_growth.py::test_domain_semantics_linear_work"
+      ],
+      "proofs": [
+        "tests/test_source_growth.py::test_domain_semantics_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "2d97b09355c5194c6106230afc03eb2ed05dcf37ddcaa5ea1e3c3d0915be667b",
+        "tests/test_source_growth.py": "67bd3327e4943aebfff2fe4db3757daf57c3a5c5cf9af55f7865f93ee14e1302"
+      },
+      "symbol": "fishhat_contracts.validation:validate_domain",
+      "work": "O(B + E) complete source bytes and declared reference edges; shared memberships indexed once"
+    },
+    "source.host": {
+      "capacity": [
+        "The receiving owner admits the complete source under its explicit memory capacity"
+      ],
+      "extent": "Every declared component, dataset, procedure, target and grant; no collection-count ceiling",
+      "growth": "linear",
+      "id": "source.host",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_source_growth.py::test_host_semantics_linear_work"
+      ],
+      "proofs": [
+        "tests/test_source_growth.py::test_host_semantics_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "2d97b09355c5194c6106230afc03eb2ed05dcf37ddcaa5ea1e3c3d0915be667b",
+        "tests/test_source_growth.py": "67bd3327e4943aebfff2fe4db3757daf57c3a5c5cf9af55f7865f93ee14e1302"
+      },
+      "symbol": "fishhat_contracts.validation:validate_host",
+      "work": "O(B + E) complete source bytes and declared reference edges; shared memberships indexed once"
     },
     "wire.read-frame": {
       "capacity": [],
@@ -2224,6 +2711,29 @@
       },
       "symbol": "fishhat_client.wire:read_frame",
       "work": "O(frame_bytes)"
+    },
+    "workflow.lifecycle-request": {
+      "capacity": [
+        "native owner capacity may refuse new requests without evicting accepted identities"
+      ],
+      "extent": "Complete current workflow history, exact original request attribution and complete accepted receipt/evidence; no history prefix selection",
+      "growth": "linear",
+      "id": "workflow.lifecycle-request",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_workflow_lifecycle_requests.py::test_lifecycle_request_linear_complete_history_work"
+      ],
+      "proofs": [
+        "tests/test_workflow_lifecycle_requests.py::test_accepted_lifecycle_request_replay_preserves_original_result_and_attribution",
+        "tests/test_workflow_lifecycle_requests.py::test_lifecycle_request_linear_complete_history_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_lifecycle.py": "6a02c1981a5252574b6305baae0a3b791798f24b993d5542be5b0d42e587de63",
+        "tests/test_workflow_lifecycle_requests.py": "66c5c8e0d11ee88b251a399a689ead94b1e8d34dbf309401354ea9af4d3e7519"
+      },
+      "symbol": "fishhat_contracts.workflow_lifecycle:request_workflow_lifecycle",
+      "work": "O(B + H) complete capsule validation, exact history lookup and copying; B complete retained workflow/proposal/evidence bytes and H retained transition entries; the finite request never bounds retained result evidence"
     },
     "workflow.phase-evidence": {
       "capacity": [

@@ -31,6 +31,8 @@ hooks:
   health:
     component: web
     role: health
+    required_checks:
+    - HEALTH_OK
     argv:
     - /app/health
     mode: read

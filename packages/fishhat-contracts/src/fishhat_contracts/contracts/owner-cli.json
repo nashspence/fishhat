@@ -32,7 +32,7 @@
         "--json"
       ],
       "use_case": "observe",
-      "description": "Observe managed resources with separate intent, activity, health, reachability and power meanings; retain timestamp and provenance."
+      "description": "Start an all-authorized observation traversal over this owner's authoritative managed-resource inventory, including an empty inventory. Resolve and retain the permission-filtered selection once; source, client cache and optional directory data are not required."
     },
     {
       "name": "list",
@@ -99,7 +99,7 @@
         "--json"
       ],
       "use_case": "check",
-      "description": "Observe the selected application; checking does not silently repair it or adopt new source."
+      "description": "Stage the exact one-application SelectionInput once under content custody and begin check. Observation cannot silently repair, adopt source, or authorize mutation; empty exact selections are separately representable through the request form."
     },
     {
       "name": "app-restart",
@@ -425,7 +425,7 @@
         "--json"
       ],
       "use_case": "observe",
-      "description": "Continue the same authorized observation traversal without treating one page as the complete collection."
+      "description": "Continue the exact retained observation traversal using only the independently authenticated owner, opaque cursor and limit. Do not re-enumerate or resend the original selection; expiry and revoked permission fail explicitly."
     },
     {
       "name": "resources-page",
@@ -597,6 +597,40 @@
       ],
       "use_case": "workflow.recover",
       "description": "Read a complete closed workflow recovery phase input, stage its canonical workflow-input bytes and submit the bounded reference. Preparation durably reserves one exact successor and retires the original child-admission set; commit requires the independently authenticated complete participant preparation closure. Retire-unprepared obtains a finite current-owner proof for an original participant that never prepared, only after positive authoritative no-preparation/no-child checks, native fencing, permanent old-admission tombstones and retained input/hold custody. It does not invent an original capsule or select a successor. Abandonment irreversibly closes an unused successor at every current participant, including peers that never prepared it, before a different successor may be reviewed. An accepted successor child forbids abandonment. Current scoped recovery authority, settled original effects and retained holds remain required. Old work and abandoned child requests never regain execution authority."
+    },
+    {
+      "name": "observe-request",
+      "tokens": [
+        "{tool}",
+        "observe",
+        "--request-stdin",
+        "--json"
+      ],
+      "use_case": "observe",
+      "description": "Read one closed StartRequest or ContinueRequest. Exact selection uses complete committed content; all-authorized resolves the owner inventory once. Continuation carries no repeated resource list."
+    },
+    {
+      "name": "check-request",
+      "tokens": [
+        "{tool}",
+        "check",
+        "--request-stdin",
+        "--json"
+      ],
+      "use_case": "check",
+      "description": "Read one closed StartRequest or ContinueRequest for observational checks, with exact staged selection or all-authorized inventory and bounded retained continuation."
+    },
+    {
+      "name": "workflow-lifecycle",
+      "tokens": [
+        "{tool}",
+        "workflow",
+        "lifecycle",
+        "--request-stdin",
+        "--json"
+      ],
+      "use_case": "workflow.lifecycle",
+      "description": "Ask this receiving owner to authorize a finite lifecycle decision for the exact workflow, generation, driver term and original request identity. The request cannot supply native authorization or reconciliation evidence. Resume requires independently verified current driver and native conditions; acceptance retains the original decision receipt for exact replay."
     }
   ],
   "parser": "bounded tokens; no shell evaluation",

@@ -1531,131 +1531,7 @@
             "$ref": "common.schema.json#/$defs/Id"
           },
           "additionalProperties": {
-            "type": "object",
-            "properties": {
-              "component": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 24,
-                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
-              },
-              "role": {
-                "enum": [
-                  "health",
-                  "configure",
-                  "verify-config",
-                  "dependency-check",
-                  "busy",
-                  "quiesce",
-                  "transition-assess",
-                  "transition-apply",
-                  "transition-verify",
-                  "capture",
-                  "restore",
-                  "verify-restore",
-                  "rebuild",
-                  "verify-rebuild"
-                ]
-              },
-              "argv": {
-                "type": "array",
-                "items": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 4096
-                },
-                "minItems": 1
-              },
-              "mode": {
-                "enum": [
-                  "read",
-                  "write"
-                ]
-              },
-              "timeout_seconds": {
-                "type": "integer",
-                "minimum": 1,
-                "maximum": 86400
-              },
-              "datasets": {
-                "type": "array",
-                "items": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 24,
-                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
-                },
-                "minItems": 0,
-                "uniqueItems": true
-              },
-              "secrets": {
-                "type": "array",
-                "items": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 64,
-                  "pattern": "^[a-z][a-z0-9-]{0,63}(?![\\s\\S])"
-                },
-                "minItems": 0,
-                "uniqueItems": true
-              },
-              "network": {
-                "enum": [
-                  "none",
-                  "declared"
-                ]
-              }
-            },
-            "required": [
-              "component",
-              "role",
-              "argv",
-              "mode",
-              "timeout_seconds",
-              "datasets",
-              "secrets",
-              "network"
-            ],
-            "additionalProperties": false,
-            "description": "Hook roles determine their access mode. Observation, assessment, verification and capture use read access to admitted datasets; configure, quiesce, transition application, restore and rebuild use write access and require separately authorized owner work. Read access also constrains remote credentials and native operations: a read-only filesystem mount alone does not make a database connection observational. Artifact output is confined separately to the operation output directory. Restore and verify-restore invocations carry the selected checkpoint, exact dataset snapshots and read-only artifact materializations through hook-request.restore_input, separately from dataset targets. The receiving owner verifies that handoff against retained accepted inputs; procedure names and release identity cannot select a capture implicitly.",
-            "oneOf": [
-              {
-                "properties": {
-                  "role": {
-                    "enum": [
-                      "health",
-                      "verify-config",
-                      "dependency-check",
-                      "busy",
-                      "transition-assess",
-                      "transition-verify",
-                      "capture",
-                      "verify-restore",
-                      "verify-rebuild"
-                    ]
-                  },
-                  "mode": {
-                    "const": "read"
-                  }
-                }
-              },
-              {
-                "properties": {
-                  "role": {
-                    "enum": [
-                      "configure",
-                      "quiesce",
-                      "transition-apply",
-                      "restore",
-                      "rebuild"
-                    ]
-                  },
-                  "mode": {
-                    "const": "write"
-                  }
-                }
-              }
-            ]
+            "$ref": "source.schema.json#/$defs/Hook"
           }
         },
         "lifecycle": {
@@ -2061,6 +1937,173 @@
       ],
       "additionalProperties": false,
       "description": "Repository-owned logical secret catalogue, independent of the secret storage provider. Its repository identifies source custody, not a backend or management permission. Entries never contain values. The source selection names an already owner-approved secret-source instance; publication, credential issuance and consumer adoption remain distinct authorized effects."
+    },
+    "Hook": {
+      "type": "object",
+      "properties": {
+        "component": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 24,
+          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
+        },
+        "role": {
+          "enum": [
+            "health",
+            "configure",
+            "verify-config",
+            "dependency-check",
+            "busy",
+            "quiesce",
+            "transition-assess",
+            "transition-apply",
+            "transition-verify",
+            "capture",
+            "restore",
+            "verify-restore",
+            "rebuild",
+            "verify-rebuild"
+          ]
+        },
+        "argv": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          },
+          "minItems": 1
+        },
+        "mode": {
+          "enum": [
+            "read",
+            "write"
+          ]
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400
+        },
+        "datasets": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 24,
+            "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "secrets": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[a-z][a-z0-9-]{0,63}(?![\\s\\S])"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "network": {
+          "enum": [
+            "none",
+            "declared"
+          ]
+        },
+        "required_checks": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[A-Z][A-Z0-9_]+(?![\\s\\S])"
+          },
+          "uniqueItems": true,
+          "minItems": 0,
+          "description": "Complete mandatory check codes selected by the receiving owner from the exact accepted procedure. Result diagnostics cannot replace, downgrade or omit these requirements. Verification, health, dependency, busy and assessment roles require at least one independently approved check."
+        }
+      },
+      "required": [
+        "component",
+        "role",
+        "argv",
+        "mode",
+        "timeout_seconds",
+        "datasets",
+        "secrets",
+        "network",
+        "required_checks"
+      ],
+      "additionalProperties": false,
+      "description": "Hook roles determine their access mode. Observation, assessment, verification and capture use read access to admitted datasets; configure, quiesce, transition application, restore and rebuild use write access and require separately authorized owner work. Read access also constrains remote credentials and native operations: a read-only filesystem mount alone does not make a database connection observational. Artifact output is confined separately to the operation output directory. Restore and verify-restore invocations carry the selected checkpoint, exact dataset snapshots and read-only artifact materializations through hook-request.restore_input, separately from dataset targets. The receiving owner verifies that handoff against retained accepted inputs; procedure names and release identity cannot select a capture implicitly. required_checks is the complete mandatory result gate for this exact procedure. The receiving owner pins the entire canonical Hook record, including this set, as hook-request.procedure_digest. The request and result cannot remove or downgrade these source-approved checks. Read-only success may emit output artifacts but must report no mutation to managed targets or external systems.",
+      "oneOf": [
+        {
+          "properties": {
+            "role": {
+              "enum": [
+                "health",
+                "verify-config",
+                "dependency-check",
+                "busy",
+                "transition-assess",
+                "transition-verify",
+                "capture",
+                "verify-restore",
+                "verify-rebuild"
+              ]
+            },
+            "mode": {
+              "const": "read"
+            }
+          }
+        },
+        {
+          "properties": {
+            "role": {
+              "enum": [
+                "configure",
+                "quiesce",
+                "transition-apply",
+                "restore",
+                "rebuild"
+              ]
+            },
+            "mode": {
+              "const": "write"
+            }
+          }
+        }
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "enum": [
+                  "health",
+                  "verify-config",
+                  "dependency-check",
+                  "busy",
+                  "transition-assess",
+                  "transition-verify",
+                  "verify-restore",
+                  "verify-rebuild"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "required_checks": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
     }
   }
 }
