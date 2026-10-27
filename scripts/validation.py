@@ -98,17 +98,29 @@ def source_identity(root: Path = ROOT) -> dict[str, Any]:
     return {"commit": sha, "clean": not status, "fingerprint": fingerprint.hexdigest()}
 
 
+def test_command(command: list[str]) -> list[str]:
+    """Only reporting and execution distribution flags preserve complete selection."""
+    normalized: list[str] = []
+    parts = iter(command)
+    for part in parts:
+        if part in {"-n", "--numprocesses"}:
+            value = next(parts, "")
+            if not re.fullmatch(r"[0-9]+", value):
+                normalized.extend((part, value))
+        elif not re.fullmatch(
+            r"--junitxml=artifacts/[A-Za-z0-9_./-]+\.xml|--durations=[0-9]+|"
+            r"--durations-min=[0-9.]+|-n[0-9]+|--numprocesses=[0-9]+|"
+            r"--dist=(?:load|worksteal)|--max-worker-restart=0",
+            part,
+        ):
+            normalized.append(part)
+    return normalized
+
+
 def selection(target: str, command: list[str]) -> dict[str, Any]:
     normalized = list(command)
     if target in TEST_TARGETS:
-        normalized = [
-            part
-            for part in command
-            if not re.fullmatch(
-                r"--junitxml=artifacts/[A-Za-z0-9_./-]+\.xml|--durations=[0-9]+|--durations-min=[0-9.]+",
-                part,
-            )
-        ]
+        normalized = test_command(command)
     overrides = [key for key in OVERRIDES if os.environ.get(key)]
     # Record source test references only; arbitrary arguments and environment values stay out.
     tests = [

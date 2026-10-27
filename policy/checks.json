@@ -111,7 +111,7 @@
       "requiredness_authority": "release.toml#/governance/required_checks",
       "result_authority": "GitHub job conclusion; classification supplies no execution proof",
       "scope": "pytest groups retain separate authority and exact local scopes",
-      "work_sha256": "3c2607e582487da67fdb74bbbbbed4c124b4477d49c48ae4c5280636ca69fcda"
+      "work_sha256": "a3a6e94f9b7f9c765bac030a07ff141816ae4f2b76fe0e8a37f0ea81be9ecf24"
     },
     ".github/workflows/codeql.yml:analyze": {
       "authority": "release.toml",
@@ -251,7 +251,7 @@
         "repository-policy"
       ],
       "scope": "repository-local",
-      "work_sha256": "d24defbd74e20ce3d23abfb356e79d4207f4d202302c749feeb67a026e34f69e"
+      "work_sha256": "53be9dd3004272625ee753e36973a74ee66978089e2d66e7b13419a387c6dd48"
     },
     "make:license": {
       "authority": "Makefile",
@@ -347,7 +347,7 @@
         "validation-tooling"
       ],
       "scope": "repository-local",
-      "work_sha256": "fab69b6f0f7a552549c364638590634204f3ea44e9cc014973dd2365186ffd90"
+      "work_sha256": "3054f7725eb7b9282c85807c12815ad9cd341be00e65ab56edbf1a97fcb991b6"
     }
   },
   "format": "fishhat-check-evidence/v1",
@@ -6209,6 +6209,10 @@
       "purpose_sha256": "fbd8de233dd674c1fb789dfc15d14fe15bfc64a8977868868b52d2686039e652"
     },
     {
+      "node": "tests/test_performance_measurement.py::test_parallel_metrics_account_for_workers_without_claiming_a_simultaneous_peak",
+      "purpose_sha256": "fbd8de233dd674c1fb789dfc15d14fe15bfc64a8977868868b52d2686039e652"
+    },
+    {
       "node": "tests/test_performance_measurement.py::test_parameterized_proofs_require_all_executed_cases_and_no_skips",
       "purpose_sha256": "fbd8de233dd674c1fb789dfc15d14fe15bfc64a8977868868b52d2686039e652"
     },
@@ -9354,6 +9358,46 @@
     },
     {
       "node": "tests/test_validation.py::test_filtered_success_does_not_become_full_qualification",
+      "purpose_sha256": "67217fd9e4aef33e7514d26f751657107d9703eb4b64518b27b09d5d23e5cb0c"
+    },
+    {
+      "node": "tests/test_validation.py::test_parallel_complete_run_retains_worker_phases_fixtures_subtests_and_scoped_proofs",
+      "purpose_sha256": "67217fd9e4aef33e7514d26f751657107d9703eb4b64518b27b09d5d23e5cb0c"
+    },
+    {
+      "node": "tests/test_validation.py::test_parallel_distribution_flags_preserve_selection_but_filtering_and_duplication_do_not",
+      "purpose_sha256": "67217fd9e4aef33e7514d26f751657107d9703eb4b64518b27b09d5d23e5cb0c"
+    },
+    {
+      "node": "tests/test_validation.py::test_parallel_failure_or_lost_evidence_cannot_qualify[assertion]",
+      "purpose_sha256": "67217fd9e4aef33e7514d26f751657107d9703eb4b64518b27b09d5d23e5cb0c"
+    },
+    {
+      "node": "tests/test_validation.py::test_parallel_failure_or_lost_evidence_cannot_qualify[crash]",
+      "purpose_sha256": "67217fd9e4aef33e7514d26f751657107d9703eb4b64518b27b09d5d23e5cb0c"
+    },
+    {
+      "node": "tests/test_validation.py::test_parallel_failure_or_lost_evidence_cannot_qualify[duplicate]",
+      "purpose_sha256": "67217fd9e4aef33e7514d26f751657107d9703eb4b64518b27b09d5d23e5cb0c"
+    },
+    {
+      "node": "tests/test_validation.py::test_parallel_failure_or_lost_evidence_cannot_qualify[invalid-metrics]",
+      "purpose_sha256": "67217fd9e4aef33e7514d26f751657107d9703eb4b64518b27b09d5d23e5cb0c"
+    },
+    {
+      "node": "tests/test_validation.py::test_parallel_failure_or_lost_evidence_cannot_qualify[missing-evidence]",
+      "purpose_sha256": "67217fd9e4aef33e7514d26f751657107d9703eb4b64518b27b09d5d23e5cb0c"
+    },
+    {
+      "node": "tests/test_validation.py::test_parallel_failure_or_lost_evidence_cannot_qualify[missing-phase]",
+      "purpose_sha256": "67217fd9e4aef33e7514d26f751657107d9703eb4b64518b27b09d5d23e5cb0c"
+    },
+    {
+      "node": "tests/test_validation.py::test_parallel_failure_or_lost_evidence_cannot_qualify[skip]",
+      "purpose_sha256": "67217fd9e4aef33e7514d26f751657107d9703eb4b64518b27b09d5d23e5cb0c"
+    },
+    {
+      "node": "tests/test_validation.py::test_parallel_failure_or_lost_evidence_cannot_qualify[teardown]",
       "purpose_sha256": "67217fd9e4aef33e7514d26f751657107d9703eb4b64518b27b09d5d23e5cb0c"
     },
     {

@@ -4,6 +4,7 @@ SHELL := bash
 MISE_BIN ?= mise
 FILES ?= .
 TESTS ?= tests
+UNIT_WORKERS ?= 4
 UNIT_REPORT_ARGS ?= --durations=30 --durations-min=0.25
 PYTHON_PATHS ?= packages fishhat some-implementations scripts tests
 BUNDLE_OUTPUT ?= artifacts/scaffold-bundle
@@ -47,6 +48,7 @@ help:
 		'Variables:' \
 		"  args='...'         Forward tool flags to unit, ruff, ruff-fix, format, format-check or mypy." \
 		"                     For operation-qualification/engineering: check (default), generate or report [--require-current-proofs]." \
+		"  UNIT_WORKERS=...  Unit workers; default: 4. Use 0 for serial debugging." \
 		"  TESTS='...'        Select unit test paths or node IDs; default: tests." \
 		"  FILES='...'        Select Ruff/format paths; default: ." \
 		"  PYTHON_PATHS='...' Select compile paths; default: packages fishhat some-implementations scripts tests." \
@@ -96,7 +98,7 @@ compile:
 
 # check-purpose: validation-tooling
 unit:
-	$(VALIDATE) python -m pytest -q $(TESTS) $(UNIT_REPORT_ARGS) $(args)
+	$(VALIDATE) python -m pytest -q $(TESTS) -n $(UNIT_WORKERS) --dist=worksteal --max-worker-restart=0 $(UNIT_REPORT_ARGS) $(args)
 
 # check-purpose: validation-tooling
 test: lint unit

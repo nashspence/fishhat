@@ -4,4 +4,4 @@ cd "$(git rev-parse --show-toplevel)"
 for repo_git_variable in $(git rev-parse --local-env-vars); do
     unset "$repo_git_variable"
 done
-exec make unit TESTS=tests args= UNIT_REPORT_ARGS="--durations=30 --durations-min=0.25"
+exec make unit TESTS=tests UNIT_WORKERS=4 args= UNIT_REPORT_ARGS="--durations=30 --durations-min=0.25"
