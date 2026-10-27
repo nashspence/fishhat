@@ -159,3 +159,27 @@ def test_parallel_metrics_account_for_workers_without_claiming_a_simultaneous_pe
     )
     with pytest.raises(ValueError):
         run_stats.parallel_stats({"controller": controller, "gw0": {}})
+
+
+def test_parallel_cpu_totals_survive_worker_order_and_sorted_receipt_json(monkeypatch):
+    from itertools import permutations
+
+    def python311_sum(values):
+        total = 0
+        for value in values:
+            total += value
+        return total
+
+    # Exercise the supported interpreter's addition semantics on every Python.
+    monkeypatch.setattr(run_stats, "sum", python311_sum, raising=False)
+    base = run_stats.RunStats().finish()
+    processes = {
+        name: {**base, "cpu_user_seconds": cpu, "cpu_system_seconds": cpu}
+        for name, cpu in zip(("controller", "gw0", "gw1", "gw2"), (0.1, 0.2, 0.3, 0.4), strict=True)
+    }
+    for order in permutations(processes):
+        observed = run_stats.parallel_stats({name: processes[name] for name in order})
+        restored = json.loads(json.dumps(observed, sort_keys=True))
+        assert observed["cpu_user_seconds"] == observed["cpu_system_seconds"] == 1.0
+        assert run_stats.valid_stats(restored)
+        assert run_stats.parallel_stats(restored["processes"]) == observed
