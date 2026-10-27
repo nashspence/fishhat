@@ -1939,7 +1939,7 @@
         },
         "result_schema": {
           "$ref": "common.schema.json#/$defs/SchemaIdentity",
-          "description": "Custom installed result schemas use the fixed Draft 2020-12 assertion profile: known keywords and formats, proven-linear regular expressions, and static acyclic references to actual schema positions in the selected installed closure or source-reviewed core contracts. The existing provider schema execution-depth capacity also applies to custom result schemas. Literal annotations are instance data, not schema positions. Unsupported profiles reject before matching result values; schema admission preserves exact published bytes and identities."
+          "description": "Custom installed result schemas use the fixed Draft 2020-12 assertion profile: known keywords and formats, proven-linear regular expressions, and static acyclic references to actual schema positions in the selected installed closure or source-reviewed core contracts. The existing provider capacities for schema execution depth (32) and statically expanded schema work (4096) also apply to custom result schemas. Unused definitions are checked independently; declaration count and result-list extent are not capped. Literal annotations are instance data, not schema positions. Unsupported profiles reject before matching result values; schema admission preserves exact published bytes and identities."
         }
       },
       "required": [

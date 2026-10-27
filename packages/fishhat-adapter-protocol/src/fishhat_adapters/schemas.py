@@ -12,20 +12,20 @@ from urllib.parse import unquote
 from fishhat_contracts.json_work import unique_items
 from fishhat_contracts.schema_profile import (
     FORMATS,
+    MAX_EXPANDED_SCHEMA,
     MAX_SCHEMA_DEPTH,
     check_assertions,
+    check_document,
     regex_degree,
     schema_children,
 )
 from fishhat_contracts.validation import FORMAT_CHECKER, ContractError, canonical
 from jsonschema import Draft202012Validator, FormatChecker, validators
-from jsonschema.exceptions import SchemaError
 
 Path = tuple[str, ...]
 ALL_TYPES = frozenset({"null", "boolean", "number", "string", "object", "array"})
 PROVIDER_FORMAT_CHECKER = FormatChecker()
 PROVIDER_FORMAT_CHECKER.checkers = {name: FORMAT_CHECKER.checkers[name] for name in FORMATS}
-MAX_EXPANDED_SCHEMA = 4096
 MAX_EVALUATION_WORK = 2_000_000
 _WORK: ContextVar[list[int] | None] = ContextVar("provider_schema_work", default=None)
 
@@ -108,10 +108,7 @@ def check_closed_schema(schema: dict[str, Any]) -> None:
     an already closed value, but cannot introduce an arbitrary object or array.
     """
     require(len(canonical(schema)) <= 262144, "SCHEMA_CAPACITY")
-    try:
-        Draft202012Validator.check_schema(schema)
-    except SchemaError as exc:
-        raise ContractError("INVALID_CONFIGURATION_SCHEMA") from exc
+    check_document(schema, code="INVALID_CONFIGURATION_SCHEMA")
     checker = _ClosedSchema(schema)
     checker.check()
 

@@ -6,9 +6,11 @@ import re
 from collections.abc import Iterator, Mapping
 from typing import Any
 
-from jsonschema import Draft202012Validator
+from jsonschema import Draft202012Validator, validators
+from referencing import Registry, Resource
+from referencing.jsonschema import DRAFT202012
 
-from .validation import FORMAT_CHECKER, ContractError
+from .validation import _SCHEMA_VALIDATOR, FORMAT_CHECKER, ContractError, value_check
 
 SINGLE = (
     "additionalProperties",
@@ -51,6 +53,44 @@ KEYWORDS = (
 )
 
 MAX_SCHEMA_DEPTH = 32
+MAX_EXPANDED_SCHEMA = 4096
+
+
+# Keep published metaschema identities intact. Evaluation omits only the dialect
+# selector so local/dynamic references retain the same linear uniqueness class.
+_META_REGISTRY = Registry().with_resources(
+    (
+        uri,
+        Resource.from_contents(
+            {key: value for key, value in resource.contents.items() if key != "$schema"},
+            default_specification=DRAFT202012,
+        ),
+    )
+    for uri, resource in vars(validators)["SPECIFICATIONS"].items()
+    if "/draft/2020-12/" in uri
+)
+_META_SCHEMA = {
+    key: value for key, value in Draft202012Validator.META_SCHEMA.items() if key != "$schema"
+}
+_META_VALIDATOR = _SCHEMA_VALIDATOR
+
+
+def check_document(schema: dict[str, Any], *, code: str) -> None:
+    """Check schema syntax with linear uniqueness, including referenced metaschemas."""
+    value_check(schema)
+    try:
+        error = next(
+            _META_VALIDATOR(
+                _META_SCHEMA,
+                registry=_META_REGISTRY,
+                format_checker=Draft202012Validator.FORMAT_CHECKER,
+            ).iter_errors(schema),
+            None,
+        )
+    except RecursionError as exc:
+        raise ContractError(code) from exc
+    if error is not None:
+        raise ContractError(code)
 
 
 def require(ok: bool, code: str) -> None:
@@ -231,15 +271,19 @@ def schema_children(node: dict[str, Any]) -> Iterator[tuple[tuple[str, ...], Any
 SchemaNode = tuple[str, tuple[str, ...]]
 
 
-def check_reference_graph(graph: Mapping[SchemaNode, list[SchemaNode]]) -> None:
+def check_reference_graph(
+    graph: Mapping[SchemaNode, list[SchemaNode]],
+    execution: Mapping[SchemaNode, list[SchemaNode]],
+) -> None:
     """Check every custom node in linear graph work without unfolding shared references.
 
-    The schema execution depth uses the existing provider-profile capacity.
+    Schema depth and static expansion use the existing provider-profile capacities.
     It is independent of the number of array items or documents in a collection.
     Source-reviewed core nodes are terminal dependencies of this custom graph;
     they cannot refer back to independently installed extension documents.
     """
     depths: dict[SchemaNode, int] = {}
+    expanded: dict[SchemaNode, int] = {}
     active: set[SchemaNode] = set()
     for start in graph:
         pending = [(start, False)]
@@ -250,6 +294,8 @@ def check_reference_graph(graph: Mapping[SchemaNode, list[SchemaNode]]) -> None:
             if returning:
                 depths[node] = 1 + max((depths.get(child, 0) for child in graph[node]), default=0)
                 require(depths[node] <= MAX_SCHEMA_DEPTH, "SCHEMA_DEPTH")
+                expanded[node] = 1 + sum(expanded.get(child, 1) for child in execution[node])
+                require(expanded[node] <= MAX_EXPANDED_SCHEMA, "SCHEMA_EXPANSION_CAPACITY")
                 active.remove(node)
                 continue
             require(node not in active, "RECURSIVE_SCHEMA_REFERENCE")

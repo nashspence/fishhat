@@ -14,15 +14,19 @@ from datetime import datetime
 from typing import Any
 from urllib.parse import unquote, urldefrag, urljoin
 
-from jsonschema import Draft202012Validator
-from jsonschema.exceptions import SchemaError
 from referencing import Registry, Resource
 from referencing.jsonschema import DRAFT202012
 
 from .adapter_semantics import ROLES, check_retained_result
 from .bounds import Bounds, bounds
 from .operations import validate_operation
-from .schema_profile import SchemaNode, check_assertions, check_reference_graph, schema_children
+from .schema_profile import (
+    SchemaNode,
+    check_assertions,
+    check_document,
+    check_reference_graph,
+    schema_children,
+)
 from .validation import (
     _SCHEMA_VALIDATOR,
     FORMAT_CHECKER,
@@ -34,7 +38,6 @@ from .validation import (
     digest,
     strict_json,
     validate,
-    value_check,
 )
 
 ACTIONS = {
@@ -63,6 +66,7 @@ def _schema_documents(
     targets: list[tuple[str, SchemaNode | None]] = [(uri, None)]
     positions: set[SchemaNode] = set()
     graph: dict[SchemaNode, list[SchemaNode]] = {}
+    execution: dict[SchemaNode, list[SchemaNode]] = {}
 
     def references(
         value: Any, base: str, path: tuple[str, ...] = (), *, root: bool = False
@@ -72,6 +76,7 @@ def _schema_documents(
         custom = base in (installed or {})
         if custom:
             graph[position] = []
+            execution[position] = []
         if isinstance(value, dict):
             _require(
                 value.get("$schema") == _SCHEMA_VALIDATOR.META_SCHEMA["$id"]
@@ -94,6 +99,8 @@ def _schema_documents(
                 child_position = (base, (*path, *suffix))
                 if custom:
                     graph[position].append(child_position)
+                    if suffix[0] not in {"$defs", "definitions"}:
+                        execution[position].append(child_position)
                 references(child, base, child_position[1])
 
     while pending:
@@ -103,11 +110,7 @@ def _schema_documents(
         _require(identity in available, "result schema is not installed")
         schema = available[identity]
         if identity in (installed or {}):
-            value_check(schema)
-            try:
-                Draft202012Validator.check_schema(schema)
-            except (SchemaError, RecursionError) as exc:
-                raise ContractError("INVALID_INSTALLED_SCHEMA") from exc
+            check_document(schema, code="INVALID_INSTALLED_SCHEMA")
         found[identity] = schema
         references(schema, identity, root=True)
     for target, source in targets:
@@ -135,7 +138,8 @@ def _schema_documents(
         if source in graph:
             assert source is not None
             graph[source].append((identity, tuple(path)))
-    check_reference_graph(graph)
+            execution[source].append((identity, tuple(path)))
+    check_reference_graph(graph, execution)
     return found
 
 
@@ -324,10 +328,13 @@ def _wraps_core_adapter_input(uri: str, installed: dict[str, dict[str, Any]] | N
 @bounds(
     Bounds(
         id="handoffs.retained-result",
-        work="O(S + E + B) schema-position/reference admission plus complete payload bytes under a fixed admitted schema profile; S schema bytes, E references, B payload bytes",
+        work="Admission O(S + E) schema bytes and references without unfolding; payload O(B) complete bytes under a fixed admitted schema profile",
         extent="Exact committed result bytes, every nested invocation/output artifact and full selected schema closure",
         limits=(),
-        capacity=("The receiving max_bytes capacity rejects before parsing; it never truncates",),
+        capacity=(
+            "The receiving max_bytes capacity rejects before parsing; it never truncates",
+            "Custom schema profiles share depth 32 and static expansion work 4096; complete result and unused-definition counts remain uncapped",
+        ),
         proofs=("tests/test_retained_result_growth.py::test_retained_adapter_results_linear_work",),
         linear_proofs=(
             "tests/test_retained_result_growth.py::test_retained_adapter_results_linear_work",

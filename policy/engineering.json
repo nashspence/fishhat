@@ -1876,7 +1876,8 @@
     },
     "handoffs.retained-result": {
       "capacity": [
-        "The receiving max_bytes capacity rejects before parsing; it never truncates"
+        "The receiving max_bytes capacity rejects before parsing; it never truncates",
+        "Custom schema profiles share depth 32 and static expansion work 4096; complete result and unused-definition counts remain uncapped"
       ],
       "extent": "Exact committed result bytes, every nested invocation/output artifact and full selected schema closure",
       "growth": "linear",
@@ -1894,12 +1895,12 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/handoffs.py": "b87fd78842c5480c561ba1be4880e49221af0639359423b84b2a9ac558dca5c5",
-        "tests/test_result_schema_admission.py": "6a3bd9cf1fdf1e0b565494a953097ca3cc665e45ab1d1e56f971f92400a86fad",
+        "packages/fishhat-contracts/src/fishhat_contracts/handoffs.py": "1ee27340682b351a06af32fdfe4c1cdbdd96569b5409bd1c9873a4938ee6ea13",
+        "tests/test_result_schema_admission.py": "3dfa6a93b31496a1ddc74b6000e872791a0ef7f270c745a711c92ad9ba45a62e",
         "tests/test_retained_result_growth.py": "6b9ac27a2d0a04ca2e403cd8add2b194d592ab453f2c5442dd82b60c76e958d0"
       },
       "symbol": "fishhat_contracts.handoffs:validate_result_payload",
-      "work": "O(S + E + B) schema-position/reference admission plus complete payload bytes under a fixed admitted schema profile; S schema bytes, E references, B payload bytes"
+      "work": "Admission O(S + E) schema bytes and references without unfolding; payload O(B) complete bytes under a fixed admitted schema profile"
     },
     "journal.submit": {
       "capacity": [],

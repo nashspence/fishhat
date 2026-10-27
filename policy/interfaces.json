@@ -254,7 +254,7 @@
   "schemas": {
     "actions.schema.json": {
       "id": "https://fishhat.invalid/contracts/actions.schema.json",
-      "sha256": "c90c27b43e39ddd7b43ddbf7fd49fc5caa069db3b2227bd0ce218abb363fd33d"
+      "sha256": "2cc6dcd6b3f968f26e36c1f288cedd9bb3d04b12a49b2f1e967f35ffc33ace5f"
     },
     "adapter.schema.json": {
       "id": "https://fishhat.invalid/contracts/adapter.schema.json",

@@ -6,10 +6,11 @@ import copy
 from unittest.mock import patch
 
 import pytest
-from fishhat_contracts import canonical, digest, handoffs
+from fishhat_adapters import check_schema
+from fishhat_contracts import canonical, digest, handoffs, schema_profile
 from fishhat_contracts.schema_profile import MAX_SCHEMA_DEPTH
 from fishhat_contracts.validation import ContractError
-from jsonschema import _keywords
+from jsonschema import Draft202012Validator, _keywords
 
 from tests.linear_support import assert_linear, measure
 from tests.test_owner_handoffs import adapter_result
@@ -122,6 +123,26 @@ def test_cross_document_cycle_and_execution_depth_are_checked_without_unfolding(
         handoffs.validate_result_payload(record, data, installed=installed)
 
 
+def test_shared_references_cannot_expand_exponentially_during_value_validation():
+    definitions = {"L0": {"type": "integer"}}
+    for level in range(1, 6):
+        definitions["L" + str(level)] = {"allOf": [{"$ref": "#/$defs/L" + str(level - 1)}] * 8}
+    record, data, installed = retained({"$defs": definitions, "$ref": "#/$defs/L5"}, 1)
+    with pytest.raises(ContractError, match="SCHEMA_EXPANSION_CAPACITY"):
+        handoffs.schema_identity(URI, installed)
+    with pytest.raises(ContractError, match="SCHEMA_EXPANSION_CAPACITY"):
+        handoffs.validate_result_payload(record, data, installed=installed)
+
+
+def test_unused_definition_count_is_independent_of_execution_expansion_capacity():
+    # Declarations are inspected once; unused definitions are not unfolded as
+    # assertions on the value. A schema-work budget is not a declaration cap.
+    definitions = {f"V{index}": {"type": "integer"} for index in range(5000)}
+    record, data, installed = retained({"type": "integer", "$defs": definitions}, 1)
+    assert handoffs.validate_result_payload(record, data, installed=installed) == 1
+    assert len(installed[URI]["$defs"]) == 5000
+
+
 @pytest.mark.parametrize("keyword", ["const", "enum", "default", "examples"])
 def test_schema_looking_instance_literals_are_preserved(keyword):
     literal = {
@@ -219,21 +240,71 @@ def test_custom_result_complete_validation_linear_work(outcome):
     assert_linear(samples)
 
 
-def test_custom_schema_closure_admission_linear_work():
+@pytest.mark.parametrize("shape", ["definitions", "required"])
+def test_custom_schema_closure_admission_linear_work(shape):
     samples = []
     for count in (16, 64, 256):
-        body = {
-            "type": "integer",
-            "$defs": {f"V{index}": {"type": "string", "pattern": "^a+$"} for index in range(count)},
-        }
+        if shape == "definitions":
+            body = {
+                "type": "integer",
+                "$defs": {
+                    f"V{index}": {"type": "string", "pattern": "^a+$"} for index in range(count)
+                },
+            }
+        else:
+            names = [f"V{index:04d}" for index in sorted(range(count), key=digest)]
+            body = {
+                "type": "object",
+                "properties": {name: {"type": "integer"} for name in names},
+                "required": names,
+                "additionalProperties": False,
+            }
         record, _, installed = retained(body, 1)
         identity, work = measure(
             lambda installed=installed: handoffs.schema_identity(URI, installed)
         )
         assert identity == record["result_handle"]["schema"]
-        assert len(installed[URI]["$defs"]) == count
+        assert len(installed[URI]["$defs" if shape == "definitions" else "required"]) == count
         samples.append((count, work))
     assert_linear(samples)
+
+
+@pytest.mark.parametrize("boundary", ["provider", "result"])
+def test_schema_admission_uses_linear_uniqueness_through_metaschema_references(boundary):
+    def stock(*args, **kwargs):
+        raise AssertionError("stock metaschema uniqueness reached")
+
+    for duplicate in (False, True):
+        body = {
+            "type": "object",
+            "properties": {"a": {"type": "integer"}, "b": {"type": "integer"}},
+            "required": ["a", "a"] if duplicate else ["b", "a"],
+            "additionalProperties": False,
+        }
+        record, _, installed = retained(body, {})
+        with patch.object(_keywords, "uniq", stock):
+
+            def admit(body=body, installed=installed):
+                return (
+                    check_schema(body)
+                    if boundary == "provider"
+                    else handoffs.schema_identity(URI, installed)
+                )
+
+            if duplicate:
+                with pytest.raises(
+                    ContractError, match=r"INVALID_(?:CONFIGURATION|INSTALLED)_SCHEMA"
+                ):
+                    admit()
+            else:
+                admit()
+        assert record["result_handle"]["schema"]["uri"] == URI
+
+
+def test_metaschema_uniqueness_regression_is_detected(monkeypatch):
+    monkeypatch.setattr(schema_profile, "_META_VALIDATOR", Draft202012Validator)
+    with pytest.raises(AssertionError, match="stock metaschema uniqueness reached"):
+        test_schema_admission_uses_linear_uniqueness_through_metaschema_references("result")
 
 
 def test_unsafe_regex_regression_is_detected_without_executing_it(monkeypatch):
@@ -254,6 +325,17 @@ CHECK_OVERRIDES = {
         "claims": [],
     },
 }
+CHECK_OVERRIDES["test_metaschema_uniqueness_regression_is_detected"] = {
+    "purpose": "validation-tooling",
+    "authority": [
+        "tests/test_result_schema_admission.py#test_schema_admission_uses_linear_uniqueness_through_metaschema_references"
+    ],
+    "scope": "schema syntax-check uniqueness regression detection",
+    "relationship": "no-product-claim",
+    "reason": "Restoring the stock schema-syntax validator must fail the guarded uniqueness witness through referenced metaschemas before any expensive matching; it supplies no product qualification.",
+    "claims": [],
+}
+
 for _name in (
     "test_custom_result_complete_validation_linear_work",
     "test_custom_schema_closure_admission_linear_work",

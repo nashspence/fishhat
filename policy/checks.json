@@ -7893,8 +7893,24 @@
       "purpose_sha256": "fbc7c51afbb1b6affbdbf289103233ec370dae38843b965ca74fe7abb56f0901"
     },
     {
-      "node": "tests/test_result_schema_admission.py::test_custom_schema_closure_admission_linear_work",
+      "node": "tests/test_result_schema_admission.py::test_custom_schema_closure_admission_linear_work[definitions]",
       "purpose_sha256": "fbc7c51afbb1b6affbdbf289103233ec370dae38843b965ca74fe7abb56f0901"
+    },
+    {
+      "node": "tests/test_result_schema_admission.py::test_custom_schema_closure_admission_linear_work[required]",
+      "purpose_sha256": "fbc7c51afbb1b6affbdbf289103233ec370dae38843b965ca74fe7abb56f0901"
+    },
+    {
+      "node": "tests/test_result_schema_admission.py::test_metaschema_uniqueness_regression_is_detected",
+      "purpose_sha256": "11f2d100f40552dfb7538e2cea984fd8c4eb377a9e40a5c7e2583735dd9665cf"
+    },
+    {
+      "node": "tests/test_result_schema_admission.py::test_schema_admission_uses_linear_uniqueness_through_metaschema_references[provider]",
+      "purpose_sha256": "9f462f0ce5a805f539fd28e48d5e897a6d9263af980032903ad4db93f3cb740e"
+    },
+    {
+      "node": "tests/test_result_schema_admission.py::test_schema_admission_uses_linear_uniqueness_through_metaschema_references[result]",
+      "purpose_sha256": "9f462f0ce5a805f539fd28e48d5e897a6d9263af980032903ad4db93f3cb740e"
     },
     {
       "node": "tests/test_result_schema_admission.py::test_schema_looking_instance_literals_are_preserved[const]",
@@ -7910,6 +7926,10 @@
     },
     {
       "node": "tests/test_result_schema_admission.py::test_schema_looking_instance_literals_are_preserved[examples]",
+      "purpose_sha256": "9f462f0ce5a805f539fd28e48d5e897a6d9263af980032903ad4db93f3cb740e"
+    },
+    {
+      "node": "tests/test_result_schema_admission.py::test_shared_references_cannot_expand_exponentially_during_value_validation",
       "purpose_sha256": "9f462f0ce5a805f539fd28e48d5e897a6d9263af980032903ad4db93f3cb740e"
     },
     {
@@ -7994,6 +8014,10 @@
     },
     {
       "node": "tests/test_result_schema_admission.py::test_unsupported_custom_schema_fails_explicit_admission[unknown-keyword]",
+      "purpose_sha256": "9f462f0ce5a805f539fd28e48d5e897a6d9263af980032903ad4db93f3cb740e"
+    },
+    {
+      "node": "tests/test_result_schema_admission.py::test_unused_definition_count_is_independent_of_execution_expansion_capacity",
       "purpose_sha256": "9f462f0ce5a805f539fd28e48d5e897a6d9263af980032903ad4db93f3cb740e"
     },
     {
