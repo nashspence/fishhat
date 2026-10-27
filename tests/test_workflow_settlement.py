@@ -17,6 +17,7 @@ from tests.test_workflow_continuations import move
 from tests.test_workflow_recovery import finish_transfer, native_completion_input
 from tests.test_workflow_transfer import committed, completion_request, frozen
 from tests.workflow_evidence_support import advance_request, seal_phase_participant
+from tests.workflow_lifecycle_support import lifecycle
 
 CHECK_PURPOSE = {
     "purpose": "public-contract",
@@ -36,7 +37,8 @@ CHECK_PURPOSE = {
 def ready(transfer_phase=None, state="active"):
     value = workflow()
     value = move(value, PHASES[value["type"]][-2])
-    value["state"] = state
+    if state == "paused":
+        value = lifecycle(value, "pause")
     if transfer_phase == "freeze":
         value, _ = frozen(value)
     elif transfer_phase == "commit":
@@ -116,7 +118,7 @@ def test_native_completion_cannot_revive_a_restricted_lifecycle(state):
     if state == "completed":
         value = move(value, PHASES[value["type"]][-1])
     else:
-        value["state"] = state
+        value = lifecycle(value, "cancel" if state == "cancelled" else "require-recovery")
     with pytest.raises(ContractError, match="final installed transition"):
         settle(native_completion_input(value), value)
 

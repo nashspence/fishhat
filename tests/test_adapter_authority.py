@@ -315,7 +315,7 @@ def test_lifecycle_and_resource_envelope_can_have_distinct_owners_on_one_resourc
     descriptor.update(
         id="independent-author.example-compute",
         roles=["compute"],
-        implemented=["compute.set-limits"],
+        implemented=["compute.set-limits", "compute.reconcile"],
     )
     artifact = "sha256:" + "c" * 64
     registry.install(

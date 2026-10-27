@@ -3,20 +3,28 @@
     "sha256:9553e618ec9ff5907c0c50eb706a6b060f5934433ce493ebf754d6b6abb2d81e",
     "sha256:c4674c6e4c72a79fadbfeeb55b778055499316271947703e96e2959f5b4ec53a"
   ],
-  "reasons": {
-    "sha256:9553e618ec9ff5907c0c50eb706a6b060f5934433ce493ebf754d6b6abb2d81e": [
-      "accepted-target-active-or-inactive",
-      "minimum-retention-age"
-    ],
-    "sha256:c4674c6e4c72a79fadbfeeb55b778055499316271947703e96e2959f5b4ec53a": [
-      "hot-predecessor-count"
-    ]
-  },
   "cold_demoted_releases": [
     "sha256:8d3b141fc65bf5426f78fb6e1dc4584f64ea2e1f310a4a6fd8bf2ccbc7a5760d"
   ],
   "policy_digest": "sha256:90d8403640cdc7e79202c20fd71935fad8f902463a6481aa27a8435caf3a788d",
   "protection_generation": 7,
   "inventory_digest": "sha256:646da8e03c12caaac12969284f5108718014eacc3e8c1ee8996db75053b0baa7",
-  "custody_digest": "sha256:e43d6ba961065390935eea776956765b928debb96f91e9466cdbf4d997c226df"
+  "custody_digest": "sha256:e43d6ba961065390935eea776956765b928debb96f91e9466cdbf4d997c226df",
+  "release_reasons": {
+    "sha256:dde30bf5e0d0404007b3d5c91f8a01bb3b1f87a584efd736a925b40f3aa538db": [
+      "accepted-target-active-or-inactive",
+      "minimum-retention-age"
+    ],
+    "sha256:d138ec9d2fbe8931871901c0d4d813f756ab7d06089df360e869bd9979c14ca8": [
+      "hot-predecessor-count"
+    ]
+  },
+  "handle_releases": {
+    "sha256:9553e618ec9ff5907c0c50eb706a6b060f5934433ce493ebf754d6b6abb2d81e": [
+      "sha256:dde30bf5e0d0404007b3d5c91f8a01bb3b1f87a584efd736a925b40f3aa538db"
+    ],
+    "sha256:c4674c6e4c72a79fadbfeeb55b778055499316271947703e96e2959f5b4ec53a": [
+      "sha256:d138ec9d2fbe8931871901c0d4d813f756ab7d06089df360e869bd9979c14ca8"
+    ]
+  }
 }

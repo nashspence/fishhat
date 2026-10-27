@@ -191,7 +191,7 @@ def test_pending_transfer_cannot_omit_proposal_or_local_freeze_custody():
         validate_workflow(missing)
     missing = copy.deepcopy(value)
     missing["transfer"]["freeze_witnesses"][0]["generation"] = 0
-    with pytest.raises(ContractError, match="witness generation"):
+    with pytest.raises(ContractError, match="custody changes share a generation"):
         validate_workflow(missing)
 
 

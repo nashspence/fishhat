@@ -22,7 +22,8 @@ from referencing import Registry, Resource
 from referencing.jsonschema import DRAFT202012
 from yaml.events import AliasEvent, DocumentStartEvent
 
-from .json_work import unique_items
+from .bounds import Bounds, bounds
+from .json_work import ordered_json, unique_items
 
 ROOT = Path(__file__).resolve().parent
 MAX_BYTES = 1_048_576
@@ -63,6 +64,18 @@ class ContractError(ValueError):
     pass
 
 
+def _data_bounds(name: str) -> Bounds:
+    return Bounds(
+        id="data." + name,
+        work="O(B) complete JSON/source value bytes under the installed schema profile",
+        extent="Complete values are validated or explicitly rejected; no truncated collections",
+        limits=(),
+        capacity=("JSON frame/source admission capacities remain explicit caller decisions",),
+        proofs=("tests/test_export_growth.py::test_data_exports_linear_work",),
+        linear_proofs=("tests/test_export_growth.py::test_data_exports_linear_work",),
+    )
+
+
 def _pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
     result = {}
     for key, value in pairs:
@@ -99,17 +112,20 @@ def value_check(value: Any, depth: int = 0) -> None:
     raise ContractError("non-JSON or floating point value")
 
 
+@bounds(_data_bounds("canonical"))
 def canonical(value: Any) -> bytes:
     value_check(value)
     return json.dumps(
-        value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False
+        ordered_json(value), ensure_ascii=False, separators=(",", ":"), allow_nan=False
     ).encode("utf-8")
 
 
+@bounds(_data_bounds("digest"))
 def digest(value: Any) -> str:
     return "sha256:" + hashlib.sha256(canonical(value)).hexdigest()
 
 
+@bounds(_data_bounds("strict_json"))
 def strict_json(data: bytes | str, max_bytes: int = MAX_BYTES) -> Any:
     try:
         raw = data.encode("utf-8") if isinstance(data, str) else data
@@ -160,6 +176,7 @@ def _mapping(loader: SourceLoader, node: Any, deep: bool = False) -> dict[str, A
 SourceLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _mapping)
 
 
+@bounds(_data_bounds("strict_yaml"))
 def strict_yaml(data: str, *, capacity_bytes: int | None = None) -> Any:
     """Parse a whole source document; a wire-frame limit is not a source extent limit.
 
@@ -208,6 +225,7 @@ _SCHEMA_VALIDATOR = cast(Any, validators.extend)(
 )
 
 
+@bounds(_data_bounds("validate"))
 def validate(schema: str, value: Any, definition: str | None = None) -> None:
     value_check(value)
     base = SCHEMAS[schema]

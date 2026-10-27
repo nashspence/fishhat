@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fishhat_contracts.validation import ContractError, canonical
+from .validation import ContractError, canonical
 
 
 def _require(ok: bool, code: str) -> None:

@@ -129,7 +129,8 @@
     "Replays are checked before new-admission expiry/generation checks.",
     "An accepted request identity and its exact immutable payload identity remain reserved for the lifetime of its owner epoch, including after terminal Operation history is pruned. Exact accepted replay resolves to the retained outcome before new-admission checks; the identity is never admitted again as fresh work.",
     "History retention and request deduplication are independent. Collection may compact terminal detail into a retained replay record, but must preserve original attribution, payload identity, terminal state and effect certainty, required Plan/result custody, and unresolved holds. Explicit receiver capacity may refuse new identities; it never evicts accepted identity reservations to admit more work.",
-    "A restored owner epoch does not recreate historical acceptance authority. Historical request identities, original outcomes and workflow recovery lineage remain attributable to their original epochs; current-authority recovery uses new exact identities."
+    "A restored owner epoch does not recreate historical acceptance authority. Historical request identities, original outcomes and workflow recovery lineage remain attributable to their original epochs; current-authority recovery uses new exact identities.",
+    "Workflow lifecycle decisions are owner-native, exact-generation atomic admission changes retained in ordered advances. Neither lifecycle relabeling, driver transfer nor cancellation may erase accepted facts or release custody. Cancelled and completed have no outgoing lifecycle transitions; a retained terminal phase or outcome requires the matching terminal capsule state. Initial partial preparation can be cancelled locally without inventing complete agreement; never-prepared participants require positive retirement before late preparation is permanently excluded."
   ],
   "owner_meanings": {
     "accepted": "The local owner has durably accepted responsibility for this exact request. Execution has not been established as complete.",
@@ -145,5 +146,39 @@
     "acceptance_unknown": "The request may have been accepted. Query or reconcile the original owner and request identity.",
     "accepted": "Owner evidence establishes acceptance. Consult the separate Operation receipt for progress and outcome.",
     "rejected": "An authenticated owner response explicitly refused acceptance. A timeout or unreadable response is not rejection."
+  },
+  "workflow_lifecycle": {
+    "prepared": [
+      "active",
+      "paused",
+      "recovery-required",
+      "cancelled"
+    ],
+    "active": [
+      "paused",
+      "recovery-required",
+      "completed",
+      "cancelled"
+    ],
+    "paused": [
+      "prepared",
+      "active",
+      "recovery-required",
+      "completed",
+      "cancelled"
+    ],
+    "recovery-required": [
+      "cancelled"
+    ],
+    "completed": [],
+    "cancelled": []
+  },
+  "workflow_meanings": {
+    "prepared": "This owner durably retained its exact proposal and local preparation custody. No child acceptance is implied. New children and first ordinary progress require complete authenticated participant preparation agreement plus their independent native admission checks. First ordinary phase progress enters active.",
+    "active": "The installed procedure has progressed under this owner. New exact child work remains subject to current driver, phase, bound Plan, permissions, generations, exclusions and custody checks. Active does not establish completion or running status of every child.",
+    "paused": "This owner has durably closed new local child admission, binding and ordinary procedure progress. Accepted children continue under their own owner contracts. Explicit owner-native resume requires current driver authorization and reconciliation and restores prepared at the initial phase or active thereafter. Transfer completion preserves pause; already admitted successful work may receive final native settlement without resume.",
+    "recovery-required": "This owner has closed ordinary new work because accepted conditions require explicit recovery. Resume and driver transfer cannot clear this state. Use an exact independently authorized successor recovery, preserving original history and unresolved holds; local cancellation can close future admission permanently.",
+    "completed": "The installed terminal phase and complete successful known child outcomes have been independently verified and retained. This exact lifecycle is terminal and cannot admit new children, bindings, phase progress or transfer. Accepted exact requests remain replayable; completion itself does not release holds or other custody.",
+    "cancelled": "This owner has permanently closed future child admission for this exact workflow, or retained explicit recovery-successor abandonment. The local workflow will not resume or advance. This says nothing about already accepted child termination, remote participants, rollback or safe release. Preserve all original outcomes, identities, input and hold custody and incomplete transfer evidence for exact replay and recovery."
   }
 }

@@ -16,6 +16,7 @@
   "generation": 3,
   "created_at": "2026-10-19T12:00:00Z",
   "expires_at": "2026-10-19T12:05:00Z",
+  "max_objects": 64,
   "candidates": [
     {
       "handle": "sha256:f9b4fa935bad938ae659c99dc21313e6eeae24d1b89e6cf17648b7b2b53c08c9",

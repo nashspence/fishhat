@@ -518,6 +518,34 @@
           "additionalProperties": false
         }
       ]
+    },
+    "RetainedResult": {
+      "description": "Complete durable evidence for one adapter.execute mutation. Retain the exact invocation and full direct or reconciliation response, including method, request digest, coverage, effect identity and typed output. Invocation owner, operation, executor and original request bytes must match the accepted Operation. Reconciliation reconstructs its request from this unchanged invocation and retains its original response method and request digest. Readers apply the same method-specific semantics as direct responses, including successful-output identity and custody; a succeeded Operation requires terminal known satisfied evidence. This record neither authenticates an owner nor grants native authority.",
+      "type": "object",
+      "properties": {
+        "invocation": {
+          "allOf": [
+            {
+              "$ref": "adapter.schema.json#/$defs/Invocation"
+            },
+            {
+              "properties": {
+                "request": {
+                  "$ref": "#/$defs/MutationRequest"
+                }
+              }
+            }
+          ]
+        },
+        "response": {
+          "$ref": "#/$defs/Response"
+        }
+      },
+      "required": [
+        "invocation",
+        "response"
+      ],
+      "additionalProperties": false
     }
   },
   "oneOf": [

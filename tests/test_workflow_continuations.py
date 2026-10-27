@@ -21,6 +21,7 @@ from fishhat_contracts.workflows import (
 )
 
 from tests.operation_support import seal_operation
+from tests.test_adapter_handoffs import invocation_for, response_for
 from tests.test_contracts import uid
 from tests.test_owner_handoffs import (
     operation,
@@ -195,8 +196,15 @@ def publication_stage(provider="forgejo-age"):
             }
         ]
     }
-    validate("credential-issuer-adapter.schema.json", output, "Output")
-    copied_output = attach_result(issued, output, publisher["owner"])
+    query = issuer["requests"][0]["adapter"]["request"]
+    invocation = invocation_for(query)
+    invocation["attempt"].update(owner=issued["owner"], operation_id=issued["id"])
+    retained = {
+        "invocation": invocation,
+        "response": response_for(query, invocation["attempt"], output),
+    }
+    validate("credential-issuer-adapter.schema.json", retained, "RetainedResult")
+    copied_output = attach_result(issued, retained, publisher["owner"])
     ciphertext = b"newly-issued-unpredictable-ciphertext-" + str(uuid.uuid4()).encode()
     candidate = material_handle(
         publisher["owner"], "sha256:" + hashlib.sha256(ciphertext).hexdigest(), size=len(ciphertext)

@@ -1,11 +1,1714 @@
 {
   "format": "fishhat-engineering-map/v1",
+  "implementation_coverage": {
+    "operations": {
+      "action:adapter.execute": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:app.backup": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:app.backup-check": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:app.cleanup": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:app.deploy": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:app.drill": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:app.maintenance-run": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:app.recover": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:app.relocate": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:app.repair": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:app.restart": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:app.restore": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:app.retire": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:app.secrets-adopt": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:app.undeploy": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:app.upgrade": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:backend.check": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:backend.enroll": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:backend.prune": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:dns.reconcile": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:host.apply": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:host.capture-changes": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:host.reboot": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:host.recover": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:host.retire": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:host.runtime-install": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:host.secrets-adopt": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:host.sleep": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:host.source-update": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:host.wake": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:operation.recover": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:publisher.publish": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:publisher.recover": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:recovery.publish": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "action:source.publish": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "cli:app-ops:info": {
+        "growth_proofs": [
+          "tests/test_linear_growth.py::test_cli_linear_work"
+        ],
+        "growth_requirement": "linear",
+        "implementation": {
+          "path": "fishhat/app-ops/src/fishhat_app/cli.py",
+          "stage": "scaffold",
+          "symbol": "fishhat_app.cli:main"
+        },
+        "native_qualified": false,
+        "status": "implemented-scaffold"
+      },
+      "cli:app-ops:validate": {
+        "growth_proofs": [
+          "tests/test_linear_growth.py::test_cli_linear_work"
+        ],
+        "growth_requirement": "linear",
+        "implementation": {
+          "path": "fishhat/app-ops/src/fishhat_app/cli.py",
+          "stage": "scaffold",
+          "symbol": "fishhat_app.cli:main"
+        },
+        "native_qualified": false,
+        "status": "implemented-scaffold"
+      },
+      "cli:domain-ops:info": {
+        "growth_proofs": [
+          "tests/test_linear_growth.py::test_cli_linear_work"
+        ],
+        "growth_requirement": "linear",
+        "implementation": {
+          "path": "fishhat/domain-ops/src/fishhat_domain/cli.py",
+          "stage": "scaffold",
+          "symbol": "fishhat_domain.cli:main"
+        },
+        "native_qualified": false,
+        "status": "implemented-scaffold"
+      },
+      "cli:domain-ops:validate": {
+        "growth_proofs": [
+          "tests/test_linear_growth.py::test_cli_linear_work"
+        ],
+        "growth_requirement": "linear",
+        "implementation": {
+          "path": "fishhat/domain-ops/src/fishhat_domain/cli.py",
+          "stage": "scaffold",
+          "symbol": "fishhat_domain.cli:main"
+        },
+        "native_qualified": false,
+        "status": "implemented-scaffold"
+      },
+      "cli:host-ops:info": {
+        "growth_proofs": [
+          "tests/test_linear_growth.py::test_cli_linear_work"
+        ],
+        "growth_requirement": "linear",
+        "implementation": {
+          "path": "fishhat/host-ops/src/fishhat_host/cli.py",
+          "stage": "scaffold",
+          "symbol": "fishhat_host.cli:main"
+        },
+        "native_qualified": false,
+        "status": "implemented-scaffold"
+      },
+      "cli:host-ops:validate": {
+        "growth_proofs": [
+          "tests/test_linear_growth.py::test_cli_linear_work"
+        ],
+        "growth_requirement": "linear",
+        "implementation": {
+          "path": "fishhat/host-ops/src/fishhat_host/cli.py",
+          "stage": "scaffold",
+          "symbol": "fishhat_host.cli:main"
+        },
+        "native_qualified": false,
+        "status": "implemented-scaffold"
+      },
+      "client:app cleanup": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "client:app resources": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "client:host resources": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "client:info": {
+        "growth_proofs": [
+          "tests/test_linear_growth.py::test_cli_linear_work"
+        ],
+        "growth_requirement": "linear",
+        "implementation": {
+          "path": "fishhat/domain-ops/src/fishhat_domain/cli.py",
+          "stage": "scaffold",
+          "symbol": "fishhat_domain.cli:main"
+        },
+        "native_qualified": false,
+        "status": "implemented-scaffold"
+      },
+      "client:receipts export": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "client:receipts import": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "client:source fast-forward": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "client:source fetch": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "client:source publish": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "client:source recover": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "client:source status": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "client:source worktree": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "client:test": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "client:tracking check": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "client:tracking record": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "client:tracking show": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "client:workflow resume": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "client:workspace check": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "client:workspace close": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "client:workspace export": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "client:workspace open": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:app-backup": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:app-check": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:app-repair": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:app-restart": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:apply": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:cancel": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:cleanup-plan": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:help": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:history-content": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:history-list": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:history-read": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:info": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:list": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:list-page": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:logs": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:op-list-active-resource": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:op-list-active-resource-page": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:op-list-history": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:op-list-history-page": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:op-list-history-resource": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:op-list-history-resource-page": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:owner-history": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:plan-get": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:plan-stdin": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:record-read": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:resources": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:resources-page": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:show": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:show-epoch": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:status": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:status-page": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:workflow-advance": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:workflow-bind": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:workflow-list-active": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:workflow-list-active-page": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:workflow-list-active-resource": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:workflow-list-active-resource-page": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:workflow-list-history": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:workflow-list-history-page": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:workflow-list-history-resource": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:workflow-list-history-resource-page": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:workflow-prepare": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:workflow-recover": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:workflow-show": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:workflow-transfer": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:check": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:content.begin": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:content.chunk": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:content.commit": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:content.get": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:content.status": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:discover": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:history.content": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:history.list": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:history.read": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:logs": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:observe": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:operation.cancel": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:operation.get": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:operation.list": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:operation.submit": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:owner.history": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:plan.get": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:plan.prepare": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:record.read": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:resources.observe": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:workflow.advance": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:workflow.bind": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:workflow.get": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:workflow.list": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:workflow.prepare": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:workflow.recover": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:workflow.transfer": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      }
+    },
+    "public_python": {
+      "fishhat_adapters:Registry.__init__": {
+        "bounds": null,
+        "classification": "constant-source-body",
+        "growth_requirement": "linear",
+        "source": "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py",
+        "symbol": "fishhat_adapters.protocol:Registry.__init__"
+      },
+      "fishhat_adapters:Registry.authorize": {
+        "bounds": "adapters.Registry.authorize",
+        "classification": "input-sized-operation",
+        "growth_requirement": "linear",
+        "source": "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py",
+        "symbol": "fishhat_adapters.protocol:Registry.authorize"
+      },
+      "fishhat_adapters:Registry.authorize_invocation": {
+        "bounds": "adapters.Registry.authorize_invocation",
+        "classification": "input-sized-operation",
+        "growth_requirement": "linear",
+        "source": "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py",
+        "symbol": "fishhat_adapters.protocol:Registry.authorize_invocation"
+      },
+      "fishhat_adapters:Registry.authorize_request": {
+        "bounds": "adapters.Registry.authorize_request",
+        "classification": "input-sized-operation",
+        "growth_requirement": "linear",
+        "source": "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py",
+        "symbol": "fishhat_adapters.protocol:Registry.authorize_request"
+      },
+      "fishhat_adapters:Registry.enroll": {
+        "bounds": "adapters.Registry.enroll",
+        "classification": "input-sized-operation",
+        "growth_requirement": "linear",
+        "source": "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py",
+        "symbol": "fishhat_adapters.protocol:Registry.enroll"
+      },
+      "fishhat_adapters:Registry.enroll_repository": {
+        "bounds": "adapters.Registry.enroll_repository",
+        "classification": "input-sized-operation",
+        "growth_requirement": "linear",
+        "source": "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py",
+        "symbol": "fishhat_adapters.protocol:Registry.enroll_repository"
+      },
+      "fishhat_adapters:Registry.enroll_source_target": {
+        "bounds": "adapters.Registry.enroll_source_target",
+        "classification": "input-sized-operation",
+        "growth_requirement": "linear",
+        "source": "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py",
+        "symbol": "fishhat_adapters.protocol:Registry.enroll_source_target"
+      },
+      "fishhat_adapters:Registry.inspect_delegation": {
+        "bounds": "adapters.Registry.inspect_delegation",
+        "classification": "input-sized-operation",
+        "growth_requirement": "linear",
+        "source": "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py",
+        "symbol": "fishhat_adapters.protocol:Registry.inspect_delegation"
+      },
+      "fishhat_adapters:Registry.inspect_instance": {
+        "bounds": "adapters.Registry.inspect_instance",
+        "classification": "input-sized-operation",
+        "growth_requirement": "linear",
+        "source": "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py",
+        "symbol": "fishhat_adapters.protocol:Registry.inspect_instance"
+      },
+      "fishhat_adapters:Registry.install": {
+        "bounds": "adapters.Registry.install",
+        "classification": "input-sized-operation",
+        "growth_requirement": "linear",
+        "source": "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py",
+        "symbol": "fishhat_adapters.protocol:Registry.install"
+      },
+      "fishhat_adapters:Registry.resolve": {
+        "bounds": "adapters.Registry.resolve",
+        "classification": "input-sized-operation",
+        "growth_requirement": "linear",
+        "source": "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py",
+        "symbol": "fishhat_adapters.protocol:Registry.resolve"
+      },
+      "fishhat_adapters:Registry.resolve_host_targets": {
+        "bounds": "adapters.Registry.resolve_host_targets",
+        "classification": "input-sized-operation",
+        "growth_requirement": "linear",
+        "source": "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py",
+        "symbol": "fishhat_adapters.protocol:Registry.resolve_host_targets"
+      },
+      "fishhat_adapters:Registry.resolve_source": {
+        "bounds": "adapters.Registry.resolve_source",
+        "classification": "input-sized-operation",
+        "growth_requirement": "linear",
+        "source": "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py",
+        "symbol": "fishhat_adapters.protocol:Registry.resolve_source"
+      },
+      "fishhat_adapters:Registry.source_target": {
+        "bounds": "adapters.Registry.source_target",
+        "classification": "input-sized-operation",
+        "growth_requirement": "linear",
+        "source": "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py",
+        "symbol": "fishhat_adapters.protocol:Registry.source_target"
+      },
+      "fishhat_adapters:check_configuration": {
+        "bounds": "adapters.check_configuration",
+        "classification": "input-sized-operation",
+        "growth_requirement": "linear",
+        "source": "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py",
+        "symbol": "fishhat_adapters.protocol:check_configuration"
+      },
+      "fishhat_adapters:check_descriptor": {
+        "bounds": "adapters.check_descriptor",
+        "classification": "input-sized-operation",
+        "growth_requirement": "linear",
+        "source": "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py",
+        "symbol": "fishhat_adapters.protocol:check_descriptor"
+      },
+      "fishhat_adapters:check_invocation": {
+        "bounds": "adapters.check_invocation",
+        "classification": "input-sized-operation",
+        "growth_requirement": "linear",
+        "source": "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py",
+        "symbol": "fishhat_contracts.adapter_semantics:check_invocation"
+      },
+      "fishhat_adapters:check_request": {
+        "bounds": "adapters.check_request",
+        "classification": "input-sized-operation",
+        "growth_requirement": "linear",
+        "source": "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py",
+        "symbol": "fishhat_contracts.adapter_semantics:check_request"
+      },
+      "fishhat_adapters:check_response": {
+        "bounds": "adapters.check_response",
+        "classification": "input-sized-operation",
+        "growth_requirement": "linear",
+        "source": "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py",
+        "symbol": "fishhat_contracts.adapter_semantics:check_response"
+      },
+      "fishhat_adapters:check_result": {
+        "bounds": "adapters.check_result",
+        "classification": "input-sized-operation",
+        "growth_requirement": "linear",
+        "source": "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py",
+        "symbol": "fishhat_contracts.adapter_semantics:check_result"
+      },
+      "fishhat_adapters:check_schema": {
+        "bounds": "adapters.check_schema",
+        "classification": "input-sized-operation",
+        "growth_requirement": "linear",
+        "source": "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py",
+        "symbol": "fishhat_adapters.protocol:check_schema"
+      },
+      "fishhat_adapters:instance_reference": {
+        "bounds": "adapters.instance_reference",
+        "classification": "input-sized-operation",
+        "growth_requirement": "linear",
+        "source": "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py",
+        "symbol": "fishhat_adapters.protocol:instance_reference"
+      },
+      "fishhat_adapters:require_qualification": {
+        "bounds": "adapters.require_qualification",
+        "classification": "input-sized-operation",
+        "growth_requirement": "linear",
+        "source": "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py",
+        "symbol": "fishhat_adapters.protocol:require_qualification"
+      },
+      "fishhat_adapters:runtime_binding_digest": {
+        "bounds": "adapters.runtime_binding_digest",
+        "classification": "input-sized-operation",
+        "growth_requirement": "linear",
+        "source": "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py",
+        "symbol": "fishhat_adapters.protocol:runtime_binding_digest"
+      },
+      "fishhat_contracts:canonical": {
+        "bounds": "data.canonical",
+        "classification": "input-sized-operation",
+        "growth_requirement": "linear",
+        "source": "packages/fishhat-contracts/src/fishhat_contracts/validation.py",
+        "symbol": "fishhat_contracts.validation:canonical"
+      },
+      "fishhat_contracts:digest": {
+        "bounds": "data.digest",
+        "classification": "input-sized-operation",
+        "growth_requirement": "linear",
+        "source": "packages/fishhat-contracts/src/fishhat_contracts/validation.py",
+        "symbol": "fishhat_contracts.validation:digest"
+      },
+      "fishhat_contracts:strict_json": {
+        "bounds": "data.strict_json",
+        "classification": "input-sized-operation",
+        "growth_requirement": "linear",
+        "source": "packages/fishhat-contracts/src/fishhat_contracts/validation.py",
+        "symbol": "fishhat_contracts.validation:strict_json"
+      },
+      "fishhat_contracts:strict_yaml": {
+        "bounds": "data.strict_yaml",
+        "classification": "input-sized-operation",
+        "growth_requirement": "linear",
+        "source": "packages/fishhat-contracts/src/fishhat_contracts/validation.py",
+        "symbol": "fishhat_contracts.validation:strict_yaml"
+      },
+      "fishhat_contracts:validate": {
+        "bounds": "data.validate",
+        "classification": "input-sized-operation",
+        "growth_requirement": "linear",
+        "source": "packages/fishhat-contracts/src/fishhat_contracts/validation.py",
+        "symbol": "fishhat_contracts.validation:validate"
+      }
+    },
+    "scope": "Every exported input-sized Python implementation requires source-owned bounds; implemented public operations require their existing operation-owned growth proofs. Literal-only setup is proved from its source body. Unimplemented native operations remain unestablished and cannot be qualified by reference witnesses."
+  },
   "metrics": {
     "collection": "required",
     "non_contractual": true,
     "thresholds": "none"
   },
   "operations": {
+    "adapters.Registry.authorize": {
+      "capacity": [
+        "Existing provider schema and configuration byte/work capacities reject explicitly"
+      ],
+      "extent": "Whole configuration, grants, selections and evidence; no list truncation",
+      "growth": "linear",
+      "id": "adapters.Registry.authorize",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_export_growth.py::test_registry_exports_linear_work"
+      ],
+      "proofs": [
+        "tests/test_export_growth.py::test_registry_exports_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
+        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+      },
+      "symbol": "fishhat_adapters.protocol:Registry.authorize",
+      "work": "O(B + R) current complete input bytes and selected retained registry records"
+    },
+    "adapters.Registry.authorize_invocation": {
+      "capacity": [
+        "Existing provider schema and configuration byte/work capacities reject explicitly"
+      ],
+      "extent": "Whole configuration, grants, selections and evidence; no list truncation",
+      "growth": "linear",
+      "id": "adapters.Registry.authorize_invocation",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_export_growth.py::test_registry_exports_linear_work"
+      ],
+      "proofs": [
+        "tests/test_export_growth.py::test_registry_exports_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
+        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+      },
+      "symbol": "fishhat_adapters.protocol:Registry.authorize_invocation",
+      "work": "O(B + R) current complete input bytes and selected retained registry records"
+    },
+    "adapters.Registry.authorize_request": {
+      "capacity": [
+        "Existing provider schema and configuration byte/work capacities reject explicitly"
+      ],
+      "extent": "Whole configuration, grants, selections and evidence; no list truncation",
+      "growth": "linear",
+      "id": "adapters.Registry.authorize_request",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_export_growth.py::test_registry_exports_linear_work"
+      ],
+      "proofs": [
+        "tests/test_export_growth.py::test_registry_exports_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
+        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+      },
+      "symbol": "fishhat_adapters.protocol:Registry.authorize_request",
+      "work": "O(B + R) current complete input bytes and selected retained registry records"
+    },
+    "adapters.Registry.enroll": {
+      "capacity": [
+        "Existing provider schema and configuration byte/work capacities reject explicitly"
+      ],
+      "extent": "Whole configuration, grants, selections and evidence; no list truncation",
+      "growth": "linear",
+      "id": "adapters.Registry.enroll",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_export_growth.py::test_registry_exports_linear_work"
+      ],
+      "proofs": [
+        "tests/test_export_growth.py::test_registry_exports_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
+        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+      },
+      "symbol": "fishhat_adapters.protocol:Registry.enroll",
+      "work": "O(B + R) current complete input bytes and selected retained registry records"
+    },
+    "adapters.Registry.enroll_repository": {
+      "capacity": [
+        "Existing provider schema and configuration byte/work capacities reject explicitly"
+      ],
+      "extent": "Whole configuration, grants, selections and evidence; no list truncation",
+      "growth": "linear",
+      "id": "adapters.Registry.enroll_repository",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_export_growth.py::test_registry_exports_linear_work"
+      ],
+      "proofs": [
+        "tests/test_export_growth.py::test_registry_exports_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
+        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+      },
+      "symbol": "fishhat_adapters.protocol:Registry.enroll_repository",
+      "work": "O(B + R) current complete input bytes and selected retained registry records"
+    },
+    "adapters.Registry.enroll_source_target": {
+      "capacity": [
+        "Existing provider schema and configuration byte/work capacities reject explicitly"
+      ],
+      "extent": "Whole configuration, grants, selections and evidence; no list truncation",
+      "growth": "linear",
+      "id": "adapters.Registry.enroll_source_target",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_export_growth.py::test_registry_exports_linear_work"
+      ],
+      "proofs": [
+        "tests/test_export_growth.py::test_registry_exports_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
+        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+      },
+      "symbol": "fishhat_adapters.protocol:Registry.enroll_source_target",
+      "work": "O(B + R) current complete input bytes and selected retained registry records"
+    },
+    "adapters.Registry.inspect_delegation": {
+      "capacity": [
+        "Existing provider schema and configuration byte/work capacities reject explicitly"
+      ],
+      "extent": "Whole configuration, grants, selections and evidence; no list truncation",
+      "growth": "linear",
+      "id": "adapters.Registry.inspect_delegation",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_export_growth.py::test_registry_exports_linear_work"
+      ],
+      "proofs": [
+        "tests/test_export_growth.py::test_registry_exports_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
+        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+      },
+      "symbol": "fishhat_adapters.protocol:Registry.inspect_delegation",
+      "work": "O(B + R) current complete input bytes and selected retained registry records"
+    },
+    "adapters.Registry.inspect_instance": {
+      "capacity": [
+        "Existing provider schema and configuration byte/work capacities reject explicitly"
+      ],
+      "extent": "Whole configuration, grants, selections and evidence; no list truncation",
+      "growth": "linear",
+      "id": "adapters.Registry.inspect_instance",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_export_growth.py::test_registry_exports_linear_work"
+      ],
+      "proofs": [
+        "tests/test_export_growth.py::test_registry_exports_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
+        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+      },
+      "symbol": "fishhat_adapters.protocol:Registry.inspect_instance",
+      "work": "O(B + R) current complete input bytes and selected retained registry records"
+    },
+    "adapters.Registry.install": {
+      "capacity": [
+        "Existing provider schema and configuration byte/work capacities reject explicitly"
+      ],
+      "extent": "Whole configuration, grants, selections and evidence; no list truncation",
+      "growth": "linear",
+      "id": "adapters.Registry.install",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_export_growth.py::test_registry_exports_linear_work"
+      ],
+      "proofs": [
+        "tests/test_export_growth.py::test_registry_exports_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
+        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+      },
+      "symbol": "fishhat_adapters.protocol:Registry.install",
+      "work": "O(B + R) current complete input bytes and selected retained registry records"
+    },
+    "adapters.Registry.resolve": {
+      "capacity": [
+        "Existing provider schema and configuration byte/work capacities reject explicitly"
+      ],
+      "extent": "Whole configuration, grants, selections and evidence; no list truncation",
+      "growth": "linear",
+      "id": "adapters.Registry.resolve",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_export_growth.py::test_registry_exports_linear_work"
+      ],
+      "proofs": [
+        "tests/test_export_growth.py::test_registry_exports_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
+        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+      },
+      "symbol": "fishhat_adapters.protocol:Registry.resolve",
+      "work": "O(B + R) current complete input bytes and selected retained registry records"
+    },
+    "adapters.Registry.resolve_host_targets": {
+      "capacity": [
+        "Existing provider schema and configuration byte/work capacities reject explicitly"
+      ],
+      "extent": "Whole configuration, grants, selections and evidence; no list truncation",
+      "growth": "linear",
+      "id": "adapters.Registry.resolve_host_targets",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_export_growth.py::test_registry_exports_linear_work"
+      ],
+      "proofs": [
+        "tests/test_export_growth.py::test_registry_exports_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
+        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+      },
+      "symbol": "fishhat_adapters.protocol:Registry.resolve_host_targets",
+      "work": "O(B + R) current complete input bytes and selected retained registry records"
+    },
+    "adapters.Registry.resolve_source": {
+      "capacity": [
+        "Existing provider schema and configuration byte/work capacities reject explicitly"
+      ],
+      "extent": "Whole configuration, grants, selections and evidence; no list truncation",
+      "growth": "linear",
+      "id": "adapters.Registry.resolve_source",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_export_growth.py::test_registry_exports_linear_work"
+      ],
+      "proofs": [
+        "tests/test_export_growth.py::test_registry_exports_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
+        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+      },
+      "symbol": "fishhat_adapters.protocol:Registry.resolve_source",
+      "work": "O(B + R) current complete input bytes and selected retained registry records"
+    },
+    "adapters.Registry.source_target": {
+      "capacity": [
+        "Existing provider schema and configuration byte/work capacities reject explicitly"
+      ],
+      "extent": "Whole configuration, grants, selections and evidence; no list truncation",
+      "growth": "linear",
+      "id": "adapters.Registry.source_target",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_export_growth.py::test_registry_exports_linear_work"
+      ],
+      "proofs": [
+        "tests/test_export_growth.py::test_registry_exports_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
+        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+      },
+      "symbol": "fishhat_adapters.protocol:Registry.source_target",
+      "work": "O(B + R) current complete input bytes and selected retained registry records"
+    },
+    "adapters.check_configuration": {
+      "capacity": [
+        "Existing provider schema and configuration byte/work capacities reject explicitly"
+      ],
+      "extent": "Whole configuration, grants, selections and evidence; no list truncation",
+      "growth": "linear",
+      "id": "adapters.check_configuration",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_export_growth.py::test_adapter_exports_linear_work"
+      ],
+      "proofs": [
+        "tests/test_export_growth.py::test_adapter_exports_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
+        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+      },
+      "symbol": "fishhat_adapters.protocol:check_configuration",
+      "work": "O(B + R) current complete input bytes and selected retained registry records"
+    },
+    "adapters.check_descriptor": {
+      "capacity": [
+        "Existing provider schema and configuration byte/work capacities reject explicitly"
+      ],
+      "extent": "Whole configuration, grants, selections and evidence; no list truncation",
+      "growth": "linear",
+      "id": "adapters.check_descriptor",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_export_growth.py::test_adapter_exports_linear_work"
+      ],
+      "proofs": [
+        "tests/test_export_growth.py::test_adapter_exports_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
+        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+      },
+      "symbol": "fishhat_adapters.protocol:check_descriptor",
+      "work": "O(B + R) current complete input bytes and selected retained registry records"
+    },
+    "adapters.check_invocation": {
+      "capacity": [
+        "Existing typed scalar and page limits remain explicit admission boundaries"
+      ],
+      "extent": "Exact whole inputs and outputs; observation pages retain explicit continuation",
+      "growth": "linear",
+      "id": "adapters.check_invocation",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_export_growth.py::test_adapter_semantics_linear_work"
+      ],
+      "proofs": [
+        "tests/test_export_growth.py::test_adapter_semantics_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py": "15405cdad6c4f6685d5bc2c58b2925ec01e0e6416b33c1a8736908e941187752",
+        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+      },
+      "symbol": "fishhat_contracts.adapter_semantics:check_invocation",
+      "work": "O(B) complete typed request, retained invocation and response bytes"
+    },
+    "adapters.check_request": {
+      "capacity": [
+        "Existing typed scalar and page limits remain explicit admission boundaries"
+      ],
+      "extent": "Exact whole inputs and outputs; observation pages retain explicit continuation",
+      "growth": "linear",
+      "id": "adapters.check_request",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_export_growth.py::test_adapter_semantics_linear_work"
+      ],
+      "proofs": [
+        "tests/test_export_growth.py::test_adapter_semantics_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py": "15405cdad6c4f6685d5bc2c58b2925ec01e0e6416b33c1a8736908e941187752",
+        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+      },
+      "symbol": "fishhat_contracts.adapter_semantics:check_request",
+      "work": "O(B) complete typed request, retained invocation and response bytes"
+    },
+    "adapters.check_response": {
+      "capacity": [
+        "Existing typed scalar and page limits remain explicit admission boundaries"
+      ],
+      "extent": "Exact whole inputs and outputs; observation pages retain explicit continuation",
+      "growth": "linear",
+      "id": "adapters.check_response",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_export_growth.py::test_adapter_semantics_linear_work"
+      ],
+      "proofs": [
+        "tests/test_export_growth.py::test_adapter_semantics_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py": "15405cdad6c4f6685d5bc2c58b2925ec01e0e6416b33c1a8736908e941187752",
+        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+      },
+      "symbol": "fishhat_contracts.adapter_semantics:check_response",
+      "work": "O(B) complete typed request, retained invocation and response bytes"
+    },
+    "adapters.check_result": {
+      "capacity": [
+        "Existing typed scalar and page limits remain explicit admission boundaries"
+      ],
+      "extent": "Exact whole inputs and outputs; observation pages retain explicit continuation",
+      "growth": "linear",
+      "id": "adapters.check_result",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_export_growth.py::test_adapter_semantics_linear_work"
+      ],
+      "proofs": [
+        "tests/test_export_growth.py::test_adapter_semantics_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py": "15405cdad6c4f6685d5bc2c58b2925ec01e0e6416b33c1a8736908e941187752",
+        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+      },
+      "symbol": "fishhat_contracts.adapter_semantics:check_result",
+      "work": "O(B) complete typed request, retained invocation and response bytes"
+    },
+    "adapters.check_schema": {
+      "capacity": [
+        "Existing provider schema and configuration byte/work capacities reject explicitly"
+      ],
+      "extent": "Whole configuration, grants, selections and evidence; no list truncation",
+      "growth": "linear",
+      "id": "adapters.check_schema",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_export_growth.py::test_adapter_exports_linear_work"
+      ],
+      "proofs": [
+        "tests/test_export_growth.py::test_adapter_exports_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
+        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+      },
+      "symbol": "fishhat_adapters.protocol:check_schema",
+      "work": "O(B + R) current complete input bytes and selected retained registry records"
+    },
+    "adapters.instance_reference": {
+      "capacity": [
+        "Existing provider schema and configuration byte/work capacities reject explicitly"
+      ],
+      "extent": "Whole configuration, grants, selections and evidence; no list truncation",
+      "growth": "linear",
+      "id": "adapters.instance_reference",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_export_growth.py::test_adapter_exports_linear_work"
+      ],
+      "proofs": [
+        "tests/test_export_growth.py::test_adapter_exports_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
+        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+      },
+      "symbol": "fishhat_adapters.protocol:instance_reference",
+      "work": "O(B + R) current complete input bytes and selected retained registry records"
+    },
+    "adapters.require_qualification": {
+      "capacity": [
+        "Existing provider schema and configuration byte/work capacities reject explicitly"
+      ],
+      "extent": "Whole configuration, grants, selections and evidence; no list truncation",
+      "growth": "linear",
+      "id": "adapters.require_qualification",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_export_growth.py::test_adapter_exports_linear_work"
+      ],
+      "proofs": [
+        "tests/test_export_growth.py::test_adapter_exports_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
+        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+      },
+      "symbol": "fishhat_adapters.protocol:require_qualification",
+      "work": "O(B + R) current complete input bytes and selected retained registry records"
+    },
+    "adapters.runtime_binding_digest": {
+      "capacity": [
+        "Existing provider schema and configuration byte/work capacities reject explicitly"
+      ],
+      "extent": "Whole configuration, grants, selections and evidence; no list truncation",
+      "growth": "linear",
+      "id": "adapters.runtime_binding_digest",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_export_growth.py::test_adapter_exports_linear_work"
+      ],
+      "proofs": [
+        "tests/test_export_growth.py::test_adapter_exports_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-adapter-protocol/src/fishhat_adapters/protocol.py": "6e7ea9533360dfe685f3ce2c95acc3118b128379c9f46f51243efa230836b165",
+        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+      },
+      "symbol": "fishhat_adapters.protocol:runtime_binding_digest",
+      "work": "O(B + R) current complete input bytes and selected retained registry records"
+    },
     "bootstrap.catalogue": {
       "capacity": [
         "native readers enforce explicitly approved capacity without omitting sources"
@@ -25,10 +1728,120 @@
       "sources": {
         "packages/fishhat-client/src/fishhat_client/bootstrap.py": "d4fda41960674e5b8c04c5f092005fcd1a89bebb9c83dbef3eaa113b394d3080",
         "tests/test_bootstrap.py": "3ec324d68e8cff12d672e2f32de4fab55bb898aa204e5dd58a078913755f9161",
-        "tests/test_linear_growth.py": "67b21abf8e8197aa2a60a98171690536e35ced69adb38fbb10fbe5b59fab10c8"
+        "tests/test_linear_growth.py": "238c554ee57c932a2b14c605a17d40bc17e40b979e3b4936cc5ae49f60b2885d"
       },
       "symbol": "fishhat_client.bootstrap:validate_catalogue",
       "work": "O(B + S) bounded reference record validation and one source identity pass"
+    },
+    "data.canonical": {
+      "capacity": [
+        "JSON frame/source admission capacities remain explicit caller decisions"
+      ],
+      "extent": "Complete values are validated or explicitly rejected; no truncated collections",
+      "growth": "linear",
+      "id": "data.canonical",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_export_growth.py::test_data_exports_linear_work"
+      ],
+      "proofs": [
+        "tests/test_export_growth.py::test_data_exports_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "929b7a45ed81e0c394c885ee58956b13a2c65604cc74367dfcbc320183c613c0",
+        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+      },
+      "symbol": "fishhat_contracts.validation:canonical",
+      "work": "O(B) complete JSON/source value bytes under the installed schema profile"
+    },
+    "data.digest": {
+      "capacity": [
+        "JSON frame/source admission capacities remain explicit caller decisions"
+      ],
+      "extent": "Complete values are validated or explicitly rejected; no truncated collections",
+      "growth": "linear",
+      "id": "data.digest",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_export_growth.py::test_data_exports_linear_work"
+      ],
+      "proofs": [
+        "tests/test_export_growth.py::test_data_exports_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "929b7a45ed81e0c394c885ee58956b13a2c65604cc74367dfcbc320183c613c0",
+        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+      },
+      "symbol": "fishhat_contracts.validation:digest",
+      "work": "O(B) complete JSON/source value bytes under the installed schema profile"
+    },
+    "data.strict_json": {
+      "capacity": [
+        "JSON frame/source admission capacities remain explicit caller decisions"
+      ],
+      "extent": "Complete values are validated or explicitly rejected; no truncated collections",
+      "growth": "linear",
+      "id": "data.strict_json",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_export_growth.py::test_data_exports_linear_work"
+      ],
+      "proofs": [
+        "tests/test_export_growth.py::test_data_exports_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "929b7a45ed81e0c394c885ee58956b13a2c65604cc74367dfcbc320183c613c0",
+        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+      },
+      "symbol": "fishhat_contracts.validation:strict_json",
+      "work": "O(B) complete JSON/source value bytes under the installed schema profile"
+    },
+    "data.strict_yaml": {
+      "capacity": [
+        "JSON frame/source admission capacities remain explicit caller decisions"
+      ],
+      "extent": "Complete values are validated or explicitly rejected; no truncated collections",
+      "growth": "linear",
+      "id": "data.strict_yaml",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_export_growth.py::test_data_exports_linear_work"
+      ],
+      "proofs": [
+        "tests/test_export_growth.py::test_data_exports_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "929b7a45ed81e0c394c885ee58956b13a2c65604cc74367dfcbc320183c613c0",
+        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+      },
+      "symbol": "fishhat_contracts.validation:strict_yaml",
+      "work": "O(B) complete JSON/source value bytes under the installed schema profile"
+    },
+    "data.validate": {
+      "capacity": [
+        "JSON frame/source admission capacities remain explicit caller decisions"
+      ],
+      "extent": "Complete values are validated or explicitly rejected; no truncated collections",
+      "growth": "linear",
+      "id": "data.validate",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_export_growth.py::test_data_exports_linear_work"
+      ],
+      "proofs": [
+        "tests/test_export_growth.py::test_data_exports_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "929b7a45ed81e0c394c885ee58956b13a2c65604cc74367dfcbc320183c613c0",
+        "tests/test_export_growth.py": "cc06c04bb658d468f628b912860bef2c9c5e815ee4168f1de09b002f2b626fd8"
+      },
+      "symbol": "fishhat_contracts.validation:validate",
+      "work": "O(B) complete JSON/source value bytes under the installed schema profile"
     },
     "directory.load": {
       "capacity": [],
@@ -55,11 +1868,39 @@
       "qualification": "reference-model",
       "sources": {
         "some-implementations/fishhat/applications/directory/src/fishhat_directory/projection.py": "0d59131faae4d3af36206a4dfd18603b5acb09dc6d962157ae3d9e4a680dcdd1",
-        "tests/test_engineering.py": "852a6e0b9add6ae1b2b6540b52c9a5e80a294884bf73b8f3840196a95b3d69ae",
-        "tests/test_linear_growth.py": "67b21abf8e8197aa2a60a98171690536e35ced69adb38fbb10fbe5b59fab10c8"
+        "tests/test_engineering.py": "b848f13edf88900c94c6cc8ee30922f36a23705895dc239484d4caaffd21379c",
+        "tests/test_linear_growth.py": "238c554ee57c932a2b14c605a17d40bc17e40b979e3b4936cc5ae49f60b2885d"
       },
       "symbol": "fishhat_directory.projection:load_directory",
       "work": "O(input_bytes)-bounded-parser-depth"
+    },
+    "handoffs.retained-result": {
+      "capacity": [
+        "The receiving max_bytes capacity rejects before parsing; it never truncates",
+        "Custom schema profiles share depth 32 and static expansion work 4096; complete result and unused-definition counts remain uncapped"
+      ],
+      "extent": "Exact committed result bytes, every nested invocation/output artifact and full selected schema closure",
+      "growth": "linear",
+      "id": "handoffs.retained-result",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_retained_result_growth.py::test_retained_adapter_results_linear_work",
+        "tests/test_result_schema_admission.py::test_custom_result_complete_validation_linear_work",
+        "tests/test_result_schema_admission.py::test_custom_schema_closure_admission_linear_work"
+      ],
+      "proofs": [
+        "tests/test_retained_result_growth.py::test_retained_adapter_results_linear_work",
+        "tests/test_result_schema_admission.py::test_custom_result_complete_validation_linear_work",
+        "tests/test_result_schema_admission.py::test_custom_schema_closure_admission_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/handoffs.py": "1ee27340682b351a06af32fdfe4c1cdbdd96569b5409bd1c9873a4938ee6ea13",
+        "tests/test_result_schema_admission.py": "3dfa6a93b31496a1ddc74b6000e872791a0ef7f270c745a711c92ad9ba45a62e",
+        "tests/test_retained_result_growth.py": "6b9ac27a2d0a04ca2e403cd8add2b194d592ab453f2c5442dd82b60c76e958d0"
+      },
+      "symbol": "fishhat_contracts.handoffs:validate_result_payload",
+      "work": "Admission O(S + E) schema bytes and references without unfolding; payload O(B) complete bytes under a fixed admitted schema profile"
     },
     "journal.submit": {
       "capacity": [],
@@ -77,9 +1918,9 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "fishhat/owner-support/src/fishhat_owner/journal.py": "846509423ba4127a1c0900fd33996d9c7294508dceb855a958563178d4683fe7",
-        "tests/test_engineering.py": "852a6e0b9add6ae1b2b6540b52c9a5e80a294884bf73b8f3840196a95b3d69ae",
-        "tests/test_linear_growth.py": "67b21abf8e8197aa2a60a98171690536e35ced69adb38fbb10fbe5b59fab10c8"
+        "fishhat/owner-support/src/fishhat_owner/journal.py": "34a5fc47c3fc7ef525c181bba5fa34b9887537ad1522f48811e5a4679f33449c",
+        "tests/test_engineering.py": "b848f13edf88900c94c6cc8ee30922f36a23705895dc239484d4caaffd21379c",
+        "tests/test_linear_growth.py": "238c554ee57c932a2b14c605a17d40bc17e40b979e3b4936cc5ae49f60b2885d"
       },
       "symbol": "fishhat_owner.journal:Journal.submit",
       "work": "O(retained_requests + input_bytes)-reference-scan"
@@ -105,7 +1946,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/record_delivery.py": "04d94df25a9bfadac80ab92fccc68d9a6b5b39cccf12490cb0d673ee455a6fb6",
-        "tests/test_linear_growth.py": "67b21abf8e8197aa2a60a98171690536e35ced69adb38fbb10fbe5b59fab10c8",
+        "tests/test_linear_growth.py": "238c554ee57c932a2b14c605a17d40bc17e40b979e3b4936cc5ae49f60b2885d",
         "tests/test_record_delivery.py": "29ae96e27fcb9e8197d5bc7d20b8eca0a747e5c58cdcb0dff5c65ef983e50cc2"
       },
       "symbol": "fishhat_contracts.record_delivery:RecordSnapshot.chunk",
@@ -137,8 +1978,8 @@
       "qualification": "reference-model",
       "sources": {
         "some-implementations/fishhat/applications/receipts/src/fishhat_reporting/store.py": "94c5a454ee4160e6c35ffae110c6c6450ef6b78e7c94e90204c3477c8714d16f",
-        "tests/test_engineering.py": "852a6e0b9add6ae1b2b6540b52c9a5e80a294884bf73b8f3840196a95b3d69ae",
-        "tests/test_linear_growth.py": "67b21abf8e8197aa2a60a98171690536e35ced69adb38fbb10fbe5b59fab10c8"
+        "tests/test_engineering.py": "b848f13edf88900c94c6cc8ee30922f36a23705895dc239484d4caaffd21379c",
+        "tests/test_linear_growth.py": "238c554ee57c932a2b14c605a17d40bc17e40b979e3b4936cc5ae49f60b2885d"
       },
       "symbol": "fishhat_reporting.store:EventStore.events",
       "work": "O(log(retained_events) + page_bytes) indexed seek and linear page construction with one serialization per returned event"
@@ -160,8 +2001,8 @@
       "qualification": "reference-model",
       "sources": {
         "some-implementations/fishhat/applications/receipts/src/fishhat_reporting/store.py": "94c5a454ee4160e6c35ffae110c6c6450ef6b78e7c94e90204c3477c8714d16f",
-        "tests/test_engineering.py": "852a6e0b9add6ae1b2b6540b52c9a5e80a294884bf73b8f3840196a95b3d69ae",
-        "tests/test_linear_growth.py": "67b21abf8e8197aa2a60a98171690536e35ced69adb38fbb10fbe5b59fab10c8"
+        "tests/test_engineering.py": "b848f13edf88900c94c6cc8ee30922f36a23705895dc239484d4caaffd21379c",
+        "tests/test_linear_growth.py": "238c554ee57c932a2b14c605a17d40bc17e40b979e3b4936cc5ae49f60b2885d"
       },
       "symbol": "fishhat_reporting.store:EventStore.put",
       "work": "O(retained_bytes + event_bytes) reference-scan for corrections with hash-indexed traversal; ordinary appends use indexed identity lookup"
@@ -187,11 +2028,175 @@
       "qualification": "reference-model",
       "sources": {
         "some-implementations/fishhat/applications/receipts/src/fishhat_reporting/store.py": "94c5a454ee4160e6c35ffae110c6c6450ef6b78e7c94e90204c3477c8714d16f",
-        "tests/test_engineering.py": "852a6e0b9add6ae1b2b6540b52c9a5e80a294884bf73b8f3840196a95b3d69ae",
-        "tests/test_linear_growth.py": "67b21abf8e8197aa2a60a98171690536e35ced69adb38fbb10fbe5b59fab10c8"
+        "tests/test_engineering.py": "b848f13edf88900c94c6cc8ee30922f36a23705895dc239484d4caaffd21379c",
+        "tests/test_linear_growth.py": "238c554ee57c932a2b14c605a17d40bc17e40b979e3b4936cc5ae49f60b2885d"
       },
       "symbol": "fishhat_reporting.store:EventStore.workflows",
       "work": "O(retained_events + page_items) one cold reference scan, constant-work issued cursors and linear page output; database changes rebuild the index"
+    },
+    "resources.cleanup-plan": {
+      "capacity": [
+        "receiving owner memory"
+      ],
+      "extent": "complete inventory, retention input and reviewed candidate extent across every dispatch batch",
+      "growth": "linear",
+      "id": "resources.cleanup-plan",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_resource_growth.py::test_cleanup_complete_traversal_linear_work"
+      ],
+      "proofs": [
+        "tests/test_resources.py::Cleanup::test_expected_candidates",
+        "tests/test_resource_growth.py::test_cleanup_complete_traversal_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/resources.py": "906f52721a34e07ad4f9c1248d954e2d4279c7f243df822da2c3e5592aecb925",
+        "tests/test_resource_growth.py": "d51e5ed7d70f6d12d820eafd714fb69c7c1c208c3869600e85f818de41579b35",
+        "tests/test_resources.py": "e8671a3452f8a2590b509ea0acba4b6f674ccd09e76311646cd5ee5abdf68b3c"
+      },
+      "symbol": "fishhat_contracts.resources:plan_cleanup",
+      "work": "complete native graph and retained-release closure, including radix ordering"
+    },
+    "resources.cleanup-traversal": {
+      "capacity": [
+        "receiving owner memory"
+      ],
+      "extent": "complete native graph and retention closure plus every attempt; unchanged input is never rescanned per candidate or batch",
+      "growth": "linear",
+      "id": "resources.cleanup-traversal",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_resource_growth.py::test_cleanup_complete_traversal_linear_work"
+      ],
+      "proofs": [
+        "tests/test_cleanup_traversal.py::test_exact_custody_and_candidate_identity_are_required",
+        "tests/test_resource_growth.py::test_cleanup_complete_traversal_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/resources.py": "906f52721a34e07ad4f9c1248d954e2d4279c7f243df822da2c3e5592aecb925",
+        "tests/test_cleanup_traversal.py": "2a9a60382d42d5602cb9cd572b57c2a682a00e7a8ec310ad75144d32ee486765",
+        "tests/test_resource_growth.py": "d51e5ed7d70f6d12d820eafd714fb69c7c1c208c3869600e85f818de41579b35"
+      },
+      "symbol": "fishhat_contracts.resources:revalidate_cleanup",
+      "work": "one complete verification plus indexed candidates, batches, retries and confirmed outcomes; external invalidation stops the run"
+    },
+    "resources.host": {
+      "capacity": [
+        "receiving owner memory"
+      ],
+      "extent": "all resource accounts, adapter grants and quota roots, without a count ceiling",
+      "growth": "linear",
+      "id": "resources.host",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_resource_growth.py::test_host_resources_linear_work"
+      ],
+      "proofs": [
+        "tests/test_resources.py::HostEnvelopes::test_complete_host",
+        "tests/test_resource_growth.py::test_host_resources_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/resources.py": "906f52721a34e07ad4f9c1248d954e2d4279c7f243df822da2c3e5592aecb925",
+        "tests/test_resource_growth.py": "d51e5ed7d70f6d12d820eafd714fb69c7c1c208c3869600e85f818de41579b35",
+        "tests/test_resources.py": "e8671a3452f8a2590b509ea0acba4b6f674ccd09e76311646cd5ee5abdf68b3c"
+      },
+      "symbol": "fishhat_contracts.resources:validate_host_resources",
+      "work": "complete account, grant and quota-root bytes; indexed overlap detection"
+    },
+    "resources.inventory": {
+      "capacity": [
+        "receiving owner memory"
+      ],
+      "extent": "all native inventory objects, references and protection labels",
+      "growth": "linear",
+      "id": "resources.inventory",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_resource_growth.py::test_inventory_linear_work"
+      ],
+      "proofs": [
+        "tests/test_resources.py::Cleanup::test_missing_graph_node_blocks",
+        "tests/test_resource_growth.py::test_inventory_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/resources.py": "906f52721a34e07ad4f9c1248d954e2d4279c7f243df822da2c3e5592aecb925",
+        "tests/test_resource_growth.py": "d51e5ed7d70f6d12d820eafd714fb69c7c1c208c3869600e85f818de41579b35",
+        "tests/test_resources.py": "e8671a3452f8a2590b509ea0acba4b6f674ccd09e76311646cd5ee5abdf68b3c"
+      },
+      "symbol": "fishhat_contracts.resources:validate_inventory",
+      "work": "one complete native-object index and all reference edges"
+    },
+    "resources.reservation.release": {
+      "capacity": [
+        "receiving owner memory"
+      ],
+      "extent": "all observed pools and the four semantic quota buckets; exact current binding validation precedes subtraction",
+      "growth": "linear",
+      "id": "resources.reservation.release",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_resource_growth.py::test_reservation_request_linear_work"
+      ],
+      "proofs": [
+        "tests/test_resource_growth.py::test_reservation_request_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/resources.py": "906f52721a34e07ad4f9c1248d954e2d4279c7f243df822da2c3e5592aecb925",
+        "tests/test_resource_growth.py": "d51e5ed7d70f6d12d820eafd714fb69c7c1c208c3869600e85f818de41579b35"
+      },
+      "symbol": "fishhat_contracts.resources:ReservationModel.release",
+      "work": "complete current bindings and retained request with fresh per-call quota/pool indexes; released replay is constant"
+    },
+    "resources.reservation.reserve": {
+      "capacity": [
+        "receiving owner memory"
+      ],
+      "extent": "all observed pools and the four semantic quota buckets; no pool-count ceiling",
+      "growth": "linear",
+      "id": "resources.reservation.reserve",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_resource_growth.py::test_reservation_request_linear_work"
+      ],
+      "proofs": [
+        "tests/test_resource_growth.py::test_reservation_request_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/resources.py": "906f52721a34e07ad4f9c1248d954e2d4279c7f243df822da2c3e5592aecb925",
+        "tests/test_resource_growth.py": "d51e5ed7d70f6d12d820eafd714fb69c7c1c208c3869600e85f818de41579b35"
+      },
+      "symbol": "fishhat_contracts.resources:ReservationModel.reserve",
+      "work": "complete current snapshot and request with per-call quota/pool indexes; replay in retained request bytes"
+    },
+    "resources.retention": {
+      "capacity": [
+        "receiving owner memory"
+      ],
+      "extent": "every retained release, blocking reference, runtime handle and archive receipt",
+      "growth": "linear",
+      "id": "resources.retention",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_resource_growth.py::test_retention_linear_work"
+      ],
+      "proofs": [
+        "tests/test_retention_authority.py::test_keep_local_policy_cannot_be_overridden_by_demotion_receipt",
+        "tests/test_resource_growth.py::test_retention_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/resources.py": "906f52721a34e07ad4f9c1248d954e2d4279c7f243df822da2c3e5592aecb925",
+        "tests/test_resource_growth.py": "d51e5ed7d70f6d12d820eafd714fb69c7c1c208c3869600e85f818de41579b35",
+        "tests/test_retention_authority.py": "4dddffde9010e54841e10b85ac8aac47f649771cdbb3b13107453ce18d8bf5de"
+      },
+      "symbol": "fishhat_contracts.resources:retained_runtime_handles",
+      "work": "complete release and runtime-handle custody; radix ordering in key bytes"
     },
     "wire.read-frame": {
       "capacity": [],
@@ -214,8 +2219,8 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-client/src/fishhat_client/wire.py": "8391b4890946e69c6b31b6233d3f12ecbfdefe21e1c91b0d5f10a84e8661a202",
-        "tests/test_engineering.py": "852a6e0b9add6ae1b2b6540b52c9a5e80a294884bf73b8f3840196a95b3d69ae",
-        "tests/test_linear_growth.py": "67b21abf8e8197aa2a60a98171690536e35ced69adb38fbb10fbe5b59fab10c8"
+        "tests/test_engineering.py": "b848f13edf88900c94c6cc8ee30922f36a23705895dc239484d4caaffd21379c",
+        "tests/test_linear_growth.py": "238c554ee57c932a2b14c605a17d40bc17e40b979e3b4936cc5ae49f60b2885d"
       },
       "symbol": "fishhat_client.wire:read_frame",
       "work": "O(frame_bytes)"
@@ -238,7 +2243,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/workflow_evidence.py": "60f1b14dee717d9a5d2e8469195400d08b501907004dbad54f87a0f6c7e07c07",
-        "tests/test_linear_growth.py": "67b21abf8e8197aa2a60a98171690536e35ced69adb38fbb10fbe5b59fab10c8",
+        "tests/test_linear_growth.py": "238c554ee57c932a2b14c605a17d40bc17e40b979e3b4936cc5ae49f60b2885d",
         "tests/test_workflow_evidence.py": "9f352ee6e9109a57743bd88ab0695219fd912c54609bc9f3d99ff86f6ca51cb7"
       },
       "symbol": "fishhat_contracts.workflow_evidence:validate_phase_evidence",

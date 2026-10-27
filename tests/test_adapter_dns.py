@@ -5,7 +5,7 @@ import copy
 import pytest
 from a_fishhat_bind_rfc2136_adapter.render import render_update
 from a_fishhat_dnsmasq_appliance_adapter.render import render_hosts
-from fishhat_adapters.dns import validate_changes, validate_rrsets
+from fishhat_contracts.dns import validate_changes, validate_rrsets
 from fishhat_contracts.validation import ContractError
 
 from tests.adapter_support import OWNER, identifier

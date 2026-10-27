@@ -74,7 +74,7 @@
     {
       "name": "workflow resume",
       "scope": "reauthorized-owner-work",
-      "description": "Continue the exact recorded workflow after current owner authorization and reconciliation; do not silently create replacement work."
+      "description": "Continue the exact recorded workflow after current owner authorization and reconciliation. A paused local capsule requires an owner-native NativeLifecycleDecision to resume under its current driver and exact generation; incomplete transfer, recovery-required and terminal states cannot be bypassed. Restoring client context alone does not change owner admission or silently create replacement work."
     },
     {
       "name": "tracking record",

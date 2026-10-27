@@ -30,6 +30,18 @@ CHECK_PURPOSE = {
     "claims": [],
 }
 
+CHECK_OVERRIDES = {
+    "test_keep_local_policy_cannot_be_overridden_by_demotion_receipt": {
+        **CHECK_PURPOSE,
+        "purpose": "implementation",
+        "authority": [
+            "packages/fishhat-contracts/src/fishhat_contracts/resources.py#retained_runtime_handles"
+        ],
+        "relationship": "scoped-witness",
+        "claims": ["engineering:resources.retention"],
+    }
+}
+
 NOW = "2026-10-19T12:00:00Z"
 
 
@@ -281,9 +293,12 @@ def test_hot_predecessor_uses_instants_and_digest_ties_before_cleanup(first, sec
     decision = retained_runtime_handles(retention, accepted_policy=policy, now=NOW)
     selected = retention["releases"][newest]
     other = retention["releases"][3 - newest]
-    selected_handle, other_handle = selected["runtime_handles"][0], other["runtime_handles"][0]
-    assert "hot-predecessor-count" in decision["reasons"][selected_handle]
-    assert "hot-predecessor-count" not in decision["reasons"].get(other_handle, [])
+    selected_handle = selected["runtime_handles"][0]
+    assert selected["release_digest"] in decision["handle_releases"][selected_handle]
+    assert "hot-predecessor-count" in decision["release_reasons"][selected["release_digest"]]
+    assert "hot-predecessor-count" not in decision["release_reasons"].get(
+        other["release_digest"], []
+    )
     assert selected["release_digest"] not in decision["cold_demoted_releases"]
     assert selected_handle not in {
         c["handle"] for c in plan(policy, retention, inventory)["candidates"]

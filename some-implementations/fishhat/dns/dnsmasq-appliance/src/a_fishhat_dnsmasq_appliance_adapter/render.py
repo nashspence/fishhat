@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fishhat_adapters.dns import validate_rrsets
+from fishhat_contracts.dns import validate_rrsets
 from fishhat_contracts.validation import ContractError
 
 

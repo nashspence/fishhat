@@ -7,13 +7,17 @@ must be implemented independently. These functions do not establish enforcement.
 from __future__ import annotations
 
 from copy import deepcopy
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import PurePosixPath
 from typing import Any
 
+from fishhat_contracts.bounds import Bounds, bounds
+from fishhat_contracts.json_work import lexical as _lexical
 from fishhat_contracts.validation import ContractError, digest, validate
 
 BUCKETS = ("runtime", "state", "scratch", "logs")
+_VERIFIED_CLEANUP = object()
 
 
 def require(ok: bool, message: str) -> None:
@@ -42,6 +46,17 @@ def normal_root(value: str) -> PurePosixPath:
     return root
 
 
+@bounds(
+    Bounds(
+        id="resources.host",
+        work="complete account, grant and quota-root bytes; indexed overlap detection",
+        extent="all resource accounts, adapter grants and quota roots, without a count ceiling",
+        limits=(),
+        capacity=("receiving owner memory",),
+        proofs=("tests/test_resources.py::HostEnvelopes::test_complete_host",),
+        linear_proofs=("tests/test_resource_growth.py::test_host_resources_linear_work",),
+    )
+)
 def validate_host_resources(host: dict[str, Any]) -> None:
     resources = host["resources"]
     if resources is None:
@@ -50,6 +65,8 @@ def validate_host_resources(host: dict[str, Any]) -> None:
     validate("resources.schema.json", resources, "HostResources")
     pools, accounts = resources["pools"], resources["accounts"]
 
+    allocation_grants: dict[str, set[str]] = {}
+
     def selection(instance_id: str, role: str, handle: str) -> None:
         instance = host["adapter_instances"].get(instance_id)
         require(
@@ -57,11 +74,14 @@ def validate_host_resources(host: dict[str, Any]) -> None:
             "unknown or mismatched resource adapter instance",
         )
         assert instance is not None
+        if instance_id not in allocation_grants:
+            allocation_grants[instance_id] = {
+                grant["scope"]["handle"]
+                for grant in instance["grants"]
+                if grant["scope"]["kind"] == "allocation"
+            }
         require(
-            any(
-                g["scope"]["kind"] == "allocation" and g["scope"]["handle"] == handle
-                for g in instance["grants"]
-            ),
+            handle in allocation_grants[instance_id],
             "resource adapter lacks allocation scope",
         )
 
@@ -82,7 +102,7 @@ def validate_host_resources(host: dict[str, Any]) -> None:
         resources["control"]["emergency_file_bytes"] < resources["control"]["reserve_bytes"],
         "emergency file consumes control reserve",
     )
-    roots: list[PurePosixPath] = []
+    roots: dict[str, Any] = {}
     totals = {k: [0, 0] for k in pools}
     logins: set[str] = set()
     allocations: set[tuple[str, str, str]] = set()
@@ -128,12 +148,17 @@ def validate_host_resources(host: dict[str, Any]) -> None:
                 "quota leaves no usable headroom",
             )
             path, parent = normal_root(q["root"]), normal_root(pools[q["pool"]]["mount"])
-            require(parent in path.parents, "quota root outside pool")
             require(
-                all(path != r and path not in r.parents and r not in path.parents for r in roots),
-                "nested or duplicate quota roots",
+                len(path.parts) > len(parent.parts)
+                and path.parts[: len(parent.parts)] == parent.parts,
+                "quota root outside pool",
             )
-            roots.append(path)
+            branch = roots
+            for part in path.parts:
+                require("" not in branch, "nested or duplicate quota roots")
+                branch = branch.setdefault(part, {})
+            require(not branch, "nested or duplicate quota roots")
+            branch[""] = True
             totals[q["pool"]][0] += q["max_bytes"]
             totals[q["pool"]][1] += q["max_inodes"]
     for app_id, account in host["app_accounts"].items():
@@ -233,14 +258,14 @@ def resource_bindings_digest(snapshot: dict[str, Any]) -> str:
             "account": snapshot["account"],
             "resource_generation": snapshot["resource_generation"],
             "control_pool": snapshot["control_pool"],
-            "pools": sorted(
+            "pools": _lexical(
                 (
                     {key: p[key] for key in ("pool", "storage", "reserve_bytes", "reserve_inodes")}
                     for p in snapshot["pools"]
                 ),
                 key=lambda p: p["pool"],
             ),
-            "quotas": sorted(
+            "quotas": _lexical(
                 (
                     {
                         key: q[key]
@@ -359,6 +384,17 @@ class ReservationModel:
         self.approved_bindings_digest = approved_bindings_digest
         self.requests: dict[str, dict[str, Any]] = {}
 
+    @bounds(
+        Bounds(
+            id="resources.reservation.reserve",
+            work="complete current snapshot and request with per-call quota/pool indexes; replay in retained request bytes",
+            extent="all observed pools and the four semantic quota buckets; no pool-count ceiling",
+            limits=(),
+            capacity=("receiving owner memory",),
+            proofs=("tests/test_resource_growth.py::test_reservation_request_linear_work",),
+            linear_proofs=("tests/test_resource_growth.py::test_reservation_request_linear_work",),
+        )
+    )
     def reserve(self, request: dict[str, Any], *, now: str) -> dict[str, Any]:
         key = request["operation_id"]
         if key in self.requests:
@@ -368,9 +404,11 @@ class ReservationModel:
             self.snapshot, request, approved_bindings_digest=self.approved_bindings_digest, now=now
         )
         require(decision["admissible"], "capacity reservation blocked")
+        quotas = {quota["bucket"]: quota for quota in self.snapshot["quotas"]}
+        pools = {pool["pool"]: pool for pool in self.snapshot["pools"]}
         for g in request["growth"]:
-            q = next(x for x in self.snapshot["quotas"] if x["bucket"] == g["bucket"])
-            p = next(x for x in self.snapshot["pools"] if x["pool"] == q["pool"])
+            q = quotas[g["bucket"]]
+            p = pools[q["pool"]]
             for unit in ("bytes", "inodes"):
                 q["reserved_remaining_" + unit] += g[unit]
                 p["reserved_remaining_" + unit] += g[unit]
@@ -387,6 +425,17 @@ class ReservationModel:
         if self.requests[key]["phase"] != "released":
             self.requests[key]["phase"] = "reconciling"
 
+    @bounds(
+        Bounds(
+            id="resources.reservation.release",
+            work="complete current bindings and retained request with fresh per-call quota/pool indexes; released replay is constant",
+            extent="all observed pools and the four semantic quota buckets; exact current binding validation precedes subtraction",
+            limits=(),
+            capacity=("receiving owner memory",),
+            proofs=("tests/test_resource_growth.py::test_reservation_request_linear_work",),
+            linear_proofs=("tests/test_resource_growth.py::test_reservation_request_linear_work",),
+        )
+    )
     def release(self, key: str, *, writer_stopped: bool) -> None:
         require(key in self.requests, "unknown reservation")
         if self.requests[key]["phase"] == "released":
@@ -398,9 +447,11 @@ class ReservationModel:
             == self.requests[key]["request"]["bindings_digest"],
             "reservation release differs from approved resource bindings",
         )
+        quotas = {quota["bucket"]: quota for quota in self.snapshot["quotas"]}
+        pools = {pool["pool"]: pool for pool in self.snapshot["pools"]}
         for g in self.requests[key]["request"]["growth"]:
-            q = next(x for x in self.snapshot["quotas"] if x["bucket"] == g["bucket"])
-            p = next(x for x in self.snapshot["pools"] if x["pool"] == q["pool"])
+            q = quotas[g["bucket"]]
+            p = pools[q["pool"]]
             for unit in ("bytes", "inodes"):
                 q["reserved_remaining_" + unit] -= g[unit]
                 p["reserved_remaining_" + unit] -= g[unit]
@@ -433,6 +484,17 @@ def pressure(
     return "normal"
 
 
+@bounds(
+    Bounds(
+        id="resources.inventory",
+        work="one complete native-object index and all reference edges",
+        extent="all native inventory objects, references and protection labels",
+        limits=(),
+        capacity=("receiving owner memory",),
+        proofs=("tests/test_resources.py::Cleanup::test_missing_graph_node_blocks",),
+        linear_proofs=("tests/test_resource_growth.py::test_inventory_linear_work",),
+    )
+)
 def validate_inventory(value: dict[str, Any]) -> dict[str, dict[str, Any]]:
     validate("resource-records.schema.json", value, "CleanupInventory")
     items = {i["handle"]: i for i in value["items"]}
@@ -441,14 +503,27 @@ def validate_inventory(value: dict[str, Any]) -> dict[str, dict[str, Any]]:
         len({(i["kind"], i["native_id"]) for i in value["items"]}) == len(items),
         "duplicate native object identity",
     )
-    require(set(value["protected_roots"]) <= set(items), "missing protected object")
+    require(all(root in items for root in value["protected_roots"]), "missing protected object")
     require(
-        all(set(i["references"]) <= set(items) for i in items.values()),
+        all(reference in items for item in items.values() for reference in item["references"]),
         "incomplete reference graph",
     )
     return items
 
 
+@bounds(
+    Bounds(
+        id="resources.cleanup-plan",
+        work="complete native graph and retained-release closure, including radix ordering",
+        extent="complete inventory, retention input and reviewed candidate extent across every dispatch batch",
+        limits=(),
+        capacity=("receiving owner memory",),
+        proofs=("tests/test_resources.py::Cleanup::test_expected_candidates",),
+        linear_proofs=(
+            "tests/test_resource_growth.py::test_cleanup_complete_traversal_linear_work",
+        ),
+    )
+)
 def plan_cleanup(
     inventory: dict[str, Any],
     *,
@@ -477,7 +552,10 @@ def plan_cleanup(
         and inventory["protection_generation"] == retention["protection_generation"],
         "cleanup retention authority changed",
     )
-    require(set(retention["protected_roots"]) <= set(items), "missing retained native object")
+    require(
+        all(root in items for root in retention["protected_roots"]),
+        "missing retained native object",
+    )
     when = instant(now)
     age = (when - instant(inventory["observed_at"])).total_seconds()
     blockers: list[str] = []
@@ -524,7 +602,12 @@ def plan_cleanup(
             continue
         eligible.append({"handle": handle, "kind": item["kind"], "native_id": item["native_id"]})
     order = {"container": 0, "build-cache": 1, "scratch": 2, "closed-log": 3, "image": 4}
-    eligible.sort(key=lambda x: (order[x["kind"]], items[x["handle"]]["last_used_at"], x["handle"]))
+    eligible = _lexical(
+        eligible,
+        key=lambda item: (
+            str(order[item["kind"]]) + items[item["handle"]]["last_used_at"] + "\0" + item["handle"]
+        ),
+    )
     result = {
         "format": "deployment-ops/resources/v1",
         "kind": "CleanupPlan",
@@ -541,7 +624,7 @@ def plan_cleanup(
                 "policy_digest": retention["policy_digest"],
                 "retention_custody_digest": retention["custody_digest"],
                 "protection_generation": retention["protection_generation"],
-                "protected_roots": sorted(protected),
+                "protected_roots": _lexical(protected),
             }
         ),
         "generation": inventory["generation"],
@@ -550,13 +633,204 @@ def plan_cleanup(
         .astimezone(UTC)
         .isoformat()
         .replace("+00:00", "Z"),
-        "candidates": [] if blockers else eligible[: inventory["max_objects"]],
+        "max_objects": inventory["max_objects"],
+        "candidates": [] if blockers else eligible,
         "blocked": blockers,
     }
     validate("resource-records.schema.json", result, "CleanupPlan")
     return result
 
 
+@dataclass(frozen=True)
+class CleanupCustody:
+    """Current owner facts under one continuously held exclusion.
+
+    The native owner supplies these fields independently for each attempted
+    deletion and its outcome. A requester/adapter cannot mint this context.
+    ``exclusion`` represents the caller's actual guard, not an authenticated
+    token or a lock implemented by this pure model. Every external native,
+    reference, protection, policy or durability change invalidates that guard.
+    """
+
+    owner: tuple[str, ...]
+    account: str
+    store_binding: str
+    generation: int
+    policy_digest: str
+    retention_custody_digest: str
+    protection_generation: int
+    native_observed_at: str
+    retention_observed_at: str
+    exclusion: object | None
+    coverage_complete: bool = True
+    exclusive_control: bool = True
+    busy: bool = False
+    control_writable: bool = True
+
+
+class CleanupTraversal:
+    """Indexed reference traversal, created only by complete revalidation.
+
+    The index is retained for the entire reviewed extent, including batches and
+    retries. Current scalar custody and the exact native identity are checked
+    before every attempt; a confirmed own removal advances the expected native
+    generation without rescanning the graph. Unknown outcomes, lost exclusion
+    and externally changed state stop this traversal. Native implementations
+    must provide the actual exclusion, authenticated journal and observations.
+    """
+
+    def __init__(
+        self,
+        plan: dict[str, Any],
+        inventory: dict[str, Any],
+        retention_inventory: dict[str, Any],
+        accepted_policy: dict[str, Any],
+        removed: set[str],
+        exclusion: object | None,
+        *,
+        _verified: object | None = None,
+    ) -> None:
+        require(_verified is _VERIFIED_CLEANUP, "cleanup traversal requires complete revalidation")
+        self._custody = CleanupCustody(
+            owner=tuple(inventory["owner"][key] for key in ("tool", "id", "epoch")),
+            account=inventory["account"],
+            store_binding=inventory["store_binding"],
+            generation=inventory["generation"],
+            policy_digest=plan["policy_digest"],
+            retention_custody_digest=plan["retention_custody_digest"],
+            protection_generation=plan["protection_generation"],
+            native_observed_at=inventory["observed_at"],
+            retention_observed_at=retention_inventory["observed_at"],
+            exclusion=exclusion,
+        )
+        self._generation = inventory["generation"]
+        self._candidates = {
+            item["handle"]: (item["kind"], item["native_id"]) for item in plan["candidates"]
+        }
+        self._handles = iter(self._candidates)
+        self._removed = set(removed)
+        self._pending: str | None = None
+        self._valid = True
+        self._max_objects = min(plan["max_objects"], inventory["max_objects"])
+        self._max_age = accepted_policy["max_observation_age_seconds"]
+        self._expires = instant(plan["expires_at"])
+        # A time-dependent cold-copy protection can expire without a generation
+        # change. Conservatively stop at any retained archive validity boundary.
+        for release in retention_inventory["releases"]:
+            if release["archive"] is not None:
+                expiry = instant(release["archive"]["valid_until"])
+                if expiry > instant(plan["created_at"]):
+                    self._expires = min(self._expires, expiry)
+
+    @property
+    def custody(self) -> CleanupCustody:
+        """Expose the immutable verified baseline; current owner facts are separate."""
+        return self._custody
+
+    def next_batch(self) -> list[dict[str, str]]:
+        """Visit each reviewed candidate once; a dispatch bound never cuts extent."""
+        require(self._valid, "cleanup traversal invalidated")
+        result = []
+        for handle in self._handles:
+            if handle in self._removed:
+                continue
+            kind, native_id = self._candidates[handle]
+            result.append({"handle": handle, "kind": kind, "native_id": native_id})
+            if len(result) == self._max_objects:
+                break
+        return result
+
+    def _check(self, current: CleanupCustody, now: str, generation: int) -> None:
+        expected = self.custody
+        require(self._valid, "cleanup traversal invalidated")
+        try:
+            require(
+                expected.exclusion is not None and current.exclusion is expected.exclusion,
+                "cleanup exclusion lost",
+            )
+            require(
+                current.owner == expected.owner
+                and current.account == expected.account
+                and current.store_binding == expected.store_binding
+                and type(current.generation) is int
+                and 0 <= current.generation <= 9_007_199_254_740_991
+                and current.generation == generation,
+                "cleanup native generation or binding changed",
+            )
+            require(
+                current.policy_digest == expected.policy_digest
+                and current.retention_custody_digest == expected.retention_custody_digest
+                and current.protection_generation == expected.protection_generation,
+                "cleanup owner protection changed",
+            )
+            require(
+                current.coverage_complete
+                and current.exclusive_control
+                and not current.busy
+                and current.control_writable,
+                "cleanup now blocked",
+            )
+            when = instant(now)
+            require(when < self._expires, "cleanup plan or archive validity expired")
+            require(
+                all(
+                    0 <= (when - instant(observed)).total_seconds() <= self._max_age
+                    for observed in (current.native_observed_at, current.retention_observed_at)
+                ),
+                "cleanup observation stale",
+            )
+        except ContractError:
+            self._valid = False
+            raise
+
+    def before_delete(
+        self, candidate: dict[str, str], *, current: CleanupCustody, now: str
+    ) -> None:
+        """Check one exact observed candidate under current independently held custody."""
+        self._check(current, now, self._generation)
+        require(self._generation < 9_007_199_254_740_991, "cleanup native generation exhausted")
+        require(self._pending is None, "cleanup outcome unresolved")
+        handle = candidate["handle"]
+        if handle in self._removed or self._candidates.get(handle) != (
+            candidate["kind"],
+            candidate["native_id"],
+        ):
+            self._valid = False
+            raise ContractError("cleanup candidate no longer safe")
+        self._pending = handle
+
+    def record_outcome(
+        self, handle: str, outcome: str, *, current: CleanupCustody, now: str
+    ) -> None:
+        """Consume owner-authenticated outcome evidence; uncertainty ends permission."""
+        require(self._pending == handle, "unknown cleanup outcome")
+        require(outcome in {"removed", "not-removed", "unknown"}, "invalid cleanup outcome")
+        if outcome == "unknown":
+            self._valid = False
+            return
+        generation = self._generation + int(outcome == "removed")
+        self._check(current, now, generation)
+        self._generation = generation
+        if outcome == "removed":
+            self._removed.add(handle)
+        self._pending = None
+
+
+@bounds(
+    Bounds(
+        id="resources.cleanup-traversal",
+        work="one complete verification plus indexed candidates, batches, retries and confirmed outcomes; external invalidation stops the run",
+        extent="complete native graph and retention closure plus every attempt; unchanged input is never rescanned per candidate or batch",
+        limits=(),
+        capacity=("receiving owner memory",),
+        proofs=(
+            "tests/test_cleanup_traversal.py::test_exact_custody_and_candidate_identity_are_required",
+        ),
+        linear_proofs=(
+            "tests/test_resource_growth.py::test_cleanup_complete_traversal_linear_work",
+        ),
+    )
+)
 def revalidate_cleanup(
     plan: dict[str, Any],
     inventory: dict[str, Any],
@@ -565,14 +839,17 @@ def revalidate_cleanup(
     retention_inventory: dict[str, Any],
     now: str,
     confirmed_removed: set[str] | None = None,
-) -> None:
+    exclusion: object | None = None,
+) -> CleanupTraversal:
     """Check current bindings while the owner excludes protection changes.
 
     The native executor serializes this final check and each deletion with
     accepted policy, hold and recovery-reference changes. It retains that
     exclusion until the native outcome is known; otherwise it must stop and
-    reconcile. Returning from this pure helper creates no continuing permission
-    or concurrency guard.
+    reconcile. Returning from this pure helper creates no concurrency guard.
+    The owner supplies its actual held exclusion and independently current
+    CleanupCustody for each use of the returned indexed traversal. Without that
+    exclusion, this helper verifies a snapshot but cannot authorize an attempt.
     """
     validate("resource-records.schema.json", plan, "CleanupPlan")
     require(instant(now) < instant(plan["expires_at"]), "cleanup plan expired")
@@ -596,12 +873,10 @@ def revalidate_cleanup(
         all(handle in present or handle in removed for handle in candidates),
         "cleanup object vanished without confirmed outcome",
     )
-    # Revalidate the entire current native candidate set, not merely the next
-    # bounded batch selected by max_objects. Completeness/ref closure is mandatory.
-    expanded = deepcopy(inventory)
-    expanded["max_objects"] = max(1, len(inventory["items"]))
+    # This entry check consumes the complete graph once. Dispatch batches and
+    # retries use its retained index, never a copy/rescan of the same snapshot.
     current = plan_cleanup(
-        expanded,
+        inventory,
         accepted_policy=accepted_policy,
         retention_inventory=retention_inventory,
         now=now,
@@ -628,8 +903,30 @@ def revalidate_cleanup(
         <= {(x["handle"], x["kind"], x["native_id"]) for x in current["candidates"]},
         "cleanup candidate no longer safe",
     )
+    return CleanupTraversal(
+        plan,
+        inventory,
+        retention_inventory,
+        accepted_policy,
+        removed,
+        exclusion,
+        _verified=_VERIFIED_CLEANUP,
+    )
 
 
+@bounds(
+    Bounds(
+        id="resources.retention",
+        work="complete release and runtime-handle custody; radix ordering in key bytes",
+        extent="every retained release, blocking reference, runtime handle and archive receipt",
+        limits=(),
+        capacity=("receiving owner memory",),
+        proofs=(
+            "tests/test_retention_authority.py::test_keep_local_policy_cannot_be_overridden_by_demotion_receipt",
+        ),
+        linear_proofs=("tests/test_resource_growth.py::test_retention_linear_work",),
+    )
+)
 def retained_runtime_handles(
     inventory: dict[str, Any],
     *,
@@ -641,6 +938,9 @@ def retained_runtime_handles(
     Native owners independently load accepted_policy and authenticate custody
     evidence and cold-demotion receipts. This pure model checks their exact
     bindings; it does not authorize policy changes or authenticate provenance.
+    Each release's complete reasons appear once in release_reasons, while
+    handle_releases joins protected handles to those exact release identities.
+    This preserves every hold without expanding handles times blocking reasons.
     """
     validate("resource-records.schema.json", accepted_policy, "AcceptedRetentionPolicy")
     validate("resource-records.schema.json", inventory, "RetentionInventory")
@@ -671,13 +971,17 @@ def retained_runtime_handles(
         "accepted retention release changed",
     )
     require(all(instant(r["verified_at"]) <= when for r in releases), "future release observation")
-    prior = sorted(
+    prior = _lexical(
         (r for r in releases if not r["accepted"]),
-        key=lambda r: (instant(r["verified_at"]), r["release_digest"]),
-        reverse=True,
+        key=lambda r: (
+            instant(r["verified_at"]).astimezone(UTC).isoformat(timespec="microseconds")
+            + r["release_digest"]
+        ),
     )
+    prior.reverse()
     newest = {r["release_digest"] for r in prior[: policy["prior_releases"]]}
-    protected: dict[str, list[str]] = {}
+    protected: dict[str, set[str]] = {}
+    release_reasons: dict[str, list[str]] = {}
     demoted: list[str] = []
     for r in releases:
         reasons = list(r["blocking_refs"])
@@ -718,12 +1022,14 @@ def retained_runtime_handles(
             else:
                 demoted.append(r["release_digest"])
         if reasons:
+            release_reasons[r["release_digest"]] = _lexical(set(reasons))
             for handle in r["runtime_handles"]:
-                protected.setdefault(handle, []).extend(reasons)
+                protected.setdefault(handle, set()).add(r["release_digest"])
     return {
-        "protected_roots": sorted(protected),
-        "reasons": {k: sorted(set(v)) for k, v in sorted(protected.items())},
-        "cold_demoted_releases": sorted(demoted),
+        "protected_roots": _lexical(protected),
+        "release_reasons": release_reasons,
+        "handle_releases": {key: _lexical(protected[key]) for key in _lexical(protected)},
+        "cold_demoted_releases": _lexical(demoted),
         "policy_digest": policy_digest,
         "protection_generation": inventory["protection_generation"],
         "inventory_digest": digest(inventory),

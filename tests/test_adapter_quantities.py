@@ -15,7 +15,7 @@ CHECK_PURPOSE = {
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/adapter.schema.json",
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/storage-adapter.schema.json",
     ],
-    "scope": "named compute requirements, exact approved storage ceilings and allocation-bound usage evidence",
+    "scope": "finite compute limit patches, exact approved storage ceilings and allocation-bound usage evidence",
     "relationship": "candidate",
     "reason": "Quantity/target, unit, coverage and time checks establish common data semantics, not native enforcement.",
     "claims": [],
@@ -148,6 +148,35 @@ def test_success_proves_the_exact_requested_limit_set(change):
         output["allocation"] = "allocation:other"
     with pytest.raises(ContractError, match="SUCCESS_OUTPUT_IDENTITY"):
         check_response("compute", query, reply, invocation=invocation)
+
+
+@pytest.mark.parametrize("change", ["empty", "null", "unlimited", "reset", "remove"])
+def test_limit_patch_cannot_encode_implicit_removal_or_undefined_reset(change):
+    query = request()
+    if change == "empty":
+        query["input"]["limits"] = []
+    elif change in {"null", "unlimited"}:
+        query["input"]["limits"][0]["value"] = None if change == "null" else "unlimited"
+    else:
+        query["input"][change] = ["memory-max"]
+    with pytest.raises(ContractError):
+        check_request("compute", query)
+
+
+def test_patch_receipt_and_full_observation_have_distinct_quantity_extents():
+    query = request([limit(value=4096)])
+    invocation = invocation_for(query)
+    reply = response_for(
+        query,
+        invocation["attempt"],
+        {"allocation": "allocation:demo", "limits": [limit(value=4096)], "counters": []},
+    )
+    check_response("compute", query, reply, invocation=invocation)
+    observation, complete = observe([])
+    complete["output"]["limits"] = [limit(value=4096), limit("tasks-max", 128, "tasks")]
+    check_response("compute", observation, complete)
+    assert query["input"]["limits"] == reply["output"]["limits"]
+    assert len(complete["output"]["limits"]) == 2
 
 
 def test_usage_metrics_disambiguate_equal_memory_and_swap_byte_values():

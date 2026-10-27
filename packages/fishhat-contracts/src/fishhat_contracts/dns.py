@@ -5,7 +5,7 @@ from __future__ import annotations
 import ipaddress
 from typing import Any
 
-from fishhat_contracts.validation import ContractError, canonical, validate
+from .validation import ContractError, canonical, validate
 
 
 def rrset_key(value: dict[str, Any]) -> tuple[str, str, str]:

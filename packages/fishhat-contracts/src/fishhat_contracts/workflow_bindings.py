@@ -284,7 +284,7 @@ def validate_bind_request(
     _require(
         request["expected_generation"] == workflow["generation"] < 9007199254740991
         and request["driver_term"] == workflow["driver_term"]
-        and workflow["state"] in {"prepared", "active", "paused"},
+        and workflow["state"] in {"prepared", "active"},
         "workflow binding generation, driver or state changed",
     )
     _require(
