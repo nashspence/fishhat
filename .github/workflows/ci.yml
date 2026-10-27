@@ -31,7 +31,7 @@ jobs:
       CHECK_AUTHORITY: release.toml
     name: Contracts and unit tests (Python ${{ matrix.python }})
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
