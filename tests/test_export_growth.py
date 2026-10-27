@@ -84,6 +84,7 @@ def bundle(count, role="capture"):
         "id": "independent.growth-" + role,
         "roles": [role],
         "entrypoint": "bin/adapter",
+        "process_protocol": "fishhat.adapter-process/v1",
         "configuration_schema": schema,
         "component_schema": selector,
         "source_schema": selector,

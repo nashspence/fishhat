@@ -53,6 +53,8 @@ hooks:
   health:
     component: server
     role: health
+    required_checks:
+    - HEALTH_OK
     argv:
     - /app/health
     mode: read
@@ -63,6 +65,8 @@ hooks:
   capture:
     component: maintenance
     role: capture
+    required_checks:
+    - CAPTURE_OK
     argv:
     - /app/capture-stopped
     mode: read
@@ -74,6 +78,8 @@ hooks:
   restore:
     component: maintenance
     role: restore
+    required_checks:
+    - RESTORE_OK
     argv:
     - /app/restore-stopped
     mode: write
@@ -85,6 +91,8 @@ hooks:
   verify-restore:
     component: maintenance
     role: verify-restore
+    required_checks:
+    - VERIFY_RESTORE_OK
     argv:
     - /app/verify-index
     mode: read

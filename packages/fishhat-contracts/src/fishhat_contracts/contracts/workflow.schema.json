@@ -330,7 +330,7 @@
         "initial_driver"
       ],
       "additionalProperties": false,
-      "description": "The immutable installed procedure, participant/resource closure, initial driver agreement and child request slots. A ready child retains its complete reviewed Plan and material; a closed continuation intent retains exact scope, predecessor and allowed action without inventing future material or a stale future Plan. Every receiver independently authorizes the full local closure and initial driver, and pins existing local content before preparation. Other participants retain the same proposal digest. Later reviewed Plans and actual output material are attached only by workflow.bind under current authority and exact retained lineage; this does not edit the proposal or admit a child effect. Stored initial intent and accepted bindings survive client loss, transfer and recovery. Procedure phase order is installed, never caller-defined.",
+      "description": "The immutable installed procedure, participant/resource closure, initial driver agreement and child request slots. A ready child retains its complete reviewed Plan and material; a closed continuation intent retains exact scope, predecessor and allowed action without inventing future material or a stale future Plan. Every receiver independently authorizes the full local closure and initial driver, and pins existing local content before preparation. Other participants retain the same proposal digest. Later reviewed Plans and actual output material are attached only by workflow.bind under current authority and exact retained lineage; this does not edit the proposal or admit a child effect. Stored initial intent and accepted bindings survive client loss, transfer and recovery. Procedure phase order is installed, never caller-defined. Reference capsule operations account for their complete supplied capsule bytes and retained history. Workflow cost reports also identify aggregate proposal and evidence bytes transmitted, retained and revisited across every participant, phase and retry. A per-owner linear validation proof establishes only its declared local operation; it cannot qualify end-to-end orchestration. Any implementation of that broader operation must declare its own complete input extent and include replication, all recipients and retries in its linear work proof.",
       "allOf": [
         {
           "if": {
@@ -1258,6 +1258,31 @@
         },
         "witness": {
           "$ref": "records.schema.json#/$defs/Witness"
+        },
+        "request": {
+          "anyOf": [
+            {
+              "$ref": "workflow.schema.json#/$defs/LifecycleRequestAttribution"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "procedure": {
+          "enum": [
+            "host-drain",
+            "interface-binding",
+            "ingress-publication",
+            "secret-rotation",
+            "checkpoint",
+            "relocation",
+            "source-publication",
+            "dns-change",
+            "secret-publication",
+            "raw-maintenance",
+            "runtime-upgrade"
+          ]
         }
       },
       "required": [
@@ -1270,10 +1295,12 @@
         "phase",
         "from_state",
         "action",
-        "witness"
+        "witness",
+        "request",
+        "procedure"
       ],
       "additionalProperties": false,
-      "description": "One independently authorized owner-native admission decision, never a workflow.advance or other transport input. The owner serializes this exact decision with local new-child admission and retains its full input, signed witness and outcome atomically. advance_id shares the immutable transition identity namespace with driver advances and native completion; replay under current native authorization precedes new-generation and reconciliation checks. Exact owner epoch, proposal, predecessor lifecycle, procedure phase, generation and observed driver term are bound. The approval witness names the same owner and workflow, generation expected_generation+1, destination state, and subject_digest of this complete decision excluding witness. The native owner independently authenticates the decision and retains any evidence named by its witness. Pause closes new local child admission, binding and ordinary phase progress. Resume is legal only from paused, restores prepared at the initial phase or active thereafter, and requires independently verified current driver authority, reconciliation of accepted children, holds and current permissions, and no incomplete driver transfer. Preparation closure remains required before new children or phase progress. Require-recovery closes ordinary progress until an explicit successor recovery; it cannot be undone by resume or transfer. Cancel irreversibly closes local future child admission from any nonterminal lifecycle, even during incomplete initial preparation or driver transfer. It does not cancel child Operations, establish that participants stopped, undo effects, release holds or inputs, advance the procedure, or change transfer/driver custody. Uncommitted recovery successors use their existing explicit abandonment path. Each participant remains independently authoritative; one local cancellation never certifies global cancellation. Initially prepared participants may cancel locally without complete preparation closure; never-prepared participants require their positive retire-unprepared tombstones to prevent late preparation. All original proposal, child identity, input, evidence, hold and transfer custody survives every decision; cancellation/recovery evidence remains discoverable for explicit recovery."
+      "description": "One independently authorized owner-native admission decision, never a workflow.advance or other transport input. The owner serializes this exact decision with local new-child admission and retains its full input, signed witness and outcome atomically. advance_id shares the immutable transition identity namespace with driver advances and native completion; replay under current native authorization precedes new-generation and reconciliation checks. Exact owner epoch, proposal, predecessor lifecycle, procedure phase, generation and observed driver term are bound. The approval witness names the same owner and workflow, generation expected_generation+1, destination state, and subject_digest of this complete decision excluding witness. The native owner independently authenticates the decision and retains any evidence named by its witness. Pause closes new local child admission, binding and ordinary phase progress. Resume is legal only from paused, restores prepared at the initial phase or active thereafter, and requires independently verified current driver authority, reconciliation of accepted children, holds and current permissions, and no incomplete driver transfer. Preparation closure remains required before new children or phase progress. Require-recovery closes ordinary progress until an explicit successor recovery; it cannot be undone by resume or transfer. Cancel irreversibly closes local future child admission from any nonterminal lifecycle, even during incomplete initial preparation or driver transfer. It does not cancel child Operations, establish that participants stopped, undo effects, release holds or inputs, advance the procedure, or change transfer/driver custody. Uncommitted recovery successors use their existing explicit abandonment path. Each participant remains independently authoritative; one local cancellation never certifies global cancellation. Initially prepared participants may cancel locally without complete preparation closure; never-prepared participants require their positive retire-unprepared tombstones to prevent late preparation. All original proposal, child identity, input, evidence, hold and transfer custody survives every decision; cancellation/recovery evidence remains discoverable for explicit recovery. request is null for an autonomous owner-native decision, otherwise it retains the exact LifecycleRequest and actual authenticated principal that triggered consideration. Its request_id equals advance_id and owner, workflow, proposal, generation, driver term and action equal the decision. This attribution never converts untrusted request fields into native authority; the witness covers it with the complete protected decision. An accepted requested decision remains discoverable in workflow history with its original attribution after later lifecycle or driver changes. procedure equals the immutable proposal type and is covered by the witness so a standalone LifecycleResult cannot relabel the installed procedure without changing the signed decision."
     },
     "NativeLifecycleReceipt": {
       "type": "object",
@@ -1321,6 +1348,118 @@
       ],
       "additionalProperties": false,
       "description": "Immutable owner-native lifecycle input and finite local outcome in the ordered workflow history. The procedure phase, driver and all custody remain unchanged. State must equal the legal outcome of decision.action from the exact preceding lifecycle state; generation is expected_generation+1. No entry may follow cancellation or completion. Current capsule state must preserve the history outcome, including terminal state, while separately retained recovery abandonment can establish cancellation only without overriding completed history."
+    },
+    "LifecycleRequest": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "workflow_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "request_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "proposal_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "expected_generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "driver_term": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "action": {
+          "enum": [
+            "pause",
+            "resume",
+            "require-recovery",
+            "cancel"
+          ]
+        }
+      },
+      "required": [
+        "owner",
+        "workflow_id",
+        "request_id",
+        "proposal_digest",
+        "expected_generation",
+        "driver_term",
+        "action"
+      ],
+      "additionalProperties": false,
+      "description": "A finite untrusted request for the receiving owner to consider a local lifecycle decision. It supplies no native authority, signature, actor, reconciliation result or caller-selected from_state/phase. The actual authenticated principal needs current scoped administrator lifecycle permission for a new decision; current scoped read permission is checked before accepted-request lookup and disclosure. request_id shares the ordered transition identity namespace with advance_id: the owner permanently reserves its exact canonical input and authenticated attribution with the emitted decision. Exact accepted replay returns the original decision and outcome before generation, driver, lifecycle and new-decision checks, and may be read by a differently authenticated currently permitted reader; original attribution is never rewritten. A changed input or a native/driver transition under the same identity yields CONFLICT. A new request binds this owner epoch, immutable proposal, current local generation and driver term. The owner independently selects current state/phase, authorizes and signs NativeLifecycleDecision, and atomically retains it with local child-admission changes before success. Resume also independently verifies the retained driver current permission and reconciliation; an administrator request does not supply those facts. A driver transfer is still required to change driver identity. Resume cannot bypass terminal or recovery-required state, uncommitted recovery, incomplete transfer or missing reconciliation. Other actions preserve the native lifecycle rules, including local cancellation during incomplete preparation or transfer. PERMISSION_DENIED refuses missing current permissions, OWNER_EPOCH_CHANGED refuses a different receiver epoch, NOT_FOUND refuses an absent workflow, and PRECONDITION_FAILED refuses changed proposal/generation/term, illegal transitions or unmet native prerequisites. Refusal uses the existing typed Problem and grants no transition; read/reconcile before constructing a separately reviewed new request. A lost or unreadable response is acceptance uncertainty, never evidence of refusal. Discover retained request attribution through workflow.get/list and record.read and replay the same exact request. This path never cancels accepted children, releases holds or invents remote cessation."
+    },
+    "LifecycleRequestAttribution": {
+      "type": "object",
+      "properties": {
+        "input": {
+          "$ref": "workflow.schema.json#/$defs/LifecycleRequest"
+        },
+        "authenticated_principal": {
+          "$ref": "common.schema.json#/$defs/Id"
+        }
+      },
+      "required": [
+        "input",
+        "authenticated_principal"
+      ],
+      "additionalProperties": false,
+      "description": "Protected actual receiving-principal attribution and the complete original untrusted request, signed as part of the native decision. This object is produced by the receiver and cannot be submitted as request authority. Replays preserve it byte-for-byte even when a newly authorized reader is different."
+    },
+    "LifecycleResult": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "WorkflowLifecycleResult"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "workflow_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "request_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "request_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "procedure": {
+          "enum": [
+            "host-drain",
+            "interface-binding",
+            "ingress-publication",
+            "secret-rotation",
+            "checkpoint",
+            "relocation",
+            "source-publication",
+            "dns-change",
+            "secret-publication",
+            "raw-maintenance",
+            "runtime-upgrade"
+          ]
+        },
+        "receipt": {
+          "$ref": "workflow.schema.json#/$defs/NativeLifecycleReceipt"
+        }
+      },
+      "required": [
+        "kind",
+        "owner",
+        "workflow_id",
+        "request_id",
+        "request_digest",
+        "procedure",
+        "receipt"
+      ],
+      "additionalProperties": false,
+      "description": "The original accepted requested native decision and its local outcome, not a fresh current-state observation or an Operation acceptance. The request_id and request_digest select receipt.decision.request.input exactly; request attribution is non-null. The receipt generation equals expected_generation+1 and its phase/driver term and legal destination match the signed decision under this installed procedure. Every replay returns these same values, preserving the original principal, even after newer workflow transitions. The receiver separately authenticates the native witness; structural checks and a digest do not establish native truth. Witness evidence remains complete and uncapped. When this result cannot fit a wire frame, return an immutable Workflow RecordReference for its complete retained capsule; read all chunks, verify the exact snapshot, select the unique requested receipt by request_id and request_digest, and reconstruct this same result. Never omit evidence or replace the original receipt with current workflow state. Success proves the local admission decision only, never child termination, global cancellation, rollback, hold release or native qualification."
     }
   }
 }

@@ -84,6 +84,9 @@
     },
     {
       "name": "workflow.recover"
+    },
+    {
+      "name": "workflow.lifecycle"
     }
   ],
   "max_frame_bytes": 1048576,

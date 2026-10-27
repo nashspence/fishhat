@@ -73,8 +73,10 @@ def observation_page(items):
         "format": "deployment-ops/record/v1",
         "kind": "ObservationPage",
         "owner": copy.deepcopy(operation()["owner"]),
+        "traversal": {"id": U, "method": "observe", "selection_digest": "sha256:" + "a" * 64},
+        "position": 0,
         "items": items,
-        "next_cursor": "retained_scope_cursor",
+        "next_cursor": "retained_scope_cursor" if items else None,
     }
 
 
@@ -122,11 +124,14 @@ def test_single_large_observation_preserves_complete_signed_evidence_and_provena
     }
     page = observation_page([reference])
     for method in ("observe", "check"):
+        page["traversal"]["method"] = method
         response = wire(method, page)
         validate("ssh-response.schema.json", response)
         assert read_frame(io.BytesIO(frame(response))) == response
     validate_cli(cli(page))
-    validate_observation_page(page, expected_owner=value["owner"], resources=[value["resource"]])
+    validate_observation_page(
+        page, expected_owner=value["owner"], selection={canonical(value["resource"])}
+    )
     value.update(time="2026-10-24T00:00:00Z", origin="owner-confirmed", generation=8)
     value["witness"]["evidence_digests"].pop()
     decoded = complete_record(snapshot)
@@ -147,17 +152,24 @@ def test_observation_page_binds_empty_replies_and_mixed_representations_to_query
     page = observation_page([first, reference])
     context = {
         "expected_owner": first["owner"],
-        "resources": [first["resource"], second["resource"]],
+        "selection": {canonical(first["resource"]), canonical(second["resource"])},
     }
     validate_observation_page(page, **context)
+    with pytest.raises(ContractError, match="traversal changed"):
+        validate_observation_page(
+            page, **context, expected_traversal={**page["traversal"], "id": V}
+        )
+    with pytest.raises(ContractError, match="position changed"):
+        validate_observation_page(page, **context, expected_position=1)
     with pytest.raises(ContractError, match="outside requested selection"):
         validate_observation_page(
-            page, expected_owner=first["owner"], resources=[first["resource"]]
+            page, expected_owner=first["owner"], selection={canonical(first["resource"])}
         )
     page["items"].append(second)
     with pytest.raises(ContractError, match="repeats resource"):
         validate_cli(cli(page))
     page["items"] = []
+    page["next_cursor"] = None
     validate_observation_page(page, **context)
     page["owner"]["epoch"] = V
     with pytest.raises(ContractError, match="owner epoch changed"):

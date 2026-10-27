@@ -392,6 +392,11 @@ def validate_result_payload(
     )
     _require(not any(validator.iter_errors(value)), "result payload violates action schema")
     action = operation["subject"]["action"]
+    if action == "app.backup":
+        from .checkpoints import validate_checkpoint
+
+        validate_checkpoint(value)
+        _require(value["owner"] == operation["owner"], "checkpoint result owner mismatch")
     if action == "adapter.execute":
         selected = _adapter_result_contract(
             operation["subject"]["arguments"],
@@ -451,6 +456,10 @@ def validate_cli_result(
     kind = result.get("kind")
     if kind == "Operation":
         validate_operation(result, recovery_readers=recovery_readers)
+    elif kind == "Checkpoint":
+        from .checkpoints import validate_checkpoint
+
+        validate_checkpoint(result)
     elif kind == "Workflow":
         validate_workflow(result, recovery_readers=recovery_readers)
     elif kind == "ContentStaging":
@@ -463,6 +472,10 @@ def validate_cli_result(
         from .workflow_unprepared import validate_never_prepared
 
         validate_never_prepared(result)
+    elif kind == "WorkflowLifecycleResult":
+        from .workflow_lifecycle import validate_lifecycle_result
+
+        validate_lifecycle_result(result)
     elif kind == "ObservationPage":
         from .record_delivery import validate_observation_page
 

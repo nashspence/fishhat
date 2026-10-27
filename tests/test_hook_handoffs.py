@@ -66,6 +66,8 @@ def request(role="restore"):
     }
     return {
         "format": "deployment-ops/hook/v1",
+        "procedure_digest": "sha256:" + "a" * 64,
+        "required_checks": ["VERIFICATION_OK"],
         "id": "00000000-0000-4000-8000-000000000001",
         "operation_id": "00000000-0000-4000-8000-000000000002",
         "release_digest": D,

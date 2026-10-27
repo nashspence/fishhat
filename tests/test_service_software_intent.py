@@ -50,6 +50,7 @@ def selected(role="service", names=("web",)):
         "id": "independent.example-" + role,
         "roles": [role],
         "entrypoint": "bin/adapter",
+        "process_protocol": "fishhat.adapter-process/v1",
         "configuration_schema": empty,
         "component_schema": empty,
         "source_schema": source,

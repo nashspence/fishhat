@@ -76,6 +76,7 @@ def installed(role, *, observe_only=False, endpoint="protected-target", generati
         "id": "independent.example-" + role,
         "roles": [role],
         "entrypoint": "bin/adapter",
+        "process_protocol": "fishhat.adapter-process/v1",
         "configuration_schema": configuration_schema,
         "component_schema": empty,
         "source_schema": empty,

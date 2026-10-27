@@ -46,68 +46,7 @@
           "const": "observe"
         },
         "params": {
-          "type": "object",
-          "properties": {
-            "resources": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "kind": {
-                    "enum": [
-                      "domain",
-                      "host",
-                      "app",
-                      "source",
-                      "dns",
-                      "recovery",
-                      "publisher",
-                      "backend",
-                      "adapter",
-                      "interface",
-                      "dataset",
-                      "component"
-                    ]
-                  },
-                  "id": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 160
-                  }
-                },
-                "required": [
-                  "kind",
-                  "id"
-                ],
-                "additionalProperties": false
-              },
-              "minItems": 1,
-              "uniqueItems": true
-            },
-            "cursor": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 256
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "limit": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 256
-            }
-          },
-          "required": [
-            "resources",
-            "cursor",
-            "limit"
-          ],
-          "additionalProperties": false
+          "$ref": "observation.schema.json#/$defs/Request"
         }
       },
       "required": [
@@ -133,68 +72,7 @@
           "const": "check"
         },
         "params": {
-          "type": "object",
-          "properties": {
-            "resources": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "kind": {
-                    "enum": [
-                      "domain",
-                      "host",
-                      "app",
-                      "source",
-                      "dns",
-                      "recovery",
-                      "publisher",
-                      "backend",
-                      "adapter",
-                      "interface",
-                      "dataset",
-                      "component"
-                    ]
-                  },
-                  "id": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 160
-                  }
-                },
-                "required": [
-                  "kind",
-                  "id"
-                ],
-                "additionalProperties": false
-              },
-              "minItems": 1,
-              "uniqueItems": true
-            },
-            "cursor": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 256
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "limit": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 256
-            }
-          },
-          "required": [
-            "resources",
-            "cursor",
-            "limit"
-          ],
-          "additionalProperties": false
+          "$ref": "observation.schema.json#/$defs/Request"
         }
       },
       "required": [
@@ -942,7 +820,7 @@
             "staging_id"
           ],
           "additionalProperties": false,
-          "description": "Verify complete declared size and digest, then durably expose one immutable handle. Same-ID retries return the same committed identity. Commit does not authorize an operation; its exact handle must enter a reviewed plan and be pinned by durable operation admission."
+          "description": "Verify complete declared size and digest, then durably expose one immutable handle. Same-ID retries return the same committed identity. Commit grants no observation or mutation permission. Each consumer independently verifies the exact retained custody and current scoped authority required by its contract; mutation inputs remain subject to reviewed planning and durable operation admission."
         }
       },
       "required": [
@@ -1378,6 +1256,32 @@
         },
         "params": {
           "$ref": "workflow.schema.json#/$defs/InputReference"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "params"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "workflow.lifecycle"
+        },
+        "params": {
+          "$ref": "workflow.schema.json#/$defs/LifecycleRequest"
         }
       },
       "required": [

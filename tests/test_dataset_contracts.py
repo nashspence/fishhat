@@ -175,6 +175,8 @@ def test_rebuild_procedures_have_explicit_hook_wire_roles(role, mode):
         "hook-request.schema.json",
         {
             "format": "deployment-ops/hook/v1",
+            "procedure_digest": "sha256:" + "a" * 64,
+            "required_checks": ["VERIFICATION_OK"],
             "id": "00000000-0000-4000-8000-000000000001",
             "operation_id": "00000000-0000-4000-8000-000000000002",
             "release_digest": "sha256:" + "a" * 64,
@@ -207,9 +209,8 @@ def test_multi_dataset_checkpoint_declares_its_consistency_claim(scope, evidence
     d = "sha256:" + "a" * 64
     dataset = {
         "capture_digest": d,
-        "native_format": "synthetic.snapshot",
-        "consistency": "individually-consistent",
-        "snapshot_id": "snapshot:first",
+        "backup_digest": d,
+        "verification_digest": d,
     }
     value = {
         "format": "deployment-ops/record/v1",
@@ -218,9 +219,17 @@ def test_multi_dataset_checkpoint_declares_its_consistency_claim(scope, evidence
         "app_instance": "prod:" + "a" * 64,
         "owner": OWNER,
         "release_digest": d,
-        "datasets": {"database": dataset, "files": {**dataset, "snapshot_id": "snapshot:second"}},
+        "datasets": {"database": dataset, "files": copy.deepcopy(dataset)},
         "secret_generations": [],
-        "backup_backend": "backup",
+        "backup_executor": {
+            "instance": "backup",
+            "role": "backup",
+            "installation_digest": d,
+            "configuration_digest": d,
+            "instance_generation": 1,
+            "instance_digest": d,
+            "scope": {"authority": OWNER["id"], "kind": "backup-repository", "handle": "backup"},
+        },
         "recovery_closure": [d],
         "verified_at": "2026-10-24T00:00:00Z",
         "restore_tested_at": None,

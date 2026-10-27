@@ -44,12 +44,19 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 512
+          },
+          "requirement": {
+            "enum": [
+              "mandatory",
+              "diagnostic"
+            ]
           }
         },
         "required": [
           "code",
           "passed",
-          "summary"
+          "summary",
+          "requirement"
         ],
         "additionalProperties": false
       },
@@ -69,7 +76,7 @@
           "bytes": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 10737418240
+            "maximum": 9007199254740991
           },
           "digest": {
             "type": "string",
@@ -86,6 +93,48 @@
         "additionalProperties": false
       },
       "minItems": 0
+    },
+    "operation_id": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+    },
+    "release_digest": {
+      "type": "string",
+      "minLength": 71,
+      "maxLength": 71,
+      "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
+    },
+    "executor_component": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 24,
+      "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
+    },
+    "role": {
+      "enum": [
+        "health",
+        "configure",
+        "verify-config",
+        "dependency-check",
+        "busy",
+        "quiesce",
+        "transition-assess",
+        "transition-apply",
+        "transition-verify",
+        "capture",
+        "restore",
+        "verify-restore",
+        "rebuild",
+        "verify-rebuild"
+      ]
+    },
+    "procedure_digest": {
+      "$ref": "common.schema.json#/$defs/Digest",
+      "description": "Digest of the independently accepted exact hook procedure and its result requirements. The receiving owner supplies this binding from retained source; request fields cannot replace that source authority."
+    },
+    "request_digest": {
+      "$ref": "common.schema.json#/$defs/Digest"
     }
   },
   "required": [
@@ -94,7 +143,14 @@
     "outcome",
     "effects",
     "checks",
-    "artifacts"
+    "artifacts",
+    "operation_id",
+    "release_digest",
+    "executor_component",
+    "role",
+    "procedure_digest",
+    "request_digest"
   ],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "description": "Exact result of one accepted hook invocation. request_digest covers its complete canonical request; operation, release, executor, role and procedure pins match that request. Check codes and artifact paths are unique. The mandatory check set equals the receiving owner's independently retained accepted procedure requirements; diagnostic checks cannot weaken it. Succeeded requires every mandatory check to pass and effects to be known or none; unknown effects cannot establish success. Observational roles assert effects none for success: this excludes mutation of managed datasets, configuration or external systems, while allowing artifacts in the isolated output directory. Failed, unsupported and unknown results never advance a required phase. A failed mandatory check cannot coexist with succeeded; failed diagnostic checks alone do not block success. Artifacts name canonical relative regular-file paths below the isolated output directory, with no duplicates or ancestor/descendant conflicts. The owner independently opens/confines them, verifies every exact byte and commits immutable result/artifact custody before consuming success. Missing, changed, aliased or unretained artifacts keep the operation unresolved. Replaying a retained result preserves the original observation and cannot establish fresh health, quiescence or verification for a different request."
 }

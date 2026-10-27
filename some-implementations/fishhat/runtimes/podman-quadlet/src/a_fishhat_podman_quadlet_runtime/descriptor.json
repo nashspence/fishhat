@@ -105,5 +105,6 @@
       "files"
     ],
     "additionalProperties": false
-  }
+  },
+  "process_protocol": "fishhat.adapter-process/v1"
 }

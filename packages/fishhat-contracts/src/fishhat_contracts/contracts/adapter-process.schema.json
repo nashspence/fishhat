@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fishhat.invalid/contracts/adapter-process.schema.json",
+  "type": "object",
+  "properties": {
+    "format": {
+      "const": "fishhat.adapter-process/v1"
+    },
+    "mode": {
+      "enum": [
+        "mutation",
+        "query"
+      ]
+    },
+    "role": {
+      "enum": [
+        "runtime",
+        "compute",
+        "storage",
+        "capture",
+        "backup",
+        "secret-source",
+        "credential-issuer",
+        "dns",
+        "ingress",
+        "network",
+        "software",
+        "service",
+        "repository",
+        "build",
+        "report",
+        "bootstrap-source"
+      ]
+    },
+    "executor": {
+      "$ref": "adapter.schema.json#/$defs/InstanceReference"
+    },
+    "request": {
+      "$ref": "adapter.schema.json#/$defs/Artifact"
+    },
+    "configuration": {
+      "$ref": "adapter.schema.json#/$defs/Artifact"
+    },
+    "inputs": {
+      "$ref": "adapter.schema.json#/$defs/Artifact"
+    }
+  },
+  "required": [
+    "format",
+    "mode",
+    "role",
+    "executor",
+    "request",
+    "configuration",
+    "inputs"
+  ],
+  "additionalProperties": false,
+  "description": "One fixed independent executable protocol. The owner resolves the descriptor entrypoint inside the exact independently approved immutable installation and executes it directly, without a shell, with argv [entrypoint, \"invoke\"]. The current directory is a new protected owner-created per-invocation directory, never the caller repository or home. The complete environment is exactly LANG=C.UTF-8, LC_ALL=C.UTF-8 and TZ=UTC; native dependencies use independently approved absolute executable identities, not an inherited PATH, HOME, PYTHONPATH, loader or runtime variable. Only stdin/stdout/stderr and explicitly owner-provisioned handles are inherited; stdin is closed EOF. process.json is this canonical manifest. request.json contains the exact canonical Invocation for mutation or typed role Request for query. configuration.json contains the exact approved instance configuration, matching executor.configuration_digest. inputs.ndjson contains every required immutable protected input as canonical Input lines followed by LF; input files are at inputs/<sha256 hex>. These files and the installation are owner-confined, immutable and read-only to the process. The owner verifies every request/configuration/manifest/artifact byte, approved executor, current authority and required scope before launch. Native alias, regular-file, ownership, symlink, mount, handle-leak and isolation checks are owner duties; matching paths never establishes authority. A query must be an observational method; reconciliation receives its original retained invocation, never dispatches it, and cannot mutate as a retry. The owner provisions only this approved input closure and an isolated writable output area. Output typed Response bytes are canonical JSON at output/response.json, committed atomically before advertising completion. Every locally transferred material artifact selected by the role-owned typed result uses output/artifacts/<sha256 hex>, with hex equal to its declared digest; publish each complete regular file atomically before Completion. The role contract and accepted handoff select the complete required local material closure, including all returned material for capture.capture and build.build. Observing remote Artifact metadata does not establish local custody or implicitly request a material transfer. Repeated digest/size references share one file even when their contextual media types differ; conflicting byte identities reject. Exact independently retained immutable owner bytes may satisfy a repeated material identity without a redundant output file, but historical metadata or provider availability claims cannot. The receiving owner acquires stable immutable custody through independently verified confinement and native lifetime controls, then verifies every selected byte, digest and size and commits complete custody before claiming materialization or operation success. Hashing a mutable output alone does not establish custody. Missing, changed or incomplete material leaves that handoff unresolved while preserving the exact verified Response and confirmed native effects; it never authorizes mutation redispatch. Reconciliation may re-export already retained original outputs without repeating the mutation. Unreferenced files never become accepted result material. stdout contains exactly one canonical Completion record and one LF, with no diagnostic output. stderr is diagnostic bytes only, streamed to owner custody and never parsed as authority. This transport adds no total-file-size, diagnostic-stream-size or collection-count cap. Existing descriptor, provider-schema and configuration admission profiles remain required before launch; they are not widened by file transport. Bounded chunks and owner resource capacity failures cannot silently truncate accepted evidence. Parsing a complete typed JSON value may require proportional local memory; capacity failure remains explicit unresolved work. Transport completion covers the response handoff only and is separate from material custody and operation success: the typed effect task state, certainty and postcondition retain their own meaning even after a successful process exit. Completion requires exact complete response digest/size/schema/request correlation, zero process exit, no timeout and independently verified cessation of all invocation children. A valid response is retained even if exit, timeout or child state prevents completion; those transport facts cannot erase its confirmed effect evidence. Missing, malformed, truncated or substituted response, nonzero exit, timeout, signal or unknown/surviving children leave execution/cessation unresolved and preserve original invocation and all collected evidence. Killing a process is not a cancellation receipt; the owner reconciles, never redispatches the original mutation. This contract and its reference codec/harness do not qualify native isolation, authentication, supervision or deployment.",
+  "$defs": {
+    "Input": {
+      "type": "object",
+      "properties": {
+        "artifact": {
+          "allOf": [
+            {
+              "$ref": "adapter.schema.json#/$defs/Artifact"
+            },
+            {
+              "properties": {
+                "media_type": {
+                  "const": "application/octet-stream"
+                }
+              }
+            }
+          ]
+        },
+        "path": {
+          "type": "string",
+          "pattern": "^inputs/[0-9a-f]{64}(?![\\s\\S])",
+          "minLength": 71,
+          "maxLength": 71
+        }
+      },
+      "required": [
+        "artifact",
+        "path"
+      ],
+      "additionalProperties": false,
+      "description": "Exactly one protected byte sequence per digest at its deterministic content-addressed relative path. Path hex equals artifact digest hex. The manifest uses application/octet-stream; contextual media types remain in exact typed request artifacts. Repeated references to the same digest and size share one entry and one verification, including references with different contextual media types. Conflicting sizes for a digest reject. Complete manifest entries match the independently retained required input byte closure, with no omitted, additional or duplicate file. One canonical line is at most 4096 bytes; this bounds a fixed-shape entry, never the number of entries."
+    },
+    "Completion": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "fishhat.adapter-process-result/v1"
+        },
+        "response": {
+          "$ref": "adapter.schema.json#/$defs/Artifact"
+        }
+      },
+      "required": [
+        "format",
+        "response"
+      ],
+      "additionalProperties": false,
+      "description": "Exactly one canonical JSON line no larger than 1024 bytes including LF. response media_type is application/json. This record advertises output/response.json identity; it is not a success assertion or an alternate Response. Process and child cessation are independently checked. Diagnostics belong exclusively on stderr."
+    }
+  }
+}

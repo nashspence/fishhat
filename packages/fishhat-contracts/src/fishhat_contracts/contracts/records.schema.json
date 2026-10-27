@@ -2379,29 +2379,22 @@
                 "type": "string",
                 "minLength": 71,
                 "maxLength": 71,
-                "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
+                "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])",
+                "description": "Digest of the complete canonical signed succeeded adapter.execute Operation for capture.capture. Its exact result_handle selects a capture RetainedResult in recovery_closure; the retained invocation and response resolve one Snapshot for this dataset. This is not a digest of raw captured bytes or of the Snapshot alone."
               },
-              "native_format": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 160
+              "backup_digest": {
+                "$ref": "common.schema.json#/$defs/Digest",
+                "description": "Digest of the canonical signed succeeded backup.store Operation. Its retained result binds the exact historical backup_executor, repository, sealed immutable object and complete artifact set containing this dataset Snapshot's artifacts. Several datasets may share one object without duplicating its closure."
               },
-              "consistency": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 512
-              },
-              "snapshot_id": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 256
+              "verification_digest": {
+                "$ref": "common.schema.json#/$defs/Digest",
+                "description": "Digest of the canonical signed succeeded backup.verify Operation for the same executor, repository, object and complete artifacts as backup_digest. Its retained result must establish sealed and available retrieval. A store receipt or a restore-tested timestamp cannot substitute for this verification."
               }
             },
             "required": [
               "capture_digest",
-              "native_format",
-              "consistency",
-              "snapshot_id"
+              "backup_digest",
+              "verification_digest"
             ],
             "additionalProperties": false
           }
@@ -2417,11 +2410,20 @@
           "minItems": 0,
           "uniqueItems": true
         },
-        "backup_backend": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 24,
-          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
+        "backup_executor": {
+          "allOf": [
+            {
+              "$ref": "adapter.schema.json#/$defs/InstanceReference"
+            },
+            {
+              "properties": {
+                "role": {
+                  "const": "backup"
+                }
+              }
+            }
+          ],
+          "description": "Exact historical backup enrollment, artifact, configuration, generation and scope used by every referenced store and verify receipt. Resolve this identity from retained approved custody, never by looking up a mutable backend alias. A current restore executor is independently authorized and does not rewrite this producer identity."
         },
         "recovery_closure": {
           "type": "array",
@@ -2432,7 +2434,8 @@
             "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
           },
           "minItems": 1,
-          "uniqueItems": true
+          "uniqueItems": true,
+          "description": "Complete retained closure includes the accepted release, secret generations, any quiescence evidence, every dataset's three signed Operation snapshots, their exact result_handle payloads, all Snapshot and backup-object artifacts, and the installed compatible readers and protected historical enrollment/configuration needed to interpret them. Receipt and payload digests hash canonical JSON; material digests hash original bytes. The checkpoint witness authenticates membership, while native retention and verified materialization establish custody. Missing members block recovery explicitly; current aliases or client caches cannot substitute."
         },
         "verified_at": {
           "$ref": "common.schema.json#/$defs/Time"
@@ -2611,7 +2614,7 @@
         "release_digest",
         "datasets",
         "secret_generations",
-        "backup_backend",
+        "backup_executor",
         "recovery_closure",
         "verified_at",
         "restore_tested_at",
@@ -2620,7 +2623,7 @@
         "quiescence_evidence"
       ],
       "additionalProperties": false,
-      "description": "A complete checkpoint binds every required captured dataset, accepted release and secret generations, independent signed native capture receipts and verified backup snapshot identity. Its witness subject covers the entire canonical checkpoint body excluding the witness, including consistency_scope and quiescence_evidence. Application-quiesced requires one verifiable writer fence and capture cohort; independent-datasets is explicitly not an application-atomic recovery point. No missing dataset or inconsistent archive may be silently omitted.",
+      "description": "A complete checkpoint binds exactly every preserved application-owned dataset selected by the accepted release, its secret generations, signed capture/store/verify Operation receipts and exact historical backup executor. Resolve each receipt through its immutable result_handle to the existing typed RetainedResult, reapply original invocation/output joins and authenticate the signed Operation with independently trusted owner keys. Capture must return one consistently captured Snapshot for the named dataset; backup verification must cover the same sealed object and all snapshot artifacts. Its checkpoint-kind, verified-state witness subject covers the entire canonical body excluding witness. Application-quiesced requires one verifiable writer fence and capture cohort and quiesced snapshots; independent-datasets is not an application-atomic recovery point. A fresh owner reconstructs these same snapshots and objects before independently authorizing current retrieval/restore and verifying actual bytes. No missing dataset, closure member or inconsistent archive may be omitted.",
       "allOf": [
         {
           "if": {
@@ -4580,6 +4583,14 @@
         "kind": {
           "const": "ObservationPage"
         },
+        "traversal": {
+          "$ref": "observation.schema.json#/$defs/Traversal"
+        },
+        "position": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
         "items": {
           "type": "array",
           "items": {
@@ -4627,12 +4638,14 @@
       "required": [
         "format",
         "kind",
+        "traversal",
+        "position",
         "items",
         "next_cursor",
         "owner"
       ],
       "additionalProperties": false,
-      "description": "A bounded complete page of one permission-filtered owner observation traversal, retaining the owner epoch even when empty. Each inline observation and exact Observation RecordReference names that same owner and one distinct resource within the independently retained request selection. References pin their resource before disclosure and their complete payload must be verified before claiming inspection. Continuations retain the authenticated principal, exact selection and owner epoch; concurrent changes must not silently omit retained entries. A non-null cursor requires continuation before claiming the traversal is complete. A single large observation uses its exact immutable reference, never truncated evidence or a new total collection limit. Page and snapshot owner identify the attributed observation owner, not an intermediary transport or cache. Cached and caller-reported observations preserve their declared origin, owner epoch and original time; snapshotting never relabels them as fresh evidence. Current custody of prior epochs uses the separate history protocol rather than rewriting original ownership."
+      "description": "A bounded complete page of one retained owner observation traversal, retaining its owner epoch, traversal identity and zero-based starting position even when empty. position plus item count is the next page position; a nonterminal page must make progress. Each inline observation and exact Observation RecordReference names that same owner and one distinct resource within the independently retained ordered selection. References pin their resource before disclosure and their complete payload must be verified before claiming inspection. Continuations send only owner, cursor and limit, preserving the authenticated principal, method, exact selection and immutable snapshot without retransmitting or rescanning the selection. Concurrent changes never alter retained entries. Every page separately checks current read permission; denial, expiry or lost custody fails explicitly rather than silently omitting data or restarting. A non-null cursor requires continuation before claiming the traversal is complete. A single large observation uses its exact immutable reference, never truncated evidence or a new total collection limit. Page and snapshot owner identify the attributed observation owner, not an intermediary transport or cache. Cached and caller-reported observations preserve their declared origin, owner epoch and original time; snapshotting never relabels them as fresh evidence. Current custody of prior epochs uses the separate history protocol rather than rewriting original ownership."
     },
     "EventPage": {
       "type": "object",

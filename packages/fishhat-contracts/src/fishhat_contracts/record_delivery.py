@@ -10,7 +10,7 @@ import base64
 import binascii
 import copy
 import hashlib
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Set
 from typing import Any, cast
 
 from .bounds import Bounds, bounds
@@ -303,17 +303,26 @@ def validate_observation_page(
     page: dict[str, Any],
     *,
     expected_owner: dict[str, Any],
-    resources: list[dict[str, Any]] | None = None,
+    selection: Set[bytes] | None = None,
+    expected_traversal: dict[str, Any] | None = None,
+    expected_position: int | None = None,
     retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None = None,
 ) -> None:
     """Join inline/reference observations to the retained query, including empty replies.
 
-    Query matching does not authorize disclosure. The native owner independently
-    checks current principal permission for each protected resource and snapshot.
+    The caller indexes its complete selection once, then supplies that retained
+    index across pages; this function never rescans it. Query matching does not
+    authorize disclosure. Native owners check current permission for every read.
     """
     validate("records.schema.json", page, "ObservationPage")
     _require(page["owner"] == expected_owner, "observation page owner epoch changed")
-    selected = None if resources is None else {canonical(resource) for resource in resources}
+    if expected_traversal is not None:
+        _require(page["traversal"] == expected_traversal, "observation traversal changed")
+    if expected_position is not None:
+        _require(page["position"] == expected_position, "observation page position changed")
+    _require(
+        bool(page["items"]) or page["next_cursor"] is None, "observation page made no progress"
+    )
     seen: set[bytes] = set()
     for item in page["items"]:
         _require(item["owner"] == expected_owner, "observation page contains another owner epoch")
@@ -329,7 +338,7 @@ def validate_observation_page(
         _require(identity not in seen, "observation page repeats resource")
         seen.add(identity)
         _require(
-            selected is None or identity in selected, "observation outside requested selection"
+            selection is None or identity in selection, "observation outside requested selection"
         )
 
 
