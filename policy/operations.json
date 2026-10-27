@@ -2405,12 +2405,12 @@
     "fishhat/domain-ops/src/fishhat_domain/cli.py": "c8e1242a73f5a670e836a35cbb92ffffab44496aff92d198ea80ab14e3279a57",
     "fishhat/host-ops/pyproject.toml": "3cc402bda8fd5e83e36d0bd5a299d0e6904535c69c992754e1aa169f37f88bd6",
     "fishhat/host-ops/src/fishhat_host/cli.py": "d8457ca822e6d01be0b1301fb439ef9f5ed74b6224aca2d85feb189dadeb611c",
-    "packages/fishhat-contracts/src/fishhat_contracts/contracts/actions.json": "ee298499602608467fd2ed40650e5b0fdf0aa7f022ac5bd46780fb8c6d87a396",
-    "packages/fishhat-contracts/src/fishhat_contracts/contracts/client-commands.json": "a8e2c6238b3942b68c82a7ea21c5d01540dbedf468518d4495fdbd4337ea878e",
+    "packages/fishhat-contracts/src/fishhat_contracts/contracts/actions.json": "b1c648decfaafc846a0d137d5985daf21e2980ebbb32e8ffdd02bdf64503cb83",
+    "packages/fishhat-contracts/src/fishhat_contracts/contracts/client-commands.json": "934c5c78f20144f7ceba024b7374404a45d204c1f8d45b32d55fe374c64513e3",
     "packages/fishhat-contracts/src/fishhat_contracts/contracts/owner-cli.json": "e17ccb02d490f04ac4838a80c903602c4cf6fbe4f367cf393012a636bed5d6d4",
     "packages/fishhat-contracts/src/fishhat_contracts/contracts/ssh-methods.json": "5862d766a0f9bc68f172c4252b442a2c7982f9b91778def1ecffa466e62211d7",
     "policy/components.toml": "d83506dc63602aec3932e1ac35244efca0db494a38a5d4cd9ec94c68476b235c",
-    "policy/interfaces.json": "a0d73b8a6ee0e55cb455cbe2c985372ee7781a578bfd18abf878133c764b0fba",
+    "policy/interfaces.json": "b1e4e8213a57ebb0af7d8c5f2813703fd1f17db01bcc277f70035e3be7713860",
     "policy/operation-coverage.toml": "a4f3f76cdbb755ea03ba39eb36ccc5ebcd682f6aabaacaa5fb88f849d42c54c4",
     "release.toml": "87a48bd19f97e977b2be6d6399b1d60a911dcf66ed9b81b59386d8fb7a624996",
     "some-implementations/fishhat/backup/restic/pyproject.toml": "665f88e34c00d431e829678503ae3bb7075294d0db3f303c318f87dbdab651e8",
@@ -2449,7 +2449,7 @@
     "some-implementations/fishhat/storage/ext4-filesystem/pyproject.toml": "c44f077b5697e948c3a6c2f7bcd4d2061d60521f45ad5b3596c67cbd0d9c1e3f",
     "some-implementations/fishhat/storage/xfs-project/pyproject.toml": "73e00e3691845add0fc45f4d7286bb87bff35a62083f3d310b63694b61da03af",
     "tests/test_component_policy.py": "c0dc4caac33970b91fd691000cef1e15ecf971c46704fa16f40b29023649856d",
-    "tests/test_linear_growth.py": "67b21abf8e8197aa2a60a98171690536e35ced69adb38fbb10fbe5b59fab10c8",
+    "tests/test_linear_growth.py": "238c554ee57c932a2b14c605a17d40bc17e40b979e3b4936cc5ae49f60b2885d",
     "tests/test_operation_coverage.py": "349ee26855d8bb1770024322fa98402ab79dfcda65aecfbe7b431c47dfb70a10"
   }
 }

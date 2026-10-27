@@ -28,7 +28,8 @@
         "allocation",
         "limits"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "Plan the same finite limit patch as set-limits against the effective allocation envelope. Listed quantity/target pairs change; omitted pairs retain their effective values. Planning does not remove, reset or authorize a limit."
     },
     "set-limits": {
       "type": "object",
@@ -56,7 +57,8 @@
         "allocation",
         "limits"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "Apply a patch of the listed quantity/target pairs to this allocation. Omitted pairs retain their existing effective values; omission never removes a controlled limit. V1 admits only explicit finite quantities and has no removal, reset, inherit or unlimited sentinel. Before effects, the executor verifies that the resulting envelope, including retained limits, is supported and internally consistent; for example memory-high cannot exceed memory-max when both are controlled. Unsupported patches reject explicitly. Partial application or unverified preservation remains unresolved and cannot establish success. Successful output confirms exactly the changed pairs, while observe reports the complete effective envelope across pages."
     },
     "observe": {
       "type": "object",
@@ -141,7 +143,7 @@
         "counters"
       ],
       "additionalProperties": false,
-      "description": "The selected allocation, observed effective limits, and separately identified usage counters. A successful set-limits result must contain exactly the requested quantity/target/value/unit set; extra, missing or changed limits cannot establish success. Observation with no known allocation uses null and empty collections."
+      "description": "Observed quantities for the exact allocation. Successful set-limits and its reconciliation confirm exactly the requested patch quantity/target/value/unit set; extra, missing or changed pairs cannot establish success. Pairs omitted from the patch retain their prior effective values and are not repeated in the successful mutation output. Observe reports all effective controlled limits across its pages, including pairs omitted from the last patch. Observation with no known allocation uses null and empty collections."
     },
     "Response": {
       "oneOf": [
@@ -492,7 +494,7 @@
       ]
     },
     "Limit": {
-      "description": "One explicitly named requirement, unique by quantity and target. cpu-max is thousandths of one CPU (1000 permits one CPU-second per wall-clock second), not cumulative CPU time. Weights are normalized 1..10000 within a contention group and are not hard ceilings. Memory high is the pressure threshold, memory max and swap max are hard ceilings; task/tmpfs bounds cover descendants. I/O rates select an approved opaque logical device/domain target; native locators remain adapter-owned. Unsupported requirements must reject or remain explicitly unresolved, never be silently dropped.",
+      "description": "One explicitly named requirement, unique by quantity and target. cpu-max is thousandths of one CPU (1000 permits one CPU-second per wall-clock second), not cumulative CPU time. Weights are normalized 1..10000 within a contention group and are not hard ceilings. Memory high is the pressure threshold, memory max and swap max are hard ceilings; task/tmpfs bounds cover descendants. I/O rates select an approved opaque logical device/domain target; native locators remain adapter-owned. Unsupported requirements must reject or remain explicitly unresolved, never be silently dropped. V1 admits only finite effective quantities: null, removal, reset, inherit and unlimited values are not supported. Omission from a set-limits patch preserves the existing effective value.",
       "oneOf": [
         {
           "type": "object",
@@ -781,6 +783,34 @@
           "additionalProperties": false
         }
       ]
+    },
+    "RetainedResult": {
+      "description": "Complete durable evidence for one adapter.execute mutation. Retain the exact invocation and full direct or reconciliation response, including method, request digest, coverage, effect identity and typed output. Invocation owner, operation, executor and original request bytes must match the accepted Operation. Reconciliation reconstructs its request from this unchanged invocation and retains its original response method and request digest. Readers apply the same method-specific semantics as direct responses, including successful-output identity and custody; a succeeded Operation requires terminal known satisfied evidence. This record neither authenticates an owner nor grants native authority.",
+      "type": "object",
+      "properties": {
+        "invocation": {
+          "allOf": [
+            {
+              "$ref": "adapter.schema.json#/$defs/Invocation"
+            },
+            {
+              "properties": {
+                "request": {
+                  "$ref": "#/$defs/MutationRequest"
+                }
+              }
+            }
+          ]
+        },
+        "response": {
+          "$ref": "#/$defs/Response"
+        }
+      },
+      "required": [
+        "invocation",
+        "response"
+      ],
+      "additionalProperties": false
     }
   },
   "oneOf": [

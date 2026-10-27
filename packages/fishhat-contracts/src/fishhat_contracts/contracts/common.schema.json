@@ -291,7 +291,7 @@
         "digest"
       ],
       "additionalProperties": false,
-      "description": "The exact installed closed result schema. Digest is SHA-256 over canonical {root: uri, documents: {document URI: complete schema document}} containing the root document and every transitively referenced local document. Resolve references only from the approved installed schema set, never by fetching the URI. A caller-supplied identity does not approve a schema. The supported closed subset uses static references and JSON Pointer fragments; nested schema IDs, dynamic references and unresolved targets are rejected, not approximated."
+      "description": "The exact installed closed input or result schema. Digest is SHA-256 over canonical {root: uri, documents: {document URI: complete schema document}} containing the root document and every transitively referenced local document. Resolve references only from the approved installed schema set, never by fetching the URI. A caller-supplied identity does not approve a schema. Every schema document declares JSON Schema Draft 2020-12 at its root. Other dialects and nested dialect declarations reject; evaluation preserves the declared dialect and structural uniqueness semantics across references without rewriting the published documents or their identity. The supported closed subset uses static references and JSON Pointer fragments; nested schema IDs, dynamic references and unresolved targets are rejected, not approximated."
     },
     "HandleBinding": {
       "oneOf": [

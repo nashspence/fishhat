@@ -57,7 +57,8 @@
         "pattern": "^[a-z][a-z0-9-]*(?:[./][a-z][a-z0-9-]*)+(?![\\s\\S])"
       },
       "minItems": 0,
-      "uniqueItems": true
+      "uniqueItems": true,
+      "description": "Exact implemented role methods. Every mutating method requires the same role reconciliation method; role membership alone does not establish that capability. Mutation admission also requires current observe authority for the same accepted instance and scope so uncertain effects can be inspected without replacing the executor identity. Later permission revocation remains effective and may block recovery."
     },
     "native_qualified": {
       "const": false
@@ -903,7 +904,7 @@
         "native_dependencies"
       ],
       "additionalProperties": false,
-      "description": " Native qualification requires passing linear-growth and complete-extent cases in addition to the independently selected behavioral cases. Complete extent includes all pages and chunks; a total-list bound requires explicit maintainer approval before accepting or merging the implementation."
+      "description": "Native qualification requires passing linear-growth and complete-extent cases in addition to the independently selected behavioral cases. The receiving owner supplies the exact implemented method set from its approved descriptor. Every mutator also requires a passing reconcile-<role>-<method> case covering lost acknowledgment, independently reconstructed original input, and recovery of complete method-specific output without redispatch. A generic smoke or reconciliation case cannot qualify another method. Complete extent includes all pages and chunks; a total-list bound requires explicit maintainer approval before accepting or merging the implementation."
     },
     "Snapshot": {
       "type": "object",
@@ -2046,7 +2047,7 @@
       ]
     },
     "Invocation": {
-      "description": "The executable owner-to-adapter boundary for one mutation: its exact retained attempt and original typed role request. The role request by itself is planning data and cannot be dispatched. attempt.input_digest is the digest of request alone, avoiding a circular identity; executor belongs to the immutable attempt identity. The controlling owner must verify retained input/artifact custody, current permission, admission and native exclusion before release. An adapter must not infer attempt identity from identical payload bytes: separately authorized attempts may have identical requests. An invocation is identity and custody data, never a self-authorizing token. Reconciliation receives the same original closure, is observational and cannot redispatch it.",
+      "description": "The executable owner-to-adapter boundary for one mutation: its exact retained attempt and original typed role request. The role request by itself is planning data and cannot be dispatched. attempt.input_digest is the digest of request alone, avoiding a circular identity; executor belongs to the immutable attempt identity. The controlling owner must verify retained input/artifact custody, current permission, admission and native exclusion before release. An adapter must not infer attempt identity from identical payload bytes: separately authorized attempts may have identical requests. An invocation is identity and custody data, never a self-authorizing token. Reconciliation receives the same original closure, is observational and cannot redispatch it. New mutation admission requires the exact executor to implement its role reconciliation method and currently hold both change and observe access for this scope. Observation remains subject to current authority; earlier admission does not bypass revocation.",
       "type": "object",
       "properties": {
         "attempt": {

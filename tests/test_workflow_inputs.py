@@ -139,8 +139,8 @@ def adapter_proposal(role="ingress"):
             "adapter_release": executor["installation_digest"],
             "action": selected["method"],
             "input": copy.deepcopy(handle),
-            "input_schema_digest": schema_identity(uri + "#/$defs/MutationRequest")["digest"],
-            "result_schema": schema_identity(uri + "#/$defs/Output"),
+            "input_schema": schema_identity(uri + "#/$defs/MutationRequest"),
+            "result_schema": schema_identity(uri + "#/$defs/RetainedResult"),
         },
     }
     for condition in plan["preconditions"]:
@@ -394,7 +394,7 @@ def test_generic_adapter_target_cannot_substitute_an_unrelated_selected_method(c
             }
         ]
     elif change == "schema":
-        arguments["input_schema_digest"] = "sha256:" + "f" * 64
+        arguments["input_schema"]["digest"] = "sha256:" + "f" * 64
     else:
         intent = adapter_proposal("credential-issuer")
         binding = intent["participants"][0]["requests"][0]

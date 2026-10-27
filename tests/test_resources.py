@@ -31,6 +31,20 @@ CHECK_PURPOSE = {
     "claims": [],
 }
 
+CHECK_OVERRIDES = {
+    name: {
+        **CHECK_PURPOSE,
+        "authority": ["packages/fishhat-contracts/src/fishhat_contracts/resources.py#" + symbol],
+        "relationship": "scoped-witness",
+        "claims": ["engineering:" + identity],
+    }
+    for name, (identity, symbol) in {
+        "HostEnvelopes::test_complete_host": ("resources.host", "validate_host_resources"),
+        "Cleanup::test_missing_graph_node_blocks": ("resources.inventory", "validate_inventory"),
+        "Cleanup::test_expected_candidates": ("resources.cleanup-plan", "plan_cleanup"),
+    }.items()
+}
+
 
 def load(name):
     p = fixture_path(name)
@@ -402,7 +416,16 @@ class Cleanup(unittest.TestCase):
 
     def test_bounded_batch(self):
         self.i["max_objects"] = 1
-        self.assertEqual(len(self.plan()["candidates"]), 1)
+        plan = self.plan()
+        self.assertEqual(len(plan["candidates"]), 3)
+        traversal = revalidate_cleanup(
+            plan,
+            self.i,
+            accepted_policy=self.policy,
+            retention_inventory=self.retention,
+            now=NOW,
+        )
+        self.assertEqual([len(traversal.next_batch()) for _ in range(4)], [1, 1, 1, 0])
 
     def test_stale_scan_blocked(self):
         self.i["observed_at"] = "2026-10-18T12:00:00Z"
@@ -460,7 +483,7 @@ class Cleanup(unittest.TestCase):
         )
         self.i["max_objects"] = 3
         reviewed = self.plan()
-        self.assertEqual(len(reviewed["candidates"]), 3)
+        self.assertEqual(len(reviewed["candidates"]), 5003)
         self.revalidate(reviewed)
         self.i["items"][-1]["references"] = [reviewed["candidates"][0]["handle"]]
         with self.assertRaisesRegex(ContractError, "candidate no longer safe"):

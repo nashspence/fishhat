@@ -10,9 +10,11 @@ from __future__ import annotations
 
 import copy
 import hashlib
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping
+from heapq import merge
 from typing import Any
 
+from .adapter_semantics import check_request
 from .handoffs import PHASES, schema_identity, validate_staged_input, validate_staging
 from .validation import (
     SCHEMAS,
@@ -284,6 +286,7 @@ def _adapter_binding(
 ) -> None:
     adapter, plan = binding["adapter"], binding["plan"]
     executor, request = adapter["executor"], adapter["request"]
+    check_request(executor["role"], request)
     arguments = plan["subject"]["arguments"]
     _require(
         request["contract"] == "fishhat." + executor["role"]
@@ -302,12 +305,13 @@ def _adapter_binding(
     )
     role_schema = SCHEMAS[executor["role"] + "-adapter.schema.json"]["$id"]
     input_schema = schema_identity(role_schema + "#/$defs/MutationRequest")
-    result_schema = schema_identity(role_schema + "#/$defs/Output")
-    input_key = (input_schema["uri"], arguments["input_schema_digest"])
+    result_schema = schema_identity(role_schema + "#/$defs/RetainedResult")
+    input_key = (arguments["input_schema"]["uri"], arguments["input_schema"]["digest"])
     result_key = (arguments["result_schema"]["uri"], arguments["result_schema"]["digest"])
-    input_current = arguments["input_schema_digest"] == input_schema["digest"]
+    input_current = arguments["input_schema"] == input_schema
     _require(
-        (input_current or (recovery_readers is not None and input_key in recovery_readers))
+        arguments["input_schema"]["uri"] == input_schema["uri"]
+        and (input_current or (recovery_readers is not None and input_key in recovery_readers))
         and arguments["result_schema"]["uri"] == result_schema["uri"]
         and (
             arguments["result_schema"] == result_schema
@@ -676,6 +680,73 @@ def _driver_transfer_window(workflow: dict[str, Any]) -> tuple[int, int | None] 
     return int(freezes[0]["expected_generation"]), end
 
 
+def retained_transition_input(receipt: dict[str, Any]) -> dict[str, Any]:
+    """Select the original input without confusing native and driver authority."""
+    key = {"driver": "request", "native-owner": "completion", "native-lifecycle": "decision"}[
+        receipt["authority"]
+    ]
+    return dict(receipt[key])
+
+
+def _require_recovery_admission(workflow: dict[str, Any], expected_generation: int) -> None:
+    recovery = workflow.get("recovery")
+    if recovery is None:
+        return
+    commit = recovery["commit"]
+    _require(
+        commit is not None and expected_generation >= commit["generation"],
+        "retained workflow admission precedes committed recovery preparation",
+    )
+
+
+def _custody_events(
+    workflow: dict[str, Any], transfer_window: tuple[int, int | None] | None
+) -> Iterator[tuple[int, str]]:
+    """Merge ordered bindings with the finite transfer/abandonment phase facts."""
+    events = []
+    transfer = workflow["transfer"]
+    if transfer is not None:
+        for original in transfer["accepted_phases"]:
+            _require_recovery_admission(workflow, original["expected_generation"])
+            witnesses = transfer[original["phase"] + "_witnesses"]
+            local = next((item for item in witnesses if item["owner"] == workflow["owner"]), None)
+            _require(local is not None, "local transfer phase lacks retained witness")
+            assert local is not None
+            events.append((local["generation"], "transfer"))
+    abandonment = workflow.get("recovery", {}).get("abandonment")
+    if abandonment is not None:
+        events.append((abandonment["generation"], "abandonment"))
+    bindings = ((receipt["generation"], "binding") for receipt in workflow["bindings"])
+    previous = 0
+    # There are at most two installed transfer phases and one abandonment.
+    # Bindings remain a complete, linearly merged collection without a size cap.
+    for generation, kind in merge(bindings, sorted(events)):
+        _require(generation > previous, "workflow custody changes share a generation")
+        if kind == "binding":
+            _require_recovery_admission(workflow, generation - 1)
+            if transfer_window is not None and generation > transfer_window[0]:
+                _require(
+                    transfer_window[1] is not None and generation > transfer_window[1],
+                    "retained workflow binding was recorded inside a pending transfer",
+                )
+        previous = generation
+        yield generation, kind
+
+
+def _custody_lifecycle(state: str, kind: str) -> str:
+    if kind == "binding":
+        _require(state in {"prepared", "active"}, "retained binding bypassed workflow lifecycle")
+    elif kind == "transfer":
+        _require(
+            state not in {"completed", "cancelled"},
+            "retained transfer follows terminal workflow lifecycle",
+        )
+    else:
+        _require(state != "completed", "completed workflow cannot be abandoned")
+        return "cancelled"
+    return state
+
+
 def _validate_advance_history(
     workflow: dict[str, Any],
     *,
@@ -683,6 +754,7 @@ def _validate_advance_history(
 ) -> None:
     from .workflow_bindings import require_bound_phase
     from .workflow_evidence import validate_phase_evidence
+    from .workflow_lifecycle import validate_lifecycle_decision
     from .workflow_settlement import validate_native_completion
 
     identities: set[str] = set()
@@ -690,15 +762,28 @@ def _validate_advance_history(
     phases = PHASES[workflow["type"]]
     _require(workflow["phase"] in phases, "workflow phase outside installed procedure")
     phase_position = 0
+    state = "prepared"
     transfer_window = _driver_transfer_window(workflow)
+    custody_events = _custody_events(workflow, transfer_window)
+    custody = next(custody_events, None)
     for receipt in workflow["advances"]:
+        while custody is not None and custody[0] < receipt["generation"]:
+            state = _custody_lifecycle(state, custody[1])
+            custody = next(custody_events, None)
         _require(
-            phase_position < len(phases) - 1,
-            "workflow transition follows terminal settlement",
+            custody is None or custody[0] != receipt["generation"],
+            "workflow transition shares a custody generation",
+        )
+        _require(
+            state not in {"completed", "cancelled"},
+            "workflow transition follows terminal settlement or cancellation",
         )
         native = receipt["authority"] == "native-owner"
-        original = receipt["completion"] if native else receipt["request"]
-        original_digest = receipt["completion_digest"] if native else receipt["request_digest"]
+        lifecycle = receipt["authority"] == "native-lifecycle"
+        original = retained_transition_input(receipt)
+        original_digest = receipt[
+            "decision_digest" if lifecycle else "completion_digest" if native else "request_digest"
+        ]
         _require(original["advance_id"] not in identities, "duplicate retained workflow advance")
         identities.add(original["advance_id"])
         _require(
@@ -707,6 +792,7 @@ def _validate_advance_history(
             and original_digest == digest(original),
             "retained workflow advance identity changed",
         )
+        _require_recovery_admission(workflow, original["expected_generation"])
         _require(
             generation < receipt["generation"] <= workflow["generation"]
             and original["expected_generation"] + 1 == receipt["generation"]
@@ -714,6 +800,24 @@ def _validate_advance_history(
             "retained workflow advance generation changed",
         )
         generation = receipt["generation"]
+        if lifecycle:
+            _require(
+                original["from_state"] == state
+                and original["phase"] == receipt["phase"] == phases[phase_position],
+                "retained workflow lifecycle predecessor changed",
+            )
+            state = validate_lifecycle_decision(original, workflow)
+            _require(receipt["state"] == state, "retained workflow lifecycle outcome changed")
+            if original["action"] == "resume" and transfer_window is not None:
+                _require(
+                    receipt["generation"] <= transfer_window[0]
+                    or (
+                        transfer_window[1] is not None
+                        and receipt["generation"] > transfer_window[1]
+                    ),
+                    "retained workflow resume bypassed incomplete transfer",
+                )
+            continue
         destination = phases[-1] if native else original["phase"]
         _require(
             destination == receipt["phase"] in phases
@@ -723,11 +827,16 @@ def _validate_advance_history(
         )
         if native or original["transfer_completion"] is None:
             phase_position += 1
+            _require(
+                receipt["state"] == ("completed" if destination == phases[-1] else "active"),
+                "ordinary workflow transition changed lifecycle outcome",
+            )
         _require(
             phase_position < len(phases) and destination == phases[phase_position],
             "retained workflow phase history is incomplete or reordered",
         )
         if native:
+            _require(state in {"active", "paused"}, "native settlement bypassed workflow lifecycle")
             validate_native_completion(
                 original,
                 workflow,
@@ -735,6 +844,14 @@ def _validate_advance_history(
                 recovery_readers=recovery_readers,
             )
         else:
+            if original["transfer_completion"] is None:
+                _require(
+                    state in {"prepared", "active"}, "driver advance bypassed workflow lifecycle"
+                )
+            else:
+                _require(
+                    receipt["state"] == state, "transfer completion changed workflow lifecycle"
+                )
             if transfer_window is not None and receipt["generation"] > transfer_window[0]:
                 _require(
                     transfer_window[1] is not None and receipt["generation"] >= transfer_window[1],
@@ -746,15 +863,20 @@ def _validate_advance_history(
                 before_generation=receipt["generation"],
                 recovery_readers=recovery_readers,
             )
+        state = receipt["state"]
         position = phases.index(receipt["phase"])
         if position > 0:
             require_bound_phase(
                 workflow, phases[position - 1], before_generation=receipt["generation"]
             )
+    while custody is not None:
+        state = _custody_lifecycle(state, custody[1])
+        custody = next(custody_events, None)
     _require(
         workflow["phase"] == phases[phase_position],
         "workflow phase lacks its complete retained transition history",
     )
+    _require(workflow["state"] == state, "workflow lifecycle differs from retained history")
 
 
 def _completion_witnesses(request: dict[str, Any], workflow: dict[str, Any]) -> None:
@@ -801,9 +923,7 @@ def validate_advance_request(
         "workflow advance receiver changed",
     )
     for receipt in workflow["advances"]:
-        original = (
-            receipt["completion"] if receipt["authority"] == "native-owner" else receipt["request"]
-        )
+        original = retained_transition_input(receipt)
         if original["advance_id"] == request["advance_id"]:
             _require(
                 receipt["authority"] == "driver", "workflow transition identity changed authority"
@@ -822,9 +942,9 @@ def validate_advance_request(
     completion_only = (
         request["transfer_completion"] is not None and request["phase"] == workflow["phase"]
     )
-    allowed = {"prepared", "active", "paused"}
+    allowed = {"prepared", "active"}
     if completion_only:
-        allowed.add("recovery-required")
+        allowed.update({"paused", "recovery-required"})
     _require(workflow["state"] in allowed, "workflow cannot advance in this state")
     _completion_witnesses(request, workflow)
     phases = PHASES[workflow["type"]]

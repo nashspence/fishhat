@@ -69,6 +69,7 @@ def record_native_completion(
     from .workflow_bindings import require_bound_phase
     from .workflow_evidence import require_verified_phase_evidence
     from .workflow_preparation import validate_workflow_agreement
+    from .workflows import retained_transition_input
 
     validate("workflow.schema.json", completion, "NativeCompletion")
     validate_workflow(workflow, recovery_readers=recovery_readers)
@@ -79,9 +80,7 @@ def record_native_completion(
         "native workflow completion receiver changed",
     )
     for receipt in workflow["advances"]:
-        original = (
-            receipt["completion"] if receipt["authority"] == "native-owner" else receipt["request"]
-        )
+        original = retained_transition_input(receipt)
         if original["advance_id"] == completion["advance_id"]:
             _require(
                 receipt["authority"] == "native-owner",

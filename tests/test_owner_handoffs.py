@@ -295,6 +295,7 @@ def check_input(value, **overrides):
 
 def adapter_result():
     uri = "https://synthetic.invalid/adapter-result.schema.json"
+    input_uri = "https://synthetic.invalid/adapter-input.schema.json"
     schema = {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "$id": uri,
@@ -303,8 +304,21 @@ def adapter_result():
         "required": ["revision"],
         "additionalProperties": False,
     }
-    installed = {uri: schema}
+    installed = {
+        uri: schema,
+        input_uri: {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "$id": input_uri,
+            "type": "object",
+            "properties": {"minimum_revision": {"type": "integer", "minimum": 0}},
+            "required": ["minimum_revision"],
+            "additionalProperties": False,
+        },
+    }
     identity = schema_identity(uri, installed)
+    request = canonical({"minimum_revision": 0})
+    handle = committed()["handle"]
+    handle.update(size=len(request), digest="sha256:" + hashlib.sha256(request).hexdigest())
     op = operation()
     op["subject"] = {
         "action": "adapter.execute",
@@ -313,8 +327,8 @@ def adapter_result():
             "adapter_id": "selected-adapter",
             "adapter_release": D,
             "action": "inspect",
-            "input": committed()["handle"],
-            "input_schema_digest": D,
+            "input": handle,
+            "input_schema": schema_identity(input_uri, installed),
             "result_schema": identity,
         },
     }
@@ -550,6 +564,15 @@ def test_result_schema_closure_rejects_uninstalled_nested_or_unresolved_referenc
         {"properties": {"child": {"$id": "https://nested.invalid/schema.json", "type": "string"}}},
         {"$ref": "#/$defs/missing"},
         {"$dynamicRef": "#dynamic"},
+        {"$schema": "http://json-schema.org/draft-07/schema#"},
+        {
+            "$defs": {
+                "changed": {
+                    "$schema": "https://json-schema.org/draft/2020-12/schema",
+                    "type": "string",
+                }
+            }
+        },
     ):
         schema = {"$schema": "https://json-schema.org/draft/2020-12/schema", "$id": uri, **body}
         with pytest.raises(ContractError):

@@ -10,53 +10,21 @@ from typing import Any, cast
 from urllib.parse import unquote
 
 from fishhat_contracts.json_work import unique_items
+from fishhat_contracts.schema_profile import (
+    FORMATS,
+    MAX_SCHEMA_DEPTH,
+    check_assertions,
+    regex_degree,
+    schema_children,
+)
 from fishhat_contracts.validation import FORMAT_CHECKER, ContractError, canonical
 from jsonschema import Draft202012Validator, FormatChecker, validators
 from jsonschema.exceptions import SchemaError
 
 Path = tuple[str, ...]
 ALL_TYPES = frozenset({"null", "boolean", "number", "string", "object", "array"})
-SINGLE = (
-    "additionalProperties",
-    "unevaluatedProperties",
-    "items",
-    "contains",
-    "propertyNames",
-    "not",
-    "if",
-    "then",
-    "else",
-    "contentSchema",
-    "unevaluatedItems",
-)
-MAPPINGS = ("properties", "patternProperties", "$defs", "definitions", "dependentSchemas")
-SEQUENCES = ("allOf", "anyOf", "oneOf", "prefixItems")
-FORMATS = frozenset({"date", "date-time", "ipv4", "ipv6", "uuid"})
 PROVIDER_FORMAT_CHECKER = FormatChecker()
 PROVIDER_FORMAT_CHECKER.checkers = {name: FORMAT_CHECKER.checkers[name] for name in FORMATS}
-KEYWORDS = (
-    frozenset(Draft202012Validator.VALIDATORS) - {"unevaluatedItems", "unevaluatedProperties"}
-) | frozenset(
-    {
-        "$schema",
-        "$id",
-        "$ref",
-        "$defs",
-        "definitions",
-        "$comment",
-        "title",
-        "description",
-        "default",
-        "examples",
-        "deprecated",
-        "readOnly",
-        "writeOnly",
-        "then",
-        "else",
-        "minContains",
-        "maxContains",
-    }
-)
 MAX_EXPANDED_SCHEMA = 4096
 MAX_EVALUATION_WORK = 2_000_000
 _WORK: ContextVar[list[int] | None] = ContextVar("provider_schema_work", default=None)
@@ -71,149 +39,6 @@ def _calendar_date(value: Any) -> bool:
     year, month, day = map(int, value.split("-"))
     datetime(2000 + year % 400, month, day)
     return True
-
-
-def _atom_accepts(atom: Any, character: int) -> bool:
-    operation, argument = atom
-    name = str(operation)
-    if name == "LITERAL":
-        return bool(character == argument)
-    if name == "NOT_LITERAL":
-        return bool(character != argument)
-    if name == "ANY":
-        return character != 10
-    if name != "IN":
-        return True
-    negated = bool(argument and str(argument[0][0]) == "NEGATE")
-    matches = False
-    for kind, value in argument:
-        if str(kind) == "LITERAL":
-            matches |= character == value
-        elif str(kind) == "RANGE":
-            matches |= value[0] <= character <= value[1]
-        elif str(kind) != "NEGATE":
-            # Unknown/category alphabets cannot establish delimiter exclusion.
-            return True
-    return not matches if negated else matches
-
-
-def _separated_repetitions(tokens: Any) -> bool:
-    """Prove that two variable runs cannot backtrack across their delimiter.
-
-    Branches and assertions do not supply a delimiter proof. An optional group
-    can supply a delimiter to a run inside it, never to a run after that group.
-    """
-    previous: Any = None
-    delimiters: list[int] = []
-    runs = 0
-    separated = False
-    supported = True
-
-    def walk(parts: Any) -> None:
-        nonlocal previous, runs, separated, supported, delimiters
-        for operation, argument in parts:
-            name = str(operation)
-            if name == "LITERAL":
-                delimiters.append(argument)
-            elif name == "SUBPATTERN":
-                walk(argument[3])
-            elif name == "BRANCH":
-                supported = False
-            elif name in {"ASSERT", "ASSERT_NOT"}:
-                if argument[1].getwidth() != (1, 1):
-                    supported = False
-            elif name in {"MAX_REPEAT", "MIN_REPEAT"}:
-                minimum, maximum, child = argument
-                if len(child) == 1 and str(child[0][0]) in {
-                    "LITERAL",
-                    "NOT_LITERAL",
-                    "ANY",
-                    "IN",
-                    "CATEGORY",
-                }:
-                    if minimum != maximum and maximum > 1:
-                        if previous is not None:
-                            separated = any(not _atom_accepts(previous, c) for c in delimiters)
-                        previous, delimiters = child[0], []
-                        runs += 1
-                else:
-                    before, saved = runs, delimiters.copy()
-                    walk(child)
-                    if minimum == 0 and before == runs:
-                        delimiters = saved
-
-    walk(tokens)
-    return supported and runs == 2 and separated
-
-
-def _regex_degree(pattern: str) -> int:
-    """Admit a bounded regular-expression subset, never backtracking group repeats.
-
-    Variable repetition is restricted to single characters/classes, except a
-    single optional group. There are at most two variable repetitions and eight
-    total alternatives. Lookbehind, backreferences and inline flags reject.
-    """
-    require(len(pattern) <= 256, "SCHEMA_REGEX_CAPACITY")
-    require(
-        not any(marker in pattern for marker in ("(?P", "(?#", r"\A", r"\Z", r"\N")),
-        "UNSUPPORTED_SCHEMA_REGEX",
-    )
-    parser: Any = vars(re)["_parser"]
-    try:
-        parsed = parser.parse(pattern, 0)
-    except re.error as exc:
-        raise ContractError("INVALID_SCHEMA_REGEX") from exc
-    require(parsed.state.flags == re.UNICODE, "UNSUPPORTED_SCHEMA_REGEX")
-    repetitions, alternatives = 0, 1
-
-    def walk(tokens: Any) -> None:
-        nonlocal repetitions, alternatives
-        for operation, argument in tokens:
-            name = str(operation)
-            if name in {"LITERAL", "NOT_LITERAL", "ANY", "IN", "AT", "CATEGORY"}:
-                continue
-            if name == "SUBPATTERN":
-                require(argument[1] == argument[2] == 0, "UNSUPPORTED_SCHEMA_REGEX")
-                walk(argument[3])
-            elif name == "BRANCH":
-                alternatives *= len(argument[1])
-                require(alternatives <= 8, "SCHEMA_REGEX_CAPACITY")
-                for branch in argument[1]:
-                    walk(branch)
-            elif name in {"MAX_REPEAT", "MIN_REPEAT"}:
-                minimum, maximum, child = argument
-                atom = len(child) == 1 and str(child[0][0]) in {
-                    "LITERAL",
-                    "NOT_LITERAL",
-                    "ANY",
-                    "IN",
-                    "CATEGORY",
-                }
-                require(atom or (minimum == 0 and maximum == 1), "UNSUPPORTED_SCHEMA_REGEX")
-                if not atom:
-                    alternatives *= 2
-                    require(alternatives <= 8, "SCHEMA_REGEX_CAPACITY")
-                    walk(child)
-                elif minimum != maximum and maximum > 1:
-                    repetitions += 1
-                require(repetitions <= 2, "SCHEMA_REGEX_CAPACITY")
-            elif name in {"ASSERT", "ASSERT_NOT"}:
-                require(argument[0] >= 0, "UNSUPPORTED_SCHEMA_REGEX")
-                walk(argument[1])
-            else:
-                raise ContractError("UNSUPPORTED_SCHEMA_REGEX")
-
-    walk(parsed)
-    anchored = (
-        bool(parsed)
-        and str(parsed[0][0]) == "AT"
-        and str(parsed[0][1]) in {"AT_BEGINNING", "AT_BEGINNING_STRING"}
-    )
-    if repetitions == 2 and anchored and _separated_repetitions(parsed):
-        repetitions = 1
-    degree = max(1, repetitions + (not anchored))
-    require(degree == 1, "NONLINEAR_SCHEMA_REGEX")
-    return degree
 
 
 def _charge(keyword: str, constraint: Any, value: Any, schema: Any) -> None:
@@ -240,7 +65,7 @@ def _charge(keyword: str, constraint: Any, value: Any, schema: Any) -> None:
     require(work[0] <= MAX_EVALUATION_WORK, "SCHEMA_EVALUATION_CAPACITY")
     for pattern, subject in patterns:
         require(len(subject) <= 4096, "SCHEMA_REGEX_INPUT_CAPACITY")
-        work[0] += 8 * (len(subject) + 1) ** _regex_degree(pattern)
+        work[0] += 8 * (len(subject) + 1) ** regex_degree(pattern)
         require(work[0] <= MAX_EVALUATION_WORK, "SCHEMA_EVALUATION_CAPACITY")
 
 
@@ -313,7 +138,7 @@ class _ClosedSchema:
         self._shape(())
 
     def _walk(self, node: Any, path: Path = (), depth: int = 0) -> None:
-        require(depth <= 32, "SCHEMA_DEPTH")
+        require(depth <= MAX_SCHEMA_DEPTH, "SCHEMA_DEPTH")
         self.nodes[path], self.edges[path] = node, []
         if isinstance(node, bool):
             return
@@ -329,23 +154,10 @@ class _ClosedSchema:
             or node["$schema"] == "https://json-schema.org/draft/2020-12/schema",
             "UNSUPPORTED_SCHEMA_DIALECT",
         )
-        require(not node.keys() - KEYWORDS, "UNSUPPORTED_SCHEMA_KEYWORD")
-        if "format" in node:
-            require(
-                node["format"] in FORMATS and node["format"] in FORMAT_CHECKER.checkers,
-                "UNSUPPORTED_SCHEMA_FORMAT",
-            )
-        for pattern in ([node["pattern"]] if "pattern" in node else []) + list(
-            node.get("patternProperties", {})
-        ):
-            _regex_degree(pattern)
+        check_assertions(node)
         if "$ref" in node:
             self.references[path] = self._target(node["$ref"])
-        children: list[tuple[Path, Any]] = [((key,), node[key]) for key in SINGLE if key in node]
-        for key in MAPPINGS:
-            children.extend(((key, name), value) for name, value in node.get(key, {}).items())
-        for key in SEQUENCES:
-            children.extend(((key, str(i)), value) for i, value in enumerate(node.get(key, [])))
+        children = schema_children(node)
         for suffix, child in children:
             child_path = (*path, *suffix)
             self.edges[path].append(child_path)
@@ -364,7 +176,7 @@ class _ClosedSchema:
 
     def _acyclic(self, path: Path) -> None:
         require(path not in self.active, "RECURSIVE_SCHEMA_REFERENCE")
-        require(len(self.active) <= 32, "SCHEMA_DEPTH")
+        require(len(self.active) <= MAX_SCHEMA_DEPTH, "SCHEMA_DEPTH")
         if path in self.done:
             return
         self.active.add(path)

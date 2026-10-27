@@ -15,10 +15,16 @@ from typing import Any
 from urllib.parse import unquote, urldefrag, urljoin
 
 from jsonschema import Draft202012Validator
+from jsonschema.exceptions import SchemaError
 from referencing import Registry, Resource
+from referencing.jsonschema import DRAFT202012
 
+from .adapter_semantics import ROLES, check_retained_result
+from .bounds import Bounds, bounds
 from .operations import validate_operation
+from .schema_profile import SchemaNode, check_assertions, check_reference_graph, schema_children
 from .validation import (
+    _SCHEMA_VALIDATOR,
     FORMAT_CHECKER,
     MAX_BYTES,
     ROOT,
@@ -28,6 +34,7 @@ from .validation import (
     digest,
     strict_json,
     validate,
+    value_check,
 )
 
 ACTIONS = {
@@ -53,46 +60,41 @@ def _schema_documents(
             available[identity] = schema
     found: dict[str, dict[str, Any]] = {}
     pending = [urldefrag(uri)[0]]
-    targets = [uri]
+    targets: list[tuple[str, SchemaNode | None]] = [(uri, None)]
+    positions: set[SchemaNode] = set()
+    graph: dict[SchemaNode, list[SchemaNode]] = {}
 
-    def references(value: Any, base: str, *, root: bool = False) -> None:
+    def references(
+        value: Any, base: str, path: tuple[str, ...] = (), *, root: bool = False
+    ) -> None:
+        position = (base, path)
+        positions.add(position)
+        custom = base in (installed or {})
+        if custom:
+            graph[position] = []
         if isinstance(value, dict):
+            _require(
+                value.get("$schema") == _SCHEMA_VALIDATOR.META_SCHEMA["$id"]
+                if root
+                else "$schema" not in value,
+                "installed schemas require the fixed root Draft 2020-12 dialect",
+            )
             _require(
                 "$dynamicRef" not in value and "$recursiveRef" not in value,
                 "result schemas require static local references",
             )
             _require("$id" not in value or root, "nested result schema identity")
+            if custom:
+                check_assertions(value)
             if "$ref" in value:
                 target = urljoin(base, value["$ref"])
-                targets.append(target)
+                targets.append((target, position))
                 pending.append(urldefrag(target)[0])
-            for key in (
-                "additionalProperties",
-                "unevaluatedProperties",
-                "items",
-                "contains",
-                "propertyNames",
-                "not",
-                "if",
-                "then",
-                "else",
-                "contentSchema",
-                "unevaluatedItems",
-            ):
-                if key in value:
-                    references(value[key], base)
-            for key in (
-                "properties",
-                "patternProperties",
-                "$defs",
-                "definitions",
-                "dependentSchemas",
-            ):
-                for child in value.get(key, {}).values():
-                    references(child, base)
-            for key in ("allOf", "anyOf", "oneOf", "prefixItems"):
-                for child in value.get(key, []):
-                    references(child, base)
+            for suffix, child in schema_children(value):
+                child_position = (base, (*path, *suffix))
+                if custom:
+                    graph[position].append(child_position)
+                references(child, base, child_position[1])
 
     while pending:
         identity = pending.pop()
@@ -100,20 +102,40 @@ def _schema_documents(
             continue
         _require(identity in available, "result schema is not installed")
         schema = available[identity]
+        if identity in (installed or {}):
+            value_check(schema)
+            try:
+                Draft202012Validator.check_schema(schema)
+            except (SchemaError, RecursionError) as exc:
+                raise ContractError("INVALID_INSTALLED_SCHEMA") from exc
         found[identity] = schema
         references(schema, identity, root=True)
-    for target in targets:
+    for target, source in targets:
         identity, fragment = urldefrag(target)
         node: Any = found[identity]
+        path: list[str] = []
         if fragment:
             _require(fragment.startswith("/"), "result schema requires JSON pointer fragments")
-            try:
-                for part in fragment[1:].split("/"):
-                    key = unquote(part).replace("~1", "/").replace("~0", "~")
+            for part in fragment[1:].split("/"):
+                decoded = unquote(part)
+                _require(
+                    "~" not in decoded.replace("~0", "").replace("~1", ""),
+                    "invalid result schema pointer escape",
+                )
+                key = decoded.replace("~1", "/").replace("~0", "~")
+                path.append(key)
+                try:
                     node = node[int(key)] if isinstance(node, list) else node[key]
-            except (KeyError, ValueError, IndexError, TypeError) as exc:
-                raise ContractError("result schema reference is unresolved") from exc
-        _require(isinstance(node, (dict, bool)), "result reference is not a schema")
+                except (KeyError, ValueError, IndexError, TypeError) as exc:
+                    raise ContractError("result schema reference is unresolved") from exc
+        _require(
+            isinstance(node, (dict, bool)) and (identity, tuple(path)) in positions,
+            "result reference is not a schema position",
+        )
+        if source in graph:
+            assert source is not None
+            graph[source].append((identity, tuple(path)))
+    check_reference_graph(graph)
     return found
 
 
@@ -134,8 +156,10 @@ def validate_workflow(
     validate("records.schema.json", value, "Workflow")
     validate_workflow_proposal_binding(value, recovery_readers=recovery_readers)
     _require(value["phase"] in PHASES[value["type"]], "workflow phase outside installed procedure")
-    if value["state"] == "completed":
-        _require(value["phase"] == PHASES[value["type"]][-1], "workflow completion phase mismatch")
+    _require(
+        (value["state"] == "completed") == (value["phase"] == PHASES[value["type"]][-1]),
+        "workflow completion phase and lifecycle mismatch",
+    )
     pairs: set[bytes] = set()
     requests: set[bytes] = set()
     local = False
@@ -215,6 +239,103 @@ def validate_staged_input(
     )
 
 
+def _adapter_result_contract(
+    arguments: dict[str, Any],
+    *,
+    installed: dict[str, dict[str, Any]] | None,
+) -> tuple[str, dict[str, str]] | None:
+    """Resolve core semantics from the pinned input, never a caller's result wrapper."""
+    identity = arguments["input_schema"]
+    base, fragment = urldefrag(identity["uri"])
+    role = next(
+        (role for role in ROLES if SCHEMAS[role + "-adapter.schema.json"]["$id"] == base),
+        None,
+    )
+    if role is not None:
+        _require(
+            fragment == "/$defs/MutationRequest", "core adapter input requires MutationRequest"
+        )
+        _require(
+            arguments["result_schema"]["uri"]
+            == SCHEMAS[role + "-adapter.schema.json"]["$id"] + "#/$defs/RetainedResult",
+            "typed adapter results require the complete retained invocation and response",
+        )
+        return role, schema_identity(identity["uri"])
+    result_base = urldefrag(arguments["result_schema"]["uri"])[0]
+    _require(
+        all(result_base != SCHEMAS[role + "-adapter.schema.json"]["$id"] for role in ROLES),
+        "retained adapter input schema binding changed",
+    )
+    _require(
+        base in (installed or {}) and identity == schema_identity(identity["uri"], installed),
+        "custom adapter input schema is not independently installed",
+    )
+    _require(
+        not _wraps_core_adapter_input(identity["uri"], installed),
+        "custom input cannot wrap a core adapter mutation contract",
+    )
+    return None
+
+
+def _wraps_core_adapter_input(uri: str, installed: dict[str, dict[str, Any]] | None) -> bool:
+    """Inspect one selected input's whole-instance references, without reverse lookup."""
+    core = {
+        SCHEMAS[role + "-adapter.schema.json"]["$id"] + suffix
+        for role in ROLES
+        for suffix in ("", "#/$defs/MutationRequest")
+    }
+    core.update(
+        SCHEMAS["adapter.schema.json"]["$id"] + "#/$defs/" + name
+        for name in ("MutationRequest", "Invocation")
+    )
+    documents = _schema_documents(uri, installed)
+    pending = [uri]
+    seen: set[str] = set()
+    inspected: set[int] = set()
+    while pending:
+        target = pending.pop()
+        base, fragment = urldefrag(target)
+        target = base + ("#" + unquote(fragment) if fragment else "")
+        if target in core:
+            return True
+        if target in seen:
+            continue
+        seen.add(target)
+        value: Any = documents[base]
+        for part in fragment.split("/")[1:]:
+            key = unquote(part).replace("~1", "/").replace("~0", "~")
+            value = value[int(key)] if isinstance(value, list) else value[key]
+        nodes = [value]
+        while nodes:
+            node = nodes.pop()
+            if not isinstance(node, dict) or id(node) in inspected:
+                continue
+            inspected.add(id(node))
+            if "$ref" in node:
+                pending.append(urljoin(base, node["$ref"]))
+            for keyword in ("allOf", "anyOf", "oneOf"):
+                nodes.extend(node.get(keyword, []))
+            for keyword in ("then", "else"):
+                if keyword in node:
+                    nodes.append(node[keyword])
+    return False
+
+
+@bounds(
+    Bounds(
+        id="handoffs.retained-result",
+        work="O(S + E + B) schema-position/reference admission plus complete payload bytes under a fixed admitted schema profile; S schema bytes, E references, B payload bytes",
+        extent="Exact committed result bytes, every nested invocation/output artifact and full selected schema closure",
+        limits=(),
+        capacity=("The receiving max_bytes capacity rejects before parsing; it never truncates",),
+        proofs=("tests/test_retained_result_growth.py::test_retained_adapter_results_linear_work",),
+        linear_proofs=(
+            "tests/test_retained_result_growth.py::test_retained_adapter_results_linear_work",
+            "tests/test_result_schema_admission.py::test_custom_result_complete_validation_linear_work",
+            "tests/test_result_schema_admission.py::test_custom_schema_closure_admission_linear_work",
+        ),
+    )
+)
 def validate_result_payload(
     operation: dict[str, Any],
     data: bytes,
@@ -248,13 +369,42 @@ def validate_result_payload(
         _require(canonical(inspected) == canonical(value), "result reader changed original bytes")
     documents = _schema_documents(identity["uri"], installed)
     registry = Registry().with_resources(
-        (uri, Resource.from_contents(schema)) for uri, schema in documents.items()
+        (
+            uri,
+            Resource.from_contents(
+                {key: value for key, value in schema.items() if key != "$schema"},
+                default_specification=DRAFT202012,
+            ),
+        )
+        for uri, schema in documents.items()
     )
-    validator = Draft202012Validator(
+    # Identity retains the complete published documents. Evaluation uses the
+    # fixed installed dialect without selecting the stock class through $ref.
+    validator = _SCHEMA_VALIDATOR(
         {"$ref": identity["uri"]}, registry=registry, format_checker=FORMAT_CHECKER
     )
     _require(not any(validator.iter_errors(value)), "result payload violates action schema")
     action = operation["subject"]["action"]
+    if action == "adapter.execute":
+        selected = _adapter_result_contract(
+            operation["subject"]["arguments"],
+            installed=installed,
+        )
+        if selected is not None:
+            role, input_schema = selected
+            input_digest = operation["subject"]["arguments"]["input_schema"]["digest"]
+            if input_digest != input_schema["digest"]:
+                reader = (recovery_readers or {}).get((input_schema["uri"], input_digest))
+                _require(reader is not None, "retained adapter input schema binding changed")
+                assert reader is not None
+                original = value["invocation"]["request"]
+                inspected = deepcopy(original)
+                reader(inspected)
+                _require(
+                    canonical(inspected) == canonical(original),
+                    "adapter input reader changed original bytes",
+                )
+            check_retained_result(role, value, operation=operation)
     if action in {"publisher.publish", "publisher.recover"}:
         from .publication import validate_publication, validate_publication_result
 

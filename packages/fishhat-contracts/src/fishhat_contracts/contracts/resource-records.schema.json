@@ -742,7 +742,7 @@
         "max_objects": {
           "type": "integer",
           "minimum": 1,
-          "description": "Owner-chosen bound on the number of deletion candidates proposed in one Plan, not an inventory or store-size ceiling. Native limits may refuse/delay a batch but cannot silently omit objects or prevent complete traversal."
+          "description": "Owner-chosen bound on one deletion dispatch batch. The reviewed CleanupPlan retains the complete candidate extent; this bound does not truncate the plan, inventory or store. All batches share the verified inventory and protection index. Native limits may refuse/delay a batch but cannot silently omit objects or restart unchanged full scans for each batch."
         },
         "policy_digest": {
           "$ref": "common.schema.json#/$defs/Digest"
@@ -778,7 +778,7 @@
         "protection_generation"
       ],
       "additionalProperties": false,
-      "description": "Native inventory bound to the current accepted owner policy and exact retention inventory. protected_roots and protected_by may add protection but cannot replace or subtract owner-derived retention roots. A missing retained native handle prevents cleanup. minimum_age_seconds may impose a stricter age than the accepted unused-candidate grace, never a weaker one."
+      "description": "Native inventory bound to the current accepted owner policy and exact retention inventory. protected_roots and protected_by may add protection but cannot replace or subtract owner-derived retention roots. A missing retained native handle prevents cleanup. minimum_age_seconds may impose a stricter age than the accepted unused-candidate grace, never a weaker one. The receiving owner establishes the complete object, incoming-reference and protected-closure indexes once under exclusion. Any external native identity, edge, use, protection or ownership change invalidates the indexed generation; confirmed own deletions may advance it with authenticated exact outcomes. The complete operation includes every inventory page, reviewed candidate, dispatch batch, retry and affected external update. Its work must be linear in complete input bytes/edges plus attempted candidates and genuinely changed affected extent; copying or rescanning unchanged state is work, not new input. A native implementation that cannot preserve that bound and exact protection must stop rather than discard protection, truncate extent or claim qualification."
     },
     "CleanupPlan": {
       "type": "object",
@@ -886,6 +886,11 @@
           },
           "minItems": 0
         },
+        "max_objects": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum candidates in one dispatch batch, preserving the complete reviewed candidates across all batches. A lower current owner limit may make batches smaller without widening permission."
+        },
         "blocked": {
           "type": "array",
           "items": {
@@ -924,6 +929,7 @@
         "created_at",
         "expires_at",
         "candidates",
+        "max_objects",
         "blocked",
         "policy_digest",
         "retention_inventory_digest",
@@ -931,7 +937,7 @@
         "retention_custody_digest"
       ],
       "additionalProperties": false,
-      "description": "Exact cleanup proposal bound to the accepted policy, stable retention custody and protection generation. inventory_digest and retention_inventory_digest retain the original complete observations for review provenance. retention_custody_digest excludes only the top-level retention observed_at; refreshed scans do not change protection authority. protection_digest binds policy_digest, retention_custody_digest, protection_generation and the full protected root closure. Before each deletion the owner must revalidate current policy, retention custody and native inventory under the accepted max_observation_age_seconds, preserving exact candidate identities and confirmed own deletions. A reviewed plan cannot override policy or release holds. The native executor must serialize final revalidation and deletion with accepted policy, hold and recovery-reference changes, retaining that exclusion until the native outcome is known. If it cannot maintain exclusion, it must stop and reconcile rather than delete under a stale observation. The pure reference revalidation helper supplies no lock or continuing authorization."
+      "description": "Exact complete cleanup proposal bound to accepted policy, stable retention custody and protection generation. max_objects limits dispatch batches, never the reviewed candidate extent. inventory_digest and retention_inventory_digest retain the original complete observations for provenance; retention_custody_digest excludes only the top-level retention observed_at. protection_digest binds policy_digest, retention_custody_digest, protection_generation and the complete protected closure. The owner verifies the complete graph once, then before every deletion or retry checks its independently current owner/account/store identity, accepted policy digest, exact retention custody, protection generation, indexed native generation, observation freshness, current durability/exclusive-control status and exact candidate kind/native identity. This constant-size custody check is valid only while actual owner-held exclusion prevents external policy, hold, recovery-reference and native graph changes. The owner retains exclusion through the authenticated native outcome; only confirmed own removal advances indexed generation. Unknown outcomes or any lost exclusion invalidate the traversal and require reconciliation, never a blind retry. Cold archive validity and plan expiry remain enforced even when generations do not change. A reviewed plan cannot override policy or release holds. The reference model supplies neither locks nor authentication: its non-serializable exclusion and current custody inputs represent independently held native owner facts, not requester assertions. Complete-operation growth includes all pages, batches, retries and affected external invalidations; repeated full-state copies or rescans cannot be hidden as independent batches or fresh input. Native continuation after invalidation must maintain an exact index with a linear work proof; the reference traversal stops and makes no claim to implement that continuation."
     },
     "CleanupReceipt": {
       "type": "object",

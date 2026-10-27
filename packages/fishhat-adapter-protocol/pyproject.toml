@@ -15,7 +15,7 @@ dependencies = ["fishhat-contracts==0.1.0.dev0", "jsonschema==4.26.0", "referenc
 where = ["src"]
 
 [tool.setuptools.package-data]
-fishhat_adapters = ["py.typed", "roles.json"]
+fishhat_adapters = ["py.typed"]
 
 [tool.uv.sources]
 fishhat-contracts = { workspace = true }

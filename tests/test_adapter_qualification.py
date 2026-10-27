@@ -15,7 +15,7 @@ from tests.adapter_support import D, descriptors
 CHECK_PURPOSE = {
     "purpose": "public-contract",
     "authority": ["packages/fishhat-contracts/src/fishhat_contracts/contracts/adapter.schema.json"],
-    "scope": "qualification identity and truthful installed-scaffold command results",
+    "scope": "qualification identity, per-mutator recovery obligations and truthful installed-scaffold command results",
     "relationship": "candidate",
     "reason": "Scaffold commands and evidence validation do not prove real native behavior.",
     "claims": [],
@@ -31,7 +31,13 @@ def qualification():
         "runner": "local.disposable-runner",
         "cases": [
             {"id": name, "outcome": "passed"}
-            for name in ("failure-reconciliation", "linear-growth", "complete-extent")
+            for name in (
+                "failure-reconciliation",
+                "linear-growth",
+                "complete-extent",
+                "reconcile-capture-restore",
+                "reconcile-capture-verify",
+            )
         ],
         "external_accounts": False,
         "native_dependencies": [{"digest": D, "media_type": "application/zip", "size_bytes": 1}],
@@ -50,6 +56,7 @@ def check(value):
                 "environment_digest",
             )
         },
+        implemented={"capture.restore", "capture.verify", "capture.reconcile"},
         required_cases={"failure-reconciliation"},
         trusted_runner="local.disposable-runner",
     )
@@ -110,6 +117,21 @@ def test_all_supplied_scaffolds_are_importable_with_independent_entrypoints(path
 @pytest.mark.parametrize("outcome", ["missing", "failed", "skipped", "not-executed"])
 def test_engineering_cases_cannot_be_omitted_by_the_receiving_caller(case, outcome):
     value = qualification()
+    if outcome == "missing":
+        value["cases"] = [item for item in value["cases"] if item["id"] != case]
+    else:
+        next(item for item in value["cases"] if item["id"] == case)["outcome"] = outcome
+    with pytest.raises(
+        ContractError, match=r"MISSING_QUALIFICATION_CASE|UNQUALIFIED_NATIVE_BEHAVIOR"
+    ):
+        check(value)
+
+
+@pytest.mark.parametrize("method", ["restore", "verify"])
+@pytest.mark.parametrize("outcome", ["missing", "failed", "skipped", "not-executed"])
+def test_each_implemented_mutator_requires_its_own_recovery_proof(method, outcome):
+    value = qualification()
+    case = "reconcile-capture-" + method
     if outcome == "missing":
         value["cases"] = [item for item in value["cases"] if item["id"] != case]
     else:

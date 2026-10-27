@@ -15,7 +15,7 @@ from fishhat_directory.projection import load_directory, prepare_projection
 from fishhat_owner.journal import Journal
 from fishhat_reporting.store import EventStore
 
-from scripts.engineering import declarations
+from scripts.engineering import declarations, public_implementations
 from tests.support import FIXTURES
 from tests.test_component_policy import restore_fixture
 
@@ -324,7 +324,7 @@ def test_workflow_pagination_preserves_logical_extent(tmp_path):
 
 def test_operation_owned_bounds_are_discovered_and_never_claim_native_qualification():
     found = declarations()
-    assert set(found) == {
+    assert set(found) >= {
         "bootstrap.catalogue",
         "wire.read-frame",
         "directory.load",
@@ -335,6 +335,11 @@ def test_operation_owned_bounds_are_discovered_and_never_claim_native_qualificat
         "reporting.workflows",
         "workflow.phase-evidence",
     }
+    owned_symbols = {row["symbol"] for row in found.values()}
+    assert all(
+        row["classification"] == "constant-source-body" or row["symbol"] in owned_symbols
+        for row in public_implementations().values()
+    )
     assert all(item["qualification"] == "reference-model" for item in found.values())
     assert "reference-scan" in found["reporting.put"]["work"]
     assert all(item["proofs"] and item["sources"] for item in found.values())

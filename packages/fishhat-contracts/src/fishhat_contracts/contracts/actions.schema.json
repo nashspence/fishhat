@@ -1933,14 +1933,13 @@
         "input": {
           "$ref": "common.schema.json#/$defs/Handle"
         },
-        "input_schema_digest": {
-          "type": "string",
-          "minLength": 71,
-          "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
+        "input_schema": {
+          "$ref": "common.schema.json#/$defs/SchemaIdentity",
+          "description": "Exact independently installed input schema URI and complete closure digest. A core role MutationRequest URI requires the same role canonical RetainedResult URI regardless of result-schema wrappers. Custom input and result extensions have explicit independently installed identities. Custom inputs must not forward the whole instance to a core request through $ref or the inspected allOf, anyOf, oneOf, then or else schema positions. This reference check does not establish general logical equivalence between independently authored schemas. Unknown or changed input identities reject."
         },
         "result_schema": {
-          "$ref": "common.schema.json#/$defs/SchemaIdentity"
+          "$ref": "common.schema.json#/$defs/SchemaIdentity",
+          "description": "Custom installed result schemas use the fixed Draft 2020-12 assertion profile: known keywords and formats, proven-linear regular expressions, and static acyclic references to actual schema positions in the selected installed closure or source-reviewed core contracts. The existing provider schema execution-depth capacity also applies to custom result schemas. Literal annotations are instance data, not schema positions. Unsupported profiles reject before matching result values; schema admission preserves exact published bytes and identities."
         }
       },
       "required": [
@@ -1948,11 +1947,11 @@
         "adapter_release",
         "action",
         "input",
-        "input_schema_digest",
+        "input_schema",
         "result_schema"
       ],
       "additionalProperties": false,
-      "description": "Execute the exact declared adapter action and input through a receiving-owner-approved artifact, configuration and scope. Resolve the actual native targets and mutation facets and enforce the same controlling owner, accepted binding, admission, holds, retention and recovery obligations as the corresponding typed operation. Generic dispatch grants no alternate authority. An executor subordinate to a runtime controller must use that controller's durable attempt and admission path; an adapter identity or scope label alone cannot authorize it. This is an advanced capability boundary, not a general shell or source-controlled enrollment mechanism. The receiving owner independently resolves the approved selected method and requires its result schema identity to match result_schema. Planning binds that schema; a caller cannot select a more permissive result contract."
+      "description": "Execute the exact declared adapter action and input through a receiving-owner-approved artifact, configuration and scope. Resolve the actual native targets and mutation facets and enforce the same controlling owner, accepted binding, admission, holds, retention and recovery obligations as the corresponding typed operation. Generic dispatch grants no alternate authority. An executor subordinate to a runtime controller must use that controller's durable attempt and admission path; an adapter identity or scope label alone cannot authorize it. This is an advanced capability boundary, not a general shell or source-controlled enrollment mechanism. The receiving owner independently resolves the approved selected method and requires its result schema identity to match result_schema. Planning binds that schema; a caller cannot select a more permissive result contract. Core typed adapter methods bind their role RetainedResult, preserving the exact invocation and full response under the same request identity, coverage, effect and successful-output checks as a direct reply. Output alone cannot establish a durable typed result."
     },
     "backend.enroll": {
       "type": "object",

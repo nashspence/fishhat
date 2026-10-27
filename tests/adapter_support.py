@@ -39,6 +39,7 @@ def runtime_registry() -> tuple[Registry, dict, dict]:
         "runtime.deactivate",
         "runtime.observe",
         "runtime.inventory",
+        "runtime.reconcile",
     ]
     installation = {
         "implementation": descriptor["id"],

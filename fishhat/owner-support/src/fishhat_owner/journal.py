@@ -148,6 +148,10 @@ class Journal:
     def transition(self, request_id: str, new_state: str, effect: str) -> None:
         if effect not in ("none", "known", "unknown"):
             raise ContractError("unknown effect classification")
+        # Reserve the writer before reading the predecessor. SQLite's implicit
+        # transaction starts at UPDATE, too late to protect that read from a
+        # competing connection committing a terminal outcome.
+        self.db.execute("BEGIN IMMEDIATE")
         with self.db:
             old = self.db.execute(
                 "SELECT state FROM requests WHERE request_id=?", (request_id,)

@@ -53,6 +53,7 @@ from tests.test_workflow_transfer import (
     proposal as transfer_proposal,
 )
 from tests.workflow_evidence_support import phase_evidence, seal_phase_participant
+from tests.workflow_lifecycle_support import lifecycle, seal_lifecycle
 
 CHECK_PURPOSE = {
     "purpose": "public-contract",
@@ -170,10 +171,13 @@ def participant_capsule(original, owner):
             w for w in preparation_witnesses(record["proposal"]) if canonical(w) not in existing
         )
     for receipt in record["bindings"] + record["advances"]:
-        native = receipt.get("authority") == "native-owner"
-        source = "completion" if native else "request"
+        source = {"native-owner": "completion", "native-lifecycle": "decision"}.get(
+            receipt.get("authority"), "request"
+        )
         original = receipt[source]
         original["owner"] = copy.deepcopy(record["owner"])
+        if source == "decision":
+            seal_lifecycle(original, record)
         evidence = original.get("phase_evidence")
         if evidence is not None:
             evidence["transition"]["owner"] = copy.deepcopy(record["owner"])
@@ -733,7 +737,10 @@ def finish_transfer(value):
 @pytest.mark.parametrize("state", ["prepared", "active", "paused", "recovery-required"])
 def test_driver_transfer_preserves_lifecycle_and_exact_replay(state):
     original = workflow()
-    original["state"] = state
+    if state == "active":
+        original = move(original, PHASES[original["type"]][1])
+    elif state != "prepared":
+        original = lifecycle(original, "pause" if state == "paused" else "require-recovery")
     value, query = finish_transfer(original)
     assert value["state"] == state
     assert value["phase"] == original["phase"]
@@ -756,7 +763,7 @@ def test_terminal_workflow_cannot_begin_new_driver_transfer(state):
     if state == "completed":
         value = move(value, PHASES[value["type"]][-1])
     else:
-        value["state"] = state
+        value = lifecycle(value, "cancel")
     validate_workflow(value)
     query = {
         "owner": value["owner"],
@@ -810,7 +817,7 @@ def test_terminal_lifecycle_keeps_exact_accepted_transfer_replay(phase, state):
     if state == "completed":
         value = native_completion(value)
     else:
-        value["state"] = state
+        value = lifecycle(value, "cancel")
     value["generation"] += 1
     validate_workflow(value)
     if phase == "completed":
@@ -827,9 +834,14 @@ def test_terminal_lifecycle_keeps_exact_accepted_transfer_replay(phase, state):
 
 @pytest.mark.parametrize("state", ["prepared", "active", "paused", "recovery-required"])
 def test_transfer_completion_cannot_combine_driver_change_with_phase_progress(state):
-    value, _ = committed()
-    value["state"] = state
+    value = capsule()
+    if state == "active":
+        value = move(value, PHASES[value["type"]][1])
+    elif state != "prepared":
+        value = lifecycle(value, "pause" if state == "paused" else "require-recovery")
+    value, _ = committed(value)
     query = completion_request(value)
-    query["phase"] = PHASES[value["type"]][1]
+    phases = PHASES[value["type"]]
+    query["phase"] = phases[phases.index(value["phase"]) + 1]
     with pytest.raises(ContractError):
         advance_workflow(query, value)

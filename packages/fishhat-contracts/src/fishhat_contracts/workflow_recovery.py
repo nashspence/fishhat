@@ -532,6 +532,10 @@ def validate_recovery_custody(
     _require(custody["phase"] in {"committed", "abandoned"}, "committed supersession phase changed")
     original = receipt["request"]
     _require(
+        original["expected_generation"] == 0 and receipt["generation"] == 1,
+        "retained recovery commit must be the first successor generation",
+    )
+    _require(
         found == {canonical(p["owner"]) for p in proposal["participants"]}
         and original["preparations"] == custody["preparations"]
         and original["owner"] == workflow["owner"]

@@ -6,6 +6,7 @@ import copy
 import io
 import json
 from contextlib import redirect_stdout
+from types import ModuleType
 
 import pytest
 from fishhat_adapters import check_configuration
@@ -20,7 +21,7 @@ from fishhat_owner.journal import Journal
 from fishhat_reporting.store import EventStore
 from jsonschema import Draft202012Validator, validators
 
-from scripts.engineering import declarations
+from scripts.engineering import declarations, implementation_coverage, public_implementations
 from scripts.project_policy import ROOT, read_toml
 from tests.linear_support import assert_linear, measure
 from tests.test_bootstrap import records
@@ -323,6 +324,36 @@ def test_linear_oracle_rejects_quadratic_work_and_repeated_prefix_serialization(
             assert_linear(samples)
 
 
+def test_linear_oracle_counts_c_container_traversal_and_full_state_copies():
+    owner = ModuleType("measured_container_owner")
+    exec(
+        "def rebuild(items, constructor):\n"
+        "    for _ in items:\n"
+        "        if constructor == 'set':\n"
+        "            set(items)\n"
+        "        elif constructor == 'dict':\n"
+        "            dict(items)\n"
+        "        elif constructor == 'list':\n"
+        "            list(items)\n"
+        "        else:\n"
+        "            items.copy()\n",
+        vars(owner),
+    )
+    for constructor in ("set", "dict", "list", "copy"):
+        samples = []
+        for count in SCALES:
+            items = {str(index): index for index in range(count)}
+            _, work = measure(
+                lambda items=items, constructor=constructor: owner.rebuild(items, constructor),
+                modules=(owner,),
+            )
+            metric = "copied_items" if constructor == "copy" else "container_items"
+            assert work[metric] == count * count
+            samples.append((count, work))
+        with pytest.raises(AssertionError):
+            assert_linear(samples)
+
+
 def test_every_declared_implementation_requires_linear_proofs():
     assert read_toml(ROOT / "release.toml")["engineering"] == {
         "growth": "linear",
@@ -399,6 +430,71 @@ def test_nonlinear_or_missing_growth_declarations_block_implementation(monkeypat
             declarations()
 
 
+def test_new_export_without_any_bounds_is_discovered_and_blocks(monkeypatch):
+    import fishhat_contracts
+    from fishhat_contracts.resources import validate_requirements
+
+    assert not hasattr(validate_requirements, "__growth_bounds__")
+    monkeypatch.setattr(
+        fishhat_contracts, "validate_requirements", validate_requirements, raising=False
+    )
+    monkeypatch.setattr(
+        fishhat_contracts, "__all__", [*fishhat_contracts.__all__, "validate_requirements"]
+    )
+    with pytest.raises(
+        ValueError, match=r"public implementation lacks linear bounds.*validate_requirements"
+    ):
+        declarations()
+
+
+def test_growth_ownership_distinguishes_constant_setup_and_unimplemented_native_operations():
+    from scripts.engineering import _constant_setup
+
+    class HiddenAssignmentWork:
+        def __init__(self):
+            self.state = {}
+
+        def __setattr__(self, name, value):
+            for key in self.__dict__:
+                str(key)
+            object.__setattr__(self, name, value)
+
+    class HiddenDescriptorWork:
+        def __init__(self):
+            self.state = {}
+
+        @property
+        def state(self):
+            return None
+
+        @state.setter
+        def state(self, value):
+            for key in self.__dict__:
+                str(key)
+
+    assert not _constant_setup(HiddenAssignmentWork.__init__, HiddenAssignmentWork)
+    assert not _constant_setup(HiddenDescriptorWork.__init__, HiddenDescriptorWork)
+    exported = public_implementations()
+    assert (
+        exported["fishhat_adapters:Registry.__init__"]["classification"] == "constant-source-body"
+    )
+    assert exported["fishhat_adapters:Registry.enroll"]["classification"] == "input-sized-operation"
+    coverage = implementation_coverage(ROOT, declarations())
+    unimplemented = [
+        row for row in coverage["operations"].values() if row["implementation"] is None
+    ]
+    assert unimplemented
+    assert all(
+        row["status"] == "unimplemented"
+        and not row["growth_proofs"]
+        and not row["native_qualified"]
+        for row in unimplemented
+    )
+    assert all(
+        row["growth_proofs"] for row in coverage["operations"].values() if row["implementation"]
+    )
+
+
 def test_phase_growth_witness_rejects_pairwise_schema_regression(monkeypatch):
     from fishhat_contracts import validation
 
@@ -413,7 +509,10 @@ def test_phase_growth_witness_rejects_pairwise_schema_regression(monkeypatch):
 
 for _name, _authority in {
     "test_linear_oracle_rejects_quadratic_work_and_repeated_prefix_serialization": "tests/linear_support.py#assert_linear",
+    "test_linear_oracle_counts_c_container_traversal_and_full_state_copies": "tests/linear_support.py#measure",
     "test_nonlinear_or_missing_growth_declarations_block_implementation": "scripts/engineering.py#declarations",
+    "test_new_export_without_any_bounds_is_discovered_and_blocks": "scripts/engineering.py#declarations",
+    "test_growth_ownership_distinguishes_constant_setup_and_unimplemented_native_operations": "scripts/engineering.py#implementation_coverage",
     "test_phase_growth_witness_rejects_pairwise_schema_regression": "tests/test_linear_growth.py#test_phase_evidence_linear_work",
     "test_every_declared_implementation_requires_linear_proofs": "release.toml#/engineering",
 }.items():

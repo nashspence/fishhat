@@ -6,7 +6,7 @@ import copy
 
 import pytest
 from fishhat_adapters import check_response
-from fishhat_adapters.dns import validate_changes, validate_rrsets
+from fishhat_contracts.dns import validate_changes, validate_rrsets
 from fishhat_contracts.validation import ContractError, canonical
 
 from tests.test_adapter_dns import change, rrset
