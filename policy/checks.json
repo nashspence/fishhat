@@ -6209,6 +6209,10 @@
       "purpose_sha256": "fbd8de233dd674c1fb789dfc15d14fe15bfc64a8977868868b52d2686039e652"
     },
     {
+      "node": "tests/test_performance_measurement.py::test_parallel_cpu_totals_survive_worker_order_and_sorted_receipt_json",
+      "purpose_sha256": "fbd8de233dd674c1fb789dfc15d14fe15bfc64a8977868868b52d2686039e652"
+    },
+    {
       "node": "tests/test_performance_measurement.py::test_parallel_metrics_account_for_workers_without_claiming_a_simultaneous_peak",
       "purpose_sha256": "fbd8de233dd674c1fb789dfc15d14fe15bfc64a8977868868b52d2686039e652"
     },

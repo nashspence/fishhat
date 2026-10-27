@@ -85,6 +85,8 @@ def parallel_stats(processes: dict[str, Any]) -> dict[str, Any]:
         )
     ):
         raise ValueError("invalid parallel process statistics")
+    # CPU totals must survive worker completion order and sorted JSON even on
+    # Python versions whose built-in sum uses naive floating-point addition.
     result = dict(processes["controller"])
     for field in (
         "cpu_user_seconds",
@@ -94,7 +96,8 @@ def parallel_stats(processes: dict[str, Any]) -> dict[str, Any]:
         "rss_sampled_peak_bytes",
         "rss_high_water_bytes",
     ):
-        result[field] = sum(stats[field] for stats in processes.values())
+        values = [stats[field] for stats in processes.values()]
+        result[field] = math.fsum(values) if field.startswith("cpu_") else sum(values)
     available = all(stats["io_available"] for stats in processes.values())
     result.update(
         scope="pytest-controller-and-workers-excludes-other-children",
