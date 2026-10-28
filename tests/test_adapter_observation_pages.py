@@ -50,7 +50,14 @@ def page(role, method="observe"):
         "method": method,
         "input": {"scope": executor["scope"], "cursor": "page:one", "limit": 1},
     }
-    if role in {"repository", "service", "software"}:
+    if role in {
+        "repository",
+        "service",
+        "software",
+        "runtime",
+        "secret-source",
+        "credential-issuer",
+    }:
         query["input"]["binding"] = executor
     if role == "runtime":
         query["input"]["barrier"] = None

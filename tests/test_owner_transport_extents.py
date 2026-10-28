@@ -42,6 +42,7 @@ def plan_input(count=1):
             "action": "app.cleanup",
             "resource": {"kind": "app", "id": "demo-app"},
             "arguments": {
+                "account": "app-demo-app",
                 "inventory_digest": "sha256:" + "a" * 64,
                 "candidates": ["sha256:" + f"{index:064x}" for index in range(count)],
             },

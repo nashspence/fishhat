@@ -600,6 +600,9 @@ class AdapterCoordinator:
                 "cursor": None,
                 "limit": limit,
                 "barrier": barrier,
+                "binding": instance_reference(
+                    self.registry.inspect_instance(binding["instance"]), binding["scope"]
+                ),
             },
         }
         self.registry.authorize_request(

@@ -6,7 +6,7 @@ import pytest
 from fishhat_adapters import check_invocation, check_request, check_response
 from fishhat_contracts.validation import ContractError, digest
 
-from tests.adapter_support import identifier
+from tests.adapter_support import OWNER, identifier
 from tests.test_adapter_dns import change, rrset
 from tests.test_adapter_effects import coordinator, prepare, result
 from tests.test_adapter_handoffs import (
@@ -245,7 +245,15 @@ def test_creation_success_requires_recoverable_produced_identity(role):
     elif role == "credential-issuer":
         method = "issue"
         inputs.update(
-            issuer=executor, identity="database-user", consumer="demo", lifetime_seconds=3600
+            issuer=executor,
+            identity="database-user",
+            consumer="demo",
+            lifetime_seconds=3600,
+            value_destination={
+                "id": identifier(77),
+                "owner": copy.deepcopy(OWNER),
+                "consumer": "demo",
+            },
         )
         output = {"leases": []}
     elif role == "backup":

@@ -5,7 +5,7 @@ from __future__ import annotations
 import copy
 
 import pytest
-from fishhat_adapters import Registry, check_request, check_response
+from fishhat_adapters import Registry, check_request, check_response, instance_reference
 from fishhat_contracts.validation import ContractError, digest, validate
 from fishhat_owner.adapter_state import AdapterCoordinator
 
@@ -68,7 +68,13 @@ def test_protocol_correlates_observation_challenges_independently_of_coordinator
     query = {
         "contract": "fishhat.runtime",
         "method": method,
-        "input": {"scope": copy.deepcopy(SCOPE), "cursor": None, "limit": 10, "barrier": barrier},
+        "input": {
+            "scope": copy.deepcopy(SCOPE),
+            "cursor": None,
+            "limit": 10,
+            "barrier": barrier,
+            "binding": instance_reference(runtime_registry()[2], SCOPE),
+        },
     }
     reply = {
         "contract": query["contract"],

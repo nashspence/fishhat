@@ -11,6 +11,7 @@ from fishhat_adapters import (
     check_descriptor,
     check_request,
     check_schema,
+    instance_reference,
 )
 from fishhat_contracts.validation import SCHEMAS, ContractError, digest, validate
 
@@ -202,7 +203,13 @@ def test_read_response_is_bound_to_request_and_complete_coverage():
     query = {
         "contract": "fishhat.runtime",
         "method": "observe",
-        "input": {"scope": SCOPE, "cursor": None, "limit": 10, "barrier": None},
+        "input": {
+            "scope": SCOPE,
+            "cursor": None,
+            "limit": 10,
+            "barrier": None,
+            "binding": instance_reference(runtime_registry()[2], SCOPE),
+        },
     }
     response = {
         "contract": query["contract"],

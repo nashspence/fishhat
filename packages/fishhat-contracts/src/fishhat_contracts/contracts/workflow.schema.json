@@ -41,7 +41,7 @@
         "phase"
       ],
       "additionalProperties": false,
-      "description": "One exact child request with a complete reviewed Plan, assigned to an installed procedure phase. Initial ready Plans are the first request for their participant and use its initial expected_generation. Later reviewed Plans are retained through workflow.bind, with current independently verified preconditions. The Plan owner and subject resource match its participant; every effect remains within the immutable participant closure. adapter.execute requires the complete approved AdapterInput; other actions forbid it.",
+      "description": "One exact child request with a complete reviewed Plan, assigned to an installed procedure phase. Initial ready Plans are the first request for their participant and use its initial expected_generation. Later reviewed Plans are retained through workflow.bind, with current independently verified preconditions. The Plan owner and subject resource match its participant; every effect remains within the immutable participant closure. adapter.execute requires the complete approved AdapterInput; other actions forbid it. Ordinary child evidence must match its exact owner, request, Plan and the enclosing workflow ID in the Operation witness at binding, phase advancement and recovery alike; standalone or unrelated-workflow success cannot fulfill it.",
       "allOf": [
         {
           "if": {
@@ -632,7 +632,7 @@
         "phase_evidence"
       ],
       "additionalProperties": false,
-      "description": "One immutable advance identity. The receiving owner reauthorizes the actual principal, resolves advance_id and exact retained input before current generation/term or new-input expiry checks, and replays an identical accepted transition without executing it again. Changed input under the same advance_id conflicts. A new request compares the exact local capsule generation and current driver term and follows the installed next phase; it cannot skip phases or revive terminal/recovery-required work. Every prerequisite witness is independently authenticated and checked against its local procedure obligations. When a transfer is pending in commit phase, transfer_completion must contain the complete transferred-witness closure for the exact proposal and the unchanged retained local commit. The owner atomically retains that evidence, marks the transfer completed, records the advance outcome and increments its capsule generation once. Transfer completion must preserve the current procedure phase and exact lifecycle state; subsequent phase progress requires a separate ordinarily authorized advance. It never implies rollback, release of holds or completion of a child operation. An unavailable epoch or incomplete evidence remains unresolved and cannot be replaced by timeout. Driver transfer is orthogonal to lifecycle. Completion preserves the exact prior lifecycle state, including paused and recovery-required. No transfer is permitted to reactivate cancelled or completed work. A successor with recovery preparation not yet committed cannot advance. Before an ordinary phase transition, witnesses plus already retained prerequisites must contain complete authenticated PreparationWitness agreement for all distinct original participant owners. Retain each exact proof; a conflicting proposal digest, replacement local witness or omitted owner fails. A committed recovery successor uses its complete recovery preparation closure for this agreement. Every ordinary advance carries complete phase_evidence under workflow-evidence.schema.json: exact proposal-bound transition, participant native proofs and installed child success barriers. Receiving owners independently authenticate and currently verify that evidence before acceptance; merely bound Plans cannot complete a phase. The same-phase transfer-completion path requires null phase_evidence. This transport input cannot request owner-native authority; every non-null phase proof binds authority driver. New ordinary phase progress requires prepared or active lifecycle; paused work requires a separate independently authorized owner-native resume. Exact accepted advances remain replayable after any later lifecycle restriction."
+      "description": "One immutable advance identity. The receiving owner reauthorizes the actual principal, resolves advance_id and exact retained input before current generation/term or new-input expiry checks, and replays an identical accepted transition without executing it again. Changed input under the same advance_id conflicts. A new request compares the exact local capsule generation and current driver term and follows the installed next phase; it cannot skip phases or revive terminal/recovery-required work. Every prerequisite witness is independently authenticated and checked against its local procedure obligations. When a transfer is pending in commit phase, transfer_completion must contain the complete transferred-witness closure for the exact proposal and the unchanged retained local commit. The owner atomically retains that evidence, marks the transfer completed, records the advance outcome and increments its capsule generation once. Transfer completion must preserve the current procedure phase and exact lifecycle state; subsequent phase progress requires a separate ordinarily authorized advance. It never implies rollback, release of holds or completion of a child operation. An unavailable epoch or incomplete evidence remains unresolved and cannot be replaced by timeout. Driver transfer is orthogonal to lifecycle. Completion preserves the exact prior lifecycle state, including paused and recovery-required. No transfer is permitted to reactivate cancelled or completed work. A successor with recovery preparation not yet committed cannot advance. Before an ordinary phase transition, witnesses plus already retained prerequisites must contain complete authenticated PreparationWitness agreement for all distinct original participant owners. Retain each exact proof; a conflicting proposal digest, replacement local witness or omitted owner fails. A committed recovery successor uses its complete recovery preparation closure for this agreement. Every ordinary advance carries complete phase_evidence under workflow-evidence.schema.json: exact proposal-bound transition, participant native proofs and installed child success barriers. Receiving owners independently authenticate and currently verify that evidence before acceptance; merely bound Plans cannot complete a phase. The same-phase transfer-completion path requires null phase_evidence. This transport input cannot request owner-native authority; every non-null phase proof binds authority driver. New ordinary phase progress requires prepared or active lifecycle; paused work requires a separate independently authorized owner-native resume. Exact accepted advances remain replayable after any later lifecycle restriction. The successful wire result is the original finite MutationAcknowledgment, correlated to advance_id, complete decoded input and committed local generation. Full capsule inspection is a separate workflow.get/list or record.read operation."
     },
     "InputReference": {
       "type": "object",
@@ -878,7 +878,7 @@
         "producer_output"
       ],
       "additionalProperties": false,
-      "description": "An independently verified material derivation retained by its receiving custodian. The witness owner equals material.owner, kind binding, state verified, exact workflow ID, and subject_digest covers the complete canonical body excluding witness. For publication, producer is the exact succeeded issuer operation and material is the complete ciphertext candidate derived from its issued credential. For adoption, producer is the exact succeeded publication operation, material contains the complete publication receipt, and that receipt names the exact published candidate and custodian. A receiver independently authenticates this lineage and byte custody before placing it in verified_materials; neither a signature-shaped object nor the request supplies that approval. The issuer-to-publication binding is retained transitively, never replaced by a coincidental receipt digest. producer_output is a verified receiving-custodian copy of the exact non-null Operation result handle bytes, matching digest and size and retained in the new Plan input closure. For adoption it equals material and therefore the canonical receipt is the exact publication Operation output, not another publication of equal ciphertext."
+      "description": "An independently verified material derivation retained by its receiving custodian. The witness owner equals material.owner, kind binding, state verified, exact workflow ID, and subject_digest covers the complete canonical body excluding witness. For publication, producer is the exact succeeded issuer operation and material is the complete ciphertext candidate derived from its issued credential. For adoption, producer is the exact succeeded publication operation, material contains the complete publication receipt, and that receipt names the exact published candidate and custodian. A receiver independently authenticates this lineage and byte custody before placing it in verified_materials; neither a signature-shaped object nor the request supplies that approval. The issuer-to-publication binding is retained transitively, never replaced by a coincidental receipt digest. producer_output is a verified receiving-custodian copy of the exact non-null Operation result handle bytes, matching digest and size and retained in the new Plan input closure. For adoption it equals material and therefore the canonical receipt is the exact publication Operation output, not another publication of equal ciphertext. Credential-to-ciphertext derivation additionally requires the exact original ProtectedValueHandoff to be available and its receiving owner to have committed original-value custody; an opaque value_handle alone is insufficient. Missing material preserves confirmed native effects and cannot authorize repeating issuance."
     },
     "BindRequest": {
       "type": "object",
@@ -941,7 +941,7 @@
         "materials"
       ],
       "additionalProperties": false,
-      "description": "One exact later-reviewed child binding. The receiver resolves bind_id replay before freshness, checks the immutable slot and installed phase, current driver, authentic complete predecessor evidence and the protected current resource generations, then independently approves the full new Plan. Every material and selected adapter is verified and retained before acknowledgment. Input is staged through workflow-input custody. The binding atomically increments only the local workflow capsule generation and retains its original request; it does not admit native effects. Plan admission still checks current owner/resource generation, deadline and permission. The same child cannot acquire a different Plan. Other replicas retain the same owner-approved binding and producer lineage under their own exact local request identity; transport alone supplies no approval. New bindings require prepared or active lifecycle and are refused while paused, recovery-required or terminal; exact previously accepted bindings remain replayable under current access."
+      "description": "One exact later-reviewed child binding. The receiver resolves bind_id replay before freshness, checks the immutable slot and installed phase, current driver, authentic complete predecessor evidence and the protected current resource generations, then independently approves the full new Plan. Every material and selected adapter is verified and retained before acknowledgment. Input is staged through workflow-input custody. The binding atomically increments only the local workflow capsule generation and retains its original request; it does not admit native effects. Plan admission still checks current owner/resource generation, deadline and permission. The same child cannot acquire a different Plan. Other replicas retain the same owner-approved binding and producer lineage under their own exact local request identity; transport alone supplies no approval. New bindings require prepared or active lifecycle and are refused while paused, recovery-required or terminal; exact previously accepted bindings remain replayable under current access. Ordinary predecessor Operations must name this workflow in their witness; a CompletedBinding instead requires its exact preserved ancestor operation. The successful wire result is MutationAcknowledgment for the original request and committed generation, not a current Workflow snapshot."
     },
     "BindReceipt": {
       "type": "object",
@@ -964,7 +964,7 @@
         "generation"
       ],
       "additionalProperties": false,
-      "description": "The complete accepted binding request and local committed capsule generation. Retained exact input supports replay after deadline, generation or driver changes; current access remains required. Binding receipts are append-only, unique by bind_id and child, and preserve preceding output lineage."
+      "description": "The complete accepted binding request and local committed capsule generation. Retained exact input supports replay after deadline, generation or driver changes; current access remains required. Binding receipts are append-only, unique by bind_id and child, and preserve preceding output lineage. Its finite MutationAcknowledgment is retained with this exact outcome and replayed unchanged; later capsule generation does not change the acknowledged generation."
     },
     "CompletedBinding": {
       "type": "object",
@@ -1032,7 +1032,7 @@
         "completed"
       ],
       "additionalProperties": false,
-      "description": "A nonexecutable successor slot fulfilled by an exact previously succeeded operation and its original Plan. The new slot identity is a workflow reference, never a new operation request. Original owner epoch, request identity, Plan and outcome remain unchanged. Only workflow.recover may introduce this slot after independently verifying the complete predecessor closure. A fresh prepare cannot turn a supplied receipt into fulfillment. Later continuations use the retained original successful operation as their predecessor evidence."
+      "description": "A nonexecutable successor slot fulfilled by an exact previously succeeded operation and its original Plan. The new slot identity is a workflow reference, never a new operation request. Original owner epoch, request identity, Plan and outcome remain unchanged. Only workflow.recover may introduce this slot after independently verifying the complete predecessor closure. A fresh prepare cannot turn a supplied receipt into fulfillment. Later continuations use the retained original successful operation as their predecessor evidence. The exact original Operation witness workflow_id is preserved across successors; it is never rewritten to the successor ID. Every later binding, phase and recovery join requires that complete preserved operation rather than ordinary successor membership."
     },
     "PreparationWitness": {
       "allOf": [
@@ -1103,7 +1103,7 @@
         "state"
       ],
       "additionalProperties": false,
-      "description": "The original complete accepted driver advance and its immutable finite outcome. authority is driver and the exact request remains an AdvanceRequest. Ordinary phase admission cannot occur during a pending driver transfer; only its separately authorized same-phase completion can close that interval. generation identifies the local atomic transition and stays fixed after later observations or transfers. Exact accepted replay returns the current capsule without applying the transition again. Ordinary phase progress is admitted only from prepared or active; paused and recovery-required capsules may only retain same-phase transfer completion, which preserves their lifecycle restrictions."
+      "description": "The original complete accepted driver advance and its immutable finite outcome. authority is driver and the exact request remains an AdvanceRequest. Ordinary phase admission cannot occur during a pending driver transfer; only its separately authorized same-phase completion can close that interval. generation identifies the local atomic transition and stays fixed after later observations or transfers. Exact accepted wire replay returns the original finite MutationAcknowledgment without applying the transition again; current capsule retrieval is separate. Ordinary phase progress is admitted only from prepared or active; paused and recovery-required capsules may only retain same-phase transfer completion, which preserves their lifecycle restrictions."
     },
     "NativeCompletion": {
       "type": "object",
@@ -1460,6 +1460,52 @@
       ],
       "additionalProperties": false,
       "description": "The original accepted requested native decision and its local outcome, not a fresh current-state observation or an Operation acceptance. The request_id and request_digest select receipt.decision.request.input exactly; request attribution is non-null. The receipt generation equals expected_generation+1 and its phase/driver term and legal destination match the signed decision under this installed procedure. Every replay returns these same values, preserving the original principal, even after newer workflow transitions. The receiver separately authenticates the native witness; structural checks and a digest do not establish native truth. Witness evidence remains complete and uncapped. When this result cannot fit a wire frame, return an immutable Workflow RecordReference for its complete retained capsule; read all chunks, verify the exact snapshot, select the unique requested receipt by request_id and request_digest, and reconstruct this same result. Never omit evidence or replace the original receipt with current workflow state. Success proves the local admission decision only, never child termination, global cancellation, rollback, hold release or native qualification."
+    },
+    "MutationAcknowledgment": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/workflow-acknowledgment/v1"
+        },
+        "kind": {
+          "const": "WorkflowMutationAcknowledgment"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "workflow_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "method": {
+          "enum": [
+            "workflow.bind",
+            "workflow.advance"
+          ]
+        },
+        "mutation_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "request_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "owner",
+        "workflow_id",
+        "method",
+        "mutation_id",
+        "request_digest",
+        "generation"
+      ],
+      "additionalProperties": false,
+      "description": "The finite immutable local acknowledgment for exactly one accepted workflow.bind or workflow.advance. mutation_id is the decoded original bind_id or advance_id, request_digest commits the complete canonical decoded request rather than a staging locator, and generation is that request expected_generation plus one. owner and workflow_id exactly match the request and receiving owner epoch. Before replying the owner independently authorizes the mutation and atomically retains its complete original input, individual outcome, acknowledgment and required material/evidence custody. The same exact accepted request returns this same acknowledgment under current read permission even after later generations, driver changes or deadline expiry; changed input under the identity conflicts. Acknowledgment creation and replay use the individual retained outcome and must not require copying, serializing, hashing or fetching the whole Workflow. workflow.get/list and record.read separately disclose complete retained history; no history, evidence or custody is omitted by a finite reply. Receivers correlate every field with their independently retained request commitment and expected owner before treating this as local acceptance. This record is neither current workflow state, proof of child execution or global completion, native authentication nor permission to execute. A missing reply remains acceptance uncertainty. No full-Workflow or RecordReference alternate is accepted for these two mutation responses. Linear reply-production and correlation work does not qualify full workflow validation, admission, storage or execution growth, which retain their separate requirements."
     }
   }
 }

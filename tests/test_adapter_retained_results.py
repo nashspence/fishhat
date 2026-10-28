@@ -177,9 +177,7 @@ def test_retained_invocation_must_belong_to_the_exact_accepted_operation(reconci
     if change == "operation":
         record["id"] = identifier(99)
     elif change == "owner":
-        retained["invocation"]["attempt"]["owner"]["epoch"] = identifier(99)
-        if reconcile:
-            retained["response"]["request_digest"] = digest(recovered(retained["invocation"]))
+        record["owner"]["epoch"] = identifier(99)
     elif change == "executor":
         arguments["adapter_id"] = "another-adapter"
     elif change == "artifact":
@@ -213,6 +211,9 @@ def test_pending_adapter_evidence_cannot_support_a_successful_operation():
         task_state="running", native_task="task:pending", postcondition="unknown"
     )
     retained["response"]["output"]["leases"] = []
+    retained["response"]["output"]["handoff"].update(
+        state="unknown", value_handle=None, size_bytes=None
+    )
     with pytest.raises(ContractError, match="SUCCESSFUL_OPERATION_REQUIRES_ADAPTER_SUCCESS"):
         read_result(record, retained)
 
@@ -231,7 +232,9 @@ def test_succeeded_workflow_child_rejects_output_only_durable_shape():
 
 def test_core_output_schema_cannot_be_selected_as_an_adapter_execution_result():
     record, retained = result_fixture()
-    uri = "https://fishhat.invalid/contracts/credential-issuer-adapter.schema.json#/$defs/Output"
+    uri = (
+        "https://fishhat.invalid/contracts/credential-issuer-adapter.schema.json#/$defs/ValueOutput"
+    )
     record["subject"]["arguments"]["result_schema"] = schema_identity(uri)
     output = retained["response"]["output"]
     with pytest.raises(ContractError, match="complete retained invocation and response"):
@@ -292,6 +295,7 @@ def test_retained_adapter_result_cannot_erase_known_effect_certainty(reconcile):
     response["request_digest"] = digest(query)
     response["effect"].update(effect_certainty="none", postcondition="not-satisfied")
     response["output"]["leases"] = []
+    response["output"]["handoff"].update(state="unknown", value_handle=None, size_bytes=None)
     # A weaker observation remains admissible for cumulative reconciliation. It
     # cannot become a committed summary that erases previously known effects.
     check_response("credential-issuer", query, response, invocation=invocation)

@@ -1084,7 +1084,8 @@
         "freed_bytes_attributable",
         "state"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "Complete accounting of an exact reviewed cleanup selection. owner, operation_id, plan_digest and account equal the enclosing Operation and its reviewed account; admission independently verifies the application-to-account mapping. items contains every selected candidate exactly once and no others, including blocked or unresolved candidates. verified-complete requires every outcome removed or already-absent; skipped and failed outcomes remain incomplete. Any unknown outcome requires effect-unknown and the enclosing Operation has unknown effect certainty. A succeeded Operation requires verified-complete and known effects. Partial/blocked receipts preserve all selected items rather than dropping unfinished work. Byte totals are observations, not authorization or proof of attributable reclaimed space."
     },
     "ResourceReport": {
       "type": "object",

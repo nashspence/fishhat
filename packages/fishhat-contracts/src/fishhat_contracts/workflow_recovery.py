@@ -26,6 +26,7 @@ from .workflow_unprepared import (
     validate_never_prepared,
 )
 from .workflows import (
+    _child_identity_matches,
     _pair,
     _request_key,
     bound_plan,
@@ -490,13 +491,8 @@ def _dispositions(
                 operation == succeeded[key],
                 "recovery changed retained successful workflow child outcome",
             )
-        identity_matches = (
-            operation == binding["completed"]["operation"]
-            if "completed" in binding
-            else operation["owner"] == old["owner"] and operation["request_id"] == old["request_id"]
-        )
         _require(
-            identity_matches
+            _child_identity_matches(operation, old, binding, original["workflow_id"])
             and operation["plan_digest"] == plan["digest"]
             and operation["subject"] == plan["subject"],
             "workflow recovery substituted original child work",

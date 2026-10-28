@@ -586,27 +586,16 @@
           "const": true
         },
         "result": {
-          "oneOf": [
+          "allOf": [
             {
-              "$ref": "records.schema.json#/$defs/Workflow"
+              "$ref": "workflow.schema.json#/$defs/MutationAcknowledgment"
             },
             {
-              "allOf": [
-                {
-                  "$ref": "common.schema.json#/$defs/RecordReference"
-                },
-                {
-                  "properties": {
-                    "record": {
-                      "properties": {
-                        "kind": {
-                          "const": "Workflow"
-                        }
-                      }
-                    }
-                  }
+              "properties": {
+                "method": {
+                  "const": "workflow.advance"
                 }
-              ]
+              }
             }
           ]
         }
@@ -1148,27 +1137,16 @@
           "const": true
         },
         "result": {
-          "oneOf": [
+          "allOf": [
             {
-              "$ref": "records.schema.json#/$defs/Workflow"
+              "$ref": "workflow.schema.json#/$defs/MutationAcknowledgment"
             },
             {
-              "allOf": [
-                {
-                  "$ref": "common.schema.json#/$defs/RecordReference"
-                },
-                {
-                  "properties": {
-                    "record": {
-                      "properties": {
-                        "kind": {
-                          "const": "Workflow"
-                        }
-                      }
-                    }
-                  }
+              "properties": {
+                "method": {
+                  "const": "workflow.bind"
                 }
-              ]
+              }
             }
           ]
         }
