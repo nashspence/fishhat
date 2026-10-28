@@ -1517,6 +1517,28 @@
       "symbol": "fishhat_adapters.protocol:Registry.source_target",
       "work": "O(B + R) current complete input bytes and selected retained registry records"
     },
+    "adapters.accumulate_result": {
+      "capacity": [
+        "The owner retains complete raw responses independently of this derived evidence"
+      ],
+      "extent": "Every retained result, including unknown observations and exact replays",
+      "growth": "linear",
+      "id": "adapters.accumulate_result",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_adapter_cumulative_results.py::test_cumulative_result_history_linear_work"
+      ],
+      "proofs": [
+        "tests/test_adapter_cumulative_results.py::test_cumulative_result_history_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py": "9c98d711c30780d24bc34f58fe309483d0881e44325921546d3002a9d7552259",
+        "tests/test_adapter_cumulative_results.py": "e5fe96da3de096c29e9327657c244f6c61de20dbcfa78cea615e342c8db99980"
+      },
+      "symbol": "fishhat_contracts.adapter_semantics:accumulate_result",
+      "work": "O(B) exact attempt, result and fixed-shape cumulative evidence bytes per observation"
+    },
     "adapters.check_configuration": {
       "capacity": [
         "Existing provider schema and configuration byte/work capacities reject explicitly"
@@ -1577,7 +1599,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py": "15405cdad6c4f6685d5bc2c58b2925ec01e0e6416b33c1a8736908e941187752",
+        "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py": "9c98d711c30780d24bc34f58fe309483d0881e44325921546d3002a9d7552259",
         "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_contracts.adapter_semantics:check_invocation",
@@ -1599,7 +1621,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py": "15405cdad6c4f6685d5bc2c58b2925ec01e0e6416b33c1a8736908e941187752",
+        "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py": "9c98d711c30780d24bc34f58fe309483d0881e44325921546d3002a9d7552259",
         "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_contracts.adapter_semantics:check_request",
@@ -1621,7 +1643,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py": "15405cdad6c4f6685d5bc2c58b2925ec01e0e6416b33c1a8736908e941187752",
+        "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py": "9c98d711c30780d24bc34f58fe309483d0881e44325921546d3002a9d7552259",
         "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_contracts.adapter_semantics:check_response",
@@ -1643,7 +1665,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py": "15405cdad6c4f6685d5bc2c58b2925ec01e0e6416b33c1a8736908e941187752",
+        "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py": "9c98d711c30780d24bc34f58fe309483d0881e44325921546d3002a9d7552259",
         "tests/test_export_growth.py": "90ee0f632fd359f57513075290f292c7e66fd271c7e35f0a41baa125296ac599"
       },
       "symbol": "fishhat_contracts.adapter_semantics:check_result",
@@ -1887,7 +1909,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/checkpoints.py": "ee5395876870b2274bf15ef0d413898463dfbbbae3a516b1cde46d953a4f98f4",
-        "tests/test_checkpoint_resolution.py": "5b6877363e8b0ae123823d54f921f5525fd172e48c8cfed3f7c660681bb5232a"
+        "tests/test_checkpoint_resolution.py": "a1b63d49bb8fb4309b0b310870d811af374286be0e2985608cde0f156333996c"
       },
       "symbol": "fishhat_contracts.checkpoints:resolve_checkpoint",
       "work": "Current-core O(S + B + E): per-resolution installed schema closure setup, complete checkpoint and distinct receipt/result bytes, and dataset-artifact incidences; each shared receipt and object indexed once. Historical pins use complete result validation under its fixed admitted schema profile and qualified reader bounds"
@@ -1910,7 +1932,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/checkpoints.py": "ee5395876870b2274bf15ef0d413898463dfbbbae3a516b1cde46d953a4f98f4",
-        "tests/test_checkpoint_resolution.py": "5b6877363e8b0ae123823d54f921f5525fd172e48c8cfed3f7c660681bb5232a"
+        "tests/test_checkpoint_resolution.py": "a1b63d49bb8fb4309b0b310870d811af374286be0e2985608cde0f156333996c"
       },
       "symbol": "fishhat_contracts.checkpoints:validate_checkpoint",
       "work": "O(B + E) complete checkpoint bytes and dataset/closure identities"
@@ -2104,8 +2126,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/handoffs.py": "5aadc89d799db3fa88ce74393e2d5b28c4c3cb800b63793e1dcf6b27b77f0f63",
-        "tests/test_result_schema_admission.py": "3dfa6a93b31496a1ddc74b6000e872791a0ef7f270c745a711c92ad9ba45a62e",
+        "packages/fishhat-contracts/src/fishhat_contracts/handoffs.py": "35bbbdb5fbc3bea1ad2df4f7162c123f3c49888a3207d595da177b8116310ca0",
+        "tests/test_result_schema_admission.py": "dd7ed5e788d1fa3dfc16e9f13c8b491d8401629b69db6dd511e3bfc3db15b830",
         "tests/test_retained_result_growth.py": "6b9ac27a2d0a04ca2e403cd8add2b194d592ab453f2c5442dd82b60c76e958d0"
       },
       "symbol": "fishhat_contracts.handoffs:validate_result_payload",
@@ -2721,16 +2743,18 @@
       "id": "workflow.lifecycle-request",
       "limits": [],
       "linear_proofs": [
-        "tests/test_workflow_lifecycle_requests.py::test_lifecycle_request_linear_complete_history_work"
+        "tests/test_workflow_lifecycle_requests.py::test_lifecycle_request_linear_complete_history_work",
+        "tests/test_workflow_lifecycle_requests.py::test_lifecycle_request_linear_child_and_binding_work"
       ],
       "proofs": [
         "tests/test_workflow_lifecycle_requests.py::test_accepted_lifecycle_request_replay_preserves_original_result_and_attribution",
-        "tests/test_workflow_lifecycle_requests.py::test_lifecycle_request_linear_complete_history_work"
+        "tests/test_workflow_lifecycle_requests.py::test_lifecycle_request_linear_complete_history_work",
+        "tests/test_workflow_lifecycle_requests.py::test_lifecycle_request_linear_child_and_binding_work"
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_lifecycle.py": "6a02c1981a5252574b6305baae0a3b791798f24b993d5542be5b0d42e587de63",
-        "tests/test_workflow_lifecycle_requests.py": "66c5c8e0d11ee88b251a399a689ead94b1e8d34dbf309401354ea9af4d3e7519"
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_lifecycle.py": "35bc98c0b7f1ef70dd9a2698f58b5a2f5ea33f3261db59f12b099dc7859ea707",
+        "tests/test_workflow_lifecycle_requests.py": "25c174cb52f4bd9aaf0b2f0b6d5ac58f39e11e159803dbfca9a569f053e063fc"
       },
       "symbol": "fishhat_contracts.workflow_lifecycle:request_workflow_lifecycle",
       "work": "O(B + H) complete capsule validation, exact history lookup and copying; B complete retained workflow/proposal/evidence bytes and H retained transition entries; the finite request never bounds retained result evidence"
@@ -2758,6 +2782,35 @@
       },
       "symbol": "fishhat_contracts.workflow_evidence:validate_phase_evidence",
       "work": "O(B + P + C + K) complete-input validation with hash-indexed structural uniqueness for fixed installed schema/phase closure; B serialized proposal/evidence/Plan bytes, P participants, C child slots and K retained bindings"
+    },
+    "workflow.recovery-proposal": {
+      "capacity": [
+        "native owners may refuse new recovery capacity without discarding accepted custody"
+      ],
+      "extent": "Every original/current owner, resource, child, retained acceptance/success, preparation and abandonment, including positive never-prepared proofs and recovered origin custody; no prefix selection or total-size cap",
+      "growth": "linear",
+      "id": "workflow.recovery-proposal",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_workflow_validation_growth.py::test_recovery_validation_linear_child_and_binding_work",
+        "tests/test_workflow_validation_growth.py::test_recovery_validation_linear_unprepared_owner_work",
+        "tests/test_workflow_validation_growth.py::test_retained_recovery_preparations_linear_owner_work",
+        "tests/test_workflow_abandonment.py::test_recovery_abandonment_linear_owner_and_selection_work"
+      ],
+      "proofs": [
+        "tests/test_workflow_validation_growth.py::test_recovery_validation_linear_child_and_binding_work",
+        "tests/test_workflow_validation_growth.py::test_recovery_validation_linear_unprepared_owner_work",
+        "tests/test_workflow_validation_growth.py::test_retained_recovery_preparations_linear_owner_work",
+        "tests/test_workflow_abandonment.py::test_recovery_abandonment_linear_owner_and_selection_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_recovery.py": "2fce8992b63a461529c6cc96ef067c624fc10f49d82f6772a788d71752a48682",
+        "tests/test_workflow_abandonment.py": "d6658d4dcc5aed63cab901784872f633669354ba2bd6c2b93100abba2dbe83ad",
+        "tests/test_workflow_validation_growth.py": "24c02d809ced60f9771a6ee07f6c668a58eede3010d686c4be1fd6768e705fce"
+      },
+      "symbol": "fishhat_contracts.workflow_recovery:validate_recovery_proposal",
+      "work": "O(B) complete proposal, independently verified origins and retained evidence bytes for fixed installed schema/phase closure; per-call child, owner, preparation and abandonment indexes preserve complete joins"
     }
   },
   "production_qualified": false,

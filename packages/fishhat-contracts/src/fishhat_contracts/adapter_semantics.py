@@ -499,6 +499,15 @@ def check_result(attempt: dict[str, Any], result: dict[str, Any]) -> None:
         and result["input_digest"] == attempt["input_digest"],
         "RESULT_IDENTITY",
     )
+    if attempt["native_task"] is not None:
+        require(
+            result["native_task"] is None or result["native_task"] == attempt["native_task"],
+            "RESULT_NATIVE_TASK_CONFLICT",
+        )
+        require(
+            result["task_state"] != "terminal" or result["native_task"] == attempt["native_task"],
+            "RESULT_TASK_CESSATION_IDENTITY",
+        )
     if result["acknowledgment"] == "rejected":
         require(
             result["effect_certainty"] == "none" and result["task_state"] == "terminal",
@@ -508,6 +517,129 @@ def check_result(attempt: dict[str, Any], result: dict[str, Any]) -> None:
         require(result["effect_certainty"] == "known", "UNKNOWN_EFFECT_CANNOT_SUCCEED")
     if result["task_state"] == "running":
         require(result["native_task"] is not None, "MISSING_NATIVE_TASK")
+
+
+def _result_fact(previous: Any, observed: Any, unknown: Any, code: str) -> Any:
+    require(previous == unknown or observed == unknown or previous == observed, code)
+    return observed if previous == unknown else previous
+
+
+@bounds(
+    Bounds(
+        id="adapters.accumulate_result",
+        work="O(B) exact attempt, result and fixed-shape cumulative evidence bytes per observation",
+        extent="Every retained result, including unknown observations and exact replays",
+        limits=(),
+        capacity=(
+            "The owner retains complete raw responses independently of this derived evidence",
+        ),
+        proofs=(
+            "tests/test_adapter_cumulative_results.py::test_cumulative_result_history_linear_work",
+        ),
+        linear_proofs=(
+            "tests/test_adapter_cumulative_results.py::test_cumulative_result_history_linear_work",
+        ),
+    )
+)
+def accumulate_result(
+    attempt: dict[str, Any],
+    result: dict[str, Any],
+    *,
+    previous: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Join exact original-attempt facts without inventing a completed response.
+
+    The owner supplies independently retained previous knowledge. Unknown values
+    add no negative facts. A known result may describe a verified no-op: retaining
+    known certainty never asserts that a nonzero native mutation occurred. None
+    can establish no effects only with terminal evidence, not while work may run.
+
+    This join is independent of receipt order. Completion records facts carried
+    together by one terminal result, never pieces assembled from observations.
+    The complete typed response and any required output custody remain separate
+    prerequisites. Conflicting receipts fail before changing accepted evidence.
+    """
+    check_result(attempt, result)
+    terminal = result["task_state"] == "terminal"
+    observed = {
+        **result,
+        "effect_certainty": (
+            "unknown"
+            if result["effect_certainty"] == "none" and not terminal
+            else result["effect_certainty"]
+        ),
+        "postcondition": result["postcondition"] if terminal else "unknown",
+        "running_observed": result["task_state"] == "running",
+        "completion": (
+            {
+                "effect_certainty": result["effect_certainty"],
+                "postcondition": result["postcondition"],
+            }
+            if terminal
+            and result["effect_certainty"] != "unknown"
+            and result["postcondition"] != "unknown"
+            else None
+        ),
+    }
+    if previous is None:
+        validate("adapter.schema.json", observed, "EffectKnowledge")
+        return observed
+    validate("adapter.schema.json", previous, "EffectKnowledge")
+    require(
+        all(previous[key] == observed[key] for key in ("attempt_id", "input_digest")),
+        "RESULT_IDENTITY",
+    )
+    acknowledgment = _result_fact(
+        previous["acknowledgment"],
+        observed["acknowledgment"],
+        "unknown",
+        "RESULT_ACKNOWLEDGMENT_CONFLICT",
+    )
+    running = previous["running_observed"] or observed["running_observed"]
+    require(not running or acknowledgment != "rejected", "RESULT_RUNNING_REJECTION")
+    native_task = _result_fact(
+        previous["native_task"], observed["native_task"], None, "RESULT_NATIVE_TASK_CONFLICT"
+    )
+    require(
+        native_task is None
+        or all(
+            value["task_state"] != "terminal" or value["native_task"] == native_task
+            for value in (previous, observed)
+        ),
+        "RESULT_TASK_CESSATION_IDENTITY",
+    )
+    postcondition = _result_fact(
+        previous["postcondition"],
+        observed["postcondition"],
+        "unknown",
+        "RESULT_TERMINAL_OUTCOME_CONFLICT",
+    )
+    certainty = max(
+        (previous["effect_certainty"], observed["effect_certainty"]),
+        key=("unknown", "none", "known").index,
+    )
+    completion = previous["completion"]
+    if observed["completion"] is not None and (
+        completion is None or observed["completion"]["effect_certainty"] == "known"
+    ):
+        completion = observed["completion"]
+    return {
+        "attempt_id": result["attempt_id"],
+        "input_digest": result["input_digest"],
+        "acknowledgment": acknowledgment,
+        "task_state": (
+            "terminal"
+            if "terminal" in (previous["task_state"], observed["task_state"])
+            else "running"
+            if running
+            else "unknown"
+        ),
+        "effect_certainty": certainty,
+        "postcondition": postcondition,
+        "native_task": native_task,
+        "running_observed": running,
+        "completion": None if completion is None else dict(completion),
+    }
 
 
 def check_retained_result(role: str, value: dict[str, Any], *, operation: dict[str, Any]) -> None:
@@ -542,7 +674,8 @@ def check_retained_result(role: str, value: dict[str, Any], *, operation: dict[s
         "RETAINED_RESULT_OPERATION_IDENTITY",
     )
     require(
-        operation["effect_certainty"] == response["effect"]["effect_certainty"],
+        operation["effect_certainty"] == response["effect"]["effect_certainty"]
+        and (attempt["certainty"] != "known" or operation["effect_certainty"] == "known"),
         "RETAINED_RESULT_EFFECT_CERTAINTY",
     )
     require(

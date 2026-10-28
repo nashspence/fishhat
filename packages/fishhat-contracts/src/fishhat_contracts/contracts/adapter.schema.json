@@ -774,7 +774,7 @@
           }
         }
       },
-      "description": "Owner-retained identity and state of one authorized native mutation. executor pins the complete receiving-owner-approved instance, configuration and grants; it is never resolved through a replacement enrollment. input_digest covers the exact canonical role request, excluding this attempt and its invocation wrapper. Those request bytes and every immutable referenced input remain in owner custody. Mutable state, outcome and native task knowledge do not change the attempt identity. Native dispatch requires an Invocation released by the controlling owner after durable acceptance; this record alone grants no execution authority."
+      "description": "Owner-retained identity and state of one authorized native mutation. executor pins the complete receiving-owner-approved instance, configuration and grants; it is never resolved through a replacement enrollment. input_digest covers the exact canonical role request, excluding this attempt and its invocation wrapper. Those request bytes and every immutable referenced input remain in owner custody. Mutable state, outcome and native task knowledge do not change the attempt identity. Native dispatch requires an Invocation released by the controlling owner after durable acceptance; this record alone grants no execution authority. Once result evidence exists, certainty and native_task preserve cumulative confirmed knowledge; an unknown observation cannot erase either. Resolution requires one complete, consistent terminal method result at the retained certainty, not a synthetic outcome assembled from partial observations. A committed RetainedResult must preserve this invocation's known certainty in the owning Operation; weaker observational responses cannot become a less certain committed outcome."
     },
     "EffectResult": {
       "type": "object",
@@ -790,7 +790,8 @@
             "accepted",
             "rejected",
             "unknown"
-          ]
+          ],
+          "description": "Acceptance of the exact original invocation, not acceptance of this reconciliation query. Accepted and rejected are incompatible retained facts; unknown adds no contrary evidence. A task observed running cannot later be treated as an unaccepted invocation."
         },
         "task_state": {
           "enum": [
@@ -824,7 +825,8 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "description": "One stable original-attempt native task identity, or null when this observation supplies no identity. Null never erases an already known task. Terminal evidence must positively name the same task whenever any retained evidence identifies it; a different handle conflicts."
         }
       },
       "required": [
@@ -837,7 +839,122 @@
         "native_task"
       ],
       "additionalProperties": false,
-      "description": "The observed result of the exact invocation attempt. Known effects include a verified no-op that already satisfies the requested postcondition; success still requires the original method result identities and custody. A native process ending without required outputs does not establish a satisfied terminal result. Unknown outcomes retain uncertainty and are reconciled observationally."
+      "description": "The observed result of the exact invocation attempt. Known effects include a verified no-op that already satisfies the requested postcondition; success still requires the original method result identities and custody. A native process ending without required outputs does not establish a satisfied terminal result. Unknown outcomes retain uncertainty and are reconciled observationally. Each accepted complete response remains unchanged in owner custody. The owner joins evidence cumulatively using EffectKnowledge, including on restore; dictionary or arrival order cannot make contradictory original-attempt facts acceptable. Unknown or incomplete later observations cannot erase accepted acknowledgment, known certainty or a native task. Conflicting acknowledgments, native task identities or terminal postconditions reject without replacing accepted execution state. A rejected invocation is incompatible with any retained running-task evidence, including when its earlier acknowledgment was unknown. Exact accepted receipt replay is idempotent even after resolution. A terminal response without the previously known task identity cannot settle that task. Complete terminal output at weaker certainty than retained known evidence remains unresolved; known includes verified no-ops and does not assert nonzero mutation."
+    },
+    "EffectKnowledge": {
+      "type": "object",
+      "properties": {
+        "attempt_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "input_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "acknowledgment": {
+          "enum": [
+            "accepted",
+            "rejected",
+            "unknown"
+          ],
+          "description": "Acceptance of the exact original invocation, not acceptance of this reconciliation query. Accepted and rejected are incompatible retained facts; unknown adds no contrary evidence. A task observed running cannot later be treated as an unaccepted invocation."
+        },
+        "task_state": {
+          "enum": [
+            "running",
+            "terminal",
+            "unknown"
+          ]
+        },
+        "effect_certainty": {
+          "enum": [
+            "none",
+            "known",
+            "unknown"
+          ]
+        },
+        "postcondition": {
+          "enum": [
+            "satisfied",
+            "not-satisfied",
+            "unknown"
+          ]
+        },
+        "native_task": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160,
+              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*(?![\\s\\S])"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "One stable original-attempt native task identity, or null when this observation supplies no identity. Null never erases an already known task. Terminal evidence must positively name the same task whenever any retained evidence identifies it; a different handle conflicts."
+        },
+        "running_observed": {
+          "type": "boolean",
+          "description": "Whether any retained result positively observed this exact task running. This fact survives terminal and unknown observations and excludes original-invocation rejection."
+        },
+        "completion": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "effect_certainty": {
+                  "enum": [
+                    "none",
+                    "known"
+                  ]
+                },
+                "postcondition": {
+                  "enum": [
+                    "satisfied",
+                    "not-satisfied"
+                  ]
+                }
+              },
+              "required": [
+                "effect_certainty",
+                "postcondition"
+              ],
+              "additionalProperties": false,
+              "if": {
+                "properties": {
+                  "postcondition": {
+                    "const": "satisfied"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "effect_certainty": {
+                    "const": "known"
+                  }
+                }
+              }
+            }
+          ],
+          "description": "These two facts occurred together in one fully validated terminal response, not in separate observations. A known completion supersedes weaker no-effect completion evidence only with the same terminal postcondition. Resolution requires this certainty to equal cumulative effect_certainty, plus the complete original method result and material custody; the cache cannot synthesize success."
+        }
+      },
+      "required": [
+        "attempt_id",
+        "input_digest",
+        "acknowledgment",
+        "task_state",
+        "effect_certainty",
+        "postcondition",
+        "native_task",
+        "running_observed",
+        "completion"
+      ],
+      "additionalProperties": false,
+      "description": "Fixed-shape owner-derived cumulative evidence for one exact invocation. It is recomputed from every complete retained typed response and checked against the cached value on restore, independently of receipt order; matching this record alone supplies no native truth or authority. Unknown scalar facts add no contrary evidence. A known native task is retained through terminal state; every terminal observation must identify that same task when any retained evidence names it. Accepted/rejected acknowledgments, differing task identities and conflicting terminal postconditions cannot coexist. Running-task evidence always excludes rejected acknowledgment. Nonterminal postconditions are observations and do not establish an immutable final outcome. None while nonterminal does not prove absence of future effects and is normalized to unknown; terminal no-effect evidence may refine unknown, while known evidence is never downgraded to none and may represent a verified no-op. Terminal state, certainty and postcondition from unrelated partial observations cannot create a completion. Raw responses retain their original bytes; this cache never replaces their custody."
     },
     "Qualification": {
       "type": "object",

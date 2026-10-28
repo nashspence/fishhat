@@ -7,7 +7,6 @@ from collections.abc import Callable, Iterable
 from contextvars import ContextVar
 from datetime import datetime
 from typing import Any, cast
-from urllib.parse import unquote
 
 from fishhat_contracts.json_work import unique_items
 from fishhat_contracts.schema_profile import (
@@ -16,6 +15,7 @@ from fishhat_contracts.schema_profile import (
     MAX_SCHEMA_DEPTH,
     check_assertions,
     check_document,
+    pointer_tokens,
     regex_degree,
     schema_children,
 )
@@ -163,13 +163,7 @@ class _ClosedSchema:
     @staticmethod
     def _target(ref: str) -> Path:
         require(ref == "#" or ref.startswith("#/"), "NONLOCAL_SCHEMA_REFERENCE")
-        fragment = unquote(ref[1:])
-        parts = fragment[1:].split("/") if fragment else []
-        require(
-            all("~" not in part.replace("~0", "").replace("~1", "") for part in parts),
-            "INVALID_SCHEMA_REFERENCE",
-        )
-        return tuple(part.replace("~1", "/").replace("~0", "~") for part in parts)
+        return pointer_tokens(ref[1:], code="INVALID_SCHEMA_REFERENCE")
 
     def _acyclic(self, path: Path) -> None:
         require(path not in self.active, "RECURSIVE_SCHEMA_REFERENCE")

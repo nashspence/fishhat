@@ -187,7 +187,15 @@ def participant_capsule(original, owner):
     return record
 
 
-def scenario(*, historical=False, kinds=None, original=None, multiple=False, outcomes=None):
+def scenario(
+    *,
+    historical=False,
+    kinds=None,
+    original=None,
+    multiple=False,
+    outcomes=None,
+    never_prepared=None,
+):
     original = copy.deepcopy(original or (capsule() if multiple else workflow()))
     kinds = kinds or ["unaccepted"] * sum(
         len(p["requests"]) for p in original["proposal"]["participants"]
@@ -197,13 +205,19 @@ def scenario(*, historical=False, kinds=None, original=None, multiple=False, out
     for participant in original["proposal"]["participants"]:
         if any(p["origin"] == participant["owner"] for p in mappings):
             continue
-        record = participant_capsule(original, participant["owner"])
-        custody = custody_for(record) if historical else None
-        current = copy.deepcopy(custody["custodian"] if custody else record["owner"])
-        reference = RecordSnapshot(record, uid("origin-" + record["owner"]["id"])).reference
-        origins.append({"reference": reference, "custody": custody})
-        records.append({"reference": reference, "custody": custody, "record": record})
-        mappings.append({"origin": record["owner"], "owner": current})
+        proof = (never_prepared or {}).get(canonical(participant["owner"]))
+        if proof is not None:
+            origins.append({"never_prepared": copy.deepcopy(proof)})
+            records.append({"never_prepared": copy.deepcopy(proof)})
+            current = copy.deepcopy(proof["owner"])
+        else:
+            record = participant_capsule(original, participant["owner"])
+            custody = custody_for(record) if historical else None
+            current = copy.deepcopy(custody["custodian"] if custody else record["owner"])
+            reference = RecordSnapshot(record, uid("origin-" + record["owner"]["id"])).reference
+            origins.append({"reference": reference, "custody": custody})
+            records.append({"reference": reference, "custody": custody, "record": record})
+        mappings.append({"origin": participant["owner"], "owner": current})
 
     def current(owner):
         return copy.deepcopy(next(p["owner"] for p in mappings if p["origin"] == owner))
@@ -220,6 +234,8 @@ def scenario(*, historical=False, kinds=None, original=None, multiple=False, out
         participant["requests"] = []
         for slot in source["requests"]:
             selected = selected_binding(original, source, slot)
+            if "completed" in selected:
+                selected = selected["completed"]
             new_id = uid("successor-child-" + slot["request_id"])
             old_ref = {"owner": source["owner"], "request_id": slot["request_id"]}
             new_ref = {"owner": participant["owner"], "request_id": new_id}
@@ -248,11 +264,22 @@ def scenario(*, historical=False, kinds=None, original=None, multiple=False, out
             binding = {"request_id": new_id, "phase": slot["phase"], "plan": plan}
             if "adapter" in selected:
                 binding["adapter"] = copy.deepcopy(selected["adapter"])
-            origin = next(o for o in origins if o["reference"]["owner"] == source["owner"])
+            origin = next(o for o in origins if origin_owner(o) == source["owner"])
             binding = original_disposition(
-                binding, selected, disposition, origin, outcomes.get(slot["request_id"])
+                binding,
+                selected,
+                disposition,
+                origin,
+                outcomes.get(canonical(old_ref), outcomes.get(slot["request_id"])),
             )
-            if original["type"] == "secret-rotation" and "intent" in slot and kind != "completed":
+            if (
+                "intent" in slot
+                and kind != "completed"
+                and (
+                    original["type"] == "secret-rotation"
+                    or any("completed" not in prior for prior in participant["requests"])
+                )
+            ):
                 binding = {**copy.deepcopy(slot), "request_id": new_id}
             children.append(disposition)
             participant["requests"].append(binding)
@@ -379,7 +406,12 @@ def test_successor_retains_original_outcomes_and_current_authority(historical, k
 def test_expired_bound_child_gets_fresh_request_after_completed_predecessor():
     original, binding = successor_stage()
     original = bind_workflow(binding, original, **context(binding))
-    proposal, records = scenario(original=original, kinds=["completed", "unaccepted"])
+    predecessor = binding["predecessors"][0]
+    proposal, records = scenario(
+        original=original,
+        kinds=["completed", "unaccepted"],
+        outcomes={predecessor["request_id"]: predecessor},
+    )
     _, successor = commit(prepare(proposal, records), proposal)
     children = successor["proposal"]["participants"][0]["requests"]
     assert "completed" in children[0]
@@ -463,7 +495,8 @@ def test_rotation_recovery_keeps_completed_output_and_rebinds_only_unused_child(
 @pytest.mark.parametrize("producer", ["issuer", "publisher"])
 def test_generic_recovery_links_adapter_and_publisher_failure_to_exact_original_operation(producer):
     original, binding = publication_stage()
-    original = bind_workflow(binding, original, **context(binding))
+    if producer == "publisher":
+        original = bind_workflow(binding, original, **context(binding))
     kinds = (
         ["recovered", "unaccepted", "unaccepted"]
         if producer == "issuer"

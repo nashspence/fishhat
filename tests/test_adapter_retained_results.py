@@ -28,7 +28,7 @@ CHECK_PURPOSE = {
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/capture-adapter.schema.json",
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/workflow.schema.json",
     ],
-    "scope": "input-schema-selected core semantics, exact retained invocation and owning Operation, and original-method success evidence in direct and recovered adapter results",
+    "scope": "input-schema-selected core semantics, exact retained invocation and owning Operation, retained effect/native-task knowledge, and original-method success evidence in direct and recovered adapter results",
     "relationship": "candidate",
     "reason": "Synthetic sealed Operations with valid content commitments exercise semantic substitution and incomplete-success rejection; no native effect, authentication or custody is established.",
     "claims": [],
@@ -252,6 +252,54 @@ def test_retained_effect_certainty_must_match_its_operation_summary():
         read_result(record, retained)
 
 
+@pytest.mark.parametrize("reconcile", [False, True], ids=["direct", "recovered"])
+@pytest.mark.parametrize(
+    "native_task,code",
+    [
+        ("task:replacement", "RESULT_NATIVE_TASK_CONFLICT"),
+        (None, "RESULT_TASK_CESSATION_IDENTITY"),
+    ],
+    ids=["replacement", "missing"],
+)
+def test_retained_terminal_result_cannot_replace_or_forget_known_native_task(
+    reconcile, native_task, code
+):
+    record, retained = result_fixture(reconcile=reconcile)
+    invocation = retained["invocation"]
+    invocation["attempt"].update(
+        state="reconciling", certainty="known", native_task="task:original"
+    )
+    query = recovered(invocation) if reconcile else invocation["request"]
+    response = retained["response"]
+    response["request_digest"] = digest(query)
+    response["effect"]["native_task"] = "task:original"
+    assert read_result(record, retained) == retained
+
+    response["effect"]["native_task"] = native_task
+    with pytest.raises(ContractError, match=code):
+        check_response("credential-issuer", query, response, invocation=invocation)
+    with pytest.raises(ContractError, match=code):
+        read_result(record, retained)
+
+
+@pytest.mark.parametrize("reconcile", [False, True], ids=["direct", "recovered"])
+def test_retained_adapter_result_cannot_erase_known_effect_certainty(reconcile):
+    record, retained = result_fixture(reconcile=reconcile)
+    invocation = retained["invocation"]
+    invocation["attempt"].update(state="reconciling", certainty="known")
+    query = recovered(invocation) if reconcile else invocation["request"]
+    response = retained["response"]
+    response["request_digest"] = digest(query)
+    response["effect"].update(effect_certainty="none", postcondition="not-satisfied")
+    response["output"]["leases"] = []
+    # A weaker observation remains admissible for cumulative reconciliation. It
+    # cannot become a committed summary that erases previously known effects.
+    check_response("credential-issuer", query, response, invocation=invocation)
+    record.update(state="failed", effect_certainty="none")
+    with pytest.raises(ContractError, match="RETAINED_RESULT_EFFECT_CERTAINTY"):
+        read_result(record, retained)
+
+
 def test_retained_request_needs_its_exact_installed_input_schema_reader():
     record, retained = result_fixture()
     record["subject"]["arguments"]["input_schema"]["digest"] = "sha256:" + "f" * 64
@@ -311,13 +359,19 @@ def test_custom_input_extension_requires_an_independently_installed_schema_ident
         validate_result_payload(record, data, installed=installed)
 
 
-@pytest.mark.parametrize("form", ["reference", "composition", "indirect"])
+@pytest.mark.parametrize(
+    "form", ["reference", "composition", "indirect", "encoded-direct", "encoded-indirect"]
+)
 def test_custom_input_alias_cannot_hide_a_core_method_behind_custom_result_schema(form):
     record, _ = result_fixture()
     input_uri = "https://synthetic.invalid/wrapped-issuer-input.schema.json"
     result_uri = "https://synthetic.invalid/wrapped-issuer-result.schema.json"
     core_uri = "https://fishhat.invalid/contracts/credential-issuer-adapter.schema.json#/$defs/"
-    reference = {"$ref": core_uri + "MutationRequest"}
+    reference = {
+        "$ref": core_uri + "MutationRequest"
+        if form != "encoded-direct"
+        else core_uri.replace("/$defs/", "/$defs%2F") + "MutationRequest"
+    }
     installed = {
         input_uri: {
             "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -330,14 +384,15 @@ def test_custom_input_alias_cannot_hide_a_core_method_behind_custom_result_schem
             "$ref": core_uri + "Output",
         },
     }
-    if form == "indirect":
+    if form in {"indirect", "encoded-indirect"}:
         alias = "https://synthetic.invalid/input-alias.schema.json"
         installed[alias] = {
             "$schema": "https://json-schema.org/draft/2020-12/schema",
             "$id": alias,
             "$defs": {"Input": {"allOf": [reference]}},
         }
-        installed[input_uri]["allOf"] = [{"$ref": alias + "#/$defs/Input"}]
+        fragment = "#/$defs/Input" if form == "indirect" else "#/$defs%2FInput"
+        installed[input_uri]["allOf"] = [{"$ref": alias + fragment}]
     record["subject"]["arguments"].update(
         input_schema=schema_identity(input_uri, installed),
         result_schema=schema_identity(result_uri, installed),

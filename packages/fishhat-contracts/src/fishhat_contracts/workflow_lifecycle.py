@@ -260,6 +260,7 @@ def _request_decision(
         ),
         linear_proofs=(
             "tests/test_workflow_lifecycle_requests.py::test_lifecycle_request_linear_complete_history_work",
+            "tests/test_workflow_lifecycle_requests.py::test_lifecycle_request_linear_child_and_binding_work",
         ),
     )
 )

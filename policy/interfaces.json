@@ -264,7 +264,7 @@
     },
     "adapter.schema.json": {
       "id": "https://fishhat.invalid/contracts/adapter.schema.json",
-      "sha256": "9c47ae8a364da2153def817216cac69f42683f933a85ecf1c956b468e28e2fe4"
+      "sha256": "4c954322725036510d6aaaaa56b341a70f5509d3325d74272d2ccb5dd08f9993"
     },
     "backup-adapter.schema.json": {
       "id": "https://fishhat.invalid/contracts/backup-adapter.schema.json",
@@ -304,7 +304,7 @@
     },
     "common.schema.json": {
       "id": "https://fishhat.invalid/contracts/common.schema.json",
-      "sha256": "75f834b0654902e1d86806d1b4868283046b23eeeb899cfd9155d668fe0bb1a9"
+      "sha256": "5443445ff9195fe751c11f53459c868606b82bad493c7c14718bc60619d4825e"
     },
     "compute-adapter.schema.json": {
       "id": "https://fishhat.invalid/contracts/compute-adapter.schema.json",
@@ -468,7 +468,7 @@
     },
     "workflow-recovery.schema.json": {
       "id": "https://fishhat.invalid/contracts/workflow-recovery.schema.json",
-      "sha256": "5cbaebb60c950b0e1ea956a5f2fe0df21fb1ae1e00a788b1f8b95325835c3b27"
+      "sha256": "fa443824e3814c9073ecc08c761936e90e34f603821ee5aba94853c58d137ad1"
     },
     "workflow.schema.json": {
       "id": "https://fishhat.invalid/contracts/workflow.schema.json",

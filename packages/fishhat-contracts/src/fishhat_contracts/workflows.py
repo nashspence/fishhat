@@ -189,6 +189,7 @@ def _validate_child(
     proposal: dict[str, Any],
     generations: dict[bytes, int],
     content: set[bytes],
+    available: set[bytes],
     *,
     recovery: bool = False,
     recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
@@ -207,7 +208,6 @@ def _validate_child(
             "later participant child requires reviewed continuation",
         )
         _plan_binding(binding, participant, generations, content, recovery_readers=recovery_readers)
-        available = {canonical([h["owner"], h["digest"]]) for h in proposal["content"]}
         _require(
             all(
                 canonical([binding["plan"]["owner"], d]) in available
@@ -248,7 +248,7 @@ def _handles(value: Any) -> Iterable[dict[str, Any]]:
 def _plan_binding(
     binding: dict[str, Any],
     participant: dict[str, Any],
-    generations: dict[bytes, int],
+    generations: Mapping[bytes, int],
     content: set[bytes],
     *,
     recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
@@ -342,6 +342,7 @@ def validate_workflow_proposal(
     }
     _require(len(generations) == len(participants), "duplicate workflow proposal participant")
     content = {canonical(handle) for handle in proposal["content"]}
+    available = {canonical([h["owner"], h["digest"]]) for h in proposal["content"]}
     _require(len(content) == len(proposal["content"]), "duplicate workflow content handle")
     content_ids = {_request_key(h["owner"], h["id"]) for h in proposal["content"]}
     _require(len(content_ids) == len(content), "workflow content identity changed")
@@ -357,6 +358,7 @@ def validate_workflow_proposal(
                 proposal,
                 generations,
                 content,
+                available,
                 recovery=recovery,
                 recovery_readers=recovery_readers,
             )
@@ -762,6 +764,7 @@ def _validate_advance_history(
     phases = PHASES[workflow["type"]]
     _require(workflow["phase"] in phases, "workflow phase outside installed procedure")
     phase_position = 0
+    bound_phases: set[str] = set()
     state = "prepared"
     transfer_window = _driver_transfer_window(workflow)
     custody_events = _custody_events(workflow, transfer_window)
@@ -865,10 +868,14 @@ def _validate_advance_history(
             )
         state = receipt["state"]
         position = phases.index(receipt["phase"])
-        if position > 0:
+        if position > 0 and phases[position - 1] not in bound_phases:
             require_bound_phase(
                 workflow, phases[position - 1], before_generation=receipt["generation"]
             )
+            # Bindings are validated append-only above. Once the complete phase
+            # closure held at its first transition, a same-phase transfer cannot
+            # remove it or make a later binding authorize that earlier advance.
+            bound_phases.add(phases[position - 1])
     while custody is not None:
         state = _custody_lifecycle(state, custody[1])
         custody = next(custody_events, None)

@@ -82,7 +82,12 @@ def retirement(proposal, origin, owner, custody):
         "participants_digest": digest(
             [p for p in proposal["participants"] if p["owner"] == origin]
         ),
-        "request_digest": digest(query),
+        "request_commitment": digest(
+            {
+                **{key: query[key] for key in ("owner", "origin", "phase", "custody")},
+                "proposal_digest": digest(query["proposal"]),
+            }
+        ),
         "native_fence_digest": digest({"native": "independently-fenced-original-execution"}),
         "tombstone_digest": digest({"durable": "closed-original-workflow-and-child-identities"}),
         "retained_closure_digest": digest({"retained": "original-inputs-and-preparation-holds"}),
@@ -131,7 +136,12 @@ def test_partial_initial_preparation_recovers_without_inventing_an_origin(histor
             "never_prepared": proof
         }
     assert canonical(records[0]["record"]) == original
-    assert proof["request_digest"] == digest(query)
+    assert proof["request_commitment"] == digest(
+        {
+            **{key: query[key] for key in ("owner", "origin", "phase", "custody")},
+            "proposal_digest": digest(query["proposal"]),
+        }
+    )
 
 
 @pytest.mark.parametrize(
@@ -166,6 +176,16 @@ def test_recovery_rejects_missing_or_substituted_unprepared_origin(change):
         field = {"closure": "participants_digest", "proposal": "proposal_digest"}.get(change)
         if field:
             proof[field] = "sha256:" + "0" * 64
+            if field == "proposal_digest":
+                proof["request_commitment"] = digest(
+                    {
+                        **{
+                            key: proof[key]
+                            for key in ("owner", "origin", "custody", "proposal_digest")
+                        },
+                        "phase": "retire-unprepared",
+                    }
+                )
         else:
             proof["origin"]["epoch"] = uid("substituted-original-epoch")
         seal_retirement(proof)
@@ -207,6 +227,57 @@ def test_retirement_replay_preserves_proof_and_tombstone_blocks_repreparation():
             verified_preparation=preparation_witness(query["proposal"], query["owner"]),
             retained_retirement=proof,
         )
+
+
+@pytest.mark.parametrize("field", ["owner", "origin", "phase", "custody", "proposal_digest"])
+def test_retirement_commitment_pins_every_compact_request_field(field):
+    _, _, query, proof = partial(historical=True)
+    preimage = {
+        **{key: copy.deepcopy(query[key]) for key in ("owner", "origin", "phase", "custody")},
+        "proposal_digest": digest(query["proposal"]),
+    }
+    if field in {"owner", "origin"}:
+        preimage[field]["epoch"] = uid("different-commitment-epoch")
+    elif field == "phase":
+        preimage[field] = "abandon"
+    elif field == "custody":
+        preimage[field] = None
+    else:
+        preimage[field] = "sha256:" + "0" * 64
+    proof["request_commitment"] = digest(preimage)
+    seal_retirement(proof)
+    with pytest.raises(ContractError, match="retirement input changed"):
+        validate_never_prepared(proof)
+    with pytest.raises(ContractError, match="retirement input changed"):
+        retire(query, proof, retained=proof)
+
+
+@pytest.mark.parametrize("spelling", ["old-only", "both"])
+def test_retirement_rejects_obsolete_digest_field(spelling):
+    _, _, query, proof = partial(historical=False)
+    proof["request_digest"] = digest(query)
+    if spelling == "old-only":
+        del proof["request_commitment"]
+    seal_retirement(proof)
+    with pytest.raises(ContractError):
+        validate_never_prepared(proof, proposal=query["proposal"])
+
+
+def test_retirement_commitment_preserves_nonlocal_proposal_content_on_replay():
+    _, _, query, proof = partial(historical=False)
+    changed = copy.deepcopy(query)
+    original_local = [p for p in query["proposal"]["participants"] if p["owner"] == query["origin"]]
+    plan = changed["proposal"]["participants"][0]["requests"][0]["plan"]
+    assert plan["owner"] != query["origin"]
+    plan["summary"] = "A different reviewed nonlocal operation."
+    reseal(plan)
+    assert [
+        p for p in changed["proposal"]["participants"] if p["owner"] == query["origin"]
+    ] == original_local
+    with pytest.raises(ContractError, match="original proposal or local child closure"):
+        retire(changed, proof, retained=proof)
+    with pytest.raises(ContractError, match="original proposal or local child closure"):
+        retire(changed, proof)
 
 
 def test_retirement_uses_complete_staged_input_and_finite_lost_reply_result():

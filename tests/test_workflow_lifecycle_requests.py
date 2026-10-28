@@ -26,6 +26,7 @@ from tests.test_owner_handoffs import request, wire, workflow
 from tests.test_workflow_continuations import move
 from tests.test_workflow_recovery import finish_transfer
 from tests.test_workflow_transfer import committed, frozen
+from tests.workflow_growth_support import chain, count_child_indexes
 from tests.workflow_lifecycle_support import lifecycle, lifecycle_decision, seal_lifecycle
 
 CHECK_PURPOSE = {
@@ -64,6 +65,18 @@ CHECK_OVERRIDES = {
         "scope": "complete lifecycle request processing and replay over increasing retained histories",
         "relationship": "scoped-witness",
         "reason": "Deterministic Python, byte and container counters measure the actual complete-input request helper at sixteenfold history extent; this proves reference work growth, not native bounded persistence or timing.",
+        "claims": ["engineering:workflow.lifecycle-request"],
+    },
+    "test_lifecycle_request_linear_child_and_binding_work": {
+        "purpose": "implementation",
+        "authority": [
+            "packages/fishhat-contracts/src/fishhat_contracts/workflow_lifecycle.py#request_workflow_lifecycle",
+            "packages/fishhat-contracts/src/fishhat_contracts/workflow_bindings.py#validate_workflow_bindings",
+            "release.toml#/engineering",
+        ],
+        "scope": "complete lifecycle request and replay over independent child-only and causal binding extents",
+        "relationship": "scoped-witness",
+        "reason": "Fully validated capsules exercise sixteenfold growth with executed Python, serialization and container counters plus actual complete child-index visits. New pause and accepted replay retain the full child/binding closure. This is reference work evidence, not native bounded persistence or a timing claim.",
         "claims": ["engineering:workflow.lifecycle-request"],
     },
 }
@@ -410,3 +423,37 @@ def test_lifecycle_request_linear_complete_history_work():
         replays.append((count, replay_work))
     assert_linear(samples)
     assert_linear(replays)
+
+
+@pytest.mark.parametrize("bound", [False, True], ids=["child-only", "causal-bindings"])
+def test_lifecycle_request_linear_child_and_binding_work(monkeypatch, bound):
+    samples, replays, indexes, replay_indexes = [], [], [], []
+    for count in (4, 16, 64):
+        value = chain(count, bound=bound)
+        proposed = query(value, "pause")
+        decision = requested_decision(value, proposed)
+        with monkeypatch.context() as patch:
+            counts = count_child_indexes(patch)
+            (retained, accepted), work = measure(
+                lambda value=value, proposed=proposed, decision=decision: receive(
+                    value, proposed, verified_decision=decision
+                )
+            )
+        assert retained["proposal"] == value["proposal"]
+        assert retained["bindings"] == value["bindings"]
+        assert len(retained["bindings"]) == (count if bound else 0)
+        assert counts["indexed_children"] > 0
+        samples.append((count, work))
+        indexes.append((count, counts))
+        with monkeypatch.context() as patch:
+            counts = count_child_indexes(patch)
+            (_, repeated), work = measure(
+                lambda retained=retained, proposed=proposed: receive(
+                    retained, proposed, verified_decision=None
+                )
+            )
+        assert repeated == accepted
+        replays.append((count, work))
+        replay_indexes.append((count, counts))
+    for measurements in (samples, replays, indexes, replay_indexes):
+        assert_linear(measurements)
