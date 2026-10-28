@@ -477,7 +477,7 @@
         "--json"
       ],
       "use_case": "workflow.advance",
-      "description": "Read a complete AdvanceRequest from stdin and submit it through staged workflow-input custody using the bounded InputReference. New advances compare the exact local generation and driver term. Transfer completion requires every participant's verified transferred witness and atomically retains the completion evidence, procedure phase and immutable advance receipt. Exact accepted advance IDs replay before new-admission expiry or generation checks."
+      "description": "Read a complete AdvanceRequest from stdin and submit it through staged workflow-input custody using the bounded InputReference. New advances compare the exact local generation and driver term. Transfer completion requires every participant's verified transferred witness and atomically retains the completion evidence, procedure phase and immutable advance receipt. Exact accepted advance IDs replay before new-admission expiry or generation checks. Return only the original finite WorkflowMutationAcknowledgment with exact decoded request commitment and committed generation; whole Workflow inspection is a separate read and exact replay never substitutes current state."
     },
     {
       "name": "workflow-transfer",
@@ -572,7 +572,7 @@
         "--json"
       ],
       "use_case": "workflow.bind",
-      "description": "Read a complete reviewed BindRequest from stdin, stage its canonical workflow-input bytes and submit the bounded InputReference. Bind a declared continuation to actual verified predecessor outputs and current participant generation, retain exact content and immutable replay receipt, and preserve installed phase ordering. Binding does not accept child effects."
+      "description": "Read a complete reviewed BindRequest from stdin, stage its canonical workflow-input bytes and submit the bounded InputReference. Bind a declared continuation to actual verified predecessor outputs and current participant generation, retain exact content and immutable replay receipt, and preserve installed phase ordering. Binding does not accept child effects. Return only the original finite WorkflowMutationAcknowledgment with exact decoded request commitment and committed generation; whole Workflow inspection is a separate read and exact replay never substitutes current state."
     },
     {
       "name": "plan-get",

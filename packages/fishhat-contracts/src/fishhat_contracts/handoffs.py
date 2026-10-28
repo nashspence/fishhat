@@ -385,6 +385,14 @@ def validate_result_payload(
     )
     _require(not any(validator.iter_errors(value)), "result payload violates action schema")
     action = operation["subject"]["action"]
+    if action == "app.cleanup":
+        from .action_results import validate_cleanup_result
+
+        validate_cleanup_result(value, operation)
+    if action == "host.capture-changes":
+        from .action_results import validate_source_proposal
+
+        validate_source_proposal(value, operation=operation)
     if action == "app.backup":
         from .checkpoints import validate_checkpoint
 

@@ -17,6 +17,7 @@ from .handoffs import PHASES
 from .operations import validate_operation
 from .validation import ContractError, canonical, digest, validate
 from .workflows import (
+    _child_identity_matches,
     _pair,
     _plan_binding,
     _request_key,
@@ -58,19 +59,14 @@ def _operation(
     record: dict[str, Any],
     reference: dict[str, Any],
     binding: dict[str, Any],
+    workflow_id: str,
     *,
     recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
 ) -> None:
     validate_operation(record, recovery_readers=recovery_readers)
     plan = bound_plan(binding)
-    identity_matches = (
-        record == binding["completed"]["operation"]
-        if "completed" in binding
-        else record["owner"] == reference["owner"]
-        and record["request_id"] == reference["request_id"]
-    )
     _require(
-        identity_matches
+        _child_identity_matches(record, reference, binding, workflow_id)
         and record["subject"] == plan["subject"]
         and record["plan_digest"] == plan["digest"]
         and record["state"] == "succeeded"
@@ -207,7 +203,13 @@ def _binding_shape(
     _require(_key(reference) in ready, "workflow predecessor Plan is not retained")
     _require(len(request["predecessors"]) == 1, "workflow binding requires exact predecessor")
     predecessor = request["predecessors"][0]
-    _operation(predecessor, reference, ready[_key(reference)], recovery_readers=recovery_readers)
+    _operation(
+        predecessor,
+        reference,
+        ready[_key(reference)],
+        workflow["id"],
+        recovery_readers=recovery_readers,
+    )
     if intent["kind"] == "reviewed-successor":
         _require(
             binding["plan"]["subject"] == intent["subject"], "workflow successor subject changed"

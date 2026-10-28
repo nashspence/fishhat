@@ -1,5 +1,6 @@
 """Public adapter data boundaries. No implementation discovery or native effects."""
 
+from fishhat_contracts.adapter_observations import ObservationSequence
 from fishhat_contracts.adapter_semantics import (
     ROLES,
     check_invocation,
@@ -20,6 +21,7 @@ from .protocol import (
 
 __all__ = [
     "ROLES",
+    "ObservationSequence",
     "Registry",
     "check_configuration",
     "check_descriptor",

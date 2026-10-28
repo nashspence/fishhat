@@ -3112,10 +3112,14 @@
           "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})(?![\\s\\S])"
         },
         "ref": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 240,
-          "pattern": "^refs/heads/"
+          "allOf": [
+            {
+              "$ref": "common.schema.json#/$defs/GitRef"
+            },
+            {
+              "pattern": "^refs/heads/"
+            }
+          ]
         },
         "tree_digest": {
           "type": "string",
@@ -3347,6 +3351,24 @@
             "signature"
           ],
           "additionalProperties": false
+        },
+        "operation_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/RelativePath"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "records.schema.json#/$defs/CapturedSourceFile"
+          },
+          "minItems": 0
         }
       },
       "required": [
@@ -3360,10 +3382,13 @@
         "tree_digest",
         "changes",
         "owner",
-        "witness"
+        "witness",
+        "operation_id",
+        "paths",
+        "files"
       ],
       "additionalProperties": false,
-      "description": "Reviewable changes to source against an exact base. changes is complete for the requested capture scope; an empty list records a completed capture with no differences from that base in that scope. tree_digest still identifies the exact resulting captured tree. Missing or incomplete inspection cannot be reported as an empty successful capture. The proposal preserves live edits for review; it is distinct from publication, accepted configuration and activated application state."
+      "description": "Reviewable complete captured source against an exact base, distinct from publication or activation. owner and operation_id identify the exact producing capture Operation; source_id, repository, base_commit and paths equal its reviewed arguments. paths selects literal files/subtrees; empty means the complete approved source tree. files contains every resulting regular file in that scope, including unchanged files, in strictly increasing UTF-8 byte lexicographic path order without duplicates or file/descendant collisions. Its complete bytes are retained through the original owner handles while accepted publication or recovery depends on them; a receiving owner may independently acquire exact copies without rewriting these identities. Every content handle has purpose capture and binds this owner and operation_id. tree_digest is SHA-256 over canonical JSON {format: deployment-ops/captured-tree/v1, files: [{path, mode, digest, size}, ...]}, projecting content.digest/content.size in the same path order, excluding custody identifiers. changes contains exactly one coherent add/modify/delete entry per changed path within this scope: add has null old_digest and non-null new_digest; modify has both; delete has non-null old_digest and null new_digest. Added/modified files match the resulting file content digest and mode; deleted paths are absent. Empty changes means verified complete inspection with no differences, never missing inspection. Native capture and publication independently verify completeness and old preimages against the exact retained base; shape and digests alone do not prove those facts. The effect witness has the same owner, succeeded state, and subject_digest of the complete canonical proposal excluding witness; its workflow and generation match the producing Operation. Each handle remains protected by content.get authorization and retained owner custody; no original-client state or provider-specific handle interpretation is required to retrieve captured bytes."
     },
     "Grant": {
       "type": "object",
@@ -5030,6 +5055,27 @@
       ],
       "additionalProperties": false,
       "description": "The complete immutable evidence digest selection of a Problem for one exact owner epoch and resource. The owner establishes durable retrievable custody before publishing its RecordReference, without admitting an operation. Complete size, digest, installed schema and owner/resource identity must verify before the selection is used. Each snapshot read independently authorizes the current receiving principal against protected disclosure scope. A rejection need not disclose private evidence, but any advertised selection is complete and retained for its advertised traversal. Evidence extent has no transport count limit; independently approved receiver capacity may explicitly reject new custody, never silently truncate it."
+    },
+    "CapturedSourceFile": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "$ref": "common.schema.json#/$defs/RelativePath"
+        },
+        "mode": {
+          "$ref": "common.schema.json#/$defs/Mode"
+        },
+        "content": {
+          "$ref": "common.schema.json#/$defs/Handle"
+        }
+      },
+      "required": [
+        "path",
+        "mode",
+        "content"
+      ],
+      "additionalProperties": false,
+      "description": "One regular file in a complete captured source scope. content identifies retrievable immutable bytes and retains original producer ownership; its digest is SHA-256 of the exact file bytes. Filesystem confinement and source mapping are independently verified by the native owner. Multiple paths may share the same exact content handle. Reusing an owner/id with different handle fields, or a digest with a different byte size, rejects."
     }
   }
 }

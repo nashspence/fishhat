@@ -202,8 +202,17 @@ def producer(action):
     else:
         arguments = {
             "app.backup": {},
-            "app.cleanup": {"inventory_digest": digest({}), "candidates": [digest([])]},
-            "host.capture-changes": {"base": "a" * 40, "paths": []},
+            "app.cleanup": {
+                "inventory_digest": digest({}),
+                "candidates": [digest([])],
+                "account": "app-demo-app",
+            },
+            "host.capture-changes": {
+                "base": "a" * 40,
+                "paths": [],
+                "source_id": "demo",
+                "repository": {"instance": V, "repository_id": 1, "name": "demo/config"},
+            },
         }[action]
         host = action.startswith("host.")
         value["owner"]["tool"] = "host-ops" if host else "app-ops"
@@ -285,7 +294,10 @@ def test_successful_no_change_capture_retains_a_complete_typed_source_proposal()
         "source_id": "demo",
         "base_commit": value["subject"]["arguments"]["base"],
         "ref": "refs/heads/capture-no-change",
-        "tree_digest": digest({"captured-tree": "unchanged"}),
+        "operation_id": value["id"],
+        "paths": [],
+        "files": [],
+        "tree_digest": digest({"format": "deployment-ops/captured-tree/v1", "files": []}),
         "changes": [],
         "owner": copy.deepcopy(value["owner"]),
     }

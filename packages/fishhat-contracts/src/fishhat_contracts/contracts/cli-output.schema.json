@@ -136,6 +136,9 @@
             },
             {
               "$ref": "workflow.schema.json#/$defs/LifecycleResult"
+            },
+            {
+              "$ref": "workflow.schema.json#/$defs/MutationAcknowledgment"
             }
           ]
         },
@@ -197,7 +200,8 @@
                   "HistoricalContentChunk",
                   "WorkflowAbandonment",
                   "WorkflowNeverPrepared",
-                  "WorkflowLifecycleResult"
+                  "WorkflowLifecycleResult",
+                  "WorkflowMutationAcknowledgment"
                 ]
               }
             },

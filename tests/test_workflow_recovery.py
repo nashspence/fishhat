@@ -18,7 +18,7 @@ from fishhat_contracts.workflow_recovery import (
     validate_recovery_proposal,
 )
 from fishhat_contracts.workflow_settlement import record_native_completion
-from fishhat_contracts.workflow_unprepared import origin_digest, origin_owner
+from fishhat_contracts.workflow_unprepared import origin_digest, origin_owner, origin_workflow_id
 from fishhat_contracts.workflows import advance_workflow, decode_workflow_input, prepare_workflow
 
 from tests.operation_support import seal_operation
@@ -80,7 +80,7 @@ def evidence(record):
     }
 
 
-def child_operation(binding, owner, *, state="succeeded"):
+def child_operation(binding, owner, *, state="succeeded", workflow_id=None):
     value = operation()
     plan = binding["plan"]
     value.update(
@@ -93,6 +93,7 @@ def child_operation(binding, owner, *, state="succeeded"):
         effect_certainty="known" if state == "succeeded" else "unknown",
         result_handle=None,
     )
+    value["witness"]["workflow_id"] = workflow_id
     return seal_operation(value)
 
 
@@ -108,7 +109,9 @@ def original_disposition(binding, selected, disposition, origin, outcome):
     kind = disposition["kind"]
     owner = disposition["origin"]["owner"]
     if kind == "completed":
-        done = copy.deepcopy(outcome) or child_operation(selected, owner)
+        done = copy.deepcopy(outcome or selected.get("operation")) or child_operation(
+            selected, owner, workflow_id=origin_workflow_id(origin)
+        )
         disposition["operation"] = evidence(done)
         result = {
             "request_id": binding["request_id"],
@@ -119,7 +122,9 @@ def original_disposition(binding, selected, disposition, origin, outcome):
             result["completed"]["adapter"] = copy.deepcopy(selected["adapter"])
         return result
     if kind == "recovered":
-        failed = child_operation(selected, owner, state="quarantined")
+        failed = child_operation(
+            selected, owner, state="quarantined", workflow_id=origin_workflow_id(origin)
+        )
         disposition["operation"] = evidence(failed)
         plan = copy.deepcopy(binding["plan"])
         plan["id"] = uid("recovery-plan-" + binding["request_id"])

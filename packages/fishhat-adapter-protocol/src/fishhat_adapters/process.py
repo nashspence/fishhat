@@ -15,6 +15,7 @@ from fishhat_contracts.adapter_semantics import (
 )
 from fishhat_contracts.artifact_custody import CHUNK_BYTES, verify_artifact_stream
 from fishhat_contracts.bounds import Bounds, bounds
+from fishhat_contracts.protected_values import require_value_custody
 from fishhat_contracts.validation import ContractError, canonical, digest, strict_json, validate
 
 from .protocol import check_configuration, check_descriptor
@@ -215,6 +216,138 @@ def verify_process_outputs(
             source = open_artifact("output/artifacts/" + key.removeprefix("sha256:"))
         with source:
             verify_artifact_stream(artifact, source)
+
+
+def _private_chunk_matches(original: BinaryIO, chunk: bytes) -> bool:
+    offset = 0
+    view = memoryview(chunk)
+    while offset < len(chunk):
+        part = original.read(len(chunk) - offset)
+        if not isinstance(part, bytes) or not part or len(part) > len(chunk) - offset:
+            return False
+        if view[offset : offset + len(part)] != part:
+            return False
+        offset += len(part)
+    return True
+
+
+def _check_private_record(
+    role: str, output: dict[str, Any], original_record: dict[str, Any] | None
+) -> None:
+    if original_record is None:
+        return
+    secret = role == "secret-source"
+    validate(
+        "adapter.schema.json", original_record, "SecretVersion" if secret else "CredentialLease"
+    )
+    selected = next(
+        record
+        for record in output["versions" if secret else "leases"]
+        if record["value_handle"] == output["handoff"]["value_handle"]
+    )
+    fields = (
+        ("source", "entry", "version", "value_handle")
+        if secret
+        else ("issuer", "identity", "consumer", "lease", "value_handle")
+    )
+    _require(
+        all(selected[field] == original_record[field] for field in fields),
+        "process protected value original identity changed",
+    )
+
+
+@bounds(
+    Bounds(
+        id="adapters.process.receive_process_value",
+        work="O(B) complete invocation/response metadata and exact protected value bytes",
+        extent="Complete value stream; no total extent cap or public plaintext digest",
+        limits=(("chunk_bytes", CHUNK_BYTES),),
+        capacity=("Private receiving-owner storage; failures retain original native effects",),
+        proofs=("tests/test_protected_values.py::test_protected_value_transfer_linear_work",),
+        linear_proofs=(
+            "tests/test_protected_values.py::test_protected_value_transfer_linear_work",
+        ),
+    )
+)
+def receive_process_value(
+    invocation: dict[str, Any],
+    response: dict[str, Any],
+    *,
+    expected_destination: dict[str, Any],
+    open_value: Callable[[str], BinaryIO],
+    retained_value: BinaryIO,
+    original_value: BinaryIO | None,
+    original_record: dict[str, Any] | None,
+) -> None:
+    """Stage exact original value bytes into unpublished private receiving custody.
+
+    The owner independently selects expected_destination and confines open_value
+    to stable immutable owner-private streams. The fresh sink never enters public
+    artifact storage. This function verifies metadata and complete stream length;
+    it cannot establish native confidentiality, authentication or immutable source
+    identity. original_value is the independently selected previously committed
+    private stream for this destination, required whenever that custody exists.
+    original_record is its independently retained lease/version metadata whenever
+    known, including when private bytes were lost. Its immutable identity fields
+    cannot change during re-export; validity and expiry remain separate observations.
+    Full private comparison rejects changed replay bytes without exposing a public
+    plaintext digest. The owner commits the private bytes and their original Invocation
+    binding atomically only after success. On failure the sink remains unpublished,
+    and the separately retained response/native effects must not be discarded.
+    """
+    request, attempt = invocation["request"], invocation["attempt"]
+    role = attempt["executor"]["role"]
+    query = request
+    if response["method"] == "reconcile":
+        query = {
+            "contract": request["contract"],
+            "method": "reconcile",
+            "input": {"scope": request["input"]["scope"], "invocation": invocation},
+        }
+    check_response(role, query, response, invocation=invocation)
+    handoff = response["output"].get("handoff")
+    _require(handoff is not None, "process result has no protected value handoff")
+    assert handoff is not None
+    require_value_custody(role, request, response)
+    _require(
+        handoff["destination"] == expected_destination,
+        "process protected value destination changed",
+    )
+    _require(
+        original_value is None or original_record is not None,
+        "process original private bytes lack retained identity",
+    )
+    _check_private_record(role, response["output"], original_record)
+    _require(
+        retained_value is not original_value
+        and retained_value.tell() == 0
+        and retained_value.seek(0, 2) == 0,
+        "process protected value sink is not fresh",
+    )
+    _require(
+        original_value is None or original_value.tell() == 0,
+        "process original private value does not begin at byte zero",
+    )
+    path = "output/values/" + expected_destination["id"]
+    size = 0
+    with open_value(path) as source:
+        _require(source.tell() == 0, "process protected value stream does not begin at byte zero")
+        while chunk := source.read(CHUNK_BYTES):
+            _require(isinstance(chunk, bytes), "process protected value stream is not bytes")
+            size += len(chunk)
+            _require(size <= handoff["size_bytes"], "process protected value exceeds declared size")
+            _require(
+                original_value is None or _private_chunk_matches(original_value, chunk),
+                "process protected value changed from committed original",
+            )
+            _require(
+                retained_value.write(chunk) == len(chunk), "process private custody write failed"
+            )
+    _require(size == handoff["size_bytes"], "process protected value is incomplete")
+    _require(
+        original_value is None or original_value.read(1) == b"",
+        "process protected value changed from committed original",
+    )
 
 
 @dataclass(frozen=True)

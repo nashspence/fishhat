@@ -11,8 +11,10 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 from typing import Any, cast
 
+from .adapter_observations import _observation_keys
 from .bounds import Bounds, bounds
 from .dns import _rrset_identity, validate_changes, validate_rrsets
+from .protected_values import check_value_request, check_value_response, require_value_custody
 from .publication import validate_publication_intent
 from .targets import check_target_request, check_target_response
 from .validation import ROOT, ContractError, canonical, digest, validate
@@ -101,6 +103,7 @@ def check_request(role: str, value: dict[str, Any]) -> None:
             inputs["scope"]["handle"] == inputs["selection"]["source_id"],
             "BOOTSTRAP_SCOPE_IDENTITY",
         )
+    check_value_request(role, value)
 
 
 @bounds(_semantic_bounds("check_invocation"))
@@ -109,6 +112,7 @@ def check_invocation(role: str, value: dict[str, Any]) -> None:
     validate("adapter.schema.json", value, "Invocation")
     request, attempt = value["request"], value["attempt"]
     check_request(role, request)
+    check_value_request(role, request, owner=attempt["owner"])
     executor = attempt["executor"]
     require(
         ROLES[role][request["method"]]["effect"]
@@ -134,13 +138,18 @@ def check_invocation(role: str, value: dict[str, Any]) -> None:
 
 def _handoff_binding(role: str, request: dict[str, Any]) -> dict[str, Any] | None:
     method, inputs = request["method"], request["input"]
+    if role in {"runtime", "secret-source", "credential-issuer"} and method in {
+        "observe",
+        "inventory",
+    }:
+        return cast(dict[str, Any], inputs["binding"])
     if role in {"service", "software"} and method != "reconcile":
         return cast(
             dict[str, Any],
             inputs["binding"] if method == "observe" else inputs["target"]["executor"],
         )
     if (role == "capture" and method in {"assess", "capture", "restore", "verify"}) or (
-        role == "secret-source" and method in {"resolve", "publish"}
+        role == "secret-source" and method in {"resolve", "retrieve", "publish"}
     ):
         return cast(dict[str, Any], inputs["binding"])
     if role == "credential-issuer":
@@ -210,7 +219,9 @@ def check_response(
         )
         check_result(invocation["attempt"], response["effect"])
     _check_handoff_response(role, request, response)
+    check_value_response(role, request, response, invocation)
     _check_observation_page(request, response)
+    _observation_keys(role, request, response)
     _check_observed_quantities(role, response["output"])
     check_target_response(role, request, response, invocation["attempt"] if invocation else None)
     if "effect" in response and _succeeded(response["effect"]):
@@ -682,3 +693,5 @@ def check_retained_result(role: str, value: dict[str, Any], *, operation: dict[s
         operation["state"] != "succeeded" or _succeeded(response["effect"]),
         "SUCCESSFUL_OPERATION_REQUIRES_ADAPTER_SUCCESS",
     )
+    if operation["state"] == "succeeded":
+        require_value_custody(role, request, response)

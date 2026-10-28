@@ -44,7 +44,7 @@ def _child_outcome(
     completion_required: bool,
     recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
 ) -> None:
-    from .workflows import bound_plan
+    from .workflows import _child_identity_matches, bound_plan
 
     child, operation = outcome["child"], outcome["operation"]
     plan = bound_plan(binding)
@@ -56,14 +56,12 @@ def _child_outcome(
     )
     if "completed" in binding:
         _require(
-            operation == binding["completed"]["operation"],
+            _child_identity_matches(operation, child, binding, workflow["id"]),
             "workflow phase changed preserved completed child",
         )
     else:
         _require(
-            operation["owner"] == child["owner"]
-            and operation["request_id"] == child["request_id"]
-            and operation["witness"]["workflow_id"] == workflow["id"],
+            _child_identity_matches(operation, child, binding, workflow["id"]),
             "workflow phase Operation changed child or workflow identity",
         )
     if completion_required or "completed" in binding:

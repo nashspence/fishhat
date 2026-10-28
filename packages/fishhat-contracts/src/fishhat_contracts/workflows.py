@@ -119,6 +119,26 @@ def bound_plan(binding: dict[str, Any]) -> dict[str, Any]:
     return dict(binding["completed"]["plan"] if "completed" in binding else binding["plan"])
 
 
+def _child_identity_matches(
+    operation: dict[str, Any],
+    reference: dict[str, Any],
+    binding: dict[str, Any],
+    workflow_id: str,
+) -> bool:
+    """Match ordinary membership or the exact preserved completed ancestor.
+
+    Recovery gives a completed slot a new reference, never a rewritten Operation
+    or witness. Its original workflow identity remains part of the exact record.
+    """
+    if "completed" in binding:
+        return bool(operation == binding["completed"]["operation"])
+    return bool(
+        operation["owner"] == reference["owner"]
+        and operation["request_id"] == reference["request_id"]
+        and operation["witness"]["workflow_id"] == workflow_id
+    )
+
+
 def validate_completed_binding(
     binding: dict[str, Any],
     participant: dict[str, Any],

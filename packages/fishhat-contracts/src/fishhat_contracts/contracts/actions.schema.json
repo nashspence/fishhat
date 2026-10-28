@@ -1428,14 +1428,18 @@
           },
           "minItems": 1,
           "uniqueItems": true
+        },
+        "account": {
+          "$ref": "common.schema.json#/$defs/Id"
         }
       },
       "required": [
         "inventory_digest",
-        "candidates"
+        "candidates",
+        "account"
       ],
       "additionalProperties": false,
-      "description": "Reclaim only the exact candidates in the reviewed inventory under the current protected-reference checks. Rebuildability or inactivity alone does not authorize removal of data, backups or accepted recovery material."
+      "description": "Reclaim only the exact candidates in the reviewed inventory under the current protected-reference checks. Rebuildability or inactivity alone does not authorize removal of data, backups or accepted recovery material. account is the exact reviewed resource account from the retained inventory; admission independently verifies its mapping to the application resource and current protected owner policy. The result must account for every selected candidate exactly once, including skipped, failed or unresolved candidates. Only removed and already-absent outcomes satisfy successful cleanup; skipped work remains an explicit incomplete outcome."
     },
     "app.retire": {
       "type": "object",
@@ -1656,14 +1660,22 @@
           },
           "minItems": 0,
           "uniqueItems": true
+        },
+        "source_id": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "repository": {
+          "$ref": "common.schema.json#/$defs/Repository"
         }
       },
       "required": [
         "base",
-        "paths"
+        "paths",
+        "source_id",
+        "repository"
       ],
       "additionalProperties": false,
-      "description": "Capture selected live host changes against the named source base as a reviewable source proposal with an exact live preimage. Capturing a proposal neither publishes it nor adopts it as accepted configuration, and grants no permission to overwrite a later live edit. A host.apply capture disposition must retain and verify custody of its exact reviewed preimage before replacement."
+      "description": "Capture selected live host changes against the named source base as a reviewable source proposal with an exact live preimage. Capturing a proposal neither publishes it nor adopts it as accepted configuration, and grants no permission to overwrite a later live edit. A host.apply capture disposition must retain and verify custody of its exact reviewed preimage before replacement. source_id and repository name the exact independently approved source mapping. paths selects literal files or subtrees in that source; an empty selection means the complete approved source tree, never arbitrary host paths. The resulting proposal carries this exact selection and the complete resulting regular-file tree within it, including unchanged files, with retrievable immutable content handles. Unsupported entries or incomplete inspection cannot be omitted from a successful capture."
     },
     "host.source-update": {
       "type": "object",
@@ -1785,7 +1797,7 @@
         "proposal"
       ],
       "additionalProperties": false,
-      "description": "Publish the exact reviewed source proposal against its named base through the authorized repository publisher. Publication changes source history; it does not activate that source on any host or application."
+      "description": "Publish the exact reviewed source proposal against its named base through the authorized repository publisher. Publication changes source history; it does not activate that source on any host or application. The proposal handle selects the exact canonical records.schema SourceProposal, including its complete captured-file manifest and retained content handles. Before admission the receiving publisher verifies its source_id and base against this request, independently approves the repository mapping, acquires complete immutable custody of every referenced file and the exact base repository snapshot, and pins that closure in its Plan. It verifies old digests and differences against that base before publication. Original producer handles remain intact; approved receiving copies do not rewrite the proposal or require the original client. A mutable ref is never a substitute for the base commit or captured bytes."
     },
     "dns.reconcile": {
       "type": "object",

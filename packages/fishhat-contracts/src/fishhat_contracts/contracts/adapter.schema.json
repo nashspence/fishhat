@@ -2205,6 +2205,103 @@
       ],
       "additionalProperties": false,
       "description": "Receiving-owner-approved mapping of a host service or software source selector to its exact enrolled executor and canonical native mutation target. The executor role is service or software; its scope and the selected instance must agree, and its change grant must contain the namespace. The owner independently resolves native aliases and verifies the mapping before enrolling it. Source bytes cannot create, replace or authorize this mapping. Different selector spellings or instances that resolve to one namespace remain one target; a host may prescribe that target only once. Native side effects remain confined to the complete accepted mutation grant."
+    },
+    "ProtectedValueDestination": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "consumer": {
+          "$ref": "common.schema.json#/$defs/Id"
+        }
+      },
+      "required": [
+        "id",
+        "owner",
+        "consumer"
+      ],
+      "additionalProperties": false,
+      "description": "One receiving-owner-created private value slot, committed in the original reviewed request before dispatch. Its UUID is independent of the plaintext and is never reused for another invocation or value. The exact owner including epoch equals the original Attempt owner; consumer equals the requested consumer. The owner independently authorizes the destination, provisions its protected channel, and binds its private record to the complete original Invocation, returned lease/version and opaque value_handle. A destination or value_handle is identity data, not bearer authority. Authenticated owner-local resolution requires the exact destination and original Invocation; these references are not content.get handles and never enter public content-addressed storage."
+    },
+    "ProtectedValueHandoff": {
+      "type": "object",
+      "properties": {
+        "destination": {
+          "$ref": "adapter.schema.json#/$defs/ProtectedValueDestination"
+        },
+        "value_handle": {
+          "anyOf": [
+            {
+              "$ref": "adapter.schema.json#/$defs/Handle"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "state": {
+          "enum": [
+            "available",
+            "unavailable",
+            "unknown"
+          ]
+        },
+        "size_bytes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "destination",
+        "value_handle",
+        "state",
+        "size_bytes"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "available"
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value_handle": {
+                "type": "string"
+              },
+              "size_bytes": {
+                "type": "integer"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "size_bytes": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ],
+      "description": "Protected delivery of the original value to the exact destination in its retained Invocation. A non-null value_handle names exactly one returned lease/version. available advertises the complete original bytes on the fixed private process channel, not completed receiving-owner custody. unknown means delivery/recoverability is unresolved; unavailable means the original value is authoritatively no longer recoverable and cannot satisfy material success. Native effect facts remain independent and retained in every state. A succeeded Operation requires available plus independently committed private byte custody. Reconciliation may only re-export the same original value to the same destination; it never issues, renews or retrieves a replacement mutation. The receiving owner retains exact bytes and resolution bindings while accepted dependent work needs them, including across process exit and original-client loss. Disposal requires all dependent custody/retention obligations to be settled; revoking a native lease does not itself erase recovery evidence or authorize disposal. Plaintext and plaintext-derived public digests never appear in this metadata, ordinary artifacts, diagnostics or logs. Explicit authorized derivation can create an encrypted publication candidate with its existing ProducedMaterial lineage. When this exact destination already has committed private bytes, the receiving owner compares the complete re-export against those retained original bytes and rejects any difference, including same-size substitution. Reconciliation cannot overwrite original custody. This comparison remains private; native first-intake authentication and stable source custody are separate requirements. The receiving owner also preserves the originally committed identity: source/entry/version/value_handle for a secret, or complete issuer/identity/consumer/lease/value_handle for a credential. Re-export cannot replace those fields even when bytes are identical. Later validity and expiry observations remain separate from this immutable binding."
     }
   },
   "description": "Descriptor for a separately approved implementation. Provider-owned configuration, component and source schemas retain their JSON Schema format semantics. Bare date-time asserts RFC3339 syntax and Gregorian calendar validity without normalizing strings or inheriting core Time precision/UTC restrictions. Leap-second syntax is checked only at the offset-adjusted UTC end of a month; actual insertion or negative-leap schedules require provider authority and are not qualification supplied by this validator. Provider schemas assert only date, date-time, ipv4, ipv6 and uuid formats. Unknown formats, nested dialect declarations, dialect vocabularies and unsupported keywords (including unevaluatedItems and unevaluatedProperties) reject during descriptor approval. The profile permits at most 262144 schema bytes, depth 32 and 4096 expanded schema positions. Pattern strings are at most 256 characters, contain no backreferences, lookbehind or inline flags, and variable repetition applies only to character atoms (apart from optional groups), with at most eight alternative paths; only patterns with a linear work bound are admitted. Pattern inputs are at most 4096 characters. Configuration evaluation admits at most 2000000 charged work units including linear regex bounds and compared bytes for const, enum and hash-indexed structural uniqueness; exhausted capacity is an explicit rejection, never successful partial validation. Source configuration bytes retain the separate 1048576-byte boundary."

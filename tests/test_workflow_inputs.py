@@ -127,6 +127,11 @@ def adapter_proposal(role="ingress"):
                 "consumer": "demo-app",
                 "lifetime_seconds": 3600,
                 "issuer": copy.deepcopy(executor),
+                "value_destination": {
+                    "id": uid("issued-value-slot"),
+                    "owner": copy.deepcopy(participant["owner"]),
+                    "consumer": "demo-app",
+                },
             },
         }
     handle = material_handle(plan["owner"], digest(selected), size=len(canonical(selected)))

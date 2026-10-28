@@ -176,6 +176,16 @@ def handoff(role, method):
         }
         if method == "renew":
             inputs["lifetime_seconds"] = 3600
+    if method in {"retrieve", "renew"}:
+        if role == "secret-source":
+            inputs.pop("candidate", None)
+            inputs.pop("expected_previous", None)
+        consumer = inputs["lease"]["consumer"] if "lease" in inputs else inputs["consumer"]
+        inputs["value_destination"] = {
+            "id": identifier(77),
+            "owner": copy.deepcopy(OWNER),
+            "consumer": consumer,
+        }
     return registry, {"contract": "fishhat." + role, "method": method, "input": inputs}
 
 
@@ -217,6 +227,16 @@ def invocation_for(query):
 
 
 def response_for(query, attempt, output):
+    original = query["input"]["invocation"]["request"] if query["method"] == "reconcile" else query
+    if "value_destination" in original["input"]:
+        output = copy.deepcopy(output)
+        records = output.get("leases", output.get("versions", []))
+        output["handoff"] = {
+            "destination": copy.deepcopy(original["input"]["value_destination"]),
+            "value_handle": records[0]["value_handle"] if records else None,
+            "state": "available" if records else "unknown",
+            "size_bytes": 16 if records else None,
+        }
     return {
         "contract": query["contract"],
         "method": query["method"],
