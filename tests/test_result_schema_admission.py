@@ -6,7 +6,7 @@ import copy
 from unittest.mock import patch
 
 import pytest
-from fishhat_adapters import check_schema
+from fishhat_adapters import check_configuration, check_schema
 from fishhat_contracts import canonical, digest, handoffs, schema_profile
 from fishhat_contracts.schema_profile import MAX_SCHEMA_DEPTH
 from fishhat_contracts.validation import ContractError
@@ -20,6 +20,8 @@ CHECK_PURPOSE = {
     "purpose": "public-contract",
     "authority": [
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/actions.schema.json#/$defs/adapter.execute/properties/result_schema",
+        "packages/fishhat-contracts/src/fishhat_contracts/contracts/common.schema.json#/$defs/SchemaIdentity",
+        "packages/fishhat-contracts/src/fishhat_contracts/contracts/adapter.schema.json",
         "packages/fishhat-contracts/src/fishhat_contracts/handoffs.py#schema_identity",
     ],
     "scope": "installed custom result schema admission, exact identity and complete accepted values",
@@ -123,6 +125,24 @@ def test_cross_document_cycle_and_execution_depth_are_checked_without_unfolding(
         handoffs.validate_result_payload(record, data, installed=installed)
 
 
+def test_encoded_pointer_separators_cannot_hide_recursive_schemas():
+    pointer = "#/$defs/a%2F$defs%2Fb"
+    body = {
+        "$defs": {
+            "a/$defs/b": {"type": "integer"},
+            "a": {"$defs": {"b": {"$ref": pointer}}},
+        },
+        "$ref": pointer,
+    }
+    record, data, installed = retained(body, 1)
+    with pytest.raises(ContractError, match="RECURSIVE_SCHEMA_REFERENCE"):
+        check_schema(body)
+    with pytest.raises(ContractError, match="RECURSIVE_SCHEMA_REFERENCE"):
+        handoffs.schema_identity(URI, installed)
+    with pytest.raises(ContractError, match="RECURSIVE_SCHEMA_REFERENCE"):
+        handoffs.validate_result_payload(record, data, installed=installed)
+
+
 def test_shared_references_cannot_expand_exponentially_during_value_validation():
     definitions = {"L0": {"type": "integer"}}
     for level in range(1, 6):
@@ -183,9 +203,33 @@ def test_accepted_pattern_search_and_complete_large_values_keep_their_semantics(
     assert handoffs.validate_result_payload(record, data, installed=installed) == list(range(20000))
 
 
-def test_cross_document_and_escaped_schema_position_identity_is_exact():
-    body = {"$ref": LEAF + "#/$defs/a~1b~0c"}
-    extra = {LEAF: document(LEAF, {"$defs": {"a/b~c": {"type": "string", "pattern": "^ok$"}}})}
+@pytest.mark.parametrize(
+    "fragment,name",
+    [
+        ("/$defs/a~1b~0c", "a/b~c"),
+        ("/$defs%2Fa~1b~0c", "a/b~c"),
+        ("/%24defs/a%7E1b%7E0c", "a/b~c"),
+        ("/$defs/a~01b", "a~1b"),
+        ("/$defs/a%252Fb", "a%2Fb"),
+        ("/$defs/%E2%98%83", "\u2603"),
+    ],
+    ids=[
+        "escaped-name",
+        "encoded-separator",
+        "encoded-escapes",
+        "tilde-once",
+        "percent-once",
+        "unicode",
+    ],
+)
+def test_cross_document_and_escaped_schema_position_identity_is_exact(fragment, name):
+    definition = {"$defs": {name: {"type": "string", "pattern": "^ok$"}}}
+    provider = {**copy.deepcopy(definition), "$ref": "#" + fragment}
+    check_configuration(provider, "ok", digest(provider))
+    with pytest.raises(ContractError, match="CONFIGURATION_REJECTED"):
+        check_configuration(provider, "bad", digest(provider))
+    body = {"$ref": LEAF + "#" + fragment}
+    extra = {LEAF: document(LEAF, definition)}
     record, data, installed = retained(body, "ok", extra=extra)
     before = canonical(installed)
     assert handoffs.validate_result_payload(record, data, installed=installed) == "ok"

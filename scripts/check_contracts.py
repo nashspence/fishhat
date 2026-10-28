@@ -1,9 +1,10 @@
 """Validate executable contracts and synthetic fixtures, without native effects."""
 
 import json
-from urllib.parse import unquote, urldefrag, urljoin
+from urllib.parse import urldefrag, urljoin
 
 from fishhat_contracts.operations import validate_operation
+from fishhat_contracts.schema_profile import pointer_tokens
 from fishhat_contracts.validation import (
     SCHEMAS,
     strict_json,
@@ -40,11 +41,8 @@ def run():
                 uri, fragment = urldefrag(urljoin(base, value["$ref"]))
                 assert uri in by_id, "nonlocal schema reference"
                 target = by_id[uri]
-                if fragment:
-                    assert fragment.startswith("/")
-                    for part in fragment[1:].split("/"):
-                        key = unquote(part).replace("~1", "/").replace("~0", "~")
-                        target = target[int(key)] if isinstance(target, list) else target[key]
+                for key in pointer_tokens(fragment, code="invalid schema pointer"):
+                    target = target[int(key)] if isinstance(target, list) else target[key]
             for child in value.values():
                 refs(child, base)
         elif isinstance(value, list):

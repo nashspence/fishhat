@@ -291,6 +291,7 @@ def test_dispatch_releases_exact_committed_request_and_executor():
     owner.settle(attempt["attempt_id"], query, later)
     earlier = owner.snapshot()["results"][attempt["attempt_id"]]["records"]
     assert any(value["response"]["output"]["deployment"] is not None for value in earlier.values())
+    reply["effect"]["native_task"] = "task:one"
     owner.settle(attempt["attempt_id"], query, reply)
     saved = owner.snapshot()
     assert saved["attempts"][attempt["attempt_id"]]["outcome"] == "succeeded"

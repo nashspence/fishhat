@@ -83,7 +83,7 @@ def move(value, phase):
     return value
 
 
-def successful(reference, binding, generation=1):
+def successful(reference, binding, generation=1, *, workflow_id=None):
     result = operation()
     result.update(
         id=uid("finished-" + reference["request_id"]),
@@ -95,6 +95,7 @@ def successful(reference, binding, generation=1):
         effect_certainty="known",
         generation=generation,
     )
+    result["witness"]["workflow_id"] = workflow_id
     return seal_operation(result)
 
 
@@ -179,7 +180,7 @@ def publication_stage(provider="forgejo-age"):
     value = move(prepare(intent), "issuer-changing")
     issuer, publisher, _ = intent["participants"]
     reference = intent["target"]["issuer_change"]
-    issued = successful(reference, issuer["requests"][0], generation=10)
+    issued = successful(reference, issuer["requests"][0], generation=10, workflow_id=value["id"])
     # The candidate is created only after preparation and issuer completion.
     output = {
         "leases": [
@@ -257,7 +258,7 @@ def adoption_stage(provider="forgejo-age"):
     intent = value["proposal"]
     publisher, consumer = intent["participants"][1:]
     reference = intent["target"]["publication"]
-    published = successful(reference, publication["binding"])
+    published = successful(reference, publication["binding"], workflow_id=value["id"])
     subject = publication["binding"]["plan"]["subject"]
     arguments = subject["arguments"]
     candidate = arguments["candidate"]
@@ -474,7 +475,7 @@ def successor_stage():
     )
     validate_workflow_proposal(intent)
     value = move(prepare(intent), "host-effect")
-    succeeded = successful(reference, previous, generation=10)
+    succeeded = successful(reference, previous, generation=10, workflow_id=value["id"])
     query = bind_request(
         value,
         participant,
@@ -525,6 +526,39 @@ def test_retained_phase_history_cannot_erase_or_backdate_its_required_binding(ch
         finished["generation"] = max(finished["generation"], receipt["generation"])
     with pytest.raises(ContractError):
         validate_workflow(finished)
+
+
+def test_retained_binding_history_checks_first_phase_before_same_phase_transfer(monkeypatch):
+    from fishhat_contracts import workflow_bindings
+
+    from tests.test_workflow_recovery import finish_transfer
+
+    value, query = successor_stage()
+    bound = bind_workflow(query, value, **context(query))
+    advanced = move(bound, "reconciling")
+    first_generation = advanced["generation"]
+    transferred, _ = finish_transfer(advanced)
+    checked = []
+    original = workflow_bindings.require_bound_phase
+
+    def observe(workflow, phase, *, before_generation=None):
+        checked.append((phase, before_generation))
+        return original(workflow, phase, before_generation=before_generation)
+
+    monkeypatch.setattr(workflow_bindings, "require_bound_phase", observe)
+    validate_workflow(transferred)
+    assert [
+        generation
+        for phase, generation in checked
+        if phase == "host-effect" and generation is not None
+    ] == [first_generation]
+    late = copy.deepcopy(transferred)
+    binding = late["bindings"][0]
+    binding["generation"] = first_generation + 1
+    binding["request"]["expected_generation"] = first_generation
+    binding["request_digest"] = digest(binding["request"])
+    with pytest.raises(ContractError):
+        validate_workflow(late)
 
 
 def test_same_material_other_publication_receipt_is_not_the_exact_child_output():

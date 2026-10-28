@@ -36,6 +36,17 @@ def recovery_selection(proposal: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _selection_join(value: dict[str, Any], selection: dict[str, Any], owners: set[bytes]) -> None:
+    """Join one proof to an already validated selection and its complete owner set."""
+    _require(
+        canonical(value["origin"]) in owners
+        and value["workflow_id"] == selection["workflow_id"]
+        and value["recovery_id"] == selection["recovery_id"]
+        and value["proposal_digest"] == selection["proposal_digest"],
+        "abandonment selected a different successor proposal",
+    )
+
+
 def validate_abandonment(value: dict[str, Any], *, selection: dict[str, Any] | None = None) -> None:
     """Check bounded proof joins, without authenticating its signer or native facts."""
     validate("workflow-recovery.schema.json", value, "Abandonment")
@@ -60,13 +71,7 @@ def validate_abandonment(value: dict[str, Any], *, selection: dict[str, Any] | N
     if selection is None:
         return
     validate("workflow-recovery.schema.json", selection, "Selection")
-    _require(
-        any(p["owner"] == origin for p in selection["participants"])
-        and value["workflow_id"] == selection["workflow_id"]
-        and value["recovery_id"] == selection["recovery_id"]
-        and value["proposal_digest"] == selection["proposal_digest"],
-        "abandonment selected a different successor proposal",
-    )
+    _selection_join(value, selection, {canonical(p["owner"]) for p in selection["participants"]})
 
 
 def validate_abandonment_closure(
@@ -74,12 +79,19 @@ def validate_abandonment_closure(
 ) -> None:
     """Require every current participant to close each selected unused successor."""
     current = {_logical(p["owner"]): p["owner"] for p in proposal["participants"]}
+    expected_owners = {canonical(owner) for owner in current.values()}
     original_ids = {origin_workflow_id(o) for o in proposal["origins"]}
     origins = {canonical(p["origin"]) for p in proposal["participants"]}
+    verified = (
+        None
+        if verified_abandonments is None
+        else {canonical(proof) for proof in verified_abandonments}
+    )
     selected: set[str] = set()
     for closure in proposal["abandonments"]:
         previous = closure["selection"]
         validate("workflow-recovery.schema.json", previous, "Selection")
+        previous_owners = {canonical(p["owner"]) for p in previous["participants"]}
         _require(
             previous["workflow_id"] not in selected
             and previous["workflow_id"] != proposal["workflow_id"]
@@ -90,7 +102,8 @@ def validate_abandonment_closure(
         selected.add(previous["workflow_id"])
         found: set[bytes] = set()
         for proof in closure["proofs"]:
-            validate_abandonment(proof, selection=previous)
+            validate_abandonment(proof)
+            _selection_join(proof, previous, previous_owners)
             owner = canonical(proof["owner"])
             _require(
                 _logical(proof["owner"]) in current
@@ -98,14 +111,14 @@ def validate_abandonment_closure(
                 and owner not in found,
                 "abandonment owner closure changed",
             )
-            if verified_abandonments is not None:
+            if verified is not None:
                 _require(
-                    proof in verified_abandonments,
+                    canonical(proof) in verified,
                     "successor abandonment is not independently authenticated",
                 )
             found.add(owner)
         _require(
-            found == {canonical(owner) for owner in current.values()},
+            found == expected_owners,
             "successor selection requires complete participant abandonment",
         )
 

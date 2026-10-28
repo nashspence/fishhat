@@ -301,6 +301,28 @@ def test_local_commit_replays_original_generation_and_completion_needs_all_commi
     assert validate_advance_request(advance, complete) == "replay"
 
 
+@pytest.mark.parametrize("change", ["reordered", "duplicate", "missing", "changed-generation"])
+def test_retained_transfer_completion_preserves_exact_unique_witness_closure(change):
+    value, _ = committed()
+    complete = advance_workflow(completion_request(value), value)
+    receipt = complete["advances"][0]
+    witnesses = receipt["request"]["transfer_completion"]["witnesses"]
+    if change == "reordered":
+        witnesses.reverse()
+    elif change == "duplicate":
+        witnesses.append(copy.deepcopy(witnesses[0]))
+    elif change == "missing":
+        witnesses.pop()
+    else:
+        witnesses[0]["generation"] += 1
+    receipt["request_digest"] = digest(receipt["request"])
+    if change == "reordered":
+        validate_workflow(complete)
+    else:
+        with pytest.raises(ContractError, match="completed transfer advance evidence"):
+            validate_workflow(complete)
+
+
 @pytest.mark.parametrize("field", ["owner", "workflow_id", "subject_digest", "state"])
 def test_transfer_proofs_cannot_change_owner_epoch_workflow_proposal_or_phase(field):
     value, _ = frozen()

@@ -1,10 +1,11 @@
-"""Shared conservative assertion profile; value ownership and reference resolution stay local."""
+"""Shared assertion and pointer syntax profile; value and resolution authority stay local."""
 
 from __future__ import annotations
 
 import re
 from collections.abc import Iterator, Mapping
 from typing import Any
+from urllib.parse import unquote
 
 from jsonschema import Draft202012Validator, validators
 from referencing import Registry, Resource
@@ -96,6 +97,20 @@ def check_document(schema: dict[str, Any], *, code: str) -> None:
 def require(ok: bool, code: str) -> None:
     if not ok:
         raise ContractError(code)
+
+
+def pointer_tokens(fragment: str, *, code: str) -> tuple[str, ...]:
+    """Decode one URI fragment before splitting its JSON Pointer reference tokens.
+
+    The evaluator selects pointers by their leading slash. Percent-encoded slashes
+    inside that pointer are separators; literal slashes in member names use ~1.
+    Resolution and schema-position checks remain with the receiving schema owner.
+    """
+    require(not fragment or fragment.startswith("/"), code)
+    decoded = unquote(fragment)
+    parts = decoded[1:].split("/") if decoded else []
+    require(all("~" not in part.replace("~0", "").replace("~1", "") for part in parts), code)
+    return tuple(part.replace("~1", "/").replace("~0", "~") for part in parts)
 
 
 def _atom_accepts(atom: Any, character: int) -> bool:

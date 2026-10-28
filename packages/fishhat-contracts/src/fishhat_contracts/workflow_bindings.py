@@ -8,6 +8,7 @@ authorization, durable transactions or material storage.
 from __future__ import annotations
 
 import copy
+from collections import ChainMap
 from collections.abc import Callable, Mapping
 from datetime import datetime
 from typing import Any
@@ -34,10 +35,12 @@ def _key(reference: dict[str, Any]) -> bytes:
     return _request_key(reference["owner"], reference["request_id"])
 
 
-def _ready(workflow: dict[str, Any]) -> dict[bytes, dict[str, Any]]:
+def _ready(
+    children: Mapping[bytes, tuple[dict[str, Any], dict[str, Any]]],
+) -> dict[bytes, dict[str, Any]]:
     return {
         key: binding
-        for key, (_, binding) in proposal_children(workflow["proposal"]).items()
+        for key, (_, binding) in children.items()
         if "plan" in binding or "completed" in binding
     }
 
@@ -160,9 +163,10 @@ def _binding_shape(
     workflow: dict[str, Any],
     ready: dict[bytes, dict[str, Any]],
     *,
+    children: Mapping[bytes, tuple[dict[str, Any], dict[str, Any]]],
+    generations: dict[bytes, int],
     recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
 ) -> None:
-    children = proposal_children(workflow["proposal"])
     key = _key(request["child"])
     _require(key in children and key not in ready, "workflow child is absent or already bound")
     participant, slot = children[key]
@@ -174,20 +178,23 @@ def _binding_shape(
         and binding["plan"]["subject"]["action"] == child_action(slot),
         "workflow bound Plan changed immutable child intent",
     )
-    generations = {
-        _pair(p["owner"], p["resource"]): p["expected_generation"]
-        for p in workflow["proposal"]["participants"]
-    }
+    reviewed_generations = {}
     for condition in binding["plan"]["preconditions"]:
         pair = _pair(condition["owner"], condition["resource"])
         if pair in generations:
             _require(condition["generation"] >= generations[pair], "workflow generation regressed")
-            generations[pair] = condition["generation"]
+            reviewed_generations[pair] = condition["generation"]
     content = {canonical(h) for h in request["content"]}
     _require(len(content) == len(request["content"]), "duplicate workflow binding content")
     identities = {_request_key(h["owner"], h["id"]) for h in request["content"]}
     _require(len(identities) == len(content), "workflow binding content identity changed")
-    _plan_binding(binding, participant, generations, content, recovery_readers=recovery_readers)
+    _plan_binding(
+        binding,
+        participant,
+        ChainMap(reviewed_generations, generations),
+        content,
+        recovery_readers=recovery_readers,
+    )
     available = {canonical([h["owner"], h["digest"]]) for h in request["content"]}
     _require(
         all(
@@ -219,7 +226,12 @@ def validate_workflow_bindings(
     recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> None:
     """Check retained exact bindings without reapplying current admission checks."""
-    ready = _ready(workflow)
+    children = proposal_children(workflow["proposal"])
+    ready = _ready(children)
+    generations = {
+        _pair(p["owner"], p["resource"]): p["expected_generation"]
+        for p in workflow["proposal"]["participants"]
+    }
     ids: set[str] = set()
     generation = 0
     advances = {receipt["generation"] for receipt in workflow["advances"]}
@@ -237,7 +249,14 @@ def validate_workflow_bindings(
             and original["driver_term"] <= workflow["driver_term"],
             "retained workflow binding identity or generation changed",
         )
-        _binding_shape(original, workflow, ready, recovery_readers=recovery_readers)
+        _binding_shape(
+            original,
+            workflow,
+            ready,
+            children=children,
+            generations=generations,
+            recovery_readers=recovery_readers,
+        )
         ready[_key(original["child"])] = original["binding"]
         generation = receipt["generation"]
 
@@ -248,7 +267,8 @@ def require_bound_phase(
     *,
     before_generation: int | None = None,
 ) -> None:
-    ready = _ready(workflow)
+    children = proposal_children(workflow["proposal"])
+    ready = _ready(children)
     for receipt in workflow["bindings"]:
         if before_generation is None or receipt["generation"] < before_generation:
             ready[_key(receipt["request"]["child"])] = receipt["request"]["binding"]
@@ -256,7 +276,7 @@ def require_bound_phase(
     _require(
         all(
             key in ready
-            for key, (_, slot) in proposal_children(workflow["proposal"]).items()
+            for key, (_, slot) in children.items()
             if PHASES[workflow["type"]].index(slot["phase"]) <= position
         ),
         "workflow phase has unresolved required child Plans",
@@ -302,10 +322,21 @@ def validate_bind_request(
         and phases.index(workflow["phase"]) in {phases.index(phase) - 1, phases.index(phase)},
         "workflow binding outside installed phase",
     )
-    ready = _ready(workflow)
+    children = proposal_children(workflow["proposal"])
+    ready = _ready(children)
     for receipt in workflow["bindings"]:
         ready[_key(receipt["request"]["child"])] = receipt["request"]["binding"]
-    _binding_shape(request, workflow, ready, recovery_readers=recovery_readers)
+    _binding_shape(
+        request,
+        workflow,
+        ready,
+        children=children,
+        generations={
+            _pair(p["owner"], p["resource"]): p["expected_generation"]
+            for p in workflow["proposal"]["participants"]
+        },
+        recovery_readers=recovery_readers,
+    )
     return "new"
 
 
@@ -344,8 +375,9 @@ def _verify_binding_custody(
         all(item in verified_materials for item in request["materials"]),
         "workflow produced material is not independently verified",
     )
+    content = {canonical(h) for h in verified_content}
     _require(
-        all(h in verified_content for h in request["content"]),
+        all(canonical(h) in content for h in request["content"]),
         "workflow binding verified custody incomplete",
     )
     adapter = request["binding"].get("adapter")

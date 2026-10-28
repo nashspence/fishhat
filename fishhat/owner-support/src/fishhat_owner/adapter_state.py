@@ -20,6 +20,7 @@ from fishhat_adapters import (
     instance_reference,
     runtime_binding_digest,
 )
+from fishhat_contracts.adapter_semantics import accumulate_result
 from fishhat_contracts.validation import ContractError, canonical, digest, validate
 
 
@@ -460,40 +461,54 @@ class AdapterCoordinator:
 
     def settle(self, attempt_id: str, request: dict[str, Any], response: dict[str, Any]) -> None:
         """Retain complete typed response custody before resolving the original attempt."""
+        require(not self._poisoned, "OWNER_COMMIT_UNCERTAIN")
         attempt = self.state["attempts"].get(attempt_id)
         require(attempt is not None, "UNKNOWN_ATTEMPT")
         assert attempt is not None
-        require(attempt["state"] in {"dispatched", "reconciling"}, "INVALID_SETTLEMENT")
         check_response(
             attempt["executor"]["role"],
             request,
             response,
             invocation={"attempt": attempt, "request": self.state["requests"][attempt_id]},
         )
-        candidate = copy.deepcopy(self.state)
-        candidate["attempts"][attempt_id].update(self._settlement(response["effect"]))
         retained = {
             "request": copy.deepcopy(request),
             "response": copy.deepcopy(response),
         }
         identity = digest(retained)
-        evidence = candidate["results"].setdefault(attempt_id, {"latest": identity, "records": {}})
+        previous = self.state["results"].get(attempt_id)
+        if previous is not None and identity in previous["records"]:
+            require(previous["records"][identity] == retained, "RESULT_IDENTITY_CONFLICT")
+            return
+        require(attempt["state"] in {"dispatched", "reconciling"}, "INVALID_SETTLEMENT")
+        knowledge = accumulate_result(
+            attempt,
+            response["effect"],
+            previous=None if previous is None else previous["knowledge"],
+        )
+        candidate = copy.deepcopy(self.state)
+        candidate["attempts"][attempt_id].update(self._settlement(knowledge))
+        evidence = candidate["results"].setdefault(
+            attempt_id, {"latest": identity, "records": {}, "knowledge": knowledge}
+        )
         evidence["records"][identity] = retained
         evidence["latest"] = identity
+        evidence["knowledge"] = knowledge
         self._publish(candidate)
 
     @staticmethod
-    def _settlement(result: dict[str, Any]) -> dict[str, Any]:
-        known_terminal = (
-            result["task_state"] == "terminal" and result["effect_certainty"] != "unknown"
-        )
+    def _settlement(knowledge: dict[str, Any]) -> dict[str, Any]:
+        completion = knowledge["completion"]
         outcome = "pending"
-        if known_terminal and result["postcondition"] != "unknown":
-            outcome = "succeeded" if result["postcondition"] == "satisfied" else "failed"
+        if (
+            completion is not None
+            and completion["effect_certainty"] == knowledge["effect_certainty"]
+        ):
+            outcome = "succeeded" if completion["postcondition"] == "satisfied" else "failed"
         return {
             "state": "resolved" if outcome != "pending" else "reconciling",
-            "certainty": result["effect_certainty"],
-            "native_task": result["native_task"],
+            "certainty": knowledge["effect_certainty"],
+            "native_task": knowledge["native_task"],
             "outcome": outcome,
         }
 
@@ -501,17 +516,28 @@ class AdapterCoordinator:
         require(set(snapshot["results"]) <= set(snapshot["attempts"]), "RESTORE_RESULT_CUSTODY")
         for key, attempt in snapshot["attempts"].items():
             evidence = snapshot["results"].get(key)
-            require(
-                evidence is not None or attempt["outcome"] not in {"succeeded", "failed"},
-                "RESTORE_RESULT_CUSTODY",
-            )
             if evidence is None:
+                require(
+                    (
+                        attempt["state"],
+                        attempt["certainty"],
+                        attempt["outcome"],
+                        attempt["native_task"],
+                    )
+                    in {
+                        ("prepared", "none", "pending", None),
+                        ("dispatched", "unknown", "pending", None),
+                        ("resolved", "none", "cancelled", None),
+                    },
+                    "RESTORE_RESULT_CUSTODY",
+                )
                 continue
             require(
-                set(evidence) == {"latest", "records"}
+                set(evidence) == {"latest", "records", "knowledge"}
                 and evidence["latest"] in evidence["records"],
                 "RESTORE_RESULT_CUSTODY",
             )
+            knowledge = None
             for identity, retained in evidence["records"].items():
                 require(
                     set(retained) == {"request", "response"} and digest(retained) == identity,
@@ -523,11 +549,14 @@ class AdapterCoordinator:
                     retained["response"],
                     invocation={"attempt": attempt, "request": snapshot["requests"][key]},
                 )
-            latest = evidence["records"][evidence["latest"]]
+                knowledge = accumulate_result(
+                    attempt, retained["response"]["effect"], previous=knowledge
+                )
+            require(knowledge == evidence["knowledge"], "RESTORE_RESULT_KNOWLEDGE")
+            assert knowledge is not None
             require(
                 all(
-                    attempt[field] == value
-                    for field, value in self._settlement(latest["response"]["effect"]).items()
+                    attempt[field] == value for field, value in self._settlement(knowledge).items()
                 ),
                 "RESTORE_RESULT_STATE",
             )

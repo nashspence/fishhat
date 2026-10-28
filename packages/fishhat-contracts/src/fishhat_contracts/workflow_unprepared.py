@@ -42,6 +42,40 @@ def origin_digest(origin: dict[str, Any]) -> str:
     )
 
 
+def _request_commitment(
+    owner: dict[str, Any],
+    origin: dict[str, Any],
+    custody: dict[str, Any] | None,
+    proposal_digest: str,
+) -> str:
+    """Bind every closed request field through the complete canonical proposal digest."""
+    return digest(
+        {
+            "owner": owner,
+            "origin": origin,
+            "phase": "retire-unprepared",
+            "custody": custody,
+            "proposal_digest": proposal_digest,
+        }
+    )
+
+
+def _proposal_binding(
+    proof: dict[str, Any],
+    workflow_id: str,
+    proposal_digest: str,
+    local: list[dict[str, Any]],
+) -> None:
+    """Join an already validated proof to internally derived original proposal facts."""
+    _require(
+        bool(local)
+        and proof["workflow_id"] == workflow_id
+        and proof["proposal_digest"] == proposal_digest
+        and proof["participants_digest"] == digest(local),
+        "unprepared retirement changed original proposal or local child closure",
+    )
+
+
 def validate_never_prepared(
     proof: dict[str, Any],
     *,
@@ -72,24 +106,15 @@ def validate_never_prepared(
         and witness["subject_digest"] == digest({k: v for k, v in proof.items() if k != "witness"}),
         "unprepared retirement witness changed",
     )
+    _require(
+        proof["request_commitment"]
+        == _request_commitment(owner, origin, custody, proof["proposal_digest"]),
+        "unprepared retirement input changed",
+    )
     if proposal is None:
         return
     local = [p for p in proposal["participants"] if p["owner"] == origin]
-    _require(
-        bool(local)
-        and proof["workflow_id"] == proposal["workflow_id"]
-        and proof["proposal_digest"] == digest(proposal)
-        and proof["participants_digest"] == digest(local),
-        "unprepared retirement changed original proposal or local child closure",
-    )
-    request = {
-        "owner": owner,
-        "phase": "retire-unprepared",
-        "origin": origin,
-        "proposal": proposal,
-        "custody": custody,
-    }
-    _require(proof["request_digest"] == digest(request), "unprepared retirement input changed")
+    _proposal_binding(proof, proposal["workflow_id"], digest(proposal), local)
 
 
 def retire_unprepared_workflow(
@@ -119,9 +144,12 @@ def retire_unprepared_workflow(
     _require(recovery_authorized is True, "current unprepared-retirement authority required")
     _require(request["owner"] == expected_owner, "unprepared retirement receiver changed")
     proposal = request["proposal"]
+    commitment = _request_commitment(
+        request["owner"], request["origin"], request["custody"], digest(proposal)
+    )
     if retained is not None:
         validate_never_prepared(retained, proposal=proposal, expected_owner=expected_owner)
-        _require(retained["request_digest"] == digest(request), "accepted retirement input changed")
+        _require(retained["request_commitment"] == commitment, "accepted retirement input changed")
         return copy.deepcopy(retained)
     _require(proposal == verified_proposal, "unprepared proposal is not independently verified")
     validate_workflow_proposal(proposal)
@@ -131,7 +159,7 @@ def retire_unprepared_workflow(
     )
     validate_never_prepared(verified_proof, proposal=proposal, expected_owner=expected_owner)
     _require(
-        verified_proof["request_digest"] == digest(request),
+        verified_proof["request_commitment"] == commitment,
         "independently verified retirement changed input",
     )
     return copy.deepcopy(verified_proof)

@@ -12,7 +12,7 @@ from collections.abc import Callable, Mapping
 from copy import deepcopy
 from datetime import datetime
 from typing import Any
-from urllib.parse import unquote, urldefrag, urljoin
+from urllib.parse import urldefrag, urljoin
 
 from referencing import Registry, Resource
 from referencing.jsonschema import DRAFT202012
@@ -25,6 +25,7 @@ from .schema_profile import (
     check_assertions,
     check_document,
     check_reference_graph,
+    pointer_tokens,
     schema_children,
 )
 from .validation import (
@@ -116,29 +117,20 @@ def _schema_documents(
     for target, source in targets:
         identity, fragment = urldefrag(target)
         node: Any = found[identity]
-        path: list[str] = []
-        if fragment:
-            _require(fragment.startswith("/"), "result schema requires JSON pointer fragments")
-            for part in fragment[1:].split("/"):
-                decoded = unquote(part)
-                _require(
-                    "~" not in decoded.replace("~0", "").replace("~1", ""),
-                    "invalid result schema pointer escape",
-                )
-                key = decoded.replace("~1", "/").replace("~0", "~")
-                path.append(key)
-                try:
-                    node = node[int(key)] if isinstance(node, list) else node[key]
-                except (KeyError, ValueError, IndexError, TypeError) as exc:
-                    raise ContractError("result schema reference is unresolved") from exc
+        path = pointer_tokens(fragment, code="invalid result schema pointer escape")
+        for key in path:
+            try:
+                node = node[int(key)] if isinstance(node, list) else node[key]
+            except (KeyError, ValueError, IndexError, TypeError) as exc:
+                raise ContractError("result schema reference is unresolved") from exc
         _require(
-            isinstance(node, (dict, bool)) and (identity, tuple(path)) in positions,
+            isinstance(node, (dict, bool)) and (identity, path) in positions,
             "result reference is not a schema position",
         )
         if source in graph:
             assert source is not None
-            graph[source].append((identity, tuple(path)))
-            execution[source].append((identity, tuple(path)))
+            graph[source].append((identity, path))
+            execution[source].append((identity, path))
     check_reference_graph(graph, execution)
     return found
 
@@ -284,30 +276,30 @@ def _adapter_result_contract(
 def _wraps_core_adapter_input(uri: str, installed: dict[str, dict[str, Any]] | None) -> bool:
     """Inspect one selected input's whole-instance references, without reverse lookup."""
     core = {
-        SCHEMAS[role + "-adapter.schema.json"]["$id"] + suffix
+        (SCHEMAS[role + "-adapter.schema.json"]["$id"], path)
         for role in ROLES
-        for suffix in ("", "#/$defs/MutationRequest")
+        for path in ((), ("$defs", "MutationRequest"))
     }
     core.update(
-        SCHEMAS["adapter.schema.json"]["$id"] + "#/$defs/" + name
+        (SCHEMAS["adapter.schema.json"]["$id"], ("$defs", name))
         for name in ("MutationRequest", "Invocation")
     )
     documents = _schema_documents(uri, installed)
     pending = [uri]
-    seen: set[str] = set()
+    seen: set[SchemaNode] = set()
     inspected: set[int] = set()
     while pending:
         target = pending.pop()
         base, fragment = urldefrag(target)
-        target = base + ("#" + unquote(fragment) if fragment else "")
-        if target in core:
+        path = pointer_tokens(fragment, code="invalid result schema pointer escape")
+        position = (base, path)
+        if position in core:
             return True
-        if target in seen:
+        if position in seen:
             continue
-        seen.add(target)
+        seen.add(position)
         value: Any = documents[base]
-        for part in fragment.split("/")[1:]:
-            key = unquote(part).replace("~1", "/").replace("~0", "~")
+        for key in path:
             value = value[int(key)] if isinstance(value, list) else value[key]
         nodes = [value]
         while nodes:
@@ -366,6 +358,7 @@ def validate_result_payload(
         "result content identity mismatch",
     )
     value = strict_json(data, max_bytes=max_bytes)
+    _require(canonical(value) == data, "result payload encoding is not canonical")
     identity = result["schema"]
     if schema_identity(identity["uri"], installed) != identity:
         reader = (recovery_readers or {}).get((identity["uri"], identity["digest"]))

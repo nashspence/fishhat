@@ -9,13 +9,17 @@ The original capsule and accepted outcomes remain immutable recovery evidence.
 from __future__ import annotations
 
 import copy
+from collections import ChainMap
 from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from typing import Any
 
+from .bounds import Bounds, bounds
 from .history import validate_owner_custody
 from .record_delivery import validate_record_payload
 from .validation import ContractError, canonical, digest, validate, validate_plan
 from .workflow_unprepared import (
+    _proposal_binding,
     origin_digest,
     origin_owner,
     origin_workflow_id,
@@ -28,6 +32,7 @@ from .workflows import (
     child_action,
     prepared_capsule,
     proposal_children,
+    retained_transition_input,
     validate_workflow_proposal,
 )
 
@@ -156,15 +161,14 @@ def _structure(
         "workflow recovery requires one distinct original workflow",
     )
     _require(any("reference" in o for o in origins.values()), "recovery lacks an original capsule")
+    accepted_owners = {
+        canonical(d["origin"]["owner"]) for d in proposal["children"] if d["kind"] != "unaccepted"
+    }
     for key, origin in origins.items():
         if "never_prepared" in origin:
             validate_never_prepared(origin["never_prepared"], expected_owner=owners[key])
             _require(
-                all(
-                    d["kind"] == "unaccepted"
-                    for d in proposal["children"]
-                    if canonical(d["origin"]["owner"]) == key
-                ),
+                key not in accepted_owners,
                 "unprepared origin cannot supply accepted child work",
             )
     children = proposal_children(proposal["successor"])
@@ -253,12 +257,17 @@ def _origin_records(
         result[key] = record
     _require(len(proposals) == 1, "original participant proposals disagree")
     original = next(iter(result.values()))["proposal"]
+    proposal_digest = digest(original)
+    participants: dict[bytes, list[dict[str, Any]]] = {}
+    for participant in original["participants"]:
+        participants.setdefault(canonical(participant["owner"]), []).append(participant)
     for origin in proposal["origins"]:
         if "never_prepared" in origin:
-            validate_never_prepared(
+            _proposal_binding(
                 origin["never_prepared"],
-                proposal=original,
-                expected_owner=owners[canonical(origin_owner(origin))],
+                original["workflow_id"],
+                proposal_digest,
+                participants.get(canonical(origin_owner(origin)), []),
             )
     _require(
         {canonical(p["owner"]) for p in original["participants"]} == set(owners),
@@ -272,15 +281,80 @@ def _origin_records(
     return result
 
 
-def _ready(record: dict[str, Any]) -> dict[bytes, dict[str, Any]]:
-    ready = {
-        key: binding
-        for key, (_, binding) in proposal_children(record["proposal"]).items()
-        if "plan" in binding or "completed" in binding
-    }
-    for receipt in record["bindings"]:
-        ready[_key(receipt["request"]["child"])] = receipt["request"]["binding"]
-    return ready
+def _ready(
+    record: dict[str, Any], initial: dict[bytes, dict[str, Any]]
+) -> Mapping[bytes, dict[str, Any]]:
+    return ChainMap(
+        {
+            _key(receipt["request"]["child"]): receipt["request"]["binding"]
+            for receipt in record["bindings"]
+        },
+        initial,
+    )
+
+
+def _same_child_operation(first: dict[str, Any], later: dict[str, Any]) -> None:
+    _require(
+        all(
+            first[name] == later[name]
+            for name in (
+                "owner",
+                "id",
+                "request_id",
+                "plan_digest",
+                "subject",
+                "authenticated_principal",
+                "claimed_actor",
+            )
+        ),
+        "retained workflow child Operation identity changed",
+    )
+
+
+def _retained_acceptance(
+    records: Mapping[bytes, dict[str, Any]],
+    children: Mapping[bytes, tuple[dict[str, Any], dict[str, Any]]],
+) -> tuple[dict[bytes, dict[str, Any]], dict[bytes, dict[str, Any]]]:
+    """Index facts in every verified origin, including another owner's capsule.
+
+    Absence here is not evidence of nonacceptance. Native retirement still proves
+    the latest disposition independently. Logical completed-slot references keep
+    their original Operation epoch and request identity, without retargeting it.
+    """
+    from .workflow_bindings import _predecessor
+
+    accepted: dict[bytes, dict[str, Any]] = {}
+    succeeded: dict[bytes, dict[str, Any]] = {}
+
+    def remember(key: bytes, operation: dict[str, Any]) -> None:
+        _require(key in children, "retained Operation outside original workflow child closure")
+        if key in accepted:
+            _same_child_operation(accepted[key], operation)
+        else:
+            accepted[key] = operation
+        if operation["state"] == "succeeded":
+            _require(
+                key not in succeeded or succeeded[key] == operation,
+                "retained workflow child successful outcome changed",
+            )
+            succeeded[key] = operation
+
+    for key, (_, binding) in children.items():
+        if "completed" in binding:
+            remember(key, binding["completed"]["operation"])
+    for record in records.values():
+        for receipt in record["bindings"]:
+            request = receipt["request"]
+            slot = children[_key(request["child"])][1]
+            key = _key(_predecessor(slot["intent"]))
+            remember(key, request["predecessors"][0])
+        for receipt in record["advances"]:
+            evidence = retained_transition_input(receipt).get("phase_evidence")
+            if evidence is not None:
+                for participant in evidence["participants"]:
+                    for outcome in participant["operations"]:
+                        remember(_key(outcome["child"]), outcome["operation"])
+    return accepted, succeeded
 
 
 def _evidence(
@@ -350,6 +424,13 @@ def _dispositions(
     original = next(iter(records.values()))["proposal"]
     original_children = proposal_children(original)
     successor_children = proposal_children(proposal["successor"])
+    initial = {
+        key: binding
+        for key, (_, binding) in original_children.items()
+        if "plan" in binding or "completed" in binding
+    }
+    ready = {owner: _ready(record, initial) for owner, record in records.items()}
+    accepted, succeeded = _retained_acceptance(records, original_children)
     seen = {_key(d["origin"]) for d in proposal["children"]}
     _require(seen == set(original_children), "workflow recovery omits original child disposition")
     mapped = {_key(d["origin"]): d["successor"] for d in proposal["children"]}
@@ -373,11 +454,21 @@ def _dispositions(
             and child_action(old_slot) == child_action(new_slot),
             "workflow recovery changed child procedure role",
         )
-        record = records.get(canonical(old["owner"]))
-        if record is None:
+        key = _key(old)
+        if disposition["kind"] == "unaccepted":
+            _require(
+                key not in accepted, "retained accepted workflow child cannot become unaccepted"
+            )
+        if key in succeeded:
+            _require(
+                disposition["kind"] == "completed",
+                "retained successful workflow child requires completed disposition",
+            )
+        owner = canonical(old["owner"])
+        if owner not in ready:
             _require(disposition["kind"] == "unaccepted", "unprepared origin has accepted child")
             continue
-        binding = _ready(record).get(_key(old))
+        binding = ready[owner].get(key)
         if disposition["kind"] == "unaccepted":
             _require(
                 binding is None or "completed" not in binding,
@@ -392,6 +483,13 @@ def _dispositions(
             retained_readers=retained_readers,
             recovery_readers=recovery_readers,
         )
+        if key in accepted:
+            _same_child_operation(accepted[key], operation)
+        if key in succeeded:
+            _require(
+                operation == succeeded[key],
+                "recovery changed retained successful workflow child outcome",
+            )
         identity_matches = (
             operation == binding["completed"]["operation"]
             if "completed" in binding
@@ -416,6 +514,29 @@ def _dispositions(
             )
 
 
+@bounds(
+    Bounds(
+        id="workflow.recovery-proposal",
+        work="O(B) complete proposal, independently verified origins and retained evidence bytes for fixed installed schema/phase closure; per-call child, owner, preparation and abandonment indexes preserve complete joins",
+        extent="Every original/current owner, resource, child, retained acceptance/success, preparation and abandonment, including positive never-prepared proofs and recovered origin custody; no prefix selection or total-size cap",
+        limits=(),
+        capacity=(
+            "native owners may refuse new recovery capacity without discarding accepted custody",
+        ),
+        proofs=(
+            "tests/test_workflow_validation_growth.py::test_recovery_validation_linear_child_and_binding_work",
+            "tests/test_workflow_validation_growth.py::test_recovery_validation_linear_unprepared_owner_work",
+            "tests/test_workflow_validation_growth.py::test_retained_recovery_preparations_linear_owner_work",
+            "tests/test_workflow_abandonment.py::test_recovery_abandonment_linear_owner_and_selection_work",
+        ),
+        linear_proofs=(
+            "tests/test_workflow_validation_growth.py::test_recovery_validation_linear_child_and_binding_work",
+            "tests/test_workflow_validation_growth.py::test_recovery_validation_linear_unprepared_owner_work",
+            "tests/test_workflow_validation_growth.py::test_retained_recovery_preparations_linear_owner_work",
+            "tests/test_workflow_abandonment.py::test_recovery_abandonment_linear_owner_and_selection_work",
+        ),
+    )
+)
 def validate_recovery_proposal(
     proposal: dict[str, Any],
     *,
@@ -429,23 +550,50 @@ def validate_recovery_proposal(
     _dispositions(proposal, records, retained_readers, recovery_readers)
 
 
-def _preparation(value: dict[str, Any], proposal: dict[str, Any]) -> None:
+@dataclass(frozen=True)
+class _PreparationIndex:
+    proposal_digest: str
+    owners: dict[bytes, tuple[dict[str, Any], str, str]]
+
+
+def _preparation_index(proposal: dict[str, Any]) -> _PreparationIndex:
+    origins = {canonical(origin_owner(o)): origin_digest(o) for o in proposal["origins"]}
+    children: dict[bytes, list[dict[str, Any]]] = {}
+    for disposition in proposal["children"]:
+        children.setdefault(canonical(disposition["origin"]["owner"]), []).append(disposition)
+    owners = {}
+    for participant in proposal["participants"]:
+        key = canonical(participant["origin"])
+        owners[canonical(participant["owner"])] = (
+            participant["origin"],
+            origins[key],
+            digest(children.get(key, [])),
+        )
+    return _PreparationIndex(digest(proposal), owners)
+
+
+def _preparation(
+    value: dict[str, Any],
+    proposal: dict[str, Any],
+    index: _PreparationIndex | None = None,
+) -> None:
     validate("workflow-recovery.schema.json", value, "Preparation")
+    if index is None:
+        index = _preparation_index(proposal)
     owner, retirement, witness = value["owner"], value["retirement"], value["witness"]
-    participant = next((p for p in proposal["participants"] if p["owner"] == owner), None)
-    _require(participant is not None, "supersession preparation owner outside closure")
-    assert participant is not None
-    origin = next(o for o in proposal["origins"] if origin_owner(o) == participant["origin"])
-    children = [d for d in proposal["children"] if d["origin"]["owner"] == participant["origin"]]
+    expected = index.owners.get(canonical(owner))
+    _require(expected is not None, "supersession preparation owner outside closure")
+    assert expected is not None
+    origin, original_digest, children_digest = expected
     _require(
         value["recovery_id"] == proposal["recovery_id"]
-        and value["proposal_digest"] == digest(proposal)
+        and value["proposal_digest"] == index.proposal_digest
         and retirement["owner"] == owner
-        and retirement["origin"] == participant["origin"]
+        and retirement["origin"] == origin
         and retirement["recovery_id"] == value["recovery_id"]
         and retirement["proposal_digest"] == value["proposal_digest"]
-        and retirement["origin_digest"] == origin_digest(origin)
-        and retirement["children_digest"] == digest(children),
+        and retirement["origin_digest"] == original_digest
+        and retirement["children_digest"] == children_digest,
         "supersession retirement preimage changed",
     )
     _require(
@@ -459,9 +607,10 @@ def _preparation(value: dict[str, Any], proposal: dict[str, Any]) -> None:
 
 
 def _preparation_closure(values: list[dict[str, Any]], proposal: dict[str, Any]) -> set[bytes]:
+    index = _preparation_index(proposal)
     found: set[bytes] = set()
     for value in values:
-        _preparation(value, proposal)
+        _preparation(value, proposal, index)
         owner = canonical(value["owner"])
         _require(owner not in found, "duplicate supersession preparation owner")
         found.add(owner)
@@ -616,11 +765,9 @@ def prepare_workflow_recovery(
         if previous == request:
             _require(reserved_successor["owner"] == expected_owner, "recovery replay owner changed")
             return copy.deepcopy(reserved_successor)
+        selected = recovery_selection(previous["proposal"])
         _require(
-            any(
-                a["selection"] == recovery_selection(previous["proposal"])
-                for a in request["proposal"]["abandonments"]
-            ),
+            any(a["selection"] == selected for a in request["proposal"]["abandonments"]),
             "original lineage is reserved by another successor",
         )
     proposal = request["proposal"]
@@ -645,8 +792,9 @@ def prepare_workflow_recovery(
     _preparation(verified_preparation, proposal)
     _require(verified_preparation["owner"] == expected_owner, "local retirement owner changed")
     local = [h for h in proposal["successor"]["content"] if h["owner"] == expected_owner]
+    content = {canonical(h) for h in verified_content}
     _require(
-        all(h in verified_content for h in local), "successor local material custody incomplete"
+        all(canonical(h) in content for h in local), "successor local material custody incomplete"
     )
     result = prepared_capsule(proposal["successor"], expected_owner)
     result["recovery"] = {
@@ -695,8 +843,9 @@ def commit_workflow_recovery(
         "workflow recovery commit generation changed",
     )
     values = request["preparations"]
+    verified = {canonical(p) for p in verified_preparations}
     _require(
-        all(p in verified_preparations for p in values),
+        all(canonical(p) in verified for p in values),
         "supersession preparation is not authenticated",
     )
     found = _preparation_closure(values, proposal)

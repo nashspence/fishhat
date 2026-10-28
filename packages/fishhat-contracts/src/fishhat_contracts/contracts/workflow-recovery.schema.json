@@ -128,7 +128,7 @@
             "kind"
           ],
           "additionalProperties": false,
-          "description": "The owner positively proves this exact old request was never accepted and durably closes future old-identity admission. Timeout, missing client records and an empty restored journal are not proof. The successor uses a fresh request ID and separately reviewed Plan."
+          "description": "The owner positively proves this exact old request was never accepted and durably closes future old-identity admission. Any accepted Operation retained in any verified original capsule contradicts this disposition, including completed slots, binding predecessors and driver or native phase evidence. Evidence is joined by the original child owner and request identity across the complete origin closure; another participant's retained evidence cannot be ignored. Timeout, missing client records, absence of retained evidence and an empty restored journal are not proof. The successor uses a fresh request ID and separately reviewed Plan."
         },
         {
           "type": "object",
@@ -240,7 +240,7 @@
         "abandonments"
       ],
       "additionalProperties": false,
-      "description": "One immutable, independently reviewed supersession intent. workflow_id is the new successor ID; every predecessor capsule belongs to the same original workflow/proposal. Every original participant resource and child appears exactly once in the successor mapping. Existing successes become nonexecutable fulfilled slots; positively unaccepted or separately recovered work gets fresh request identities. Current authority approves all new Plans/material/driver and preserves the complete old input, result, hold, transfer and recovery closure. Old epochs, failed results and driver terms are never rewritten or revived. abandonments is empty for an uncontested selection; replacing a reserved but unused successor requires the complete authenticated abandonment closure of each conflicting selection. The receiver resolves reservations by original lineage, never solely by a caller-chosen new ID. A failed partial preparation may be explicitly abandoned after all owners close it; the replacement selects fresh latest snapshots and dispositions. Recovery supports the current v1 closure and explicitly recovery-qualified compatible historical closures. Exact URI/digest compatibility is independently installed by the receiver, separate from ordinary inspection readers. It cannot be declared by a proposal, inferred from a v1 label or established by translating original bytes. All current v1 recovery joins and guarantees remain required. An unrelated schema document or editorial change need not strand otherwise qualified records. Accepted custody preserves the exact original schema identities and evidence. An initial workflow may have unprepared original participants: each supplies NeverPrepared evidence through retire-unprepared under current authority. At least one actual retained original capsule supplies the common immutable proposal; no absent capsule is invented. Every original owner remains in the origin/current-owner closure, every unprepared owner child is positively unaccepted, and the proof pins the same proposal and complete owner-local participant closure."
+      "description": "One immutable, independently reviewed supersession intent. workflow_id is the new successor ID; every predecessor capsule belongs to the same original workflow/proposal. Every original participant resource and child appears exactly once in the successor mapping. Join retained acceptance and success from every verified original capsule, including completed slots, binding predecessors and driver or native phase evidence. A retained Operation identity cannot be substituted by another Operation for the same request; contradictory identities or successful outcomes fail validation. Existing successes become nonexecutable fulfilled slots preserving the exact successful Operation and original Plan; positively unaccepted or separately recovered work gets fresh request identities. These evidence joins never replace independent native disposition and retirement verification. Current authority approves all new Plans/material/driver and preserves the complete old input, result, hold, transfer and recovery closure. Old epochs, failed results and driver terms are never rewritten or revived. abandonments is empty for an uncontested selection; replacing a reserved but unused successor requires the complete authenticated abandonment closure of each conflicting selection. The receiver resolves reservations by original lineage, never solely by a caller-chosen new ID. A failed partial preparation may be explicitly abandoned after all owners close it; the replacement selects fresh latest snapshots and dispositions. Recovery supports the current v1 closure and explicitly recovery-qualified compatible historical closures. Exact URI/digest compatibility is independently installed by the receiver, separate from ordinary inspection readers. It cannot be declared by a proposal, inferred from a v1 label or established by translating original bytes. All current v1 recovery joins and guarantees remain required. An unrelated schema document or editorial change need not strand otherwise qualified records. Accepted custody preserves the exact original schema identities and evidence. An initial workflow may have unprepared original participants: each supplies NeverPrepared evidence through retire-unprepared under current authority. At least one actual retained original capsule supplies the common immutable proposal; no absent capsule is invented. Every original owner remains in the origin/current-owner closure, every unprepared owner child is positively unaccepted, and the proof pins the same proposal and complete owner-local participant closure."
     },
     "Retirement": {
       "type": "object",
@@ -770,8 +770,9 @@
         "participants_digest": {
           "$ref": "common.schema.json#/$defs/Digest"
         },
-        "request_digest": {
-          "$ref": "common.schema.json#/$defs/Digest"
+        "request_commitment": {
+          "$ref": "common.schema.json#/$defs/Digest",
+          "description": "SHA-256 digest of canonical {owner, origin, phase: retire-unprepared, custody, proposal_digest}. proposal_digest is the digest of the complete canonical original proposal, so this commitment covers every field of the closed RetireUnpreparedRequest without repeating the proposal in each proof. It does not replace retention or verification of the full original request."
         },
         "native_fence_digest": {
           "$ref": "common.schema.json#/$defs/MaterialDigest"
@@ -809,7 +810,7 @@
         "workflow_id",
         "proposal_digest",
         "participants_digest",
-        "request_digest",
+        "request_commitment",
         "native_fence_digest",
         "tombstone_digest",
         "retained_closure_digest",
@@ -817,7 +818,7 @@
         "witness"
       ],
       "additionalProperties": false,
-      "description": "Finite independently authenticated proof of positive never-prepared/no-child-admission checks and permanent retirement for one exact original owner epoch. The complete original proposal and all material named by native_fence_digest, tombstone_digest and retained_closure_digest remain in protected retrievable custody. participants_digest covers the original proposal participant entries owned by origin, preserving their resources, initial generations and complete child requests. The current witness has kind approval, state workflow-never-prepared, matching workflow_id and subject_digest over this entire object except witness. An epoch change requires exact independently verified OwnerCustody and positive native exclusion, not inferred absence. This proof cannot replace an existing capsule or accepted child, release holds, choose a successor, or authorize new effects. Repeating the exact retire-unprepared request rediscovers it after client loss; the signature alone never proves native facts without trusted owner verification."
+      "description": "Finite independently authenticated proof of positive never-prepared/no-child-admission checks and permanent retirement for one exact original owner epoch. The complete original request and proposal and all material named by native_fence_digest, tombstone_digest and retained_closure_digest remain in protected retrievable custody. request_commitment binds owner, origin, the fixed retire-unprepared phase, complete custody including null and the complete original proposal through proposal_digest. Receiving and recovery validators derive that proposal digest from the actual retained proposal, never from caller-selected cache values. participants_digest covers the original proposal participant entries owned by origin in their original order, preserving their resources, initial generations and complete child requests. The current witness has kind approval, state workflow-never-prepared, matching workflow_id and subject_digest over this entire object except witness. An epoch change requires exact independently verified OwnerCustody and positive native exclusion, not inferred absence. This proof cannot replace an existing capsule or accepted child, release holds, choose a successor, or authorize new effects. Repeating the exact retire-unprepared request rediscovers it after client loss; the signature alone never proves native facts without trusted owner verification."
     }
   }
 }

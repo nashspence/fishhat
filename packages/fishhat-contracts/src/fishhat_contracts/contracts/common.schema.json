@@ -291,7 +291,7 @@
         "digest"
       ],
       "additionalProperties": false,
-      "description": "The exact installed closed input or result schema. Digest is SHA-256 over canonical {root: uri, documents: {document URI: complete schema document}} containing the root document and every transitively referenced local document. Resolve references only from the approved installed schema set, never by fetching the URI. A caller-supplied identity does not approve a schema. Every schema document declares JSON Schema Draft 2020-12 at its root. Other dialects and nested dialect declarations reject; evaluation preserves the declared dialect and structural uniqueness semantics across references without rewriting the published documents or their identity. The supported closed subset uses static references and JSON Pointer fragments; nested schema IDs, dynamic references and unresolved targets are rejected, not approximated."
+      "description": "The exact installed closed input or result schema. Digest is SHA-256 over canonical {root: uri, documents: {document URI: complete schema document}} containing the root document and every transitively referenced local document. Resolve references only from the approved installed schema set, never by fetching the URI. A caller-supplied identity does not approve a schema. Every schema document declares JSON Schema Draft 2020-12 at its root. Other dialects and nested dialect declarations reject; evaluation preserves the declared dialect and structural uniqueness semantics across references without rewriting the published documents or their identity. The supported closed subset uses static references and JSON Pointer fragments; nested schema IDs, dynamic references and unresolved targets are rejected, not approximated. A pointer fragment is empty or begins with a literal slash. Percent-decode the complete fragment once before splitting its reference tokens, then unescape ~1 and ~0 in that order. Encoded separators select nested schema positions; literal slashes in member names use ~1. Admission, cycle and expansion checks, core-wrapper inspection and value evaluation must resolve the same schema positions."
     },
     "HandleBinding": {
       "oneOf": [
@@ -360,7 +360,7 @@
         "schema"
       ],
       "additionalProperties": false,
-      "description": "A committed operation output and its exact approved result schema. The handle owner and operation binding must match the enclosing Operation. The owning action catalog determines the permitted result type; a generic adapter action pins its selected method result schema in its reviewed subject. This declaration does not advertise an implemented capability."
+      "description": "A committed operation output and its exact approved result schema. The handle owner and operation binding must match the enclosing Operation. The complete payload is canonical JSON; its digest and size commit those exact bytes. Result intake verifies canonical encoding before treating the payload as usable, including when an independently installed historical reader is selected. Noncanonical bytes are rejected, never silently normalized or rebound after custody commitment. The owning action catalog determines the permitted result type; a generic adapter action pins its selected method result schema in its reviewed subject. This declaration does not advertise an implemented capability."
     },
     "GitRef": {
       "type": "string",

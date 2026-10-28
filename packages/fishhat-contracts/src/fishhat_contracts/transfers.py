@@ -136,10 +136,13 @@ def validate_workflow_transfer(workflow: dict[str, Any]) -> None:
             for witness in transfer["commit_witnesses"]
             if witness["owner"] == workflow["owner"]
         )
+        # Retained proofs have unique owners; equal lengths keep duplicate
+        # completion witnesses from disappearing in the exact-byte set comparison.
         _require(
             completion["proposal_digest"] == transfer["proposal_digest"]
-            and sorted(canonical(item) for item in completion["witnesses"])
-            == sorted(canonical(item) for item in transfer["commit_witnesses"])
+            and len(completion["witnesses"]) == len(transfer["commit_witnesses"])
+            and {canonical(item) for item in completion["witnesses"]}
+            == {canonical(item) for item in transfer["commit_witnesses"]}
             and receipt["driver_term"] == proposal["expected_term"] + 1
             and local["generation"] < receipt["generation"],
             "completed transfer advance evidence or generation changed",

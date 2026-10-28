@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 from copy import deepcopy
 from functools import cache
 
@@ -10,6 +12,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from fishhat_contracts import checkpoints
 from fishhat_contracts.checkpoints import resolve_checkpoint, validate_checkpoint
 from fishhat_contracts.handoffs import schema_identity, validate_cli_result, validate_result_payload
+from fishhat_contracts.operations import validate_operation
 from fishhat_contracts.validation import ContractError, canonical, digest, strict_json
 from fishhat_contracts.witness import sign
 
@@ -27,6 +30,7 @@ CHECK_PURPOSE = {
     "authority": [
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/records.schema.json#/$defs/Checkpoint",
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/adapter.schema.json#/$defs/Snapshot",
+        "packages/fishhat-contracts/src/fishhat_contracts/contracts/common.schema.json#/$defs/ResultHandle",
     ],
     "scope": "exact signed capture/store/verification receipt mapping and historical recovery inputs",
     "relationship": "candidate",
@@ -521,6 +525,33 @@ def test_decoded_checkpoint_and_app_backup_payload_reapply_snapshot_integrity():
         validate_cli_result(checkpoint)
     with pytest.raises(ContractError, match="checkpoint witness snapshot mismatch"):
         read(checkpoint)
+
+
+@pytest.mark.parametrize("encoding", ["whitespace", "member-order", "string-escape"])
+def test_signed_capture_results_reject_noncanonical_bytes_at_intake(encoding):
+    checkpoint, context, snapshots = fixture(count=1)
+    assert resolve_checkpoint(checkpoint, **context).snapshots == snapshots
+    capture_id = checkpoint["datasets"]["dataset-0000"]["capture_digest"]
+    record = strict_json(context["records"][capture_id])
+    handle = record["result_handle"]["handle"]
+    original = context["records"][handle["digest"]]
+    value = validate_result_payload(record, original)
+    variants = {
+        "whitespace": original + b"\n",
+        "member-order": json.dumps(
+            dict(reversed(list(value.items()))), ensure_ascii=False, separators=(",", ":")
+        ).encode("utf-8"),
+        "string-escape": original.replace(b"fishhat.capture", b"fishhat.\\u0063apture"),
+    }
+    data = variants[encoding]
+    assert data != original and strict_json(data) == value
+    handle.update(size=len(data), digest="sha256:" + hashlib.sha256(data).hexdigest())
+    seal_operation(record)
+    validate_operation(record)
+    retained = canonical(record)
+    with pytest.raises(ContractError, match="result payload encoding is not canonical"):
+        validate_result_payload(record, data)
+    assert canonical(record) == retained
 
 
 @pytest.mark.parametrize("shared", [False, True], ids=["separate-objects", "shared-object"])

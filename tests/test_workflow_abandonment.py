@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import copy
 import io
+from collections import Counter
 
 import pytest
 from fishhat_client.wire import frame, read_frame
+from fishhat_contracts import workflow_abandonment
 from fishhat_contracts.handoffs import validate_cli_result
 from fishhat_contracts.validation import (
     MAX_BYTES,
@@ -21,9 +23,15 @@ from fishhat_contracts.workflow_abandonment import (
     abandon_workflow_recovery,
     record_workflow_abandonment,
     recovery_selection,
+    validate_abandonment,
+    validate_abandonment_closure,
 )
-from fishhat_contracts.workflow_recovery import commit_workflow_recovery
+from fishhat_contracts.workflow_recovery import (
+    commit_workflow_recovery,
+    validate_recovery_proposal,
+)
 
+from tests.linear_support import assert_linear, measure
 from tests.test_contracts import uid
 from tests.test_owner_handoffs import cli, operation, request, staged_workflow_input, wire
 from tests.test_owner_history import custody_for
@@ -41,6 +49,21 @@ CHECK_PURPOSE = {
     "relationship": "candidate",
     "reason": "Independent protected context challenges simultaneous selections, absent peers, stale outcomes, restoration and lost-client replay. Bounded transport and retained lineage are checked without claiming native negative proofs, atomic fencing, durability or execution.",
     "claims": [],
+}
+
+CHECK_OVERRIDES = {
+    "test_recovery_abandonment_linear_owner_and_selection_work": {
+        "purpose": "implementation",
+        "authority": [
+            "packages/fishhat-contracts/src/fishhat_contracts/workflow_recovery.py#validate_recovery_proposal",
+            "packages/fishhat-contracts/src/fishhat_contracts/workflow_abandonment.py#validate_abandonment_closure",
+            "release.toml#/engineering",
+        ],
+        "scope": "complete public recovery validation and independently verified abandonment closure over separate sixteenfold owner and selection extents",
+        "relationship": "scoped-witness",
+        "reason": "Valid complete inputs measure executed work, actual selection owner visits and exact verified-proof membership visits. Synthetic setup is outside measurement and supplies no native authentication or fencing qualification.",
+        "claims": ["engineering:workflow.recovery-proposal"],
+    },
 }
 
 
@@ -189,6 +212,28 @@ def test_partial_or_substituted_abandonment_cannot_release_selection(change):
         prepare(replacement, records, reserved_successor=value, verified_abandonments=verified)
 
 
+def test_verified_abandonment_membership_requires_the_complete_exact_proof():
+    proposal, _ = scenario(multiple=True)
+    closure = {
+        "selection": recovery_selection(proposal),
+        "proofs": [abandon_proof(proposal, p["owner"])[1] for p in proposal["participants"]],
+    }
+    replacement = alternative(proposal, "exact-verified-abandonment")
+    replacement["abandonments"] = [closure]
+    verified = copy.deepcopy(list(reversed(closure["proofs"])))
+    validate_abandonment_closure(replacement, verified_abandonments=verified)
+    substituted = verified[0]
+    substituted["native_evidence"] = digest({"different": "independently-selected-native-proof"})
+    body = {key: value for key, value in substituted["witness"].items() if key != "signature"}
+    body["subject_digest"] = digest(
+        {key: value for key, value in substituted.items() if key != "witness"}
+    )
+    substituted["witness"] = sign(body, KEY)
+    validate_abandonment(substituted, selection=closure["selection"])
+    with pytest.raises(ContractError, match="not independently authenticated"):
+        validate_abandonment_closure(replacement, verified_abandonments=verified)
+
+
 def test_abandoned_absent_peer_cannot_later_prepare_the_old_successor():
     proposal, records = scenario(multiple=True)
     peer = proposal["participants"][1]["owner"]
@@ -313,3 +358,80 @@ def test_repeated_selection_summaries_do_not_nest_previous_proposals():
         assert len(canonical(value)) < 2 * len(canonical(proposal))
         proposal = value
     assert records[0]["record"]["id"] == closure["selection"]["original_workflow_id"]
+
+
+class ObservedProofs(list):
+    """Count unchanged proof visits, including list membership's equality scan."""
+
+    def __init__(self, values, counts):
+        super().__init__(values)
+        self.counts = counts
+
+    def __iter__(self):
+        for value in super().__iter__():
+            self.counts["verified_proof_visits"] += 1
+            yield value
+
+    def __contains__(self, value):
+        return any(candidate == value for candidate in self)
+
+
+@pytest.mark.parametrize("extent", ["owners", "selections"])
+def test_recovery_abandonment_linear_owner_and_selection_work(monkeypatch, extent):
+    from tests.workflow_growth_support import unprepared_owners
+
+    recovery_samples, closure_samples, visits = [], [], []
+    for count in (2, 8, 32):
+        owner_count = count if extent == "owners" else 2
+        selection_count = 1 if extent == "owners" else count
+        initial, records = unprepared_owners(owner_count - 1)
+        replacement = alternative(initial, "measured-abandonment-replacement")
+        verified = []
+        for index in range(selection_count):
+            previous = alternative(initial, "measured-abandoned-" + str(index))
+            proofs = [abandon_proof(previous, p["owner"])[1] for p in previous["participants"]]
+            replacement["abandonments"].append(
+                {"selection": recovery_selection(previous), "proofs": proofs}
+            )
+            verified.extend(copy.deepcopy(proofs))
+        counts = Counter(selection_validations=0, selection_owner_visits=0, proof_validations=0)
+        actual_validate = workflow_abandonment.validate
+
+        def observed_validate(
+            schema, value, definition=None, counts=counts, actual_validate=actual_validate
+        ):
+            if schema == "workflow-recovery.schema.json":
+                if definition == "Selection":
+                    counts["selection_validations"] += 1
+                    counts["selection_owner_visits"] += len(value["participants"])
+                elif definition == "Abandonment":
+                    counts["proof_validations"] += 1
+            return actual_validate(schema, value, definition)
+
+        with monkeypatch.context() as patch:
+            patch.setattr(workflow_abandonment, "validate", observed_validate)
+            _, recovery_work = measure(
+                lambda replacement=replacement, records=records: validate_recovery_proposal(
+                    replacement, verified_origins=records
+                ),
+                modules=(workflow_abandonment,),
+            )
+            observed_proofs = ObservedProofs(verified, counts)
+            _, closure_work = measure(
+                lambda replacement=replacement, observed_proofs=observed_proofs: (
+                    validate_abandonment_closure(replacement, verified_abandonments=observed_proofs)
+                ),
+                modules=(workflow_abandonment,),
+            )
+        assert len(replacement["participants"]) == owner_count
+        assert len(replacement["abandonments"]) == selection_count
+        assert counts["selection_validations"] == 2 * selection_count
+        assert counts["selection_owner_visits"] == 2 * selection_count * owner_count
+        assert counts["proof_validations"] == 2 * selection_count * owner_count
+        assert counts["verified_proof_visits"] == len(verified)
+        recovery_samples.append((count, recovery_work))
+        closure_samples.append((count, closure_work))
+        visits.append((count, counts))
+    assert_linear(recovery_samples)
+    assert_linear(closure_samples)
+    assert_linear(visits)
