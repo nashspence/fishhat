@@ -7,11 +7,12 @@ import subprocess
 from typing import Any
 
 from scripts.project_policy import ROOT, read_toml
+from scripts.validation_timeouts import invocation, watchdog
 
 
 def api(path: str, *args: str) -> Any:
     command = ["gh", "api", "--hostname", "github.com", path, *args]
-    result = subprocess.run(command, capture_output=True, text=True, timeout=30)
+    result = subprocess.run(command, capture_output=True, text=True, timeout=watchdog(30))
     if result.returncode:
         raise RuntimeError("repository control read failed")
     return json.loads(result.stdout) if result.stdout else None
@@ -150,6 +151,7 @@ def observe(policy: dict[str, Any], scope: str) -> dict[str, Any]:
     return observed
 
 
+@invocation
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--scope", choices=["public", "full"], default="full")

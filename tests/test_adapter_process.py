@@ -22,9 +22,16 @@ from fishhat_adapters.process import (
 )
 from fishhat_contracts.validation import ContractError, canonical
 
+from scripts.validation_timeouts import Deadline, watchdog
 from tests.linear_support import assert_linear, measure
 from tests.test_adapter_handoffs import installed, invocation_for, response_for
 from tests.test_adapter_invocations import recovered
+
+
+def expiry_probe(child):
+    """Observe intentional expiry after the independent peer established readiness."""
+    return child.wait(timeout=0.1)
+
 
 CHECK_PURPOSE = {
     "purpose": "public-contract",
@@ -146,9 +153,9 @@ def run_peer(
         try:
             if intentional_timeout:
                 readiness = work / "output/timeout-ready"
-                ready_deadline = time.monotonic() + 10
+                ready_deadline = Deadline.after(10)
                 while not readiness.exists() and child.poll() is None:
-                    if time.monotonic() >= ready_deadline:
+                    if not ready_deadline.remaining():
                         pytest.fail("synthetic timeout peer did not establish readiness")
                     time.sleep(0.01)
                 assert readiness.read_text() == call["attempt"]["attempt_id"]
@@ -157,15 +164,17 @@ def run_peer(
                     == call["attempt"]["attempt_id"]
                 )
             try:
-                exit_code = child.wait(timeout=0.1 if intentional_timeout else 10)
+                exit_code = (
+                    expiry_probe(child) if intentional_timeout else child.wait(timeout=watchdog(10))
+                )
             except subprocess.TimeoutExpired:
                 timed_out = True
                 child.kill()
-                exit_code = child.wait(timeout=5)
+                exit_code = child.wait(timeout=watchdog(5))
         finally:
             if child.poll() is None:
                 child.kill()
-                child.wait(timeout=5)
+                child.wait(timeout=watchdog(5))
     response_path = work / "output/response.json"
     with (work / "stdout.bin").open("rb") as output:
         marker = output.read(1025)

@@ -21,6 +21,13 @@ from fishhat_contracts import canonical
 from scripts.check_evidence import entrypoints, execution_origin, valid_evidence
 from scripts.project_policy import ROOT
 from scripts.run_stats import valid_phases, valid_stats
+from scripts.validation_timeouts import (
+    current,
+    execution_conditions,
+    invocation,
+    valid_report,
+    watchdog,
+)
 
 FORMAT = "fishhat-validation/v1"
 OVERRIDES = (
@@ -172,6 +179,8 @@ def read_test_results(path: Path, root: Path = ROOT) -> dict[str, Any] | None:
         "evidence": value.get("evidence"),
         "subtests": value.get("subtests", {}),
         "profile": value.get("profile"),
+        "watchdogs": value.get("watchdogs"),
+        "worker_watchdogs": value.get("worker_watchdogs", {}),
     }
     return result if valid_evidence(result, root) else None
 
@@ -179,7 +188,9 @@ def read_test_results(path: Path, root: Path = ROOT) -> dict[str, Any] | None:
 def full_check_passed(receipt: dict[str, Any]) -> bool:
     tests = receipt.get("tests")
     return bool(
-        receipt["state"] == "completed"
+        valid_report(receipt.get("watchdogs"))
+        and receipt["watchdogs"]["scale"] == receipt["profile"].get("watchdog_scale")
+        and receipt["state"] == "completed"
         and receipt["exit_status"] == 0
         and receipt["selection"]["canonical"]
         and receipt["source_before"]["clean"]
@@ -188,6 +199,9 @@ def full_check_passed(receipt: dict[str, Any]) -> bool:
             receipt["target"] not in TEST_TARGETS
             or (
                 tests
+                and tests.get("profile") == receipt["profile"]
+                and valid_report(tests.get("watchdogs"))
+                and tests["watchdogs"]["scale"] == receipt["watchdogs"]["scale"]
                 and valid_stats(tests.get("stats"))
                 and tests["exit_status"] == 0
                 and tests["outcomes"]
@@ -199,13 +213,14 @@ def full_check_passed(receipt: dict[str, Any]) -> bool:
 
 def write_receipt(path: Path, value: dict[str, Any]) -> None:
     content = json.dumps(value, indent=2, sort_keys=True) + "\n"
-    with FileLock(str(path.parent / ".lock"), timeout=10):
+    with FileLock(str(path.parent / ".lock"), timeout=watchdog(10)):
         temporary = path.with_suffix(".tmp")
         temporary.write_text(content, encoding="utf-8", newline="\n")
         temporary.chmod(0o600)
         temporary.replace(path)
 
 
+@invocation
 def run(target: str, command: list[str], root: Path = ROOT) -> int:
     if target not in TARGETS or not command or command[0] not in {"python", "uv"}:
         raise ValueError("unknown validation target or executable")
@@ -224,6 +239,7 @@ def run(target: str, command: list[str], root: Path = ROOT) -> int:
         "source_after": None,
         "selection": selection(target, command),
         "profile": {
+            **execution_conditions(),
             "platform": sys.platform,
             "machine": platform.machine(),
             "python": platform.python_version(),
@@ -237,6 +253,7 @@ def run(target: str, command: list[str], root: Path = ROOT) -> int:
         "production_qualified": False,
         "check_purpose": entrypoints(root).get("make:" + target),
         "execution_origin": execution_origin(),
+        "watchdogs": current().report(),
     }
     write_receipt(path, receipt)
     status = 127
@@ -260,7 +277,7 @@ def run(target: str, command: list[str], root: Path = ROOT) -> int:
             if child is not None and child.poll() is None:
                 child.terminate()
                 try:
-                    child.wait(timeout=5)
+                    child.wait(timeout=watchdog(5))
                 except subprocess.TimeoutExpired:
                     child.kill()
                     child.wait()
@@ -284,6 +301,7 @@ def run(target: str, command: list[str], root: Path = ROOT) -> int:
                 exit_status=status,
                 duration_seconds=round(time.monotonic() - started, 6),
             )
+            receipt["watchdogs"] = current().report()
             receipt["full_check_passed"] = full_check_passed(receipt)
             write_receipt(path, receipt)
     print(

@@ -341,7 +341,9 @@ def main() -> None:
     if args.write_snapshot:
         target.write_text(json.dumps(snapshot(), indent=2, sort_keys=True) + "\n")
         return
-    errors = boundary_errors() + state_errors(history=args.history)
+    from scripts.validation_watchdogs import check as watchdog_errors
+
+    errors = boundary_errors() + state_errors(history=args.history) + watchdog_errors(ROOT)
     if snapshot() != json.loads(target.read_text()):
         errors.append("declared public interface changed; review and update its snapshot")
     if errors:

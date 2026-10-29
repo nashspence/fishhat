@@ -24,14 +24,48 @@ env:
   PYTHONHASHSEED: '0'
 
 jobs:
+  watchdogs:
+    name: Validation watchdog policy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5 # Independent bootstrap resource ceiling; policy is not resolved yet.
+    env:
+      CHECK_PURPOSES: validation-tooling
+      CHECK_SCOPE: validation budget planning; no product qualification
+      CHECK_AUTHORITY: scripts/validation_workflows.py
+      FISHHAT_VALIDATION_SCALE_DEFINED: ${{ contains(toJSON(vars), '"FISHHAT_VALIDATION_TIMEOUT_SCALE":') }}
+      FISHHAT_VALIDATION_SCALE_VALUE: ${{ vars.FISHHAT_VALIDATION_TIMEOUT_SCALE }}
+    outputs:
+      scale: ${{ steps.plan.outputs.scale }}
+      budgets: ${{ steps.plan.outputs.budgets }}
+      contacts: ${{ steps.plan.outputs.contacts }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - run: python3 scripts/validation_timeouts.py bootstrap --github-env "$GITHUB_ENV"
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9 # v7
+        with:
+          version: '0.11.24'
+      - run: uv sync --locked --all-packages --group dev --python 3.12
+      - id: plan
+        run: uv run --locked --all-packages --group dev python -m scripts.validation_workflows --workflow .github/workflows/ci.yml --github-output "$GITHUB_OUTPUT"
+
   tests:
     env:
+      UV_HTTP_TIMEOUT: ${{ fromJSON(needs.watchdogs.outputs.contacts)['tests'].uv }}
+      FISHHAT_VALIDATION_JOB_MINUTES: ${{ fromJSON(needs.watchdogs.outputs.budgets)['tests'] }}
+      FISHHAT_VALIDATION_NOMINAL_MINUTES: '45'
+      FISHHAT_VALIDATION_TIMEOUT_SCALE: ${{ needs.watchdogs.outputs.scale }}
       CHECK_PURPOSES: implementation,public-contract,repository-policy,validation-tooling
       CHECK_SCOPE: pytest groups retain separate authority and exact local scopes
       CHECK_AUTHORITY: release.toml
+    needs: [watchdogs, watchdog-regressions]
     name: Contracts and unit tests (Python ${{ matrix.python }})
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: ${{ fromJSON(needs.watchdogs.outputs.budgets)['tests'] }}
     strategy:
       fail-fast: false
       matrix:
@@ -68,12 +102,17 @@ jobs:
 
   mypy:
     env:
+      UV_HTTP_TIMEOUT: ${{ fromJSON(needs.watchdogs.outputs.contacts)['mypy'].uv }}
+      FISHHAT_VALIDATION_JOB_MINUTES: ${{ fromJSON(needs.watchdogs.outputs.budgets)['mypy'] }}
+      FISHHAT_VALIDATION_NOMINAL_MINUTES: '10'
+      FISHHAT_VALIDATION_TIMEOUT_SCALE: ${{ needs.watchdogs.outputs.scale }}
       CHECK_PURPOSES: validation-tooling
       CHECK_SCOPE: repository checks; no product or native qualification
       CHECK_AUTHORITY: release.toml
+    needs: watchdogs
     name: Strict mypy
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: ${{ fromJSON(needs.watchdogs.outputs.budgets)['mypy'] }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
@@ -89,12 +128,17 @@ jobs:
 
   ruff:
     env:
+      UV_HTTP_TIMEOUT: ${{ fromJSON(needs.watchdogs.outputs.contacts)['ruff'].uv }}
+      FISHHAT_VALIDATION_JOB_MINUTES: ${{ fromJSON(needs.watchdogs.outputs.budgets)['ruff'] }}
+      FISHHAT_VALIDATION_NOMINAL_MINUTES: '10'
+      FISHHAT_VALIDATION_TIMEOUT_SCALE: ${{ needs.watchdogs.outputs.scale }}
       CHECK_PURPOSES: validation-tooling
       CHECK_SCOPE: repository checks; no product or native qualification
       CHECK_AUTHORITY: release.toml
+    needs: watchdogs
     name: Ruff
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: ${{ fromJSON(needs.watchdogs.outputs.budgets)['ruff'] }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
@@ -111,12 +155,17 @@ jobs:
 
   public-safety:
     env:
+      UV_HTTP_TIMEOUT: ${{ fromJSON(needs.watchdogs.outputs.contacts)['public-safety'].uv }}
+      FISHHAT_VALIDATION_JOB_MINUTES: ${{ fromJSON(needs.watchdogs.outputs.budgets)['public-safety'] }}
+      FISHHAT_VALIDATION_NOMINAL_MINUTES: '10'
+      FISHHAT_VALIDATION_TIMEOUT_SCALE: ${{ needs.watchdogs.outputs.scale }}
       CHECK_PURPOSES: repository-policy
       CHECK_SCOPE: repository checks; no product or native qualification
       CHECK_AUTHORITY: release.toml
+    needs: watchdogs
     name: Public tree and full-history secret scan
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: ${{ fromJSON(needs.watchdogs.outputs.budgets)['public-safety'] }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
@@ -127,12 +176,17 @@ jobs:
 
   package:
     env:
+      UV_HTTP_TIMEOUT: ${{ fromJSON(needs.watchdogs.outputs.contacts)['package'].uv }}
+      FISHHAT_VALIDATION_JOB_MINUTES: ${{ fromJSON(needs.watchdogs.outputs.budgets)['package'] }}
+      FISHHAT_VALIDATION_NOMINAL_MINUTES: '15'
+      FISHHAT_VALIDATION_TIMEOUT_SCALE: ${{ needs.watchdogs.outputs.scale }}
       CHECK_PURPOSES: implementation
       CHECK_SCOPE: built/installed scaffold packages only; no native activation
       CHECK_AUTHORITY: release.toml
+    needs: watchdogs
     name: Build and install wheel outside source checkout
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: ${{ fromJSON(needs.watchdogs.outputs.budgets)['package'] }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
@@ -155,12 +209,17 @@ jobs:
 
   policy:
     env:
+      UV_HTTP_TIMEOUT: ${{ fromJSON(needs.watchdogs.outputs.contacts)['policy'].uv }}
+      FISHHAT_VALIDATION_JOB_MINUTES: ${{ fromJSON(needs.watchdogs.outputs.budgets)['policy'] }}
+      FISHHAT_VALIDATION_NOMINAL_MINUTES: '10'
+      FISHHAT_VALIDATION_TIMEOUT_SCALE: ${{ needs.watchdogs.outputs.scale }}
       CHECK_PURPOSES: repository-policy
       CHECK_SCOPE: repository checks; no product or native qualification
       CHECK_AUTHORITY: release.toml
+    needs: watchdogs
     name: Component and compatibility policy
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: ${{ fromJSON(needs.watchdogs.outputs.budgets)['policy'] }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
@@ -182,12 +241,17 @@ jobs:
 
   licensing:
     env:
+      UV_HTTP_TIMEOUT: ${{ fromJSON(needs.watchdogs.outputs.contacts)['licensing'].uv }}
+      FISHHAT_VALIDATION_JOB_MINUTES: ${{ fromJSON(needs.watchdogs.outputs.budgets)['licensing'] }}
+      FISHHAT_VALIDATION_NOMINAL_MINUTES: '10'
+      FISHHAT_VALIDATION_TIMEOUT_SCALE: ${{ needs.watchdogs.outputs.scale }}
       CHECK_PURPOSES: repository-policy
       CHECK_SCOPE: repository checks; no product or native qualification
       CHECK_AUTHORITY: release.toml
+    needs: watchdogs
     name: Licensing provenance
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: ${{ fromJSON(needs.watchdogs.outputs.budgets)['licensing'] }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
@@ -204,13 +268,17 @@ jobs:
 
   installed:
     env:
+      UV_HTTP_TIMEOUT: ${{ fromJSON(needs.watchdogs.outputs.contacts)['installed'].uv }}
+      FISHHAT_VALIDATION_JOB_MINUTES: ${{ fromJSON(needs.watchdogs.outputs.budgets)['installed'] }}
+      FISHHAT_VALIDATION_NOMINAL_MINUTES: '25'
+      FISHHAT_VALIDATION_TIMEOUT_SCALE: ${{ needs.watchdogs.outputs.scale }}
       CHECK_PURPOSES: implementation
       CHECK_SCOPE: built/installed scaffold packages only; no native activation
       CHECK_AUTHORITY: release.toml
     name: Installed distributions (${{ matrix.os }})
-    needs: package
+    needs: [package, watchdogs]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 25
+    timeout-minutes: ${{ fromJSON(needs.watchdogs.outputs.budgets)['installed'] }}
     strategy:
       fail-fast: false
       matrix:
@@ -243,13 +311,18 @@ jobs:
 
   dependency-review:
     env:
+      UV_HTTP_TIMEOUT: ${{ fromJSON(needs.watchdogs.outputs.contacts)['dependency-review'].uv }}
+      FISHHAT_VALIDATION_JOB_MINUTES: ${{ fromJSON(needs.watchdogs.outputs.budgets)['dependency-review'] }}
+      FISHHAT_VALIDATION_NOMINAL_MINUTES: '10'
+      FISHHAT_VALIDATION_TIMEOUT_SCALE: ${{ needs.watchdogs.outputs.scale }}
       CHECK_PURPOSES: repository-policy
       CHECK_SCOPE: repository checks; no product or native qualification
       CHECK_AUTHORITY: release.toml
+    needs: watchdogs
     name: Dependency review
     if: ${{ github.event_name == 'pull_request' }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: ${{ fromJSON(needs.watchdogs.outputs.budgets)['dependency-review'] }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
@@ -260,12 +333,17 @@ jobs:
 
   dependency-audit:
     env:
+      UV_HTTP_TIMEOUT: ${{ fromJSON(needs.watchdogs.outputs.contacts)['dependency-audit'].uv }}
+      FISHHAT_VALIDATION_JOB_MINUTES: ${{ fromJSON(needs.watchdogs.outputs.budgets)['dependency-audit'] }}
+      FISHHAT_VALIDATION_NOMINAL_MINUTES: '15'
+      FISHHAT_VALIDATION_TIMEOUT_SCALE: ${{ needs.watchdogs.outputs.scale }}
       CHECK_PURPOSES: repository-policy
       CHECK_SCOPE: repository checks; no product or native qualification
       CHECK_AUTHORITY: release.toml
+    needs: watchdogs
     name: Dependency audit
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: ${{ fromJSON(needs.watchdogs.outputs.budgets)['dependency-audit'] }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
@@ -279,17 +357,22 @@ jobs:
       - run: uv sync --locked --all-packages --group dev --python 3.12
       - run: |
           uv export --quiet --locked --all-packages --all-groups --no-emit-workspace --no-hashes --format requirements-txt --output-file "$RUNNER_TEMP/audit-requirements.txt"
-          uv run --locked --all-packages --group dev --python 3.12 pip-audit --strict --no-deps --disable-pip -r "$RUNNER_TEMP/audit-requirements.txt"
+          uv run --locked --all-packages --group dev --python 3.12 pip-audit --strict --no-deps --disable-pip --timeout "$(uv run --locked --all-packages --group dev python -m scripts.validation_timeouts audit-http)" -r "$RUNNER_TEMP/audit-requirements.txt"
 
   native-prerequisites:
     env:
+      UV_HTTP_TIMEOUT: ${{ fromJSON(needs.watchdogs.outputs.contacts)['native-prerequisites'].uv }}
+      FISHHAT_VALIDATION_JOB_MINUTES: ${{ fromJSON(needs.watchdogs.outputs.budgets)['native-prerequisites'] }}
+      FISHHAT_VALIDATION_NOMINAL_MINUTES: '25'
+      FISHHAT_VALIDATION_TIMEOUT_SCALE: ${{ needs.watchdogs.outputs.scale }}
       CHECK_PURPOSES: implementation
       CHECK_SCOPE: disposable-runner prerequisites only; not deployment qualification
       CHECK_AUTHORITY: release.toml
+    needs: watchdogs
     name: Native Linux prerequisite smoke (not deployment qualification)
     if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: ${{ fromJSON(needs.watchdogs.outputs.budgets)['native-prerequisites'] }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
@@ -299,3 +382,42 @@ jobs:
         if: ${{ always() }}
         run: |
           printf '%s\n' 'This job probes disposable-runner systemd/cgroup2, rootless Podman/Quadlet, loopback XFS quotas and SSH. It does not qualify the unfinished owner implementations, reboot recovery, hardware or production migration.' >> "$GITHUB_STEP_SUMMARY"
+
+  watchdog-regressions:
+    needs: watchdogs
+    name: Validation watchdog regressions (${{ matrix.watchdog_scale }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: ${{ fromJSON(needs.watchdogs.outputs.budgets)['watchdog-regressions'][matrix.watchdog_scale] }}
+    strategy:
+      fail-fast: false
+      matrix:
+        watchdog_scale: ['1', '4']
+    env:
+      UV_HTTP_TIMEOUT: ${{ fromJSON(needs.watchdogs.outputs.contacts)['watchdog-regressions'][matrix.watchdog_scale].uv }}
+      FISHHAT_VALIDATION_JOB_MINUTES: ${{ fromJSON(needs.watchdogs.outputs.budgets)['watchdog-regressions'][matrix.watchdog_scale] }}
+      FISHHAT_VALIDATION_NOMINAL_MINUTES: '10'
+      FISHHAT_VALIDATION_TIMEOUT_SCALE: ${{ matrix.watchdog_scale }}
+      CHECK_PURPOSES: validation-tooling,repository-policy,public-contract
+      CHECK_SCOPE: watchdog propagation and negative progress/cleanup regressions
+      CHECK_AUTHORITY: scripts/validation_timeouts.py
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9 # v7
+        with:
+          version: '0.11.24'
+      - run: uv sync --locked --all-packages --group dev --python 3.12
+      - run: uv run --locked --all-packages --group dev python -m scripts.validation run --target unit -- python -m pytest -q tests/test_validation_timeouts.py tests/test_journal_concurrency.py tests/test_adapter_process.py -n 2 --dist=worksteal --max-worker-restart=0 --durations=30
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: ${{ always() }}
+        with:
+          name: watchdog-results-${{ matrix.watchdog_scale }}
+          path: |
+            artifacts/validation/*.json
+            artifacts/test-stats/*.json
+          retention-days: 7
+          if-no-files-found: error

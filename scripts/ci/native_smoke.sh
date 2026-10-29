@@ -8,6 +8,7 @@ fi
 [[ -d "${RUNNER_TEMP:?}" && "$(ps -p 1 -o comm= | xargs)" == systemd ]]
 [[ "$(stat -fc %T /sys/fs/cgroup)" == cgroup2fs ]]
 sudo -n true
+timeout_helper="$(cd "$(dirname "$0")/.." && pwd)/validation_timeouts.py"
 # Cross-user and rootless namespace commands need a universally traversable cwd.
 cd /
 export DEBIAN_FRONTEND=noninteractive
@@ -32,7 +33,8 @@ cleanup() {
     sudo loginctl terminate-user "$account" || cleanup_failed=1
     sudo systemctl stop "user@$uid.service" || cleanup_failed=1
     account_removed=0
-    for ((attempt=0; attempt<40; attempt++)); do
+    cleanup_deadline="$(python3 "$timeout_helper" deadline 10)"
+    while python3 "$timeout_helper" pending "$cleanup_deadline"; do
       sudo userdel -r "$account" 2>"$work/userdel.stderr"
       account_remove_status=$?
       if ((account_remove_status == 0)); then
@@ -141,7 +143,8 @@ if ! user_run systemctl --user start ci-probe.service; then
   exit 1
 fi
 [[ "$(user_run systemctl --user show ci-probe.service -p FragmentPath --value)" == "/run/user/$uid/systemd/generator/ci-probe.service" ]]
-for _ in $(seq 1 40); do
+settlement_deadline="$(python3 "$timeout_helper" deadline 10)"
+while python3 "$timeout_helper" pending "$settlement_deadline"; do
   state="$(user_run systemctl --user show ci-probe.service -p ActiveState --value)"
   [[ "$state" != active && "$state" != activating ]] && break
   sleep 0.25

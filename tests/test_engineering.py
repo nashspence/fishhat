@@ -16,6 +16,7 @@ from fishhat_owner.journal import Journal
 from fishhat_reporting.store import EventStore
 
 from scripts.engineering import declarations, public_implementations
+from scripts.validation_timeouts import watchdog
 from tests.support import FIXTURES
 from tests.test_component_policy import restore_fixture
 
@@ -146,7 +147,7 @@ j.transition(sys.argv[5], "running", "unknown")
     result = subprocess.run(
         [sys.executable, "-c", script, str(path), OWNER, EPOCH, str(committed), REQUEST],
         capture_output=True,
-        timeout=15,
+        timeout=watchdog(15),
         check=False,
     )
     assert result.returncode == 29, result.stderr.decode()
@@ -186,7 +187,7 @@ store.put(sample, principal="child-reporter", scopes={"append"})
     result = subprocess.run(
         [sys.executable, "-c", script, str(path), str(committed), json.dumps(pending), SERVICE],
         capture_output=True,
-        timeout=15,
+        timeout=watchdog(15),
         check=False,
     )
     assert result.returncode == 29, result.stderr.decode()

@@ -30,7 +30,7 @@ addopts = "-ra --strict-markers -p scripts.validation_pytest"
 python_version = "3.11"
 strict = true
 exclude = ["(^|/)build/"]
-files = ["packages", "fishhat", "some-implementations", "scripts/project_policy.py", "scripts/check_repository.py", "scripts/check_wheel.py", "scripts/bundle_install.py", "scripts/distributions.py", "scripts/smoke_installed.py", "scripts/validation.py", "scripts/validation_pytest.py", "scripts/operation_qualification.py", "scripts/run_stats.py", "scripts/profile.py", "scripts/engineering.py", "scripts/check_evidence.py"]
+files = ["packages", "fishhat", "some-implementations", "scripts/project_policy.py", "scripts/check_repository.py", "scripts/check_wheel.py", "scripts/bundle_install.py", "scripts/distributions.py", "scripts/smoke_installed.py", "scripts/validation.py", "scripts/validation_pytest.py", "scripts/operation_qualification.py", "scripts/run_stats.py", "scripts/profile.py", "scripts/engineering.py", "scripts/check_evidence.py", "scripts/validation_timeouts.py", "scripts/validation_watchdogs.py", "scripts/validation_workflows.py"]
 
 [tool.ruff]
 target-version = "py311"

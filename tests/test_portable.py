@@ -29,6 +29,7 @@ from fishhat_client.workspace import (
 from fishhat_contracts.validation import ContractError, digest, strict_yaml, validate, validate_cli
 from fishhat_owner.commands import FORMS, parse_command
 
+from scripts.validation_timeouts import watchdog
 from tests.operation_support import seal_operation
 from tests.support import fixture_path
 
@@ -548,7 +549,7 @@ class NativeInstallationExperiment(unittest.TestCase):
                 [sys.executable, "-m", "venv", str(r / "venv")],
                 check=True,
                 capture_output=True,
-                timeout=30,
+                timeout=watchdog(30),
             )
             py = str(r / "venv/bin/python")
             env = os.environ.copy()
@@ -571,10 +572,12 @@ class NativeInstallationExperiment(unittest.TestCase):
                 "-r",
                 str(lock),
             ]
-            p = subprocess.run(cmd, env=env, capture_output=True, timeout=30)
+            p = subprocess.run(cmd, env=env, capture_output=True, timeout=watchdog(30))
             self.assertEqual(p.returncode, 0, p.stderr.decode())
             p = subprocess.run(
-                [py, "-c", "import ops_fixture; assert ops_fixture.VALUE == 7"], env=env, timeout=10
+                [py, "-c", "import ops_fixture; assert ops_fixture.VALUE == 7"],
+                env=env,
+                timeout=watchdog(10),
             )
             self.assertEqual(p.returncode, 0)
             lock.write_text("ops-fixture==0.0.1 --hash=sha256:" + "0" * 64 + "\n")
@@ -582,6 +585,6 @@ class NativeInstallationExperiment(unittest.TestCase):
                 [*cmd, "--force-reinstall"],
                 env=env,
                 capture_output=True,
-                timeout=30,
+                timeout=watchdog(30),
             )
             self.assertNotEqual(p.returncode, 0)

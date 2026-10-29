@@ -8,7 +8,8 @@ UNIT_WORKERS ?= 4
 UNIT_REPORT_ARGS ?= --durations=30 --durations-min=0.25
 PYTHON_PATHS ?= packages fishhat some-implementations scripts tests
 BUNDLE_OUTPUT ?= artifacts/scaffold-bundle
-UV_RUN = "$(MISE_BIN)" x -- uv run --locked --all-packages --group dev
+WATCHDOG_UV = UV_HTTP_TIMEOUT="$$("$(MISE_BIN)" x -- python -m scripts.validation_timeouts uv-http)"
+UV_RUN = $(WATCHDOG_UV) "$(MISE_BIN)" x -- uv run --locked --all-packages --group dev
 VALIDATE = $(UV_RUN) python -m scripts.validation run --target $@ --
 args ?=
 
@@ -57,13 +58,16 @@ help:
 		'  BUNDLE_OUTPUT=...  Persistent bundle destination; it must not already exist.' \
 		'  MISE_BIN=...       Use a particular mise executable.' \
 		'' \
+		'FISHHAT_VALIDATION_TIMEOUT_SCALE: finite positive validation watchdog factor; default 1.' \
+		'It changes observation budgets, preserves runtime deadlines and records actual time unchanged.' \
+		'CI resolves the repository variable before jobs start; factors beyond platform ceilings fail.' \
 		'Receipts: artifacts/validation; mandatory test stats/targets: artifacts/test-stats; profiles: artifacts/profiles.' \
 		'Use TESTS for unit paths and args for pytest flags; test/check also invoke other tools.'
 
 # check-purpose: repository-policy
 setup:
 	"$(MISE_BIN)" install --locked
-	"$(MISE_BIN)" x -- uv sync --locked --all-packages --group dev
+	$(WATCHDOG_UV) "$(MISE_BIN)" x -- uv sync --locked --all-packages --group dev
 	git config --local core.hooksPath .githooks
 
 # check-purpose: validation-tooling
@@ -120,8 +124,8 @@ dist:
 
 # check-purpose: validation-tooling
 audit:
-	"$(MISE_BIN)" x -- uv export --quiet --locked --all-packages --all-groups --no-emit-workspace --no-hashes --format requirements-txt --output-file .venv/audit-requirements.txt
-	$(VALIDATE) python -m pip_audit --strict --no-deps --disable-pip -r .venv/audit-requirements.txt
+	$(WATCHDOG_UV) "$(MISE_BIN)" x -- uv export --quiet --locked --all-packages --all-groups --no-emit-workspace --no-hashes --format requirements-txt --output-file .venv/audit-requirements.txt
+	$(VALIDATE) python -m pip_audit --timeout $$($(UV_RUN) python -m scripts.validation_timeouts audit-http) --strict --no-deps --disable-pip -r .venv/audit-requirements.txt
 
 # check-purpose: repository-policy
 policy:

@@ -6,10 +6,12 @@ import importlib.metadata
 import importlib.util
 import io
 import json
+import math
 import pkgutil
 import subprocess
 import sys
 import tempfile
+import threading
 from pathlib import Path
 
 
@@ -18,7 +20,13 @@ def main() -> None:
     parser.add_argument("--component", required=True)
     parser.add_argument("--bundle", type=Path, required=True)
     parser.add_argument("--fixtures", type=Path, required=True)
+    parser.add_argument("--watchdog-seconds", type=float, required=True)
     args = parser.parse_args()
+    if (
+        not math.isfinite(args.watchdog_seconds)
+        or not 0 < args.watchdog_seconds <= threading.TIMEOUT_MAX
+    ):
+        parser.error("invalid effective watchdog")
     manifest = json.loads((args.bundle / "manifest.json").read_text())
     selected = manifest["components"][args.component]
     expected = set(selected["dependencies"])
@@ -49,7 +57,7 @@ def main() -> None:
             capture_output=True,
             text=True,
             check=True,
-            timeout=15,
+            timeout=args.watchdog_seconds,
         )
         info = json.loads(result.stdout)
         assert (
@@ -61,9 +69,11 @@ def main() -> None:
             [str(executable), "validate", str(args.fixtures / "domain/domain.yaml"), "--json"],
             capture_output=True,
             check=True,
-            timeout=15,
+            timeout=args.watchdog_seconds,
         )
-        rejected = subprocess.run([str(executable), "apply"], capture_output=True, timeout=15)
+        rejected = subprocess.run(
+            [str(executable), "apply"], capture_output=True, timeout=args.watchdog_seconds
+        )
         assert rejected.returncode == 2
     if selected["distribution"].startswith("a-fishhat-"):
         distribution = importlib.metadata.distribution(selected["distribution"])
@@ -79,14 +89,14 @@ def main() -> None:
             capture_output=True,
             text=True,
             check=True,
-            timeout=15,
+            timeout=args.watchdog_seconds,
         )
         info = json.loads(result.stdout)
         assert info["native_qualified"] is False
         rejected = subprocess.run(
             [str(executable), "qualify", "--json"],
             capture_output=True,
-            timeout=15,
+            timeout=args.watchdog_seconds,
         )
         assert rejected.returncode == 2
         if "bootstrap-source" in info["roles"]:
@@ -97,14 +107,16 @@ def main() -> None:
                 input=source,
                 capture_output=True,
                 check=True,
-                timeout=15,
+                timeout=args.watchdog_seconds,
             )
             assert json.loads(validated.stdout) == {
                 "status": "valid",
                 "scope": "local-source-description-only",
             }
             rejected = subprocess.run(
-                [str(executable), "recover", "--json"], capture_output=True, timeout=15
+                [str(executable), "recover", "--json"],
+                capture_output=True,
+                timeout=args.watchdog_seconds,
             )
             assert rejected.returncode == 2
     if args.component == "client":

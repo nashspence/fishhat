@@ -3,8 +3,8 @@
 import hashlib
 import json
 import os
+import signal
 import sys
-import time
 from pathlib import Path
 
 import rfc8785
@@ -62,7 +62,7 @@ if mode == "missing-response":
     raise SystemExit(4)
 if mode == "timeout":
     Path("output/timeout-ready").write_text(attempt["attempt_id"])
-    time.sleep(30)
+    signal.pause()
 query = original if manifest["mode"] == "mutation" else payload
 produced_digest = hashlib.sha256(produced_bytes).hexdigest()
 Path("output/artifacts").mkdir()
@@ -121,5 +121,5 @@ else:
 sys.stdout.flush()
 if mode == "timeout-after-response":
     Path("output/timeout-ready").write_text(attempt["attempt_id"])
-    time.sleep(30)
+    signal.pause()
 raise SystemExit(9 if mode == "nonzero-after-response" else 0)

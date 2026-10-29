@@ -12,6 +12,7 @@ from alembic import command
 from sqlalchemy import URL, create_engine, event
 
 from scripts.project_policy import ROOT, read_toml
+from scripts.validation_timeouts import watchdog
 from tests.test_component_policy import restore_fixture
 
 CHECK_PURPOSE = {
@@ -153,7 +154,7 @@ execute(importlib.import_module(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3
     child = subprocess.run(
         [sys.executable, "-B", "-c", script, owner["migrations"], str(path), str(history)],
         capture_output=True,
-        timeout=15,
+        timeout=watchdog(15),
         check=False,
     )
     assert child.returncode == 23, child.stderr.decode()
