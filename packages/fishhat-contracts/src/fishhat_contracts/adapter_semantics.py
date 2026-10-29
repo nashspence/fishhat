@@ -178,6 +178,13 @@ def check_response(
     *,
     invocation: dict[str, Any] | None = None,
 ) -> None:
+    """Bind the complete response while keeping domain problems separate from effect facts.
+
+    The required nullable problem never substitutes for acknowledgment, task
+    identity, certainty, postcondition or output custody. Its retry vocabulary is
+    observational only; each mutation response requires retry none. Reconciliation
+    remains a read even while its returned effect names the original mutation.
+    """
     check_request(role, request)
     validate(role + "-adapter.schema.json", response, "Response")
     require(
@@ -203,10 +210,17 @@ def check_response(
         )
         check_result(invocation["attempt"], response["effect"])
         request = invocation["request"]
-        # Recovery has the same output obligations as the original method.
+        # Recovery has the same output obligations as the original method. Its
+        # problem belongs to this observational query, not to a new mutation.
+        # Clear it only in this validation projection; retain the exact response.
         validate(
             role + "-adapter.schema.json",
-            {**response, "method": request["method"], "request_digest": digest(request)},
+            {
+                **response,
+                "method": request["method"],
+                "request_digest": digest(request),
+                "problem": None,
+            },
             "Response",
         )
     elif ROLES[role][request["method"]]["effect"]:

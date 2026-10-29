@@ -11,6 +11,8 @@ import tomllib
 from pathlib import Path
 from typing import Any, cast
 
+from fishhat_contracts import canonical
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -68,9 +70,7 @@ def snapshot() -> dict[str, Any]:
             elif isinstance(value, dict):
                 public[module_name][name] = {
                     "kind": "data",
-                    "sha256": hashlib.sha256(
-                        json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
-                    ).hexdigest(),
+                    "sha256": hashlib.sha256(canonical(value)).hexdigest(),
                 }
             else:
                 raise ValueError("public export needs a declared snapshot rule")
@@ -108,9 +108,7 @@ def snapshot() -> dict[str, Any]:
         "schemas": {
             name: {
                 "id": data["$id"],
-                "sha256": hashlib.sha256(
-                    json.dumps(data, sort_keys=True, separators=(",", ":")).encode()
-                ).hexdigest(),
+                "sha256": hashlib.sha256(canonical(data)).hexdigest(),
             }
             for name, data in sorted(SCHEMAS.items())
         },

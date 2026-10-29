@@ -136,7 +136,7 @@
         "limit"
       ],
       "additionalProperties": false,
-      "description": " The output has fixed scalar cardinality and no collection entries; limit does not create an additional collection or change that scalar shape. A continuation is an opaque receiver-issued cursor bound to the exact approved executor, scope, query and one stable native observation snapshot. The receiver verifies those bindings on every continuation. Incomplete coverage requires a non-null cursor different from the request cursor; complete coverage has no continuation. Unknown coverage is not resumable and has no continuation; an unavailable or changed snapshot is explicitly unknown and requires a new scan with cursor null. Known records may accompany unknown coverage, but cannot establish complete absence. These per-page bounds do not limit total collection extent or prove native bounded work."
+      "description": "Each newly executed null-cursor invocation starts a fresh snapshot. If its first response was not accepted, a new null-cursor invocation may restart the scan. Replay of an already accepted page reuses the receiving owner's retained exact request and response; it does not ask a fresh adapter process to regenerate the old first page. Only a retained non-null cursor continues the previously selected native snapshot.  The output has fixed scalar cardinality and no collection entries; limit does not create an additional collection or change that scalar shape. A continuation is an opaque receiver-issued cursor bound to the exact approved executor, scope, query and one stable native observation snapshot. The receiver verifies those bindings on every continuation. Incomplete coverage requires a non-null cursor different from the request cursor; complete coverage has no continuation. Unknown coverage is not resumable and has no continuation; an unavailable or changed snapshot is explicitly unknown and requires a new scan with cursor null. Known records may accompany unknown coverage, but cannot establish complete absence. These per-page bounds do not limit total collection extent or prove native bounded work."
     },
     "reconcile": {
       "type": "object",
@@ -220,6 +220,17 @@
             },
             "output": {
               "$ref": "#/$defs/Output"
+            },
+            "problem": {
+              "anyOf": [
+                {
+                  "$ref": "adapter.schema.json#/$defs/Problem"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Adapter-domain explanation independent of native effect and material custody facts. Required null means no reported problem; it never implies success. Transport failure remains separate and this field never authorizes redispatch."
             }
           },
           "required": [
@@ -230,7 +241,8 @@
             "coverage",
             "continuation",
             "proposal",
-            "output"
+            "output",
+            "problem"
           ],
           "additionalProperties": false
         },
@@ -281,6 +293,28 @@
             },
             "effect": {
               "$ref": "adapter.schema.json#/$defs/EffectResult"
+            },
+            "problem": {
+              "anyOf": [
+                {
+                  "allOf": [
+                    {
+                      "$ref": "adapter.schema.json#/$defs/Problem"
+                    },
+                    {
+                      "properties": {
+                        "retry": {
+                          "const": "none"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Adapter-domain explanation independent of native effect and material custody facts. Required null means no reported problem; it never implies success. Transport failure remains separate and this field never authorizes redispatch."
             }
           },
           "required": [
@@ -292,7 +326,8 @@
             "continuation",
             "proposal",
             "output",
-            "effect"
+            "effect",
+            "problem"
           ],
           "additionalProperties": false,
           "allOf": [
@@ -387,6 +422,17 @@
             },
             "output": {
               "$ref": "#/$defs/Output"
+            },
+            "problem": {
+              "anyOf": [
+                {
+                  "$ref": "adapter.schema.json#/$defs/Problem"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Adapter-domain explanation independent of native effect and material custody facts. Required null means no reported problem; it never implies success. Transport failure remains separate and this field never authorizes redispatch."
             }
           },
           "required": [
@@ -397,7 +443,8 @@
             "coverage",
             "continuation",
             "proposal",
-            "output"
+            "output",
+            "problem"
           ],
           "additionalProperties": false,
           "allOf": [
@@ -477,6 +524,17 @@
             },
             "effect": {
               "$ref": "adapter.schema.json#/$defs/EffectResult"
+            },
+            "problem": {
+              "anyOf": [
+                {
+                  "$ref": "adapter.schema.json#/$defs/Problem"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Adapter-domain explanation independent of native effect and material custody facts. Required null means no reported problem; it never implies success. Transport failure remains separate and this field never authorizes redispatch."
             }
           },
           "required": [
@@ -488,7 +546,8 @@
             "continuation",
             "proposal",
             "output",
-            "effect"
+            "effect",
+            "problem"
           ],
           "additionalProperties": false,
           "description": "request_digest identifies this reconciliation RPC; effect identifies its original invocation attempt. Recovered output must satisfy the original method result and custody contract, using independently retained invocation bytes. Reconciliation supplies no authority to repeat or correct the mutation."

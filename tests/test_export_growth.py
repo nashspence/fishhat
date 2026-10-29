@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import copy
-import json
 from functools import partial
 
 import pytest
+import rfc8785
 from fishhat_adapters import (
     ROLES,
     Registry,
@@ -145,17 +145,15 @@ def test_data_exports_linear_work(name):
         ]
         if name in {"canonical", "digest"}:
             # Wide objects and long common prefixes exercise actual key ordering,
-            # including Unicode scalar order and nested mapping/list preservation.
+            # including JCS UTF-16 order and nested mapping/list preservation.
             value = {
                 "é🙂" + "x" * 64 + f"{index:04d}": {
-                    "z": [index, {"😀": None, "é": True}],
+                    "z": [index, {"\ue000": None, "😀": 1e-7, "é": True}],
                     "a": "value",
                 }
                 for index in sorted(range(count), key=digest)
             }
-        encoded = json.dumps(
-            value, ensure_ascii=False, sort_keys=True, separators=(",", ":")
-        ).encode()
+        encoded = rfc8785.dumps(value)
         calls = {
             "canonical": partial(canonical, value),
             "digest": partial(digest, value),

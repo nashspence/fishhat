@@ -441,6 +441,34 @@ def validate_result_payload(
     return value
 
 
+def _validate_workflow_result(
+    result: dict[str, Any],
+    *,
+    retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
+) -> None:
+    if result["kind"] == "Workflow":
+        validate_workflow(result, recovery_readers=recovery_readers)
+    elif result["kind"] == "WorkflowTransferRecord":
+        from .workflow_transfer_history import validate_transfer_record
+
+        validate_transfer_record(result)
+    elif result["kind"] == "WorkflowPhaseAttestation":
+        from .workflow_attestations import validate_attestation
+
+        validate_attestation(result)
+    else:
+        from .record_delivery import validate_record_reference
+
+        validate("workflow-evidence.schema.json", result, "CurrentAttestation")
+        validate_record_reference(result["reference"], retained_readers=retained_readers)
+        _require(
+            result["reference"]["record"]["resource"]
+            == {"kind": "workflow", "id": result["transition"]["workflow_id"]},
+            "current attestation check workflow changed",
+        )
+
+
 def validate_cli_result(
     result: Any,
     *,
@@ -461,12 +489,15 @@ def validate_cli_result(
         from .checkpoints import validate_checkpoint
 
         validate_checkpoint(result)
-    elif kind == "Workflow":
-        validate_workflow(result, recovery_readers=recovery_readers)
-    elif kind == "WorkflowTransferRecord":
-        from .workflow_transfer_history import validate_transfer_record
-
-        validate_transfer_record(result)
+    elif kind in {
+        "Workflow",
+        "WorkflowTransferRecord",
+        "WorkflowPhaseAttestation",
+        "CurrentWorkflowAttestation",
+    }:
+        _validate_workflow_result(
+            result, retained_readers=retained_readers, recovery_readers=recovery_readers
+        )
     elif kind in {"OperationCancellationReceipt", "OperationCancellationPage"}:
         from .cancellation import validate_cancellation_result
 

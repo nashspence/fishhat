@@ -149,12 +149,12 @@ def validate_history_result(
                     "historical record kind substitution",
                 )
                 if (
-                    request["record_kind"] == "WorkflowTransferRecord"
+                    request["record_kind"] in {"WorkflowTransferRecord", "WorkflowPhaseAttestation"}
                     and request["resource"] is not None
                 ):
                     _require(
                         item["record"]["resource"] == request["resource"],
-                        "historical transfer workflow substitution",
+                        "historical workflow resource substitution",
                     )
                 identity = canonical(
                     [

@@ -36,9 +36,15 @@ RECORD_SCHEMAS = {
     "Observation": ("records.schema.json", "Observation"),
     "ProblemEvidence": ("records.schema.json", "ProblemEvidence"),
     "WorkflowTransferRecord": ("workflow-transfer-history.schema.json", "WorkflowTransferRecord"),
+    "WorkflowPhaseAttestation": ("workflow-evidence.schema.json", "WorkflowPhaseAttestation"),
 }
 SNAPSHOT_ID_KINDS = {"Discovery", "ResourceReport", "Observation", "ProblemEvidence"}
-SCOPED_KINDS = {"Observation", "ProblemEvidence", "WorkflowTransferRecord"}
+SCOPED_KINDS = {
+    "Observation",
+    "ProblemEvidence",
+    "WorkflowTransferRecord",
+    "WorkflowPhaseAttestation",
+}
 
 
 def _require(condition: bool, message: str) -> None:
@@ -78,6 +84,10 @@ def _validate_record(
         validate_operation(record, recovery_readers=recovery_readers)
     elif kind == "Observation":
         validate_observation(record)
+    elif kind == "WorkflowPhaseAttestation":
+        from .workflow_attestations import validate_attestation
+
+        validate_attestation(record)
     elif kind == "WorkflowTransferRecord":
         from .workflow_transfer_history import validate_transfer_record
 
@@ -163,6 +173,39 @@ class RecordSnapshot:
             "size": len(self._data),
         }
         validate("common.schema.json", self._reference, "RecordReference")
+
+    @classmethod
+    def restore(
+        cls,
+        reference: dict[str, Any],
+        data: bytes,
+        *,
+        expected_owner: dict[str, Any],
+        retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None = None,
+        recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
+    ) -> RecordSnapshot:
+        """Restore original custody without rebinding its historical schema closure.
+
+        The receiving owner supplies any qualified historical reader. Neither the
+        retained bytes nor their reference can install a reader. Losing the exact
+        original reference or its supported reader refuses restoration.
+        """
+        record = validate_record_payload(
+            reference,
+            data,
+            expected_owner=expected_owner,
+            retained_readers=retained_readers,
+            recovery_readers=recovery_readers,
+        )
+        result = cls.__new__(cls)
+        result._record = record
+        result._data = bytes(data)
+        result._reference = copy.deepcopy(reference)
+        return result
+
+    @property
+    def record(self) -> dict[str, Any]:
+        return copy.deepcopy(self._record)
 
     @property
     def reference(self) -> dict[str, Any]:

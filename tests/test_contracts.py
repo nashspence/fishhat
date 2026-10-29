@@ -125,8 +125,7 @@ class Parsing(unittest.TestCase):
             strict_json('{"a":1,"a":2}')
 
     def test_float(self):
-        with self.assertRaises(ContractError):
-            strict_json('{"a":1.1}')
+        self.assertEqual(strict_json('{"a":1.1}'), {"a": 1.1})
 
     def test_nonfinite(self):
         for x in ["NaN", "Infinity", "-Infinity"]:
@@ -193,8 +192,7 @@ class Parsing(unittest.TestCase):
         )
 
     def test_yaml_float(self):
-        with self.assertRaises(ContractError):
-            strict_yaml("x: 1.3")
+        self.assertEqual(strict_yaml("x: 1.3"), {"x": 1.3})
 
     def test_yaml_error_redacted(self):
         with self.assertRaises(ContractError) as cm:

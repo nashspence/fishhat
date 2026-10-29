@@ -500,6 +500,7 @@ def test_bootstrap_wire_requires_repository_scope_and_an_evidenced_result(method
         "coverage": "complete",
         "continuation": None,
         "proposal": None,
+        "problem": None,
         "output": {"receipt": fixture("source-receipt")},
         "effect": {
             "attempt_id": attempt["attempt_id"],

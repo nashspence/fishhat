@@ -96,6 +96,15 @@
     },
     {
       "name": "workflow.transfer.get"
+    },
+    {
+      "name": "workflow.attest"
+    },
+    {
+      "name": "workflow.attestation.get"
+    },
+    {
+      "name": "workflow.attestation.check"
     }
   ],
   "max_frame_bytes": 1048576,

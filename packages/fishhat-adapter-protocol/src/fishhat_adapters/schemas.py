@@ -8,7 +8,7 @@ from contextvars import ContextVar
 from datetime import datetime
 from typing import Any, cast
 
-from fishhat_contracts.json_work import unique_items
+from fishhat_contracts.json_work import multiple_of, unique_items
 from fishhat_contracts.schema_profile import (
     FORMATS,
     MAX_EXPANDED_SCHEMA,
@@ -80,7 +80,9 @@ def _bounded(keyword: str, function: Any) -> Any:
 _VALIDATOR = cast(Callable[..., Any], validators.extend)(
     Draft202012Validator,
     {
-        key: _bounded(key, unique_items if key == "uniqueItems" else function)
+        key: _bounded(
+            key, {"uniqueItems": unique_items, "multipleOf": multiple_of}.get(key, function)
+        )
         for key, function in Draft202012Validator.VALIDATORS.items()
     },
 )
@@ -188,6 +190,7 @@ class _ClosedSchema:
             type(None): "null",
             bool: "boolean",
             int: "number",
+            float: "number",
             str: "string",
             dict: "object",
             list: "array",

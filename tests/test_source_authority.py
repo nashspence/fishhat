@@ -50,6 +50,7 @@ def concern():
 def target_entry(kind, destination):
     if kind == "artifacts":
         return {
+            "state": "present",
             "url": "https://artifacts.example.invalid/tool",
             "digest": "sha256:" + "a" * 64,
             "platform": "linux",
@@ -58,6 +59,7 @@ def target_entry(kind, destination):
             "reason": "Synthetic installed artifact",
         }
     value = {
+        "state": "present",
         "destination": destination,
         "mode": "0600" if kind == "secret_files" else "0644",
         "user": "root",
@@ -126,12 +128,12 @@ def test_group_binding_names_cannot_compete_for_the_same_user(another_concern, c
     groups = host["concerns"]["base"]["groups"]
     groups["first-membership"] = {
         "user": "synthetic-agent",
-        "memberships": ["synthetic-operators"],
+        "supplementary": {"add": ["synthetic-operators"], "remove": []},
         "reason": "Synthetic declared membership",
     }
     duplicate = copy.deepcopy(groups["first-membership"])
     if contradictory:
-        duplicate["memberships"] = []
+        duplicate["supplementary"] = {"add": [], "remove": ["synthetic-operators"]}
     if another_concern:
         host["concerns"]["maintenance"] = concern()
         groups = host["concerns"]["maintenance"]["groups"]
@@ -146,7 +148,7 @@ def test_group_memberships_for_distinct_users_remain_independent():
     for scope, user in (("base", "synthetic-agent"), ("maintenance", "synthetic-other")):
         host["concerns"][scope]["groups"]["membership"] = {
             "user": user,
-            "memberships": ["synthetic-operators"],
+            "supplementary": {"add": ["synthetic-operators"], "remove": []},
             "reason": "Independent user membership declaration",
         }
     validate_host(host, catalogue)

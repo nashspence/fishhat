@@ -148,6 +148,9 @@
             },
             {
               "$ref": "workflow-transfer-history.schema.json#/$defs/WorkflowTransferRecord"
+            },
+            {
+              "$ref": "workflow-evidence.schema.json#/$defs/CurrentAttestation"
             }
           ]
         },
@@ -213,7 +216,8 @@
                   "WorkflowMutationAcknowledgment",
                   "OperationCancellationReceipt",
                   "OperationCancellationPage",
-                  "WorkflowTransferRecord"
+                  "WorkflowTransferRecord",
+                  "CurrentWorkflowAttestation"
                 ]
               }
             },

@@ -10,12 +10,13 @@ receiving-owner boundary; request bytes never supply their own approval.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+from datetime import datetime
 from typing import Any, Literal
 
 from .bounds import Bounds, bounds
 from .handoffs import PHASES
 from .operations import validate_operation_plan
-from .validation import SCHEMAS, ContractError, digest, validate
+from .validation import SCHEMAS, ContractError, canonical, digest, validate
 
 REQUIREMENTS = SCHEMAS["workflow-evidence.schema.json"]["$defs"]["InstalledProcedureRequirements"][
     "const"
@@ -106,6 +107,62 @@ def validate_phase_evidence(
     Native settlement has a separately signed authority and can only finish the
     final adjacent phase; a driver request cannot claim that native path.
     """
+    _validate_phase_evidence(
+        request,
+        workflow,
+        authority=authority,
+        before_generation=before_generation,
+        recovery_readers=recovery_readers,
+    )
+
+
+def validate_issuer_phase_context(
+    transition: dict[str, Any],
+    participants: list[dict[str, Any]],
+    workflow: dict[str, Any],
+    *,
+    owner: dict[str, Any],
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
+) -> None:
+    """Check the complete unsigned issuer-local closure before protected signing.
+
+    workflow is the independently authenticated target receiver capsule. This
+    helper authenticates neither that context nor native participant facts.
+    """
+    _validate_phase_evidence(
+        {
+            **{
+                key: transition[key]
+                for key in (
+                    "owner",
+                    "workflow_id",
+                    "advance_id",
+                    "expected_generation",
+                    "driver_term",
+                )
+            },
+            "phase": transition["to_phase"],
+            "transfer_completion": None,
+            "phase_evidence": {"transition": transition, "participants": participants},
+        },
+        workflow,
+        participant_owner=owner,
+        unsigned=True,
+        recovery_readers=recovery_readers,
+    )
+
+
+def _validate_phase_evidence(
+    request: dict[str, Any],
+    workflow: dict[str, Any],
+    *,
+    authority: Literal["driver", "native-owner"] = "driver",
+    before_generation: int | None = None,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
+    participant_owner: dict[str, Any] | None = None,
+    unsigned: bool = False,
+) -> None:
+
     from .workflows import _pair, _request_key, proposal_children
 
     _require(
@@ -121,7 +178,12 @@ def validate_phase_evidence(
         return
     _require(evidence is not None, "workflow advance requires phase evidence")
     assert evidence is not None
-    validate("workflow-evidence.schema.json", evidence, "PhaseEvidence")
+    if unsigned:
+        validate("workflow-evidence.schema.json", evidence["transition"], "Transition")
+        for participant in evidence["participants"]:
+            validate("workflow-evidence.schema.json", participant, "UnsignedParticipantEvidence")
+    else:
+        validate("workflow-evidence.schema.json", evidence, "PhaseEvidence")
     phases = PHASES[workflow["type"]]
     _require(request["phase"] in phases[1:], "workflow phase evidence destination changed")
     position = phases.index(request["phase"])
@@ -176,9 +238,12 @@ def validate_phase_evidence(
             child = original["child"]
             ready[_request_key(child["owner"], child["request_id"])] = original["binding"]
     participants = {
-        _pair(p["owner"], p["resource"]): p for p in workflow["proposal"]["participants"]
+        _pair(p["owner"], p["resource"]): p
+        for p in workflow["proposal"]["participants"]
+        if participant_owner is None or p["owner"] == participant_owner
     }
     found: set[bytes] = set()
+    attestations: dict[bytes, str] = {}
     barriers = REQUIREMENTS[workflow["type"]]["child_completion"]
     for proof in evidence["participants"]:
         pair = _pair(proof["owner"], proof["resource"])
@@ -186,6 +251,11 @@ def validate_phase_evidence(
             pair in participants and pair not in found, "workflow phase participant closure changed"
         )
         found.add(pair)
+        issuer = canonical(proof["owner"])
+        _require(
+            attestations.setdefault(issuer, proof["attestation_id"]) == proof["attestation_id"],
+            "workflow phase mixes issuer attestation snapshots",
+        )
         participant = participants[pair]
         _require(
             proof["resource_generation"] >= participant["expected_generation"],
@@ -222,7 +292,14 @@ def validate_phase_evidence(
                 "workflow phase native evidence custody changed",
             )
             identities.add(identity)
+        if unsigned:
+            continue
         witness = proof["witness"]
+        _require(
+            datetime.fromisoformat(witness["created_at"])
+            < datetime.fromisoformat(proof["expires_at"]),
+            "workflow phase proof expiry does not follow issuance",
+        )
         _require(
             witness["owner"] == proof["owner"]
             and witness["generation"] == proof["resource_generation"]
@@ -237,7 +314,7 @@ def validate_phase_evidence(
 
 
 def require_verified_phase_evidence(
-    request: dict[str, Any], verified_phase_evidence: dict[str, Any] | None
+    request: dict[str, Any], verified_phase_evidence: dict[str, Any] | None, *, now: str | None
 ) -> None:
     """Require independently authenticated, current native evidence for a new advance.
 
@@ -249,4 +326,20 @@ def require_verified_phase_evidence(
         request["phase_evidence"] == verified_phase_evidence
         and (request["transfer_completion"] is not None or verified_phase_evidence is not None),
         "workflow phase evidence is not independently verified",
+    )
+
+    if request["transfer_completion"] is not None:
+        return
+    _require(now is not None, "current owner time required for new phase proof")
+    assert now is not None and verified_phase_evidence is not None
+    validate("common.schema.json", now, "Time")
+    instant = datetime.fromisoformat(now)
+    _require(
+        all(
+            datetime.fromisoformat(proof["witness"]["created_at"])
+            <= instant
+            < datetime.fromisoformat(proof["expires_at"])
+            for proof in verified_phase_evidence["participants"]
+        ),
+        "workflow phase proof is not currently valid",
     )

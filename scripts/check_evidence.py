@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from fishhat_contracts import canonical
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -28,9 +29,7 @@ ACTIVE: ContextVar[set[str] | None] = ContextVar("evidence_groups", default=None
 
 
 def fingerprint(value: Any) -> str:
-    return hashlib.sha256(
-        json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
-    ).hexdigest()
+    return hashlib.sha256(canonical(value)).hexdigest()
 
 
 def conditions() -> dict[str, str]:

@@ -275,6 +275,7 @@ def test_service_observation_keeps_mixed_states_keyed_and_paged():
         "coverage": "incomplete",
         "continuation": "page:second",
         "proposal": None,
+        "problem": None,
         "output": {"services": records[:1], "transition": None},
     }
     check_response("service", query, response)
@@ -347,6 +348,7 @@ def test_software_resolution_echoes_requested_policy_without_claiming_it_is_enfo
         "coverage": "complete",
         "continuation": None,
         "proposal": None,
+        "problem": None,
         "output": {
             "target": target,
             "requested_held": True,
@@ -414,6 +416,7 @@ def test_software_resolution_cannot_substitute_another_requested_version(state, 
         "coverage": "unknown" if state == "unknown" else "complete",
         "continuation": None,
         "proposal": None,
+        "problem": None,
         "output": {
             "target": target,
             "requested_held": False,

@@ -226,6 +226,17 @@
             },
             "output": {
               "$ref": "#/$defs/Output"
+            },
+            "problem": {
+              "anyOf": [
+                {
+                  "$ref": "adapter.schema.json#/$defs/Problem"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Adapter-domain explanation independent of native effect and material custody facts. Required null means no reported problem; it never implies success. Transport failure remains separate and this field never authorizes redispatch."
             }
           },
           "required": [
@@ -236,7 +247,8 @@
             "coverage",
             "continuation",
             "proposal",
-            "output"
+            "output",
+            "problem"
           ],
           "additionalProperties": false
         },
@@ -287,6 +299,28 @@
             },
             "effect": {
               "$ref": "adapter.schema.json#/$defs/EffectResult"
+            },
+            "problem": {
+              "anyOf": [
+                {
+                  "allOf": [
+                    {
+                      "$ref": "adapter.schema.json#/$defs/Problem"
+                    },
+                    {
+                      "properties": {
+                        "retry": {
+                          "const": "none"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Adapter-domain explanation independent of native effect and material custody facts. Required null means no reported problem; it never implies success. Transport failure remains separate and this field never authorizes redispatch."
             }
           },
           "required": [
@@ -298,7 +332,8 @@
             "continuation",
             "proposal",
             "output",
-            "effect"
+            "effect",
+            "problem"
           ],
           "additionalProperties": false,
           "allOf": [
@@ -397,6 +432,28 @@
             },
             "effect": {
               "$ref": "adapter.schema.json#/$defs/EffectResult"
+            },
+            "problem": {
+              "anyOf": [
+                {
+                  "allOf": [
+                    {
+                      "$ref": "adapter.schema.json#/$defs/Problem"
+                    },
+                    {
+                      "properties": {
+                        "retry": {
+                          "const": "none"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Adapter-domain explanation independent of native effect and material custody facts. Required null means no reported problem; it never implies success. Transport failure remains separate and this field never authorizes redispatch."
             }
           },
           "required": [
@@ -408,7 +465,8 @@
             "continuation",
             "proposal",
             "output",
-            "effect"
+            "effect",
+            "problem"
           ],
           "additionalProperties": false,
           "allOf": [
@@ -507,6 +565,28 @@
             },
             "effect": {
               "$ref": "adapter.schema.json#/$defs/EffectResult"
+            },
+            "problem": {
+              "anyOf": [
+                {
+                  "allOf": [
+                    {
+                      "$ref": "adapter.schema.json#/$defs/Problem"
+                    },
+                    {
+                      "properties": {
+                        "retry": {
+                          "const": "none"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Adapter-domain explanation independent of native effect and material custody facts. Required null means no reported problem; it never implies success. Transport failure remains separate and this field never authorizes redispatch."
             }
           },
           "required": [
@@ -518,7 +598,8 @@
             "continuation",
             "proposal",
             "output",
-            "effect"
+            "effect",
+            "problem"
           ],
           "additionalProperties": false,
           "allOf": [
@@ -620,6 +701,17 @@
             },
             "effect": {
               "$ref": "adapter.schema.json#/$defs/EffectResult"
+            },
+            "problem": {
+              "anyOf": [
+                {
+                  "$ref": "adapter.schema.json#/$defs/Problem"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Adapter-domain explanation independent of native effect and material custody facts. Required null means no reported problem; it never implies success. Transport failure remains separate and this field never authorizes redispatch."
             }
           },
           "required": [
@@ -631,7 +723,8 @@
             "continuation",
             "proposal",
             "output",
-            "effect"
+            "effect",
+            "problem"
           ],
           "additionalProperties": false,
           "description": "request_digest identifies this reconciliation RPC; effect identifies its original invocation attempt. Recovered output must satisfy the original method result and custody contract, using independently retained invocation bytes. Reconciliation supplies no authority to repeat or correct the mutation."

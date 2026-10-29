@@ -28,6 +28,7 @@ CHECK_PURPOSE = {
     "authority": [
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/owner-history.schema.json",
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/workflow-transfer-history.schema.json",
+        "packages/fishhat-contracts/src/fishhat_contracts/contracts/workflow-evidence.schema.json",
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/actions.schema.json#/$defs/app.recover",
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/actions.schema.json#/$defs/host.recover",
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/actions.schema.json#/$defs/operation.recover",
@@ -153,7 +154,7 @@ def test_restored_transfer_records_keep_original_epoch_and_workflow_scope():
     with pytest.raises(ContractError, match="current historical read permission"):
         authorize("history.list", query, custody, allowed=False)
     page["request"]["resource"] = {"kind": "workflow", "id": uid("other-workflow")}
-    with pytest.raises(ContractError, match="historical transfer workflow substitution"):
+    with pytest.raises(ContractError, match="historical workflow resource substitution"):
         validate_history_result(page, verified_custody=custody)
 
 
@@ -336,22 +337,101 @@ def test_history_listing_does_not_present_two_generations_as_independent_operati
         validate_history_result(page, expected_request=page["request"], verified_custody=custody)
 
 
-def test_historical_schema_reader_is_installed_independently_and_remains_read_only():
-    custody = custody_for()
-    reference = RecordSnapshot(operation(), uid("snapshot")).reference
-    reference["schema"]["digest"] = "sha256:" + "b" * 64
-    page = record_page(custody, reference)
-    with pytest.raises(ContractError, match="schema substitution"):
-        validate_history_result(page)
-    readers = {reference["schema"]["digest"]: lambda value: None}
-    validate_history_result(
-        page, expected_request=page["request"], verified_custody=custody, retained_readers=readers
+def test_historical_schema_reader_is_installed_independently_and_remains_read_only(monkeypatch):
+    from fishhat_contracts.operations import validate_operation
+    from fishhat_contracts.validation import SCHEMAS
+    from fishhat_contracts.workflow_attestations import validate_attestation
+
+    from tests.test_workflow_attestations import acquire, cluster, current, transition
+
+    owners = cluster(1)
+    attestations, _, _ = acquire(owners, transition(current(owners[0])))
+    retained = [
+        (operation(), validate_operation),
+        (attestations[0], validate_attestation),
+    ]
+    originals = [
+        (value, RecordSnapshot(value, uid(value["kind"] + "-history")), reader)
+        for value, reader in retained
+    ]
+    # The schema revision leaves record structure unchanged but changes the
+    # exact installed closure. The current custodian installs the old readers
+    # independently; neither a record nor its caller selects executable code.
+    monkeypatch.setitem(
+        SCHEMAS["common.schema.json"],
+        "description",
+        SCHEMAS["common.schema.json"]["description"] + " Historical reader qualification.",
     )
-    validate_cli(cli(page), retained_readers=readers)
-    forged = cli(page)
-    forged["state"] = "succeeded"
-    with pytest.raises(ContractError):
-        validate_cli(forged, retained_readers=readers)
+    for original, snapshot, reader in originals:
+        custody = custody_for(original)
+        reference, original_bytes = snapshot.reference, canonical(original)
+        is_attestation = original["kind"] == "WorkflowPhaseAttestation"
+        resource = original["resource"] if is_attestation else original["subject"]["resource"]
+        query = query_for(
+            custody,
+            record_kind=original["kind"],
+            resource=resource,
+            active_only=not is_attestation,
+            cursor=None,
+            limit=2,
+        )
+        page = envelope(
+            "HistoricalRecordPage",
+            query,
+            origin=custody["origin"],
+            items=[reference],
+            next_cursor=None,
+            history_complete=True,
+        )
+        authorize("history.list", query, custody)
+        validate("ssh-request.schema.json", request("history.list", query))
+        validate("ssh-response.schema.json", wire("history.list", page))
+        with pytest.raises(ContractError, match="schema substitution"):
+            validate_history_result(page)
+        readers = {reference["schema"]["digest"]: reader}
+        validate_history_result(
+            page, expected_request=query, verified_custody=custody, retained_readers=readers
+        )
+        validate_cli(cli(page), retained_readers=readers)
+        with pytest.raises(ContractError, match="current historical read permission"):
+            authorize("history.list", query, custody, allowed=False)
+
+        read_query = query_for(custody, reference=reference, offset=0, length=196608)
+        authorize("history.read", read_query, custody)
+        chunk = snapshot.chunk(reference, offset=0, length=read_query["length"])
+        history = envelope(
+            "HistoricalRecordChunk", read_query, origin=custody["origin"], chunk=chunk
+        )
+        with pytest.raises(ContractError, match="schema substitution"):
+            validate_history_result(history)
+        validate_history_result(
+            history, expected_request=read_query, verified_custody=custody, retained_readers=readers
+        )
+        validate_cli(cli(history), retained_readers=readers)
+        with pytest.raises(ContractError, match="current historical read permission"):
+            authorize("history.read", read_query, custody, allowed=False)
+        data = base64.b64decode(chunk["base64"], validate=True)
+        assert chunk["complete"] and data == original_bytes
+        decoded = validate_record_payload(
+            reference,
+            data,
+            expected_owner=custody["origin"],
+            expected_record=reference["record"],
+            expected_resource=resource if is_attestation else None,
+            retained_readers=readers,
+        )
+        assert decoded == original and decoded["owner"] != custody["custodian"]
+        if is_attestation:
+            with pytest.raises(ContractError):
+                authorize("history.list", {**query, "active_only": True}, custody)
+            changed = copy.deepcopy(page)
+            changed["request"]["resource"] = {"kind": "workflow", "id": uid("other-workflow")}
+            with pytest.raises(ContractError, match="historical workflow resource substitution"):
+                validate_history_result(changed, verified_custody=custody, retained_readers=readers)
+        forged = cli(page)
+        forged["state"] = "succeeded"
+        with pytest.raises(ContractError):
+            validate_cli(forged, retained_readers=readers)
 
 
 def content_result():

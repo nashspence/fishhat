@@ -245,6 +245,7 @@ def response_for(query, attempt, output):
         "coverage": "complete",
         "continuation": None,
         "proposal": None,
+        "problem": None,
         "output": output,
         "effect": {
             "attempt_id": attempt["attempt_id"],

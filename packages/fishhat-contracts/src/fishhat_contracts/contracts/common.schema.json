@@ -399,7 +399,8 @@
                 "ResourceReport",
                 "Observation",
                 "ProblemEvidence",
-                "WorkflowTransferRecord"
+                "WorkflowTransferRecord",
+                "WorkflowPhaseAttestation"
               ]
             },
             "id": {
@@ -435,7 +436,8 @@
                     "enum": [
                       "Observation",
                       "ProblemEvidence",
-                      "WorkflowTransferRecord"
+                      "WorkflowTransferRecord",
+                      "WorkflowPhaseAttestation"
                     ]
                   }
                 }
@@ -478,7 +480,7 @@
         "size"
       ],
       "additionalProperties": false,
-      "description": "An owner-minted immutable canonical-JSON snapshot of one complete record, independently of operation admission. The record identity, exact owner epoch, record-declared generation, installed schema closure, complete byte digest and size are inseparable. Immutable Plans use null generation; Operations, Workflows and WorkflowTransferRecords use their declared generation, with the digest distinguishing every snapshot. Possession grants no read or execution authority: every record.read rechecks the actual receiving principal and the protected snapshot resource closure. The owner commits complete retrievable snapshot custody before advertising this reference. Later generations never replace its bytes. Plan expiry affects admission, not completion of an already advertised traversal; accepted, active, uncertain and recovery-required custody cannot lose its only retrievable evidence. An explicit expired or restored snapshot requires a fresh record lookup, never silent rebinding. Accepted work must remain discoverable and fully retrievable through its current record even if old completed traversals are collected. This reference does not establish plan review, acceptance or execution success before its complete payload is verified. Size describes the record and adds no total-size limit beyond its owning contract; transfers use bounded chunks and local capacity failures must be explicit. A historical schema closure is readable only through an immutable reader independently installed by the receiver for that exact digest and the declared record-kind URI. CLI envelopes, SSH results, pages and chunks propagate the same trusted reader context; neither the record nor its caller can install a reader. Historical retrieval does not admit new work under an obsolete schema. Discovery and ResourceReport use immutable observation snapshot identities: record.id equals snapshot_id and generation is null, because neither invents a ledger generation. Discovery pins records.schema.json#/$defs/Info; ResourceReport pins resource-records.schema.json#/$defs/ResourceReport. Reassembly yields exactly the complete inline payload under that schema. Each read reauthorizes its protected disclosure scope and snapshot; later observations never change these bytes. A retained reader is selected by this exact kind URI and closure digest, not by treating an observation as an Operation. Observation and ProblemEvidence also use snapshot_id as record.id and null generation. Their record.resource is required and equals the complete payload resource. WorkflowTransferRecord also requires record.resource equal to its workflow resource, uses transfer_id as record.id and its last retained transfer generation, and pins workflow-transfer-history.schema.json#/$defs/WorkflowTransferRecord. The resource is absent for other record kinds. Observation pins records.schema.json#/$defs/Observation and preserves the observed resource generation inside its payload, without treating that value as a mutable snapshot generation. ProblemEvidence pins records.schema.json#/$defs/ProblemEvidence and retains the complete evidence selection for one exact owner/resource. Each lookup and chunk read independently checks current permission for that protected disclosure scope; an authenticated failure or possession of its evidence reference grants no additional read permission.",
+      "description": "An owner-minted immutable canonical-JSON snapshot of one complete record, independently of operation admission. The record identity, exact owner epoch, record-declared generation, installed schema closure, complete byte digest and size are inseparable. Immutable Plans use null generation; Operations, Workflows and WorkflowTransferRecords use their declared generation, with the digest distinguishing every snapshot. Possession grants no read or execution authority: every record.read rechecks the actual receiving principal and the protected snapshot resource closure. The owner commits complete retrievable snapshot custody before advertising this reference. Later generations never replace its bytes. Plan expiry affects admission, not completion of an already advertised traversal; accepted, active, uncertain and recovery-required custody cannot lose its only retrievable evidence. An explicit expired or restored snapshot requires a fresh record lookup, never silent rebinding. Accepted work must remain discoverable and fully retrievable through its current record even if old completed traversals are collected. This reference does not establish plan review, acceptance or execution success before its complete payload is verified. Size describes the record and adds no total-size limit beyond its owning contract; transfers use bounded chunks and local capacity failures must be explicit. A historical schema closure is readable only through an immutable reader independently installed by the receiver for that exact digest and the declared record-kind URI. CLI envelopes, SSH results, pages and chunks propagate the same trusted reader context; neither the record nor its caller can install a reader. Historical retrieval does not admit new work under an obsolete schema. Discovery and ResourceReport use immutable observation snapshot identities: record.id equals snapshot_id and generation is null, because neither invents a ledger generation. Discovery pins records.schema.json#/$defs/Info; ResourceReport pins resource-records.schema.json#/$defs/ResourceReport. Reassembly yields exactly the complete inline payload under that schema. Each read reauthorizes its protected disclosure scope and snapshot; later observations never change these bytes. A retained reader is selected by this exact kind URI and closure digest, not by treating an observation as an Operation. Observation and ProblemEvidence also use snapshot_id as record.id and null generation. Their record.resource is required and equals the complete payload resource. WorkflowTransferRecord also requires record.resource equal to its workflow resource, uses transfer_id as record.id and its last retained transfer generation, and pins workflow-transfer-history.schema.json#/$defs/WorkflowTransferRecord. WorkflowPhaseAttestation also requires record.resource equal to {kind: workflow, id: workflow_id}; record.id equals the attestation_id carried as payload.id, generation equals the issuer capsule generation observed at issuance, and its schema is workflow-evidence.schema.json#/$defs/WorkflowPhaseAttestation. Its independent issuance journal does not advance the workflow capsule generation. The resource is absent for other record kinds. Observation pins records.schema.json#/$defs/Observation and preserves the observed resource generation inside its payload, without treating that value as a mutable snapshot generation. ProblemEvidence pins records.schema.json#/$defs/ProblemEvidence and retains the complete evidence selection for one exact owner/resource. Each lookup and chunk read independently checks current permission for that protected disclosure scope; an authenticated failure or possession of its evidence reference grants no additional read permission.",
       "allOf": [
         {
           "if": {
@@ -572,6 +574,45 @@
     "MaterialDigest": {
       "$ref": "common.schema.json#/$defs/Digest",
       "description": "The digest of immutable material required to execute or recover the selected work, including a release, source closure, checkpoint, candidate or retained evidence record. A Plan subject value with this semantic type must occur in input_digests and remain under verified owner custody. A manifest or protected owner record also retains the material closure that it references. An identity or comparison hash alone is not custody; schema identities, expected predecessors and other integrity preconditions use Digest instead."
+    },
+    "ProblemCode": {
+      "enum": [
+        "INVALID_INPUT",
+        "UNSUPPORTED_CAPABILITY",
+        "AUTHENTICATION_FAILED",
+        "PERMISSION_DENIED",
+        "NOT_FOUND",
+        "CONFLICT",
+        "PLAN_EXPIRED",
+        "OWNER_EPOCH_CHANGED",
+        "PRECONDITION_FAILED",
+        "UNAVAILABLE",
+        "CHECK_FAILED",
+        "ACCEPTANCE_UNKNOWN",
+        "EFFECT_UNKNOWN",
+        "BUSY",
+        "CANCELLED",
+        "INTEGRITY_FAILED",
+        "OUTPUT_LIMIT",
+        "RETENTION_GAP",
+        "CAPACITY_BLOCKED",
+        "RESOURCE_ENFORCEMENT_LOST",
+        "RESOURCE_PRESSURE",
+        "CLEANUP_BLOCKED"
+      ]
+    },
+    "ProblemSummary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048
+    },
+    "ProblemRetry": {
+      "enum": [
+        "none",
+        "safe-read",
+        "same-request-after-reconcile"
+      ]
     }
-  }
+  },
+  "description": "The single fishhat v1 canonical JSON profile is RFC 8785 (JCS), https://www.rfc-editor.org/rfc/rfc8785. Every JSON commitment, digest preimage, signature preimage and canonical wire or retained record uses this profile, including installed schema closures and validation inventories. Serialize UTF-8 with no BOM, insignificant whitespace or final newline; a transport may separately require its framing LF, which is excluded from the JSON digest. Sort object names recursively by unsigned UTF-16 code units; preserve array order and Unicode strings without normalization. Escape and serialize strings and finite IEEE 754 binary64 numbers exactly as JCS requires, including negative zero as 0. Reject duplicate object names, lone surrogates, nonfinite numbers and non-JSON values. JSON numbers are parsed in the binary64 domain; JSON-like YAML numeric resolution uses the same decimal/fraction/exponent grammar, with other plain scalars remaining strings. JSON Schema multipleOf compares exact decimal values represented by the JCS number spellings, without binary division tolerance or rounding; numeric equality treats 1 and 1.0, and negative zero and zero, as equal while keeping booleans distinct. Exact integer identities, quantities and generations remain constrained by their schemas to at most 9007199254740991. Programmatic arbitrary-precision integers outside that interoperable range are rejected; higher-precision data requires schema-declared strings. Existing explicit nesting and receiving-capacity admission rules remain. Each owning contract states the fields omitted from its commitment; no other projection is implied. Digest of a JSON value means sha256: plus lowercase hexadecimal SHA-256 of its JCS bytes. Digests explicitly identifying native material, archives or files instead cover their exact original bytes. Human-readable JSON files may use indentation; whenever their JSON values are committed, hashed or signed they are first encoded with JCS."
 }

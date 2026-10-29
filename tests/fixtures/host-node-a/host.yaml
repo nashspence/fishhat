@@ -8,6 +8,7 @@ concerns:
     purpose: Synthetic managed configuration
     files:
       motd:
+        state: present
         source: files/motd
         destination: /etc/motd
         mode: '0644'
@@ -18,6 +19,7 @@ concerns:
         reason: Example nonsecret host file
     secret_files:
       agent-token:
+        state: present
         entry: agent-token
         destination: /etc/example-agent/token
         mode: '0600'

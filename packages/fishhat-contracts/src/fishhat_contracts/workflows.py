@@ -1020,6 +1020,7 @@ def advance_workflow(
     workflow: dict[str, Any],
     *,
     verified_phase_evidence: dict[str, Any] | None = None,
+    now: str | None = None,
     verified_preparations: list[dict[str, Any]] | None = None,
     recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> dict[str, Any]:
@@ -1033,7 +1034,7 @@ def advance_workflow(
     from .workflow_evidence import require_verified_phase_evidence
     from .workflow_preparation import require_verified_preparations
 
-    require_verified_phase_evidence(request, verified_phase_evidence)
+    require_verified_phase_evidence(request, verified_phase_evidence, now=now)
     require_verified_preparations(request, workflow, verified_preparations)
     completion = request["transfer_completion"]
     if completion is not None:

@@ -205,6 +205,16 @@ def test_historical_publisher_output_remains_usable_through_successor_lifecycle(
         recovery_readers=qualified,
     )
     assert read == value
+    with pytest.raises(ContractError, match="action result schema substitution"):
+        RecordSnapshot.restore(snapshot.reference, canonical(value), expected_owner=value["owner"])
+    restored = RecordSnapshot.restore(
+        snapshot.reference,
+        canonical(value),
+        expected_owner=value["owner"],
+        recovery_readers=qualified,
+    )
+    assert restored.reference == snapshot.reference
+    assert restored.record == value
     advance = {
         "owner": value["owner"],
         "workflow_id": value["id"],
@@ -222,6 +232,7 @@ def test_historical_publisher_output_remains_usable_through_successor_lifecycle(
         advance,
         value,
         verified_phase_evidence=copy.deepcopy(advance["phase_evidence"]),
+        now="2026-11-01T00:00:00Z",
         recovery_readers=qualified,
     )
     validate_workflow(moved, recovery_readers=qualified)

@@ -107,6 +107,25 @@ def test_closed_compositions_validate_their_declared_values(schema, value):
     check_configuration(schema, value, digest(schema))
 
 
+@pytest.mark.parametrize(
+    "schema,accepted,rejected",
+    [
+        ({"const": 0.5}, 0.5, 0.5000000000000001),
+        ({"enum": [0.5, 1.5]}, 1.5, 1),
+        ({"const": 1.0}, 1, True),
+        ({"enum": [-0.0, 2.0]}, 0, False),
+        ({"const": True}, True, 1.0),
+    ],
+    ids=["fraction-const", "fraction-enum", "integer-equality", "zero-equality", "boolean"],
+)
+def test_provider_numeric_literals_are_closed_and_preserve_json_number_equality(
+    schema, accepted, rejected
+):
+    check_configuration(schema, accepted, digest(schema))
+    with pytest.raises(ContractError, match="CONFIGURATION_REJECTED"):
+        check_configuration(schema, rejected, digest(schema))
+
+
 @pytest.mark.parametrize("keyword", ["const", "enum", "default", "examples"])
 def test_schema_looking_literal_values_are_not_interpreted_as_schemas(keyword):
     literal = {

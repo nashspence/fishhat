@@ -56,6 +56,7 @@ def record_native_completion(
     expected_owner: dict[str, Any],
     native_authorized: bool,
     verified_phase_evidence: dict[str, Any] | None = None,
+    now: str | None = None,
     recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> dict[str, Any]:
     """Retain terminal facts without new work, transfer progress or hold release.
@@ -106,7 +107,7 @@ def record_native_completion(
     require_bound_phase(workflow, workflow["phase"])
     validate_native_completion(completion, workflow, recovery_readers=recovery_readers)
     require_verified_phase_evidence(
-        _evidence_context(completion, workflow), verified_phase_evidence
+        _evidence_context(completion, workflow), verified_phase_evidence, now=now
     )
     result = copy.deepcopy(workflow)
     result["generation"] += 1
