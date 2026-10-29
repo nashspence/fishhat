@@ -5,6 +5,7 @@ import unittest
 
 import yaml
 
+from scripts.validation_timeouts import watchdog
 from tests.support import ROOT
 
 CHECK_PURPOSE = {
@@ -87,7 +88,7 @@ class WorkflowSafety(unittest.TestCase):
             env={"PATH": "/usr/bin:/bin"},
             capture_output=True,
             text=True,
-            timeout=5,
+            timeout=watchdog(5),
         )
         self.assertEqual(proc.returncode, 2)
         self.assertIn("Refusing", proc.stderr)

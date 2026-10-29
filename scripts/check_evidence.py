@@ -32,8 +32,11 @@ def fingerprint(value: Any) -> str:
     return hashlib.sha256(canonical(value)).hexdigest()
 
 
-def conditions() -> dict[str, str]:
+def conditions() -> dict[str, Any]:
+    from scripts.validation_timeouts import execution_conditions
+
     return {
+        **execution_conditions(),
         "platform": sys.platform,
         "machine": platform.machine(),
         "python": platform.python_version(),
@@ -185,7 +188,9 @@ def entrypoints(root: Path) -> dict[str, Any]:
                 "purposes": purposes,
                 "scope": scope,
                 "authority": authority,
-                "work_sha256": fingerprint({k: v for k, v in job.items() if k != "env"}),
+                "work_sha256": fingerprint(
+                    {**job, "env": {k: v for k, v in env.items() if not k.startswith("CHECK_")}}
+                ),
                 "result_authority": "GitHub job conclusion; classification supplies no execution proof",
                 "requiredness_authority": "release.toml#/governance/required_checks",
             }
@@ -357,6 +362,20 @@ def group_outcome(phases: dict[str, Any], outcome: str | None, passed: bool) -> 
 def valid_evidence(tests: dict[str, Any], root: Path) -> bool:
     """Integrity is distinct from successful execution or sufficiency for a claim."""
     try:
+        from scripts.validation_timeouts import valid_report
+
+        report = tests.get("watchdogs")
+        if (
+            not isinstance(report, dict)
+            or not valid_report(report)
+            or report["scale"] != tests.get("profile", {}).get("watchdog_scale")
+        ):
+            return False
+        if any(
+            not valid_report(worker) or worker["scale"] != report["scale"]
+            for worker in tests.get("worker_watchdogs", {}).values()
+        ):
+            return False
         value = tests["evidence"]
         expected = inventory(root)
         groups = value["groups"]

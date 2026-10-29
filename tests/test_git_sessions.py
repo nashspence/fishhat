@@ -9,6 +9,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from scripts.validation_timeouts import watchdog
+
 CHECK_PURPOSE = {
     "purpose": "implementation",
     "authority": [
@@ -54,7 +56,7 @@ class GitWorkspaceTests(unittest.TestCase):
             env=self.env,
             text=True,
             capture_output=True,
-            timeout=15,
+            timeout=watchdog(15),
         )
         if check and p.returncode:
             raise AssertionError(p.stderr)

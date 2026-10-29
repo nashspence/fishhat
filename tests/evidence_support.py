@@ -15,6 +15,7 @@ from scripts.check_evidence import (
 from scripts.run_stats import RunStats
 from scripts.validation import CANONICAL, digest
 from scripts.validation import FORMAT as RECEIPT_FORMAT
+from scripts.validation_timeouts import current
 
 
 def reviewed_groups(root=ROOT):
@@ -62,8 +63,10 @@ def sample_run(root, source):
             "work_sha256": digest(CANONICAL["unit"]),
             "environment_overrides": [],
         },
+        "watchdogs": current().report(),
         "profile": conditions(),
         "tests": {
+            "watchdogs": current().report(),
             "profile": conditions(),
             "exit_status": 0,
             "outcomes": outcomes,

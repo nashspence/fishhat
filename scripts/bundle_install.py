@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import re
 import subprocess
 import sys
@@ -87,7 +88,11 @@ def verify(bundle: Path, expected: str) -> dict[str, Any]:
     return manifest
 
 
-def install(bundle: Path, destination: Path, component: str, expected: str) -> Path:
+def install(
+    bundle: Path, destination: Path, component: str, expected: str, *, timeout_seconds: float = 180
+) -> Path:
+    if not math.isfinite(timeout_seconds) or timeout_seconds <= 0:
+        raise ValueError("invalid installation timeout")
     manifest = verify(bundle, expected)
     if component not in manifest["components"] or destination.exists():
         raise ValueError("unknown component or existing installation destination")
@@ -110,7 +115,7 @@ def install(bundle: Path, destination: Path, component: str, expected: str) -> P
         "-r",
         str(lock),
     ]
-    subprocess.run(command, check=True, capture_output=True, timeout=180)
+    subprocess.run(command, check=True, capture_output=True, timeout=timeout_seconds)
     return python
 
 

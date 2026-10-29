@@ -29,6 +29,8 @@ from scripts.check_evidence import (
     FORMAT as EVIDENCE_FORMAT,
 )
 from scripts.run_stats import RunStats, comparison, parallel_stats
+from scripts.validation_timeouts import ACTIVE as WATCHDOGS
+from scripts.validation_timeouts import Policy, execution_conditions, valid_report, watchdog
 
 REPORT_VARIABLE = "FISHHAT_TEST_REPORT"
 SAFE_NODE = re.compile(r"tests/[A-Za-z0-9_./-]+\.py(?:::[A-Za-z0-9_]+)+(?:\[[A-Za-z0-9_.-]+\])?")
@@ -49,7 +51,7 @@ def write_stats(root: Path, value: dict[str, Any]) -> Path:
     directory.mkdir(parents=True, exist_ok=True)
     content = json.dumps(value, sort_keys=True) + "\n"
     path = directory / (uuid.uuid4().hex + ".json")
-    with FileLock(str(directory / ".lock"), timeout=10):
+    with FileLock(str(directory / ".lock"), timeout=watchdog(10)):
         # The receipt corpus is not a bounded work page. Retain all completed
         # observations until an explicit owner-managed retention operation; full
         # collection growth must never silently erase prior evidence.
@@ -70,6 +72,16 @@ class TestResults:
         process_name: str = "controller",
     ) -> None:
         self.root, self.destination = root, destination
+        self.watchdogs = Policy.resolve()
+        self.watchdog_token = WATCHDOGS.set(self.watchdogs)
+        self.watchdog_conditions = execution_conditions()
+        self.profile = {
+            **self.watchdog_conditions,
+            "platform": sys.platform,
+            "machine": platform.machine(),
+            "python": platform.python_version(),
+        }
+        self.worker_watchdogs: dict[str, Any] = {}
         self.stats = RunStats()
         self.controller = controller
         self.process_name = process_name
@@ -87,6 +99,9 @@ class TestResults:
         self.inventory_hash = ""
         self.evidence: dict[str, Any] = {}
         self.subtests: dict[str, list[dict[str, Any]]] = {}
+
+    def pytest_unconfigure(self) -> None:
+        WATCHDOGS.reset(self.watchdog_token)
 
     def pytest_collection_finish(self, session: pytest.Session) -> None:
         self.collected = [safe_node(item.nodeid) for item in session.items]
@@ -142,7 +157,10 @@ class TestResults:
         for name, value in self.workers.items():
             evidence = value["evidence"]
             if (
-                value["collected"] != self.collected
+                not valid_report(value.get("watchdogs"))
+                or value["watchdogs"]["scale"] != self.watchdogs.scale
+                or value.get("profile") != self.profile
+                or value["collected"] != self.collected
                 or evidence["origin"] != os.environ.get("FISHHAT_TEST_ORIGIN")
                 or (self.inventory_hash and self.inventory_hash != evidence["inventory_sha256"])
                 or (exitstatus == 0 and value["exit_status"] != 0)
@@ -150,6 +168,7 @@ class TestResults:
                 raise ValueError("inconsistent worker evidence")
             self.inventory_hash = evidence["inventory_sha256"]
             processes[name] = value["stats"]
+            self.worker_watchdogs[name] = value["watchdogs"]
             executed = {node for node, phases in value["phases"].items() if phases}
             if seen & executed or not executed <= set(self.collected):
                 raise ValueError("duplicate or unexpected worker execution")
@@ -175,6 +194,17 @@ class TestResults:
             "groups": groups,
         }
         return parallel_stats(processes)
+
+    @pytest.hookimpl(wrapper=True)
+    def pytest_runtest_makereport(
+        self, item: pytest.Item, call: Any
+    ) -> Generator[None, Any, pytest.TestReport]:
+        report: pytest.TestReport = yield
+        if report.failed:
+            report.sections.append(
+                ("Validation watchdog policy", json.dumps(self.watchdogs.report(), sort_keys=True))
+            )
+        return report
 
     @pytest.hookimpl(wrapper=True)
     def pytest_runtest_call(self, item: pytest.Item) -> Generator[None, Any, Any]:
@@ -267,11 +297,9 @@ class TestResults:
                 ),
             }
         value = {
-            "profile": {
-                "platform": sys.platform,
-                "machine": platform.machine(),
-                "python": platform.python_version(),
-            },
+            "profile": dict(self.profile),
+            "watchdogs": self.watchdogs.report(),
+            "worker_watchdogs": self.worker_watchdogs,
             "profiling_target": target,
             "format": "fishhat-pytest-timing/v1",
             "qualification_eligible": False,
@@ -320,6 +348,10 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 def pytest_configure(config: pytest.Config) -> None:
     if not config.pluginmanager.hasplugin("fishhat-results"):
         destination = os.environ.get(REPORT_VARIABLE)
+        try:
+            Policy.resolve()
+        except ValueError as exc:
+            raise pytest.UsageError(str(exc)) from None
         config.pluginmanager.register(
             TestResults(
                 config.rootpath,

@@ -29,6 +29,9 @@ def accounted(tmp_path):
         shutil.copytree(ROOT / name, tmp_path / name)
     shutil.copyfile(ROOT / "Makefile", tmp_path / "Makefile")
     shutil.copyfile(ROOT / "release.toml", tmp_path / "release.toml")
+    (tmp_path / "scripts").mkdir(exist_ok=True)
+    for helper in ("validation_timeouts.py", "validation_workflows.py"):
+        shutil.copyfile(ROOT / "scripts" / helper, tmp_path / "scripts" / helper)
     source = {"commit": "a" * 40, "clean": True, "fingerprint": "b" * 64}
     run = sample_run(tmp_path, source)
     folder = tmp_path / "artifacts/validation"
@@ -77,7 +80,13 @@ def test_unreviewed_collection_or_authority_is_rejected(change):
 def test_new_or_changed_workflow_requires_review(accounted):
     root, _, _ = accounted
     path = root / ".github/workflows/ci.yml"
-    path.write_text(path.read_text().replace("timeout-minutes: 15", "timeout-minutes: 16", 1))
+    path.write_text(
+        path.read_text().replace(
+            "FISHHAT_VALIDATION_NOMINAL_MINUTES: '15'",
+            "FISHHAT_VALIDATION_NOMINAL_MINUTES: '16'",
+            1,
+        )
+    )
     with pytest.raises(ValueError, match="stale"):
         evidence.inventory(root)
     path.write_text(

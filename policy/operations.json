@@ -2731,6 +2731,6 @@
     "some-implementations/fishhat/storage/xfs-project/pyproject.toml": "73e00e3691845add0fc45f4d7286bb87bff35a62083f3d310b63694b61da03af",
     "tests/test_component_policy.py": "c0dc4caac33970b91fd691000cef1e15ecf971c46704fa16f40b29023649856d",
     "tests/test_linear_growth.py": "238c554ee57c932a2b14c605a17d40bc17e40b979e3b4936cc5ae49f60b2885d",
-    "tests/test_operation_coverage.py": "32d00478c755d864bcb6e051e714611030dac378245220f185cc69ec4cdf54bb"
+    "tests/test_operation_coverage.py": "0f0bdbf24ee324c9bef5ac75832df591a97fac4218a33b20d97f0ed1040bc361"
   }
 }

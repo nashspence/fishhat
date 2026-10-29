@@ -29,6 +29,9 @@ def checkout(tmp_path, monkeypatch):
     (tmp_path / "scripts").mkdir()
     (tmp_path / "scripts/__init__.py").touch()
     shutil.copyfile(
+        ROOT / "scripts/validation_timeouts.py", tmp_path / "scripts/validation_timeouts.py"
+    )
+    shutil.copyfile(
         ROOT / "scripts/validation_pytest.py", tmp_path / "scripts/validation_pytest.py"
     )
     shutil.copyfile(ROOT / "scripts/run_stats.py", tmp_path / "scripts/run_stats.py")

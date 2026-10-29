@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+import json
+import subprocess
+import sys
 import threading
 
 import pytest
 from fishhat_contracts.validation import ContractError
 from fishhat_owner.journal import Journal
+
+from scripts.validation_timeouts import observe_child, watchdog
 
 CHECK_PURPOSE = {
     "purpose": "public-contract",
@@ -21,12 +26,7 @@ CHECK_PURPOSE = {
 }
 
 
-@pytest.mark.parametrize(
-    "second_state,second_effect", [("cancelled", "none"), ("succeeded", "known")]
-)
-def test_competing_terminal_transitions_preserve_first_outcome(
-    tmp_path, second_state, second_effect
-):
+def _competing_terminal_transitions(tmp_path, second_state, second_effect):
     path = tmp_path / "owner.sqlite"
     owner = Journal(path, "owner", "epoch", initialize=True)
     owner.submit(
@@ -42,6 +42,7 @@ def test_competing_terminal_transitions_preserve_first_outcome(
     owner.transition("request", "running", "unknown")
     owner.close()
 
+    coordination_budget = watchdog(10)
     ready = threading.Barrier(2)
     begins = threading.Barrier(2)
     first_finished = threading.Event()
@@ -54,15 +55,15 @@ def test_competing_terminal_transitions_preserve_first_outcome(
         def trace(statement):
             if statement.startswith("BEGIN"):
                 try:
-                    begins.wait(timeout=10)
-                    if label == "second" and not first_finished.wait(timeout=10):
+                    begins.wait(timeout=coordination_budget)
+                    if label == "second" and not first_finished.wait(timeout=coordination_budget):
                         coordination_errors.append("first transition did not finish")
                 except threading.BrokenBarrierError:
                     coordination_errors.append("both transaction starts were not observed")
 
         connection.db.set_trace_callback(trace)
         try:
-            ready.wait(timeout=10)
+            ready.wait(timeout=coordination_budget)
             connection.transition("request", state, effect)
             outcomes[label] = "committed"
         except Exception as exc:
@@ -81,9 +82,16 @@ def test_competing_terminal_transitions_preserve_first_outcome(
     ]
     for worker in workers:
         worker.start()
-    for worker in workers:
-        worker.join(timeout=25)
-    assert not any(worker.is_alive() for worker in workers)
+    try:
+        for worker in workers:
+            worker.join(timeout=watchdog(25))
+        assert not any(worker.is_alive() for worker in workers)
+    finally:
+        ready.abort()
+        begins.abort()
+        first_finished.set()
+        for worker in workers:
+            worker.join()
     assert not coordination_errors
     assert outcomes["first"] == "committed"
     assert isinstance(outcomes["second"], ContractError)
@@ -110,3 +118,27 @@ def test_competing_terminal_transitions_preserve_first_outcome(
         assert owner.generation == 1
     finally:
         owner.close()
+
+
+@pytest.mark.parametrize(
+    "second_state,second_effect", [("cancelled", "none"), ("succeeded", "known")]
+)
+def test_competing_terminal_transitions_preserve_first_outcome(
+    tmp_path, second_state, second_effect
+):
+    script = """from pathlib import Path
+import json,sys
+from scripts.validation_timeouts import Policy,using
+from tests.test_journal_concurrency import _competing_terminal_transitions
+with using(Policy.resolve()) as policy:
+    _competing_terminal_transitions(Path(sys.argv[1]), sys.argv[2], sys.argv[3])
+    print(json.dumps(policy.report()))
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", script, str(tmp_path), second_state, second_effect],
+        capture_output=True,
+        text=True,
+        timeout=watchdog(90),
+    )
+    assert result.returncode == 0, result.stderr
+    observe_child(json.loads(result.stdout))

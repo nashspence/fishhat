@@ -4,8 +4,8 @@ from hashlib import sha256
 from json import loads
 from os import environ
 from pathlib import Path
+from signal import pause
 from sys import argv, stderr, stdout
-from time import sleep
 
 from rfc8785 import dumps
 
@@ -53,7 +53,7 @@ if failure == "missing-response":
     raise SystemExit(4)
 if failure == "timeout":
     Path("output/timeout-ready").write_text(attempt["attempt_id"])
-    sleep(30)
+    pause()
 product_name = sha256(product).hexdigest()
 destination = Path("output/artifacts")
 destination.mkdir()
@@ -105,5 +105,5 @@ stdout.buffer.write(b"malformed response\n" if failure == "malformed" else seria
 stdout.flush()
 if failure == "timeout-after-response":
     Path("output/timeout-ready").write_text(attempt["attempt_id"])
-    sleep(30)
+    pause()
 raise SystemExit(9 if failure == "nonzero-after-response" else 0)

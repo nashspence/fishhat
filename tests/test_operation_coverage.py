@@ -95,6 +95,9 @@ def copy_sources(tmp_path):
             ignore=shutil.ignore_patterns("__pycache__", "*.egg-info", "build"),
         )
     shutil.copyfile(ROOT / "release.toml", tmp_path / "release.toml")
+    (tmp_path / "scripts").mkdir(exist_ok=True)
+    for helper in ("validation_timeouts.py", "validation_workflows.py"):
+        shutil.copyfile(ROOT / "scripts" / helper, tmp_path / "scripts" / helper)
     return tmp_path
 
 
@@ -180,6 +183,9 @@ def test_report_requires_current_complete_executed_proofs(monkeypatch, tmp_path)
         shutil.copytree(ROOT / name, tmp_path / name)
     shutil.copyfile(ROOT / "Makefile", tmp_path / "Makefile")
     shutil.copyfile(ROOT / "release.toml", tmp_path / "release.toml")
+    (tmp_path / "scripts").mkdir(exist_ok=True)
+    for helper in ("validation_timeouts.py", "validation_workflows.py"):
+        shutil.copyfile(ROOT / "scripts" / helper, tmp_path / "scripts" / helper)
     folder = tmp_path / "artifacts/validation"
     folder.mkdir(parents=True)
     receipt = sample_run(tmp_path, source)

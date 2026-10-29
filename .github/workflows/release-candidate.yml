@@ -15,16 +15,50 @@ defaults:
     shell: bash
 
 jobs:
+  watchdogs:
+    name: Validation watchdog policy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5 # Independent bootstrap resource ceiling; policy is not resolved yet.
+    env:
+      CHECK_PURPOSES: validation-tooling
+      CHECK_SCOPE: validation budget planning; no product qualification
+      CHECK_AUTHORITY: scripts/validation_workflows.py
+      FISHHAT_VALIDATION_SCALE_DEFINED: ${{ contains(toJSON(vars), '"FISHHAT_VALIDATION_TIMEOUT_SCALE":') }}
+      FISHHAT_VALIDATION_SCALE_VALUE: ${{ vars.FISHHAT_VALIDATION_TIMEOUT_SCALE }}
+    outputs:
+      scale: ${{ steps.plan.outputs.scale }}
+      budgets: ${{ steps.plan.outputs.budgets }}
+      contacts: ${{ steps.plan.outputs.contacts }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - run: python3 scripts/validation_timeouts.py bootstrap --github-env "$GITHUB_ENV"
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9 # v7
+        with:
+          version: '0.11.24'
+      - run: uv sync --locked --all-packages --group dev --python 3.12
+      - id: plan
+        run: uv run --locked --all-packages --group dev python -m scripts.validation_workflows --workflow .github/workflows/release-candidate.yml --github-output "$GITHUB_OUTPUT"
+
   candidate:
     env:
+      UV_HTTP_TIMEOUT: ${{ fromJSON(needs.watchdogs.outputs.contacts)['candidate'].uv }}
+      FISHHAT_VALIDATION_JOB_MINUTES: ${{ fromJSON(needs.watchdogs.outputs.budgets)['candidate'] }}
+      FISHHAT_VALIDATION_NOMINAL_MINUTES: '30'
+      FISHHAT_VALIDATION_TIMEOUT_SCALE: ${{ needs.watchdogs.outputs.scale }}
       CHECK_PURPOSES: implementation
       CHECK_SCOPE: built/installed scaffold packages only; no native activation
       CHECK_AUTHORITY: release.toml
     if: ${{ github.ref == 'refs/heads/main' }}
+    needs: watchdogs
     name: Attested scaffold (${{ matrix.os }})
     environment: release-publication
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: ${{ fromJSON(needs.watchdogs.outputs.budgets)['candidate'] }}
     permissions:
       contents: read
       id-token: write

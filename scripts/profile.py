@@ -14,6 +14,7 @@ from typing import Any
 from scripts.project_policy import ROOT
 from scripts.run_stats import RunStats
 from scripts.validation import source_identity
+from scripts.validation_timeouts import current, invocation
 
 WORKLOADS = {
     "unit": ["tests"],
@@ -33,6 +34,7 @@ def synthetic(size: int, repeats: int) -> int:
     return 0
 
 
+@invocation
 def run(workload: str, size: int, repeats: int) -> int:
     if (
         workload not in {*WORKLOADS, "canonical"}
@@ -86,6 +88,7 @@ def run(workload: str, size: int, repeats: int) -> int:
         "qualification_eligible": False,
         "production_qualified": False,
         "workload": workload,
+        "watchdogs": current().report(),
         "instrumentation": "cProfile-overhead-included",
         "size": size if workload == "canonical" else None,
         "repeats": repeats if workload == "canonical" else None,

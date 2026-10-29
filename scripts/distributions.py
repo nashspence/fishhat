@@ -18,6 +18,7 @@ from packaging.utils import canonicalize_name
 
 from scripts.bundle_install import install, sha256, verify
 from scripts.project_policy import ROOT, components, fingerprint, read_toml
+from scripts.validation_timeouts import invocation, watchdog
 
 
 def wheel_metadata(path: Path) -> dict[str, Any]:
@@ -82,7 +83,7 @@ def prepare(dist: Path, output: Path) -> Path:
         cwd=ROOT,
         capture_output=True,
         check=True,
-        timeout=60,
+        timeout=watchdog(60),
     )
     subprocess.run(
         [
@@ -90,6 +91,8 @@ def prepare(dist: Path, output: Path) -> Path:
             "-m",
             "pip",
             "--isolated",
+            "--timeout",
+            str(watchdog(15)),
             "download",
             "--only-binary=:all:",
             "--no-deps",
@@ -101,7 +104,7 @@ def prepare(dist: Path, output: Path) -> Path:
         ],
         capture_output=True,
         check=True,
-        timeout=180,
+        timeout=watchdog(180),
     )
     runtime.unlink()
     units = components()
@@ -222,11 +225,13 @@ def smoke(bundle: Path) -> None:
         scratch = Path(temporary)
         for item in components():
             env = scratch / item["id"]
-            python = install(bundle, env, item["id"], expected)
+            python = install(bundle, env, item["id"], expected, timeout_seconds=watchdog(180))
             command = [
                 str(python),
                 "-I",
                 str(ROOT / "scripts/smoke_installed.py"),
+                "--watchdog-seconds",
+                str(watchdog(15)),
                 "--component",
                 item["id"],
                 "--bundle",
@@ -234,7 +239,7 @@ def smoke(bundle: Path) -> None:
                 "--fixtures",
                 str(ROOT / "tests/fixtures"),
             ]
-            subprocess.run(command, cwd=scratch, check=True, timeout=90)
+            subprocess.run(command, cwd=scratch, check=True, timeout=watchdog(90))
             # Keep only the environment needed by the final external typing check.
             if item["id"] != "contracts":
                 shutil.rmtree(env)
@@ -261,7 +266,7 @@ def smoke(bundle: Path) -> None:
             ],
             cwd=scratch,
             check=True,
-            timeout=90,
+            timeout=watchdog(90),
         )
     print(
         json.dumps(
@@ -304,6 +309,7 @@ def archive(bundle: Path) -> Path:
     return target
 
 
+@invocation
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("command", choices=["prepare", "smoke", "archive", "smoke-fresh", "build"])
