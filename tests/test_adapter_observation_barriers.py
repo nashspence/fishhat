@@ -84,6 +84,7 @@ def test_protocol_correlates_observation_challenges_independently_of_coordinator
         "coverage": "complete",
         "continuation": None,
         "proposal": None,
+        "problem": None,
         "output": {
             "deployment": None,
             "observation": observation(1, barrier=barrier),

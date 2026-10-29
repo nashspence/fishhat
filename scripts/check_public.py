@@ -51,6 +51,7 @@ ALLOWED_DOMAINS = {
     "raw.githubusercontent.com",
     "docs.github.com",
     "json-schema.org",
+    "www.rfc-editor.org",
     "pypi.org",
     "files.pythonhosted.org",
     "localhost",

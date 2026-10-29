@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from filelock import FileLock
+from fishhat_contracts import canonical
 
 from scripts.check_evidence import entrypoints, execution_origin, valid_evidence
 from scripts.project_policy import ROOT
@@ -74,9 +75,7 @@ SAFE_NODE = re.compile(r"tests/[A-Za-z0-9_./-]+\.py(?:::[A-Za-z0-9_]+)+(?:\[[A-Z
 
 
 def digest(value: Any) -> str:
-    return hashlib.sha256(
-        json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
-    ).hexdigest()
+    return hashlib.sha256(canonical(value)).hexdigest()
 
 
 def source_identity(root: Path = ROOT) -> dict[str, Any]:

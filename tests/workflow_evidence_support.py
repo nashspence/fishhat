@@ -123,6 +123,10 @@ def phase_evidence(workflow, request, *, operations=None, authority="driver"):
             "owner": copy.deepcopy(participant["owner"]),
             "resource": copy.deepcopy(participant["resource"]),
             "resource_generation": participant["expected_generation"],
+            "expires_at": "2026-12-01T00:00:00Z",
+            "attestation_id": uid(
+                "phase-attestation-" + participant["owner"]["id"] + digest(evidence["transition"])
+            ),
             "operations": [],
             "native_evidence": [
                 {
@@ -181,6 +185,7 @@ def advance_request(workflow, phase, *, operations=None, advance_id=None):
 
 def advance_with_evidence(request, workflow, **context: Any):
     """Pass explicit synthetic trusted context without filling missing request evidence."""
+    context.setdefault("now", "2026-11-01T00:00:00Z")
     context.setdefault("verified_phase_evidence", copy.deepcopy(request.get("phase_evidence")))
     context.setdefault(
         "verified_preparations",

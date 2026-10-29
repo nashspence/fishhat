@@ -118,7 +118,7 @@
           "type": "string",
           "minLength": 88,
           "maxLength": 88,
-          "pattern": "^[A-Za-z0-9+/]{86}==(?![\\s\\S])"
+          "pattern": "^[A-Za-z0-9+/]{85}[AQgw]==(?![\\s\\S])"
         }
       },
       "required": [
@@ -136,7 +136,8 @@
         "key_id",
         "signature"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "The fishhat v1 owner witness signature profile is Ed25519 over the literal ASCII bytes deployment-ops/witness/v1 followed by one zero byte (0x00), followed by RFC 8785 JCS UTF-8 bytes of this complete Witness object with only its top-level signature property omitted. No newline, BOM, Unicode normalization or additional field omission is allowed. signature is canonical padded RFC 4648 standard base64 of the 64 signature bytes. key_id selects an independently enrolled Ed25519 public key for the exact owner identity and epoch; neither the witness nor source data enrolls a key. The receiving owner authenticates the signature and checks the expected owner, subject_digest, kind, generation, state and relevant workflow binding. subject_digest covers the exact subject projection defined by that record contract, encoded with the common JCS profile; the signature authenticates the entire witness body, including null and empty fields. Valid signatures do not by themselves establish current permission, native truth, custody or continuing exclusion."
     },
     "HostPreimage": {
       "type": "object",
@@ -2836,42 +2837,13 @@
       "type": "object",
       "properties": {
         "code": {
-          "enum": [
-            "INVALID_INPUT",
-            "UNSUPPORTED_CAPABILITY",
-            "AUTHENTICATION_FAILED",
-            "PERMISSION_DENIED",
-            "NOT_FOUND",
-            "CONFLICT",
-            "PLAN_EXPIRED",
-            "OWNER_EPOCH_CHANGED",
-            "PRECONDITION_FAILED",
-            "UNAVAILABLE",
-            "CHECK_FAILED",
-            "ACCEPTANCE_UNKNOWN",
-            "EFFECT_UNKNOWN",
-            "BUSY",
-            "CANCELLED",
-            "INTEGRITY_FAILED",
-            "OUTPUT_LIMIT",
-            "RETENTION_GAP",
-            "CAPACITY_BLOCKED",
-            "RESOURCE_ENFORCEMENT_LOST",
-            "RESOURCE_PRESSURE",
-            "CLEANUP_BLOCKED"
-          ]
+          "$ref": "common.schema.json#/$defs/ProblemCode"
         },
         "summary": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 2048
+          "$ref": "common.schema.json#/$defs/ProblemSummary"
         },
         "retry": {
-          "enum": [
-            "none",
-            "safe-read",
-            "same-request-after-reconcile"
-          ]
+          "$ref": "common.schema.json#/$defs/ProblemRetry"
         },
         "owner": {
           "anyOf": [

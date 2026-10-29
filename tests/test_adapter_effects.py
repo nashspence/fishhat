@@ -89,6 +89,7 @@ def result(owner, attempt, **overrides):
         "coverage": "complete",
         "continuation": None,
         "proposal": None,
+        "problem": None,
         "effect": effect,
         "output": output,
     }

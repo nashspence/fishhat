@@ -1324,6 +1324,81 @@
         "params"
       ],
       "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "method": {
+          "const": "workflow.attest"
+        },
+        "params": {
+          "$ref": "workflow-evidence.schema.json#/$defs/AttestationRequest"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "params"
+      ],
+      "additionalProperties": false,
+      "description": "Issue or retrieve complete owner-authenticated phase evidence through bounded immutable record delivery."
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "method": {
+          "const": "workflow.attestation.get"
+        },
+        "params": {
+          "$ref": "workflow-evidence.schema.json#/$defs/AttestationLookup"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "params"
+      ],
+      "additionalProperties": false,
+      "description": "Issue or retrieve complete owner-authenticated phase evidence through bounded immutable record delivery."
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "method": {
+          "const": "workflow.attestation.check"
+        },
+        "params": {
+          "$ref": "workflow-evidence.schema.json#/$defs/AttestationCheckRequest"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "params"
+      ],
+      "additionalProperties": false,
+      "description": "Independently recheck one exact retained attestation without renewal or new authority."
     }
   ]
 }

@@ -52,6 +52,7 @@ def settle(query, value, **changes):
     context = {
         "expected_owner": copy.deepcopy(value["owner"]),
         "native_authorized": True,
+        "now": "2026-11-01T00:00:00Z",
         "verified_phase_evidence": copy.deepcopy(query["phase_evidence"]),
     }
     context.update(changes)

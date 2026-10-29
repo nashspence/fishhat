@@ -7,9 +7,11 @@ import sys
 import time
 from pathlib import Path
 
+import rfc8785
+
 
 def encode(value):
-    return json.dumps(value, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode()
+    return rfc8785.dumps(value)
 
 
 def digest(value):
@@ -76,6 +78,7 @@ response = {
     "coverage": "complete",
     "continuation": None,
     "proposal": None,
+    "problem": None,
     "output": {
         "artifacts": [
             {

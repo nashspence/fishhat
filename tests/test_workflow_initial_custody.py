@@ -321,11 +321,12 @@ def test_initial_agreement_requires_every_exact_owner_and_retained_local_proof()
     query = advance_request(value, PHASES[value["type"]][1])
     verified = copy.deepcopy(query["phase_evidence"])
     with pytest.raises(ContractError, match="not independently authenticated"):
-        advance_workflow(query, value, verified_phase_evidence=verified)
+        advance_workflow(query, value, verified_phase_evidence=verified, now="2026-11-01T00:00:00Z")
     advanced = advance_workflow(
         query,
         value,
         verified_phase_evidence=verified,
+        now="2026-11-01T00:00:00Z",
         verified_preparations=copy.deepcopy(complete),
     )
     validate_workflow_agreement(advanced, require_complete=True)

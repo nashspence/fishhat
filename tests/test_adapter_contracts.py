@@ -146,8 +146,9 @@ def test_observation_grants_cannot_claim_native_mutation_authority():
 def test_control_records_keep_their_strict_encoding():
     from fishhat_contracts.validation import canonical
 
-    with pytest.raises(ContractError):
-        canonical({"cpu": 0.5})
+    assert canonical({"cpu": 0.5}) == b'{"cpu":0.5}'
+    with pytest.raises(ContractError, match="nonfinite number"):
+        canonical({"cpu": float("nan")})
 
 
 def test_adapter_health_result_does_not_stand_in_for_check_capability():
@@ -219,6 +220,7 @@ def test_read_response_is_bound_to_request_and_complete_coverage():
         "coverage": "complete",
         "continuation": None,
         "proposal": None,
+        "problem": None,
         "output": {"deployment": None, "observation": None, "objects": []},
     }
     check_response("runtime", query, response)

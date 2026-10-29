@@ -9,6 +9,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import math
 import re
 from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
@@ -23,7 +24,7 @@ from referencing.jsonschema import DRAFT202012
 from yaml.events import AliasEvent, DocumentStartEvent
 
 from .bounds import Bounds, bounds
-from .json_work import ordered_json, unique_items
+from .json_work import jcs_bytes, multiple_of, unique_items
 
 ROOT = Path(__file__).resolve().parent
 MAX_BYTES = 1_048_576
@@ -94,6 +95,10 @@ def value_check(value: Any, depth: int = 0) -> None:
         if abs(value) > 9_007_199_254_740_991:
             raise ContractError("integer outside interoperable exact range")
         return
+    if type(value) is float:
+        if not math.isfinite(value):
+            raise ContractError("nonfinite number")
+        return
     if type(value) is str:
         if any(0xD800 <= ord(c) <= 0xDFFF for c in value):
             raise ContractError("invalid Unicode surrogate")
@@ -109,15 +114,33 @@ def value_check(value: Any, depth: int = 0) -> None:
             value_check(key, depth + 1)
             value_check(item, depth + 1)
         return
-    raise ContractError("non-JSON or floating point value")
+    raise ContractError("non-JSON value")
 
 
 @bounds(_data_bounds("canonical"))
 def canonical(value: Any) -> bytes:
+    """Encode the admitted value using RFC 8785 JSON Canonicalization Scheme."""
     value_check(value)
-    return json.dumps(
-        ordered_json(value), ensure_ascii=False, separators=(",", ":"), allow_nan=False
-    ).encode("utf-8")
+    return jcs_bytes(value)
+
+
+def _json_integer(text: str) -> int | float:
+    # Preserve exact interoperable integers for owner counters and generation
+    # checks. Larger JSON numeric literals use JCS's IEEE 754 binary64 domain;
+    # schemas still constrain identity/counter fields to the safe integer range.
+    if len(text.lstrip("-")) > 16:
+        return float(text)
+    value = int(text)
+    return value if abs(value) <= 9_007_199_254_740_991 else float(text)
+
+
+def _json_float(text: str) -> int | float:
+    # JSON has one number domain. A decimal point or exponent cannot change the
+    # native shape of an exact safe counter after the same binary64 conversion.
+    value = float(text)
+    if math.isfinite(value) and value.is_integer() and abs(value) <= 9_007_199_254_740_991:
+        return int(value)
+    return value
 
 
 @bounds(_data_bounds("digest"))
@@ -134,6 +157,8 @@ def strict_json(data: bytes | str, max_bytes: int = MAX_BYTES) -> Any:
         value = json.loads(
             raw.decode("utf-8"),
             object_pairs_hook=_pairs,
+            parse_int=_json_integer,
+            parse_float=_json_float,
             parse_constant=lambda _: (_ for _ in ()).throw(ContractError("nonfinite number")),
         )
         value_check(value)
@@ -146,21 +171,39 @@ class SourceLoader(yaml.SafeLoader):
     """Reject duplicate keys; scalar restrictions are checked after parsing."""
 
 
-# JSON-like scalar resolution; do not interpret yes/no, octal or timestamps as policy types.
+# JSON-like scalar resolution; YAML-only numbers and timestamps remain strings.
 SourceLoader.yaml_implicit_resolvers = copy.deepcopy(yaml.SafeLoader.yaml_implicit_resolvers)
 for char, rules in list(SourceLoader.yaml_implicit_resolvers.items()):
     SourceLoader.yaml_implicit_resolvers[char] = [
         (tag, regex)
         for tag, regex in rules
         if tag
-        not in ("tag:yaml.org,2002:bool", "tag:yaml.org,2002:int", "tag:yaml.org,2002:timestamp")
+        not in (
+            "tag:yaml.org,2002:bool",
+            "tag:yaml.org,2002:int",
+            "tag:yaml.org,2002:float",
+            "tag:yaml.org,2002:timestamp",
+        )
     ]
 SourceLoader.add_implicit_resolver(
     "tag:yaml.org,2002:bool", re.compile(r"^(?:true|false)$"), list("tf")
 )
 SourceLoader.add_implicit_resolver(
-    "tag:yaml.org,2002:int", re.compile(r"^(?:0|-?[1-9][0-9]*)$"), list("-0123456789")
+    "tag:yaml.org,2002:int", re.compile(r"^-?(?:0|[1-9][0-9]*)$"), list("-0123456789")
 )
+SourceLoader.add_implicit_resolver(
+    "tag:yaml.org,2002:float",
+    re.compile(r"^-?(?:0|[1-9][0-9]*)(?:\.[0-9]+(?:[eE][+-]?[0-9]+)?|[eE][+-]?[0-9]+)$"),
+    list("-0123456789"),
+)
+
+
+def _yaml_integer(loader: SourceLoader, node: Any) -> int | float:
+    return _json_integer(loader.construct_scalar(node))
+
+
+def _yaml_float(loader: SourceLoader, node: Any) -> int | float:
+    return _json_float(loader.construct_scalar(node))
 
 
 def _mapping(loader: SourceLoader, node: Any, deep: bool = False) -> dict[str, Any]:
@@ -173,6 +216,8 @@ def _mapping(loader: SourceLoader, node: Any, deep: bool = False) -> dict[str, A
     return _pairs(pairs)
 
 
+SourceLoader.add_constructor("tag:yaml.org,2002:int", _yaml_integer)
+SourceLoader.add_constructor("tag:yaml.org,2002:float", _yaml_float)
 SourceLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _mapping)
 
 
@@ -221,7 +266,7 @@ REGISTRY = Registry().with_resources(
 )
 
 _SCHEMA_VALIDATOR = cast(Any, validators.extend)(
-    Draft202012Validator, {"uniqueItems": unique_items}
+    Draft202012Validator, {"uniqueItems": unique_items, "multipleOf": multiple_of}
 )
 
 
@@ -305,6 +350,8 @@ def _validate_host_concerns(
     catalogue: dict[str, Any] | None,
     observation_grants: dict[str, set[bytes]],
 ) -> None:
+    from .host_intent import validate_supplementary_patch
+
     services: set[str] = set()
     units: set[bytes] = set()
     destinations: set[str] = set()
@@ -323,7 +370,7 @@ def _validate_host_concerns(
                 target = _source_target(entry["destination"])
                 _require(target not in destinations, "destination collision")
                 destinations.add(target)
-                if kind == "artifacts":
+                if entry["state"] == "retired" or kind == "artifacts":
                     continue
                 for note in entry["notify"]:
                     _require(note["service"] in services, "unknown notification service")
@@ -336,6 +383,7 @@ def _validate_host_concerns(
             _require(identity not in packages, "duplicate package target")
             packages.add(identity)
         for membership in concern["groups"].values():
+            validate_supplementary_patch(membership)
             user = membership["user"]
             _require(user not in membership_users, "duplicate group membership target")
             membership_users.add(user)
@@ -706,7 +754,7 @@ def _material_digests(value: Any, schema: Any, base: str) -> set[str]:
             found.update(_material_digests(child, schema["items"], base))
     for keyword in ("allOf", "anyOf", "oneOf"):
         for child in schema.get(keyword, []):
-            validator = Draft202012Validator(
+            validator = _SCHEMA_VALIDATOR(
                 REGISTRY.resolver().lookup(base).contents,
                 registry=REGISTRY,
                 format_checker=FORMAT_CHECKER,

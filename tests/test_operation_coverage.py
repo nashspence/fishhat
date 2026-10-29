@@ -102,13 +102,16 @@ def test_map_exhaustively_tracks_current_surfaces_and_native_gaps():
     coverage = check()
     rows = {row["id"]: row for row in coverage["operations"]}
     assert len([key for key in rows if key.startswith("action:")]) == 35
-    assert len([key for key in rows if key.startswith("rpc:")]) == 32
+    assert len([key for key in rows if key.startswith("rpc:")]) == 35
     assert {
         "rpc:workflow.list",
         "rpc:workflow.bind",
         "rpc:workflow.recover",
         "rpc:workflow.lifecycle",
         "rpc:workflow.transfer.get",
+        "rpc:workflow.attest",
+        "rpc:workflow.attestation.get",
+        "rpc:workflow.attestation.check",
         "rpc:operation.cancellation.get",
         "rpc:operation.cancellation.list",
         "rpc:content.status",

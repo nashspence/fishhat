@@ -52,6 +52,7 @@ def lookup(state="present"):
         "coverage": "unknown" if state == "unknown" else "complete",
         "continuation": None,
         "proposal": None,
+        "problem": None,
         "output": {"state": state, "version": version if state == "present" else None},
     }
     return registry, query, response

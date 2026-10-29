@@ -85,6 +85,7 @@ def page(role, method="observe"):
         "coverage": "complete",
         "continuation": None,
         "proposal": None,
+        "problem": None,
         "output": outputs[role],
     }
     return query, reply

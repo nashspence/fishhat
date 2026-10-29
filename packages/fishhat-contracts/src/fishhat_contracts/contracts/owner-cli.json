@@ -670,6 +670,44 @@
       ],
       "use_case": "workflow.transfer.get",
       "description": "Read the closed exact owner/workflow/transfer lookup from stdin. Retrieve the complete immutable original transfer record, directly or through all RecordReference chunks, including its original completion receipt. Current transfer state never replaces earlier accepted history."
+    },
+    {
+      "name": "workflow-attest",
+      "tokens": [
+        "{tool}",
+        "workflow",
+        "attest",
+        "--request-stdin",
+        "--json"
+      ],
+      "use_case": "workflow.attest",
+      "description": "Request owner-private phase attestation for the exact issuer and receiving transition under current native authority. Return the immutable complete result through RecordReference and record.read. Success does not advance a workflow, accept a child or renew protection on replay."
+    },
+    {
+      "name": "workflow-attestation-show",
+      "tokens": [
+        "{tool}",
+        "workflow",
+        "attestation",
+        "show",
+        "--request-stdin",
+        "--json"
+      ],
+      "use_case": "workflow.attestation.get",
+      "description": "Read the exact retained attestation by owner, workflow and attestation identity. Current read scope is required; inspect all RecordReference chunks without renewing its expiry or native authority."
+    },
+    {
+      "name": "workflow-attestation-check",
+      "tokens": [
+        "{tool}",
+        "workflow",
+        "attestation",
+        "check",
+        "--request-stdin",
+        "--json"
+      ],
+      "use_case": "workflow.attestation.check",
+      "description": "Ask the original issuer to recheck exact retained phase evidence under current authority and native protection. An authenticated success is a current observation, never a renewed lease, new phase admission or release authority."
     }
   ],
   "parser": "bounded tokens; no shell evaluation",

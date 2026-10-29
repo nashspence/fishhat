@@ -825,7 +825,10 @@
             "workflow.lifecycle",
             "operation.cancellation.get",
             "operation.cancellation.list",
-            "workflow.transfer.get"
+            "workflow.transfer.get",
+            "workflow.attest",
+            "workflow.attestation.get",
+            "workflow.attestation.check"
           ]
         },
         "ok": {
@@ -1362,6 +1365,93 @@
         "result"
       ],
       "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "method": {
+          "const": "workflow.attest"
+        },
+        "ok": {
+          "const": true
+        },
+        "result": {
+          "$ref": "workflow-evidence.schema.json#/$defs/AttestationReference"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "ok",
+        "result"
+      ],
+      "additionalProperties": false,
+      "description": "Issue or retrieve complete owner-authenticated phase evidence through bounded immutable record delivery."
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "method": {
+          "const": "workflow.attestation.get"
+        },
+        "ok": {
+          "const": true
+        },
+        "result": {
+          "$ref": "workflow-evidence.schema.json#/$defs/AttestationReference"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "ok",
+        "result"
+      ],
+      "additionalProperties": false,
+      "description": "Issue or retrieve complete owner-authenticated phase evidence through bounded immutable record delivery."
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "method": {
+          "const": "workflow.attestation.check"
+        },
+        "ok": {
+          "const": true
+        },
+        "result": {
+          "$ref": "workflow-evidence.schema.json#/$defs/CurrentAttestation"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "ok",
+        "result"
+      ],
+      "additionalProperties": false,
+      "description": "Independently recheck one exact retained attestation without renewal or new authority."
     }
   ]
 }

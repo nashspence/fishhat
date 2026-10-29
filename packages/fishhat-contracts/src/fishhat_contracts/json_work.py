@@ -8,8 +8,11 @@ lookups compare complete keys, so collisions never substitute for equality.
 from __future__ import annotations
 
 from collections.abc import Callable, Hashable, Iterable, Iterator
+from fractions import Fraction
+from io import BytesIO
 from typing import Any
 
+import rfc8785
 from jsonschema.exceptions import ValidationError
 
 
@@ -20,7 +23,11 @@ def lexical(values: Iterable[Any], key: Callable[[Any], str] = str) -> list[Any]
     adds no collection-size factor; prefixes are visited once per key byte.
     UTF-8 byte order agrees with Unicode scalar order for admitted JSON text.
     """
-    pending = [([(key(value).encode("utf-8"), value) for value in values], 0)]
+    return _radix(values, key, "utf-8")
+
+
+def _radix(values: Iterable[Any], key: Callable[[Any], str], encoding: str) -> list[Any]:
+    pending = [([(key(value).encode(encoding), value) for value in values], 0)]
     result: list[Any] = []
     while pending:
         group, offset = pending.pop()
@@ -37,13 +44,38 @@ def lexical(values: Iterable[Any], key: Callable[[Any], str] = str) -> list[Any]
     return result
 
 
-def ordered_json(value: Any) -> Any:
-    """Preserve exact JSON values while ordering every object's members linearly."""
+def jcs_bytes(value: Any) -> bytes:
+    """RFC 8785 with linear key ordering and the pinned library's scalar encoder.
+
+    UTF-16BE byte order is unsigned UTF-16 code-unit order, including pairs for
+    supplementary characters. Sorting each fixed byte alphabet is constant work;
+    unlike a general comparison sort, common prefixes add only their byte extent.
+    The caller validates the complete JSON value before entering this encoder.
+    """
+    sink = BytesIO()
+    _jcs_write(value, sink)
+    return sink.getvalue()
+
+
+def _jcs_write(value: Any, sink: BytesIO) -> None:
     if isinstance(value, dict):
-        return {key: ordered_json(value[key]) for key in lexical(value)}
-    if isinstance(value, list):
-        return [ordered_json(item) for item in value]
-    return value
+        sink.write(b"{")
+        for index, key in enumerate(_radix(value, str, "utf-16be")):
+            if index:
+                sink.write(b",")
+            rfc8785.dump(key, sink)
+            sink.write(b":")
+            _jcs_write(value[key], sink)
+        sink.write(b"}")
+    elif isinstance(value, list):
+        sink.write(b"[")
+        for index, item in enumerate(value):
+            if index:
+                sink.write(b",")
+            _jcs_write(item, sink)
+        sink.write(b"]")
+    else:
+        rfc8785.dump(value, sink)
 
 
 def structural_key(value: Any) -> Hashable:
@@ -51,6 +83,10 @@ def structural_key(value: Any) -> Hashable:
         return ("object", frozenset((key, structural_key(item)) for key, item in value.items()))
     if isinstance(value, list):
         return ("array", tuple(structural_key(item) for item in value))
+    if type(value) in (int, float):
+        # JSON Schema compares numbers mathematically, including 1 == 1.0 and
+        # negative zero == zero. Booleans remain a distinct JSON type.
+        return ("number", value)
     return (type(value).__name__, value)
 
 
@@ -66,3 +102,19 @@ def unique_items(
             yield ValidationError("array items are not unique")
             return
         seen.add(key)
+
+
+def multiple_of(validator: Any, divisor: Any, value: Any, schema: Any) -> Iterator[ValidationError]:
+    """Compare exact JCS decimal values, avoiding binary division roundoff.
+
+    Both numbers have already entered the finite binary64/safe-integer profile.
+    Their canonical decimal lengths and integer arithmetic are bounded by that
+    numeric domain, independently of collection extent. Schema admission requires
+    a positive divisor. No source value is included in rejection text.
+    """
+    if not validator.is_type(value, "number"):
+        return
+    numerator = Fraction(rfc8785.dumps(value).decode("ascii"))
+    denominator = Fraction(rfc8785.dumps(divisor).decode("ascii"))
+    if denominator <= 0 or (numerator / denominator).denominator != 1:
+        yield ValidationError("number is not a multiple of the declared divisor")

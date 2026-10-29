@@ -68,6 +68,7 @@ def observe(counters):
         "coverage": "complete",
         "continuation": None,
         "proposal": None,
+        "problem": None,
         "output": {"allocation": "allocation:demo", "limits": [], "counters": counters},
     }
     return query, reply

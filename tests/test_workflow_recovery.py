@@ -836,6 +836,7 @@ def native_completion(value):
         value,
         expected_owner=value["owner"],
         native_authorized=True,
+        now="2026-11-01T00:00:00Z",
         verified_phase_evidence=copy.deepcopy(query["phase_evidence"]),
     )
 

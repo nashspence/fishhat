@@ -623,6 +623,8 @@ def receive_process_value(
 class ProcessReceipt:
     """Transport completion, never an operation-success assertion.
 
+    problem is a transport diagnostic. The exact response retains its separate
+    nullable adapter-domain problem, including when this transport is complete.
     Typed response effect certainty, task state and postcondition keep their own
     meaning even when complete is true. Verified output survives an unresolved
     process or child cessation independently of transport completion.

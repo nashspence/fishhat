@@ -79,6 +79,7 @@ def read_response(request, output, *, coverage="complete"):
         "coverage": coverage,
         "continuation": None,
         "proposal": None,
+        "problem": None,
         "output": output,
     }
 

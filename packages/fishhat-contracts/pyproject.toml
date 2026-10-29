@@ -9,7 +9,7 @@ description = "Fishhat shared-contracts reference scaffold"
 requires-python = ">=3.11"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
-dependencies = ["jsonschema==4.26.0", "referencing==0.37.0", "PyYAML==6.0.3", "cryptography==50.0.2"]
+dependencies = ["jsonschema==4.26.0", "referencing==0.37.0", "PyYAML==6.0.3", "cryptography==50.0.2", "rfc8785==0.1.4"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

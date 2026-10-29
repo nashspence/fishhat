@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from pathlib import Path
 from typing import Any
 
 from fishhat_adapters import check_configuration, check_descriptor
-from fishhat_contracts.validation import ContractError, digest, strict_json
+from fishhat_contracts.validation import ContractError, canonical, digest, strict_json
 
 
 def main(package_file: str, argv: list[str] | None = None) -> int:
@@ -31,13 +30,13 @@ def main(package_file: str, argv: list[str] | None = None) -> int:
             result = {"status": "valid", "scope": scope}
         elif args.command == "qualify":
             print(
-                json.dumps(
+                canonical(
                     {
                         "status": "unqualified",
                         "error": "NATIVE_EXECUTOR_UNIMPLEMENTED",
                         "native_qualified": False,
                     }
-                )
+                ).decode("utf-8")
             )
             return 2
         else:
@@ -53,8 +52,8 @@ def main(package_file: str, argv: list[str] | None = None) -> int:
                 "native_mutations": False,
                 "native_qualified": False,
             }
-        print(json.dumps(result, sort_keys=True))
+        print(canonical(result).decode("utf-8"))
         return 0
     except (OSError, ValueError, ContractError, KeyError, TypeError):
-        print(json.dumps({"error": "INPUT_REJECTED"}), file=sys.stderr)
+        print(canonical({"error": "INPUT_REJECTED"}).decode("utf-8"), file=sys.stderr)
         return 2

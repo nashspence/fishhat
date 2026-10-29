@@ -363,7 +363,7 @@
         },
         "concerns": {
           "type": "object",
-          "description": "Concern and binding names label declarations; they do not partition native targets. Services and packages explicitly select receiving-owner-enrolled adapters and exact grant scopes. Provider-owned pinned source schemas define native selectors, including service units, labels and package names. Before planning or dispatch, the receiver resolves each declaration through an independently approved SourceTargetBinding and rejects duplicate canonical native mutation targets across concerns, selectors and instances, even when prescriptions agree. Declaration order grants no precedence. Notifications name exactly one validated service binding and use that same accepted target; they cannot select another executor. Ordinary files, secret files and artifacts share one absolute destination namespace. Destination paths use canonical absolute spelling without empty, dot or parent segments or a trailing slash. Lexical source checks cannot establish native separation; native admission must resolve aliases, confine all side effects and reject overlapping writers.",
+          "description": "Concern and binding names label declarations; they do not partition native targets. Services and packages explicitly select receiving-owner-enrolled adapters and exact grant scopes. Provider-owned pinned source schemas define native selectors, including service units, labels and package names. Before planning or dispatch, the receiver resolves each declaration through an independently approved SourceTargetBinding and rejects duplicate canonical native mutation targets across concerns, selectors and instances, even when prescriptions agree. Declaration order grants no precedence. Notifications name exactly one validated service binding and use that same accepted target; they cannot select another executor. Ordinary files, secret files and artifacts share one absolute destination namespace. Destination paths use canonical absolute spelling without empty, dot or parent segments or a trailing slash. Lexical source checks cannot establish native separation; native admission must resolve aliases, confine all side effects and reject overlapping writers. Omission of a concern or target from a later source never authorizes removal, stopping, membership revocation or release of management/recovery custody. The receiving owner retains the previous effective prescription and its exact original source/material closure; source removal is not unmanagement. Concern or binding renames that keep the same native target are identity-neutral. A changed destination or native selector introduces a new target and leaves the old target under its retained obligation. File-like removal is expressed with an exact retired tombstone, software removal with its existing retired state, and supplementary revocation with an explicit managed remove patch; service inactivity is explicit enabled/activity intent. Retained service notification bindings continue to refer to their original approved native targets, never to a reused label in a later source. The Plan discloses the complete effective target set and every retained or retired obligation; unrequested inherited drift cannot be silently repaired.",
           "minProperties": 0,
           "propertyNames": {
             "pattern": "^[a-z][a-z0-9-]{0,63}(?![\\s\\S])"
@@ -383,93 +383,16 @@
                   "pattern": "^[a-z][a-z0-9-]{0,63}(?![\\s\\S])"
                 },
                 "additionalProperties": {
-                  "type": "object",
-                  "properties": {
-                    "source": {
-                      "type": "string",
-                      "minLength": 1,
-                      "maxLength": 240,
-                      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*(?![\\s\\S])"
+                  "oneOf": [
+                    {
+                      "$ref": "#/$defs/HostFile"
                     },
-                    "destination": {
-                      "type": "string",
-                      "minLength": 2,
-                      "maxLength": 512,
-                      "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+(?![\\s\\S])"
-                    },
-                    "mode": {
-                      "type": "string",
-                      "minLength": 4,
-                      "maxLength": 4,
-                      "pattern": "^0[0-7]{3}(?![\\s\\S])"
-                    },
-                    "user": {
-                      "type": "string",
-                      "minLength": 1,
-                      "maxLength": 64
-                    },
-                    "group": {
-                      "type": "string",
-                      "minLength": 1,
-                      "maxLength": 64
-                    },
-                    "validator": {
-                      "anyOf": [
-                        {
-                          "type": "string",
-                          "minLength": 1,
-                          "maxLength": 24,
-                          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "notify": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "service": {
-                            "type": "string",
-                            "minLength": 1,
-                            "maxLength": 24,
-                            "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
-                          },
-                          "action": {
-                            "enum": [
-                              "reload",
-                              "restart"
-                            ]
-                          }
-                        },
-                        "required": [
-                          "service",
-                          "action"
-                        ],
-                        "additionalProperties": false
-                      },
-                      "minItems": 0
-                    },
-                    "reason": {
-                      "type": "string",
-                      "minLength": 1,
-                      "maxLength": 512
+                    {
+                      "$ref": "#/$defs/HostDestinationRetirement"
                     }
-                  },
-                  "required": [
-                    "source",
-                    "destination",
-                    "mode",
-                    "user",
-                    "group",
-                    "validator",
-                    "notify",
-                    "reason"
-                  ],
-                  "additionalProperties": false
-                }
+                  ]
+                },
+                "description": "Explicit present or retired intent in the shared destination namespace. Concern and binding labels are not target identity. Retired selects only the exact previously managed destination in this same concern kind; it never means recursive directory removal or deletion of an unrelated replacement."
               },
               "secret_files": {
                 "type": "object",
@@ -478,95 +401,16 @@
                   "pattern": "^[a-z][a-z0-9-]{0,63}(?![\\s\\S])"
                 },
                 "additionalProperties": {
-                  "type": "object",
-                  "properties": {
-                    "entry": {
-                      "type": "string",
-                      "minLength": 1,
-                      "maxLength": 64,
-                      "pattern": "^[a-z][a-z0-9-]{0,63}(?![\\s\\S])"
+                  "oneOf": [
+                    {
+                      "$ref": "#/$defs/HostSecretFile"
                     },
-                    "destination": {
-                      "type": "string",
-                      "minLength": 2,
-                      "maxLength": 512,
-                      "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+(?![\\s\\S])"
-                    },
-                    "mode": {
-                      "enum": [
-                        "0400",
-                        "0440",
-                        "0600",
-                        "0640"
-                      ]
-                    },
-                    "user": {
-                      "type": "string",
-                      "minLength": 1,
-                      "maxLength": 64
-                    },
-                    "group": {
-                      "type": "string",
-                      "minLength": 1,
-                      "maxLength": 64
-                    },
-                    "validator": {
-                      "anyOf": [
-                        {
-                          "type": "string",
-                          "minLength": 1,
-                          "maxLength": 24,
-                          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
-                        },
-                        {
-                          "type": "null"
-                        }
-                      ]
-                    },
-                    "notify": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "service": {
-                            "type": "string",
-                            "minLength": 1,
-                            "maxLength": 24,
-                            "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
-                          },
-                          "action": {
-                            "enum": [
-                              "reload",
-                              "restart"
-                            ]
-                          }
-                        },
-                        "required": [
-                          "service",
-                          "action"
-                        ],
-                        "additionalProperties": false
-                      },
-                      "minItems": 0
-                    },
-                    "reason": {
-                      "type": "string",
-                      "minLength": 1,
-                      "maxLength": 512
+                    {
+                      "$ref": "#/$defs/HostDestinationRetirement"
                     }
-                  },
-                  "required": [
-                    "entry",
-                    "destination",
-                    "mode",
-                    "user",
-                    "group",
-                    "validator",
-                    "notify",
-                    "reason"
-                  ],
-                  "additionalProperties": false
-                }
+                  ]
+                },
+                "description": "Explicit present or retired intent in the shared destination namespace. Concern and binding labels are not target identity. Retired selects only the exact previously managed destination in this same concern kind; it never means recursive directory removal or deletion of an unrelated replacement."
               },
               "packages": {
                 "type": "object",
@@ -632,53 +476,16 @@
                   "pattern": "^[a-z][a-z0-9-]{0,63}(?![\\s\\S])"
                 },
                 "additionalProperties": {
-                  "type": "object",
-                  "properties": {
-                    "url": {
-                      "type": "string",
-                      "minLength": 1,
-                      "maxLength": 1024,
-                      "pattern": "^https://"
+                  "oneOf": [
+                    {
+                      "$ref": "#/$defs/HostArtifact"
                     },
-                    "digest": {
-                      "type": "string",
-                      "minLength": 71,
-                      "maxLength": 71,
-                      "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
-                    },
-                    "platform": {
-                      "type": "string",
-                      "minLength": 1,
-                      "maxLength": 64
-                    },
-                    "destination": {
-                      "type": "string",
-                      "minLength": 2,
-                      "maxLength": 512,
-                      "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+(?![\\s\\S])"
-                    },
-                    "mode": {
-                      "type": "string",
-                      "minLength": 4,
-                      "maxLength": 4,
-                      "pattern": "^0[0-7]{3}(?![\\s\\S])"
-                    },
-                    "reason": {
-                      "type": "string",
-                      "minLength": 1,
-                      "maxLength": 512
+                    {
+                      "$ref": "#/$defs/HostDestinationRetirement"
                     }
-                  },
-                  "required": [
-                    "url",
-                    "digest",
-                    "platform",
-                    "destination",
-                    "mode",
-                    "reason"
-                  ],
-                  "additionalProperties": false
-                }
+                  ]
+                },
+                "description": "Explicit present or retired intent in the shared destination namespace. Concern and binding labels are not target identity. Retired selects only the exact previously managed destination in this same concern kind; it never means recursive directory removal or deletion of an unrelated replacement."
               },
               "groups": {
                 "type": "object",
@@ -687,36 +494,9 @@
                   "pattern": "^[a-z][a-z0-9-]{0,63}(?![\\s\\S])"
                 },
                 "additionalProperties": {
-                  "type": "object",
-                  "properties": {
-                    "user": {
-                      "type": "string",
-                      "minLength": 1,
-                      "maxLength": 64
-                    },
-                    "memberships": {
-                      "type": "array",
-                      "items": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 64
-                      },
-                      "minItems": 0,
-                      "uniqueItems": true
-                    },
-                    "reason": {
-                      "type": "string",
-                      "minLength": 1,
-                      "maxLength": 512
-                    }
-                  },
-                  "required": [
-                    "user",
-                    "memberships",
-                    "reason"
-                  ],
-                  "additionalProperties": false
-                }
+                  "$ref": "#/$defs/HostSupplementaryGroups"
+                },
+                "description": "Explicit supplementary-membership patches. Binding labels are not user identity; there is at most one patch for a canonical native user across all concerns. Omission retains independently accepted managed claims and does not revoke membership."
               },
               "services": {
                 "type": "object",
@@ -2104,6 +1884,318 @@
           }
         }
       ]
+    },
+    "HostFile": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "const": "present"
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*(?![\\s\\S])"
+        },
+        "destination": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 512,
+          "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+(?![\\s\\S])"
+        },
+        "mode": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 4,
+          "pattern": "^0[0-7]{3}(?![\\s\\S])"
+        },
+        "user": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "group": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "validator": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 24,
+              "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "notify": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "service": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 24,
+                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
+              },
+              "action": {
+                "enum": [
+                  "reload",
+                  "restart"
+                ]
+              }
+            },
+            "required": [
+              "service",
+              "action"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        }
+      },
+      "required": [
+        "state",
+        "source",
+        "destination",
+        "mode",
+        "user",
+        "group",
+        "validator",
+        "notify",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "description": "An explicit managed-presence prescription for this exact destination. The receiving owner independently admits its source closure, native identity and any secret or artifact custody. Omission from a later source preserves the previously accepted prescription and its original input closure; it does not unmanage or delete the target. A changed destination is a new target and leaves the old target managed until separately retired."
+    },
+    "HostSecretFile": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "const": "present"
+        },
+        "entry": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-z][a-z0-9-]{0,63}(?![\\s\\S])"
+        },
+        "destination": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 512,
+          "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+(?![\\s\\S])"
+        },
+        "mode": {
+          "enum": [
+            "0400",
+            "0440",
+            "0600",
+            "0640"
+          ]
+        },
+        "user": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "group": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "validator": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 24,
+              "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "notify": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "service": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 24,
+                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
+              },
+              "action": {
+                "enum": [
+                  "reload",
+                  "restart"
+                ]
+              }
+            },
+            "required": [
+              "service",
+              "action"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        }
+      },
+      "required": [
+        "state",
+        "entry",
+        "destination",
+        "mode",
+        "user",
+        "group",
+        "validator",
+        "notify",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "description": "An explicit managed-presence prescription for this exact destination. The receiving owner independently admits its source closure, native identity and any secret or artifact custody. Omission from a later source preserves the previously accepted prescription and its original input closure; it does not unmanage or delete the target. A changed destination is a new target and leaves the old target managed until separately retired."
+    },
+    "HostArtifact": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "const": "present"
+        },
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "pattern": "^https://"
+        },
+        "digest": {
+          "type": "string",
+          "minLength": 71,
+          "maxLength": 71,
+          "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
+        },
+        "platform": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "destination": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 512,
+          "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+(?![\\s\\S])"
+        },
+        "mode": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 4,
+          "pattern": "^0[0-7]{3}(?![\\s\\S])"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        }
+      },
+      "required": [
+        "state",
+        "url",
+        "digest",
+        "platform",
+        "destination",
+        "mode",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "description": "An explicit managed-presence prescription for this exact destination. The receiving owner independently admits its source closure, native identity and any secret or artifact custody. Omission from a later source preserves the previously accepted prescription and its original input closure; it does not unmanage or delete the target. A changed destination is a new target and leaves the old target managed until separately retired."
+    },
+    "HostDestinationRetirement": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "const": "retired"
+        },
+        "destination": {
+          "$ref": "common.schema.json#/$defs/AbsolutePath"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        }
+      },
+      "required": [
+        "state",
+        "destination",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "description": "Explicit retirement of one previously managed file, secret-file or artifact destination in the selected concern kind. New retirement requires the receiving owner’s retained managed claim and an exact reviewed native target and live preimage. The ordinary host.apply preserve/capture/overwrite and immediate pre-mutation checks still apply; a tombstone is not permission to erase a live edit, recurse into a directory, follow an alias or discard recovery custody. The previous prescription and original source/material closure stay retained until the owning Operation has verified removal and settled every remaining obligation. Only then does active management end. A settled tombstone is inert on later applications: it cannot delete a subsequently created unrelated object at the same pathname. Retrying accepted work uses its original operation identity; omitting a tombstone never erases unresolved retirement."
+    },
+    "HostGroupNames": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+      },
+      "minItems": 0,
+      "uniqueItems": true
+    },
+    "HostSupplementaryGroups": {
+      "type": "object",
+      "properties": {
+        "user": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "supplementary": {
+          "type": "object",
+          "properties": {
+            "add": {
+              "$ref": "#/$defs/HostGroupNames"
+            },
+            "remove": {
+              "$ref": "#/$defs/HostGroupNames"
+            }
+          },
+          "required": [
+            "add",
+            "remove"
+          ],
+          "additionalProperties": false
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        }
+      },
+      "required": [
+        "user",
+        "supplementary",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "description": "A patch to the receiving owner’s managed supplementary-group claims for one exact native user. Primary-group identity and membership are outside this surface and cannot be added, removed or reclassified here. add and remove are disjoint complete sets; add explicitly adopts responsibility for the listed supplementary memberships, including already-present memberships, and that adoption must be disclosed in the reviewed Plan. remove may revoke only a membership covered by an independently retained managed claim for this same user; presence in the live group list or source alone is not ownership. Unmentioned accepted claims and all other live memberships are preserved. Empty add/remove is a no-op; omission of the declaration is also a no-op, never replacement of the whole supplementary list. Native planning resolves user/group aliases and captures exact identities and baseline/live/proposed memberships under host.apply’s three-way review. A missing previously managed membership is live drift, not permission to silently repair it. Claims are updated only with verified accepted outcomes; failure or uncertainty retains original claims and recovery obligations. After a removal settles, repeating the identical accepted request replays its result and cannot remove a newly unmanaged membership. Independently retained settled-removal tombstones make repeated source application inert for those pairs; they never authorize removing a later unmanaged membership. An explicit reviewed add may adopt the pair again. Unmentioned missing managed memberships remain disclosed live drift rather than implicit repair; add must explicitly reaffirm any proposed repair."
     }
   }
 }

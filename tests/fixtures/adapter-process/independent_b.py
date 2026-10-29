@@ -1,18 +1,20 @@
 """Second independent synthetic build executable, with no project imports."""
 
 from hashlib import sha256
-from json import dumps, loads
+from json import loads
 from os import environ
 from pathlib import Path
 from sys import argv, stderr, stdout
 from time import sleep
+
+from rfc8785 import dumps
 
 assert argv[1:] == ["invoke"]
 assert sorted(environ.items()) == [("LANG", "C.UTF-8"), ("LC_ALL", "C.UTF-8"), ("TZ", "UTC")]
 
 
 def serial(record):
-    return dumps(record, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    return dumps(record)
 
 
 meta = loads(Path("process.json").read_text())
@@ -67,6 +69,7 @@ result = dict(
     coverage="complete",
     continuation=None,
     proposal=None,
+    problem=None,
     output=dict(
         artifacts=[
             dict(
