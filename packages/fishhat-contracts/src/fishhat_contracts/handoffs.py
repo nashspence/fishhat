@@ -463,6 +463,14 @@ def validate_cli_result(
         validate_checkpoint(result)
     elif kind == "Workflow":
         validate_workflow(result, recovery_readers=recovery_readers)
+    elif kind == "WorkflowTransferRecord":
+        from .workflow_transfer_history import validate_transfer_record
+
+        validate_transfer_record(result)
+    elif kind in {"OperationCancellationReceipt", "OperationCancellationPage"}:
+        from .cancellation import validate_cancellation_result
+
+        validate_cancellation_result(result)
     elif kind == "ContentStaging":
         validate_staging(result)
     elif kind == "WorkflowAbandonment":

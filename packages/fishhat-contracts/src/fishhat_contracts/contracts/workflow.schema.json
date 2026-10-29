@@ -41,7 +41,7 @@
         "phase"
       ],
       "additionalProperties": false,
-      "description": "One exact child request with a complete reviewed Plan, assigned to an installed procedure phase. Initial ready Plans are the first request for their participant and use its initial expected_generation. Later reviewed Plans are retained through workflow.bind, with current independently verified preconditions. The Plan owner and subject resource match its participant; every effect remains within the immutable participant closure. adapter.execute requires the complete approved AdapterInput; other actions forbid it. Ordinary child evidence must match its exact owner, request, Plan and the enclosing workflow ID in the Operation witness at binding, phase advancement and recovery alike; standalone or unrelated-workflow success cannot fulfill it.",
+      "description": "One exact child request with a complete reviewed Plan, assigned to an installed procedure phase. Initial ready Plans are the first request for their participant and use its initial expected_generation. Later reviewed Plans, including a declared reviewed-initial first child after its installed barrier, are retained through workflow.bind with current independently verified preconditions. The Plan owner and subject resource match its participant; every effect remains within the immutable participant closure. adapter.execute requires the complete approved AdapterInput; other actions forbid it. Ordinary child evidence must match its exact owner, request, Plan and the enclosing workflow ID in the Operation witness at binding, phase advancement and recovery alike; standalone or unrelated-workflow success cannot fulfill it.",
       "allOf": [
         {
           "if": {
@@ -330,7 +330,7 @@
         "initial_driver"
       ],
       "additionalProperties": false,
-      "description": "The immutable installed procedure, participant/resource closure, initial driver agreement and child request slots. A ready child retains its complete reviewed Plan and material; a closed continuation intent retains exact scope, predecessor and allowed action without inventing future material or a stale future Plan. Every receiver independently authorizes the full local closure and initial driver, and pins existing local content before preparation. Other participants retain the same proposal digest. Later reviewed Plans and actual output material are attached only by workflow.bind under current authority and exact retained lineage; this does not edit the proposal or admit a child effect. Stored initial intent and accepted bindings survive client loss, transfer and recovery. Procedure phase order is installed, never caller-defined. Reference capsule operations account for their complete supplied capsule bytes and retained history. Workflow cost reports also identify aggregate proposal and evidence bytes transmitted, retained and revisited across every participant, phase and retry. A per-owner linear validation proof establishes only its declared local operation; it cannot qualify end-to-end orchestration. Any implementation of that broader operation must declare its own complete input extent and include replication, all recipients and retries in its linear work proof.",
+      "description": "The immutable installed procedure, participant/resource closure, initial driver agreement and child request slots. A ready child retains its complete reviewed Plan and material; a closed continuation intent retains exact scope, predecessor and allowed action without inventing future material or a stale future Plan. Every receiver independently authorizes the full local closure and initial driver, and pins existing local content before preparation. Other participants retain the same proposal digest. Later reviewed Plans and actual output material are attached only by workflow.bind under current authority and exact retained lineage; this does not edit the proposal or admit a child effect. Stored initial intent and accepted bindings survive client loss, transfer and recovery. Procedure phase order is installed, never caller-defined. Reference capsule operations account for their complete supplied capsule bytes and retained history. Workflow cost reports also identify aggregate proposal and evidence bytes transmitted, retained and revisited across every participant, phase and retry. A per-owner linear validation proof establishes only its declared local operation; it cannot qualify end-to-end orchestration. Any implementation of that broader operation must declare its own complete input extent and include replication, all recipients and retries in its linear work proof. A first child whose installed phase has a non-prepared predecessor may use reviewed-initial to defer its Plan deadline and current-state review until entry into that phase. The exact subject and installed participant closure stay fixed; required ready adapter producers and secret-rotation output continuations retain their separate rules.",
       "allOf": [
         {
           "if": {
@@ -709,6 +709,23 @@
           "type": "object",
           "properties": {
             "kind": {
+              "const": "reviewed-initial"
+            },
+            "subject": {
+              "$ref": "actions.schema.json"
+            }
+          },
+          "required": [
+            "kind",
+            "subject"
+          ],
+          "additionalProperties": false,
+          "description": "The first request on one participant may defer Plan review until its installed phase has been entered from a non-prepared predecessor phase. The exact subject, owner/resource, request identity, action and installed phase stay immutable; existing subject handles are retained in the proposal content closure. The barrier is derived exclusively from states.json and the installed procedure, never from caller-selected edges or a predecessor field. workflow.bind is admitted only while that phase is current, after the owner retained the complete authenticated ordinary advance and its phase evidence. Every preceding child required by that installed barrier must therefore already have the required outcome. Binding uses current independently verified generations, fresh review, deadline, permissions, adapter approval and complete input custody. It does not use initial expected_generation as a substitute for current state, and it does not admit an effect. BindRequest predecessors and materials are empty because the retained installed barrier supplies the dependency evidence. The complete accepted binding remains immutable; expiry or staleness after binding still needs explicit safe recovery with fresh request identity. This intent is not permitted in the first post-preparation phase, as a later same-participant child, or as a replacement for secret-rotation output lineage or a required ready adapter producer."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
               "const": "reviewed-successor"
             },
             "predecessor": {
@@ -838,7 +855,7 @@
         "intent"
       ],
       "additionalProperties": false,
-      "description": "An immutable request slot requiring later owner-reviewed Plan binding. It is not a Plan, accepted operation or fabricated material handle. The installed procedure and declared predecessor constrain when it can be bound. A phase cannot finish with unresolved required slots. Secret-output intents are first-only; later participant requests always use reviewed-successor ordering."
+      "description": "An immutable request slot requiring later owner-reviewed Plan binding. It is not a Plan, accepted operation or fabricated material handle. The installed procedure and declared predecessor constrain when it can be bound. A phase cannot finish with unresolved required slots. Secret-output intents are first-only; later participant requests always use reviewed-successor ordering. A reviewed-initial first slot derives its barrier from the installed predecessor phase and is reviewed only after that barrier has been entered with complete verified phase evidence; it contains no caller-selected dependency graph."
     },
     "ProducedMaterial": {
       "type": "object",
@@ -919,7 +936,8 @@
           "items": {
             "$ref": "records.schema.json#/$defs/Operation"
           },
-          "minItems": 1
+          "minItems": 0,
+          "description": "Empty only for reviewed-initial, whose exact dependency evidence is retained in its installed phase-entry barrier. Every other continuation retains exactly its one required predecessor Operation; semantic validation joins that original immutable intent."
         },
         "materials": {
           "type": "array",
@@ -941,7 +959,7 @@
         "materials"
       ],
       "additionalProperties": false,
-      "description": "One exact later-reviewed child binding. The receiver resolves bind_id replay before freshness, checks the immutable slot and installed phase, current driver, authentic complete predecessor evidence and the protected current resource generations, then independently approves the full new Plan. Every material and selected adapter is verified and retained before acknowledgment. Input is staged through workflow-input custody. The binding atomically increments only the local workflow capsule generation and retains its original request; it does not admit native effects. Plan admission still checks current owner/resource generation, deadline and permission. The same child cannot acquire a different Plan. Other replicas retain the same owner-approved binding and producer lineage under their own exact local request identity; transport alone supplies no approval. New bindings require prepared or active lifecycle and are refused while paused, recovery-required or terminal; exact previously accepted bindings remain replayable under current access. Ordinary predecessor Operations must name this workflow in their witness; a CompletedBinding instead requires its exact preserved ancestor operation. The successful wire result is MutationAcknowledgment for the original request and committed generation, not a current Workflow snapshot."
+      "description": "One exact later-reviewed child binding. The receiver resolves bind_id replay before freshness, checks the immutable slot and installed phase, current driver, authentic complete predecessor evidence and the protected current resource generations, then independently approves the full new Plan. Every material and selected adapter is verified and retained before acknowledgment. Input is staged through workflow-input custody. The binding atomically increments only the local workflow capsule generation and retains its original request; it does not admit native effects. Plan admission still checks current owner/resource generation, deadline and permission. The same child cannot acquire a different Plan. Other replicas retain the same owner-approved binding and producer lineage under their own exact local request identity; transport alone supplies no approval. New bindings require prepared or active lifecycle and are refused while paused, recovery-required or terminal; exact previously accepted bindings remain replayable under current access. Ordinary predecessor Operations must name this workflow in their witness; a CompletedBinding instead requires its exact preserved ancestor operation. The successful wire result is MutationAcknowledgment for the original request and committed generation, not a current Workflow snapshot. A reviewed-initial slot binds only after its installed phase-entry advance is retained and before leaving that phase; the original request generation is joined to that exact retained interval during later inspection. Its immutable subject cannot change, predecessors and materials are empty, and the installed barrier retains all required prior child/native evidence. Initial preparation, a driver transfer, a lifecycle change, or a caller-supplied witness cannot manufacture this barrier. Before initial binding the owner independently revalidates current native prerequisites, continuing fences and the exact accepted dependency/result identity. A historical phase receipt alone supplies no current native authority; these checks form part of the independently reviewed binding context, never caller-asserted request authority."
     },
     "BindReceipt": {
       "type": "object",

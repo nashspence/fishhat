@@ -30,6 +30,15 @@ CHECK_PURPOSE = {
     "claims": ["engineering:workflow.recovery-proposal"],
 }
 
+CHECK_OVERRIDES = {
+    "test_recovery_validation_linear_child_and_binding_work": {
+        **CHECK_PURPOSE,
+        "scope": "complete retained binding and recovery-proposal validation across child-only and causal-binding extents",
+        "reason": "Sixteenfold child and retained-binding growth measures actual complete capsule validation within recovery validation, including the binding validator and child indexes. Setup remains outside measurement. This is reference work evidence, not native recovery qualification or end-to-end orchestration.",
+        "claims": ["engineering:workflow.recovery-proposal", "engineering:workflow.bindings"],
+    }
+}
+
 
 @pytest.mark.parametrize("bound", [False, True], ids=["child-only", "causal-bindings"])
 def test_recovery_validation_linear_child_and_binding_work(monkeypatch, bound):

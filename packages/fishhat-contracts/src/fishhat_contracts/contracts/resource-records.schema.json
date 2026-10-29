@@ -1356,7 +1356,66 @@
                   "additionalProperties": false
                 },
                 "minItems": 4,
-                "maxItems": 4
+                "maxItems": 4,
+                "allOf": [
+                  {
+                    "contains": {
+                      "properties": {
+                        "bucket": {
+                          "const": "runtime"
+                        }
+                      },
+                      "required": [
+                        "bucket"
+                      ]
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  },
+                  {
+                    "contains": {
+                      "properties": {
+                        "bucket": {
+                          "const": "state"
+                        }
+                      },
+                      "required": [
+                        "bucket"
+                      ]
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  },
+                  {
+                    "contains": {
+                      "properties": {
+                        "bucket": {
+                          "const": "scratch"
+                        }
+                      },
+                      "required": [
+                        "bucket"
+                      ]
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  },
+                  {
+                    "contains": {
+                      "properties": {
+                        "bucket": {
+                          "const": "logs"
+                        }
+                      },
+                      "required": [
+                        "bucket"
+                      ]
+                    },
+                    "minContains": 1,
+                    "maxContains": 1
+                  }
+                ],
+                "description": "Exactly one entry for each logical storage bucket: runtime, state, scratch and logs. Order is immaterial; a duplicate bucket cannot stand in for missing coverage, even when its measurements or allocation identity differ."
               },
               "cleanup_eligible_bytes_estimate": {
                 "anyOf": [

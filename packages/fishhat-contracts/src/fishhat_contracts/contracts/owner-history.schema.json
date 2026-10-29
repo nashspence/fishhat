@@ -100,7 +100,8 @@
           "enum": [
             "Plan",
             "Operation",
-            "Workflow"
+            "Workflow",
+            "WorkflowTransferRecord"
           ]
         },
         "resource": {
@@ -142,13 +143,16 @@
         "limit"
       ],
       "additionalProperties": false,
-      "description": "Enumerate original immutable record references under one verified custody descriptor, using current principal permission. Native filtering retains terminal work with unresolved effects or holds, and non-effectful prepared workflow capsules. active_only is false for Plans. A page is not a total collection cap; permission, exact filters and custody remain pinned across continuation. References disclose no execution authority.",
+      "description": "Enumerate original immutable record references under one verified custody descriptor, using current principal permission. Native filtering retains terminal work with unresolved effects or holds, and non-effectful prepared workflow capsules. active_only is false for Plans and WorkflowTransferRecords. WorkflowTransferRecord enumeration returns the latest retained custody for every original transfer identity, including in-progress and completed transfers, with a workflow resource filter matched to record.resource. Original epochs, generation, accepted input, phase witnesses and completion receipts remain unchanged across restoration; later transfers never hide earlier identities. A page is not a total collection cap; permission, exact filters and custody remain pinned across continuation. References disclose no execution authority.",
       "allOf": [
         {
           "if": {
             "properties": {
               "record_kind": {
-                "const": "Plan"
+                "enum": [
+                  "Plan",
+                  "WorkflowTransferRecord"
+                ]
               }
             }
           },

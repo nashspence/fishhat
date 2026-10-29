@@ -604,6 +604,13 @@ def validate_cli(
     validate_cli_result(
         result, retained_readers=retained_readers, recovery_readers=recovery_readers
     )
+    if isinstance(result, dict) and result.get("kind") == "OperationCancellationReceipt":
+        _require(
+            value["request_id"] == result["cancellation_id"],
+            "CLI/cancellation request mismatch",
+        )
+    if isinstance(result, dict) and result.get("kind") == "OperationCancellationPage":
+        _require(value["request_id"] is None, "CLI cancellation page is an observation")
     if value["problem"] is not None:
         from .record_delivery import validate_problem
 

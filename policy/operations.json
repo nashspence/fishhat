@@ -1219,6 +1219,42 @@
       "use_case": "operation.cancel"
     },
     {
+      "id": "owner-form:cancellation-list",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-owner-form",
+      "tests": {
+        "failure": [],
+        "growth": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops",
+        "app-ops"
+      ],
+      "use_case": "operation.cancellation.list"
+    },
+    {
+      "id": "owner-form:cancellation-show",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-owner-form",
+      "tests": {
+        "failure": [],
+        "growth": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops",
+        "app-ops"
+      ],
+      "use_case": "operation.cancellation.get"
+    },
+    {
       "id": "owner-form:check-request",
       "implementation": null,
       "recovery": "required",
@@ -1974,6 +2010,24 @@
       "use_case": "workflow.transfer"
     },
     {
+      "id": "owner-form:workflow-transfer-show",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-owner-form",
+      "tests": {
+        "failure": [],
+        "growth": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops",
+        "app-ops"
+      ],
+      "use_case": "workflow.transfer.get"
+    },
+    {
       "id": "rpc:check",
       "implementation": null,
       "recovery": "required",
@@ -2179,6 +2233,40 @@
     },
     {
       "id": "rpc:operation.cancel",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-rpc",
+      "tests": {
+        "failure": [],
+        "growth": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops",
+        "app-ops"
+      ]
+    },
+    {
+      "id": "rpc:operation.cancellation.get",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-rpc",
+      "tests": {
+        "failure": [],
+        "growth": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops",
+        "app-ops"
+      ]
+    },
+    {
+      "id": "rpc:operation.cancellation.list",
       "implementation": null,
       "recovery": "required",
       "status": "unimplemented",
@@ -2465,6 +2553,23 @@
         "host-ops",
         "app-ops"
       ]
+    },
+    {
+      "id": "rpc:workflow.transfer.get",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-rpc",
+      "tests": {
+        "failure": [],
+        "growth": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops",
+        "app-ops"
+      ]
     }
   ],
   "production_qualified": false,
@@ -2478,10 +2583,10 @@
     "fishhat/host-ops/src/fishhat_host/cli.py": "d8457ca822e6d01be0b1301fb439ef9f5ed74b6224aca2d85feb189dadeb611c",
     "packages/fishhat-contracts/src/fishhat_contracts/contracts/actions.json": "b1c648decfaafc846a0d137d5985daf21e2980ebbb32e8ffdd02bdf64503cb83",
     "packages/fishhat-contracts/src/fishhat_contracts/contracts/client-commands.json": "2ac27c10f8320b37bcdd842ca3f94777a68d7c771986b3dfbc2d01fa67648c74",
-    "packages/fishhat-contracts/src/fishhat_contracts/contracts/owner-cli.json": "4c8dea899e20ed21784a79603d9788789535f884d046e25b1f477d637f7fd033",
-    "packages/fishhat-contracts/src/fishhat_contracts/contracts/ssh-methods.json": "53006b087be8159e8354af141cde4d60559abc88f6b2883606fea37c2fb2595e",
+    "packages/fishhat-contracts/src/fishhat_contracts/contracts/owner-cli.json": "b508e976a975d5ca3df543b91d78df670036971bdc2c8363fcbecb8cfc168dd8",
+    "packages/fishhat-contracts/src/fishhat_contracts/contracts/ssh-methods.json": "b95d581542cd6e6a966f2661348c39e4031ae102d00c599b9a419255d1cae963",
     "policy/components.toml": "d83506dc63602aec3932e1ac35244efca0db494a38a5d4cd9ec94c68476b235c",
-    "policy/interfaces.json": "4a3f39f82492c1b7e29b7e7daa39a3ed8a72c683925bc403cf3e8d34aa24db76",
+    "policy/interfaces.json": "766d083009347e8b04c585ea3bdeb870553190a86d6a72c621a3b5e50cfc083b",
     "policy/operation-coverage.toml": "a4f3f76cdbb755ea03ba39eb36ccc5ebcd682f6aabaacaa5fb88f849d42c54c4",
     "release.toml": "87a48bd19f97e977b2be6d6399b1d60a911dcf66ed9b81b59386d8fb7a624996",
     "some-implementations/fishhat/backup/restic/pyproject.toml": "665f88e34c00d431e829678503ae3bb7075294d0db3f303c318f87dbdab651e8",
@@ -2521,6 +2626,6 @@
     "some-implementations/fishhat/storage/xfs-project/pyproject.toml": "73e00e3691845add0fc45f4d7286bb87bff35a62083f3d310b63694b61da03af",
     "tests/test_component_policy.py": "c0dc4caac33970b91fd691000cef1e15ecf971c46704fa16f40b29023649856d",
     "tests/test_linear_growth.py": "238c554ee57c932a2b14c605a17d40bc17e40b979e3b4936cc5ae49f60b2885d",
-    "tests/test_operation_coverage.py": "51381ca8f06504a816adc6a1ba5369069457c2a2efedc326b53326f7d29f14e3"
+    "tests/test_operation_coverage.py": "58145b3a512c3be9319802b268bc36cd39ad38c9724756dd33118f5d0df2795d"
   }
 }

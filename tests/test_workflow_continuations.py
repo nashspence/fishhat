@@ -20,6 +20,7 @@ from fishhat_contracts.workflows import (
     validate_workflow_proposal,
 )
 
+from scripts.check_evidence import evidence_group
 from tests.operation_support import seal_operation
 from tests.test_adapter_handoffs import invocation_for, response_for
 from tests.test_contracts import uid
@@ -53,6 +54,22 @@ CHECK_PURPOSE = {
     "relationship": "candidate",
     "reason": "Synthetic independently supplied authorization, successful predecessor and verified material context exercise causal lifecycle joins and rejected substitutions. No native authorization, derivation, transaction or effect is established.",
     "claims": [],
+}
+
+CHECK_OVERRIDES = {
+    "test_successor_plan_uses_fresh_generation_after_exact_predecessor_and_replays": {
+        "contract": CHECK_PURPOSE,
+        "extent": {
+            "purpose": "implementation",
+            "authority": [
+                "packages/fishhat-contracts/src/fishhat_contracts/workflow_bindings.py#validate_workflow_bindings"
+            ],
+            "scope": "complete accepted successor binding and predecessor evidence across exact replay and rejected replacement",
+            "relationship": "scoped-witness",
+            "reason": "The original complete binding request remains retained after replay and a changed fresh review is refused. This establishes reference retained-input extent, not native review, custody or execution.",
+            "claims": ["engineering:workflow.bindings"],
+        },
+    }
 }
 
 NOW = "2026-10-17T00:30:00Z"
@@ -489,26 +506,30 @@ def successor_stage():
 def test_successor_plan_uses_fresh_generation_after_exact_predecessor_and_replays():
     value, query = successor_stage()
     trusted = context(query)
-    advanced = bind_workflow(query, value, **trusted)
-    assert (
-        advanced["bindings"][0]["request"]["binding"]["plan"]["preconditions"][0]["generation"]
-        == 10
-    )
-    assert value["proposal"]["participants"][0]["expected_generation"] == 9
-    late = {
-        **trusted,
-        "now": "2027-01-01T00:00:00Z",
-        "verified_binding": {},
-        "current_generations": [],
-        "verified_operations": [],
-        "verified_content": [],
-    }
-    assert bind_workflow(copy.deepcopy(query), advanced, **late) == advanced
-    changed = copy.deepcopy(query)
-    changed["binding"]["plan"]["preconditions"][0]["generation"] += 1
-    reseal(changed["binding"]["plan"])
-    with pytest.raises(ContractError, match="accepted workflow binding input changed"):
-        bind_workflow(changed, advanced, **late)
+    with evidence_group("contract"):
+        advanced = bind_workflow(query, value, **trusted)
+        assert (
+            advanced["bindings"][0]["request"]["binding"]["plan"]["preconditions"][0]["generation"]
+            == 10
+        )
+        assert value["proposal"]["participants"][0]["expected_generation"] == 9
+        late = {
+            **trusted,
+            "now": "2027-01-01T00:00:00Z",
+            "verified_binding": {},
+            "current_generations": [],
+            "verified_operations": [],
+            "verified_content": [],
+        }
+        assert bind_workflow(copy.deepcopy(query), advanced, **late) == advanced
+        changed = copy.deepcopy(query)
+        changed["binding"]["plan"]["preconditions"][0]["generation"] += 1
+        reseal(changed["binding"]["plan"])
+        with pytest.raises(ContractError, match="accepted workflow binding input changed"):
+            bind_workflow(changed, advanced, **late)
+    with evidence_group("extent"):
+        assert len(advanced["bindings"]) == 1
+        assert advanced["bindings"][0]["request"] == query
 
 
 @pytest.mark.parametrize("change", ["missing", "after-advance", "generation-collision"])

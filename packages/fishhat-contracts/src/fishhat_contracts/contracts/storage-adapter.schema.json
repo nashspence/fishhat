@@ -151,6 +151,10 @@
         "hard_isolation": {
           "type": "boolean",
           "description": "Whether the exact approved byte and inode ceilings must be enforced for the entire independently verified allocation domain."
+        },
+        "native_identity_digest": {
+          "$ref": "common.schema.json#/$defs/Digest",
+          "description": "Independently verified native allocation incarnation selected by the reviewed retirement. Reuse of the same handle never authorizes retiring a replacement incarnation."
         }
       },
       "required": [
@@ -159,10 +163,11 @@
         "capacity_bytes",
         "capacity_inodes",
         "purposes",
-        "hard_isolation"
+        "hard_isolation",
+        "native_identity_digest"
       ],
       "additionalProperties": false,
-      "description": "Retire only the exact independently verified allocation under its current owner preconditions and retained-data rules. capacity_bytes and capacity_inodes identify its reviewed enforced ceilings; they do not authorize resizing, retargeting or deleting unrelated data."
+      "description": "Retire only the exact independently verified allocation incarnation under its current owner preconditions and retained-data rules. native_identity_digest identifies that incarnation. capacity_bytes, capacity_inodes, purposes and hard_isolation identify the reviewed preimage requirements; they do not authorize resizing, retargeting or deleting unrelated data. Successful retirement proves this incarnation absent and returns a Retirement receipt, never an active Allocation or a claim that retired quotas are still enforced."
     },
     "observe": {
       "type": "object",
@@ -441,7 +446,7 @@
               ]
             },
             "output": {
-              "$ref": "#/$defs/Output"
+              "$ref": "#/$defs/RetirementOutput"
             },
             "effect": {
               "$ref": "adapter.schema.json#/$defs/EffectResult"
@@ -496,9 +501,19 @@
                   },
                   "output": {
                     "properties": {
-                      "allocations": {
-                        "minItems": 1,
-                        "maxItems": 1
+                      "retirement": {
+                        "$ref": "#/$defs/Retirement"
+                      }
+                    }
+                  }
+                }
+              },
+              "else": {
+                "properties": {
+                  "output": {
+                    "properties": {
+                      "retirement": {
+                        "type": "null"
                       }
                     }
                   }
@@ -506,7 +521,7 @@
               }
             }
           ],
-          "description": "Terminal satisfied effects require complete committed output custody under this method contract, including its exact requested identities. Native completion without required output remains unresolved; it is not successful completion. Pending, rejected and failed effects may return no output and retain their existing uncertainty and holds."
+          "description": "Terminal known satisfied retirement requires complete coverage and a committed exact Retirement receipt proving the selected incarnation absent. Pending, rejected, unknown or failed effects return retirement null and retain their uncertainty and holds. Historical reviewed quotas in the receipt do not claim current enforcement."
         },
         {
           "type": "object",
@@ -638,7 +653,14 @@
               ]
             },
             "output": {
-              "$ref": "#/$defs/Output"
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/Output"
+                },
+                {
+                  "$ref": "#/$defs/RetirementOutput"
+                }
+              ]
             },
             "effect": {
               "$ref": "adapter.schema.json#/$defs/EffectResult"
@@ -729,6 +751,97 @@
       "required": [
         "invocation",
         "response"
+      ],
+      "additionalProperties": false
+    },
+    "Retirement": {
+      "type": "object",
+      "properties": {
+        "allocation": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*(?![\\s\\S])"
+        },
+        "native_identity_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "state": {
+          "const": "absent"
+        },
+        "reviewed": {
+          "type": "object",
+          "properties": {
+            "capacity_bytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991,
+              "description": "Historical reviewed retirement precondition; not a measurement or current enforcement claim for an absent allocation."
+            },
+            "capacity_inodes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991,
+              "description": "Historical reviewed retirement precondition; not a measurement or current enforcement claim for an absent allocation."
+            },
+            "purposes": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "runtime",
+                  "state",
+                  "scratch",
+                  "logs"
+                ]
+              },
+              "minItems": 1,
+              "maxItems": 4,
+              "uniqueItems": true,
+              "description": "Historical reviewed retirement precondition; not a measurement or current enforcement claim for an absent allocation."
+            },
+            "hard_isolation": {
+              "type": "boolean",
+              "description": "Historical reviewed retirement precondition; not a measurement or current enforcement claim for an absent allocation."
+            }
+          },
+          "required": [
+            "capacity_bytes",
+            "capacity_inodes",
+            "purposes",
+            "hard_isolation"
+          ],
+          "additionalProperties": false
+        },
+        "observed_at": {
+          "$ref": "common.schema.json#/$defs/Time"
+        }
+      },
+      "required": [
+        "allocation",
+        "native_identity_digest",
+        "state",
+        "reviewed",
+        "observed_at"
+      ],
+      "additionalProperties": false,
+      "description": "Durably retained terminal receipt for the exact reviewed native allocation incarnation. The independently verified incarnation is absent; a reused handle cannot substitute a new allocation. Reviewed values are historical preconditions, not live quotas or counters. The receipt grants no authority to discard retained data, remove another incarnation or repeat the retirement."
+    },
+    "RetirementOutput": {
+      "type": "object",
+      "properties": {
+        "retirement": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Retirement"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "retirement"
       ],
       "additionalProperties": false
     }

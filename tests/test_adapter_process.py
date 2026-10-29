@@ -75,6 +75,7 @@ def launch(call, configuration, mode="mutation", inputs=b""):
         "request": identity(canonical(payload)),
         "configuration": identity(canonical(configuration)),
         "inputs": identity(inputs, "application/x-ndjson"),
+        "private_inputs": None,
     }, payload
 
 
@@ -108,6 +109,7 @@ def run_peer(
         descriptor=descriptor,
         approved_installation=installation,
         expected_executor=call["attempt"]["executor"],
+        expected_private_use=None,
     )
     verify_process_inputs(
         BytesIO(lines),
@@ -301,6 +303,7 @@ def test_launch_rejects_substituted_inputs_and_query_mutation(change):
             descriptor=descriptor,
             approved_installation=installation,
             expected_executor=call["attempt"]["executor"],
+            expected_private_use=None,
         )
 
 
@@ -476,6 +479,7 @@ def growth_case(count):
             descriptor=descriptor,
             approved_installation=installation,
             expected_executor=executor,
+            expected_private_use=None,
         )
         verify_process_inputs(
             BytesIO(raw),

@@ -155,7 +155,7 @@
         "--json"
       ],
       "use_case": "operation.cancel",
-      "description": "Request cancellation of the exact operation. Confirmed effects remain and unknown effects must be reconciled; cancellation does not promise rollback or release holds."
+      "description": "Request durable stop intent for the original Operation request named by the positional UUID; --request-id is the separate cancellation_id and --owner-epoch pins current authority. Return the immutable OperationCancellationReceipt with observed state and CLI request_id equal to cancellation_id. stop-requested acknowledges retained intent only; inspect the target Operation separately for current execution and cessation. already-terminal preserves a completion race. Lost replies retain the exact cancellation identity for get/list reconciliation and replay. No cancellation acknowledgment promises rollback, child termination or hold release."
     },
     {
       "name": "show-epoch",
@@ -631,6 +631,45 @@
       ],
       "use_case": "workflow.lifecycle",
       "description": "Ask this receiving owner to authorize a finite lifecycle decision for the exact workflow, generation, driver term and original request identity. The request cannot supply native authorization or reconciliation evidence. Resume requires independently verified current driver and native conditions; acceptance retains the original decision receipt for exact replay."
+    },
+    {
+      "name": "cancellation-show",
+      "tokens": [
+        "{tool}",
+        "op",
+        "cancellation",
+        "show",
+        "--request-stdin",
+        "--json"
+      ],
+      "use_case": "operation.cancellation.get",
+      "description": "Read a closed cancellation GetRequest from stdin and retrieve the original accepted decision under current read permission. Its target request_id and cancellation_id stay distinct. Read the target Operation separately; replay does not freshen the original decision or grant stopping authority. The request names original owner and current custodian; restored reads also name independently verified custody_id and never revive old stop intent."
+    },
+    {
+      "name": "cancellation-list",
+      "tokens": [
+        "{tool}",
+        "op",
+        "cancellation",
+        "list",
+        "--request-stdin",
+        "--json"
+      ],
+      "use_case": "operation.cancellation.list",
+      "description": "Read a closed cancellation ListRequest from stdin and discover all retained cancellation decisions for an original Operation request without knowing cancellation IDs. Follow opaque continuations with the same owner, target, principal and limit. Expiry fails explicitly; page completion does not prove absence of concurrent future intent. For restored history, first discover custody with owner.history and the original Operation request_id with history.list/read, then select that origin and current custodian with the verified custody_id."
+    },
+    {
+      "name": "workflow-transfer-show",
+      "tokens": [
+        "{tool}",
+        "workflow",
+        "transfer",
+        "show",
+        "--request-stdin",
+        "--json"
+      ],
+      "use_case": "workflow.transfer.get",
+      "description": "Read the closed exact owner/workflow/transfer lookup from stdin. Retrieve the complete immutable original transfer record, directly or through all RecordReference chunks, including its original completion receipt. Current transfer state never replaces earlier accepted history."
     }
   ],
   "parser": "bounded tokens; no shell evaluation",

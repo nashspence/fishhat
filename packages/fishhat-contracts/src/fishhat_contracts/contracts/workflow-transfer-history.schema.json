@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fishhat.invalid/contracts/workflow-transfer-history.schema.json",
+  "$defs": {
+    "LookupRequest": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "workflow_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "transfer_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        }
+      },
+      "required": [
+        "owner",
+        "workflow_id",
+        "transfer_id"
+      ],
+      "additionalProperties": false,
+      "description": "Read the latest retained custody for this exact current-epoch workflow transfer, whether it is current or has been followed by later transfers. The receiving owner independently rechecks the actual principal's current read permission for the workflow and its complete protected participant/resource closure before lookup or disclosure. A transfer ID, digest or former driver identity is not authority. Discover all completed transfer IDs from the complete Workflow.advances receipts and its current transfer ID from Workflow.transfer; no client cache or earlier snapshot reference is required. NOT_FOUND is an authenticated absence in this authorized scope, never evidence that a workflow or native effect stopped. Restored historical owners remain available through their unchanged history custody; this lookup cannot retarget their epochs."
+    },
+    "WorkflowTransferRecord": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/record/v1"
+        },
+        "kind": {
+          "const": "WorkflowTransferRecord"
+        },
+        "id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "workflow_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "resource": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "workflow"
+            },
+            "id": {
+              "$ref": "common.schema.json#/$defs/UUID"
+            }
+          },
+          "required": [
+            "kind",
+            "id"
+          ],
+          "additionalProperties": false
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "transfer": {
+          "$ref": "records.schema.json#/$defs/WorkflowTransfer"
+        },
+        "completion": {
+          "anyOf": [
+            {
+              "$ref": "workflow.schema.json#/$defs/DriverAdvanceReceipt"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "id",
+        "owner",
+        "workflow_id",
+        "resource",
+        "generation",
+        "transfer",
+        "completion"
+      ],
+      "additionalProperties": false,
+      "description": "A complete nonrecursive retained transfer record. id equals transfer.proposal.transfer_id; workflow_id and resource.id equal transfer.proposal.workflow_id. The exact owner is a participant in that proposal. transfer preserves the complete immutable proposal, original accepted local freeze/commit inputs and independently authenticated participant witness closure. completion is null until the transfer is completed, then equals its one original DriverAdvanceReceipt, including the unchanged full completion input and immutable outcome. generation is the last local transfer phase witness generation, or the completion receipt generation once completed; unrelated later workflow generations never rewrite it. Native owners retain this exact identity and every accepted phase outcome atomically with transfer progress, and preserve it before Workflow.transfer selects a later transfer. The complete current Workflow retains every earlier completion receipt, so every retained transfer identity can be rediscovered and looked up after client loss. An unbounded number of transfers is supported; lookup uses a protected identity index and does not scan or copy unrelated workflow history. No earlier Workflow snapshot is embedded. Lookup returns this complete record or an immutable RecordReference with kind WorkflowTransferRecord, exact id/generation/owner and resource {kind: workflow, id: workflow_id}. Each chunk read reauthorizes the same protected scope. Complete byte/schema verification and correlation to the exact requested owner, workflow and transfer precede use. Retained transfer witness authentication, current permission and native truth remain independent receiving obligations; structural validation grants no driver, replay, execution or release authority. Reconstruct each accepted phase request from owner, transfer.proposal and that accepted_phases item, then replay that exact original input under current access. Historical reads never refresh expected generations, change old principals or reopen retired authority."
+    }
+  }
+}

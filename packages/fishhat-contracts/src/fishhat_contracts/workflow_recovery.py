@@ -347,6 +347,10 @@ def _retained_acceptance(
         for receipt in record["bindings"]:
             request = receipt["request"]
             slot = children[_key(request["child"])][1]
+            if slot["intent"]["kind"] == "reviewed-initial":
+                # Its complete predecessor facts are in the retained installed
+                # phase-entry evidence below, not a caller-selected child edge.
+                continue
             key = _key(_predecessor(slot["intent"]))
             remember(key, request["predecessors"][0])
         for receipt in record["advances"]:

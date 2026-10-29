@@ -497,52 +497,7 @@
           "const": "operation.cancel"
         },
         "params": {
-          "type": "object",
-          "properties": {
-            "owner": {
-              "type": "object",
-              "properties": {
-                "tool": {
-                  "enum": [
-                    "host-ops",
-                    "app-ops"
-                  ]
-                },
-                "id": {
-                  "type": "string",
-                  "format": "uuid",
-                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-                },
-                "epoch": {
-                  "type": "string",
-                  "format": "uuid",
-                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-                }
-              },
-              "required": [
-                "tool",
-                "id",
-                "epoch"
-              ],
-              "additionalProperties": false
-            },
-            "request_id": {
-              "type": "string",
-              "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-            },
-            "cancellation_id": {
-              "type": "string",
-              "format": "uuid",
-              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-            }
-          },
-          "required": [
-            "owner",
-            "request_id",
-            "cancellation_id"
-          ],
-          "additionalProperties": false
+          "$ref": "cancellation.schema.json#/$defs/Request"
         }
       },
       "required": [
@@ -1282,6 +1237,84 @@
         },
         "params": {
           "$ref": "workflow.schema.json#/$defs/LifecycleRequest"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "params"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "operation.cancellation.get"
+        },
+        "params": {
+          "$ref": "cancellation.schema.json#/$defs/GetRequest"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "params"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "operation.cancellation.list"
+        },
+        "params": {
+          "$ref": "cancellation.schema.json#/$defs/ListRequest"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "params"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "workflow.transfer.get"
+        },
+        "params": {
+          "$ref": "workflow-transfer-history.schema.json#/$defs/LookupRequest"
         }
       },
       "required": [

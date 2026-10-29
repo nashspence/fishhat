@@ -223,7 +223,14 @@ class AdapterCoordinator:
         effect_id: str,
         attempt_id: str,
         owner_approved: bool,
+        private_inputs_digest: str | None = None,
     ) -> dict[str, Any]:
+        """Retain the approved request and private operation-value commitment.
+
+        The owner independently derives private_inputs_digest from the complete
+        approved ordered metadata closure and retains its private byte custody.
+        None means that closure is empty; provider-access credentials are separate.
+        """
         require(not self._poisoned, "OWNER_COMMIT_UNCERTAIN")
         check_request("runtime", request)
         binding = self.state["bindings"].get(subject)
@@ -252,6 +259,7 @@ class AdapterCoordinator:
             operation_id=operation_id,
             effect_id=effect_id,
             attempt_id=attempt_id,
+            private_inputs_digest=private_inputs_digest,
         )
 
     def _service_instance(
@@ -288,8 +296,13 @@ class AdapterCoordinator:
         effect_id: str,
         attempt_id: str,
         owner_approved: bool,
+        private_inputs_digest: str | None = None,
     ) -> dict[str, Any]:
-        """Accept a subordinate service lifecycle effect at the runtime owner's boundary."""
+        """Accept a subordinate lifecycle effect with its private-value commitment.
+
+        private_inputs_digest has the same owner-verified closure and custody
+        requirements as prepare; None commits to an empty operation-value set.
+        """
         require(not self._poisoned, "OWNER_COMMIT_UNCERTAIN")
         require(owner_approved, "OPERATION_NOT_AUTHORIZED")
         check_request("service", request)
@@ -308,6 +321,7 @@ class AdapterCoordinator:
             operation_id=operation_id,
             effect_id=effect_id,
             attempt_id=attempt_id,
+            private_inputs_digest=private_inputs_digest,
             runtime_control={
                 "binding_digest": runtime_binding_digest(binding),
                 "target": copy.deepcopy(request["input"]["target"]),
@@ -324,6 +338,7 @@ class AdapterCoordinator:
         operation_id: str,
         effect_id: str,
         attempt_id: str,
+        private_inputs_digest: str | None,
         runtime_control: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         attempt = {
@@ -345,6 +360,8 @@ class AdapterCoordinator:
         }
         if runtime_control is not None:
             attempt["runtime_control"] = runtime_control
+        if private_inputs_digest is not None:
+            attempt["private_inputs_digest"] = private_inputs_digest
         validate("adapter.schema.json", attempt, "EffectAttempt")
         previous = self.state["attempts"].get(attempt_id)
         if previous is not None:

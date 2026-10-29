@@ -430,29 +430,7 @@
           "const": true
         },
         "result": {
-          "oneOf": [
-            {
-              "$ref": "records.schema.json#/$defs/Operation"
-            },
-            {
-              "allOf": [
-                {
-                  "$ref": "common.schema.json#/$defs/RecordReference"
-                },
-                {
-                  "properties": {
-                    "record": {
-                      "properties": {
-                        "kind": {
-                          "const": "Operation"
-                        }
-                      }
-                    }
-                  }
-                }
-              ]
-            }
-          ]
+          "$ref": "cancellation.schema.json#/$defs/Receipt"
         }
       },
       "required": [
@@ -844,7 +822,10 @@
             "history.content",
             "workflow.bind",
             "workflow.recover",
-            "workflow.lifecycle"
+            "workflow.lifecycle",
+            "operation.cancellation.get",
+            "operation.cancellation.list",
+            "workflow.transfer.get"
           ]
         },
         "ok": {
@@ -1251,6 +1232,118 @@
                       "properties": {
                         "kind": {
                           "const": "Workflow"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "ok",
+        "result"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "operation.cancellation.get"
+        },
+        "ok": {
+          "const": true
+        },
+        "result": {
+          "$ref": "cancellation.schema.json#/$defs/Receipt"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "ok",
+        "result"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "operation.cancellation.list"
+        },
+        "ok": {
+          "const": true
+        },
+        "result": {
+          "$ref": "cancellation.schema.json#/$defs/Page"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "ok",
+        "result"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "workflow.transfer.get"
+        },
+        "ok": {
+          "const": true
+        },
+        "result": {
+          "oneOf": [
+            {
+              "$ref": "workflow-transfer-history.schema.json#/$defs/WorkflowTransferRecord"
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "common.schema.json#/$defs/RecordReference"
+                },
+                {
+                  "properties": {
+                    "record": {
+                      "properties": {
+                        "kind": {
+                          "const": "WorkflowTransferRecord"
                         }
                       }
                     }

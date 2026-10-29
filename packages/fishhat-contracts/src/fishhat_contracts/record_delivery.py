@@ -35,9 +35,10 @@ RECORD_SCHEMAS = {
     "ResourceReport": ("resource-records.schema.json", "ResourceReport"),
     "Observation": ("records.schema.json", "Observation"),
     "ProblemEvidence": ("records.schema.json", "ProblemEvidence"),
+    "WorkflowTransferRecord": ("workflow-transfer-history.schema.json", "WorkflowTransferRecord"),
 }
 SNAPSHOT_ID_KINDS = {"Discovery", "ResourceReport", "Observation", "ProblemEvidence"}
-SCOPED_KINDS = {"Observation", "ProblemEvidence"}
+SCOPED_KINDS = {"Observation", "ProblemEvidence", "WorkflowTransferRecord"}
 
 
 def _require(condition: bool, message: str) -> None:
@@ -77,6 +78,10 @@ def _validate_record(
         validate_operation(record, recovery_readers=recovery_readers)
     elif kind == "Observation":
         validate_observation(record)
+    elif kind == "WorkflowTransferRecord":
+        from .workflow_transfer_history import validate_transfer_record
+
+        validate_transfer_record(record)
     else:
         schema, definition = RECORD_SCHEMAS[kind]
         validate(schema, record, definition)

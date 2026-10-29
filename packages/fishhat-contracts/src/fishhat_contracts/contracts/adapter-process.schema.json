@@ -43,6 +43,16 @@
     },
     "inputs": {
       "$ref": "adapter.schema.json#/$defs/Artifact"
+    },
+    "private_inputs": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PrivateInputs"
+        },
+        {
+          "type": "null"
+        }
+      ]
     }
   },
   "required": [
@@ -52,10 +62,11 @@
     "executor",
     "request",
     "configuration",
-    "inputs"
+    "inputs",
+    "private_inputs"
   ],
   "additionalProperties": false,
-  "description": "One fixed independent executable protocol. The owner resolves the descriptor entrypoint inside the exact independently approved immutable installation and executes it directly, without a shell, with argv [entrypoint, \"invoke\"]. The current directory is a new protected owner-created per-invocation directory, never the caller repository or home. The complete environment is exactly LANG=C.UTF-8, LC_ALL=C.UTF-8 and TZ=UTC; native dependencies use independently approved absolute executable identities, not an inherited PATH, HOME, PYTHONPATH, loader or runtime variable. Only stdin/stdout/stderr and explicitly owner-provisioned handles are inherited; stdin is closed EOF. process.json is this canonical manifest. request.json contains the exact canonical Invocation for mutation or typed role Request for query. configuration.json contains the exact approved instance configuration, matching executor.configuration_digest. inputs.ndjson contains every required immutable protected input as canonical Input lines followed by LF; input files are at inputs/<sha256 hex>. These files and the installation are owner-confined, immutable and read-only to the process. The owner verifies every request/configuration/manifest/artifact byte, approved executor, current authority and required scope before launch. Native alias, regular-file, ownership, symlink, mount, handle-leak and isolation checks are owner duties; matching paths never establishes authority. A query must be an observational method; reconciliation receives its original retained invocation, never dispatches it, and cannot mutate as a retry. The owner provisions only this approved input closure and an isolated writable output area. Output typed Response bytes are canonical JSON at output/response.json, committed atomically before advertising completion. Every locally transferred material artifact selected by the role-owned typed result uses output/artifacts/<sha256 hex>, with hex equal to its declared digest; publish each complete regular file atomically before Completion. The role contract and accepted handoff select the complete required local material closure, including all returned material for capture.capture and build.build. Observing remote Artifact metadata does not establish local custody or implicitly request a material transfer. Repeated digest/size references share one file even when their contextual media types differ; conflicting byte identities reject. Exact independently retained immutable owner bytes may satisfy a repeated material identity without a redundant output file, but historical metadata or provider availability claims cannot. The receiving owner acquires stable immutable custody through independently verified confinement and native lifetime controls, then verifies every selected byte, digest and size and commits complete custody before claiming materialization or operation success. Hashing a mutable output alone does not establish custody. Missing, changed or incomplete material leaves that handoff unresolved while preserving the exact verified Response and confirmed native effects; it never authorizes mutation redispatch. Reconciliation may re-export already retained original outputs without repeating the mutation. Unreferenced files never become accepted result material. stdout contains exactly one canonical Completion record and one LF, with no diagnostic output. stderr is diagnostic bytes only, streamed to owner custody and never parsed as authority. This transport adds no total-file-size, diagnostic-stream-size or collection-count cap. Existing descriptor, provider-schema and configuration admission profiles remain required before launch; they are not widened by file transport. Bounded chunks and owner resource capacity failures cannot silently truncate accepted evidence. Parsing a complete typed JSON value may require proportional local memory; capacity failure remains explicit unresolved work. Transport completion covers the response handoff only and is separate from material custody and operation success: the typed effect task state, certainty and postcondition retain their own meaning even after a successful process exit. Completion requires exact complete response digest/size/schema/request correlation, zero process exit, no timeout and independently verified cessation of all invocation children. A valid response is retained even if exit, timeout or child state prevents completion; those transport facts cannot erase its confirmed effect evidence. Missing, malformed, truncated or substituted response, nonzero exit, timeout, signal or unknown/surviving children leave execution/cessation unresolved and preserve original invocation and all collected evidence. Killing a process is not a cancellation receipt; the owner reconciles, never redispatches the original mutation. This contract and its reference codec/harness do not qualify native isolation, authentication, supervision or deployment. Protected value-producing methods additionally use output/values/<value_destination.id>, with the exact owner-created UUID from the original Invocation; it is not a path supplied by the adapter or a plaintext digest. The owner provisions this private directory before launch, admits only regular confined files, and independently verifies ownership, isolation and stable lifetime. An available ProtectedValueHandoff publishes the complete raw value there atomically before Completion and declares exact size_bytes. No public digest, content-addressed artifact, stdout or diagnostic carries the value. The receiver copies the complete stable stream into unpublished protected owner storage, verifies the declared size, and atomically commits private custody and the exact Invocation/destination/value_handle binding before claiming Operation success. Capacity failure, changed bytes or missing file leaves material delivery unresolved while retaining the Response and native effect facts. Reconciliation re-exports retained original bytes to the original slot; an unrecoverable value is explicitly unavailable and never replaced by redispatch. Native confidentiality, immutable custody, disposal and cross-owner authorization remain independently qualified owner duties. If private custody for the exact destination already exists, the receiver independently loads it and compares every incoming byte with that original stream before committing any re-export. Same-size substituted bytes reject and never overwrite original custody. Before re-export, the receiver also independently loads the original lease/version identity when known and rejects changed issuer/source, target, lease/version or value_handle even when returned bytes match. Private bytes without their retained immutable identity do not establish original custody.",
+  "description": "One fixed independent executable protocol. The owner resolves the descriptor entrypoint inside the exact independently approved immutable installation and executes it directly, without a shell, with argv [entrypoint, \"invoke\"]. The current directory is a new protected owner-created per-invocation directory, never the caller repository or home. The complete environment is exactly LANG=C.UTF-8, LC_ALL=C.UTF-8 and TZ=UTC; native dependencies use independently approved absolute executable identities, not an inherited PATH, HOME, PYTHONPATH, loader or runtime variable. Only stdin/stdout/stderr and explicitly owner-provisioned handles are inherited; stdin is closed EOF. process.json is this canonical manifest. request.json contains the exact canonical Invocation for mutation or typed role Request for query. configuration.json contains the exact approved instance configuration, matching executor.configuration_digest. inputs.ndjson contains every required immutable protected input as canonical Input lines followed by LF; input files are at inputs/<sha256 hex>. These files and the installation are owner-confined, immutable and read-only to the process. The owner verifies every request/configuration/manifest/artifact byte, approved executor, current authority and required scope before launch. Native alias, regular-file, ownership, symlink, mount, handle-leak and isolation checks are owner duties; matching paths never establishes authority. A query must be an observational method; reconciliation receives its original retained invocation, never dispatches it, and cannot mutate as a retry. The owner provisions only this approved input closure and an isolated writable output area. Output typed Response bytes are canonical JSON at output/response.json, committed atomically before advertising completion. Every locally transferred material artifact selected by the role-owned typed result uses output/artifacts/<sha256 hex>, with hex equal to its declared digest; publish each complete regular file atomically before Completion. The role contract and accepted handoff select the complete required local material closure, including all returned material for capture.capture and build.build. Observing remote Artifact metadata does not establish local custody or implicitly request a material transfer. Repeated digest/size references share one file even when their contextual media types differ; conflicting byte identities reject. Exact independently retained immutable owner bytes may satisfy a repeated material identity without a redundant output file, but historical metadata or provider availability claims cannot. The receiving owner acquires stable immutable custody through independently verified confinement and native lifetime controls, then verifies every selected byte, digest and size and commits complete custody before claiming materialization or operation success. Hashing a mutable output alone does not establish custody. Missing, changed or incomplete material leaves that handoff unresolved while preserving the exact verified Response and confirmed native effects; it never authorizes mutation redispatch. Reconciliation may re-export already retained original outputs without repeating the mutation. Unreferenced files never become accepted result material. stdout contains exactly one canonical Completion record and one LF, with no diagnostic output. stderr is diagnostic bytes only, streamed to owner custody and never parsed as authority. This transport adds no total-file-size, diagnostic-stream-size or collection-count cap. Existing descriptor, provider-schema and configuration admission profiles remain required before launch; they are not widened by file transport. Bounded chunks and owner resource capacity failures cannot silently truncate accepted evidence. Parsing a complete typed JSON value may require proportional local memory; capacity failure remains explicit unresolved work. Transport completion covers the response handoff only and is separate from material custody and operation success: the typed effect task state, certainty and postcondition retain their own meaning even after a successful process exit. Completion requires exact complete response digest/size/schema/request correlation, zero process exit, no timeout and independently verified cessation of all invocation children. A valid response is retained even if exit, timeout or child state prevents completion; those transport facts cannot erase its confirmed effect evidence. Missing, malformed, truncated or substituted response, nonzero exit, timeout, signal or unknown/surviving children leave execution/cessation unresolved and preserve original invocation and all collected evidence. Killing a process is not a cancellation receipt; the owner reconciles, never redispatches the original mutation. This contract and its reference codec/harness do not qualify native isolation, authentication, supervision or deployment. Protected value-producing methods additionally use output/values/<value_destination.id>, with the exact owner-created UUID from the original Invocation; it is not a path supplied by the adapter or a plaintext digest. The owner provisions this private directory before launch, admits only regular confined files, and independently verifies ownership, isolation and stable lifetime. An available ProtectedValueHandoff publishes the complete raw value there atomically before Completion and declares exact size_bytes. No public digest, content-addressed artifact, stdout or diagnostic carries the value. The receiver copies the complete stable stream into unpublished protected owner storage, verifies the declared size, and atomically commits private custody and the exact Invocation/destination/value_handle binding before claiming Operation success. Capacity failure, changed bytes or missing file leaves material delivery unresolved while retaining the Response and native effect facts. Reconciliation re-exports retained original bytes to the original slot; an unrecoverable value is explicitly unavailable and never replaced by redispatch. Native confidentiality, immutable custody, disposal and cross-owner authorization remain independently qualified owner duties. If private custody for the exact destination already exists, the receiver independently loads it and compares every incoming byte with that original stream before committing any re-export. Same-size substituted bytes reject and never overwrite original custody. Before re-export, the receiver also independently loads the original lease/version identity when known and rejects changed issuer/source, target, lease/version or value_handle even when returned bytes match. Private bytes without their retained immutable identity do not establish original custody. Private inbound values use the required private_inputs member: null for an independently verified empty private closure, otherwise the exact approved PrivateInputUse and metadata manifest. private-inputs.ndjson contains complete canonical PrivateInput lines followed by LF; private files are at private-inputs/<opaque UUID>, are regular owner-confined read-only stable streams, and are never content-addressed. The adapter resolves a logical private handle through this table and never selects an alternate location or credential mechanism. Only the owner may provision these files after current authorization and independent original-custody checks. Reconciliation keeps the original complete operation-value source/version/size bindings; a separately approved new private use may supply current provider-access credentials without changing the original effect or granting redispatch. Native authorization, confidentiality, file confinement and durable retention remain receiving-owner duties, not assurances supplied by this schema or codec.",
   "$defs": {
     "Input": {
       "type": "object",
@@ -104,6 +115,149 @@
       ],
       "additionalProperties": false,
       "description": "Exactly one canonical JSON line no larger than 1024 bytes including LF. response media_type is application/json. This record advertises output/response.json identity; it is not a success assertion or an alternate Response. Process and child cessation are independently checked. Diagnostics belong exclusively on stderr."
+    },
+    "PrivateInputUse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "kind": {
+          "enum": [
+            "mutation",
+            "query",
+            "reconcile"
+          ]
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "executor": {
+          "$ref": "adapter.schema.json#/$defs/InstanceReference"
+        },
+        "request_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "invocation_digest": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Digest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "operation_inputs_digest": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Digest"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The digest of the complete ordered operation-value metadata projection [{handle, source, size_bytes}], or null exactly for an empty projection. Mutation and reconcile uses match the original EffectAttempt.private_inputs_digest, whose absence means null. Provider-access records are excluded. An ordinary query independently approves this same projection under its fresh use identity."
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "owner",
+        "executor",
+        "request_digest",
+        "invocation_digest",
+        "operation_inputs_digest"
+      ],
+      "additionalProperties": false,
+      "description": "One owner-authored private provisioning use. id is a fresh opaque UUID, independent of plaintext, never reused for a changed use. The owner independently approves the exact current payload, consuming executor, resource, purpose and each input before launch; identity metadata grants no authority. request_digest hashes the exact process request.json payload. For mutation and reconcile, invocation_digest binds the immutable original Invocation: digest of canonical {attempt: all original EffectAttempt fields except state, certainty, outcome and native_task, request: original Request}. Reconcile uses that original identity while request_digest names the current observational query. Ordinary queries have null invocation_digest and still require an independently approved fresh use ID and exact owner epoch. Mutation owner equals the original attempt owner; query owner authority equals request scope authority. Exact replay preserves the complete use and private bindings. A changed current provider credential for reconciliation or another query requires a separately authorized new use; it never changes the original mutation input or executor.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "query"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "invocation_digest": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "invocation_digest": {
+                "$ref": "common.schema.json#/$defs/Digest"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "PrivateInputs": {
+      "type": "object",
+      "properties": {
+        "use": {
+          "$ref": "#/$defs/PrivateInputUse"
+        },
+        "manifest": {
+          "$ref": "adapter.schema.json#/$defs/Artifact"
+        }
+      },
+      "required": [
+        "use",
+        "manifest"
+      ],
+      "additionalProperties": false,
+      "description": "Identity of private-inputs.ndjson, a canonical metadata-only PrivateInput line stream. manifest.media_type is application/x-ndjson and its digest covers metadata only. The complete input set is independently approved and retained with this use; mutation operation-value bindings are atomically pinned with original invocation acceptance before dispatch. No private value bytes or plaintext-derived digests occur in this manifest. Null private_inputs in process.json means the receiver independently verified that this invocation needs no private inputs, never that it may fall back to ambient credentials."
+    },
+    "PrivateInput": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "use_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "handle": {
+          "$ref": "adapter.schema.json#/$defs/Handle"
+        },
+        "purpose": {
+          "enum": [
+            "provider-access",
+            "operation-value"
+          ]
+        },
+        "source": {
+          "$ref": "adapter.schema.json#/$defs/PrivateInputSource"
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "path": {
+          "type": "string",
+          "pattern": "^private-inputs/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])",
+          "minLength": 51,
+          "maxLength": 51
+        }
+      },
+      "required": [
+        "id",
+        "use_id",
+        "handle",
+        "purpose",
+        "source",
+        "size_bytes",
+        "path"
+      ],
+      "additionalProperties": false,
+      "description": "One exact immutable owner-provisioned private byte stream. use_id equals the approved provisioning use; path is private-inputs/ followed by id, a fresh opaque slot UUID independent of plaintext. Handles and slot IDs are unique within the complete use. Adapters resolve provider-owned configuration credential handles and selected operation-value handles only through this fixed table; no environment, home, implicit filesystem, provider-specific IPC or ambient credential fallback is permitted. The owner approves the logical handle-to-source mapping without interpreting provider secrets, validates configuration through its installed provider schema, confines regular read-only files, checks permissions and stable lifetime, and privately compares every provisioned byte with independently retained custody before launch. A produced source must match the authenticated original result and committed private bytes, not a bare value_handle. operation-value covers secret/data that can affect the managed result, and its complete handle/source/version/size set is immutable for the accepted original invocation. Reconciliation must preserve that complete set, including missing entries; new slot/use IDs do not change its meaning. provider-access grants only authentication for the exact approved remote/native authority; it cannot secretly select result inputs. A separately authorized fresh reconciliation use may substitute a current provider-access enrollment/version while retaining exact operation-value bindings and the historical executor. Current access is rechecked and unresolved original effects never permit redispatch. No public plaintext digest or ordinary Artifact is created. Files are provisioned privately and retained for accepted work; missing bytes, substitution, revoked permission or capacity failure prevents this launch without erasing custody. One canonical metadata line is at most 8192 bytes including LF; this bounds the fixed-shape record, never total entries or private byte extent. The complete manifest preserves the independently accepted entry order. Reconciliation preserves the original relative operation-value order as well as every handle/source/version/size; the committed metadata sequence cannot be replaced by a reordered or partial set."
     }
   }
 }

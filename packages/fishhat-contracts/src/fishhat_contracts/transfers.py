@@ -90,6 +90,9 @@ def _local_commits(
 
 def validate_workflow_transfer(workflow: dict[str, Any]) -> None:
     """Check a schema-validated capsule's retained transfer joins and discoverable inputs."""
+    from .workflow_transfer_history import workflow_transfer_ids
+
+    workflow_transfer_ids(workflow)
     transfer = workflow["transfer"]
     if transfer is None:
         return
@@ -157,13 +160,17 @@ def validate_transfer_request(
     request: dict[str, Any],
     workflow: dict[str, Any],
     *,
+    retained_transfer: dict[str, Any] | None = None,
     recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> str:
     """Return replay or new for decoded current-capsule input; never grant execution.
 
-    A native owner also retains older transfer identities in protected history and
-    checks those before calling this current-capsule model. Exact accepted input is
-    replayable after later generation changes; changed input never gains that rule.
+    retained_transfer is independently selected protected custody for this exact
+    transfer identity, including an older transfer exposed by workflow.transfer.get.
+    Native owners check that index before new admission and authorize current read
+    access before replay. Request bytes cannot supply their own retained record.
+    Exact accepted input is replayable after later generation or driver changes;
+    changed input never gains that rule.
     """
     from .handoffs import validate_workflow
 
@@ -178,6 +185,27 @@ def validate_transfer_request(
         and _pairs(proposal["participants"]) == _pairs(workflow["participants"]),
         "transfer request owner or closure mismatch",
     )
+    if retained_transfer is not None:
+        from .workflow_transfer_history import transfer_phase_request, validate_transfer_record
+
+        validate_transfer_record(
+            retained_transfer,
+            expected_owner=workflow["owner"],
+            workflow_id=workflow["id"],
+            transfer_id=proposal["transfer_id"],
+        )
+        _require(
+            retained_transfer["transfer"]["proposal"] == proposal,
+            "transfer identity reused with changed proposal",
+        )
+        original = transfer_phase_request(retained_transfer, request["phase"])
+        if original is not None:
+            _require(request == original, "accepted transfer phase input changed")
+            return "replay"
+        _require(
+            workflow["transfer"] == retained_transfer["transfer"],
+            "older transfer custody cannot admit a new phase",
+        )
     retained = workflow["transfer"]
     if retained is not None and retained["proposal"]["transfer_id"] == proposal["transfer_id"]:
         _require(proposal == retained["proposal"], "transfer identity reused with changed proposal")

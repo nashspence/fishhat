@@ -9,6 +9,7 @@
     "bootstrap-source-adapter.schema.json",
     "build-adapter.schema.json",
     "bundle-manifest.schema.json",
+    "cancellation.schema.json",
     "capture-adapter.schema.json",
     "cli-output.schema.json",
     "client-records.schema.json",
@@ -54,6 +55,7 @@
     "tracking-records.schema.json",
     "workflow-evidence.schema.json",
     "workflow-recovery.schema.json",
+    "workflow-transfer-history.schema.json",
     "workflow.schema.json",
     "workspace.schema.json"
   ],
