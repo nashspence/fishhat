@@ -13,6 +13,7 @@ from collections.abc import Callable, Mapping
 from datetime import datetime
 from typing import Any
 
+from .bounds import Bounds, bounds
 from .handoffs import PHASES
 from .operations import validate_operation
 from .validation import ContractError, canonical, digest, validate
@@ -53,6 +54,49 @@ def _predecessor(intent: dict[str, Any]) -> dict[str, Any]:
         "secret-adoption": "publication",
     }[intent["kind"]]
     return dict(intent[name])
+
+
+def _phase_review_windows(workflow: dict[str, Any]) -> dict[str, tuple[int, int | None]]:
+    """Index installed phase-entry barriers once for all retained initial bindings.
+
+    Complete capsule validation independently verifies every entry's phase evidence
+    and legal order. Transfers and lifecycle changes do not create a phase barrier.
+    """
+    windows: dict[str, tuple[int, int | None]] = {}
+    previous = PHASES[workflow["type"]][0]
+    for receipt in workflow["advances"]:
+        authority = receipt["authority"]
+        if authority == "native-lifecycle":
+            continue
+        if authority == "driver" and receipt["request"]["transfer_completion"] is not None:
+            continue
+        phase, generation = receipt["phase"], receipt["generation"]
+        _require(phase not in windows, "workflow repeats an installed phase review barrier")
+        if previous in windows:
+            windows[previous] = (windows[previous][0], generation)
+        windows[phase] = (generation, None)
+        previous = phase
+    return windows
+
+
+def _initial_review(
+    request: dict[str, Any],
+    intent: dict[str, Any],
+    phase_windows: Mapping[str, tuple[int, int | None]],
+) -> None:
+    window = phase_windows.get(request["binding"]["phase"])
+    _require(
+        window is not None
+        and window[0] <= request["expected_generation"]
+        and (window[1] is None or request["expected_generation"] + 1 < window[1]),
+        "initial workflow review must follow its installed phase barrier",
+    )
+    _require(
+        request["binding"]["plan"]["subject"] == intent["subject"]
+        and not request["predecessors"]
+        and not request["materials"],
+        "initial workflow review changed its closed subject or installed dependencies",
+    )
 
 
 def _operation(
@@ -161,6 +205,7 @@ def _binding_shape(
     *,
     children: Mapping[bytes, tuple[dict[str, Any], dict[str, Any]]],
     generations: dict[bytes, int],
+    phase_windows: Mapping[str, tuple[int, int | None]],
     recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
 ) -> None:
     key = _key(request["child"])
@@ -199,6 +244,9 @@ def _binding_shape(
         ),
         "workflow binding Plan input lacks retained content",
     )
+    if intent["kind"] == "reviewed-initial":
+        _initial_review(request, intent, phase_windows)
+        return
     reference = _predecessor(intent)
     _require(_key(reference) in ready, "workflow predecessor Plan is not retained")
     _require(len(request["predecessors"]) == 1, "workflow binding requires exact predecessor")
@@ -222,6 +270,23 @@ def _binding_shape(
         _material(request["materials"][0], request, intent, predecessor, ready)
 
 
+@bounds(
+    Bounds(
+        id="workflow.bindings",
+        work="O(B) complete proposal, binding and retained phase-history bytes with one child index and one installed phase-window index per validation",
+        extent="Every immutable child slot, accepted binding, predecessor/material input and installed initial-review barrier; no prefix or total-count cap",
+        limits=(),
+        capacity=("native owners may refuse new capacity without dropping accepted bindings",),
+        proofs=(
+            "tests/test_workflow_initial_review.py::test_consumer_first_plan_is_reviewed_after_provider_success_without_supersession",
+            "tests/test_workflow_continuations.py::test_successor_plan_uses_fresh_generation_after_exact_predecessor_and_replays",
+        ),
+        linear_proofs=(
+            "tests/test_workflow_initial_review_growth.py::test_initial_binding_validation_linear_complete_history_work",
+            "tests/test_workflow_validation_growth.py::test_recovery_validation_linear_child_and_binding_work",
+        ),
+    )
+)
 def validate_workflow_bindings(
     workflow: dict[str, Any],
     *,
@@ -237,6 +302,7 @@ def validate_workflow_bindings(
     ids: set[str] = set()
     generation = 0
     advances = {receipt["generation"] for receipt in workflow["advances"]}
+    phase_windows = _phase_review_windows(workflow)
     for receipt in workflow["bindings"]:
         original = receipt["request"]
         _require(original["bind_id"] not in ids, "duplicate workflow binding identity")
@@ -257,6 +323,7 @@ def validate_workflow_bindings(
             ready,
             children=children,
             generations=generations,
+            phase_windows=phase_windows,
             recovery_readers=recovery_readers,
         )
         ready[_key(original["child"])] = original["binding"]
@@ -333,6 +400,7 @@ def validate_bind_request(
         workflow,
         ready,
         children=children,
+        phase_windows=_phase_review_windows(workflow),
         generations={
             _pair(p["owner"], p["resource"]): p["expected_generation"]
             for p in workflow["proposal"]["participants"]

@@ -109,7 +109,7 @@ def child_action(binding: dict[str, Any]) -> str:
     if "plan" in binding:
         return str(binding["plan"]["subject"]["action"])
     intent = binding["intent"]
-    if intent["kind"] == "reviewed-successor":
+    if intent["kind"] in {"reviewed-successor", "reviewed-initial"}:
         return str(intent["subject"]["action"])
     return "publisher.publish" if intent["kind"] == "secret-publication" else str(intent["action"])
 
@@ -179,6 +179,15 @@ def _intent_binding(
     binding: dict[str, Any], participant: dict[str, Any], index: int, proposal: dict[str, Any]
 ) -> None:
     intent = binding["intent"]
+    if intent["kind"] == "reviewed-initial":
+        _require(
+            index == 0
+            and proposal["type"] != "secret-rotation"
+            and PHASES[proposal["type"]].index(binding["phase"]) >= 2
+            and intent["subject"]["resource"] == participant["resource"],
+            "initial workflow review lacks its installed predecessor barrier",
+        )
+        return
     if intent["kind"] == "reviewed-successor":
         _require(index > 0, "workflow successor has no prior participant request")
         previous = participant["requests"][index - 1]
@@ -237,6 +246,11 @@ def _validate_child(
         )
     else:
         _intent_binding(binding, participant, index, proposal)
+        if binding["intent"]["kind"] == "reviewed-initial":
+            _require(
+                all(canonical(h) in content for h in _handles(binding["intent"]["subject"])),
+                "initial workflow intent handle missing from content closure",
+            )
 
 
 def _require(condition: bool, message: str) -> None:

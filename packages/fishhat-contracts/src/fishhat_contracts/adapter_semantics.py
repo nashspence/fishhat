@@ -403,6 +403,20 @@ def _check_success_output(
 ) -> None:
     """Bind complete, method-specific result custody to its original requested identities."""
     inputs = request["input"]
+    if role == "storage" and request["method"] == "retire":
+        receipt = output["retirement"]
+        require(
+            receipt is not None
+            and receipt["allocation"] == inputs["allocation"]
+            and receipt["native_identity_digest"] == inputs["native_identity_digest"]
+            and receipt["state"] == "absent"
+            and receipt["reviewed"]["capacity_bytes"] == inputs["capacity_bytes"]
+            and receipt["reviewed"]["capacity_inodes"] == inputs["capacity_inodes"]
+            and receipt["reviewed"]["hard_isolation"] == inputs["hard_isolation"]
+            and _same_set(receipt["reviewed"]["purposes"], inputs["purposes"]),
+            "RETIREMENT_OUTPUT_IDENTITY",
+        )
+        return
     checks: dict[str, Callable[[], bool]] = {
         "runtime": lambda: output["deployment"] == inputs["deployment"],
         "compute": lambda: (
@@ -494,7 +508,7 @@ def _check_observed_quantities(role: str, output: dict[str, Any]) -> None:
             output["allocation"] is not None or not (output["counters"] or output["limits"]),
             "UNKNOWN_ALLOCATION_QUANTITIES",
         )
-    if role == "storage":
+    if role == "storage" and "allocations" in output:
         for allocation in output["allocations"]:
             _check_counters(allocation["counters"], allocation["handle"])
     if role == "dns":

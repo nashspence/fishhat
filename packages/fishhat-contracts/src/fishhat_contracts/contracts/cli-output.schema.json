@@ -139,6 +139,15 @@
             },
             {
               "$ref": "workflow.schema.json#/$defs/MutationAcknowledgment"
+            },
+            {
+              "$ref": "cancellation.schema.json#/$defs/Receipt"
+            },
+            {
+              "$ref": "cancellation.schema.json#/$defs/Page"
+            },
+            {
+              "$ref": "workflow-transfer-history.schema.json#/$defs/WorkflowTransferRecord"
             }
           ]
         },
@@ -201,7 +210,10 @@
                   "WorkflowAbandonment",
                   "WorkflowNeverPrepared",
                   "WorkflowLifecycleResult",
-                  "WorkflowMutationAcknowledgment"
+                  "WorkflowMutationAcknowledgment",
+                  "OperationCancellationReceipt",
+                  "OperationCancellationPage",
+                  "WorkflowTransferRecord"
                 ]
               }
             },

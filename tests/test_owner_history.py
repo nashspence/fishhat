@@ -27,6 +27,7 @@ CHECK_PURPOSE = {
     "purpose": "public-contract",
     "authority": [
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/owner-history.schema.json",
+        "packages/fishhat-contracts/src/fishhat_contracts/contracts/workflow-transfer-history.schema.json",
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/actions.schema.json#/$defs/app.recover",
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/actions.schema.json#/$defs/host.recover",
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/actions.schema.json#/$defs/operation.recover",
@@ -110,6 +111,84 @@ def record_page(custody, reference, *, cursor=None):
         next_cursor=None,
         history_complete=True,
     )
+
+
+def test_restored_transfer_records_keep_original_epoch_and_workflow_scope():
+    from tests.test_workflow_transfer_history import completed_record
+
+    original = completed_record()
+    original_bytes = canonical(original)
+    custody = custody_for(original)
+    snapshot = RecordSnapshot(original, uid("historical-transfer-snapshot"))
+    query = query_for(
+        custody,
+        record_kind="WorkflowTransferRecord",
+        resource=original["resource"],
+        active_only=False,
+        cursor=None,
+        limit=2,
+    )
+    page = envelope(
+        "HistoricalRecordPage",
+        query,
+        origin=custody["origin"],
+        items=[snapshot.reference],
+        next_cursor=None,
+        history_complete=True,
+    )
+    authorize("history.list", query, custody)
+    validate("ssh-request.schema.json", request("history.list", query))
+    validate("ssh-response.schema.json", wire("history.list", page))
+    validate_history_result(page, expected_request=query, verified_custody=custody)
+    retained = validate_record_payload(
+        snapshot.reference,
+        original_bytes,
+        expected_owner=custody["origin"],
+        expected_record=snapshot.reference["record"],
+        expected_resource=original["resource"],
+    )
+    assert canonical(retained) == original_bytes
+    assert retained["owner"] != custody["custodian"]
+    assert retained["completion"] == original["completion"]
+    with pytest.raises(ContractError, match="current historical read permission"):
+        authorize("history.list", query, custody, allowed=False)
+    page["request"]["resource"] = {"kind": "workflow", "id": uid("other-workflow")}
+    with pytest.raises(ContractError, match="historical transfer workflow substitution"):
+        validate_history_result(page, verified_custody=custody)
+
+
+def test_historical_transfer_identity_includes_its_workflow_scope():
+    from tests.test_workflow_transfer_history import completed_record
+
+    original = completed_record()
+    custody = custody_for(original)
+    reference = RecordSnapshot(original, uid("first-scoped-transfer")).reference
+    # A history page carries independently retained references. Complete payload
+    # verification is separate; this exercises the page's logical identity key.
+    other = copy.deepcopy(reference)
+    other["snapshot_id"] = uid("second-scoped-transfer")
+    other["record"]["resource"]["id"] = uid("second-workflow")
+    other["digest"] = "sha256:" + "b" * 64
+    query = query_for(
+        custody,
+        record_kind="WorkflowTransferRecord",
+        resource=None,
+        active_only=False,
+        cursor=None,
+        limit=2,
+    )
+    page = envelope(
+        "HistoricalRecordPage",
+        query,
+        origin=custody["origin"],
+        items=[reference, other],
+        next_cursor=None,
+        history_complete=True,
+    )
+    validate_history_result(page, expected_request=query, verified_custody=custody)
+    other["record"]["resource"] = copy.deepcopy(reference["record"]["resource"])
+    with pytest.raises(ContractError, match="duplicate historical record"):
+        validate_history_result(page, expected_request=query, verified_custody=custody)
 
 
 def test_fresh_client_discovers_every_retained_epoch_without_previous_owner_identity():

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import hashlib
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
@@ -9,6 +10,7 @@ from typing import Any, BinaryIO, cast
 
 from fishhat_contracts.adapter_semantics import (
     ROLES,
+    _attempt_identity,
     check_invocation,
     check_request,
     check_response,
@@ -70,6 +72,7 @@ def validate_process_launch(
     descriptor: dict[str, Any],
     approved_installation: dict[str, Any],
     expected_executor: dict[str, Any],
+    expected_private_use: dict[str, Any] | None,
 ) -> None:
     """Join files to independently approved descriptor/executor before native launch.
 
@@ -131,6 +134,55 @@ def validate_process_launch(
         role + "." + request["method"] in descriptor["implemented"],
         "process method is not implemented",
     )
+    _check_private_use(manifest, payload, expected_private_use)
+
+
+def _invocation_digest(invocation: dict[str, Any]) -> str:
+    return digest(
+        {"attempt": _attempt_identity(invocation["attempt"]), "request": invocation["request"]}
+    )
+
+
+def _check_private_use(
+    manifest: dict[str, Any], payload: dict[str, Any], expected: dict[str, Any] | None
+) -> None:
+    original: dict[str, Any] | None
+    if manifest["mode"] == "mutation":
+        original, kind = payload, "mutation"
+    elif payload["method"] == "reconcile":
+        original, kind = payload["input"]["invocation"], "reconcile"
+    else:
+        original, kind = None, "query"
+    selected = manifest["private_inputs"]
+    if selected is None:
+        _require(
+            expected is None
+            and (original is None or "private_inputs_digest" not in original["attempt"]),
+            "process required private inputs are missing",
+        )
+        return
+    use = selected["use"]
+    _require(expected is not None and use == expected, "process private use is not approved")
+    _require(
+        selected["manifest"]["media_type"] == "application/x-ndjson"
+        and use["executor"] == manifest["executor"]
+        and use["request_digest"] == digest(payload),
+        "process private use identity changed",
+    )
+    _require(use["kind"] == kind, "process private use mode changed")
+    if original is not None:
+        _require(
+            use["owner"] == original["attempt"]["owner"]
+            and use["invocation_digest"] == _invocation_digest(original)
+            and use["operation_inputs_digest"] == original["attempt"].get("private_inputs_digest"),
+            "process private original invocation changed",
+        )
+    else:
+        _require(
+            use["invocation_digest"] is None
+            and use["owner"]["id"] == payload["input"]["scope"]["authority"],
+            "process private query owner changed",
+        )
 
 
 @bounds(_process_bounds("verify_process_inputs"))
@@ -229,6 +281,223 @@ def _private_chunk_matches(original: BinaryIO, chunk: bytes) -> bool:
             return False
         offset += len(part)
     return True
+
+
+def _private_input_bounds(name: str, proof: str) -> Bounds:
+    return Bounds(
+        id="adapters.process." + name,
+        work="O(B) complete metadata, retained original bindings and selected private byte streams",
+        extent="Every approved private input and original operation-value binding; no total cap",
+        limits=(("metadata_line_bytes", 8192), ("chunk_bytes", CHUNK_BYTES)),
+        capacity=(
+            "Owner-private immutable custody; failure prevents launch without discarding inputs",
+        ),
+        proofs=(proof,),
+        linear_proofs=(proof,),
+    )
+
+
+@bounds(
+    _private_input_bounds(
+        "private_value_source",
+        "tests/test_private_inputs.py::test_private_input_source_linear_work",
+    )
+)
+def private_value_source(invocation: dict[str, Any], response: dict[str, Any]) -> dict[str, Any]:
+    """Project original produced-value identity after checking its complete typed response.
+
+    The owner independently authenticates the producer and commits private byte
+    custody before approving this source. Available metadata is not custody or
+    permission to disclose it to a consuming executor. No plaintext is hashed.
+    """
+    request = invocation["request"]
+    role, method = invocation["attempt"]["executor"]["role"], request["method"]
+    _require(
+        (role == "secret-source" and method == "retrieve")
+        or (role == "credential-issuer" and method in {"issue", "renew"}),
+        "process private source is not a value producer",
+    )
+    checked_request = (
+        {
+            "contract": request["contract"],
+            "method": "reconcile",
+            "input": {"scope": request["input"]["scope"], "invocation": invocation},
+        }
+        if response["method"] == "reconcile"
+        else request
+    )
+    check_response(role, checked_request, response, invocation=invocation)
+    require_value_custody(role, request, response)
+    output = response["output"]
+    secret = role == "secret-source"
+    matches = [
+        value
+        for value in output["versions" if secret else "leases"]
+        if value["value_handle"] == output["handoff"]["value_handle"]
+    ]
+    _require(len(matches) == 1, "process private source identity is ambiguous")
+    keys = (
+        ("source", "entry", "version", "value_handle")
+        if secret
+        else ("issuer", "identity", "consumer", "lease", "value_handle")
+    )
+    result = {
+        "kind": "produced",
+        "invocation_digest": _invocation_digest(invocation),
+        "destination": copy.deepcopy(output["handoff"]["destination"]),
+        "value": {
+            "kind": "secret" if secret else "credential",
+            **{key: copy.deepcopy(matches[0][key]) for key in keys},
+        },
+    }
+    validate("adapter.schema.json", result, "PrivateInputSource")
+    return result
+
+
+def _private_inputs_index(
+    values: Iterable[dict[str, Any]], use_id: str | None = None
+) -> dict[str, dict[str, Any]]:
+    selected: dict[str, dict[str, Any]] = {}
+    slots: set[str] = set()
+    for value in values:
+        validate("adapter-process.schema.json", value, "PrivateInput")
+        _require(
+            (use_id is None or value["use_id"] == use_id)
+            and value["path"] == "private-inputs/" + value["id"]
+            and value["handle"] not in selected
+            and value["id"] not in slots,
+            "process private input binding conflicts",
+        )
+        selected[value["handle"]] = value
+        slots.add(value["id"])
+    return selected
+
+
+def _original_private_inputs(
+    use: dict[str, Any],
+    selected: dict[str, dict[str, Any]],
+    original_inputs: Iterable[dict[str, Any]] | None,
+) -> None:
+    selected_values = _operation_private_values(selected)
+    _require(
+        use["operation_inputs_digest"] == (digest(selected_values) if selected_values else None),
+        "process private operation commitment changed",
+    )
+    if use["kind"] != "reconcile":
+        _require(original_inputs is None, "process private inputs have no original mutation")
+        return
+    _require(original_inputs is not None, "process original private inputs are required")
+    assert original_inputs is not None
+    original = _private_inputs_index(original_inputs)
+
+    _require(
+        selected_values == _operation_private_values(original),
+        "process original operation values changed",
+    )
+
+
+def _operation_private_values(values: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+    return [
+        {key: item[key] for key in ("handle", "source", "size_bytes")}
+        for item in values.values()
+        if item["purpose"] == "operation-value"
+    ]
+
+
+def _verify_private_input(
+    value: dict[str, Any],
+    open_input: Callable[[str], BinaryIO],
+    open_retained: Callable[[dict[str, Any]], BinaryIO],
+) -> None:
+    with open_input(value["path"]) as incoming, open_retained(value["source"]) as retained:
+        _require(
+            incoming.tell() == 0 and retained.tell() == 0,
+            "process private input stream does not begin at byte zero",
+        )
+        size = 0
+        while chunk := incoming.read(CHUNK_BYTES):
+            _require(isinstance(chunk, bytes), "process private input is not bytes")
+            size += len(chunk)
+            _require(size <= value["size_bytes"], "process private input exceeds declared size")
+            _require(
+                _private_chunk_matches(retained, chunk),
+                "process private input differs from retained original",
+            )
+        _require(
+            size == value["size_bytes"] and retained.read(1) == b"",
+            "process private input is incomplete",
+        )
+
+
+@bounds(
+    _private_input_bounds(
+        "verify_process_private_inputs",
+        "tests/test_private_inputs.py::test_private_input_boundary_linear_work",
+    )
+)
+def verify_process_private_inputs(
+    stream: BinaryIO,
+    *,
+    private_inputs: dict[str, Any],
+    expected_use: dict[str, Any],
+    expected_inputs: Iterable[dict[str, Any]],
+    original_inputs: Iterable[dict[str, Any]] | None,
+    open_input: Callable[[str], BinaryIO],
+    open_retained: Callable[[dict[str, Any]], BinaryIO],
+) -> None:
+    """Verify all privately provisioned bytes before launch, without public value hashes.
+
+    expected_use and expected_inputs come from independently approved owner
+    custody, never the adapter's manifest. Mutation expectations are its durable
+    original private closure. Reconciliation additionally loads original_inputs
+    from the original invocation and preserves all operation-value bindings;
+    separately approved current provider-access credentials may change under a
+    fresh use. open_retained resolves only independently trusted source identities.
+
+    The owner confines and freezes each private input file and independently
+    authenticates produced sources and current disclosure permission. This pure
+    reference check proves metadata joins and complete private byte comparison;
+    it does not establish native isolation, authority or durable custody.
+    """
+    validate("adapter-process.schema.json", private_inputs, "PrivateInputs")
+    use, identity = private_inputs["use"], private_inputs["manifest"]
+    _require(use == expected_use, "process private use is not approved")
+    _require(
+        stream.tell() == 0 and identity["media_type"] == "application/x-ndjson",
+        "process private manifest identity",
+    )
+    expected = _private_inputs_index(expected_inputs, use["id"])
+    _require(bool(expected), "process empty private closure must use null")
+    _original_private_inputs(use, expected, original_inputs)
+    seen: set[str] = set()
+    ordered = iter(expected)
+    size, checksum = 0, hashlib.sha256()
+    while line := stream.readline(8193):
+        _require(
+            isinstance(line, bytes) and len(line) <= 8192 and line.endswith(b"\n"),
+            "process private manifest framing",
+        )
+        size += len(line)
+        _require(size <= identity["size_bytes"], "process private manifest size")
+        checksum.update(line)
+        entry = strict_json(line, max_bytes=8192)
+        validate("adapter-process.schema.json", entry, "PrivateInput")
+        handle = entry["handle"]
+        _require(
+            canonical(entry) + b"\n" == line
+            and handle not in seen
+            and next(ordered, None) == handle
+            and expected.get(handle) == entry,
+            "process private input closure changed or duplicated",
+        )
+        _verify_private_input(expected[handle], open_input, open_retained)
+        seen.add(handle)
+    _require(
+        seen == expected.keys()
+        and size == identity["size_bytes"]
+        and "sha256:" + checksum.hexdigest() == identity["digest"],
+        "process private input manifest incomplete or changed",
+    )
 
 
 def _check_private_record(

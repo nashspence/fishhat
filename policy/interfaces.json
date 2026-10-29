@@ -51,6 +51,7 @@
             "bootstrap-source-adapter.schema.json",
             "build-adapter.schema.json",
             "bundle-manifest.schema.json",
+            "cancellation.schema.json",
             "capture-adapter.schema.json",
             "cli-output.schema.json",
             "client-records.schema.json",
@@ -96,6 +97,7 @@
             "tracking-records.schema.json",
             "workflow-evidence.schema.json",
             "workflow-recovery.schema.json",
+            "workflow-transfer-history.schema.json",
             "workflow.schema.json",
             "workspace.schema.json"
           ],
@@ -270,11 +272,11 @@
     },
     "adapter-process.schema.json": {
       "id": "https://fishhat.invalid/contracts/adapter-process.schema.json",
-      "sha256": "637a03f8e71bab3f22b68d5f5dc7f7db662fa742ad119d5b3ccf0d2258707bb7"
+      "sha256": "b9ace7410ddb58ae678fcec65a3bbe8c65c22a892f13083e1fc34dbece8ee98a"
     },
     "adapter.schema.json": {
       "id": "https://fishhat.invalid/contracts/adapter.schema.json",
-      "sha256": "361f3efbb395e7612914212e2ff1519dd7217ff441a4f3e42f08f47a3265e818"
+      "sha256": "d04bbabb5353506a2ad0c8dd4cc206e677142799a057b93e48e1ba2d0205728c"
     },
     "backup-adapter.schema.json": {
       "id": "https://fishhat.invalid/contracts/backup-adapter.schema.json",
@@ -300,13 +302,17 @@
       "id": "https://fishhat.invalid/contracts/bundle-manifest.schema.json",
       "sha256": "7a4ba493bc4d2c5caa531228a5e9d0894d03a6ab44d9f05021d7e19097fab0ff"
     },
+    "cancellation.schema.json": {
+      "id": "https://fishhat.invalid/contracts/cancellation.schema.json",
+      "sha256": "94e38682d256db7c8b66fdafb018b02d6ec9c71ee6e486cdd92cb0790c7b9113"
+    },
     "capture-adapter.schema.json": {
       "id": "https://fishhat.invalid/contracts/capture-adapter.schema.json",
       "sha256": "c460275e137214c4c58df9f7ae3fbb27bc676d3ea76c3aa088895295217cbae8"
     },
     "cli-output.schema.json": {
       "id": "https://fishhat.invalid/contracts/cli-output.schema.json",
-      "sha256": "17a6df81bb438247aab1e6716221bb119fb5e6afe91be2cbb518ae216994378a"
+      "sha256": "045836a4c0d9ba81a9120679ead20bbf6ab64a9593ad653c947ea4ce61041778"
     },
     "client-records.schema.json": {
       "id": "https://fishhat.invalid/contracts/client-records.schema.json",
@@ -314,7 +320,7 @@
     },
     "common.schema.json": {
       "id": "https://fishhat.invalid/contracts/common.schema.json",
-      "sha256": "5443445ff9195fe751c11f53459c868606b82bad493c7c14718bc60619d4825e"
+      "sha256": "4011fa0414e11cd4c62d3d6a475a6d37773c0a3d37fb83c666dfae9763c8566e"
     },
     "compute-adapter.schema.json": {
       "id": "https://fishhat.invalid/contracts/compute-adapter.schema.json",
@@ -382,7 +388,7 @@
     },
     "owner-history.schema.json": {
       "id": "https://fishhat.invalid/contracts/owner-history.schema.json",
-      "sha256": "97a948678c636b3ffa3bf0caa8792a6f99f88bc48a4699d1d76b5f490af9fda0"
+      "sha256": "200ecd9ba676bfc0aaf169839f55e50510f7155458a47c6457ffc68b0cefaa82"
     },
     "plan-input.schema.json": {
       "id": "https://fishhat.invalid/contracts/plan-input.schema.json",
@@ -402,7 +408,7 @@
     },
     "records.schema.json": {
       "id": "https://fishhat.invalid/contracts/records.schema.json",
-      "sha256": "5f4274e07e4d5172051e677cc1c2ad0997992ca3cdd06a55bf0e2e1522041bf5"
+      "sha256": "e3c4f1eeff29d4bf0d0a37df55f5e67bb12790de771b856e6884f44ac1e2bdf5"
     },
     "recovery-set.schema.json": {
       "id": "https://fishhat.invalid/contracts/recovery-set.schema.json",
@@ -418,7 +424,7 @@
     },
     "resource-records.schema.json": {
       "id": "https://fishhat.invalid/contracts/resource-records.schema.json",
-      "sha256": "c5261b7cfadf2b2379044fc9d92ac8628292f7b81d1d1f18a9c052c705906676"
+      "sha256": "5c0d660aa268c32351196491f346d96a5482e8b36c076e073346893776e0cdb2"
     },
     "resources.schema.json": {
       "id": "https://fishhat.invalid/contracts/resources.schema.json",
@@ -446,15 +452,15 @@
     },
     "ssh-request.schema.json": {
       "id": "https://fishhat.invalid/contracts/ssh-request.schema.json",
-      "sha256": "1f10ac1468eda462b070748b29414ad9ce6c49beae1342831212d60be9c7d8a2"
+      "sha256": "77fe649a265d83f37f3efb826ac3f41bf2431adb02dd379ead2392ada02f3445"
     },
     "ssh-response.schema.json": {
       "id": "https://fishhat.invalid/contracts/ssh-response.schema.json",
-      "sha256": "4c052ce1c91a3a14dfc1b8434930fb9da5daf42c81f16a87967b831f4a171d5d"
+      "sha256": "f8c31841fb8fe549944b08ac5490cd6b2598f5f75bcf30ceac0600c9e6cf0b27"
     },
     "storage-adapter.schema.json": {
       "id": "https://fishhat.invalid/contracts/storage-adapter.schema.json",
-      "sha256": "8d162694143673f9c7ca163a5c89bc762f63d38acc4cfe35f7c5e0924b901c1b"
+      "sha256": "e2f0de9678155e17e00cd3171c85f9a598fa9277e70892a587a16398817f7cec"
     },
     "test-suite.schema.json": {
       "id": "https://fishhat.invalid/contracts/test-suite.schema.json",
@@ -480,9 +486,13 @@
       "id": "https://fishhat.invalid/contracts/workflow-recovery.schema.json",
       "sha256": "35f3e8dd2ca345237e45aab892be7f7c82ce7742915701af217732a00eb2e86b"
     },
+    "workflow-transfer-history.schema.json": {
+      "id": "https://fishhat.invalid/contracts/workflow-transfer-history.schema.json",
+      "sha256": "4b310b2a11925f015ccf9fac6944c2f1791a7230f68b5c7ca8ad60e1c4cd4bc9"
+    },
     "workflow.schema.json": {
       "id": "https://fishhat.invalid/contracts/workflow.schema.json",
-      "sha256": "541f3b5e614d4a435616668abdae7ac2f731d6e99514d47926011553f8a61f72"
+      "sha256": "ad1022826ecd0db1285358768b1a7171b3e82a519ce6e1f451ad264a8a73d79b"
     },
     "workspace.schema.json": {
       "id": "https://fishhat.invalid/contracts/workspace.schema.json",

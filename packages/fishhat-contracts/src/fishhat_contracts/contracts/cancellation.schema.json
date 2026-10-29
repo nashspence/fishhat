@@ -1,0 +1,391 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fishhat.invalid/contracts/cancellation.schema.json",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/Receipt"
+    },
+    {
+      "$ref": "#/$defs/Page"
+    }
+  ],
+  "$defs": {
+    "Request": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "request_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "cancellation_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        }
+      },
+      "required": [
+        "owner",
+        "request_id",
+        "cancellation_id"
+      ],
+      "additionalProperties": false,
+      "description": "Request one durable stop intent for the exact accepted target request in this owner epoch. request_id names the original Operation; cancellation_id names this separate decision and is unique for the owner epoch. The actual receiving principal needs current scoped read permission before any lookup or disclosure. An exact retained request replays its original receipt before new cancellation permission, target-generation, lifecycle or capability checks, preserving original attribution; changed input under that cancellation_id is CONFLICT. A new decision additionally requires current scoped cancellation permission. Native owners atomically compare current target state and durably retain the receipt with the stop intent before acknowledgment. A nonterminal target yields stop-requested; a race already in a terminal state yields already-terminal and cannot rewrite that outcome. Unsupported nonterminal cancellation refuses with UNSUPPORTED_CAPABILITY without accepting intent. NOT_FOUND refuses a missing target and OWNER_EPOCH_CHANGED refuses another authority epoch. Other explicit refusals use Problem and do not accept stop intent. Lost or unreadable replies mean cancellation acceptance is unknown; retain this exact identity and reconcile through cancellation get/list. This input supplies no native state, permission, actor, stopping proof or hold-release authority."
+    },
+    "GetRequest": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "request_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "cancellation_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "custodian": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "custody_id": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "owner",
+        "request_id",
+        "cancellation_id",
+        "custodian",
+        "custody_id"
+      ],
+      "additionalProperties": false,
+      "description": "Read the original cancellation decision for this target request under current scoped read permission, without new cancellation authority. The owner returns the exact retained receipt, never its current Operation as a replacement. Missing decision or a different target is NOT_FOUND; absence is not evidence that an in-flight request cannot later be accepted. Within the current original epoch, retry the original operation.cancel identity after reconciliation; historical lookup never authorizes such mutation under a restored custodian. This lookup never requests cancellation itself. custodian is the independently authenticated current receiving owner; owner retains the original attributed epoch. For current-epoch reads they are equal and custody_id is null. For restored history they share tool/logical id with distinct epochs, and custody_id identifies an independently verified protected OwnerCustody whose origin and custodian match exactly. The current receiver independently verifies that its retained manifest includes these exact cancellation receipts and target scope; caller-selected identities or a supplied descriptor prove nothing. Every read rechecks current permission and verified custody; a changed custodian or custody rejects rather than rebinding. Historical reads return original immutable receipts without installing executable stop intent or reauthorizing old work."
+    },
+    "ListRequest": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "request_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "cursor": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Cursor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 128
+        },
+        "custodian": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "custody_id": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "owner",
+        "request_id",
+        "cursor",
+        "limit",
+        "custodian",
+        "custody_id"
+      ],
+      "additionalProperties": false,
+      "description": "Discover every retained cancellation decision for one original Operation request without knowing cancellation IDs or depending on client state. Begin with cursor null; the owner retains a finite append-order traversal and pins its original owner epoch, current custodian and verified custody, target request, actual principal and page limit. Later accepted decisions do not alter that traversal; a fresh traversal observes them. Every page rechecks current target disclosure permission. Continuations and exact page retries retain the original immutable entries and positions; changed query/principal rejects, expired or lost traversal returns RETENTION_GAP, and another owner epoch returns OWNER_EPOCH_CHANGED. Receipt retention has no total-count bound and new decisions never evict accepted identities. A native receiver may explicitly refuse new admission for capacity, never truncate accepted history. custodian is the independently authenticated current receiving owner; owner retains the original attributed epoch. For current-epoch reads they are equal and custody_id is null. For restored history they share tool/logical id with distinct epochs, and custody_id identifies an independently verified protected OwnerCustody whose origin and custodian match exactly. The current receiver independently verifies that its retained manifest includes these exact cancellation receipts and target scope; caller-selected identities or a supplied descriptor prove nothing. Every read rechecks current permission and verified custody; a changed custodian or custody rejects rather than rebinding. After owner restoration, discover the retained origin with owner.history, retrieve the original Operation request_id through history.list/read, then use this cancellation list with that origin, current custodian and verified custody_id. Cancellation receipts remain on this dedicated read surface; they are not advertised as owner.history record kinds. Native recovery must account for retained stop intent before deciding any newly authorized continuation; old receipts neither execute stopping nor resume original work."
+    },
+    "Receipt": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/cancellation/v1"
+        },
+        "kind": {
+          "const": "OperationCancellationReceipt"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "request_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "cancellation_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "request_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "authenticated_principal": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "resource": {
+          "$ref": "common.schema.json#/$defs/Resource"
+        },
+        "decision": {
+          "enum": [
+            "stop-requested",
+            "already-terminal"
+          ]
+        },
+        "operation_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "operation_generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "operation_state": {
+          "enum": [
+            "accepted",
+            "running",
+            "waiting",
+            "succeeded",
+            "failed",
+            "cancelled",
+            "quarantined"
+          ]
+        },
+        "effect_certainty": {
+          "enum": [
+            "none",
+            "known",
+            "unknown"
+          ]
+        },
+        "decided_at": {
+          "$ref": "common.schema.json#/$defs/Time"
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "owner",
+        "request_id",
+        "cancellation_id",
+        "request_digest",
+        "authenticated_principal",
+        "resource",
+        "decision",
+        "operation_id",
+        "operation_generation",
+        "operation_state",
+        "effect_certainty",
+        "decided_at"
+      ],
+      "additionalProperties": false,
+      "description": "The immutable original cancellation decision, separate from the target Operation outcome. request_digest covers canonical {owner, request_id, cancellation_id}; these fields retain the original request exactly. resource and operation identity/state/generation/effect certainty are independently loaded target facts captured atomically with the decision, not caller assertions. stop-requested proves only durable acceptance of the stop intent; it does not prove current pending status, process cessation, final cancellation, rollback or release of any effect, hold, input or output custody. The target Operation remains independently readable and may subsequently succeed, fail, quarantine or cancel. already-terminal records the original terminal race without changing it. Every exact replay returns these original values and original authenticated_principal even for a different currently permitted reader. The owner retains the immutable identity, payload and receipt for its epoch lifetime, independently of Operation history pruning, and restores accepted stop intents after an ordinary restart. Restoring owner authority to a new epoch does not turn old receipts into current authority. Receipt lookup and disclosure recheck current scope permission; possession and schema validity do not authenticate the owner. CLI presentation uses observed and request_id equal to cancellation_id; success describes this decision only. A new-epoch custodian retains original cancellation receipts as read-only evidence under independently verified restoration custody. It does not restore executable stop flags from those receipts. Its newly authorized recovery must reconcile both the original operation and accepted stop intent before further effects; historical reads never revive either original execution or cancellation authority.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "decision": {
+                "const": "stop-requested"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "operation_state": {
+                "enum": [
+                  "accepted",
+                  "running",
+                  "waiting"
+                ]
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "operation_state": {
+                "enum": [
+                  "succeeded",
+                  "failed",
+                  "cancelled",
+                  "quarantined"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation_state": {
+                "const": "succeeded"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "effect_certainty": {
+                "const": "known"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Page": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/cancellation/v1"
+        },
+        "kind": {
+          "const": "OperationCancellationPage"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "request_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "traversal_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "position": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Receipt"
+          },
+          "minItems": 0,
+          "maxItems": 128
+        },
+        "next_cursor": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Cursor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "custodian": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "custody_id": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "owner",
+        "request_id",
+        "traversal_id",
+        "position",
+        "items",
+        "next_cursor",
+        "custodian",
+        "custody_id"
+      ],
+      "additionalProperties": false,
+      "description": "A complete bounded page of one retained cancellation traversal, including an empty traversal. Every receipt has this exact owner and target request and a distinct cancellation_id. position plus item count is the next position; a nonterminal page makes progress. A null next_cursor exhausts this traversal only and does not assert that no concurrent future cancellation can arrive. Non-null cursors require continuation. Receipt size is finite and the page cap bounds a frame representation, never total retained decisions. CLI presentation is observed with request_id null; no page claims the target Operation stopped. custodian is the independently authenticated current receiving owner; owner retains the original attributed epoch. For current-epoch reads they are equal and custody_id is null. For restored history they share tool/logical id with distinct epochs, and custody_id identifies an independently verified protected OwnerCustody whose origin and custodian match exactly. The current receiver independently verifies that its retained manifest includes these exact cancellation receipts and target scope; caller-selected identities or a supplied descriptor prove nothing. Every read rechecks current permission and verified custody; a changed custodian or custody rejects rather than rebinding."
+    },
+    "Target": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "request_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "operation_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "resource": {
+          "$ref": "common.schema.json#/$defs/Resource"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "state": {
+          "enum": [
+            "accepted",
+            "running",
+            "waiting",
+            "succeeded",
+            "failed",
+            "cancelled",
+            "quarantined"
+          ]
+        },
+        "effect_certainty": {
+          "enum": [
+            "none",
+            "known",
+            "unknown"
+          ]
+        }
+      },
+      "required": [
+        "owner",
+        "request_id",
+        "operation_id",
+        "resource",
+        "generation",
+        "state",
+        "effect_certainty"
+      ],
+      "additionalProperties": false,
+      "description": "Finite reference-model context projected from independently verified protected current Operation state while holding its native admission/transition exclusion. Never a wire request or a substitute for authentication, accepted-state lookup or transaction serialization.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "succeeded"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "effect_certainty": {
+                "const": "known"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

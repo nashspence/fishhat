@@ -87,6 +87,15 @@
     },
     {
       "name": "workflow.lifecycle"
+    },
+    {
+      "name": "operation.cancellation.get"
+    },
+    {
+      "name": "operation.cancellation.list"
+    },
+    {
+      "name": "workflow.transfer.get"
     }
   ],
   "max_frame_bytes": 1048576,

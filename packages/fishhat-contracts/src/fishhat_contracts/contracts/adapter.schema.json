@@ -742,6 +742,10 @@
         },
         "executor": {
           "$ref": "adapter.schema.json#/$defs/InstanceReference"
+        },
+        "private_inputs_digest": {
+          "$ref": "common.schema.json#/$defs/Digest",
+          "description": "Commitment to the original complete operation-value private input closure before durable acceptance. Hash canonical JSON of the ordered list [{handle, source, size_bytes}] projected from its owner-approved adapter-process PrivateInput records with purpose operation-value. Preserve the exact accepted order; slot IDs, use IDs, paths and provider-access credentials are excluded. This hashes metadata only, never plaintext or plaintext-derived digests. Absence means exactly the empty operation-value closure, not unresolved selection or permission to use ambient values. A nonempty closure requires this field and independently retained original bytes. Reconciliation retains the same commitment and complete ordered identity set; separately authorized current provider-access credentials may change only under a fresh private use."
         }
       },
       "required": [
@@ -774,7 +778,7 @@
           }
         }
       },
-      "description": "Owner-retained identity and state of one authorized native mutation. executor pins the complete receiving-owner-approved instance, configuration and grants; it is never resolved through a replacement enrollment. input_digest covers the exact canonical role request, excluding this attempt and its invocation wrapper. Those request bytes and every immutable referenced input remain in owner custody. Mutable state, outcome and native task knowledge do not change the attempt identity. Native dispatch requires an Invocation released by the controlling owner after durable acceptance; this record alone grants no execution authority. Once result evidence exists, certainty and native_task preserve cumulative confirmed knowledge; an unknown observation cannot erase either. Resolution requires one complete, consistent terminal method result at the retained certainty, not a synthetic outcome assembled from partial observations. A committed RetainedResult must preserve this invocation's known certainty in the owning Operation; weaker observational responses cannot become a less certain committed outcome."
+      "description": "Owner-retained identity and state of one authorized native mutation. executor pins the complete receiving-owner-approved instance, configuration and grants; it is never resolved through a replacement enrollment. input_digest covers the exact canonical role request, excluding this attempt and its invocation wrapper. Those request bytes and every immutable referenced input remain in owner custody. Mutable state, outcome and native task knowledge do not change the attempt identity. Native dispatch requires an Invocation released by the controlling owner after durable acceptance; this record alone grants no execution authority. Once result evidence exists, certainty and native_task preserve cumulative confirmed knowledge; an unknown observation cannot erase either. Resolution requires one complete, consistent terminal method result at the retained certainty, not a synthetic outcome assembled from partial observations. A committed RetainedResult must preserve this invocation's known certainty in the owning Operation; weaker observational responses cannot become a less certain committed outcome. private_inputs_digest, when present, is part of the immutable attempt identity and pins the complete ordered operation-value metadata closure before acceptance; its absence permits no operation-value private inputs."
     },
     "EffectResult": {
       "type": "object",
@@ -2225,7 +2229,7 @@
         "consumer"
       ],
       "additionalProperties": false,
-      "description": "One receiving-owner-created private value slot, committed in the original reviewed request before dispatch. Its UUID is independent of the plaintext and is never reused for another invocation or value. The exact owner including epoch equals the original Attempt owner; consumer equals the requested consumer. The owner independently authorizes the destination, provisions its protected channel, and binds its private record to the complete original Invocation, returned lease/version and opaque value_handle. A destination or value_handle is identity data, not bearer authority. Authenticated owner-local resolution requires the exact destination and original Invocation; these references are not content.get handles and never enter public content-addressed storage."
+      "description": "One receiving-owner-created private value slot, committed in the original reviewed request before dispatch. Its UUID is independent of the plaintext and is never reused for another invocation or value. The exact owner including epoch equals the original Attempt owner; consumer equals the requested consumer. The owner independently authorizes the destination, provisions its protected channel, and binds its private record to the complete original Invocation, returned lease/version and opaque value_handle. A destination or value_handle is identity data, not bearer authority. Authenticated owner-local resolution requires the exact destination and original Invocation; these references are not content.get handles and never enter public content-addressed storage. Authorized downstream adapter consumption uses adapter-process PrivateInput records and independently retained PrivateInputSource custody; it never converts these bytes into an Artifact."
     },
     "ProtectedValueHandoff": {
       "type": "object",
@@ -2302,6 +2306,132 @@
         }
       ],
       "description": "Protected delivery of the original value to the exact destination in its retained Invocation. A non-null value_handle names exactly one returned lease/version. available advertises the complete original bytes on the fixed private process channel, not completed receiving-owner custody. unknown means delivery/recoverability is unresolved; unavailable means the original value is authoritatively no longer recoverable and cannot satisfy material success. Native effect facts remain independent and retained in every state. A succeeded Operation requires available plus independently committed private byte custody. Reconciliation may only re-export the same original value to the same destination; it never issues, renews or retrieves a replacement mutation. The receiving owner retains exact bytes and resolution bindings while accepted dependent work needs them, including across process exit and original-client loss. Disposal requires all dependent custody/retention obligations to be settled; revoking a native lease does not itself erase recovery evidence or authorize disposal. Plaintext and plaintext-derived public digests never appear in this metadata, ordinary artifacts, diagnostics or logs. Explicit authorized derivation can create an encrypted publication candidate with its existing ProducedMaterial lineage. When this exact destination already has committed private bytes, the receiving owner compares the complete re-export against those retained original bytes and rejects any difference, including same-size substitution. Reconciliation cannot overwrite original custody. This comparison remains private; native first-intake authentication and stable source custody are separate requirements. The receiving owner also preserves the originally committed identity: source/entry/version/value_handle for a secret, or complete issuer/identity/consumer/lease/value_handle for a credential. Re-export cannot replace those fields even when bytes are identical. Later validity and expiry observations remain separate from this immutable binding."
+    },
+    "PrivateValueIdentity": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "secret"
+            },
+            "source": {
+              "$ref": "common.schema.json#/$defs/Id"
+            },
+            "entry": {
+              "$ref": "common.schema.json#/$defs/Entry"
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160,
+              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*(?![\\s\\S])"
+            },
+            "value_handle": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160,
+              "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*(?![\\s\\S])"
+            }
+          },
+          "required": [
+            "kind",
+            "source",
+            "entry",
+            "version",
+            "value_handle"
+          ],
+          "additionalProperties": false,
+          "description": "Immutable original secret identity. Validity and expiry observations do not change the selected bytes."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "credential"
+            },
+            "issuer": {
+              "$ref": "adapter.schema.json#/$defs/InstanceReference"
+            },
+            "identity": {
+              "$ref": "adapter.schema.json#/$defs/Handle"
+            },
+            "consumer": {
+              "$ref": "common.schema.json#/$defs/Id"
+            },
+            "lease": {
+              "$ref": "adapter.schema.json#/$defs/Handle"
+            },
+            "value_handle": {
+              "$ref": "adapter.schema.json#/$defs/Handle"
+            }
+          },
+          "required": [
+            "kind",
+            "issuer",
+            "identity",
+            "consumer",
+            "lease",
+            "value_handle"
+          ],
+          "additionalProperties": false,
+          "description": "Immutable original credential identity. Validity and expiry observations do not change the selected bytes."
+        }
+      ]
+    },
+    "PrivateInputSource": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "enrolled"
+            },
+            "owner": {
+              "$ref": "common.schema.json#/$defs/Owner"
+            },
+            "enrollment_id": {
+              "$ref": "common.schema.json#/$defs/UUID"
+            },
+            "version": {
+              "$ref": "common.schema.json#/$defs/UUID"
+            }
+          },
+          "required": [
+            "kind",
+            "owner",
+            "enrollment_id",
+            "version"
+          ],
+          "additionalProperties": false,
+          "description": "An independently approved owner-private credential or value enrollment and exact immutable version. Both UUIDs are opaque random identities, never plaintext-derived digests or bearer authority. The custodian retains original bytes under this pair and never rebinds a version. Enrollment approval binds allowed consumer executors, logical handles, purposes and current access. Provider configuration may name a logical handle, but cannot create or retarget this enrollment."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "produced"
+            },
+            "invocation_digest": {
+              "$ref": "common.schema.json#/$defs/Digest"
+            },
+            "destination": {
+              "$ref": "adapter.schema.json#/$defs/ProtectedValueDestination"
+            },
+            "value": {
+              "$ref": "adapter.schema.json#/$defs/PrivateValueIdentity"
+            }
+          },
+          "required": [
+            "kind",
+            "invocation_digest",
+            "destination",
+            "value"
+          ],
+          "additionalProperties": false,
+          "description": "The exact privately retained output of an authenticated original secret-source retrieve or credential-issuer issue/renew invocation. invocation_digest hashes canonical {attempt: immutable EffectAttempt fields, request: exact original Request}; omit only state, certainty, outcome and native_task from attempt. The receiving owner independently verifies the full original invocation, original typed result, available handoff and committed original byte custody. destination and value retain the original producing identity, even across a separately authorized cross-owner delivery. These metadata commitments never hash plaintext. Current validity and consumer authorization remain separate checks; metadata alone grants no access."
+        }
+      ]
     }
   },
   "description": "Descriptor for a separately approved implementation. Provider-owned configuration, component and source schemas retain their JSON Schema format semantics. Bare date-time asserts RFC3339 syntax and Gregorian calendar validity without normalizing strings or inheriting core Time precision/UTC restrictions. Leap-second syntax is checked only at the offset-adjusted UTC end of a month; actual insertion or negative-leap schedules require provider authority and are not qualification supplied by this validator. Provider schemas assert only date, date-time, ipv4, ipv6 and uuid formats. Unknown formats, nested dialect declarations, dialect vocabularies and unsupported keywords (including unevaluatedItems and unevaluatedProperties) reject during descriptor approval. The profile permits at most 262144 schema bytes, depth 32 and 4096 expanded schema positions. Pattern strings are at most 256 characters, contain no backreferences, lookbehind or inline flags, and variable repetition applies only to character atoms (apart from optional groups), with at most eight alternative paths; only patterns with a linear work bound are admitted. Pattern inputs are at most 4096 characters. Configuration evaluation admits at most 2000000 charged work units including linear regex bounds and compared bytes for const, enum and hash-indexed structural uniqueness; exhausted capacity is an explicit rejection, never successful partial validation. Source configuration bytes retain the separate 1048576-byte boundary."

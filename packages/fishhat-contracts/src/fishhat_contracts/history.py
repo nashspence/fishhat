@@ -148,7 +148,21 @@ def validate_history_result(
                     item["record"]["kind"] == request["record_kind"],
                     "historical record kind substitution",
                 )
-                identity = canonical([item["record"]["kind"], item["record"]["id"]])
+                if (
+                    request["record_kind"] == "WorkflowTransferRecord"
+                    and request["resource"] is not None
+                ):
+                    _require(
+                        item["record"]["resource"] == request["resource"],
+                        "historical transfer workflow substitution",
+                    )
+                identity = canonical(
+                    [
+                        item["record"]["kind"],
+                        item["record"]["id"],
+                        item["record"].get("resource"),
+                    ]
+                )
                 _require(
                     identity not in records and item["snapshot_id"] not in snapshots,
                     "duplicate historical record",
