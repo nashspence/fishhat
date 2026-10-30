@@ -111,7 +111,20 @@
       "requiredness_authority": "release.toml#/governance/required_checks",
       "result_authority": "GitHub job conclusion; classification supplies no execution proof",
       "scope": "pytest groups retain separate authority and exact local scopes",
-      "work_sha256": "071cd894095ae606e895b4395a12c5cabaa7433dd7d03c0235d275b70bebcd85"
+      "work_sha256": "a05f55042aee4c8d6c4ec1cab1a55586257b9a2ec5df61177a297145816b24bd"
+    },
+    ".github/workflows/ci.yml:unit-shards": {
+      "authority": "release.toml",
+      "purposes": [
+        "implementation",
+        "public-contract",
+        "repository-policy",
+        "validation-tooling"
+      ],
+      "requiredness_authority": "release.toml#/governance/required_checks",
+      "result_authority": "GitHub job conclusion; classification supplies no execution proof",
+      "scope": "pytest groups retain separate authority and exact local scopes",
+      "work_sha256": "589638aa79275be11350b7c7ca4cecc03ea342003420b6408808fd360ea1b677"
     },
     ".github/workflows/ci.yml:watchdog-regressions": {
       "authority": "scripts/validation_timeouts.py",
@@ -126,14 +139,14 @@
       "work_sha256": "520ebad7a4f9a98f6c8037bb102fdd7d41fbed0a5ef40ebc58df1d7861831721"
     },
     ".github/workflows/ci.yml:watchdogs": {
-      "authority": "scripts/validation_workflows.py",
+      "authority": ".github/workflows/ci.yml",
       "purposes": [
         "validation-tooling"
       ],
       "requiredness_authority": "release.toml#/governance/required_checks",
       "result_authority": "GitHub job conclusion; classification supplies no execution proof",
-      "scope": "validation budget planning; no product qualification",
-      "work_sha256": "833bb71d99176cde8a2e4a9b43660de417aea98520aab9cbacbb7753a8411306"
+      "scope": "validation budget planning and advisory scheduling reference; no product qualification",
+      "work_sha256": "3b35c45c024de8130f8d047017072f80126e431e94f6e6c69b25826e694ebe0d"
     },
     ".github/workflows/codeql.yml:analyze": {
       "authority": "release.toml",
@@ -293,7 +306,7 @@
         "repository-policy"
       ],
       "scope": "repository-local",
-      "work_sha256": "a84daa744c82210b8d94e1f0526f98484b2b15beef40e437d9973ce6cd7d6c79"
+      "work_sha256": "d71171bef5034a6c1742c0c3a0402bf14443bb3dfceb3e0a5e831ac53d4f95e1"
     },
     "make:license": {
       "authority": "Makefile",
@@ -11557,6 +11570,134 @@
     {
       "node": "tests/test_tracking.py::TrackingContracts::test_unknown_top_fields",
       "purpose_sha256": "53a023a3fef7b9eb36fa1c06d0776f8641e10c42d545f723b4fc338287a6b6e3"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_constituent_semantics_are_rechecked_after_digest_changes[attempt]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_constituent_semantics_are_rechecked_after_digest_changes[command]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_constituent_semantics_are_rechecked_after_digest_changes[coverage]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_constituent_semantics_are_rechecked_after_digest_changes[origin]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_constituent_semantics_are_rechecked_after_digest_changes[phase]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_constituent_semantics_are_rechecked_after_digest_changes[profile]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_constituent_semantics_are_rechecked_after_digest_changes[shard-index]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_constituent_semantics_are_rechecked_after_digest_changes[source]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_constituent_semantics_are_rechecked_after_digest_changes[stats]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_constituent_semantics_are_rechecked_after_digest_changes[subtest]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_constituent_semantics_are_rechecked_after_digest_changes[worker]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_failed_assembly_records_latest_canonical_failure_without_fallback[failed-receipt]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_failed_assembly_records_latest_canonical_failure_without_fallback[foreign-plan]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_failed_assembly_records_latest_canonical_failure_without_fallback[missing-artifact]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_failed_assembly_records_latest_canonical_failure_without_fallback[skipped-case]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_observed_resource_scopes_are_not_summed_elapsed_or_simultaneous_rss",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_optional_reference_contact_failure_is_explicit_and_nonblocking",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_partial_stale_or_altered_assemblies_cannot_qualify[assembled-case]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_partial_stale_or_altered_assemblies_cannot_qualify[assembled-cpu]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_partial_stale_or_altered_assemblies_cannot_qualify[assembled-origin]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_partial_stale_or_altered_assemblies_cannot_qualify[duplicate-result]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_partial_stale_or_altered_assemblies_cannot_qualify[missing-result]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_partial_stale_or_altered_assemblies_cannot_qualify[plan]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_partial_stale_or_altered_assemblies_cannot_qualify[raw-receipt]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_partial_stale_or_altered_assemblies_cannot_qualify[raw-xml]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_partial_stale_or_altered_assemblies_cannot_qualify[wrong-selection]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_plan_is_deterministic_and_starts_heavy_work_early",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_real_shards_assemble_once_and_retain_raw_receipts",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_unavailable_duration_reference_never_omits_current_tests[malformed]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_unavailable_duration_reference_never_omits_current_tests[missing]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_unavailable_duration_reference_never_omits_current_tests[nonfinite]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_workflow_requires_complete_aggregation_and_attempt_scoped_raw_artifacts",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
     },
     {
       "node": "tests/test_validation.py::test_changed_or_dirty_sources_cannot_qualify",

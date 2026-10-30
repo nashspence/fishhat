@@ -449,7 +449,7 @@ def current_run(root: Path, source: dict[str, Any]) -> dict[str, Any] | None:
     selected = max(runs, key=lambda r: (r["started_at"], r["id"]))
     tests = selected.get("tests")
     if (
-        not full_check_passed(selected)
+        not full_check_passed(selected, root)
         or selected["selection"].get("work_sha256") != digest(CANONICAL["unit"])
         or selected["selection"].get("environment_overrides") != []
         or selected.get("profile") != conditions()

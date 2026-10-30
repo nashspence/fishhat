@@ -187,7 +187,7 @@ def workflow_errors(text: str, name: str) -> list[str]:
         needs = job.get("needs", [])
         needs = [needs] if isinstance(needs, str) else needs
         env = job.get("env", {})
-        if key == "tests" and "watchdog-regressions" not in needs:
+        if key in {"tests", "unit-shards"} and "watchdog-regressions" not in needs:
             errors.append(name + ": unit gate bypasses watchdog regressions")
         if key == "watchdog-regressions" and job.get("strategy", {}).get("matrix", {}).get(
             "watchdog_scale"

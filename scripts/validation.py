@@ -181,13 +181,14 @@ def read_test_results(path: Path, root: Path = ROOT) -> dict[str, Any] | None:
         "profile": value.get("profile"),
         "watchdogs": value.get("watchdogs"),
         "worker_watchdogs": value.get("worker_watchdogs", {}),
+        "shard": value.get("shard"),
     }
     return result if valid_evidence(result, root) else None
 
 
-def full_check_passed(receipt: dict[str, Any]) -> bool:
+def full_check_passed(receipt: dict[str, Any], root: Path = ROOT) -> bool:
     tests = receipt.get("tests")
-    return bool(
+    passed = bool(
         valid_report(receipt.get("watchdogs"))
         and receipt["watchdogs"]["scale"] == receipt["profile"].get("watchdog_scale")
         and receipt["state"] == "completed"
@@ -199,6 +200,7 @@ def full_check_passed(receipt: dict[str, Any]) -> bool:
             receipt["target"] not in TEST_TARGETS
             or (
                 tests
+                and tests.get("shard") is None
                 and tests.get("profile") == receipt["profile"]
                 and valid_report(tests.get("watchdogs"))
                 and tests["watchdogs"]["scale"] == receipt["watchdogs"]["scale"]
@@ -209,6 +211,12 @@ def full_check_passed(receipt: dict[str, Any]) -> bool:
             )
         )
     )
+
+    if passed and "assembly" in receipt:
+        from scripts.unit_shards import valid_assembly
+
+        return valid_assembly(receipt, root)
+    return passed
 
 
 def write_receipt(path: Path, value: dict[str, Any]) -> None:
@@ -302,7 +310,7 @@ def run(target: str, command: list[str], root: Path = ROOT) -> int:
                 duration_seconds=round(time.monotonic() - started, 6),
             )
             receipt["watchdogs"] = current().report()
-            receipt["full_check_passed"] = full_check_passed(receipt)
+            receipt["full_check_passed"] = full_check_passed(receipt, root)
             write_receipt(path, receipt)
     print(
         json.dumps(

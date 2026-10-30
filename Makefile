@@ -61,6 +61,8 @@ help:
 		'FISHHAT_VALIDATION_TIMEOUT_SCALE: finite positive validation watchdog factor; default 1.' \
 		'It changes observation budgets, preserves runtime deadlines and records actual time unchanged.' \
 		'CI resolves the repository variable before jobs start; factors beyond platform ceilings fail.' \
+		'CI uses two duration-balanced runner shards per Python version; make unit remains complete.' \
+		'Retry the full CI workflow to produce one consistent shard set for the new attempt.' \
 		'Receipts: artifacts/validation; mandatory test stats/targets: artifacts/test-stats; profiles: artifacts/profiles.' \
 		'Use TESTS for unit paths and args for pytest flags; test/check also invoke other tools.'
 
