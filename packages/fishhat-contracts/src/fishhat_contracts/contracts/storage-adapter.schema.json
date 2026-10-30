@@ -43,6 +43,9 @@
         "hard_isolation": {
           "type": "boolean",
           "description": "Whether the exact approved byte and inode ceilings must be enforced for the entire independently verified allocation domain."
+        },
+        "precondition": {
+          "$ref": "#/$defs/AllocationPrecondition"
         }
       },
       "required": [
@@ -51,10 +54,11 @@
         "capacity_bytes",
         "capacity_inodes",
         "purposes",
-        "hard_isolation"
+        "hard_isolation",
+        "precondition"
       ],
       "additionalProperties": false,
-      "description": "Plan the exact approved allocation identity and enforced byte/inode ceilings. Native granularity or provider rounding that changes either ceiling must be disclosed and separately reviewed; it cannot be silently accepted as extra capacity."
+      "description": "Plan the exact approved allocation identity and enforced byte/inode ceilings. Native granularity or provider rounding that changes either ceiling must be disclosed and separately reviewed; it cannot be silently accepted as extra capacity. The required precondition distinguishes creating only an absent allocation from changing one exact existing incarnation. Every successful result must preserve the approved accounting domain; update-exact additionally preserves its native_identity_digest. For create-if-absent, the original returned incarnation is retained as produced identity and cannot be replaced during recovery."
     },
     "allocate": {
       "type": "object",
@@ -97,6 +101,9 @@
         "hard_isolation": {
           "type": "boolean",
           "description": "Whether the exact approved byte and inode ceilings must be enforced for the entire independently verified allocation domain."
+        },
+        "precondition": {
+          "$ref": "#/$defs/AllocationPrecondition"
         }
       },
       "required": [
@@ -105,10 +112,11 @@
         "capacity_bytes",
         "capacity_inodes",
         "purposes",
-        "hard_isolation"
+        "hard_isolation",
+        "precondition"
       ],
       "additionalProperties": false,
-      "description": "Establish the exact approved enforced byte and inode ceilings on the independently verified allocation. For an existing allocation this updates quotas under current owner resource preconditions and exclusion; it does not recreate, retarget or change its native incarnation. A change of allocation identity requires separate owner approval. Reject unsupported exact enforcement or a reduction that cannot be achieved safely without discarding retained data. The backing store may be larger, but successful effective ceilings must equal the reviewed request, including after reconciliation."
+      "description": "Establish the exact approved enforced byte and inode ceilings on the independently verified allocation. For an existing allocation this updates quotas under current owner resource preconditions and exclusion; it does not recreate, retarget or change its native incarnation. A change of allocation identity requires separate owner approval. Reject unsupported exact enforcement or a reduction that cannot be achieved safely without discarding retained data. The backing store may be larger, but successful effective ceilings must equal the reviewed request, including after reconciliation. The required precondition distinguishes creating only an absent allocation from changing one exact existing incarnation. Every successful result must preserve the approved accounting domain; update-exact additionally preserves its native_identity_digest. For create-if-absent, the original returned incarnation is retained as produced identity and cannot be replaced during recovery."
     },
     "retire": {
       "type": "object",
@@ -926,6 +934,47 @@
         "retirement"
       ],
       "additionalProperties": false
+    },
+    "AllocationPrecondition": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "create-if-absent"
+            },
+            "accounting_domain": {
+              "$ref": "adapter.schema.json#/$defs/Handle"
+            }
+          },
+          "required": [
+            "kind",
+            "accounting_domain"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "update-exact"
+            },
+            "accounting_domain": {
+              "$ref": "adapter.schema.json#/$defs/Handle"
+            },
+            "native_identity_digest": {
+              "$ref": "common.schema.json#/$defs/Digest"
+            }
+          },
+          "required": [
+            "kind",
+            "accounting_domain",
+            "native_identity_digest"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "description": "The independently approved allocation preimage, retained in the exact original request before acceptance. accounting_domain is the receiving-owner-verified canonical capacity domain, not an adapter-local alias or caller-created authority. create-if-absent requires verified absence of this allocation handle in that exact domain immediately before creation; an existing allocation is a conflict, never an implicit quota update or adoption. update-exact requires the existing allocation to match the selected domain and native_identity_digest; absence, recreation or replacement rejects and cannot become creation. The executor independently verifies the target and maintains native exclusion or an equivalent compare-and-apply guarantee through mutation. Reconciliation retains this original precondition and observes the original effect without recreating or repeating it. Identity data and a successful shape check do not prove native absence, exclusion or permission."
     }
   },
   "oneOf": [

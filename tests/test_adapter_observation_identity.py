@@ -157,7 +157,12 @@ def test_conflicting_logical_records_reject_within_one_page(role):
 @pytest.mark.parametrize("role", ROLES)
 def test_sequence_rejects_cross_page_duplicates_without_consuming_failed_page(role):
     first, response = query_page(role, continuation="page:two")
-    sequence = ObservationSequence(role, first, approved_binding=first["input"]["binding"])
+    sequence = ObservationSequence(
+        role,
+        first,
+        approved_binding=first["input"]["binding"],
+        approved_runtime_binding=first["input"].get("target"),
+    )
     assert sequence.accept(first, response)
     second, reply = query_page(role, cursor="page:two")
     records = reply["output"][collection(role)]
@@ -175,7 +180,12 @@ def test_sequence_rejects_cross_page_duplicates_without_consuming_failed_page(ro
 @pytest.mark.parametrize("role", ROLES)
 def test_exact_page_retries_are_idempotent_even_after_completion(role):
     first, response = query_page(role, continuation="page:two")
-    sequence = ObservationSequence(role, first, approved_binding=first["input"]["binding"])
+    sequence = ObservationSequence(
+        role,
+        first,
+        approved_binding=first["input"]["binding"],
+        approved_runtime_binding=first["input"].get("target"),
+    )
     assert sequence.accept(first, response)
     assert not sequence.accept(copy.deepcopy(first), copy.deepcopy(response))
     second, reply = query_page(role, index=1, cursor="page:two")
@@ -192,7 +202,12 @@ def test_exact_page_retries_are_idempotent_even_after_completion(role):
 @pytest.mark.parametrize("change", ["query", "cursor", "cycle"])
 def test_traversal_cannot_change_query_skip_pages_or_cycle(change):
     first, response = query_page("runtime", count=0, continuation="page:two")
-    sequence = ObservationSequence("runtime", first, approved_binding=first["input"]["binding"])
+    sequence = ObservationSequence(
+        "runtime",
+        first,
+        approved_binding=first["input"]["binding"],
+        approved_runtime_binding=first["input"].get("target"),
+    )
     sequence.accept(first, response)
     second, reply = query_page("runtime", count=0, cursor="page:two", continuation="page:three")
     sequence.accept(second, reply)
@@ -211,7 +226,12 @@ def test_traversal_cannot_change_query_skip_pages_or_cycle(change):
 def test_unknown_coverage_does_not_become_complete_or_resume():
     query, reply = query_page("runtime")
     reply["coverage"] = "unknown"
-    sequence = ObservationSequence("runtime", query, approved_binding=query["input"]["binding"])
+    sequence = ObservationSequence(
+        "runtime",
+        query,
+        approved_binding=query["input"]["binding"],
+        approved_runtime_binding=query["input"].get("target"),
+    )
     assert sequence.accept(query, reply)
     assert not sequence.complete
     query["input"]["cursor"] = "page:unissued"
@@ -285,7 +305,11 @@ def test_observation_sequence_linear_work(role):
 
         def traverse(first=first, approved=approved, issuers=issuers, pages=pages):
             sequence = ObservationSequence(
-                role, first, approved_binding=approved, approved_issuers=issuers
+                role,
+                first,
+                approved_binding=approved,
+                approved_runtime_binding=first["input"].get("target"),
+                approved_issuers=issuers,
             )
             accepted = 0
             for query, reply in pages:

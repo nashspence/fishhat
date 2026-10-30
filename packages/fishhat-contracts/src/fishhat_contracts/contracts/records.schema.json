@@ -140,75 +140,7 @@
       "description": "The fishhat v1 owner witness signature profile is Ed25519 over the literal ASCII bytes deployment-ops/witness/v1 followed by one zero byte (0x00), followed by RFC 8785 JCS UTF-8 bytes of this complete Witness object with only its top-level signature property omitted. No newline, BOM, Unicode normalization or additional field omission is allowed. signature is canonical padded RFC 4648 standard base64 of the 64 signature bytes. key_id selects an independently enrolled Ed25519 public key for the exact owner identity and epoch; neither the witness nor source data enrolls a key. The receiving owner authenticates the signature and checks the expected owner, subject_digest, kind, generation, state and relevant workflow binding. subject_digest covers the exact subject projection defined by that record contract, encoded with the common JCS profile; the signature authenticates the entire witness body, including null and empty fields. Valid signatures do not by themselves establish current permission, native truth, custody or continuing exclusion."
     },
     "HostPreimage": {
-      "type": "object",
-      "description": "The reviewed three-way comparison for one host.apply effect. The executor owns one deterministic projection of that effect's exact native target scope, including target identity, absence, managed content and relevant metadata. Baseline, live and proposed use that same projection; their digests do not contain native values. The baseline is the state expected from the accepted source under the matching owner/resource precondition. A projection cannot omit a target that the effect may replace. This record does not observe native state, establish capture custody or authorize an effect by itself.",
-      "properties": {
-        "effect_step": {
-          "$ref": "common.schema.json#/$defs/Id",
-          "description": "Exactly one matching Plan.effects step, which supplies the executor, resource and input scope. Step action names cannot exempt an effect from comparison."
-        },
-        "baseline_digest": {
-          "$ref": "common.schema.json#/$defs/Digest",
-          "description": "Projection of the currently accepted managed state. A target without an accepted baseline is represented by explicit absence in the same projection, not by an invented successful observation."
-        },
-        "live_digest": {
-          "$ref": "common.schema.json#/$defs/Digest",
-          "description": "Projection actually observed when preparing this review, including administrator edits relative to the accepted baseline. Every disposition is limited to this exact live preimage."
-        },
-        "proposed_digest": {
-          "$ref": "common.schema.json#/$defs/Digest",
-          "description": "Projection that the exact reviewed source and effect would establish. Preserve requires this digest to equal live_digest; retaining different live state cannot be reported as applying the proposed state."
-        },
-        "disposition": {
-          "enum": [
-            "preserve",
-            "capture",
-            "overwrite"
-          ],
-          "description": "Explicit administrator disposition of the reviewed live state. Preserve keeps it and requires the proposed projection to match it. Capture permits replacement only after the executor verifies durable custody of that exact live preimage as a reviewable source proposal or recovery artifact. Overwrite permits replacing the reviewed live preimage without that capture requirement. None permits replacing a later edit, and capture neither publishes nor adopts a source proposal."
-        },
-        "capture_digest": {
-          "anyOf": [
-            {
-              "$ref": "common.schema.json#/$defs/Digest"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "description": "Exact retained capture artifact digest, required only for capture. The executor must independently verify that this artifact covers the effect scope and live_digest and remains in its custody before replacement. A digest supplied in a plan is not custody evidence."
-        }
-      },
-      "required": [
-        "effect_step",
-        "baseline_digest",
-        "live_digest",
-        "proposed_digest",
-        "disposition",
-        "capture_digest"
-      ],
-      "additionalProperties": false,
-      "if": {
-        "properties": {
-          "disposition": {
-            "const": "capture"
-          }
-        }
-      },
-      "then": {
-        "properties": {
-          "capture_digest": {
-            "$ref": "common.schema.json#/$defs/Digest"
-          }
-        }
-      },
-      "else": {
-        "properties": {
-          "capture_digest": {
-            "type": "null"
-          }
-        }
-      }
+      "$ref": "host-preimages.schema.json#/$defs/HostPreimage"
     },
     "Plan": {
       "type": "object",
@@ -450,13 +382,17 @@
           },
           "minItems": 1
         },
+        "maintenance": {
+          "$ref": "maintenance.schema.json#/$defs/MaintenanceExecution",
+          "description": "Required only for app.maintenance-run. Pin the independently resolved accepted release, exact task and occurrence, expanded action or native hook and original checkpoint selection before review. Its complete material closure belongs in input_digests. Accepted retries use this original capsule, even after the source, clock or latest backup changes."
+        },
         "host_preimages": {
           "type": "array",
           "items": {
             "$ref": "records.schema.json#/$defs/HostPreimage"
           },
           "minItems": 1,
-          "description": "Required exactly for a host.apply subject and covers every effect step exactly once, including delegated effects and arbitrary executor action names. The plan digest binds every comparison and disposition. Before each native effect, its executor must reobserve the same projection, reject any mismatch with the reviewed live_digest, and maintain exclusion or an equivalent compare-and-apply guarantee through mutation. Earlier offline validation cannot supply that native guarantee."
+          "description": "Required exactly for a host.apply subject and covers every effect step exactly once, including delegated effects and arbitrary executor action names. The plan digest binds every comparison, disclosure classification and disposition. The executor independently classifies complete native scopes before emitting the Plan and again before mutation; secret-bearing or unclassified scopes require confidential opaque references with private custody. Before each native effect, its executor must reobserve the same projection, compare it to the reviewed live digest for public scopes or retained private bytes for confidential scopes, and maintain exclusion or an equivalent compare-and-apply guarantee through mutation. Earlier offline validation cannot supply that native guarantee."
         },
         "checkpoint_required": {
           "type": "boolean",
@@ -702,7 +638,34 @@
           ]
         }
       },
-      "description": "A reviewable proposal for exact owner-authorized work. Human consequences, exact effect targets and host.apply live-change dispositions are part of its digest. Preparing, reviewing or publishing this plan does not accept or execute it."
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "subject": {
+                "properties": {
+                  "action": {
+                    "const": "app.maintenance-run"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "maintenance"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "maintenance"
+              ]
+            }
+          }
+        }
+      ],
+      "description": "A reviewable proposal for exact owner-authorized work. Human consequences, exact effect targets, maintenance expansion and host.apply live-change dispositions are part of its digest. Preparing, reviewing or publishing this plan does not accept or execute it."
     },
     "Operation": {
       "type": "object",
@@ -1051,6 +1014,7 @@
                     "enum": [
                       "app.backup",
                       "app.cleanup",
+                      "app.maintenance-run",
                       "host.capture-changes",
                       "publisher.publish",
                       "publisher.recover",

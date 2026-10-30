@@ -3,7 +3,7 @@ kind: App
 id: hello
 runtime:
   instance: quadlet
-  source_schema_digest: sha256:3ffa27071751b63593be7044c7fe50cb8f6a6bb5360f6f73be3baa7d0e3768fe
+  source_schema_digest: sha256:d1dc8d7613a45fa3f516fa4f34c890bea3f9aef45e6d10caaeaa709146a8c3e7
   source:
     files:
     - quadlet/web.container

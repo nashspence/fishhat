@@ -165,17 +165,22 @@ def service_request(activity: str = "running", registry: Registry | None = None)
 
 def binding() -> dict:
     _, _, instance = runtime_registry()
+    return observation_target(instance_reference(instance, SCOPE))
+
+
+def observation_target(executor: dict, *, admission_generation: int = 0) -> dict:
+    """Synthetic independently retained target, separate from the observer reference."""
     return {
-        "subject": "demo",
-        "instance": "native-demo",
+        "subject": executor["scope"]["handle"],
+        "instance": executor["instance"],
         "generation": 1,
-        "installation_digest": D,
-        "configuration_digest": digest({"account": "app-demo"}),
-        "scope": copy.deepcopy(SCOPE),
+        "installation_digest": executor["installation_digest"],
+        "configuration_digest": executor["configuration_digest"],
+        "scope": copy.deepcopy(executor["scope"]),
         "native_incarnation": INCARNATION,
-        "admission_generation": 0,
-        "instance_generation": 1,
-        "instance_digest": digest(instance),
+        "admission_generation": admission_generation,
+        "instance_generation": executor["instance_generation"],
+        "instance_digest": executor["instance_digest"],
     }
 
 
@@ -223,4 +228,18 @@ def observation(admission_generation: int = 0, *, barrier: dict | None = None) -
 def fresh_observation(owner, subject: str = "demo", *, method: str = "observe") -> dict:
     query = owner.observation_request(subject, owner_approved=True, method=method)
     barrier = query["input"]["barrier"]
-    return observation(barrier["admission_generation"], barrier=barrier)
+    value = observation(barrier["admission_generation"], barrier=barrier)
+    target = query["input"]["target"]
+    value.update(
+        {
+            key: copy.deepcopy(target[key])
+            for key in (
+                "scope",
+                "generation",
+                "native_incarnation",
+                "instance",
+                "installation_digest",
+            )
+        }
+    )
+    return value

@@ -122,6 +122,7 @@ def validate_issuer_phase_context(
     workflow: dict[str, Any],
     *,
     owner: dict[str, Any],
+    authority: Literal["driver", "native-owner"] = "driver",
     recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> None:
     """Check the complete unsigned issuer-local closure before protected signing.
@@ -146,6 +147,7 @@ def validate_issuer_phase_context(
             "phase_evidence": {"transition": transition, "participants": participants},
         },
         workflow,
+        authority=authority,
         participant_owner=owner,
         unsigned=True,
         recovery_readers=recovery_readers,

@@ -13,7 +13,7 @@ import copy
 import uuid
 from collections.abc import Callable, Iterable, Mapping
 from datetime import datetime
-from typing import Any, NoReturn
+from typing import Any, Literal, NoReturn
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
 
@@ -36,6 +36,7 @@ def _require(condition: bool, message: str) -> None:
 
 
 def _bounds(name: str) -> Bounds:
+    native = name.startswith("native-")
     return Bounds(
         id="workflow.attestation-" + name,
         work=(
@@ -47,10 +48,14 @@ def _bounds(name: str) -> Bounds:
         limits=(),
         capacity=("native issuer may refuse new capacity without evicting accepted identities",),
         proofs=(
-            "tests/test_workflow_attestations.py::test_two_owner_public_attestation_path_and_lost_reply_replay",
+            "tests/test_workflow_native_attestations.py::test_two_owner_native_proof_acquisition_settlement_and_replay"
+            if native
+            else "tests/test_workflow_attestations.py::test_two_owner_public_attestation_path_and_lost_reply_replay",
         ),
         linear_proofs=(
-            "tests/test_workflow_attestations.py::test_attestation_complete_issuance_assembly_restore_and_replay_are_linear",
+            "tests/test_workflow_native_attestations.py::test_native_attestation_complete_acquisition_check_and_assembly_are_linear"
+            if native
+            else "tests/test_workflow_attestations.py::test_attestation_complete_issuance_assembly_restore_and_replay_are_linear",
         ),
     )
 
@@ -201,6 +206,99 @@ class PhaseAttestationJournal:
         expires_at: str,
         recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
     ) -> dict[str, Any]:
+        """Issue a driver proof; request data cannot select owner-native authority."""
+        return self._issue(
+            request,
+            workflow,
+            expected_owner=expected_owner,
+            principal=principal,
+            read_authorized=read_authorized,
+            attest_authorized=attest_authorized,
+            native_authorized=native_authorized,
+            authority="driver",
+            authenticated_peer=None,
+            verified_receiver=verified_receiver,
+            verified_driver=verified_driver,
+            verified_participants=verified_participants,
+            verified_preparations=verified_preparations,
+            issued_at=issued_at,
+            expires_at=expires_at,
+            recovery_readers=recovery_readers,
+        )
+
+    @bounds(_bounds("native-issue"))
+    def issue_native(
+        self,
+        request: dict[str, Any],
+        workflow: dict[str, Any],
+        *,
+        expected_owner: dict[str, Any],
+        principal: str,
+        authenticated_peer: dict[str, Any] | None,
+        read_authorized: bool,
+        attest_authorized: bool,
+        native_authorized: bool,
+        verified_receiver: dict[str, Any] | None = None,
+        verified_participants: list[dict[str, Any]] | None = None,
+        verified_preparations: list[dict[str, Any]] | None = None,
+        issued_at: str,
+        expires_at: str,
+        recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
+    ) -> dict[str, Any]:
+        """Protected peer issuance for the receiver's final native settlement only.
+
+        authenticated_peer comes from independently enrolled owner transport or
+        protected same-owner dispatch, never principal spelling or request data.
+        A driver or administrator without that identity cannot use this path.
+        """
+        return self._issue(
+            request,
+            workflow,
+            expected_owner=expected_owner,
+            principal=principal,
+            authenticated_peer=authenticated_peer,
+            read_authorized=read_authorized,
+            attest_authorized=attest_authorized,
+            native_authorized=native_authorized,
+            authority="native-owner",
+            verified_receiver=verified_receiver,
+            verified_participants=verified_participants,
+            verified_preparations=verified_preparations,
+            issued_at=issued_at,
+            expires_at=expires_at,
+            recovery_readers=recovery_readers,
+        )
+
+    def _authorize_peer(
+        self, request: dict[str, Any], authenticated_peer: dict[str, Any] | None
+    ) -> None:
+        if authenticated_peer != request["transition"]["owner"]:
+            self._refuse(
+                "PERMISSION_DENIED",
+                "independently authenticated receiving owner epoch required",
+                request["workflow_id"],
+            )
+
+    def _issue(
+        self,
+        request: dict[str, Any],
+        workflow: dict[str, Any],
+        *,
+        expected_owner: dict[str, Any],
+        principal: str,
+        read_authorized: bool,
+        attest_authorized: bool,
+        native_authorized: bool,
+        authority: Literal["driver", "native-owner"],
+        authenticated_peer: dict[str, Any] | None,
+        verified_receiver: dict[str, Any] | None = None,
+        verified_driver: dict[str, Any] | None = None,
+        verified_participants: list[dict[str, Any]] | None = None,
+        verified_preparations: list[dict[str, Any]] | None = None,
+        issued_at: str,
+        expires_at: str,
+        recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
+    ) -> dict[str, Any]:
         """Issue only after independent live verification, or rediscover exact old custody.
 
         Every verified argument and permission is protected receiving context,
@@ -209,7 +307,11 @@ class PhaseAttestationJournal:
         participant. Missing protection refuses issuance. Current read scope covers
         the entire original result, not merely possession of a workflow identity.
         """
-        validate("workflow-evidence.schema.json", request, "AttestationRequest")
+        validate(
+            "workflow-evidence.schema.json",
+            request,
+            "AttestationRequest" if authority == "driver" else "NativeAttestationRequest",
+        )
         workflow_id = request["workflow_id"]
         self._authorize_read(
             request["owner"],
@@ -218,6 +320,8 @@ class PhaseAttestationJournal:
             principal=principal,
             read_authorized=read_authorized,
         )
+        if authority == "native-owner":
+            self._authorize_peer(request, authenticated_peer)
         retained = self._records.get(request["attestation_id"])
         if retained is not None:
             if retained["request"] != request:
@@ -232,9 +336,10 @@ class PhaseAttestationJournal:
                 workflow_id,
             )
         try:
-            self._current_context(
+            self._checked_context(
                 request,
                 workflow,
+                authority=authority,
                 principal=principal,
                 verified_receiver=verified_receiver,
                 verified_driver=verified_driver,
@@ -264,6 +369,7 @@ class PhaseAttestationJournal:
                 participants,
                 verified_receiver,
                 owner=self._owner,
+                authority=authority,
                 recovery_readers=recovery_readers,
             )
             local_view = {
@@ -272,6 +378,7 @@ class PhaseAttestationJournal:
                     "owner": request["transition"]["owner"],
                     "generation": request["transition"]["expected_generation"],
                     "phase": request["transition"]["from_phase"],
+                    "driver_term": request["transition"]["driver_term"],
                 },
             }
             validate_issuer_phase_context(
@@ -279,6 +386,7 @@ class PhaseAttestationJournal:
                 participants,
                 local_view,
                 owner=self._owner,
+                authority=authority,
                 recovery_readers=recovery_readers,
             )
         except ContractError as exc:
@@ -317,6 +425,68 @@ class PhaseAttestationJournal:
             )
         validate_attestation(result)
         return self._retain(result)
+
+    def _checked_context(
+        self,
+        request: dict[str, Any],
+        workflow: dict[str, Any],
+        *,
+        authority: Literal["driver", "native-owner"],
+        principal: str,
+        verified_receiver: dict[str, Any] | None,
+        verified_driver: dict[str, Any] | None,
+        verified_preparations: list[dict[str, Any]] | None,
+        recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
+    ) -> None:
+        if authority == "driver":
+            self._current_context(
+                request,
+                workflow,
+                principal=principal,
+                verified_receiver=verified_receiver,
+                verified_driver=verified_driver,
+                verified_preparations=verified_preparations,
+                recovery_readers=recovery_readers,
+            )
+            return
+        validate_workflow(workflow, recovery_readers=recovery_readers)
+        _require(verified_receiver is not None, "current authenticated receiver capsule required")
+        assert verified_receiver is not None
+        validate_workflow(verified_receiver, recovery_readers=recovery_readers)
+        transition = request["transition"]
+        _require(
+            workflow["owner"] == self._owner
+            and workflow["id"] == verified_receiver["id"] == request["workflow_id"]
+            and request["expected_generation"] == workflow["generation"]
+            and workflow["proposal"] == verified_receiver["proposal"]
+            and transition["owner"] == verified_receiver["owner"]
+            and transition["expected_generation"] == verified_receiver["generation"]
+            and transition["driver_term"] == verified_receiver["driver_term"],
+            "native attestation issuer, receiver, proposal or generation changed",
+        )
+        phases = PHASES[workflow["type"]]
+        _require(
+            transition["authority"] == "native-owner"
+            and transition["from_phase"] == verified_receiver["phase"] == phases[-2]
+            and transition["to_phase"] == phases[-1]
+            and verified_receiver["state"] in {"active", "paused"}
+            and (
+                (workflow["state"] in {"active", "paused"} and workflow["phase"] == phases[-2])
+                or (workflow["state"] == "completed" and workflow["phase"] == phases[-1])
+            ),
+            "native attestation requires the final installed transition",
+        )
+        # A partially committed driver transfer may leave peers at different
+        # driver terms. This path observes already accepted child outcomes; it
+        # cannot finish that transfer, admit work or release retained protection.
+        for capsule in (workflow, verified_receiver):
+            _require(
+                capsule.get("recovery", {}).get("phase", "committed") == "committed",
+                "uncommitted workflow recovery forbids native attestation",
+            )
+            validate_workflow_agreement(
+                capsule, witnesses=verified_preparations or [], require_complete=True
+            )
 
     def _current_context(
         self,
@@ -440,6 +610,77 @@ class PhaseAttestationJournal:
         now: str,
         recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
     ) -> dict[str, Any]:
+        """Check a driver proof under independently verified current driver context."""
+        return self._check(
+            request,
+            workflow,
+            expected_owner=expected_owner,
+            principal=principal,
+            read_authorized=read_authorized,
+            check_authorized=check_authorized,
+            native_current=native_current,
+            verified_receiver=verified_receiver,
+            verified_driver=verified_driver,
+            verified_preparations=verified_preparations,
+            now=now,
+            authority="driver",
+            authenticated_peer=None,
+            recovery_readers=recovery_readers,
+        )
+
+    @bounds(_bounds("native-check"))
+    def check_native(
+        self,
+        request: dict[str, Any],
+        workflow: dict[str, Any],
+        *,
+        expected_owner: dict[str, Any],
+        principal: str,
+        authenticated_peer: dict[str, Any] | None,
+        read_authorized: bool,
+        check_authorized: bool,
+        native_current: bool,
+        verified_receiver: dict[str, Any] | None,
+        verified_preparations: list[dict[str, Any]] | None,
+        now: str,
+        recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
+    ) -> dict[str, Any]:
+        """Recheck native proof only for its independently authenticated receiver."""
+        return self._check(
+            request,
+            workflow,
+            expected_owner=expected_owner,
+            principal=principal,
+            authenticated_peer=authenticated_peer,
+            read_authorized=read_authorized,
+            check_authorized=check_authorized,
+            native_current=native_current,
+            verified_receiver=verified_receiver,
+            verified_driver=None,
+            verified_preparations=verified_preparations,
+            now=now,
+            authority="native-owner",
+            recovery_readers=recovery_readers,
+        )
+
+    def _check(
+        self,
+        request: dict[str, Any],
+        workflow: dict[str, Any],
+        *,
+        expected_owner: dict[str, Any],
+        principal: str,
+        read_authorized: bool,
+        check_authorized: bool,
+        native_current: bool,
+        verified_receiver: dict[str, Any] | None,
+        verified_driver: dict[str, Any] | None,
+        verified_preparations: list[dict[str, Any]] | None,
+        now: str,
+        authority: Literal["driver", "native-owner"],
+        authenticated_peer: dict[str, Any] | None,
+        recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
+    ) -> dict[str, Any]:
         """Observe current proof validity without renewal, release or admission.
 
         native_current is independently selected after checking the exact retained
@@ -468,11 +709,19 @@ class PhaseAttestationJournal:
                 "PERMISSION_DENIED", "current attestation check authority required", workflow_id
             )
         value = self._records[reference["record"]["id"]]
+        if authority == "native-owner":
+            self._authorize_peer(value["request"], authenticated_peer)
         try:
+            validate(
+                "workflow-evidence.schema.json",
+                value["request"],
+                "AttestationRequest" if authority == "driver" else "NativeAttestationRequest",
+            )
             _require(native_current is True, "attested native protection is not currently verified")
-            self._current_context(
+            self._checked_context(
                 value["request"],
                 workflow,
+                authority=authority,
                 principal=workflow["driver_principal"],
                 verified_receiver=verified_receiver,
                 verified_driver=verified_driver,
@@ -514,12 +763,65 @@ def assemble_phase_evidence(
     A driver cannot substitute caller-provided enrollment or revive expired proof.
     Native admission still independently rechecks current exclusions and facts.
     """
+    return _assemble_phase_evidence(
+        attestations,
+        transition,
+        workflow,
+        public_keys=public_keys,
+        now=now,
+        authority="driver",
+        recovery_readers=recovery_readers,
+    )
+
+
+@bounds(_bounds("native-assemble"))
+def assemble_native_phase_evidence(
+    attestations: Iterable[dict[str, Any]],
+    transition: dict[str, Any],
+    workflow: dict[str, Any],
+    *,
+    public_keys: Mapping[tuple[bytes, str], Ed25519PublicKey],
+    now: str,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
+) -> dict[str, Any]:
+    """Join complete peer-issued native final proofs using independently trusted keys.
+
+    Authentic bytes do not supply current native authority. The receiving owner
+    separately checks each exact record through protected peer routing and keeps
+    the required exclusions through its serialized final settlement.
+    """
+    return _assemble_phase_evidence(
+        attestations,
+        transition,
+        workflow,
+        public_keys=public_keys,
+        now=now,
+        authority="native-owner",
+        recovery_readers=recovery_readers,
+    )
+
+
+def _assemble_phase_evidence(
+    attestations: Iterable[dict[str, Any]],
+    transition: dict[str, Any],
+    workflow: dict[str, Any],
+    *,
+    public_keys: Mapping[tuple[bytes, str], Ed25519PublicKey],
+    now: str,
+    authority: Literal["driver", "native-owner"],
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
+) -> dict[str, Any]:
     validate("common.schema.json", now, "Time")
     validate_workflow(workflow, recovery_readers=recovery_readers)
     participants = []
     owners: set[bytes] = set()
     for value in attestations:
         validate_attestation(value)
+        validate(
+            "workflow-evidence.schema.json",
+            value["request"],
+            "AttestationRequest" if authority == "driver" else "NativeAttestationRequest",
+        )
         owner = canonical(value["owner"])
         _require(owner not in owners, "duplicate workflow attestation issuer")
         owners.add(owner)
@@ -557,6 +859,7 @@ def assemble_phase_evidence(
             "phase_evidence": evidence,
         },
         workflow,
+        authority=authority,
         recovery_readers=recovery_readers,
     )
     return evidence

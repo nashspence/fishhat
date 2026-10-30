@@ -201,7 +201,15 @@ def producer(action):
         value, _, _ = adapter_result()
     else:
         arguments = {
-            "app.backup": {},
+            "app.maintenance-run": {"task": "daily-backup"},
+            "app.backup": {
+                "selection": {
+                    "app_instance": "prod:" + "a" * 64,
+                    "release_digest": digest("accepted application release"),
+                    "preserved_datasets": ["database"],
+                    "secret_generations": [],
+                }
+            },
             "app.cleanup": {
                 "inventory_digest": digest({}),
                 "candidates": [digest([])],
@@ -230,6 +238,7 @@ def producer(action):
     [
         "app.backup",
         "app.cleanup",
+        "app.maintenance-run",
         "host.capture-changes",
         "publisher.publish",
         "publisher.recover",

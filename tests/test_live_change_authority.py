@@ -66,6 +66,7 @@ def host_plan(disposition="overwrite", baseline="accepted", live="edited", propo
     )
     value["host_preimages"] = [
         {
+            "disclosure": "public",
             "effect_step": "apply-message",
             "baseline_digest": projection(baseline),
             "live_digest": projection(live),
@@ -104,7 +105,9 @@ def test_exact_reviewed_disposition_resolves_the_three_way_comparison(
 ):
     value = host_plan(disposition, baseline, live, proposed)
     before = copy.deepcopy(value)
-    require_current_host_preimages(value, current_state(value), verified_captures(value))
+    require_current_host_preimages(
+        value, current_state(value), verified_captures(value), confidential_steps=set()
+    )
     assert value == before
 
 
@@ -170,7 +173,7 @@ def test_delegated_effect_needs_its_own_preimage_even_with_an_arbitrary_action_n
     with pytest.raises(ContractError, match="host preimages must cover every effect exactly"):
         validate_plan(reseal(value))
     value["host_preimages"].append({**value["host_preimages"][0], "effect_step": "delegated"})
-    require_current_host_preimages(reseal(value), current_state(value))
+    require_current_host_preimages(reseal(value), current_state(value), confidential_steps=set())
 
 
 @pytest.mark.parametrize("disposition", ["preserve", "capture", "overwrite"])
@@ -178,7 +181,9 @@ def test_a_later_live_edit_invalidates_every_disposition(disposition):
     value = host_plan(disposition, proposed="edited" if disposition == "preserve" else "proposed")
     current = {"apply-message": projection("later administrator edit")}
     with pytest.raises(ContractError, match="live host state changed after review"):
-        require_current_host_preimages(value, current, verified_captures(value))
+        require_current_host_preimages(
+            value, current, verified_captures(value), confidential_steps=set()
+        )
 
 
 @pytest.mark.parametrize("observation", [{}, {"wrong-step": projection("edited")}])
@@ -187,22 +192,22 @@ def test_unknown_or_misbound_native_observation_is_not_treated_as_unchanged(obse
     with pytest.raises(
         ContractError, match="current host preimages must cover every effect exactly"
     ):
-        require_current_host_preimages(value, observation)
+        require_current_host_preimages(value, observation, confidential_steps=set())
 
 
 def test_interruption_requires_a_fresh_comparison_before_retry():
     value = host_plan()
     current = current_state(value)
-    require_current_host_preimages(value, current)
+    require_current_host_preimages(value, current, confidential_steps=set())
     current["apply-message"] = projection("edit during interruption")
     with pytest.raises(ContractError, match="live host state changed after review"):
-        require_current_host_preimages(value, current)
+        require_current_host_preimages(value, current, confidential_steps=set())
 
 
 def test_capture_digest_in_a_review_does_not_establish_custody():
     value = host_plan("capture")
     with pytest.raises(ContractError, match="verified captures must cover capture dispositions"):
-        require_current_host_preimages(value, current_state(value))
+        require_current_host_preimages(value, current_state(value), confidential_steps=set())
 
 
 @pytest.mark.parametrize("changed_index", [0, 1])
@@ -213,7 +218,9 @@ def test_capture_requires_the_exact_artifact_and_exact_reviewed_live_state(chang
     wrong[changed_index] = projection("different capture")
     captures["apply-message"] = tuple(wrong)
     with pytest.raises(ContractError, match="capture does not preserve reviewed live state"):
-        require_current_host_preimages(value, current_state(value), captures)
+        require_current_host_preimages(
+            value, current_state(value), captures, confidential_steps=set()
+        )
 
 
 @pytest.mark.parametrize("disposition", ["preserve", "overwrite"])
@@ -235,7 +242,7 @@ def test_host_dispositions_do_not_change_other_action_contracts():
     value = plan()
     validate_plan(value)
     with pytest.raises(ContractError, match=r"host preimage check requires a host\.apply plan"):
-        require_current_host_preimages(value, {})
+        require_current_host_preimages(value, {}, confidential_steps=set())
     value["host_preimages"] = host_plan()["host_preimages"]
     with pytest.raises(ContractError, match=r"schema records\.schema\.json rejected"):
         validate_plan(reseal(value))

@@ -389,15 +389,18 @@ def validate_result_payload(
         from .action_results import validate_cleanup_result
 
         validate_cleanup_result(value, operation)
+    if action == "app.maintenance-run":
+        from .maintenance import validate_maintenance_result
+
+        validate_maintenance_result(value, operation)
     if action == "host.capture-changes":
         from .action_results import validate_source_proposal
 
         validate_source_proposal(value, operation=operation)
     if action == "app.backup":
-        from .checkpoints import validate_checkpoint
+        from .backup_results import validate_backup_result
 
-        validate_checkpoint(value)
-        _require(value["owner"] == operation["owner"], "checkpoint result owner mismatch")
+        validate_backup_result(value, operation=operation)
     if action == "adapter.execute":
         selected = _adapter_result_contract(
             operation["subject"]["arguments"],
@@ -489,6 +492,10 @@ def validate_cli_result(
         from .checkpoints import validate_checkpoint
 
         validate_checkpoint(result)
+    elif kind == "BackupResult":
+        from .backup_results import validate_backup_result
+
+        validate_backup_result(result)
     elif kind in {
         "Workflow",
         "WorkflowTransferRecord",

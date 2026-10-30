@@ -59,7 +59,7 @@ def test_source_task_cannot_grant_itself_execution_authority(field):
     app = strict_yaml((FIXTURES / "demo-app/app.yaml").read_text())
     secrets = strict_yaml((FIXTURES / "demo-app/secrets.yaml").read_text())
     task = copy.deepcopy(next(iter(app["maintenance"].values())))
-    task.update(action="drill", hook=None)
+    task.update(action="drill", hook=None, checkpoint={"mode": "latest-verified"})
     app["maintenance"]["recovery-drill"] = task
     validate_app(app, secrets)
     assert minimum_action_role("app.maintenance-run", task_action=task["action"]) == "administrator"
@@ -73,7 +73,11 @@ def test_builtin_maintenance_cannot_inject_a_hook(action):
     app = strict_yaml((FIXTURES / "demo-app/app.yaml").read_text())
     secrets = strict_yaml((FIXTURES / "demo-app/secrets.yaml").read_text())
     task = next(iter(app["maintenance"].values()))
-    task.update(action=action, hook=None)
+    task.update(
+        action=action,
+        hook=None,
+        checkpoint={"mode": "latest-verified"} if action == "drill" else None,
+    )
     validate_app(app, secrets)
     task["hook"] = "restore"
     with pytest.raises(ContractError):
@@ -85,7 +89,11 @@ def test_native_maintenance_hook_selection_never_lowers_administrator_floor(hook
     app = strict_yaml((FIXTURES / "demo-app/app.yaml").read_text())
     secrets = strict_yaml((FIXTURES / "demo-app/secrets.yaml").read_text())
     task = next(iter(app["maintenance"].values()))
-    task.update(action="native-maintenance", hook=hook)
+    task.update(
+        action="native-maintenance",
+        hook=hook,
+        checkpoint={"mode": "latest-verified"} if hook in {"restore", "verify-restore"} else None,
+    )
     validate_app(app, secrets)
     assert minimum_action_role("app.maintenance-run", task_action=task["action"]) == "administrator"
 

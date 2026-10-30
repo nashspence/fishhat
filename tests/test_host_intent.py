@@ -207,14 +207,14 @@ def test_retirement_still_requires_the_reviewed_live_preimage_and_capture_custod
     value = reseal(value)
     current = {item["effect_step"]: item["live_digest"]}
     captures = {item["effect_step"]: (item["capture_digest"], item["live_digest"])}
-    require_current_host_preimages(value, current, captures)
+    require_current_host_preimages(value, current, captures, confidential_steps=set())
     with pytest.raises(ContractError, match="verified captures must cover"):
-        require_current_host_preimages(value, current)
+        require_current_host_preimages(value, current, confidential_steps=set())
     current[item["effect_step"]] = digest(
         {"target": "/etc/motd", "present": True, "content": "later edit", "incarnation": "new"}
     )
     with pytest.raises(ContractError, match="live host state changed after review"):
-        require_current_host_preimages(value, current, captures)
+        require_current_host_preimages(value, current, captures, confidential_steps=set())
 
 
 def test_membership_patch_preserves_unowned_and_omitted_memberships():

@@ -5,7 +5,13 @@ from __future__ import annotations
 import copy
 
 import pytest
-from fishhat_adapters import Registry, check_request, check_response, instance_reference
+from fishhat_adapters import (
+    Registry,
+    check_request,
+    check_response,
+    instance_reference,
+    runtime_binding_digest,
+)
 from fishhat_contracts.validation import ContractError, digest, validate
 from fishhat_owner.adapter_state import AdapterCoordinator
 
@@ -17,6 +23,7 @@ from tests.adapter_support import (
     identifier,
     native_exclusion,
     observation,
+    observation_target,
     request,
     runtime_registry,
     runtime_sources,
@@ -57,11 +64,13 @@ def containment(owner):
     ["request-scope", "request-owner", "result-scope", "result-barrier", "result-generation"],
 )
 def test_protocol_correlates_observation_challenges_independently_of_coordinator(method, change):
+    executor = instance_reference(runtime_registry()[2], SCOPE)
+    target = observation_target(executor, admission_generation=1)
     barrier = {
         "id": identifier(80),
         "owner": copy.deepcopy(OWNER),
         "scope": copy.deepcopy(SCOPE),
-        "binding_digest": D,
+        "binding_digest": runtime_binding_digest(target),
         "admission_generation": 1,
         "exclusion_id": identifier(90),
     }
@@ -73,7 +82,8 @@ def test_protocol_correlates_observation_challenges_independently_of_coordinator
             "cursor": None,
             "limit": 10,
             "barrier": barrier,
-            "binding": instance_reference(runtime_registry()[2], SCOPE),
+            "binding": executor,
+            "target": target,
         },
     }
     reply = {

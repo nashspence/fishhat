@@ -223,7 +223,7 @@ def test_accepted_pattern_search_and_complete_large_values_keep_their_semantics(
     ],
 )
 def test_cross_document_and_escaped_schema_position_identity_is_exact(fragment, name):
-    definition = {"$defs": {name: {"type": "string", "pattern": "^ok$"}}}
+    definition = {"$defs": {name: {"type": "string", "pattern": r"^ok(?![\s\S])"}}}
     provider = {**copy.deepcopy(definition), "$ref": "#" + fragment}
     check_configuration(provider, "ok", digest(provider))
     with pytest.raises(ContractError, match="CONFIGURATION_REJECTED"):
@@ -241,7 +241,7 @@ def test_cross_document_and_escaped_schema_position_identity_is_exact(fragment, 
 def test_custom_result_complete_validation_linear_work(outcome):
     samples = []
     for count in (16, 64, 256):
-        pattern = "^[a-z]+/[a-z]+$"
+        pattern = r"^[a-z]+/[a-z]+(?![\s\S])"
         leaf = {
             "type": "object",
             "properties": {
@@ -292,7 +292,8 @@ def test_custom_schema_closure_admission_linear_work(shape):
             body = {
                 "type": "integer",
                 "$defs": {
-                    f"V{index}": {"type": "string", "pattern": "^a+$"} for index in range(count)
+                    f"V{index}": {"type": "string", "pattern": r"^a+(?![\s\S])"}
+                    for index in range(count)
                 },
             }
         else:

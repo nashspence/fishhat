@@ -1399,6 +1399,56 @@
       ],
       "additionalProperties": false,
       "description": "Independently recheck one exact retained attestation without renewal or new authority."
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "method": {
+          "const": "workflow.native-attest"
+        },
+        "params": {
+          "$ref": "workflow-evidence.schema.json#/$defs/NativeAttestationRequest"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "params"
+      ],
+      "additionalProperties": false,
+      "description": "Protected independently authenticated owner-to-owner native final-settlement proof boundary. Driver or caller data cannot select peer authority."
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "method": {
+          "const": "workflow.native-attestation.check"
+        },
+        "params": {
+          "$ref": "workflow-evidence.schema.json#/$defs/NativeAttestationCheckRequest"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "params"
+      ],
+      "additionalProperties": false,
+      "description": "Protected independently authenticated owner-to-owner native final-settlement proof boundary. Driver or caller data cannot select peer authority."
     }
   ]
 }

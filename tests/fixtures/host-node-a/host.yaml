@@ -210,7 +210,7 @@ adapter_instances:
     implementation: fishhat.systemd
     installation_digest: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
     role: service
-    schema_digest: sha256:9a2a3ee478cdf233e2124cd1edbfe5c65556f4881c73f407f5684ae4b8dec14d
+    schema_digest: sha256:abb7e86a9091e9660a312809d5eccef6c24ccba2ff3be22784b0f8af26cb9f29
     configuration:
       manager_handle: host-service-manager
       unit_scope: managed-services
@@ -234,7 +234,7 @@ adapter_instances:
     implementation: fishhat.podman-quadlet
     installation_digest: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
     role: runtime
-    schema_digest: sha256:e4bbe3fdf024f1cfee743e997f83e95348c3ac49fa64312968f846f897660058
+    schema_digest: sha256:a03c5d5af07cc2ff27313ca1f9bf10aa435341989b1f54fe276cdc7b98126444
     configuration:
       account: app-demo-app
     grants:
@@ -257,7 +257,7 @@ adapter_instances:
     implementation: fishhat.xfs-project
     installation_digest: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
     role: storage
-    schema_digest: sha256:ffcbef897e45a2e3f10566ab70fe062e195cab211dc3a84bd6cb32fd2921a199
+    schema_digest: sha256:3ea9a0b51cd27b297d65fdb19d190ee8638c4939763032d658bbd37ff5595ec9
     configuration:
       pool_handle: control-pool
       project_handle: control-storage
@@ -281,7 +281,7 @@ adapter_instances:
     implementation: fishhat.xfs-project
     installation_digest: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
     role: storage
-    schema_digest: sha256:ffcbef897e45a2e3f10566ab70fe062e195cab211dc3a84bd6cb32fd2921a199
+    schema_digest: sha256:3ea9a0b51cd27b297d65fdb19d190ee8638c4939763032d658bbd37ff5595ec9
     configuration:
       pool_handle: workload-pool
       project_handle: workload-storage
@@ -305,7 +305,7 @@ adapter_instances:
     implementation: fishhat.systemd-cgroup
     installation_digest: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
     role: compute
-    schema_digest: sha256:d2e91862ade906ee71fd595a761facc532092e6542bdcc1ad19ab9d19890bb96
+    schema_digest: sha256:bb6faa611184b4ca73ad82017360e258796edfec90efee3bd2568503b731e23d
     configuration:
       slice_handle: managed-accounts
     grants:

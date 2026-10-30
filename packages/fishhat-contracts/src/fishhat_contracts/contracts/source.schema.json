@@ -1506,107 +1506,7 @@
             "$ref": "common.schema.json#/$defs/Id"
           },
           "additionalProperties": {
-            "type": "object",
-            "properties": {
-              "action": {
-                "enum": [
-                  "backup",
-                  "backup-check",
-                  "drill",
-                  "native-maintenance"
-                ]
-              },
-              "hook": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 24,
-                    "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "calendar": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 160,
-                "description": "systemd OnCalendar expression under the pinned native calendar parser selected by calendar_language; an unparsed or ambiguous candidate is never admissible. Syntactic validity is necessary but not an execution grant."
-              },
-              "timezone": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 64,
-                "description": "IANA time-zone identifier resolved against an admitted pinned timezone database. Missing/ambiguous identifiers reject the task before admission; current host timezone is never an implicit default."
-              },
-              "max_delay_seconds": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 604800
-              },
-              "timeout_seconds": {
-                "type": "integer",
-                "minimum": 1,
-                "maximum": 86400
-              },
-              "active_only": {
-                "type": "boolean"
-              },
-              "calendar_language": {
-                "const": "systemd-oncalendar",
-                "description": "The selected v1 calendar dialect. A qualified native owner must parse and normalize this expression using its pinned calendar implementation before admission; unsupported expressions block, never fall back to a different syntax."
-              },
-              "dst_policy": {
-                "const": "skip-gap-first-repeat",
-                "description": "Nonexistent wall-clock times are skipped. Repeated local wall times execute once using the first occurrence. The identity of the due occurrence persists across reboot, clock changes and retry."
-              },
-              "catch_up": {
-                "const": "latest-once",
-                "description": "At most the latest eligible missed due occurrence is attempted after downtime; no storm or independent overlap. Retain due/attempt/result identities across owner restart."
-              }
-            },
-            "required": [
-              "action",
-              "hook",
-              "calendar",
-              "timezone",
-              "max_delay_seconds",
-              "timeout_seconds",
-              "active_only",
-              "calendar_language",
-              "dst_policy",
-              "catch_up"
-            ],
-            "additionalProperties": false,
-            "oneOf": [
-              {
-                "properties": {
-                  "action": {
-                    "enum": [
-                      "backup",
-                      "backup-check",
-                      "drill"
-                    ]
-                  },
-                  "hook": {
-                    "type": "null"
-                  }
-                }
-              },
-              {
-                "properties": {
-                  "action": {
-                    "const": "native-maintenance"
-                  },
-                  "hook": {
-                    "type": "string"
-                  }
-                }
-              }
-            ],
-            "description": " The receiver persists task occurrence identity (accepted release, task, due instant and DST fold), attempt and result, with receiver-local continuing authorization. Revoked permissions stop new attempts and detached client state never governs the schedule."
+            "$ref": "maintenance.schema.json#/$defs/Task"
           }
         },
         "protection": {
@@ -2071,7 +1971,7 @@
         "reason"
       ],
       "additionalProperties": false,
-      "description": "An explicit managed-presence prescription for this exact destination. The receiving owner independently admits its source closure, native identity and any secret or artifact custody. Omission from a later source preserves the previously accepted prescription and its original input closure; it does not unmanage or delete the target. A changed destination is a new target and leaves the old target managed until separately retired."
+      "description": "An explicit managed-presence prescription for this exact destination. The receiving owner independently admits its source closure, native identity and any secret or artifact custody. Omission from a later source preserves the previously accepted prescription and its original input closure; it does not unmanage or delete the target. A changed destination is a new target and leaves the old target managed until separately retired. Every host.apply preimage and capture for this secret-bearing scope is confidential: use opaque owner-private references, never public digests of plaintext or ordinary source proposals. The executor privately compares retained bytes and current native state before mutation. Classification cannot be downgraded by caller-supplied source or Plan metadata."
     },
     "HostArtifact": {
       "type": "object",
@@ -2147,7 +2047,7 @@
         "reason"
       ],
       "additionalProperties": false,
-      "description": "Explicit retirement of one previously managed file, secret-file or artifact destination in the selected concern kind. New retirement requires the receiving owner’s retained managed claim and an exact reviewed native target and live preimage. The ordinary host.apply preserve/capture/overwrite and immediate pre-mutation checks still apply; a tombstone is not permission to erase a live edit, recurse into a directory, follow an alias or discard recovery custody. The previous prescription and original source/material closure stay retained until the owning Operation has verified removal and settled every remaining obligation. Only then does active management end. A settled tombstone is inert on later applications: it cannot delete a subsequently created unrelated object at the same pathname. Retrying accepted work uses its original operation identity; omitting a tombstone never erases unresolved retirement."
+      "description": "Explicit retirement of one previously managed file, secret-file or artifact destination in the selected concern kind. New retirement requires the receiving owner’s retained managed claim and an exact reviewed native target and live preimage. Confidential or unclassified live scopes, including retiring secret-file destinations, require the confidential host-preimage and private or encrypted capture form. The ordinary host.apply preserve/capture/overwrite and immediate pre-mutation checks still apply; a tombstone is not permission to erase a live edit, recurse into a directory, follow an alias or discard recovery custody. The previous prescription and original source/material closure stay retained until the owning Operation has verified removal and settled every remaining obligation. Only then does active management end. A settled tombstone is inert on later applications: it cannot delete a subsequently created unrelated object at the same pathname. Retrying accepted work uses its original operation identity; omitting a tombstone never erases unresolved retirement."
     },
     "HostGroupNames": {
       "type": "array",

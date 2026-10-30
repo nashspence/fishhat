@@ -88,6 +88,8 @@ def check_document(schema: dict[str, Any], *, code: str) -> None:
             ).iter_errors(schema),
             None,
         )
+    except OverflowError as exc:
+        raise ContractError("SCHEMA_REGEX_CAPACITY") from exc
     except RecursionError as exc:
         raise ContractError(code) from exc
     if error is not None:
@@ -186,21 +188,68 @@ def _separated_repetitions(tokens: Any) -> bool:
     return supported and runs == 2 and separated
 
 
+def _portable_spelling(pattern: str) -> None:
+    """Accept only shared Python/ECMAScript-u spellings before AST optimization.
+
+    Parsing alone loses distinctions such as Python octal escapes and literal
+    unmatched braces. Enumerated escapes, explicit repeat counts and ordinary
+    groups avoid accepting a different language in another implementation.
+    """
+    index, in_class = 0, False
+    while index < len(pattern):
+        character = pattern[index]
+        if character == "\\":
+            index += 1
+            require(index < len(pattern), "UNSUPPORTED_SCHEMA_REGEX")
+            escaped = pattern[index]
+            if escaped in "xu":
+                width = 2 if escaped == "x" else 4
+                digits = pattern[index + 1 : index + 1 + width]
+                require(
+                    len(digits) == width and all(c in "0123456789abcdefABCDEF" for c in digits),
+                    "UNSUPPORTED_SCHEMA_REGEX",
+                )
+                require(not 0xD800 <= int(digits, 16) <= 0xDFFF, "UNSUPPORTED_SCHEMA_REGEX")
+                index += width
+            else:
+                require(
+                    escaped in r"\^$.|?*+()[]{}/fnrtv" or (in_class and escaped in "-sS"),
+                    "UNSUPPORTED_SCHEMA_REGEX",
+                )
+        elif in_class:
+            require(character != "[", "UNSUPPORTED_SCHEMA_REGEX")
+            if character == "]":
+                in_class = False
+        elif character == "[":
+            in_class = True
+        elif character in "]}":
+            raise ContractError("UNSUPPORTED_SCHEMA_REGEX")
+        elif character == "{":
+            repeat = re.match(r"\{[0-9]+(?:,[0-9]*)?\}", pattern[index:])
+            require(repeat is not None, "UNSUPPORTED_SCHEMA_REGEX")
+            assert repeat is not None
+            index += repeat.end() - 1
+        elif character == "(" and pattern[index + 1 : index + 2] == "?":
+            require(pattern[index + 2 : index + 3] in {":", "=", "!"}, "UNSUPPORTED_SCHEMA_REGEX")
+        index += 1
+
+
 def regex_degree(pattern: str) -> int:
     """Admit a bounded regular-expression subset, never backtracking group repeats.
 
-    Variable repetition is restricted to single characters/classes, except a
-    single optional group. There are at most two variable repetitions and eight
-    total alternatives. Lookbehind, backreferences and inline flags reject.
+    Variable repetition is restricted to single characters/classes, except for
+    optional groups. Optional atoms and groups both count toward eight total
+    alternative paths. There are at most two variable repetitions. The admitted
+    syntax is a deliberately restricted common subset of Python and ECMAScript
+    with Unicode mode enabled, no other flags, and Unicode scalar strings.
     """
     require(len(pattern) <= 256, "SCHEMA_REGEX_CAPACITY")
-    require(
-        not any(marker in pattern for marker in ("(?P", "(?#", r"\A", r"\Z", r"\N")),
-        "UNSUPPORTED_SCHEMA_REGEX",
-    )
+    _portable_spelling(pattern)
     parser: Any = vars(re)["_parser"]
     try:
         parsed = parser.parse(pattern, 0)
+    except OverflowError as exc:
+        raise ContractError("SCHEMA_REGEX_CAPACITY") from exc
     except re.error as exc:
         raise ContractError("INVALID_SCHEMA_REGEX") from exc
     require(parsed.state.flags == re.UNICODE, "UNSUPPORTED_SCHEMA_REGEX")
@@ -230,9 +279,10 @@ def regex_degree(pattern: str) -> int:
                     "CATEGORY",
                 }
                 require(atom or (minimum == 0 and maximum == 1), "UNSUPPORTED_SCHEMA_REGEX")
-                if not atom:
+                if minimum == 0 and maximum == 1:
                     alternatives *= 2
                     require(alternatives <= 8, "SCHEMA_REGEX_CAPACITY")
+                if not atom:
                     walk(child)
                 elif minimum != maximum and maximum > 1:
                     repetitions += 1
@@ -253,7 +303,54 @@ def regex_degree(pattern: str) -> int:
         repetitions = 1
     degree = max(1, repetitions + (not anchored))
     require(degree == 1, "NONLINEAR_SCHEMA_REGEX")
+    _portable_regex(parsed)
     return degree
+
+
+def _portable_regex(tokens: Any) -> None:
+    """Keep matching independent of host Unicode categories and anchor quirks.
+
+    Literal Unicode scalars/ranges and the universal class [\\s\\S] are portable.
+    Dot, shorthand character classes, word boundaries and the dollar anchor are
+    excluded. Strict end-of-input is expressed as (?![\\s\\S]). This does not
+    rewrite schemas, their identities, or values during evaluation.
+    """
+    for operation, argument in tokens:
+        name = str(operation)
+        if name in {"LITERAL", "NOT_LITERAL"}:
+            require(not 0xD800 <= argument <= 0xDFFF, "UNSUPPORTED_SCHEMA_REGEX")
+        elif name == "AT":
+            require(str(argument) == "AT_BEGINNING", "UNSUPPORTED_SCHEMA_REGEX")
+        elif name == "IN":
+            categories = {(str(kind), str(value)) for kind, value in argument}
+            if categories == {
+                ("CATEGORY", "CATEGORY_SPACE"),
+                ("CATEGORY", "CATEGORY_NOT_SPACE"),
+            }:
+                continue
+            for kind, value in argument:
+                if str(kind) == "RANGE":
+                    require(
+                        value[1] < 0xD800 or value[0] > 0xDFFF,
+                        "UNSUPPORTED_SCHEMA_REGEX",
+                    )
+                elif str(kind) != "NEGATE":
+                    _portable_regex([(kind, value)])
+        elif name == "SUBPATTERN":
+            _portable_regex(argument[3])
+        elif name == "BRANCH":
+            for branch in argument[1]:
+                _portable_regex(branch)
+        elif name in {"MAX_REPEAT", "MIN_REPEAT"}:
+            require(
+                not (len(argument[2]) == 1 and str(argument[2][0][0]) in {"ASSERT", "ASSERT_NOT"}),
+                "UNSUPPORTED_SCHEMA_REGEX",
+            )
+            _portable_regex(argument[2])
+        elif name in {"ASSERT", "ASSERT_NOT"}:
+            _portable_regex(argument[1])
+        else:
+            raise ContractError("UNSUPPORTED_SCHEMA_REGEX")
 
 
 def check_assertions(node: dict[str, Any]) -> None:

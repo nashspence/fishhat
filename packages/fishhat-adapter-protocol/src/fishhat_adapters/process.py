@@ -73,11 +73,14 @@ def validate_process_launch(
     approved_installation: dict[str, Any],
     expected_executor: dict[str, Any],
     expected_private_use: dict[str, Any] | None,
+    expected_runtime_binding: dict[str, Any] | None = None,
 ) -> None:
     """Join files to independently approved descriptor/executor before native launch.
 
     Registry authorization and the actual durable dispatch boundary remain with
     the owner. This pure function cannot turn a manifest into bearer authority.
+    Runtime query targets must equal the separately approved runtime binding,
+    including on a fresh process with no preceding mutation or shared state.
     """
     validate("adapter-process.schema.json", manifest)
     validate("adapter.schema.json", approved_installation, "Installation")
@@ -130,6 +133,12 @@ def validate_process_launch(
                 "process reconciliation executor changed",
             )
     _require(request["input"]["scope"] == executor["scope"], "process scope changed")
+    if role == "runtime" and request["method"] in {"observe", "inventory"}:
+        _require(
+            expected_runtime_binding is not None
+            and request["input"]["target"] == expected_runtime_binding,
+            "process runtime observation target is not approved",
+        )
     _require(
         role + "." + request["method"] in descriptor["implemented"],
         "process method is not implemented",
