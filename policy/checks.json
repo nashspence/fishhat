@@ -408,242 +408,6 @@
   "format": "fishhat-check-evidence/v1",
   "pytest": [
     {
-      "node": "redacted:04ee39f501e98c41baa81598729a2a4e55f57ab003e0ce5c751597d38c83ec50",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:05e67d61f7c683c35ed3c039248e7468da1983171c116f8a33b95da8e606892e",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:068064e01c7be27eb933408183704f1c28bdc139e3048432124492d2621e4e39",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:0ce22483e67411c17b72f8c5ec6f92a7736badef896b448620440fc4db0fb76b",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:0f91ed75fac41a7b7b7176dfb0e9ff289eab73c9e24a4a6a4eb867ebf2d61e9f",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:109da3a34704000020ea0213d04b17e6be610b79e948fd6b0416da33fce6c8a9",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:10f7a7e1b1d314843762efbb74b37d39dc70366dc3b9ea50afd4c47f8b2aff2d",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:1bf97d8e34cda7dee516efe1df0d50e13664f0c5650eeca4e2a6e8f0f613624e",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:1c270cefe7e571454c14710d56805bebfbb8d766ccc06fe40fafc44b6c13ca89",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:1c710a39e2d08c19f28436a500950bbf5edadf764a99a647b8f1fbe2e97b5540",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:27a78c49e554ce123b6f95ae148731e22654d5b11a7aa0cf1d1dd44d08300494",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:2a7dc0eab08508318e8026c7a23ea23ed48eee33b30d87eaee170ebb1006f1fe",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:2ed1a4bd925a1d0f5e026fc47ccfeafef9058f137b29ea2d843f6a06aa5b7c8c",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:3078b8433cb77e8ccf5c0fc2101950774c8ec4b1011c384d1520c67c8b5adb98",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:30cc1ada6e728e090453c31ad68e36dd206baa23d617f3ff3534ba672d668431",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:335c34e97d3c0b87074ee224dee13b6db3ddb24a7e46c74eebfa5876bc993eea",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:44d3bc593cfe01fe36c31eb5a4da10549e4508ceee4f86982dfc3552a2987d22",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:4d4d89eb23c8d7728855f114fc2479d15c8ee8b24d6482f4aee8fab5af8bdc39",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:4ff89603406b087408872408dd138f00593bb57d584f07b7a39e2137bea5a4dd",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:57b2fdf8bd9412c447393ef8c6c34258d741e410566c71432a9f8ce2dc5e361b",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:5b14bb5ccbd41fa3b3d65fcb46a5c8eff7aa57b13d45d83f95e461a1823df3c5",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:5cde79d85322afd228b9b26fce47cae6a56c2bce85801c33a467dfe05951d64a",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:6e2e9788eae300bb0acdb1267b1eed21f670975be2fbc3386e34e9150ca60a78",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:6edf37532b1e380f5679af9308c7b9722c2856f62f87874a05a92ca17d85d895",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:76e2f6d5f4ccde959a135ab8017fe616e29a33574f64ff07684aae366b6d5dd3",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:7908e730cc10a38d22ef0bb9d692ce6a5d1ca6492d8bdb8b3a485157f9b83eab",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:799aef0521ef5bcb6a403d36ca3b99ef12a0d6dd32d5bb9df0c980979cdbdd17",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:8149d00c5cb63fb529d9baa45b7deed2f16a40b7c7ccf87a33372622c669ea05",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:82ac50c6ebb06548be3e9f267cfb24560072b8f2f4a88dc2f439f867db03fe75",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:856f74a1a6e574a75fc02fe1b149790ae016fbdadcbe7842e0c60a8a661f5d21",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:8de6a55e8a37564848c16a327024b80010cbc6a4cfc989a31b4880c11df2dc3c",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:8e2d802b9b9cfa5a03ba59b8272cb5f4c5702e86afd4623d1d5bf90d3b1ce5ab",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:90b9a8e69d16c80f9dadcb7ce977395e6714fcac26d753bcc9bf7cc07345d419",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:95b33237af6f9506c8cb4ad9df8c58b5c0ec812e763846b2430be7bb9b1b7c6f",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:996a0a3f222fb86212cd106fdec23e02708c3617d32438ee0248bc0f480c641a",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:a323c5a88c9aa12694a6adebf83b01a61aed4545a6bfd39c43cd2380097101d5",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:ad7cf15f47c6d88756237f42579bffb44839f580ae3fee75d47d0dcf216aaf76",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:af1e95e232940a26896267321613d03f42b1f97691b999ae335b6f8a17d778b8",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:bc8032e77accb9746d09571982dc3e0c2de319d7a6008e9a27f1b244dfa77fba",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:c173c0bad9f8601c0af54ccd20d94dab19a7c51eab5d29a57bfedde59afb3e5e",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:c58c172cc54c04f68956df9e33131dbb1d2774667d9242edebcfac4f700ec32f",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:c675e29e09428fa8bdc7290aa1cc683a3a764a581dc53f1dba123dc98a7215dd",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:ca8b32ff87caf59c7861dd828c98e0b1c78d2abdefe39b570ba94bdf47c30981",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:d18b99103dc12efa87ba5b1249a4132d822c887f254ae202a17f6880d21dceba",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:d32eaf3b7115bec21683017ccc22d408087d151d4471889c4ada9d4bfda178b6",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:dacbf2ce367a63e24640c3a1955b78d9d0849dbb74f03856cba97a39b8d2a492",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:e5ab73043ea4ddd21e1b81293f0d552a9b5375c98b543fc9ce8c43508f41a617",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:e6ac0ead54f3a2a64c1d1297adb37bdbc5d4baa1230f96c1951ff168dced43e2",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:ef06d5c977639be2210f559301c088300cde1f32908aa90c3ec88ebf2a1dad97",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:efd5e3a147f6acf5ffe50107acb1c2129b4c29009d9935c24478e3c56c056fb0",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:f4dbb56f84dea87377d045b980ef0ecc7200718fd1160252c09bebfda6d26289",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:f693690fc7362a6e546fb1046a2cfd5fbe1ad6b855f50d7805c452299204f6a2",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:f713ee2461ce53a45fb30afdd9a47fa29678d99e21a972708ac330b03fd9fdf3",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:fa5d5683f6f27faa7c8bdd617dc897b54e2bcceb454ba39f9e9b72c82e3bbe21",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:fc9123fdd1ad85471f6e7a94003d0d03f5a4aa0cfd45395799f9ed8bcdb6e38d",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:fdc15ffef6419b720f3c84e909436bb5a7d8ade7d4b053bd213777488a59a3ff",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:fe611d942017b79a1f8a91062fcc8b2665c81f2a556819690638c336478040c6",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:fea5d2cc86a8b1332f044de72c548b4bf1f83e2f88055d18388bdfb3d81d0d5c",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
-      "node": "redacted:ff12fc546e6000a8df2f93c9d098e2d294417a91477847787297cc4170d35979",
-      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
-    },
-    {
       "node": "tests/test_action_results.py::test_capture_material_rejects_incomplete_or_changed_owner_bytes[changed]",
       "purpose_sha256": "c864cebdbce3895c1f09e88b6bf2f1ea99c7288eb941270f6dbdfb98ed8acf43"
     },
@@ -11088,7 +10852,243 @@
       "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
     },
     {
-      "node": "tests/test_schema_regex_profile.py::test_python_only_or_host_dependent_spellings_cannot_be_installed[.]",
+      "node": "tests/test_schema_regex_profile.py::test_python_only_or_host_dependent_spellings_cannot_be_installed[alert-escape]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_python_only_or_host_dependent_spellings_cannot_be_installed[class-backspace]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_python_only_or_host_dependent_spellings_cannot_be_installed[digit-class]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_python_only_or_host_dependent_spellings_cannot_be_installed[dollar-anchor]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_python_only_or_host_dependent_spellings_cannot_be_installed[dot]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_python_only_or_host_dependent_spellings_cannot_be_installed[escaped-bang]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_python_only_or_host_dependent_spellings_cannot_be_installed[escaped-hyphen]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_python_only_or_host_dependent_spellings_cannot_be_installed[escaped-space]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_python_only_or_host_dependent_spellings_cannot_be_installed[implicit-repeat-start]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_python_only_or_host_dependent_spellings_cannot_be_installed[literal-braces]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_python_only_or_host_dependent_spellings_cannot_be_installed[nested-bracket]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_python_only_or_host_dependent_spellings_cannot_be_installed[nested-word-class]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_python_only_or_host_dependent_spellings_cannot_be_installed[non-space-class]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_python_only_or_host_dependent_spellings_cannot_be_installed[non-word-boundary]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_python_only_or_host_dependent_spellings_cannot_be_installed[octal-escape]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_python_only_or_host_dependent_spellings_cannot_be_installed[optional-lookahead]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_python_only_or_host_dependent_spellings_cannot_be_installed[python-unicode-escape]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_python_only_or_host_dependent_spellings_cannot_be_installed[space-class]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_python_only_or_host_dependent_spellings_cannot_be_installed[surrogate-escapes]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_python_only_or_host_dependent_spellings_cannot_be_installed[surrogate-range]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_python_only_or_host_dependent_spellings_cannot_be_installed[unmatched-bracket]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_python_only_or_host_dependent_spellings_cannot_be_installed[word-boundary]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_python_only_or_host_dependent_spellings_cannot_be_installed[word-class]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_python_only_or_host_dependent_spellings_cannot_be_installed[zero-escape]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[accented-word]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[arabic-digits]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[ascii-digits]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[ascii-space]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[ascii-word]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[astral-range]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[bom-space]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[class-escaped-hyphen]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[decomposed-unicode]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[escaped-metacharacters]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[exact-end]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[excluded-slash]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[final-line-separator]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[final-newline]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[final-paragraph-separator]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[final-return]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[line-separator-space]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[negated-unicode]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[next-line-space]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[nonbreaking-space]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[outside-astral-range]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[outside-hyphen-class]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[unicode-hex-escapes]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[unicode-literals]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[universal-astral]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[universal-bom]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[universal-empty]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[universal-extra-scalar]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[universal-line-separator]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[universal-newline]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[universal-next-line]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[universal-paragraph-separator]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_scalar_regex_vectors_have_explicit_meanings[universal-return]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_unrepresentable_repeat_counts_are_typed_capacity_rejections[bounded]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_unrepresentable_repeat_counts_are_typed_capacity_rejections[exact]",
+      "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
+    },
+    {
+      "node": "tests/test_schema_regex_profile.py::test_unrepresentable_repeat_counts_are_typed_capacity_rejections[unbounded]",
       "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
     },
     {

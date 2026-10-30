@@ -57,7 +57,9 @@ def test_optional_paths_reject_at_approval_before_any_payload_matching(pattern):
             handoffs.validate_result_payload(record, data, installed=installed)
 
 
-@pytest.mark.parametrize("repeat", ["{COUNT}", "{0,COUNT}", "{COUNT,}"])
+@pytest.mark.parametrize(
+    "repeat", ["{COUNT}", "{0,COUNT}", "{COUNT,}"], ids=["exact", "bounded", "unbounded"]
+)
 def test_unrepresentable_repeat_counts_are_typed_capacity_rejections(repeat):
     pattern = "^a" + repeat.replace("COUNT", "9" * 80) + r"(?![\s\S])"
     body = {"type": "string", "pattern": pattern}
@@ -133,6 +135,32 @@ def test_eight_paths_remain_accepted_with_exact_matching(pattern, accepted, reje
         r"(?=a)?",
         r"[\u0000-\uffff]",
     ],
+    ids=[
+        "alert-escape",
+        "zero-escape",
+        "octal-escape",
+        "python-unicode-escape",
+        "surrogate-escapes",
+        "escaped-hyphen",
+        "escaped-bang",
+        "escaped-space",
+        "word-boundary",
+        "class-backspace",
+        "non-word-boundary",
+        "word-class",
+        "nested-word-class",
+        "digit-class",
+        "space-class",
+        "non-space-class",
+        "dot",
+        "dollar-anchor",
+        "implicit-repeat-start",
+        "literal-braces",
+        "unmatched-bracket",
+        "nested-bracket",
+        "optional-lookahead",
+        "surrogate-range",
+    ],
 )
 def test_python_only_or_host_dependent_spellings_cannot_be_installed(pattern):
     body = {"type": "string", "pattern": pattern}
@@ -179,7 +207,45 @@ UNICODE_VECTORS = [
 ]
 
 
-@pytest.mark.parametrize("pattern,value,accepted", UNICODE_VECTORS)
+@pytest.mark.parametrize(
+    "pattern,value,accepted",
+    UNICODE_VECTORS,
+    ids=[
+        "ascii-digits",
+        "arabic-digits",
+        "ascii-word",
+        "accented-word",
+        "ascii-space",
+        "nonbreaking-space",
+        "next-line-space",
+        "line-separator-space",
+        "bom-space",
+        "exact-end",
+        "final-newline",
+        "final-return",
+        "final-line-separator",
+        "final-paragraph-separator",
+        "universal-newline",
+        "universal-return",
+        "universal-line-separator",
+        "universal-paragraph-separator",
+        "universal-next-line",
+        "universal-bom",
+        "universal-astral",
+        "universal-extra-scalar",
+        "universal-empty",
+        "astral-range",
+        "outside-astral-range",
+        "unicode-literals",
+        "unicode-hex-escapes",
+        "decomposed-unicode",
+        "class-escaped-hyphen",
+        "outside-hyphen-class",
+        "negated-unicode",
+        "excluded-slash",
+        "escaped-metacharacters",
+    ],
+)
 def test_scalar_regex_vectors_have_explicit_meanings(pattern, value, accepted):
     body = {"type": "string", "pattern": pattern}
     check_schema(body)
