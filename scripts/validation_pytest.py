@@ -70,6 +70,7 @@ class TestResults:
         *,
         controller: bool = False,
         process_name: str = "controller",
+        config: pytest.Config | None = None,
     ) -> None:
         self.root, self.destination = root, destination
         self.watchdogs = Policy.resolve()
@@ -99,9 +100,66 @@ class TestResults:
         self.inventory_hash = ""
         self.evidence: dict[str, Any] = {}
         self.subtests: dict[str, list[dict[str, Any]]] = {}
+        self.plan: dict[str, Any] | None = None
+        self.shard: dict[str, Any] | None = None
+        if config and config.getoption("unit_shard_plan"):
+            from scripts.unit_shards import read_plan, shard_metadata
+
+            self.plan = read_plan(Path(config.getoption("unit_shard_plan")), root)
+            self.shard = shard_metadata(self.plan, config.getoption("unit_shard_index"))
 
     def pytest_unconfigure(self) -> None:
         WATCHDOGS.reset(self.watchdog_token)
+
+    @pytest.hookimpl(trylast=True)
+    def pytest_collection_modifyitems(
+        self, config: pytest.Config, items: list[pytest.Item]
+    ) -> None:
+        output = config.getoption("unit_shard_plan_output")
+        if self.plan is None and output is None:
+            return
+        from scripts.unit_shards import execution_order, make_plan, require
+
+        require(
+            list(config.args) == ["tests"]
+            and not any(
+                (
+                    config.option.keyword,
+                    config.option.markexpr,
+                    config.option.deselect,
+                    config.option.lf,
+                    config.option.failedfirst,
+                    config.getoption("evidence_generate"),
+                )
+            ),
+            "shards require unfiltered complete collection",
+        )
+        declarations = {safe_node(item.nodeid): item_groups(item, self.root) for item in items}
+        validate_overrides(items)
+        reconcile(declarations, self.root, complete=True)
+        if output:
+            require(
+                config.option.collectonly and self.plan is None,
+                "plan output requires complete collect-only execution",
+            )
+            reference = config.getoption("unit_shard_reference")
+            plan = make_plan(list(declarations), self.root, Path(reference) if reference else None)
+            path = Path(output)
+            require(
+                path.resolve().is_relative_to(self.root.resolve()), "plan output outside checkout"
+            )
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(plan, sort_keys=True) + "\n")
+        elif self.plan and self.shard:
+            require(
+                not config.option.collectonly and set(declarations) == set(self.plan["nodes"]),
+                "shard plan differs from actual complete collection",
+            )
+            selected = self.plan["shards"][self.shard["index"]]
+            by_node = {safe_node(item.nodeid): item for item in items}
+            items[:] = [
+                by_node[node] for node in execution_order(selected, self.plan["weights_seconds"])
+            ]
 
     def pytest_collection_finish(self, session: pytest.Session) -> None:
         self.collected = [safe_node(item.nodeid) for item in session.items]
@@ -118,12 +176,15 @@ class TestResults:
                 or session.config.option.lf
             )
             generate = session.config.getoption("evidence_generate")
-            if complete:
+            if complete and self.shard is None:
                 validate_overrides(session.items)
             if generate and not session.config.option.collectonly:
                 raise ValueError("inventory generation requires --collect-only")
             self.inventory_hash = reconcile(
-                self.declarations, self.root, complete=complete, generate=generate
+                self.declarations,
+                self.root,
+                complete=complete and self.shard is None,
+                generate=generate,
             )
         except (OSError, ValueError, KeyError, TypeError) as error:
             raise pytest.UsageError(str(error)) from error
@@ -160,6 +221,7 @@ class TestResults:
                 not valid_report(value.get("watchdogs"))
                 or value["watchdogs"]["scale"] != self.watchdogs.scale
                 or value.get("profile") != self.profile
+                or value.get("shard") != self.shard
                 or value["collected"] != self.collected
                 or evidence["origin"] != os.environ.get("FISHHAT_TEST_ORIGIN")
                 or (self.inventory_hash and self.inventory_hash != evidence["inventory_sha256"])
@@ -185,6 +247,12 @@ class TestResults:
                 entry = self.fixtures.setdefault(fixture, {"count": 0, "seconds": 0.0})
                 for key in ("count", "seconds"):
                     entry[key] += timing[key]
+        if (
+            self.plan
+            and self.shard
+            and self.collected != execution_order_for(self.plan, self.shard)
+        ):
+            raise ValueError("actual worker collection differs from shard plan")
         if exitstatus == 0 and seen != set(self.collected):
             raise ValueError("incomplete worker execution")
         self.evidence = {
@@ -277,6 +345,7 @@ class TestResults:
                 session.config.option.deselect,
                 session.config.option.lf,
                 session.config.option.failedfirst,
+                self.shard is not None,
             )
         )
         target = comparison(
@@ -298,6 +367,7 @@ class TestResults:
             }
         value = {
             "profile": dict(self.profile),
+            "shard": self.shard,
             "watchdogs": self.watchdogs.report(),
             "worker_watchdogs": self.worker_watchdogs,
             "profiling_target": target,
@@ -337,7 +407,17 @@ class TestResults:
             )
 
 
+def execution_order_for(plan: dict[str, Any], shard: dict[str, Any]) -> list[str]:
+    from scripts.unit_shards import execution_order
+
+    return execution_order(plan["shards"][shard["index"]], plan["weights_seconds"])
+
+
 def pytest_addoption(parser: pytest.Parser) -> None:
+    parser.addoption("--unit-shard-plan-output", default=None)
+    parser.addoption("--unit-shard-reference", default=None)
+    parser.addoption("--unit-shard-plan", default=None)
+    parser.addoption("--unit-shard-index", type=int, default=None)
     parser.addoption(
         "--evidence-generate",
         action="store_true",
@@ -356,6 +436,7 @@ def pytest_configure(config: pytest.Config) -> None:
             TestResults(
                 config.rootpath,
                 Path(destination) if destination else None,
+                config=config,
                 process_name=getattr(config, "workerinput", {}).get("workerid", "controller"),
                 controller=bool(getattr(config.option, "numprocesses", 0))
                 and not hasattr(config, "workerinput")

@@ -50,8 +50,11 @@ class WorkflowSafety(unittest.TestCase):
 
     def test_read_only_token(self):
         self.assertEqual(self.workflow["permissions"], {"contents": "read"})
-        for job in self.workflow["jobs"].values():
-            self.assertNotIn("permissions", job)
+        for name, job in self.workflow["jobs"].items():
+            if name == "watchdogs":
+                self.assertEqual(job["permissions"], {"contents": "read", "actions": "read"})
+            else:
+                self.assertNotIn("permissions", job)
 
     def test_no_self_hosted_runners_or_secrets(self):
         text = (ROOT / ".github/workflows/ci.yml").read_text()

@@ -116,9 +116,58 @@ def parallel_stats(processes: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
+def sharded_stats(shards: dict[str, Any]) -> dict[str, Any]:
+    """Retain runner observations; elapsed is a maximum, RSS sums are upper bounds."""
+    if (
+        not shards
+        or any(not re.fullmatch(r"[0-9]+", key) for key in shards)
+        or any(
+            not valid_stats(value)
+            or value["scope"] != "pytest-controller-and-workers-excludes-other-children"
+            for value in shards.values()
+        )
+    ):
+        raise ValueError("invalid shard statistics")
+    result = dict(next(iter(shards.values())))
+    result.pop("processes")
+    for key in (
+        "cpu_user_seconds",
+        "cpu_system_seconds",
+        "rss_start_bytes",
+        "rss_end_bytes",
+        "rss_sampled_peak_bytes",
+        "rss_high_water_bytes",
+    ):
+        values = [value[key] for value in shards.values()]
+        result[key] = math.fsum(values) if key.startswith("cpu_") else sum(values)
+    available = all(value["io_available"] for value in shards.values())
+    result.update(
+        scope="pytest-shards-controller-and-workers-excludes-other-children",
+        elapsed_seconds=max(value["elapsed_seconds"] for value in shards.values()),
+        elapsed_scope="maximum-shard-pytest-duration-excludes-planning-queue-and-aggregation",
+        rss_sampled_peak_scope="sum-of-runner-process-samples-upper-bound",
+        rss_high_water_scope="sum-of-runner-process-lifetimes-upper-bound",
+        rss_high_water_method="sum-of-runner-process-high-water-marks",
+        io_available=available,
+        io_bytes={
+            key: sum(value["io_bytes"][key] for value in shards.values())
+            for key in ("read_bytes", "write_bytes")
+        }
+        if available
+        else None,
+        shards=shards,
+    )
+    return result
+
+
 def valid_stats(value: Any) -> bool:
     if not isinstance(value, dict):
         return False
+    if value.get("scope") == "pytest-shards-controller-and-workers-excludes-other-children":
+        try:
+            return value == sharded_stats(value["shards"])
+        except (KeyError, TypeError, ValueError):
+            return False
     if value.get("scope") == "pytest-controller-and-workers-excludes-other-children":
         try:
             processes = value["processes"]
