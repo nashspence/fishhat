@@ -379,10 +379,22 @@ class Registry:
         *,
         owner_approved: bool,
         invocation: dict[str, Any] | None = None,
+        expected_runtime_binding: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Authorize observation; reconciliation also needs independently retained invocation data."""
+        """Authorize a query against independently retained owner authority.
+
+        Runtime observations require the owner's exact expected runtime binding;
+        the request's target cannot supply its own approval. Reconciliation
+        likewise requires the independently retained original invocation.
+        """
         check_request(role, request)
         require(not ROLES[role][request["method"]]["effect"], "EFFECT_INVOCATION_REQUIRED")
+        if role == "runtime" and request["method"] in {"observe", "inventory"}:
+            require(
+                expected_runtime_binding is not None
+                and request["input"]["target"] == expected_runtime_binding,
+                "OBSERVATION_APPROVED_TARGET",
+            )
         instance = self.authorize(
             instance_id,
             role,

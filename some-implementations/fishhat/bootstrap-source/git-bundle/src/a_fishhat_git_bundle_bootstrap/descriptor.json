@@ -12,7 +12,7 @@
         "type": "string",
         "minLength": 1,
         "maxLength": 160,
-        "pattern": "^[a-z][a-z0-9._-]*$"
+        "pattern": "^[a-z][a-z0-9._-]*(?![\\s\\S])"
       }
     },
     "required": [
@@ -36,7 +36,7 @@
         "properties": {
           "digest": {
             "type": "string",
-            "pattern": "^sha256:[0-9a-f]{64}$"
+            "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
           },
           "media_type": {
             "const": "application/x-git-bundle"

@@ -69,6 +69,9 @@
               "$ref": "records.schema.json#/$defs/Checkpoint"
             },
             {
+              "$ref": "backup-result.schema.json#/$defs/BackupResult"
+            },
+            {
               "$ref": "records.schema.json#/$defs/Release"
             },
             {

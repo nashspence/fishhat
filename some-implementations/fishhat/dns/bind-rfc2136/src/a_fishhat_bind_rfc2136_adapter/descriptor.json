@@ -12,13 +12,13 @@
         "type": "string",
         "minLength": 1,
         "maxLength": 160,
-        "pattern": "^[a-z][a-z0-9._-]*$"
+        "pattern": "^[a-z][a-z0-9._-]*(?![\\s\\S])"
       },
       "zone": {
         "type": "string",
         "allOf": [
           {
-            "pattern": "^[a-z0-9.-]+\\.$"
+            "pattern": "^[a-z0-9.-]+\\.(?![\\s\\S])"
           },
           {
             "not": {
@@ -31,7 +31,7 @@
         "type": "string",
         "minLength": 1,
         "maxLength": 160,
-        "pattern": "^[a-z][a-z0-9._-]*$"
+        "pattern": "^[a-z][a-z0-9._-]*(?![\\s\\S])"
       }
     },
     "required": [

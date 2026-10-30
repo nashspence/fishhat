@@ -1,0 +1,222 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fishhat.invalid/contracts/host-preimages.schema.json",
+  "$ref": "#/$defs/HostPreimage",
+  "$defs": {
+    "HostPreimage": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/PublicHostPreimage"
+        },
+        {
+          "$ref": "#/$defs/ConfidentialHostPreimage"
+        }
+      ]
+    },
+    "PublicHostPreimage": {
+      "type": "object",
+      "description": "The reviewed three-way comparison for one host.apply effect whose complete native scope the executor has independently classified as nonconfidential. Baseline, live and proposed use the same deterministic projection of target identity, absence, managed content and metadata. The projection covers every target the effect may replace. Secret-bearing or unclassified scopes, including secret bytes inserted into an ordinary file, must use ConfidentialHostPreimage before any review is emitted. The Plan cannot grant its own disclosure permission. Public content digests are commitments, not confidentiality protection.",
+      "properties": {
+        "disclosure": {
+          "const": "public"
+        },
+        "effect_step": {
+          "$ref": "common.schema.json#/$defs/Id",
+          "description": "Exactly one matching Plan.effects step, which supplies the executor, resource and input scope. Step action names cannot exempt an effect from comparison."
+        },
+        "baseline_digest": {
+          "$ref": "common.schema.json#/$defs/Digest",
+          "description": "Projection of the currently accepted managed state. A target without an accepted baseline is represented by explicit absence in the same projection, not by an invented successful observation."
+        },
+        "live_digest": {
+          "$ref": "common.schema.json#/$defs/Digest",
+          "description": "Projection actually observed when preparing this review, including administrator edits relative to the accepted baseline. Every disposition is limited to this exact live preimage."
+        },
+        "proposed_digest": {
+          "$ref": "common.schema.json#/$defs/Digest",
+          "description": "Projection that the exact reviewed source and effect would establish. Preserve requires this digest to equal live_digest; retaining different live state cannot be reported as applying the proposed state."
+        },
+        "disposition": {
+          "enum": [
+            "preserve",
+            "capture",
+            "overwrite"
+          ],
+          "description": "Explicit administrator disposition of the reviewed live state. Preserve keeps it and requires the proposed projection to match it. Capture permits replacement only after the executor verifies durable custody of that exact live preimage as a reviewable source proposal or recovery artifact. Overwrite permits replacing the reviewed live preimage without that capture requirement. None permits replacing a later edit, and capture neither publishes nor adopts a source proposal."
+        },
+        "capture_digest": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Digest"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Exact retained capture artifact digest, required only for capture. The executor must independently verify that this artifact covers the effect scope and live_digest and remains in its custody before replacement. A digest supplied in a plan is not custody evidence."
+        }
+      },
+      "required": [
+        "disclosure",
+        "effect_step",
+        "baseline_digest",
+        "live_digest",
+        "proposed_digest",
+        "disposition",
+        "capture_digest"
+      ],
+      "additionalProperties": false,
+      "if": {
+        "properties": {
+          "disposition": {
+            "const": "capture"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "capture_digest": {
+            "$ref": "common.schema.json#/$defs/Digest"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "capture_digest": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    "ProtectedHostPreimageReference": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "resource": {
+          "$ref": "common.schema.json#/$defs/Resource"
+        },
+        "effect_step": {
+          "$ref": "common.schema.json#/$defs/Id"
+        }
+      },
+      "required": [
+        "id",
+        "owner",
+        "resource",
+        "effect_step"
+      ],
+      "additionalProperties": false,
+      "description": "Opaque reference to one immutable owner-private native projection. The executor assigns a fresh cryptographically random UUID independent of content, including for absence and repeated bytes; it must not encode a content digest, plaintext, length or content-derived identifier. Owner (including epoch), resource and effect_step equal the reviewed effect. Native custody authenticates the full reference and retains the exact deterministic projection of target identity, absence, managed content and relevant metadata through settlement and recovery obligations. The same ID cannot be rebound to other metadata or bytes. References confer neither read access nor mutation authority. No public hash of plaintext or reference-to-plaintext mapping is exported. Recovery retains original references and private bytes under explicit custodian authority; loss of custody blocks the operation and never falls back to public digests."
+    },
+    "ProtectedHostCaptureReference": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "resource": {
+          "$ref": "common.schema.json#/$defs/Resource"
+        },
+        "effect_step": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "live": {
+          "$ref": "#/$defs/ProtectedHostPreimageReference"
+        },
+        "protection": {
+          "enum": [
+            "owner-private",
+            "encrypted"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "owner",
+        "resource",
+        "effect_step",
+        "live",
+        "protection"
+      ],
+      "additionalProperties": false,
+      "description": "Opaque, randomly assigned recovery-capture reference bound to the exact confidential live reference and effect executor/resource/step. The owner independently verifies durable custody of the complete captured projection, access control and (when encrypted) decryption authority before replacement. This field does not prove those facts. The artifact is owner-private or encrypted; ordinary source proposals, source trees, Plan/result/log payloads and public plaintext digests are forbidden destinations. Retain capture and recovery authority until every accepted obligation settles. Separate explicit secret-aware authorization is required for any later declassification or source adoption."
+    },
+    "ConfidentialHostPreimage": {
+      "type": "object",
+      "properties": {
+        "disclosure": {
+          "const": "confidential"
+        },
+        "effect_step": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "baseline": {
+          "$ref": "#/$defs/ProtectedHostPreimageReference"
+        },
+        "live": {
+          "$ref": "#/$defs/ProtectedHostPreimageReference"
+        },
+        "proposed": {
+          "$ref": "#/$defs/ProtectedHostPreimageReference"
+        },
+        "disposition": {
+          "enum": [
+            "preserve",
+            "capture",
+            "overwrite"
+          ]
+        },
+        "capture": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProtectedHostCaptureReference"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "disclosure",
+        "effect_step",
+        "baseline",
+        "live",
+        "proposed",
+        "disposition",
+        "capture"
+      ],
+      "additionalProperties": false,
+      "if": {
+        "properties": {
+          "disposition": {
+            "const": "capture"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "capture": {
+            "$ref": "#/$defs/ProtectedHostCaptureReference"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "capture": {
+            "type": "null"
+          }
+        }
+      },
+      "description": "Confidential three-way review metadata only; all projection bytes remain in protected native custody. Baseline is the state expected from the currently accepted source under the exact owner/resource precondition, with explicit absence when no accepted target exists. Proposed is the state the exact reviewed source and effect would establish. Baseline, live and proposed use the same complete native projection and effect input scope; private reference assignment cannot substitute unrelated proposed bytes. The executor resolves baseline/live/proposed references independently of wire input and privately compares the native current projection with retained live bytes immediately before mutation under exclusion or an equivalent atomic check. Preserve additionally requires proposed and live bytes to match, irrespective of opaque ID equality. Capture additionally requires separately verified private or encrypted recovery custody of these exact live bytes. Overwrite does not waive current-state or disclosure checks. Native classification is required before Plan publication and repeated before effect, and includes managed secrets, administrator-inserted secrets and unknown sensitivity. Missing private state, stale owner epochs, foreign scope and changed bytes fail closed; exact accepted retries retain the original references. Neither schema validity nor a caller-supplied private-store claim establishes native facts."
+    }
+  }
+}

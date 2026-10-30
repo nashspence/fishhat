@@ -573,9 +573,10 @@ def validate_app(app: dict[str, Any], catalogue: dict[str, Any] | None = None) -
         names = names if isinstance(names, list) else ([] if names is None else [names])
         for name in names:
             _require(name in hooks and hooks[name]["role"] == role, "missing/wrong lifecycle hook")
+    from .maintenance import validate_maintenance_task
+
     for task in app["maintenance"].values():
-        if task["action"] == "native-maintenance":
-            _require(task["hook"] in hooks, "unknown maintenance hook")
+        validate_maintenance_task(task, hooks)
     from fishhat_contracts.resources import validate_requirements
 
     validate_requirements(app["resources"], app=app)
@@ -809,6 +810,9 @@ def validate_plan(value: dict[str, Any]) -> None:
     from .live_change import validate_host_preimages
 
     validate_host_preimages(value)
+    from .maintenance import validate_maintenance_plan
+
+    validate_maintenance_plan(value)
     if "none-needed" in value["recovery"] and len(value["recovery"]) != 1:
         raise ContractError("conflicting recovery procedures")
     if datetime.fromisoformat(value["expires_at"].replace("Z", "+00:00")) <= datetime.fromisoformat(

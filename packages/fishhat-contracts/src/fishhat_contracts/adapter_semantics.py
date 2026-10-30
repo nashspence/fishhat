@@ -91,12 +91,37 @@ def check_request(role: str, value: dict[str, Any]) -> None:
             "REPOSITORY_CANDIDATE_IDENTITY",
         )
     if role == "runtime" and method in {"observe", "inventory"}:
+        target, executor = inputs["target"], inputs["binding"]
+        require(
+            target["scope"] == inputs["scope"]
+            and target["scope"]["kind"] == "application"
+            and target["subject"] == inputs["scope"]["handle"]
+            and all(
+                target[key] == executor[key]
+                for key in (
+                    "instance",
+                    "installation_digest",
+                    "configuration_digest",
+                    "instance_generation",
+                    "instance_digest",
+                )
+            ),
+            "OBSERVATION_TARGET_IDENTITY",
+        )
         barrier = inputs["barrier"]
         if barrier is not None:
             require(
                 barrier["scope"] == inputs["scope"]
                 and barrier["owner"]["id"] == inputs["scope"]["authority"],
                 "OBSERVATION_BARRIER_SCOPE",
+            )
+            require(
+                barrier["binding_digest"]
+                == digest(
+                    {key: value for key, value in target.items() if key != "admission_generation"}
+                )
+                and barrier["admission_generation"] == target["admission_generation"],
+                "OBSERVATION_BARRIER_TARGET",
             )
     if role == "bootstrap-source" and method in {"recover", "verify"}:
         require(
@@ -332,6 +357,13 @@ def _check_handoff_response(role: str, request: dict[str, Any], response: dict[s
                     == inputs["barrier"]["admission_generation"],
                     "OBSERVATION_BARRIER_GENERATION",
                 )
+            require(
+                all(
+                    observation[key] == inputs["target"][key]
+                    for key in ("generation", "native_incarnation", "admission_generation")
+                ),
+                "OBSERVATION_TARGET_IDENTITY",
+            )
 
 
 def _check_repository_response(request: dict[str, Any], response: dict[str, Any]) -> None:
@@ -439,6 +471,13 @@ def _check_success_output(
         ),
         "storage": lambda: (
             output["allocations"][0]["handle"] == inputs["allocation"]
+            and output["allocations"][0]["accounting_domain"]
+            == inputs["precondition"]["accounting_domain"]
+            and (
+                inputs["precondition"]["kind"] == "create-if-absent"
+                or output["allocations"][0]["native_identity_digest"]
+                == inputs["precondition"]["native_identity_digest"]
+            )
             and _same_set(output["allocations"][0]["purposes"], inputs["purposes"])
             and (not inputs["hard_isolation"] or output["allocations"][0]["hard_isolation"])
             and output["allocations"][0]["capacity_bytes"] == inputs["capacity_bytes"]

@@ -1,0 +1,443 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fishhat.invalid/contracts/maintenance.schema.json",
+  "$ref": "#/$defs/MaintenanceExecution",
+  "$defs": {
+    "CheckpointSelection": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "const": "exact"
+            },
+            "checkpoint": {
+              "$ref": "common.schema.json#/$defs/MaterialDigest"
+            }
+          },
+          "required": [
+            "mode",
+            "checkpoint"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "const": "latest-verified"
+            }
+          },
+          "required": [
+            "mode"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "description": "The receiving owner resolves this policy exactly once when constructing the reviewed maintenance execution. latest-verified selects the greatest (verified_at instant, canonical checkpoint digest) among its complete independently authenticated, retained, usable checkpoint inventory for the exact accepted application instance. An empty or incomplete inventory blocks resolution. The resolved checkpoint and complete recovery closure are pinned in the Plan before admission; restart, retry, a newer backup or a later source release cannot reselect it."
+    },
+    "Task": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "enum": [
+            "backup",
+            "backup-check",
+            "drill",
+            "native-maintenance"
+          ]
+        },
+        "hook": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 24,
+              "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "calendar": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "description": "systemd OnCalendar expression under the pinned native calendar parser selected by calendar_language; an unparsed or ambiguous candidate is never admissible. Syntactic validity is necessary but not an execution grant."
+        },
+        "timezone": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "description": "IANA time-zone identifier resolved against an admitted pinned timezone database. Missing/ambiguous identifiers reject the task before admission; current host timezone is never an implicit default."
+        },
+        "max_delay_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 604800
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400
+        },
+        "active_only": {
+          "type": "boolean"
+        },
+        "calendar_language": {
+          "const": "systemd-oncalendar",
+          "description": "The selected v1 calendar dialect. A qualified native owner must parse and normalize this expression using its pinned calendar implementation before admission; unsupported expressions block, never fall back to a different syntax."
+        },
+        "dst_policy": {
+          "const": "skip-gap-first-repeat",
+          "description": "Nonexistent wall-clock times are skipped. Repeated local wall times execute once using the first occurrence. The identity of the due occurrence persists across reboot, clock changes and retry."
+        },
+        "catch_up": {
+          "const": "latest-once",
+          "description": "At most the latest eligible missed due occurrence is attempted after downtime; no storm or independent overlap. Retain due/attempt/result identities across owner restart."
+        },
+        "checkpoint": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CheckpointSelection"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "action",
+        "hook",
+        "calendar",
+        "timezone",
+        "max_delay_seconds",
+        "timeout_seconds",
+        "active_only",
+        "calendar_language",
+        "dst_policy",
+        "catch_up",
+        "checkpoint"
+      ],
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "properties": {
+            "action": {
+              "enum": [
+                "backup",
+                "backup-check"
+              ]
+            },
+            "hook": {
+              "type": "null"
+            },
+            "checkpoint": {
+              "type": "null"
+            }
+          }
+        },
+        {
+          "properties": {
+            "action": {
+              "const": "drill"
+            },
+            "hook": {
+              "type": "null"
+            },
+            "checkpoint": {
+              "$ref": "#/$defs/CheckpointSelection"
+            }
+          }
+        },
+        {
+          "properties": {
+            "action": {
+              "const": "native-maintenance"
+            },
+            "hook": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "description": "The receiver persists the exact accepted release, task definition and occurrence (manual identity or UTC due instant and DST fold), resolved execution and request before effects, then retains the original result before reporting completion. Revoked authority blocks new attempts. Drill and native restore/verify-restore hooks require an explicit checkpoint policy; other branches require null. Policies resolve before Plan approval, and accepted work retains the original choice and task after source changes or newer backups. This declaration grants no authority."
+    },
+    "Occurrence": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "manual"
+            },
+            "id": {
+              "$ref": "common.schema.json#/$defs/UUID"
+            }
+          },
+          "required": [
+            "kind",
+            "id"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "scheduled"
+            },
+            "due_at": {
+              "$ref": "common.schema.json#/$defs/Time"
+            },
+            "fold": {
+              "const": 0
+            }
+          },
+          "required": [
+            "kind",
+            "due_at",
+            "fold"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "description": "A manual invocation has a fresh caller-allocated occurrence identity. A scheduled occurrence retains the UTC due instant and first-fold identity resolved by the accepted calendar/timezone implementation; fold is zero under skip-gap-first-repeat. The receiving owner independently verifies the occurrence and deduplicates the owner/resource/release/task/occurrence tuple. Replays never recompute a due instant, skip to a newer occurrence or create another child."
+    },
+    "ActionSelection": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "action"
+        },
+        "subject": {
+          "allOf": [
+            {
+              "$ref": "actions.schema.json"
+            },
+            {
+              "properties": {
+                "action": {
+                  "enum": [
+                    "app.backup",
+                    "app.backup-check",
+                    "app.drill"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "subject"
+      ],
+      "additionalProperties": false,
+      "description": "Complete ordinary typed action selected from the accepted task. It cannot contain another maintenance action. Backup selection pins accepted application/release/datasets/secrets; drill pins the resolved checkpoint. All expanded material is included in the parent Plan input closure."
+    },
+    "HookSelection": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "hook"
+        },
+        "name": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "procedure": {
+          "$ref": "source.schema.json#/$defs/Hook"
+        },
+        "restore_input": {
+          "anyOf": [
+            {
+              "$ref": "hook-request.schema.json#/$defs/RestoreInput"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "name",
+        "procedure",
+        "restore_input"
+      ],
+      "additionalProperties": false,
+      "description": "Exact independently approved native hook and, for restore/verify-restore, complete resolved checkpoint/snapshot selection. Native filesystem paths remain owner-confined selections and cannot supply authority. Current administrator permission and the original role-specific safety rules remain required."
+    },
+    "MaintenanceExecution": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/maintenance/v1"
+        },
+        "kind": {
+          "const": "MaintenanceExecution"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "resource": {
+          "allOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Resource"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "const": "app"
+                }
+              }
+            }
+          ]
+        },
+        "task": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "release_digest": {
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
+        },
+        "task_definition": {
+          "$ref": "#/$defs/Task"
+        },
+        "occurrence": {
+          "$ref": "#/$defs/Occurrence"
+        },
+        "selection": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ActionSelection"
+            },
+            {
+              "$ref": "#/$defs/HookSelection"
+            }
+          ]
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "owner",
+        "resource",
+        "task",
+        "release_digest",
+        "task_definition",
+        "occurrence",
+        "selection"
+      ],
+      "additionalProperties": false,
+      "description": "Immutable owner-resolved execution embedded in and covered by the original Plan digest. The owner verifies the full task and hook against the independently accepted release and verifies checkpoint/backup selection, calendar occurrence and current scoped permission before review. The source cannot select another release or grant itself authority. Keep this original canonical closure while any accepted request or dependent recovery needs it; replay resolves retained work before current source/clock/latest-checkpoint selection. Public helpers validate relationships without implementing native scheduling, admission, authentication or durability."
+    },
+    "HookArtifact": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "$ref": "common.schema.json#/$defs/RelativePath"
+        },
+        "content": {
+          "$ref": "common.schema.json#/$defs/Handle"
+        }
+      },
+      "required": [
+        "path",
+        "content"
+      ],
+      "additionalProperties": false
+    },
+    "HookResult": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "hook-request.schema.json"
+        },
+        "result": {
+          "anyOf": [
+            {
+              "$ref": "hook-result.schema.json"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/HookArtifact"
+          }
+        }
+      },
+      "required": [
+        "request",
+        "result",
+        "artifacts"
+      ],
+      "additionalProperties": false,
+      "description": "Original parent-owned hook request/result and complete retained artifact handles. Missing result remains unresolved. Handles preserve exact bytes, parent owner and operation custody; success requires independently verified material and the original accepted procedure. The request identity is the same deterministic maintenance child request identity used by the action branch."
+    },
+    "MaintenanceResult": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/maintenance/v1"
+        },
+        "kind": {
+          "const": "MaintenanceResult"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "operation_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "request_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "plan_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "plan": {
+          "$ref": "records.schema.json#/$defs/Plan"
+        },
+        "child": {
+          "anyOf": [
+            {
+              "$ref": "records.schema.json#/$defs/Operation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hook": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HookResult"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "owner",
+        "operation_id",
+        "request_id",
+        "plan_digest",
+        "plan",
+        "child",
+        "hook"
+      ],
+      "additionalProperties": false,
+      "description": "Exact maintenance result retains the complete original parent Plan and therefore its immutable execution capsule, task/release/occurrence and resolved inputs. The parent Operation identity, subject and plan_digest join this Plan exactly. The action branch retains its exact ordinary child Operation; its owner and resource equal the parent, subject equals the resolved action, and request_id is UUIDv5 under the parent request UUID with name deployment-ops/maintenance-child/v1 followed by slash-separated owner tool/id/epoch. Its ordinary Plan and result remain retrievable using existing owner APIs; no optional tracker or original client is required. Child success and normal action-specific result custody are mandatory before parent success; a backup cannot lose its required typed result through this wrapper. Child result bytes are retained independently and verified through their exact ResultHandle and installed reader before settlement. The hook branch retains its original correlated hook result and complete artifact handles. Native-maintenance remains administrator-only. The two branches cannot substitute for one another or recurse; both null is allowed only while the parent has not succeeded. Parent success is immutable and never promises to add a child/result later. Transport uses the existing bounded content/record paths and places no collection-count limit on the complete Plan, ordinary child result or artifact closure."
+    }
+  }
+}

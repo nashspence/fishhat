@@ -8,6 +8,7 @@ import pytest
 from fishhat_adapters import check_response
 from fishhat_contracts.validation import ContractError, digest
 
+from tests.adapter_support import observation_target
 from tests.test_adapter_handoffs import artifact, installed
 from tests.test_adapter_quantities import counter, limit
 
@@ -61,6 +62,7 @@ def page(role, method="observe"):
         query["input"]["binding"] = executor
     if role == "runtime":
         query["input"]["barrier"] = None
+        query["input"]["target"] = observation_target(executor)
     outputs = {
         "backup": {"objects": []},
         "build": {"artifacts": []},

@@ -31,9 +31,9 @@ def minimum_action_role(action: str, *, task_action: str | None = None) -> str:
         raise ContractError("unknown action")
     required = [_ACTIONS[action]["minimum_role"]]
     if action == "app.maintenance-run":
-        allowed = SCHEMAS["source.schema.json"]["$defs"]["App"]["properties"]["maintenance"][
-            "additionalProperties"
-        ]["properties"]["action"]["enum"]
+        allowed = SCHEMAS["maintenance.schema.json"]["$defs"]["Task"]["properties"]["action"][
+            "enum"
+        ]
         if task_action not in allowed:
             raise ContractError("accepted maintenance task action required")
         if task_action == "native-maintenance":

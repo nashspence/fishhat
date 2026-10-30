@@ -1276,10 +1276,14 @@
     },
     "app.backup": {
       "type": "object",
-      "properties": {},
-      "required": [],
+      "properties": {
+        "selection": {
+          "$ref": "backup-result.schema.json#/$defs/BackupSelection"
+        }
+      },
+      "required": ["selection"],
       "additionalProperties": false,
-      "description": "Capture and publish an application recovery checkpoint using its declared data procedures. Reject before admission when the accepted application release declares no application-owned dataset with preserve recovery policy; a stateless, rebuild-only or externally owned dataset set cannot produce an empty or fabricated checkpoint. Success requires the exact signed capture, backup.store and backup.verify receipt closure for every preserved dataset and the historical backup executor, as defined by Checkpoint. Retained results and all immutable artifact bytes must be in verified independent custody before producer work completes. Reconstruction does not consult mutable backend aliases. A successful capture and backup verification remain distinct from evidence that restoration has been tested."
+      "description": "Capture and publish an application recovery checkpoint using its declared data procedures. The receiving owner independently resolves and pins selection from protected accepted application state before Plan review: exact production instance, accepted release, complete preserve dataset set and secret generations. The exact release and secret material roots belong in Plan.input_digests. Revalidate this same resource-to-instance mapping and accepted selection under current native exclusion before new admission and capture; a caller or source cannot self-approve another selection. Reject before admission when the accepted application release declares no application-owned dataset with preserve recovery policy; a stateless, rebuild-only or externally owned dataset set cannot produce an empty or fabricated checkpoint. Success returns BackupResult bound to this exact owner, Operation, request, reviewed Plan, resource and selection, wrapping the unchanged Checkpoint recovery object. It requires the exact signed capture, backup.store and backup.verify receipt closure for every preserved dataset and the historical backup executor, as defined by Checkpoint. Native owners verify that this accepted producer actually created the selected checkpoint and retain complete result and immutable artifact bytes under independent custody before success. An unrelated old result from the same owner is insufficient. Reconstruction does not consult mutable backend aliases. A successful capture and backup verification remain distinct from evidence that restoration has been tested."
     },
     "app.backup-check": {
       "type": "object",
@@ -1323,7 +1327,7 @@
         "task"
       ],
       "additionalProperties": false,
-      "description": "Run one task resolved from the receiver's accepted application release with its exact approved scope. The effective minimum role is the higher of app.maintenance-run and the expanded app.backup, app.backup-check or app.drill action. Those built-in tasks cannot select a hook. The native-maintenance branch selects one declared hook and requires administrator regardless of its hook role; it cannot lower the permission floor of restore, drill or other owner work. The receiver checks this role and current scoped authority for manual and scheduled execution. A task declaration or schedule cannot delegate administrator authority. The plan explains data changes or downtime; a task name does not authorize arbitrary host commands."
+      "description": "Run one task resolved from the receiver's accepted application release with its exact approved scope. Plan.maintenance retains the exact accepted release and full task, manual or scheduled occurrence, and complete expanded ordinary action or native hook inputs before review. Checkpoint policies resolve once and the Plan pins the exact checkpoint and full input closure; accepted replay never consults newer source, clocks or backups. The effective minimum role is the higher of app.maintenance-run and the expanded app.backup, app.backup-check or app.drill action. Those built-in tasks cannot select a hook. The native-maintenance branch selects one declared hook and requires administrator regardless of its hook role, retaining its exact original procedure and role-specific input/custody rules. It cannot lower the permission floor of restore, drill or other owner work. The receiver checks current scoped authority for manual and scheduled execution. A task declaration or schedule cannot delegate administrator authority. The complete MaintenanceResult retains the original Plan and exact ordinary child Operation with its normal typed result obligations, or original hook request/result and protected artifact handles. Parent success cannot precede verified child success and required result custody. Recovery discovers this closure through existing Operation/Plan/content APIs without the original client or optional tracking. The plan explains data changes or downtime; a task name does not authorize arbitrary host commands."
     },
     "app.secrets-adopt": {
       "type": "object",
@@ -1951,7 +1955,7 @@
         },
         "result_schema": {
           "$ref": "common.schema.json#/$defs/SchemaIdentity",
-          "description": "Custom installed result schemas use the fixed Draft 2020-12 assertion profile: known keywords and formats, proven-linear regular expressions, and static acyclic references to actual schema positions in the selected installed closure or source-reviewed core contracts. The existing provider capacities for schema execution depth (32) and statically expanded schema work (4096) also apply to custom result schemas. Unused definitions are checked independently; declaration count and result-list extent are not capped. Literal annotations are instance data, not schema positions. Unsupported profiles reject before matching result values; schema admission preserves exact published bytes and identities."
+          "description": "Custom installed result schemas use the fixed Draft 2020-12 assertion profile: known keywords and formats, the same conservative shared Unicode regular-expression spelling and fixed eight-alternative-path linearity profile as provider schemas (including every optional atom or group), and static acyclic references to actual schema positions in the selected installed closure or source-reviewed core contracts. The existing provider capacities for schema execution depth (32) and statically expanded schema work (4096) also apply to custom result schemas. Unused definitions are checked independently; declaration count and result-list extent are not capped. Literal annotations are instance data, not schema positions. Unsupported profiles reject before matching result values; schema admission preserves exact published bytes and identities."
         }
       },
       "required": [

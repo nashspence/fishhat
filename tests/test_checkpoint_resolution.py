@@ -17,6 +17,7 @@ from fishhat_contracts.validation import ContractError, canonical, digest, stric
 from fishhat_contracts.witness import sign
 
 from tests.adapter_support import OWNER, identifier
+from tests.backup_support import backup_result, backup_selection
 from tests.linear_support import assert_linear, measure
 from tests.operation_support import seal_operation
 from tests.test_adapter_handoffs import installed, invocation_for, response_for
@@ -503,21 +504,22 @@ def test_decoded_checkpoint_and_app_backup_payload_reapply_snapshot_integrity():
         subject={
             "action": "app.backup",
             "resource": {"kind": "app", "id": "example"},
-            "arguments": {},
+            "arguments": {"selection": backup_selection(checkpoint)},
         },
     )
 
     def read(value):
+        value = backup_result(value, record)
         handle = material_handle(OWNER, digest(value), size=len(canonical(value)))
         handle["binding"] = {"kind": "operation", "operation_id": record["id"]}
         record["result_handle"] = {
             "handle": handle,
             "schema": schema_identity(
-                "https://fishhat.invalid/contracts/records.schema.json#/$defs/Checkpoint"
+                "https://fishhat.invalid/contracts/backup-result.schema.json#/$defs/BackupResult"
             ),
         }
         seal_operation(record)
-        return validate_result_payload(record, canonical(value))
+        return validate_result_payload(record, canonical(value))["checkpoint"]
 
     assert read(checkpoint) == checkpoint
     checkpoint["witness"]["subject_digest"] = digest("another checkpoint body")

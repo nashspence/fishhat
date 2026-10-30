@@ -12,19 +12,19 @@
         "type": "string",
         "minLength": 1,
         "maxLength": 160,
-        "pattern": "^[a-z][a-z0-9._-]*$"
+        "pattern": "^[a-z][a-z0-9._-]*(?![\\s\\S])"
       },
       "hosts_directory_handle": {
         "type": "string",
         "minLength": 1,
         "maxLength": 160,
-        "pattern": "^[a-z][a-z0-9._-]*$"
+        "pattern": "^[a-z][a-z0-9._-]*(?![\\s\\S])"
       },
       "resolver_handle": {
         "type": "string",
         "minLength": 1,
         "maxLength": 160,
-        "pattern": "^[a-z][a-z0-9._-]*$"
+        "pattern": "^[a-z][a-z0-9._-]*(?![\\s\\S])"
       },
       "local_ttl": {
         "type": "integer",

@@ -86,7 +86,8 @@ def _sequence_bounds(name: str) -> Bounds:
 class ObservationSequence:
     """Incrementally check one independently authorized adapter snapshot traversal.
 
-    The owner supplies its exact approved observer binding and any independently
+    The owner supplies its exact approved observer binding, the separately
+    approved runtime target for runtime observations, and any independently
     approved historical issuer-to-observer mappings. Request or response data
     cannot populate those approvals. Each page still requires native snapshot,
     current-permission and cursor checks outside this pure reference model.
@@ -103,6 +104,7 @@ class ObservationSequence:
         request: dict[str, Any],
         *,
         approved_binding: dict[str, Any],
+        approved_runtime_binding: dict[str, Any] | None = None,
         approved_issuers: Iterable[dict[str, Any]] = (),
     ) -> None:
         from .adapter_semantics import check_request
@@ -115,6 +117,11 @@ class ObservationSequence:
             "OBSERVATION_SEQUENCE_START",
         )
         _require(request["input"]["binding"] == approved_binding, "OBSERVATION_APPROVED_BINDING")
+        _require(
+            (role == "runtime" and request["input"]["target"] == approved_runtime_binding)
+            or (role != "runtime" and approved_runtime_binding is None),
+            "OBSERVATION_APPROVED_TARGET",
+        )
         self._role = role
         self._query = _query(request)
         self._issuers = {canonical(approved_binding)}

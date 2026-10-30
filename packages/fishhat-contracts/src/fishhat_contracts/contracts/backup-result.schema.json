@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fishhat.invalid/contracts/backup-result.schema.json",
+  "$ref": "#/$defs/BackupResult",
+  "$defs": {
+    "BackupSelection": {
+      "type": "object",
+      "properties": {
+        "app_instance": {
+          "type": "string",
+          "minLength": 69,
+          "maxLength": 69,
+          "pattern": "^prod:[0-9a-f]{64}(?![\\s\\S])"
+        },
+        "release_digest": {
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
+        },
+        "preserved_datasets": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/Id"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "secret_generations": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/MaterialDigest"
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "app_instance",
+        "release_digest",
+        "preserved_datasets",
+        "secret_generations"
+      ],
+      "additionalProperties": false,
+      "description": "The complete receiving-owner-selected currently accepted application recovery context, retained in the reviewed app.backup Subject. The owner independently resolves the Subject resource to this production instance and selects the exact accepted release, all application-owned preserve datasets and secret generations before Plan review. A caller or source may propose values but cannot authenticate that mapping, adopt another release or omit a dataset. New admission and capture revalidate this exact selection against protected accepted state and current generations under the required native exclusion. Empty preserve sets are rejected. Dataset and secret arrays are complete sets without a collection cap; ordering is retained as part of the original request identity."
+    },
+    "BackupResult": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/backup-result/v1"
+        },
+        "kind": {
+          "const": "BackupResult"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "operation_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "request_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "plan_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "resource": {
+          "allOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Resource"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "const": "app"
+                }
+              }
+            }
+          ]
+        },
+        "selection": {
+          "$ref": "backup-result.schema.json#/$defs/BackupSelection"
+        },
+        "checkpoint": {
+          "$ref": "records.schema.json#/$defs/Checkpoint"
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "owner",
+        "operation_id",
+        "request_id",
+        "plan_digest",
+        "resource",
+        "selection",
+        "checkpoint"
+      ],
+      "additionalProperties": false,
+      "description": "The complete app.backup result, separate from the unchanged historical Checkpoint format. Owner, operation_id, request_id, plan_digest and resource equal the exact producing Operation and its reviewed Subject; selection equals that Subject's immutable arguments.selection. The Checkpoint owner, application instance, accepted release, complete preserve-dataset set and secret-generation set equal this retained selection. The producer independently verifies the full capture/store/verify receipt closure and actual native custody before success, and retains this exact result before settlement. A prior or foreign producing result cannot fulfill another request or Plan, even under the same owner. Exact accepted replay returns the original wrapper and checkpoint unchanged. Schema validity, copied fields or a signature alone never authenticate current accepted source or native capture. Historical restore continues to select the embedded original Checkpoint by its own unchanged digest and custody; a BackupResult never rewrites historical checkpoint identity."
+    }
+  }
+}

@@ -139,7 +139,7 @@
         "attestation_id"
       ],
       "additionalProperties": false,
-      "description": "Exactly one proof per immutable participant owner/resource pair. Native evidence contains complete retained owner-held material proving this participant's obligations for the selected transition, including actual target identity, current resource generation and applicable exclusion, quiescence, fencing, candidate or result verification. Its owner equals this participant. The owner authenticates every Operation and verifies each required result's complete bytes under its action-owned schema before signing. The approval witness has state workflow-phase-verified, this owner epoch, resource_generation and workflow ID; evidence_digests is empty. Its subject_digest covers canonical {transition: PhaseEvidence.transition, participant: this complete ParticipantEvidence with witness omitted}. This binds actual child snapshots and native custody to the exact transition, not an unrelated digest or generic true assertion. The receiver independently authenticates the witness and obtains current native verification before supplying trusted phase evidence. A signature-shaped object or matching digest supplies neither. expires_at is selected by the issuing owner, is after witness.created_at, and is covered by subject_digest. Every new phase admission checks this deadline and independently revalidates current native exclusion and generation; unexpired signed bytes alone are insufficient. Accepted transition replay and historical inspection preserve expired original proof bytes without reauthorizing effects. Ordinary driver proofs are obtained through workflow.attest and immutable workflow.attestation.get/record.read, never synthesized by the driver. attestation_id is an issuer-owned immutable proof identity covered by this proof signature. For ordinary driver evidence it is the attestation request identity; for native-owner final settlement it identifies protected native observation custody and cannot be obtained by a driver claiming native authority. All resources from one issuer in a phase evidence closure use the same attestation_id. For ordinary driver evidence the receiver resolves that ID through workflow.attestation.get, reads the complete signed result, requires its complete local proof set to equal the submitted proofs, and independently invokes workflow.attestation.check; a caller cannot mix local resources from different issue snapshots."
+      "description": "Exactly one proof per immutable participant owner/resource pair. Native evidence contains complete retained owner-held material proving this participant's obligations for the selected transition, including actual target identity, current resource generation and applicable exclusion, quiescence, fencing, candidate or result verification. Its owner equals this participant. The owner authenticates every Operation and verifies each required result's complete bytes under its action-owned schema before signing. The approval witness has state workflow-phase-verified, this owner epoch, resource_generation and workflow ID; evidence_digests is empty. Its subject_digest covers canonical {transition: PhaseEvidence.transition, participant: this complete ParticipantEvidence with witness omitted}. This binds actual child snapshots and native custody to the exact transition, not an unrelated digest or generic true assertion. The receiver independently authenticates the witness and obtains current native verification before supplying trusted phase evidence. A signature-shaped object or matching digest supplies neither. expires_at is selected by the issuing owner, is after witness.created_at, and is covered by subject_digest. Every new phase admission checks this deadline and independently revalidates current native exclusion and generation; unexpired signed bytes alone are insufficient. Accepted transition replay and historical inspection preserve expired original proof bytes without reauthorizing effects. Ordinary driver proofs are obtained through workflow.attest and immutable workflow.attestation.get/record.read, never synthesized by the driver. attestation_id is an issuer-owned immutable proof identity covered by this proof signature. For ordinary driver evidence it is the attestation request identity; for native-owner final settlement it identifies protected native observation custody and cannot be obtained by a driver claiming native authority. All resources from one issuer in a phase evidence closure use the same attestation_id. For ordinary driver evidence the receiver resolves that ID through workflow.attestation.get, reads the complete signed result, requires its complete local proof set to equal the submitted proofs, and independently invokes workflow.attestation.check; a caller cannot mix local resources from different issue snapshots. Native-owner final settlement obtains this complete proof set through workflow.native-attest using independently authenticated receiving-owner routing and rechecks the exact immutable record through workflow.native-attestation.check. The same attestation identity, complete local closure, pinned schema and signature joins apply; native peer authority is never supplied by the driver."
     },
     "PhaseEvidence": {
       "type": "object",
@@ -464,7 +464,14 @@
           "maximum": 9007199254740991
         },
         "request": {
-          "$ref": "workflow-evidence.schema.json#/$defs/AttestationRequest"
+          "oneOf": [
+            {
+              "$ref": "workflow-evidence.schema.json#/$defs/AttestationRequest"
+            },
+            {
+              "$ref": "workflow-evidence.schema.json#/$defs/NativeAttestationRequest"
+            }
+          ]
         },
         "request_digest": {
           "$ref": "common.schema.json#/$defs/Digest"
@@ -501,7 +508,7 @@
         "participants"
       ],
       "additionalProperties": false,
-      "description": "Complete immutable issuer-local attestation result. id equals request.attestation_id; owner equals request.owner, resource identifies request.workflow_id, and generation equals request.expected_generation without changing the capsule. request_digest commits the complete request. Each proof belongs to this issuer, covers a distinct local proposal participant resource and binds request.transition exactly; witness.created_at equals issued_at and its signed expires_at equals this record deadline. The original authenticated principal is retained. All local resources and complete native evidence appear, without a collection cap. workflow.attest and workflow.attestation.get always return a bounded RecordReference for these canonical bytes; record.read streams the complete exact result. Driver assembly requires one authentic current proof per proposal participant, exact transition equality, and independently trusted owner/key bindings; it supplies no native authorization. A restarted native journal restores exact requests/results and reservations, independently of workflow capsule generation. A restored owner epoch cannot reissue or reinterpret old proofs as current authority; historical records remain attributable to their original issuer. Durable custody includes the original RecordReference, its pinned schema closure and canonical payload bytes. Restoration preserves the complete reference exactly; it never rebinds an accepted identity to a newly installed schema closure. If its original closure differs, an independently installed qualified historical reader is required; missing reader or bytes fails restoration without rewriting accepted evidence."
+      "description": "Complete immutable issuer-local attestation result. id equals request.attestation_id; owner equals request.owner, resource identifies request.workflow_id, and generation equals request.expected_generation without changing the capsule. request_digest commits the complete request. Each proof belongs to this issuer, covers a distinct local proposal participant resource and binds request.transition exactly; witness.created_at equals issued_at and its signed expires_at equals this record deadline. The original authenticated principal is retained. All local resources and complete native evidence appear, without a collection cap. workflow.attest and workflow.attestation.get always return a bounded RecordReference for these canonical bytes; record.read streams the complete exact result. Driver assembly requires one authentic current proof per proposal participant, exact transition equality, and independently trusted owner/key bindings; it supplies no native authorization. A restarted native journal restores exact requests/results and reservations, independently of workflow capsule generation. A restored owner epoch cannot reissue or reinterpret old proofs as current authority; historical records remain attributable to their original issuer. Durable custody includes the original RecordReference, its pinned schema closure and canonical payload bytes. Restoration preserves the complete reference exactly; it never rebinds an accepted identity to a newly installed schema closure. If its original closure differs, an independently installed qualified historical reader is required; missing reader or bytes fails restoration without rewriting accepted evidence. Native final settlement proofs are issued only by workflow.native-attest under independently authenticated receiver-owner context; their request authority cannot be used by the driver route. Both issuance routes and workflow.attestation.get return the same bounded immutable record delivery, and native assembly and current checks preserve the complete exact issuer-local proof set."
     },
     "AttestationReference": {
       "allOf": [
@@ -559,6 +566,61 @@
       ],
       "additionalProperties": false,
       "description": "Finite result of the issuer's current check of this exact immutable attestation and exact transition. Its original digest, signed expiry and proof bytes remain unchanged. Independently authenticated transport establishes who answered; schema validity or caller-supplied copies do not. checked_at is the issuer's current observation time, never a renewed lease or permission across a later race. The receiving owner still independently serializes new admission with the native protections required by the installed procedure and rejects if they cannot be maintained. Expiry never releases a hold or fence; native owners retain protection through the effects and explicit owning release conditions. Accepted transition replay uses original evidence without requesting new verification."
+    },
+    "NativeAttestationRequest": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "workflow_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "attestation_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "expected_generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "transition": {
+          "allOf": [
+            {
+              "$ref": "workflow-evidence.schema.json#/$defs/Transition"
+            },
+            {
+              "properties": {
+                "authority": {
+                  "const": "native-owner"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "owner",
+        "workflow_id",
+        "attestation_id",
+        "expected_generation",
+        "transition"
+      ],
+      "additionalProperties": false,
+      "description": "Protected owner-to-owner request for complete issuer-local evidence of the receiver's final adjacent native settlement only. The issuing process independently authenticates an enrolled peer owner epoch, or protected same-owner dispatch, exactly equal to transition.owner. A driver, administrator or caller cannot acquire this authority through principal spelling, an authority field, an arbitrary route, or supplied native flags. expected_generation selects the current issuer capsule; transition binds the independently fetched receiving owner epoch, proposal, current generation, current driver term and exact final transition. The receiver must be active or paused at the penultimate phase. The issuer is active or paused at that phase, or already completed at the terminal phase. Pending driver transfers may remain incomplete and peers may have different driver terms; the proof binds the receiver's term and each issuer's exact generation without transferring driver authority. Recovery custody must be committed and preparation agreement complete. Every required accepted child has a successful known outcome and its complete result bytes are independently verified. All local resources, native material, current generations and continuing protection are verified before protected signing. No new child, intermediate phase, transfer completion, hold release or authority renewal is authorized. The request supplies no proof, peer authentication, key, expiry or native authority. Issuance does not mutate a workflow generation. Retain the exact request, original authenticated principal, signed complete result, original RecordReference and required native material before acknowledgement. The driver and native routes share the same issuer-owned attestation identity namespace. Exact replay requires current read scope and the same independently authenticated receiving owner epoch, then returns original custody before generation, lifecycle, driver, expiry or native checks; changed input is CONFLICT. Lost replies are acceptance uncertainty; retry exactly or use workflow.attestation.get and complete record.read. Every fresh native settlement independently checks each exact retained record through workflow.native-attestation.check and enrolled peer routing. Expiry never releases protection or frees an accepted identity. Refuse new capacity without evicting accepted requests or results. This bounded request carries no complete collection."
+    },
+    "NativeAttestationCheckRequest": {
+      "type": "object",
+      "properties": {
+        "reference": {
+          "$ref": "workflow-evidence.schema.json#/$defs/AttestationReference"
+        }
+      },
+      "required": [
+        "reference"
+      ],
+      "additionalProperties": false,
+      "description": "Protected peer check of one exact retained native-owner final-settlement attestation. The issuer independently authenticates the peer owner epoch exactly equal to the retained transition.owner and independently loads current issuer and receiver capsules, complete accepted successful outcomes, native material, resource generations and continuing protections. Current complete read scope and native check authority are required. This route rejects driver proofs; the driver check route rejects native-owner proofs. The receiver remains active or paused at the exact final source phase, generation and driver term; an issuer may already be terminal. Incomplete driver transfer is preserved, and recovery custody is committed. Check signed expiry against current time. Missing or stale native protection refuses; a caller-provided prior check or signed record is insufficient. Return the bounded CurrentAttestation without mutating bytes, renewing expiry, completing transfer, releasing holds or granting native authority. The receiver serializes final settlement under its own native exclusion; this observation is not a lease."
     }
   },
   "$ref": "workflow-evidence.schema.json#/$defs/PhaseEvidence"

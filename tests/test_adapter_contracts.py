@@ -15,7 +15,15 @@ from fishhat_adapters import (
 )
 from fishhat_contracts.validation import SCHEMAS, ContractError, digest, validate
 
-from tests.adapter_support import SCOPE, D, descriptors, observation, request, runtime_registry
+from tests.adapter_support import (
+    SCOPE,
+    D,
+    binding,
+    descriptors,
+    observation,
+    request,
+    runtime_registry,
+)
 
 CHECK_PURPOSE = {
     "purpose": "public-contract",
@@ -210,6 +218,7 @@ def test_read_response_is_bound_to_request_and_complete_coverage():
             "limit": 10,
             "barrier": None,
             "binding": instance_reference(runtime_registry()[2], SCOPE),
+            "target": binding(),
         },
     }
     response = {

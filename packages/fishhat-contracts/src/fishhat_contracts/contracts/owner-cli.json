@@ -138,7 +138,7 @@
         "--json"
       ],
       "use_case": "plan.prepare",
-      "description": "Plan a recovery capture; capture success and restore-drill evidence remain distinct."
+      "description": "Plan a recovery capture after the receiving owner resolves the selected resource to its independently retained accepted application instance, release, complete preserve datasets and secret generations. Pin that exact BackupSelection in arguments.selection for review and revalidate it before capture; caller fields and source cannot approve themselves or adopt a different release. Capture success and restore-drill evidence remain distinct."
     },
     {
       "name": "cancel",
@@ -695,6 +695,31 @@
       ],
       "use_case": "workflow.attestation.get",
       "description": "Read the exact retained attestation by owner, workflow and attestation identity. Current read scope is required; inspect all RecordReference chunks without renewing its expiry or native authority."
+    },
+    {
+      "name": "workflow-native-attest",
+      "tokens": [
+        "{tool}",
+        "workflow",
+        "native-attest",
+        "--request-stdin",
+        "--json"
+      ],
+      "use_case": "workflow.native-attest",
+      "description": "Protected owner-to-owner issuance for the exact final native settlement. Independently authenticated peer owner epoch must equal the intended receiver; a driver or administrator cannot obtain this authority from request fields. Paused work and incomplete driver transfer remain intact. Return the complete signed result through immutable RecordReference and record.read without advancing or admitting work."
+    },
+    {
+      "name": "workflow-native-attestation-check",
+      "tokens": [
+        "{tool}",
+        "workflow",
+        "native-attestation",
+        "check",
+        "--request-stdin",
+        "--json"
+      ],
+      "use_case": "workflow.native-attestation.check",
+      "description": "Protected peer check of the exact retained native final-settlement proof, current receiver and issuer generations, signed expiry and continuing native protection. The independently authenticated receiver-owner epoch is required. This observation grants no driver authority, renews no lease and releases no holds."
     },
     {
       "name": "workflow-attestation-check",

@@ -85,7 +85,7 @@
       "result": {
         "mode": "schema",
         "schema": {
-          "$ref": "records.schema.json#/$defs/Checkpoint"
+          "$ref": "backup-result.schema.json#/$defs/BackupResult"
         },
         "required_on_success": true
       }
@@ -138,7 +138,11 @@
       },
       "requires_plan": true,
       "result": {
-        "mode": "receipt-only"
+        "mode": "schema",
+        "schema": {
+          "$ref": "maintenance.schema.json#/$defs/MaintenanceResult"
+        },
+        "required_on_success": true
       }
     },
     {

@@ -620,10 +620,15 @@ class AdapterCoordinator:
                 "binding": instance_reference(
                     self.registry.inspect_instance(binding["instance"]), binding["scope"]
                 ),
+                "target": copy.deepcopy(binding),
             },
         }
         self.registry.authorize_request(
-            binding["instance"], "runtime", query, owner_approved=owner_approved
+            binding["instance"],
+            "runtime",
+            query,
+            owner_approved=owner_approved,
+            expected_runtime_binding=binding,
         )
         if self.state["quiescent"][subject]:
             candidate = copy.deepcopy(self.state)

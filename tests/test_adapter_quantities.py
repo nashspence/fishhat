@@ -251,6 +251,11 @@ def test_storage_success_matches_exact_approved_ceiling_and_isolation(change, re
         "input": {
             "scope": executor["scope"],
             "allocation": "allocation:demo",
+            "precondition": {
+                "kind": "update-exact",
+                "accounting_domain": "domain:demo",
+                "native_identity_digest": "sha256:" + "a" * 64,
+            },
             "capacity_bytes": 2048,
             "capacity_inodes": 10,
             "purposes": ["state"],
@@ -300,6 +305,11 @@ def test_storage_quota_change_preserves_identity_and_requires_new_exact_result(r
         "input": {
             "scope": executor["scope"],
             "allocation": "allocation:demo",
+            "precondition": {
+                "kind": "update-exact",
+                "accounting_domain": "domain:demo",
+                "native_identity_digest": "sha256:" + "a" * 64,
+            },
             "capacity_bytes": 2048,
             "capacity_inodes": 10,
             "purposes": ["state"],

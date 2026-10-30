@@ -105,6 +105,12 @@
     },
     {
       "name": "workflow.attestation.check"
+    },
+    {
+      "name": "workflow.native-attest"
+    },
+    {
+      "name": "workflow.native-attestation.check"
     }
   ],
   "max_frame_bytes": 1048576,
