@@ -14,7 +14,7 @@ from fishhat_contracts.operations import (
 from fishhat_contracts.record_delivery import RecordSnapshot, validate_record_payload
 from fishhat_contracts.validation import SCHEMAS, ContractError, canonical, digest, validate
 from fishhat_contracts.workflow_recovery import validate_recovery_proposal
-from fishhat_contracts.workflows import advance_workflow
+from fishhat_contracts.workflows import advance_workflow_view
 
 from tests.test_contracts import uid
 from tests.test_workflow_continuations import adoption_stage
@@ -29,16 +29,19 @@ CHECK_PURPOSE = {
     ],
     "scope": "explicit installed recovery compatibility and unchanged original evidence",
     "relationship": "candidate",
-    "reason": "Editorial closure changes exercise retained compatible records and producer outputs through successor custody. Missing, miskeyed, mutating and semantically incompatible readers are rejected. Synthetic installed context does not prove native authentication, qualification or execution.",
+    "reason": "Reachable description changes exercise retained compatible records and producer outputs through successor custody. Missing, miskeyed, mutating and semantically incompatible readers are rejected. Synthetic installed context does not prove native authentication, qualification or execution.",
     "claims": [],
 }
 
 
 def editorial_change(monkeypatch):
     changed = copy.deepcopy(SCHEMAS["records.schema.json"])
-    info = changed["$defs"]["Info"]
-    info["description"] = info.get("description", "") + " Discovery editorial clarification."
+    workflow = changed["$defs"]["Workflow"]
+    workflow["description"] = workflow.get("description", "") + " Retained workflow clarification."
     monkeypatch.setitem(SCHEMAS, "records.schema.json", changed)
+    changed = copy.deepcopy(SCHEMAS["publisher-receipt.schema.json"])
+    changed["description"] = changed.get("description", "") + " Retained publication clarification."
+    monkeypatch.setitem(SCHEMAS, "publisher-receipt.schema.json", changed)
 
 
 def installed_readers(proposal):
@@ -228,7 +231,7 @@ def test_historical_publisher_output_remains_usable_through_successor_lifecycle(
     from tests.workflow_evidence_support import phase_evidence
 
     advance["phase_evidence"] = phase_evidence(value, advance)
-    moved = advance_workflow(
+    moved = advance_workflow_view(
         advance,
         value,
         verified_phase_evidence=copy.deepcopy(advance["phase_evidence"]),

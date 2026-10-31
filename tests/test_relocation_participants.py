@@ -16,12 +16,12 @@ from fishhat_contracts.validation import ContractError, canonical, validate
 from fishhat_contracts.workflow_evidence import validate_phase_evidence
 from fishhat_contracts.workflow_lifecycle import require_workflow_child_admission
 from fishhat_contracts.workflow_recovery import (
-    commit_workflow_recovery,
+    commit_workflow_recovery_view,
     validate_recovery_proposal,
 )
 from fishhat_contracts.workflows import (
-    advance_workflow,
-    prepare_workflow,
+    advance_workflow_view,
+    prepare_workflow_view,
     validate_workflow_proposal,
 )
 
@@ -164,8 +164,8 @@ def test_destination_preparation_requires_local_material_and_its_own_proof():
     }
     for field, missing in (("verified_content", []), ("verified_preparation", None)):
         with pytest.raises(ContractError):
-            prepare_workflow(query, **{**context, field: missing})
-    value = prepare_workflow(query, **context)
+            prepare_workflow_view(query, **{**context, field: missing})
+    value = prepare_workflow_view(query, **context)
     assert value["owner"] == destination["owner"] and value["participants"][1]["request_ids"] == []
 
 
@@ -181,7 +181,9 @@ def test_destination_proof_and_current_native_verification_are_required_at_every
     with pytest.raises(ContractError, match="missing participant evidence"):
         advance_with_evidence(missing, source)
     with pytest.raises(ContractError, match="independently verified"):
-        advance_workflow(query, source, verified_phase_evidence=None, now="2026-11-01T00:00:00Z")
+        advance_workflow_view(
+            query, source, verified_phase_evidence=None, now="2026-11-01T00:00:00Z"
+        )
 
 
 def test_driver_loss_preserves_source_fence_and_destination_transfer_obligation():
@@ -228,7 +230,7 @@ def test_relocation_recovery_retains_childless_destination_custody(historical):
         p for p in omitted["preparations"] if p["owner"] != destination["owner"]
     ]
     with pytest.raises(ContractError, match="complete participant retirement"):
-        commit_workflow_recovery(
+        commit_workflow_recovery_view(
             omitted,
             prepared,
             recovery_authorized=True,

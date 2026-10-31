@@ -9,7 +9,8 @@
           "$ref": "adapter.schema.json#/$defs/Scope"
         },
         "source": {
-          "$ref": "adapter.schema.json#/$defs/Artifact"
+          "$ref": "adapter.schema.json#/$defs/Artifact",
+          "description": "Complete immutable native input artifact selected by the independently reviewed release. Its digest is the returned Deployment.source_digest, distinct from the Release identity. The owner supplies its exact bytes and all retained referenced inputs under the process input closure; filenames, ambient repositories and adapter-selected replacement bytes cannot redefine this source."
         },
         "components": {
           "type": "array",
@@ -18,14 +19,38 @@
           },
           "minItems": 1,
           "uniqueItems": true
+        },
+        "binding": {
+          "$ref": "adapter.schema.json#/$defs/InstanceReference"
+        },
+        "target": {
+          "allOf": [
+            {
+              "$ref": "adapter.schema.json#/$defs/RuntimeBinding"
+            },
+            {
+              "required": [
+                "instance_digest"
+              ]
+            }
+          ],
+          "description": "Complete receiving-owner-accepted runtime target, including exact generation, native incarnation, enrollment and admission fence. It must match scope and the separately approved binding executor. The receiving owner independently loads and approves this exact target; the request cannot authorize itself. A fresh independent resolver receives all this context without shared owner state or an earlier mutation."
+        },
+        "release_digest": {
+          "$ref": "common.schema.json#/$defs/Digest",
+          "description": "Exact independently reviewed Release identity. The receiving owner loads the retained release and verifies that its native_input_digest and selected artifacts name source, the complete selected components and the accepted runtime target. A request-selected digest alone cannot establish that authority."
         }
       },
       "required": [
         "scope",
         "source",
-        "components"
+        "components",
+        "binding",
+        "target",
+        "release_digest"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "Read-only resolution of the exact selected component set for the accepted runtime target and release-selected immutable native input. Complete resolution returns one Deployment and one locally transferred projection Artifact in proposal; release_digest equals the independently supplied release_digest, source_digest equals source.digest, binding_digest is the stable RuntimeBinding digest with only admission_generation omitted, projection_digest equals proposal.digest, and components is exactly the requested set. Unknown resolution returns deployment and proposal null, preserving explicit unknown coverage. Resolution grants no authority to materialize or activate. The owner acquires and verifies immutable custody of every projection byte before accepting this result or using it in a mutation. A typed Artifact or successful process exit alone is not custody."
     },
     "materialize": {
       "type": "object",
@@ -285,7 +310,6 @@
             "coverage": {
               "enum": [
                 "complete",
-                "incomplete",
                 "unknown"
               ]
             },

@@ -9,7 +9,7 @@ import pytest
 from fishhat_contracts.handoffs import PHASES, schema_identity, validate_workflow
 from fishhat_contracts.validation import SCHEMAS, ContractError, canonical, digest
 from fishhat_contracts.workflow_evidence import REQUIREMENTS, validate_phase_evidence
-from fishhat_contracts.workflows import PHASE_ACTIONS, advance_workflow
+from fishhat_contracts.workflows import PHASE_ACTIONS, advance_workflow_view
 
 from scripts.check_evidence import evidence_group
 from tests.operation_support import seal_operation
@@ -87,11 +87,11 @@ def test_phase_progress_requires_independent_evidence_and_preserves_exact_replay
     value = workflow()
     query = advance_request(value, "draining")
     with pytest.raises(ContractError, match="not independently verified"):
-        advance_workflow(query, value)
+        advance_workflow_view(query, value)
     result = advance_with_evidence(query, value)
     assert result["phase"] == "draining"
     assert result["advances"][0]["request"]["phase_evidence"] == query["phase_evidence"]
-    assert advance_workflow(copy.deepcopy(query), result) == result
+    assert advance_workflow_view(copy.deepcopy(query), result) == result
     changed = copy.deepcopy(query)
     proof = changed["phase_evidence"]["participants"][0]
     proof["resource_generation"] += 1

@@ -1266,12 +1266,14 @@
                 "rpo_seconds": {
                   "type": "integer",
                   "minimum": 1,
-                  "maximum": 9007199254740991
+                  "maximum": 9007199254740991,
+                  "description": "Recovery-point objective assessed from every selected dataset's authenticated immutable Snapshot.recovery_point and an independently supplied current clock interval. The oldest conservative bound governs the complete checkpoint. Unavailable bounds, uncertain temporal order or uncertainty crossing the objective produces unknown; verified_at, retries and successful drills never refresh data age. This is a protection assessment/warning, not an additional admission block or authorization grant."
                 },
                 "drill_interval_seconds": {
                   "type": "integer",
                   "minimum": 1,
-                  "maximum": 9007199254740991
+                  "maximum": 9007199254740991,
+                  "description": "Objective for the age of the most recent authenticated successful DrillResult for the exact selected checkpoint and accepted verification procedure scope. A verification receipt or changed checkpoint timestamp cannot substitute. Missing or temporally uncertain evidence is reported as unknown; this objective alone does not block admission or delegate authority."
                 }
               },
               "required": [

@@ -16,6 +16,7 @@ from fishhat_owner.adapter_state import AdapterCoordinator
 from tests.adapter_support import (
     OWNER,
     binding,
+    contract_versions,
     fresh_observation,
     identifier,
     native_exclusion,
@@ -77,6 +78,7 @@ def installed(role, *, observe_only=False, endpoint="protected-target", generati
         "roles": [role],
         "entrypoint": "bin/adapter",
         "process_protocol": "fishhat.adapter-process/v1",
+        **contract_versions([role]),
         "configuration_schema": configuration_schema,
         "component_schema": empty,
         "source_schema": empty,
@@ -145,6 +147,7 @@ def handoff(role, method):
                     "dataset": "data",
                     "format": "independent.snapshot",
                     "consistency": "quiesced",
+                    "recovery_point": None,
                     "artifacts": [artifact("c")],
                     "restore_requirements": ["independent.reader"],
                     "producer": copy.deepcopy(reference),
@@ -192,7 +195,10 @@ def handoff(role, method):
 def attempt_for(query):
     inputs = query["input"]
     executor = (
-        inputs.get("binding") or inputs.get("issuer") or inputs.get("target", {}).get("executor")
+        inputs.get("binding")
+        or inputs.get("issuer")
+        or inputs.get("target", {}).get("executor")
+        or inputs.get("target", {}).get("binding")
     )
     if executor is None and "lease" in inputs:
         executor = inputs["lease"]["issuer"]

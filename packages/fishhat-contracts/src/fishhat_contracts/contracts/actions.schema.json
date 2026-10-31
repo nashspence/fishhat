@@ -1366,7 +1366,7 @@
         "checkpoint"
       ],
       "additionalProperties": false,
-      "description": "Test restoration of the selected checkpoint in isolation from production writers. A drill supplies recovery evidence and does not activate the restored copy as the production application."
+      "description": "Test restoration of the selected immutable checkpoint in isolation from production writers. The reviewed Plan pins the exact target runtime binding, production binding, accepted restore/verification procedures and their complete dataset scope and isolation requirements. Execution produces and retains the actual native isolation evidence before success; its future output digest is not a required Plan input. Success requires a retained DrillResult bound to this Operation, Plan and unchanged checkpoint, including every dataset's exact restore and verification evidence. The drill never activates its restored copy as production or changes checkpoint bytes. Cleanup state is recorded separately; retained drill resources keep their obligations until independently authorized cleanup. A successful drill proves the selected procedures at that observation, not current backup freshness."
     },
     "app.recover": {
       "type": "object",

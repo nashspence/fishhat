@@ -12,7 +12,7 @@ from fishhat_contracts.workflow_acknowledgments import (
     validate_workflow_mutation_acknowledgment,
     workflow_mutation_acknowledgment,
 )
-from fishhat_contracts.workflow_bindings import bind_workflow
+from fishhat_contracts.workflow_bindings import bind_workflow_view
 
 from tests.test_contracts import uid
 from tests.test_owner_handoffs import cli, wire
@@ -34,7 +34,7 @@ CHECK_PURPOSE = {
 
 def accepted(method):
     value, query = successor_stage()
-    bound = bind_workflow(query, value, **context(query))
+    bound = bind_workflow_view(query, value, **context(query))
     if method == "workflow.bind":
         return bound, bound["bindings"][0]
     advanced = move(bound, "reconciling")
@@ -59,7 +59,8 @@ def test_original_acknowledgment_survives_later_workflow_changes(method):
     original = copy.deepcopy(receipt)
     acknowledgment = workflow_mutation_acknowledgment(method, original)
     validate_workflow_mutation_acknowledgment(acknowledgment, **expected(method, original))
-    validate("ssh-response.schema.json", wire(method, acknowledgment))
+    with pytest.raises(ContractError):
+        validate("ssh-response.schema.json", wire(method, acknowledgment))
     validate_cli(cli(acknowledgment))
     assert len(frame(wire(method, acknowledgment))) < 4096
 

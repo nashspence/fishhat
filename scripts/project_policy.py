@@ -302,7 +302,7 @@ def state_errors(root: Path = ROOT, history: bool = False) -> list[str]:
     inventory = read_toml(root / "state/inventory.toml")
     errors = fixture_history_errors(root) if history else []
     owners = inventory["owners"]
-    modules = [owner["module"] for owner in owners]
+    modules = [owner["module"] for owner in owners + inventory.get("journals", [])]
     if len(set(modules)) != len(modules):
         errors.append("duplicate durable state owner")
     for owner in owners:
@@ -316,6 +316,17 @@ def state_errors(root: Path = ROOT, history: bool = False) -> list[str]:
         fixture = root / owner["fixture"]
         if fingerprint(fixture) != owner["sha256"]:
             errors.append("state fixture digest changed")
+    for journal in inventory.get("journals", []):
+        module = root / journal["source"]
+        if (
+            not module.is_file()
+            or journal["transition"] != "explicit-forward-only"
+            or journal["qualification"] != "reference-model"
+            or journal["version_authority"] != "journal-genesis"
+        ):
+            errors.append("invalid append-only state authority")
+        if fingerprint(root / journal["fixture"]) != journal["sha256"]:
+            errors.append("append-only state fixture digest changed")
     for item in components(root):
         for path in (root / item["path"] / "src").rglob("*.py"):
             tree = ast.parse(path.read_text())

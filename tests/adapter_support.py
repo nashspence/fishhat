@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from fishhat_adapters import Registry, instance_reference, runtime_binding_digest
+from fishhat_contracts.handoffs import schema_document_digest, schema_identity
 from fishhat_contracts.validation import digest, strict_yaml
 
 from tests.support import ROOT
@@ -27,6 +28,21 @@ def identifier(n: int) -> str:
 
 def descriptors() -> list[Path]:
     return sorted((ROOT / "some-implementations/fishhat").glob("*/*/src/*/descriptor.json"))
+
+
+def contract_versions(roles: list[str]) -> dict:
+    """Explicit installed compatibility claims for synthetic descriptor fixtures."""
+    base = "https://fishhat.invalid/contracts/"
+    return {
+        "process_schema_digest": schema_document_digest(base + "adapter-process.schema.json"),
+        "role_contracts": {
+            role: {
+                "request": schema_identity(base + role + "-adapter.schema.json"),
+                "response": schema_identity(base + role + "-adapter.schema.json#/$defs/Response"),
+            }
+            for role in roles
+        },
+    }
 
 
 def runtime_registry() -> tuple[Registry, dict, dict]:
@@ -193,6 +209,7 @@ def request(method: str = "activate") -> dict:
             "deployment": {
                 "handle": "deployment:demo",
                 "release_digest": D,
+                "source_digest": D,
                 "binding_digest": runtime_binding_digest(binding()),
                 "projection_digest": D,
                 "components": ["web"],

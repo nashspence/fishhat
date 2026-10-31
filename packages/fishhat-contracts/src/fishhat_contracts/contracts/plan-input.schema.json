@@ -75,5 +75,8 @@
       "additionalProperties": false,
       "description": "Read the exact retained immutable Plan after current owner authorization. The Operation supplies both fields, so client loss does not lose the original review. The reply must match owner and digest; that digest commits the complete Plan including its original ID. Admission expiry does not expire accepted Plan custody; every accepted Operation retains this Plan and its required evidence for as long as accepted replay or recovery needs it. An old epoch uses historical custody routes rather than rebinding to the current owner."
     }
-  }
+  },
+  "x-fishhat-contract-dependencies": [
+    "#/$defs/PrepareRequest"
+  ]
 }

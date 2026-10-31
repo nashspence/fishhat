@@ -9,7 +9,8 @@
           "$ref": "adapter.schema.json#/$defs/Scope"
         },
         "generation_digest": {
-          "$ref": "common.schema.json#/$defs/Digest"
+          "$ref": "common.schema.json#/$defs/Digest",
+          "description": "Digest of the complete canonical GenerationDocument: {format: \"fishhat.routing-generation/v1\", role: \"ingress\", target: target, routes: routes}. Every entry and target value is exact; the receiver rejects any mismatch before admission."
         },
         "routes": {
           "type": "array",
@@ -45,15 +46,30 @@
           },
           "minItems": 0,
           "uniqueItems": true
+        },
+        "target": {
+          "$ref": "routing-publication.schema.json#/$defs/Target"
+        },
+        "expected_previous": {
+          "anyOf": [
+            {
+              "$ref": "routing-publication.schema.json#/$defs/Generation"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
         "scope",
         "generation_digest",
-        "routes"
+        "routes",
+        "target",
+        "expected_previous"
       ],
       "additionalProperties": false,
-      "description": "Routes have unique names and unique listener handles within a generation. A listener has one upstream and policy; multi-upstream or overlapping routing must be represented by one independently approved upstream/policy object, never duplicate route entries. Array order grants no precedence. The receiver resolves native listener aliases and rejects overlap not made explicit by the approved policy. generation_digest identifies the complete owner-held generation artifact; routes and each retained policy digest must agree with it before admission."
+      "description": "Routes have unique names and unique listener handles within a generation. A listener has one upstream and policy; multi-upstream or overlapping routing must be represented by one independently approved upstream/policy object, never duplicate route entries. Array order grants no precedence. The receiver resolves native listener aliases and rejects overlap not made explicit by the approved policy. generation_digest identifies the complete owner-held generation artifact; routes and each retained policy digest must agree with it before admission. The selected target is one complete owner-approved native namespace. This is complete replacement of its owned routes/rules: every previously managed entry omitted from this vector is removed, and an empty vector clears the owned set while retaining a present empty generation. Entries outside this namespace remain untouched. expected_previous is the exact observed native incarnation, non-reused revision and complete artifact digest; null explicitly requires the managed domain to be absent. publish compares the full predecessor at the native boundary and commits/verifies the entire replacement atomically or under continuously held native exclusion. A changed predecessor rejects with no mutation, including delete-and-recreate or digest ABA changes. No native comparison/exclusion support means unsupported before mutation. Partial/unknown native effects remain unresolved; matching the desired digest alone never proves publication. Plan is read-only and does not reserve or refresh the original precondition. Both the complete retained desired artifact and all referenced policies must be in immutable owner custody before admission."
     },
     "publish": {
       "type": "object",
@@ -62,7 +78,8 @@
           "$ref": "adapter.schema.json#/$defs/Scope"
         },
         "generation_digest": {
-          "$ref": "common.schema.json#/$defs/Digest"
+          "$ref": "common.schema.json#/$defs/Digest",
+          "description": "Digest of the complete canonical GenerationDocument: {format: \"fishhat.routing-generation/v1\", role: \"ingress\", target: target, routes: routes}. Every entry and target value is exact; the receiver rejects any mismatch before admission."
         },
         "routes": {
           "type": "array",
@@ -98,15 +115,30 @@
           },
           "minItems": 0,
           "uniqueItems": true
+        },
+        "target": {
+          "$ref": "routing-publication.schema.json#/$defs/Target"
+        },
+        "expected_previous": {
+          "anyOf": [
+            {
+              "$ref": "routing-publication.schema.json#/$defs/Generation"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
         "scope",
         "generation_digest",
-        "routes"
+        "routes",
+        "target",
+        "expected_previous"
       ],
       "additionalProperties": false,
-      "description": "Routes have unique names and unique listener handles within a generation. A listener has one upstream and policy; multi-upstream or overlapping routing must be represented by one independently approved upstream/policy object, never duplicate route entries. Array order grants no precedence. The receiver resolves native listener aliases and rejects overlap not made explicit by the approved policy. generation_digest identifies the complete owner-held generation artifact; routes and each retained policy digest must agree with it before admission."
+      "description": "Routes have unique names and unique listener handles within a generation. A listener has one upstream and policy; multi-upstream or overlapping routing must be represented by one independently approved upstream/policy object, never duplicate route entries. Array order grants no precedence. The receiver resolves native listener aliases and rejects overlap not made explicit by the approved policy. generation_digest identifies the complete owner-held generation artifact; routes and each retained policy digest must agree with it before admission. The selected target is one complete owner-approved native namespace. This is complete replacement of its owned routes/rules: every previously managed entry omitted from this vector is removed, and an empty vector clears the owned set while retaining a present empty generation. Entries outside this namespace remain untouched. expected_previous is the exact observed native incarnation, non-reused revision and complete artifact digest; null explicitly requires the managed domain to be absent. publish compares the full predecessor at the native boundary and commits/verifies the entire replacement atomically or under continuously held native exclusion. A changed predecessor rejects with no mutation, including delete-and-recreate or digest ABA changes. No native comparison/exclusion support means unsupported before mutation. Partial/unknown native effects remain unresolved; matching the desired digest alone never proves publication. Plan is read-only and does not reserve or refresh the original precondition. Both the complete retained desired artifact and all referenced policies must be in immutable owner custody before admission."
     },
     "observe": {
       "type": "object",
@@ -128,15 +160,19 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 256
+        },
+        "target": {
+          "$ref": "routing-publication.schema.json#/$defs/Target"
         }
       },
       "required": [
         "scope",
         "cursor",
-        "limit"
+        "limit",
+        "target"
       ],
       "additionalProperties": false,
-      "description": "Each newly executed null-cursor invocation starts a fresh snapshot. If its first response was not accepted, a new null-cursor invocation may restart the scan. Replay of an already accepted page reuses the receiving owner's retained exact request and response; it does not ask a fresh adapter process to regenerate the old first page. Only a retained non-null cursor continues the previously selected native snapshot.  The output has fixed scalar cardinality and no collection entries; limit does not create an additional collection or change that scalar shape. A continuation is an opaque receiver-issued cursor bound to the exact approved executor, scope, query and one stable native observation snapshot. The receiver verifies those bindings on every continuation. Incomplete coverage requires a non-null cursor different from the request cursor; complete coverage has no continuation. Unknown coverage is not resumable and has no continuation; an unavailable or changed snapshot is explicitly unknown and requires a new scan with cursor null. Known records may accompany unknown coverage, but cannot establish complete absence. These per-page bounds do not limit total collection extent or prove native bounded work."
+      "description": "Each newly executed null-cursor invocation starts a fresh snapshot. If its first response was not accepted, a new null-cursor invocation may restart the scan. Replay of an already accepted page reuses the receiving owner's retained exact request and response; it does not ask a fresh adapter process to regenerate the old first page. Only a retained non-null cursor continues the previously selected native snapshot.  The output has fixed scalar cardinality and no collection entries; limit does not create an additional collection or change that scalar shape. A continuation is an opaque receiver-issued cursor bound to the exact approved executor, scope, query and one stable native observation snapshot. The receiver verifies those bindings on every continuation. Incomplete coverage requires a non-null cursor different from the request cursor; complete coverage has no continuation. Unknown coverage is not resumable and has no continuation; an unavailable or changed snapshot is explicitly unknown and requires a new scan with cursor null. Known records may accompany unknown coverage, but cannot establish complete absence. These per-page bounds do not limit total collection extent or prove native bounded work. target supplies the exact independently approved executor and native namespace. A non-null observed object retains that target and reports either the complete native generation or verified absence; unknown native identity/coverage cannot be reported as absent. The owner independently approves the target for this observation; a request-selected namespace is not authority."
     },
     "reconcile": {
       "type": "object",
@@ -156,23 +192,7 @@
       "description": "Observe and settle the exact original owner-retained invocation, including the original typed request, full accepted executor reference and attempt identity. Scope and role must agree with that closure. Recovered outputs obey the original method result contract. Current enrollment cannot retarget historical work; an unavailable or replaced executor leaves the result unresolved. Corrective mutation requires a separate reviewed invocation; reconciliation never dispatches or repeats the supplied mutation."
     },
     "Output": {
-      "type": "object",
-      "properties": {
-        "serving_generation": {
-          "anyOf": [
-            {
-              "$ref": "common.schema.json#/$defs/Digest"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      },
-      "required": [
-        "serving_generation"
-      ],
-      "additionalProperties": false
+      "$ref": "routing-publication.schema.json#/$defs/Output"
     },
     "Response": {
       "oneOf": [
@@ -605,6 +625,63 @@
         "response"
       ],
       "additionalProperties": false
+    },
+    "GenerationDocument": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "fishhat.routing-generation/v1"
+        },
+        "role": {
+          "const": "ingress"
+        },
+        "target": {
+          "$ref": "routing-publication.schema.json#/$defs/Target"
+        },
+        "routes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "$ref": "common.schema.json#/$defs/Id"
+              },
+              "listener": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160,
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*(?![\\s\\S])"
+              },
+              "upstream": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160,
+                "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*(?![\\s\\S])"
+              },
+              "policy_digest": {
+                "$ref": "common.schema.json#/$defs/Digest"
+              }
+            },
+            "required": [
+              "name",
+              "listener",
+              "upstream",
+              "policy_digest"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "format",
+        "role",
+        "target",
+        "routes"
+      ],
+      "additionalProperties": false,
+      "description": "The complete canonical desired generation artifact. Its RFC 8785 JSON digest is the request generation_digest/policy_digest. target and every route/rule must equal the typed request. Array order participates in immutable artifact byte identity but grants no native evaluation precedence. expected_previous is excluded because it binds the separate original mutation attempt, not desired contents. The owner retains these exact canonical bytes and independently approved referenced policies before admission."
     }
   },
   "oneOf": [
@@ -689,5 +766,8 @@
       "additionalProperties": false
     }
   ],
-  "description": "Mutation request objects are typed planning payloads. Native execution requires the owner-authored adapter Invocation with its exact attempt and accepted executor; a bare role request is not an alternate executable boundary."
+  "description": "Mutation request objects are typed planning payloads. Native execution requires the owner-authored adapter Invocation with its exact attempt and accepted executor; a bare role request is not an alternate executable boundary.",
+  "x-fishhat-contract-dependencies": [
+    "#/$defs/GenerationDocument"
+  ]
 }

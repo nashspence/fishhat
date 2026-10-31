@@ -1,4 +1,12 @@
-"""Exact participant agreement before workflow child admission; no native signing.
+"""Complete shared workflow inspection models; no live owner admission.
+
+These full-value helpers construct and validate an explicitly requested audit
+projection from independently retained facts. They are not a journal writer or
+a participant protocol: live admission uses workflow_journal and its partitioned
+owner journals. Materialize complete views only for explicit inspection, never
+after each accepted child or at every participating owner.
+
+Exact participant agreement before workflow child admission; no native signing.
 
 An owner supplies its preparation witness only after independently authorizing and
 durably retaining the complete proposal. Native receivers authenticate every

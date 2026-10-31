@@ -1,4 +1,12 @@
-"""Positive retirement of an initial participant with no accepted preparation.
+"""Complete shared workflow inspection models; no live owner admission.
+
+These full-value helpers construct and validate an explicitly requested audit
+projection from independently retained facts. They are not a journal writer or
+a participant protocol: live admission uses workflow_journal and its partitioned
+owner journals. Materialize complete views only for explicit inspection, never
+after each accepted child or at every participating owner.
+
+Positive retirement of an initial participant with no accepted preparation.
 
 Native owners establish the negative facts from authoritative protected history
 after fencing execution. They permanently close old admission and preserve all
@@ -117,7 +125,7 @@ def validate_never_prepared(
     _proposal_binding(proof, proposal["workflow_id"], digest(proposal), local)
 
 
-def retire_unprepared_workflow(
+def retire_unprepared_workflow_view(
     request: dict[str, Any],
     *,
     expected_owner: dict[str, Any],

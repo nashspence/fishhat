@@ -1045,6 +1045,7 @@
                     "enum": [
                       "app.backup",
                       "app.cleanup",
+                      "app.drill",
                       "app.maintenance-run",
                       "host.capture-changes",
                       "publisher.publish",
@@ -1224,7 +1225,8 @@
             "overdue",
             "unknown",
             "not-applicable"
-          ]
+          ],
+          "description": "Current assessment of the accepted protection objectives, separate from health and mutation authority. Retain the exact RecoveryPointAssessment and applicable immutable DrillResult/procedure evidence with this observation's provenance; cached delivery preserves original assessment time. Verified requires all applicable objectives to be established within their bounds. A demonstrated violation is overdue; otherwise missing or uncertain data-time, clock, drill or custody evidence is unknown. Not-applicable means no protection objective applies. Verification timestamps, retries and drills cannot refresh captured-data age. This status is an assessment/warning and by itself creates no admission block or authorization grant."
         },
         "generation": {
           "type": "integer",
@@ -2020,7 +2022,7 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 9007199254740991,
-          "description": "The receiving owner replica generation for this workflow capsule, incremented after every durable phase, driver or custody change. It is separate from participant resource generations and driver_term. workflow.advance and workflow.transfer compare this exact local value; replicas may have different generations."
+          "description": "Generation of the selected shared inspection view; independent member journal generations remain in local accepted records. Materializing this value does not advance any owner."
         },
         "transfer": {
           "anyOf": [
@@ -2077,7 +2079,7 @@
         "bindings"
       ],
       "additionalProperties": false,
-      "description": "A finite procedure coordinating exact participant operations while each local owner retains authority and accepted state. A workflow is not a permanent central controller or an authorization supplied by an optional tracker. Each receiving owner retains its own identified, generation-checked capsule before child effects. Preparation records no accepted native operation. An authorized caller can enumerate these capsules without knowing a workflow ID; optional tracking is never required. A capsule with an incomplete transfer includes its complete retained transfer proposal and original locally accepted phase inputs. workflow.get and workflow.list expose them under current receiving authorization so recovery never depends on the original client or an optional report. The complete immutable proposal and its canonical digest survive original-client loss; its type, workflow ID and complete child-request/Plan closure match this capsule. advances retains authority-discriminated driver advance, owner-native final settlement and owner-native lifecycle decision inputs with their finite outcomes. Every retained lifecycle decision must match its exact predecessor and the current capsule state; terminal history can never be relabeled as live work. Transfer completion is performed only through workflow.advance with the full commit closure; it preserves the installed procedure phase and lifecycle state atomically with transfer completion. A separate normally authorized driver advance owns subsequent procedure progress. Independently authorized owner-native settlement may record the final completed facts of already admitted work while preserving incomplete transfer custody; it does not admit new work or complete that transfer. bindings retains complete later-reviewed child Plans, authenticated predecessor/material lineage and original binding requests without changing the immutable proposal. Unbound continuation slots cannot authorize child work or be skipped when completing their installed phase. Driver-transfer progress is orthogonal to lifecycle state. Freeze and commit preserve prepared, active, paused or recovery-required status; completion changes only transfer custody and driver authority. Terminal capsules reject new transfers, while exact previously accepted transfer requests remain replayable. Recovery custody is present only on a newly identified successor prepared through workflow.recover; incomplete recovery preparation forbids child admission, binding, phase advance and transfer. Its committed lineage never retargets original records or reexecutes completed child slots. An initial capsule always retains its exact local PreparationWitness in prerequisite_witnesses. Before first ordinary phase progress or child admission the owner independently authenticates and retains the complete same-proposal participant preparation closure. Merely preparing a local capsule, supplying matching IDs or transferring the driver does not waive this agreement. Committed recovery preparation supplies the corresponding agreement for successor capsules. Every ordinary phase transition preserves complete original phase evidence and ordered accepted history; neither evidence nor intermediate transitions can be erased from a later capsule. states.json owns the lifecycle meanings and edges. Paused capsules block new child admission, binding and ordinary phase progress until an independently authorized native resume reconciles current driver, accepted child and hold facts. Same-phase transfer completion and final native settlement of already admitted work may preserve or finish paused custody. Cancelled capsules permanently close local future child admission while preserving accepted child outcomes, exact replay, complete proposal/input/hold custody and pending transfer evidence. Initial local cancellation does not require a complete participant preparation closure and never certifies that other participants stopped. It does not replace positive retirement at a participant that never prepared. Retained recovery successors must also prove admission order: every binding, advance, native lifecycle decision and local transfer phase uses an original expected_generation at or after the committed recovery-preparation generation. A later committed marker cannot retroactively authorize changes accepted before that boundary. Explicit unused-successor abandonment remains the only pre-commit lifecycle path. A relocation destination retains its exact native_role from the immutable proposal and an empty request_ids list, while remaining in every owner/resource, preparation, evidence, transfer and recovery closure. It cannot be dropped, relabeled or treated as a successful child merely because it has no ordinary child request."
+      "description": "Complete shared workflow audit projection materialized on explicit gate inspection. This value is never a member admission capsule and is never copied or rewritten at every participant or after every event. workflow-journal.schema.json owns live agreement, common rounds, local journals, independent gate delegation, reservations, transfer and recovery. The full immutable proposal, indexed participant closure, reviewed bindings, exact accepted outcomes and ordered history represented here must agree with the authoritative gate journal and selected local evidence. Materialization processes the complete selected input once and does not grant execution authority. Local accepted work, native holds, exact retries and owner recovery remain retained at each local owner independently of this inspection. Complete evidence relationships are validated by the associated view models; they cannot substitute for native authority, durable journal custody or the current local reservation. Driver transfer and native settlement retain separate authorities. No optional service or original client is required to discover local journals; unavailable shared gate custody blocks new shared admission without erasing local accepted outcomes."
     },
     "Hold": {
       "type": "object",
@@ -2457,20 +2459,10 @@
           },
           "minItems": 1,
           "uniqueItems": true,
-          "description": "Complete retained closure includes the accepted release, secret generations, any quiescence evidence, every dataset's three signed Operation snapshots, their exact result_handle payloads, all Snapshot and backup-object artifacts, and the installed compatible readers and protected historical enrollment/configuration needed to interpret them. Receipt and payload digests hash canonical JSON; material digests hash original bytes. The checkpoint witness authenticates membership, while native retention and verified materialization establish custody. Missing members block recovery explicitly; current aliases or client caches cannot substitute."
+          "description": "Complete retained closure includes the accepted release, secret generations, any quiescence evidence, every dataset's three signed Operation snapshots, their exact result_handle payloads, all Snapshot and backup-object artifacts, every non-null Snapshot.recovery_point evidence digest, and the installed compatible readers and protected historical enrollment/configuration needed to interpret them. Receipt and payload digests hash canonical JSON; material digests hash original bytes. The checkpoint witness authenticates membership, while native retention and verified materialization establish custody. Missing members block recovery explicitly; current aliases or client caches cannot substitute."
         },
         "verified_at": {
           "$ref": "common.schema.json#/$defs/Time"
-        },
-        "restore_tested_at": {
-          "anyOf": [
-            {
-              "$ref": "common.schema.json#/$defs/Time"
-            },
-            {
-              "type": "null"
-            }
-          ]
         },
         "witness": {
           "type": "object",
@@ -2639,13 +2631,12 @@
         "backup_executor",
         "recovery_closure",
         "verified_at",
-        "restore_tested_at",
         "witness",
         "consistency_scope",
         "quiescence_evidence"
       ],
       "additionalProperties": false,
-      "description": "A complete checkpoint binds exactly every preserved application-owned dataset selected by the accepted release, its secret generations, signed capture/store/verify Operation receipts and exact historical backup executor. Resolve each receipt through its immutable result_handle to the existing typed RetainedResult, reapply original invocation/output joins and authenticate the signed Operation with independently trusted owner keys. Capture must return one consistently captured Snapshot for the named dataset; backup verification must cover the same sealed object and all snapshot artifacts. Its checkpoint-kind, verified-state witness subject covers the entire canonical body excluding witness. Application-quiesced requires one verifiable writer fence and capture cohort and quiesced snapshots; independent-datasets is not an application-atomic recovery point. A fresh owner reconstructs these same snapshots and objects before independently authorizing current retrieval/restore and verifying actual bytes. No missing dataset, closure member or inconsistent archive may be omitted.",
+      "description": "A complete checkpoint binds exactly every preserved application-owned dataset selected by the accepted release, its secret generations, signed capture/store/verify Operation receipts and exact historical backup executor. Resolve each receipt through its immutable result_handle to the existing typed RetainedResult, reapply original invocation/output joins and authenticate the signed Operation with independently trusted owner keys. Capture must return one consistently captured Snapshot for the named dataset; backup verification must cover the same sealed object and all snapshot artifacts. Its checkpoint-kind, verified-state witness subject covers the entire canonical body excluding witness. Application-quiesced requires one verifiable writer fence and capture cohort and quiesced snapshots; independent-datasets is not an application-atomic recovery point. A fresh owner reconstructs these same snapshots and objects before independently authorizing current retrieval/restore and verifying actual bytes. No missing dataset, closure member or inconsistent archive may be omitted. This record is immutable after verification. Later drills retain separate DrillResult evidence selecting this original digest and never annotate or rewrite the checkpoint. verified_at is verification completion only, not recoverable-data time; RPO uses immutable per-Snapshot recovery_point bounds and an independently current assessment.",
       "allOf": [
         {
           "if": {
@@ -3011,6 +3002,31 @@
         "wire": {
           "const": "deployment-ops/owner/v1"
         },
+        "contract_schemas": {
+          "type": "object",
+          "properties": {
+            "request": {
+              "$ref": "common.schema.json#/$defs/SchemaIdentity"
+            },
+            "response": {
+              "$ref": "common.schema.json#/$defs/SchemaIdentity"
+            },
+            "cli": {
+              "$ref": "common.schema.json#/$defs/SchemaIdentity"
+            },
+            "source": {
+              "$ref": "common.schema.json#/$defs/SchemaIdentity"
+            }
+          },
+          "required": [
+            "request",
+            "response",
+            "cli",
+            "source"
+          ],
+          "additionalProperties": false,
+          "description": "Exact rooted installed identities for ssh-request.schema.json, ssh-response.schema.json, cli-output.schema.json and source.schema.json respectively. This advertisement is observational and grants no compatibility, authority or capability. Before sending new work, callers compare each boundary they use to independently approved exact identities; a shared v1 label is insufficient. A mismatch rejects new use of that boundary unless a separately approved exact reader or writer is installed. Existing accepted work and historical inspection retain their original schema readers and custody; discovery must not rewrite those identities. Full boundary unions conservatively pin all reachable alternatives. This field does not claim arbitrary cross-version compatibility or native qualification."
+        },
         "source_formats": {
           "type": "array",
           "items": {
@@ -3045,6 +3061,7 @@
       "required": [
         "owner",
         "wire",
+        "contract_schemas",
         "source_formats",
         "actions",
         "adapters"
@@ -4990,7 +5007,7 @@
         "commit_witnesses"
       ],
       "additionalProperties": false,
-      "description": "Discoverable transfer custody retained in every receiving Workflow. accepted_phases preserves each locally accepted input; freeze_witnesses and commit_witnesses retain independently verified evidence with states frozen and transferred respectively. Missing evidence remains missing. Freeze retains the original driver; commit records this owner's durable new term only after the complete freeze closure; completed additionally requires every participant-owner commit witness. A partial transfer remains incomplete in this orthogonal transfer record and cannot silently restore old admission or authorize a different transfer. Before this field records a later transfer, the owner atomically preserves the complete WorkflowTransferRecord under workflow-transfer-history.schema.json. workflow.transfer.get reads that exact transfer by owner, workflow_id and transfer_id, including every original accepted phase input and completion receipt. Every earlier completion remains in Workflow.advances so a new client can discover its ID without retained client files. Lookup and bounded snapshot reads independently enforce current workflow/participant scope; a prior transfer never becomes current authority again. Restored epochs require explicit recovery rather than inventing or retargeting the original transfer. Freeze phase includes this receiving owner's frozen witness; an input accepted without its retrievable local prerequisite is not a completed freeze. Transfer witnesses use the same proposal digest and exact owner epoch, and their generation identifies the local durable phase commit; later capsule changes preserve them. Each local phase witness generation is greater than its original expected_generation and no greater than the current capsule generation; the local freeze witness generation is no greater than the original commit expected_generation. Lifecycle state is never overwritten by transfer progress. Paused and recovery-required restrictions survive completion; transfer is not a recovery action. The new driver delivers the complete transferred-witness closure through workflow.advance.transfer_completion. That advance atomically marks this transfer completed and retains its immutable AdvanceReceipt; exact accepted replay cannot repeat the transition. Lifecycle changes do not erase accepted freeze or commit custody: a later cancelled or completed capsule retains that incomplete evidence for inspection and exact accepted replay, without permission for a new phase. Completion preserves the current procedure phase; it cannot be combined with resumption or ordinary phase progress. Retained local freeze and commit witness generations are interleaved with workflow lifecycle history. A new local transfer phase cannot follow terminal completion, cancellation or recovery-successor abandonment, even if a later capsule merely claims that phase was already accepted. Every earlier accepted phase remains retained and replayable after terminal lifecycle changes. Retained new binding generations must also lie outside the closed driver-admission interval from local freeze through separate transfer completion; a later capsule cannot fabricate a binding that bypassed the same restriction enforced on live admission."
+      "description": "Complete transfer audit projection held at the gate and materialized only for explicit inspection. Live transfer uses one common proposal, one local freeze per member, one gate decision, exact local installation and complete gate activation as defined by workflow-journal.schema.json. It does not broadcast full freeze/commit closures or rewrite this view at each participant. Every accepted local input, original outcome and partial-transfer restriction remains in its owning append-only journal."
     },
     "WorkflowTransferWitness": {
       "allOf": [
@@ -5071,5 +5088,8 @@
       "additionalProperties": false,
       "description": "One regular file in a complete captured source scope. content identifies retrievable immutable bytes and retains original producer ownership; its digest is SHA-256 of the exact file bytes. Filesystem confinement and source mapping are independently verified by the native owner. Multiple paths may share the same exact content handle. Reusing an owner/id with different handle fields, or a digest with a different byte size, rejects."
     }
-  }
+  },
+  "x-fishhat-contract-dependencies": [
+    "#/$defs/Witness"
+  ]
 }

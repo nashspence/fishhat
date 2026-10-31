@@ -19,6 +19,7 @@ from tests.adapter_support import (
     SCOPE,
     D,
     binding,
+    contract_versions,
     descriptors,
     observation,
     request,
@@ -41,6 +42,72 @@ def test_supplied_descriptors_are_closed_and_truthful(path):
     check_descriptor(value)
     assert value["native_qualified"] is False
     assert not value["implemented"]
+
+
+@pytest.mark.parametrize("changed", ["request-uri", "request-digest", "response", "process"])
+def test_descriptor_versions_are_exact_before_installation(changed):
+    _, value, _ = runtime_registry()
+    if changed == "request-uri":
+        value["role_contracts"]["runtime"]["request"]["uri"] += "#/$defs/Response"
+    elif changed == "request-digest":
+        value["role_contracts"]["runtime"]["request"]["digest"] = D
+    elif changed == "response":
+        value["role_contracts"]["runtime"]["response"] = value["role_contracts"]["runtime"][
+            "request"
+        ]
+    else:
+        value["process_schema_digest"] = D
+    # Format labels and role/method declarations are unchanged and insufficient.
+    assert value["format"] == "deployment-ops/adapter/v1"
+    assert value["process_protocol"] == "fishhat.adapter-process/v1"
+    expected = "PROCESS_CONTRACT_IDENTITY" if changed == "process" else "ROLE_CONTRACT_IDENTITY"
+    with pytest.raises(ContractError, match=expected):
+        check_descriptor(value)
+    with pytest.raises(ContractError, match=expected):
+        Registry().install(
+            {
+                "implementation": value["id"],
+                "artifact": {"digest": D, "media_type": "application/zip", "size_bytes": 100},
+                "descriptor_digest": digest(value),
+                "enabled": True,
+            },
+            value,
+            owner_approved=True,
+        )
+
+
+@pytest.mark.parametrize("changed", ["missing", "extra", "legacy"])
+def test_descriptor_contracts_cover_exactly_the_advertised_roles(changed):
+    _, value, _ = runtime_registry()
+    if changed == "missing":
+        value["roles"].append("dns")
+    elif changed == "extra":
+        value["role_contracts"].update(contract_versions(["dns"])["role_contracts"])
+    else:
+        del value["role_contracts"]
+        del value["process_schema_digest"]
+    with pytest.raises(ContractError):
+        check_descriptor(value)
+
+
+def test_process_helper_schema_change_is_also_a_descriptor_compatibility_change(monkeypatch):
+    _, value, _ = runtime_registry()
+    unrelated = copy.deepcopy(SCHEMAS["common.schema.json"])
+    unrelated["$defs"]["UnreferencedContract"] = {"type": "boolean"}
+    with monkeypatch.context() as revisions:
+        revisions.setitem(SCHEMAS, "common.schema.json", unrelated)
+        check_descriptor(value)
+    for filename, definition in [
+        ("adapter-process.schema.json", "Completion"),
+        ("common.schema.json", "Owner"),
+    ]:
+        changed = copy.deepcopy(SCHEMAS[filename])
+        node = changed["$defs"][definition]
+        node["description"] = node.get("description", "") + " Exact process contract clarification."
+        with monkeypatch.context() as revisions:
+            revisions.setitem(SCHEMAS, filename, changed)
+            with pytest.raises(ContractError, match="PROCESS_CONTRACT_IDENTITY"):
+                check_descriptor(value)
 
 
 @pytest.mark.parametrize("role", sorted(ROLES))

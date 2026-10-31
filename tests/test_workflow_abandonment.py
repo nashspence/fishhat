@@ -20,20 +20,20 @@ from fishhat_contracts.validation import (
 )
 from fishhat_contracts.witness import sign
 from fishhat_contracts.workflow_abandonment import (
-    abandon_workflow_recovery,
-    record_workflow_abandonment,
+    abandon_workflow_recovery_view,
+    record_workflow_abandonment_view,
     recovery_selection,
     validate_abandonment,
     validate_abandonment_closure,
 )
 from fishhat_contracts.workflow_recovery import (
-    commit_workflow_recovery,
+    commit_workflow_recovery_view,
     validate_recovery_proposal,
 )
 
 from tests.linear_support import assert_linear, measure
 from tests.test_contracts import uid
-from tests.test_owner_handoffs import cli, operation, request, staged_workflow_input, wire
+from tests.test_owner_handoffs import cli, operation, request, staged_workflow_audit_input, wire
 from tests.test_owner_history import custody_for
 from tests.test_plan_review import reseal
 from tests.test_workflow_recovery import KEY, commit, prepare, remap_children, scenario
@@ -111,7 +111,7 @@ def abandon(proposal, owner, *, custody=None, **overrides):
         "verified_no_child_admission": True,
     }
     context.update(overrides)
-    return query, abandon_workflow_recovery(query, **context)
+    return query, abandon_workflow_recovery_view(query, **context)
 
 
 def alternative(proposal, tag):
@@ -156,7 +156,7 @@ def test_exclusive_selection_requires_all_owner_abandonment_before_replacement()
     closure = closed_selection(proposal)
     replacement["abandonments"] = [closure]
     proofs = closure["proofs"]
-    abandoned = record_workflow_abandonment(a, proofs[0])
+    abandoned = record_workflow_abandonment_view(a, proofs[0])
     assert abandoned["recovery"]["request"] == a["recovery"]["request"]
     assert abandoned["state"] == "cancelled"
     assert abandoned["recovery"]["phase"] == "abandoned"
@@ -249,15 +249,17 @@ def test_abandonment_refuses_any_accepted_child_and_replay_never_revives_commit(
         abandon(proposal, value["owner"], verified_no_child_admission=False)
     query, committed = commit(value, proposal)
     _, proof = abandon(proposal, value["owner"])
-    closed = record_workflow_abandonment(committed, proof)
+    closed = record_workflow_abandonment_view(committed, proof)
     assert closed["recovery"]["commit"] == committed["recovery"]["commit"]
     assert (
-        commit_workflow_recovery(query, closed, recovery_authorized=True, verified_preparations=[])
+        commit_workflow_recovery_view(
+            query, closed, recovery_authorized=True, verified_preparations=[]
+        )
         == closed
     )
-    prepared_closed = record_workflow_abandonment(value, proof)
+    prepared_closed = record_workflow_abandonment_view(value, proof)
     with pytest.raises(ContractError, match="cannot commit"):
-        commit_workflow_recovery(
+        commit_workflow_recovery_view(
             query,
             prepared_closed,
             recovery_authorized=True,
@@ -293,7 +295,7 @@ def test_restoration_during_partial_preparation_keeps_historical_bytes_and_close
     assert proof["owner"]["epoch"] != partial["owner"]["epoch"]
     assert canonical(partial) == original_bytes
     with pytest.raises(ContractError, match="cannot be retargeted"):
-        record_workflow_abandonment(partial, proof)
+        record_workflow_abandonment_view(partial, proof)
     replacement, restored = scenario(multiple=True, historical=True)
     replacement = alternative(replacement, "restored-partial-selection")
     proofs = []
@@ -323,10 +325,12 @@ def test_abandonment_bounded_route_replay_and_observed_cli_result():
     proposal, _ = scenario(multiple=True)
     owner = proposal["participants"][0]["owner"]
     query, proof = abandon(proposal, owner)
-    reference, _ = staged_workflow_input("workflow.recover", query)
-    validate("ssh-request.schema.json", request("workflow.recover", reference))
+    reference, _ = staged_workflow_audit_input("workflow.recover", query)
+    with pytest.raises(ContractError):
+        validate("ssh-request.schema.json", request("workflow.recover", reference))
     envelope = wire("workflow.recover", proof)
-    validate("ssh-response.schema.json", envelope)
+    with pytest.raises(ContractError):
+        validate("ssh-response.schema.json", envelope)
     encoded = frame(envelope)
     assert len(encoded) <= MAX_BYTES + 4
     assert read_frame(io.BytesIO(encoded)) == envelope
@@ -349,7 +353,7 @@ def test_repeated_selection_summaries_do_not_nest_previous_proposals():
         closure = closed_selection(proposal)
         value = alternative(proposal, "retry-" + str(index))
         value["abandonments"] = [closure]
-        reference, payload = staged_workflow_input(
+        reference, payload = staged_workflow_audit_input(
             "workflow.recover",
             {"owner": value["participants"][0]["owner"], "phase": "prepare", "proposal": value},
         )

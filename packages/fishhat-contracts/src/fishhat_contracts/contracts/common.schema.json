@@ -265,7 +265,7 @@
         "size"
       ],
       "additionalProperties": false,
-      "description": "An owner-minted reference to complete immutable bytes. Every redemption rechecks the actual receiving principal, resource, purpose and owner epoch against protected owner state; possession is not bearer authority. Only content.commit exposes an input handle. Planning binds its exact digest and identity; operation admission and accepted workflow preparation or phase input atomically pin referenced inputs before acknowledgement or effects. Unadmitted staging expiry cannot collect accepted references. Restoring owner state invalidates mutable staging and requires explicit recovery of retained bindings. Complete content size uses the interoperable integer range, while independently approved receiver capacity may explicitly reject new staging; transport chunks never impose a hidden total closure limit."
+      "description": "An owner-minted reference to complete immutable bytes. Every redemption rechecks the actual receiving principal, resource, purpose and owner epoch against protected owner state; possession is not bearer authority. Only content.commit exposes an input handle. Planning binds its exact digest and identity; operation admission and accepted workflow preparation or phase input atomically pin referenced inputs before acknowledgement or effects. Unadmitted staging expiry cannot collect accepted references. Restoring owner state invalidates mutable staging and requires explicit recovery of retained bindings. Complete content size uses the interoperable integer range, while independently approved receiver capacity may explicitly reject new staging; transport chunks never impose a hidden total closure limit. workflow.journal.input may also expose an owner-minted read-only handle for exact original accepted command bytes already pinned in the native journal; this does not replace content.commit for new staged admission."
     },
     "Cursor": {
       "type": "string",
@@ -292,7 +292,7 @@
         "digest"
       ],
       "additionalProperties": false,
-      "description": "The exact installed closed input or result schema. Digest is SHA-256 over canonical {root: uri, documents: {document URI: complete schema document}} containing the root document and every transitively referenced local document. Resolve references only from the approved installed schema set, never by fetching the URI. A caller-supplied identity does not approve a schema. Every schema document declares JSON Schema Draft 2020-12 at its root. Other dialects and nested dialect declarations reject; evaluation preserves the declared dialect and structural uniqueness semantics across references without rewriting the published documents or their identity. The supported closed subset uses static references and JSON Pointer fragments; nested schema IDs, dynamic references and unresolved targets are rejected, not approximated. A pointer fragment is empty or begins with a literal slash. Percent-decode the complete fragment once before splitting its reference tokens, then unescape ~1 and ~0 in that order. Encoded separators select nested schema positions; literal slashes in member names use ~1. Admission, cycle and expansion checks, core-wrapper inspection and value evaluation must resolve the same schema positions."
+      "description": "The exact installed rooted input or result schema. Digest is SHA-256 over canonical {profile: 'fishhat.schema-closure/v1', root: uri, documents: {document URI: root metadata}, nodes: {document URI: {JSON Pointer: projected schema node}}}. Start at the root URI schema position and include every schema-valued applicator child and resolved static reference target exactly once. JSON Pointer keys use decoded reference tokens escaped with ~0 for tilde and ~1 for slash, joined with leading slashes; the document root key is empty. At each node omit $defs and definitions declarations, replace every other schema-valued child with its document-local pointer string, and retain all other keywords and literal values exactly, including descriptions and annotations. Boolean schema nodes remain booleans. Unreferenced definitions and unselected root assertions do not enter the identity. For every document containing a reached node, documents preserves its root $schema, $id, $comment, title, description, default, examples, deprecated, readOnly and writeOnly fields exactly when present; root annotations may own normative rules shared by all definitions. Other document roots are absent. Full installed-document admission still applies before hashing. Core contract document roots may declare x-fishhat-contract-dependencies, a duplicate-free array of static URI references to normative schema positions used outside instance validation. Preserve this field in documents metadata and include every declared target whenever any node from that document participates, recursively applying the same rule to reached documents. Resolve and validate targets using the same installed-only URI/JSON Pointer rules as $ref; unresolved targets, non-schema positions, malformed lists and nested declarations reject. These edges affect contract identity, never instance evaluation or authority; independently installed extension schemas retain their supported-keyword admission rules. Descriptions may contain normative custody and authorization rules and are not discarded. Schema-valued children are the values of additionalProperties, unevaluatedProperties, items, contains, propertyNames, not, if, then, else, contentSchema and unevaluatedItems; each member value of properties, patternProperties and dependentSchemas; and each element of allOf, anyOf, oneOf and prefixItems. $defs and definitions are traversed only when selected by the root or a reference. Literal const, enum, default and examples data are never traversed. Resolve references only from the approved installed schema set, never by fetching the URI. A caller-supplied identity does not approve a schema. Every schema document declares JSON Schema Draft 2020-12 at its root. Other dialects and nested dialect declarations reject; evaluation preserves the declared dialect and structural uniqueness semantics across references without rewriting the published documents or their identity. The supported closed subset uses static references and JSON Pointer fragments; nested schema IDs, dynamic references and unresolved targets are rejected, not approximated. A pointer fragment is empty or begins with a literal slash. Percent-decode the complete fragment once before splitting its reference tokens, then unescape ~1 and ~0 in that order. Encoded separators select nested schema positions; literal slashes in member names use ~1. Admission, cycle and expansion checks, core-wrapper inspection and value evaluation must resolve the same schema positions."
     },
     "HandleBinding": {
       "oneOf": [
@@ -343,9 +343,29 @@
             "preparation_id"
           ],
           "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "workflow-journal"
+            },
+            "workflow_id": {
+              "$ref": "common.schema.json#/$defs/UUID"
+            },
+            "command_id": {
+              "$ref": "common.schema.json#/$defs/UUID"
+            }
+          },
+          "required": [
+            "kind",
+            "workflow_id",
+            "command_id"
+          ],
+          "additionalProperties": false
         }
       ],
-      "description": "Input staging has its own durable identity before any plan or operation acceptance. Owner-produced output binds to its accepted operation. Adoption pins the original immutable staging handle; it does not rewrite its identity or turn staging into execution. Owner-issued observational lifecycle evidence instead binds its exact non-effectful preparation_id. It is not an Operation or uploaded caller evidence."
+      "description": "Input staging has its own durable identity before any plan or operation acceptance. Owner-produced output binds to its accepted operation. Adoption pins the original immutable staging handle; it does not rewrite its identity or turn staging into execution. Owner-issued observational lifecycle evidence instead binds its exact non-effectful preparation_id. It is not an Operation or uploaded caller evidence. Owner-retained original workflow commands use workflow-journal binding to the exact accepted command and workflow; this is read-only accepted custody, never caller staging or new execution authority."
     },
     "ResultHandle": {
       "type": "object",
@@ -417,7 +437,8 @@
                 "Observation",
                 "ProblemEvidence",
                 "WorkflowTransferRecord",
-                "WorkflowPhaseAttestation"
+                "WorkflowPhaseAttestation",
+                "WorkflowJournalRecord"
               ]
             },
             "id": {
@@ -454,7 +475,8 @@
                       "Observation",
                       "ProblemEvidence",
                       "WorkflowTransferRecord",
-                      "WorkflowPhaseAttestation"
+                      "WorkflowPhaseAttestation",
+                      "WorkflowJournalRecord"
                     ]
                   }
                 }
@@ -469,6 +491,22 @@
                   "required": [
                     "resource"
                   ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "WorkflowJournalRecord"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "generation": {
+                    "type": "null"
+                  }
                 }
               }
             }
@@ -497,7 +535,7 @@
         "size"
       ],
       "additionalProperties": false,
-      "description": "An owner-minted immutable canonical-JSON snapshot of one complete record, independently of operation admission. The record identity, exact owner epoch, record-declared generation, installed schema closure, complete byte digest and size are inseparable. Immutable Plans use null generation; Operations, Workflows and WorkflowTransferRecords use their declared generation, with the digest distinguishing every snapshot. Possession grants no read or execution authority: every record.read rechecks the actual receiving principal and the protected snapshot resource closure. The owner commits complete retrievable snapshot custody before advertising this reference. Later generations never replace its bytes. Plan expiry affects admission, not completion of an already advertised traversal; accepted, active, uncertain and recovery-required custody cannot lose its only retrievable evidence. An explicit expired or restored snapshot requires a fresh record lookup, never silent rebinding. Accepted work must remain discoverable and fully retrievable through its current record even if old completed traversals are collected. This reference does not establish plan review, acceptance or execution success before its complete payload is verified. Size describes the record and adds no total-size limit beyond its owning contract; transfers use bounded chunks and local capacity failures must be explicit. A historical schema closure is readable only through an immutable reader independently installed by the receiver for that exact digest and the declared record-kind URI. CLI envelopes, SSH results, pages and chunks propagate the same trusted reader context; neither the record nor its caller can install a reader. Historical retrieval does not admit new work under an obsolete schema. Discovery and ResourceReport use immutable observation snapshot identities: record.id equals snapshot_id and generation is null, because neither invents a ledger generation. Discovery pins records.schema.json#/$defs/Info; ResourceReport pins resource-records.schema.json#/$defs/ResourceReport. Reassembly yields exactly the complete inline payload under that schema. Each read reauthorizes its protected disclosure scope and snapshot; later observations never change these bytes. A retained reader is selected by this exact kind URI and closure digest, not by treating an observation as an Operation. Observation and ProblemEvidence also use snapshot_id as record.id and null generation. Their record.resource is required and equals the complete payload resource. WorkflowTransferRecord also requires record.resource equal to its workflow resource, uses transfer_id as record.id and its last retained transfer generation, and pins workflow-transfer-history.schema.json#/$defs/WorkflowTransferRecord. WorkflowPhaseAttestation also requires record.resource equal to {kind: workflow, id: workflow_id}; record.id equals the attestation_id carried as payload.id, generation equals the issuer capsule generation observed at issuance, and its schema is workflow-evidence.schema.json#/$defs/WorkflowPhaseAttestation. Its independent issuance journal does not advance the workflow capsule generation. The resource is absent for other record kinds. Observation pins records.schema.json#/$defs/Observation and preserves the observed resource generation inside its payload, without treating that value as a mutable snapshot generation. ProblemEvidence pins records.schema.json#/$defs/ProblemEvidence and retains the complete evidence selection for one exact owner/resource. Each lookup and chunk read independently checks current permission for that protected disclosure scope; an authenticated failure or possession of its evidence reference grants no additional read permission.",
+      "description": "An owner-minted immutable canonical-JSON snapshot of one complete record, independently of operation admission. The record identity, exact owner epoch, record-declared generation, installed schema closure, complete byte digest and size are inseparable. Immutable Plans use null generation; Operations, Workflows and WorkflowTransferRecords use their declared generation, with the digest distinguishing every snapshot. Possession grants no read or execution authority: every record.read rechecks the actual receiving principal and the protected snapshot resource closure. The owner commits complete retrievable snapshot custody before advertising this reference. Later generations never replace its bytes. Plan expiry affects admission, not completion of an already advertised traversal; accepted, active, uncertain and recovery-required custody cannot lose its only retrievable evidence. An explicit expired or restored snapshot requires a fresh record lookup, never silent rebinding. Accepted work must remain discoverable and fully retrievable through its current record even if old completed traversals are collected. This reference does not establish plan review, acceptance or execution success before its complete payload is verified. Size describes the record and adds no total-size limit beyond its owning contract; transfers use bounded chunks and local capacity failures must be explicit. A historical schema closure is readable only through an immutable reader independently installed by the receiver for that exact digest and the declared record-kind URI. CLI envelopes, SSH results, pages and chunks propagate the same trusted reader context; neither the record nor its caller can install a reader. Historical retrieval does not admit new work under an obsolete schema. Discovery and ResourceReport use immutable observation snapshot identities: record.id equals snapshot_id and generation is null, because neither invents a ledger generation. Discovery pins records.schema.json#/$defs/Info; ResourceReport pins resource-records.schema.json#/$defs/ResourceReport. Reassembly yields exactly the complete inline payload under that schema. Each read reauthorizes its protected disclosure scope and snapshot; later observations never change these bytes. A retained reader is selected by this exact kind URI and closure digest, not by treating an observation as an Operation. Observation and ProblemEvidence also use snapshot_id as record.id and null generation. Their record.resource is required and equals the complete payload resource. WorkflowTransferRecord also requires record.resource equal to its workflow resource, uses transfer_id as record.id and its last retained transfer generation, and pins workflow-transfer-history.schema.json#/$defs/WorkflowTransferRecord. WorkflowPhaseAttestation also requires record.resource equal to {kind: workflow, id: workflow_id}; record.id equals the attestation_id carried as payload.id, generation equals the issuer capsule generation observed at issuance, and its schema is workflow-evidence.schema.json#/$defs/WorkflowPhaseAttestation. Its independent issuance journal does not advance the workflow capsule generation. The resource is absent for other record kinds. Observation pins records.schema.json#/$defs/Observation and preserves the observed resource generation inside its payload, without treating that value as a mutable snapshot generation. ProblemEvidence pins records.schema.json#/$defs/ProblemEvidence and retains the complete evidence selection for one exact owner/resource. Each lookup and chunk read independently checks current permission for that protected disclosure scope; an authenticated failure or possession of its evidence reference grants no additional read permission. WorkflowJournalRecord is an immutable signed journal outcome with record.id equal to its payload id, null record.generation and record.resource equal to {kind: workflow, id: workflow_id}. It pins workflow-journal.schema.json#/$defs/JournalRecord. A local journal record retains local scope and a gate route, never a full peer capsule closure. A schema-valid signature envelope is not authenticated until verified against independently approved owner keys and the exact retained gate delegation.",
       "allOf": [
         {
           "if": {
@@ -510,7 +548,8 @@
                       "Discovery",
                       "ResourceReport",
                       "Observation",
-                      "ProblemEvidence"
+                      "ProblemEvidence",
+                      "WorkflowJournalRecord"
                     ]
                   }
                 }
@@ -629,6 +668,50 @@
         "safe-read",
         "same-request-after-reconcile"
       ]
+    },
+    "ContentChunk": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/content-chunk/v1"
+        },
+        "kind": {
+          "const": "ContentChunk"
+        },
+        "handle": {
+          "$ref": "common.schema.json#/$defs/Handle"
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "base64": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 262144,
+          "pattern": "^[A-Za-z0-9+/]*={0,2}(?![\\s\\S])"
+        },
+        "next_offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "complete": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "handle",
+        "offset",
+        "base64",
+        "next_offset",
+        "complete"
+      ],
+      "additionalProperties": false,
+      "description": "One exact requested byte range from complete immutable owner content. The full handle, including owner epoch, purpose, binding, digest and size, and the starting offset match the independently retained request. Decoded bytes are at most the requested length and 196608 bytes. next_offset equals offset plus decoded length and never exceeds handle.size. complete is true exactly at that size; a nonterminal chunk must make progress. Consumers reject substituted handles, offsets, invalid base64, gaps, overlaps and premature completion, then verify complete size and digest before interpreting content under its independently approved type or schema. A completed chunk read or exhausted connection is not a completed content transfer. Every read independently rechecks the actual receiving principal and protected resource, purpose, binding and current owner epoch; possession of a handle or chunk conveys no authority. Content captured in a historical epoch uses the separate historical content contract and never silently rebinds to the current epoch. This bounded transport imposes no additional total content limit."
     }
   },
   "description": "The single fishhat v1 canonical JSON profile is RFC 8785 (JCS), https://www.rfc-editor.org/rfc/rfc8785. Every JSON commitment, digest preimage, signature preimage and canonical wire or retained record uses this profile, including installed schema closures and validation inventories. Serialize UTF-8 with no BOM, insignificant whitespace or final newline; a transport may separately require its framing LF, which is excluded from the JSON digest. Sort object names recursively by unsigned UTF-16 code units; preserve array order and Unicode strings without normalization. Escape and serialize strings and finite IEEE 754 binary64 numbers exactly as JCS requires, including negative zero as 0. Reject duplicate object names, lone surrogates, nonfinite numbers and non-JSON values. JSON numbers are parsed in the binary64 domain; JSON-like YAML numeric resolution uses the same decimal/fraction/exponent grammar, with other plain scalars remaining strings. JSON Schema multipleOf compares exact decimal values represented by the JCS number spellings, without binary division tolerance or rounding; numeric equality treats 1 and 1.0, and negative zero and zero, as equal while keeping booleans distinct. Exact integer identities, quantities and generations remain constrained by their schemas to at most 9007199254740991. Programmatic arbitrary-precision integers outside that interoperable range are rejected; higher-precision data requires schema-declared strings. Existing explicit nesting and receiving-capacity admission rules remain. Each owning contract states the fields omitted from its commitment; no other projection is implied. Digest of a JSON value means sha256: plus lowercase hexadecimal SHA-256 of its JCS bytes. Digests explicitly identifying native material, archives or files instead cover their exact original bytes. Human-readable JSON files may use indentation; whenever their JSON values are committed, hashed or signed they are first encoded with JCS."

@@ -33,7 +33,7 @@ from fishhat_contracts.validation import (
     validate_cli,
 )
 from fishhat_contracts.witness import sign
-from fishhat_contracts.workflow_bindings import bind_workflow
+from fishhat_contracts.workflow_bindings import bind_workflow_view
 from fishhat_owner.commands import parse_command
 
 from tests.operation_support import seal_operation
@@ -363,7 +363,7 @@ def test_workflow_predecessors_enforce_the_same_operation_invariants(change):
     body = {key: item for key, item in value["witness"].items() if key != "signature"}
     value["witness"] = sign(body, Ed25519PrivateKey.from_private_bytes(b"\x17" * 32))
     with pytest.raises(ContractError):
-        bind_workflow(query, workflow, **context(query))
+        bind_workflow_view(query, workflow, **context(query))
 
 
 def test_accepted_plan_is_retrievable_with_only_an_owner_discovered_operation():

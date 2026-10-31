@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fishhat.invalid/contracts/drill-result.schema.json",
+  "$ref": "#/$defs/DrillResult",
+  "$defs": {
+    "HookEvidence": {
+      "type": "object",
+      "properties": {
+        "procedure": {
+          "$ref": "source.schema.json#/$defs/Hook"
+        },
+        "request": {
+          "$ref": "hook-request.schema.json"
+        },
+        "result": {
+          "$ref": "hook-result.schema.json"
+        }
+      },
+      "required": [
+        "procedure",
+        "request",
+        "result"
+      ],
+      "additionalProperties": false,
+      "description": "The exact retained accepted procedure and its full request/result. Each stage covers every selected dataset exactly once, allowing independently selected multi-dataset procedures. Procedure bytes and all result artifacts remain in custody. The owner independently matches procedures to accepted release/Plan authority and verifies artifact bytes before success; copying a procedure into this result does not grant execution authority."
+    },
+    "DrillResult": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/drill-result/v1"
+        },
+        "kind": {
+          "const": "DrillResult"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "operation_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "request_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "plan_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "resource": {
+          "allOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Resource"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "const": "app"
+                }
+              }
+            }
+          ]
+        },
+        "checkpoint": {
+          "$ref": "records.schema.json#/$defs/Checkpoint"
+        },
+        "production_binding": {
+          "$ref": "adapter.schema.json#/$defs/RuntimeBinding"
+        },
+        "target_binding": {
+          "allOf": [
+            {
+              "$ref": "adapter.schema.json#/$defs/RuntimeBinding"
+            },
+            {
+              "required": [
+                "instance_digest"
+              ]
+            }
+          ]
+        },
+        "isolation_evidence": {
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
+        },
+        "restorations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/HookEvidence"
+          }
+        },
+        "verifications": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/HookEvidence"
+          }
+        },
+        "completed_at": {
+          "$ref": "common.schema.json#/$defs/Time"
+        },
+        "cleanup": {
+          "type": "object",
+          "properties": {
+            "state": {
+              "enum": [
+                "complete",
+                "retained"
+              ]
+            },
+            "evidence_digest": {
+              "$ref": "common.schema.json#/$defs/MaterialDigest"
+            }
+          },
+          "required": [
+            "state",
+            "evidence_digest"
+          ],
+          "additionalProperties": false,
+          "description": "State at immutable drill completion. Retained means isolated resources remain under their original holds and custody; it cannot assert absence or discharge obligations. Complete requires independently checked native cleanup evidence. Later cleanup produces separate evidence rather than rewriting this result."
+        },
+        "evidence_closure": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common.schema.json#/$defs/Digest"
+          }
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "owner",
+        "operation_id",
+        "request_id",
+        "plan_digest",
+        "resource",
+        "checkpoint",
+        "production_binding",
+        "target_binding",
+        "isolation_evidence",
+        "restorations",
+        "verifications",
+        "completed_at",
+        "cleanup",
+        "evidence_closure"
+      ],
+      "additionalProperties": false,
+      "description": "Immutable completed app.drill evidence required before a succeeded Operation can settle. Owner, operation_id, request_id, plan_digest and resource equal the exact producer; digest(checkpoint) equals its original reviewed arguments.checkpoint. The historical checkpoint owner remains unchanged even when a newly authorized drill owner or epoch differs; the receiver separately authenticates historical evidence and current recovery custody. The embedded checkpoint remains byte-for-byte unchanged: no restore-tested field is added or refreshed. The independently reviewed Plan pins the original checkpoint, production and isolated target bindings and complete accepted restore/verify procedure scope, with their reviewed isolation requirements. Actual native isolation evidence is produced and verified during execution and retained before success; the Plan need not predict the digest of that future output. Target and production native incarnations differ; this structural distinction alone never proves native isolation, which the receiving owner verifies across writers, credentials and endpoints. Every selected dataset has successful restore and verify-restore evidence for the same original Snapshot, joined to the parent operation and historical release. Every hook request and result also binds the isolated target's exact stable runtime_binding_digest; a different target path or production invocation cannot supply that evidence. Mandatory checks cannot be omitted or downgraded. Complete hook result/artifact custody and native isolation are established before success. evidence_closure retains the checkpoint and its recovery closure, stable binding digests, isolation/cleanup evidence, each accepted procedure/request/result and all artifact identities. completed_at is drill observation time only, not captured-data time; it cannot refresh RPO. Cleanup state is independent of verification success and never implicitly discharges retained resources. Exact replay returns this result and the original checkpoint unchanged."
+    }
+  }
+}

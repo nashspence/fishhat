@@ -311,7 +311,8 @@
                 {
                   "type": "null"
                 }
-              ]
+              ],
+              "description": "For workflow work, the receiving owner resolves this exact local journal and its retained admission permit by the submitted request_id and Plan digest. A workflow ID or caller-supplied certificate alone grants no admission. Before native acceptance it checks current principal, active local lifecycle, fully activated driver term, exact local Plan/subject and the same durable native reservation protected through effects. The journal permit is durably committed before native acceptance; a later pause, freeze, expiry or retirement closes new submission. An already accepted native Operation remains replayable by its own original exact request identity without reexecuting or requiring a fresh permit. A null workflow_id requires null driver_term and no implicit workflow membership."
             },
             "driver_term": {
               "anyOf": [
@@ -520,32 +521,6 @@
           "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "method": {
-          "const": "workflow.prepare"
-        },
-        "params": {
-          "$ref": "workflow.schema.json#/$defs/InputReference"
-        }
-      },
-      "required": [
-        "format",
-        "message_id",
-        "method",
-        "params"
-      ],
-      "additionalProperties": false
-    },
-    {
-      "type": "object",
-      "properties": {
-        "format": {
-          "const": "deployment-ops/owner/v1"
-        },
-        "message_id": {
-          "type": "string",
-          "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-        },
-        "method": {
           "const": "workflow.get"
         },
         "params": {
@@ -564,59 +539,8 @@
             "workflow_id",
             "owner"
           ],
-          "additionalProperties": false
-        }
-      },
-      "required": [
-        "format",
-        "message_id",
-        "method",
-        "params"
-      ],
-      "additionalProperties": false
-    },
-    {
-      "type": "object",
-      "properties": {
-        "format": {
-          "const": "deployment-ops/owner/v1"
-        },
-        "message_id": {
-          "type": "string",
-          "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-        },
-        "method": {
-          "const": "workflow.advance"
-        },
-        "params": {
-          "$ref": "workflow.schema.json#/$defs/InputReference"
-        }
-      },
-      "required": [
-        "format",
-        "message_id",
-        "method",
-        "params"
-      ],
-      "additionalProperties": false
-    },
-    {
-      "type": "object",
-      "properties": {
-        "format": {
-          "const": "deployment-ops/owner/v1"
-        },
-        "message_id": {
-          "type": "string",
-          "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-        },
-        "method": {
-          "const": "workflow.transfer"
-        },
-        "params": {
-          "$ref": "workflow.schema.json#/$defs/InputReference"
+          "additionalProperties": false,
+          "description": "Explicit complete shared audit inspection at the approved workflow gate. Local participant custody and discovery use workflow.journal.get/list; native admission never requires these complete shared views. Current receiving permission covers the selected full disclosure scope."
         }
       },
       "required": [
@@ -972,7 +896,7 @@
             "limit"
           ],
           "additionalProperties": false,
-          "description": "Enumerate authorized work with optional exact resource filtering and both active and retained terminal history. The owner filters before disclosure. Active workflows include prepared, paused and recovery-required capsules, including capsules with an incomplete driver transfer even before any child operation exists. Keep the same filters on continuation."
+          "description": "Explicit complete shared audit inspection at the approved workflow gate. Local participant custody and discovery use workflow.journal.get/list; native admission never requires these complete shared views. Current receiving permission covers the selected full disclosure scope."
         }
       },
       "required": [
@@ -1182,84 +1106,6 @@
           "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "method": {
-          "const": "workflow.bind"
-        },
-        "params": {
-          "$ref": "workflow.schema.json#/$defs/InputReference"
-        }
-      },
-      "required": [
-        "format",
-        "message_id",
-        "method",
-        "params"
-      ],
-      "additionalProperties": false
-    },
-    {
-      "type": "object",
-      "properties": {
-        "format": {
-          "const": "deployment-ops/owner/v1"
-        },
-        "message_id": {
-          "type": "string",
-          "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-        },
-        "method": {
-          "const": "workflow.recover"
-        },
-        "params": {
-          "$ref": "workflow.schema.json#/$defs/InputReference"
-        }
-      },
-      "required": [
-        "format",
-        "message_id",
-        "method",
-        "params"
-      ],
-      "additionalProperties": false
-    },
-    {
-      "type": "object",
-      "properties": {
-        "format": {
-          "const": "deployment-ops/owner/v1"
-        },
-        "message_id": {
-          "type": "string",
-          "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-        },
-        "method": {
-          "const": "workflow.lifecycle"
-        },
-        "params": {
-          "$ref": "workflow.schema.json#/$defs/LifecycleRequest"
-        }
-      },
-      "required": [
-        "format",
-        "message_id",
-        "method",
-        "params"
-      ],
-      "additionalProperties": false
-    },
-    {
-      "type": "object",
-      "properties": {
-        "format": {
-          "const": "deployment-ops/owner/v1"
-        },
-        "message_id": {
-          "type": "string",
-          "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-        },
-        "method": {
           "const": "operation.cancellation.get"
         },
         "params": {
@@ -1312,10 +1158,10 @@
           "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "method": {
-          "const": "workflow.transfer.get"
+          "const": "lifecycle.evidence.prepare"
         },
         "params": {
-          "$ref": "workflow-transfer-history.schema.json#/$defs/LookupRequest"
+          "$ref": "lifecycle-evidence.schema.json#/$defs/InputReference"
         }
       },
       "required": [
@@ -1333,13 +1179,15 @@
           "const": "deployment-ops/owner/v1"
         },
         "message_id": {
-          "$ref": "common.schema.json#/$defs/UUID"
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "method": {
-          "const": "workflow.attest"
+          "const": "workflow.journal.submit"
         },
         "params": {
-          "$ref": "workflow-evidence.schema.json#/$defs/AttestationRequest"
+          "$ref": "workflow-journal.schema.json#/$defs/InputReference"
         }
       },
       "required": [
@@ -1348,108 +1196,7 @@
         "method",
         "params"
       ],
-      "additionalProperties": false,
-      "description": "Issue or retrieve complete owner-authenticated phase evidence through bounded immutable record delivery."
-    },
-    {
-      "type": "object",
-      "properties": {
-        "format": {
-          "const": "deployment-ops/owner/v1"
-        },
-        "message_id": {
-          "$ref": "common.schema.json#/$defs/UUID"
-        },
-        "method": {
-          "const": "workflow.attestation.get"
-        },
-        "params": {
-          "$ref": "workflow-evidence.schema.json#/$defs/AttestationLookup"
-        }
-      },
-      "required": [
-        "format",
-        "message_id",
-        "method",
-        "params"
-      ],
-      "additionalProperties": false,
-      "description": "Issue or retrieve complete owner-authenticated phase evidence through bounded immutable record delivery."
-    },
-    {
-      "type": "object",
-      "properties": {
-        "format": {
-          "const": "deployment-ops/owner/v1"
-        },
-        "message_id": {
-          "$ref": "common.schema.json#/$defs/UUID"
-        },
-        "method": {
-          "const": "workflow.attestation.check"
-        },
-        "params": {
-          "$ref": "workflow-evidence.schema.json#/$defs/AttestationCheckRequest"
-        }
-      },
-      "required": [
-        "format",
-        "message_id",
-        "method",
-        "params"
-      ],
-      "additionalProperties": false,
-      "description": "Independently recheck one exact retained attestation without renewal or new authority."
-    },
-    {
-      "type": "object",
-      "properties": {
-        "format": {
-          "const": "deployment-ops/owner/v1"
-        },
-        "message_id": {
-          "$ref": "common.schema.json#/$defs/UUID"
-        },
-        "method": {
-          "const": "workflow.native-attest"
-        },
-        "params": {
-          "$ref": "workflow-evidence.schema.json#/$defs/NativeAttestationRequest"
-        }
-      },
-      "required": [
-        "format",
-        "message_id",
-        "method",
-        "params"
-      ],
-      "additionalProperties": false,
-      "description": "Protected independently authenticated owner-to-owner native final-settlement proof boundary. Driver or caller data cannot select peer authority."
-    },
-    {
-      "type": "object",
-      "properties": {
-        "format": {
-          "const": "deployment-ops/owner/v1"
-        },
-        "message_id": {
-          "$ref": "common.schema.json#/$defs/UUID"
-        },
-        "method": {
-          "const": "workflow.native-attestation.check"
-        },
-        "params": {
-          "$ref": "workflow-evidence.schema.json#/$defs/NativeAttestationCheckRequest"
-        }
-      },
-      "required": [
-        "format",
-        "message_id",
-        "method",
-        "params"
-      ],
-      "additionalProperties": false,
-      "description": "Protected independently authenticated owner-to-owner native final-settlement proof boundary. Driver or caller data cannot select peer authority."
+      "additionalProperties": false
     },
     {
       "type": "object",
@@ -1463,10 +1210,88 @@
           "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "method": {
-          "const": "lifecycle.evidence.prepare"
+          "const": "workflow.journal.get"
         },
         "params": {
-          "$ref": "lifecycle-evidence.schema.json#/$defs/InputReference"
+          "$ref": "workflow-journal.schema.json#/$defs/Lookup"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "params"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "workflow.journal.list"
+        },
+        "params": {
+          "$ref": "workflow-journal.schema.json#/$defs/ListRequest"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "params"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "workflow.journal.events"
+        },
+        "params": {
+          "$ref": "workflow-journal.schema.json#/$defs/EventsRequest"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "params"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "workflow.journal.input"
+        },
+        "params": {
+          "$ref": "workflow-journal.schema.json#/$defs/Lookup"
         }
       },
       "required": [

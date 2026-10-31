@@ -137,6 +137,8 @@ def test_all_persistence_is_owned_and_baseline_fixtures_match():
     assert not state_errors()
     inventory = tomllib.loads((ROOT / "state/inventory.toml").read_text())
     assert {owner["id"] for owner in inventory["owners"]} == {"owner-journal", "reported-events"}
+    assert {journal["id"] for journal in inventory["journals"]} == {"workflow-journal"}
+    assert all(journal["qualification"] == "reference-model" for journal in inventory["journals"])
     assert all(owner["qualification"] == "reference-model" for owner in inventory["owners"])
     assert {c["id"] for c in components()} >= {"app", "host", "contracts", "client", "domain"}
 

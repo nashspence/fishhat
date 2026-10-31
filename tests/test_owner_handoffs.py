@@ -20,7 +20,7 @@ from fishhat_contracts.handoffs import (
 from fishhat_contracts.operations import validate_operation
 from fishhat_contracts.validation import ContractError, canonical, digest, validate, validate_cli
 from fishhat_contracts.witness import sign
-from fishhat_contracts.workflows import decode_workflow_input
+from fishhat_contracts.workflows import decode_workflow_audit_input
 from fishhat_owner.commands import parse_command
 
 from tests.operation_support import seal_operation
@@ -215,7 +215,7 @@ def rebind_workflow_proposal(value):
     value["prerequisite_witnesses"] = [preparation_witness(value["proposal"], value["owner"])]
 
 
-def staged_workflow_input(method, payload):
+def staged_workflow_audit_input(method, payload):
     data = canonical(payload)
     reference = {
         "owner": copy.deepcopy(payload["owner"]),
@@ -228,9 +228,12 @@ def staged_workflow_input(method, payload):
             "size": len(data),
         },
     }
-    validate("ssh-request.schema.json", request(method, reference))
+    # Complete audit images are not live participant admission inputs.
+    with pytest.raises(ContractError):
+        validate("ssh-request.schema.json", request(method, reference))
     assert (
-        decode_workflow_input(method, reference, data, expected_owner=payload["owner"]) == payload
+        decode_workflow_audit_input(method, reference, data, expected_owner=payload["owner"])
+        == payload
     )
     return reference, data
 
@@ -378,10 +381,10 @@ def test_work_listings_cover_resource_filters_terminal_history_and_continuation(
 def test_prepare_cannot_supply_observed_owner_state():
     value = workflow()
     params = {"owner": value["owner"], "proposal": value["proposal"]}
-    staged_workflow_input("workflow.prepare", params)
+    staged_workflow_audit_input("workflow.prepare", params)
     for field, claim in (("state", "completed"), ("generation", 9), ("driver_principal", "admin")):
         with pytest.raises(ContractError):
-            staged_workflow_input("workflow.prepare", {**params, field: claim})
+            staged_workflow_audit_input("workflow.prepare", {**params, field: claim})
 
 
 def test_workflow_capsule_generation_is_separate_from_participant_generation():
@@ -391,7 +394,7 @@ def test_workflow_capsule_generation_is_separate_from_participant_generation():
     value["generation"] = 4
     validate_workflow(value)
     query = advance_request(value, "draining", advance_id=U)
-    staged_workflow_input("workflow.advance", query)
+    staged_workflow_audit_input("workflow.advance", query)
     assert query["expected_generation"] == 4
     assert query["phase_evidence"]["participants"][0]["resource_generation"] == 9
     assert value["participants"][0]["expected_generation"] == 9

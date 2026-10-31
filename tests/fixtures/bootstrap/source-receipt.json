@@ -2,7 +2,7 @@
   "format": "deployment-ops/source-recovery/v1",
   "id": "11111111-1111-4111-8111-111111111111",
   "domain_id": "a6606aee-cb29-5360-a578-3502f7b0a12a",
-  "selection_digest": "sha256:94636a48a39b4a954c5b3298faa43461cd68c7b335f7d79896a5fbd0addb07bd",
+  "selection_digest": "sha256:41bc138943a3faf42c48ce2b581d3dc10a1fb217fb47afaddbf868e19b535058",
   "commit": "1111111111111111111111111111111111111111",
   "output_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "destination": "/recovery/staging/run-001/source.git",

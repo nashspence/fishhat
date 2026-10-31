@@ -10,6 +10,7 @@ from fishhat_contracts.validation import ContractError, digest
 
 from tests.adapter_support import (
     OWNER,
+    contract_versions,
     identifier,
     runtime_sources,
     service_instance,
@@ -51,6 +52,7 @@ def selected(role="service", names=("web",)):
         "roles": [role],
         "entrypoint": "bin/adapter",
         "process_protocol": "fishhat.adapter-process/v1",
+        **contract_versions([role]),
         "configuration_schema": empty,
         "component_schema": empty,
         "source_schema": source,

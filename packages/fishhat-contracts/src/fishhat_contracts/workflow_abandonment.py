@@ -1,4 +1,12 @@
-"""Explicitly abandon unused successor selection without reopening old authority.
+"""Complete shared workflow inspection models; no live owner admission.
+
+These full-value helpers construct and validate an explicitly requested audit
+projection from independently retained facts. They are not a journal writer or
+a participant protocol: live admission uses workflow_journal and its partitioned
+owner journals. Materialize complete views only for explicit inspection, never
+after each accepted child or at every participating owner.
+
+Explicitly abandon unused successor selection without reopening old authority.
 
 The caller supplies independently authenticated current receiving context. The
 reference model does not prove the native negative fact that no successor child
@@ -123,7 +131,7 @@ def validate_abandonment_closure(
         )
 
 
-def abandon_workflow_recovery(
+def abandon_workflow_recovery_view(
     request: dict[str, Any],
     *,
     expected_owner: dict[str, Any],
@@ -168,7 +176,7 @@ def abandon_workflow_recovery(
     return copy.deepcopy(verified_abandonment)
 
 
-def record_workflow_abandonment(
+def record_workflow_abandonment_view(
     workflow: dict[str, Any],
     proof: dict[str, Any],
     *,

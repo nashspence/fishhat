@@ -11,7 +11,7 @@ from fishhat_contracts.handoffs import validate_cli_result, validate_workflow
 from fishhat_contracts.transfers import validate_transfer_proposal, validate_transfer_request
 from fishhat_contracts.validation import MAX_BYTES, ContractError, digest, validate
 from fishhat_contracts.witness import sign, verify
-from fishhat_contracts.workflows import advance_workflow, validate_advance_request
+from fishhat_contracts.workflows import advance_workflow_view, validate_advance_request
 
 from tests.test_contracts import uid
 from tests.test_owner_handoffs import (
@@ -20,7 +20,7 @@ from tests.test_owner_handoffs import (
     operation,
     rebind_workflow_proposal,
     request,
-    staged_workflow_input,
+    staged_workflow_audit_input,
     wire,
     work_page,
     workflow,
@@ -168,7 +168,7 @@ def test_pending_transfer_exposes_exact_original_input_without_client_state():
         validate_cli_result(result)
     recovered = reconstruct(value, "freeze")
     assert recovered == original
-    staged_workflow_input("workflow.transfer", recovered)
+    staged_workflow_audit_input("workflow.transfer", recovered)
     value["generation"] = 5
     assert validate_transfer_request(recovered, value) == "replay"
     assert recovered["expected_generation"] == 0
@@ -287,16 +287,16 @@ def test_local_commit_replays_original_generation_and_completion_needs_all_commi
     incomplete = copy.deepcopy(advance)
     incomplete["transfer_completion"]["witnesses"].pop()
     with pytest.raises(ContractError, match="participant commits"):
-        advance_workflow(incomplete, value)
-    staged_workflow_input("workflow.advance", advance)
-    complete = advance_workflow(advance, value)
+        advance_workflow_view(incomplete, value)
+    staged_workflow_audit_input("workflow.advance", advance)
+    complete = advance_workflow_view(advance, value)
     assert complete["generation"] == value["generation"] + 1
     assert complete["state"] == "prepared"
     assert complete["transfer"]["phase"] == "completed"
     assert complete["advances"][0]["request"] == advance
     validate_workflow(complete)
     assert validate_transfer_request(recovered, complete) == "replay"
-    assert advance_workflow(advance, complete) == complete
+    assert advance_workflow_view(advance, complete) == complete
     complete["generation"] += 1
     assert validate_advance_request(advance, complete) == "replay"
 
@@ -304,7 +304,7 @@ def test_local_commit_replays_original_generation_and_completion_needs_all_commi
 @pytest.mark.parametrize("change", ["reordered", "duplicate", "missing", "changed-generation"])
 def test_retained_transfer_completion_preserves_exact_unique_witness_closure(change):
     value, _ = committed()
-    complete = advance_workflow(completion_request(value), value)
+    complete = advance_workflow_view(completion_request(value), value)
     receipt = complete["advances"][0]
     witnesses = receipt["request"]["transfer_completion"]["witnesses"]
     if change == "reordered":
@@ -375,13 +375,13 @@ def test_staged_commit_request_keeps_complete_owner_closure():
     rebind_workflow_proposal(value)
     value, _ = frozen(value)
     query = commit_input(value)
-    reference, _ = staged_workflow_input("workflow.transfer", query)
+    reference, _ = staged_workflow_audit_input("workflow.transfer", query)
     assert validate_transfer_request(query, value) == "new"
     assert len(query["witnesses"]) == 64
     assert len(frame(request("workflow.transfer", reference))) <= MAX_BYTES + 4
     query["witnesses"][0]["evidence_digests"] = ["sha256:" + "0" * 64]
     with pytest.raises(ContractError):
-        staged_workflow_input("workflow.transfer", query)
+        staged_workflow_audit_input("workflow.transfer", query)
 
 
 def test_obsolete_unretained_transfer_shape_is_rejected():

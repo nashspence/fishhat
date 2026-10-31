@@ -739,5 +739,9 @@
       "additionalProperties": false,
       "description": "Positive custody of the complete current data for one exact immutable DatasetInventory obligation, separate from its source/procedure recovery metadata. The authenticated current custodian verifies the source native incarnation and complete current data under the required fence at verified_at; native retention keeps that exact incarnation, while a completed handoff or sealed available backup binds the original incarnation to its verified surviving location and complete native-restorable closure. A source manifest, metadata bytes, empty snapshot or mere recovery procedure cannot satisfy this binding."
     }
-  }
+  },
+  "x-fishhat-contract-dependencies": [
+    "#/$defs/PrepareRequest",
+    "#/$defs/Evidence"
+  ]
 }

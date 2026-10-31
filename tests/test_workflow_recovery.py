@@ -11,15 +11,19 @@ from fishhat_contracts.record_delivery import RecordSnapshot, validate_record_pa
 from fishhat_contracts.transfers import validate_transfer_request
 from fishhat_contracts.validation import ContractError, canonical, digest, validate
 from fishhat_contracts.witness import sign
-from fishhat_contracts.workflow_bindings import bind_workflow
+from fishhat_contracts.workflow_bindings import bind_workflow_view
 from fishhat_contracts.workflow_recovery import (
-    commit_workflow_recovery,
-    prepare_workflow_recovery,
+    commit_workflow_recovery_view,
+    prepare_workflow_recovery_view,
     validate_recovery_proposal,
 )
-from fishhat_contracts.workflow_settlement import record_native_completion
+from fishhat_contracts.workflow_settlement import record_native_completion_view
 from fishhat_contracts.workflow_unprepared import origin_digest, origin_owner, origin_workflow_id
-from fishhat_contracts.workflows import advance_workflow, decode_workflow_input, prepare_workflow
+from fishhat_contracts.workflows import (
+    advance_workflow_view,
+    decode_workflow_audit_input,
+    prepare_workflow_view,
+)
 
 from tests.operation_support import seal_operation
 from tests.test_contracts import uid
@@ -27,7 +31,7 @@ from tests.test_owner_handoffs import (
     operation,
     preparation_witnesses,
     request,
-    staged_workflow_input,
+    staged_workflow_audit_input,
     workflow,
 )
 from tests.test_owner_history import custody_for
@@ -370,7 +374,7 @@ def prepare(proposal, records, *, owner=None, **overrides):
         "local_abandonments": [],
     }
     arguments.update(overrides)
-    return prepare_workflow_recovery(query, **arguments)
+    return prepare_workflow_recovery_view(query, **arguments)
 
 
 def commit(value, proposal, **context):
@@ -384,7 +388,7 @@ def commit(value, proposal, **context):
         "expected_generation": value["generation"],
         "preparations": preparations,
     }
-    return query, commit_workflow_recovery(
+    return query, commit_workflow_recovery_view(
         query, value, recovery_authorized=True, verified_preparations=preparations, **context
     )
 
@@ -413,7 +417,7 @@ def test_successor_retains_original_outcomes_and_current_authority(historical, k
 
 def test_expired_bound_child_gets_fresh_request_after_completed_predecessor():
     original, binding = successor_stage()
-    original = bind_workflow(binding, original, **context(binding))
+    original = bind_workflow_view(binding, original, **context(binding))
     predecessor = binding["predecessors"][0]
     proposal, records = scenario(
         original=original,
@@ -443,7 +447,7 @@ def test_expired_bound_child_gets_fresh_request_after_completed_predecessor():
 @pytest.mark.parametrize("stage", ["publication", "adoption"])
 def test_rotation_recovery_keeps_completed_output_and_rebinds_only_unused_child(stage, historical):
     original, previous = publication_stage() if stage == "publication" else adoption_stage()
-    original = bind_workflow(previous, original, **context(previous))
+    original = bind_workflow_view(previous, original, **context(previous))
     issued = original["bindings"][0]["request"]["predecessors"][0]
     outcomes = {issued["request_id"]: issued}
     kinds = ["completed", "unaccepted", "unaccepted"]
@@ -492,7 +496,7 @@ def test_rotation_recovery_keeps_completed_output_and_rebinds_only_unused_child(
         },
         now=NOW,
     )
-    result = bind_workflow(query, successor, **authority)
+    result = bind_workflow_view(query, successor, **authority)
     assert result["bindings"][0]["request"]["predecessors"] == previous["predecessors"]
     assert result["proposal"]["participants"][0]["requests"][0]["completed"]["operation"] == issued
     assert (
@@ -504,7 +508,7 @@ def test_rotation_recovery_keeps_completed_output_and_rebinds_only_unused_child(
 def test_generic_recovery_links_adapter_and_publisher_failure_to_exact_original_operation(producer):
     original, binding = publication_stage()
     if producer == "publisher":
-        original = bind_workflow(binding, original, **context(binding))
+        original = bind_workflow_view(binding, original, **context(binding))
     kinds = (
         ["recovered", "unaccepted", "unaccepted"]
         if producer == "issuer"
@@ -605,7 +609,7 @@ def test_restored_partial_commit_requires_both_current_custodians():
     assert result["transfer"] is None
     query["preparations"].pop()
     with pytest.raises(ContractError, match="complete participant"):
-        commit_workflow_recovery(
+        commit_workflow_recovery_view(
             query, a, recovery_authorized=True, verified_preparations=query["preparations"]
         )
 
@@ -692,7 +696,7 @@ def test_partial_preparation_blocks_progress_and_all_participants_are_required()
         "phase_evidence": None,
     }
     with pytest.raises(ContractError, match="not committed"):
-        advance_workflow(advance, value)
+        advance_workflow_view(advance, value)
     transfer = {
         "owner": value["owner"],
         "expected_generation": 0,
@@ -705,7 +709,7 @@ def test_partial_preparation_blocks_progress_and_all_participants_are_required()
     query, _ = commit(value, proposal)
     query["preparations"].pop()
     with pytest.raises(ContractError, match="complete participant"):
-        commit_workflow_recovery(
+        commit_workflow_recovery_view(
             query, value, recovery_authorized=True, verified_preparations=query["preparations"]
         )
 
@@ -717,17 +721,21 @@ def test_preparation_and_commit_replay_keep_original_inputs_after_expiry():
     replay = prepare(proposal, records, reserved_successor=result, verified_proposal={})
     assert replay == result
     assert (
-        commit_workflow_recovery(query, result, recovery_authorized=True, verified_preparations=[])
+        commit_workflow_recovery_view(
+            query, result, recovery_authorized=True, verified_preparations=[]
+        )
         == result
     )
     changed = copy.deepcopy(query)
     changed["expected_generation"] += 1
     with pytest.raises(ContractError, match="accepted recovery commit"):
-        commit_workflow_recovery(
+        commit_workflow_recovery_view(
             changed, result, recovery_authorized=True, verified_preparations=[]
         )
     with pytest.raises(ContractError, match="authority"):
-        commit_workflow_recovery(query, result, recovery_authorized=False, verified_preparations=[])
+        commit_workflow_recovery_view(
+            query, result, recovery_authorized=False, verified_preparations=[]
+        )
 
 
 def test_retained_success_is_not_executable_through_ordinary_prepare():
@@ -735,7 +743,7 @@ def test_retained_success_is_not_executable_through_ordinary_prepare():
     successor = proposal["successor"]
     owner = successor["participants"][0]["owner"]
     with pytest.raises(ContractError, match="explicit recovery"):
-        prepare_workflow(
+        prepare_workflow_view(
             {"owner": owner, "proposal": successor},
             expected_owner=owner,
             principal="operator",
@@ -750,9 +758,13 @@ def test_recovery_uses_bounded_staged_transport_and_discoverable_workflow_output
     proposal, records = scenario(historical=True)
     owner = proposal["participants"][0]["owner"]
     query = {"owner": owner, "phase": "prepare", "proposal": proposal}
-    reference, data = staged_workflow_input("workflow.recover", query)
-    validate("ssh-request.schema.json", request("workflow.recover", reference))
-    assert decode_workflow_input("workflow.recover", reference, data, expected_owner=owner) == query
+    reference, data = staged_workflow_audit_input("workflow.recover", query)
+    with pytest.raises(ContractError):
+        validate("ssh-request.schema.json", request("workflow.recover", reference))
+    assert (
+        decode_workflow_audit_input("workflow.recover", reference, data, expected_owner=owner)
+        == query
+    )
     result = prepare(proposal, records)
     validate("records.schema.json", result, "Workflow")
     assert result["recovery"]["request"] == query
@@ -776,7 +788,7 @@ def finish_transfer(value):
     ]
     query = completion_request(value)
     query["phase"] = value["phase"]
-    return advance_workflow(query, value), query
+    return advance_workflow_view(query, value), query
 
 
 @pytest.mark.parametrize("state", ["prepared", "active", "paused", "recovery-required"])
@@ -789,7 +801,7 @@ def test_driver_transfer_preserves_lifecycle_and_exact_replay(state):
     value, query = finish_transfer(original)
     assert value["state"] == state
     assert value["phase"] == original["phase"]
-    assert advance_workflow(query, value) == value
+    assert advance_workflow_view(query, value) == value
     if state == "recovery-required":
         following = {
             **query,
@@ -799,7 +811,7 @@ def test_driver_transfer_preserves_lifecycle_and_exact_replay(state):
             "transfer_completion": None,
         }
         with pytest.raises(ContractError, match="cannot advance"):
-            advance_workflow(following, value)
+            advance_workflow_view(following, value)
 
 
 @pytest.mark.parametrize("state", ["cancelled", "completed"])
@@ -838,7 +850,7 @@ def native_completion_input(value):
 
 def native_completion(value):
     query = native_completion_input(value)
-    return record_native_completion(
+    return record_native_completion_view(
         query,
         value,
         expected_owner=value["owner"],
@@ -867,7 +879,7 @@ def test_terminal_lifecycle_keeps_exact_accepted_transfer_replay(phase, state):
     value["generation"] += 1
     validate_workflow(value)
     if phase == "completed":
-        assert advance_workflow(original, value) == value
+        assert advance_workflow_view(original, value) == value
     else:
         assert validate_transfer_request(original, value) == "replay"
     if phase == "freeze":
@@ -875,7 +887,7 @@ def test_terminal_lifecycle_keeps_exact_accepted_transfer_replay(phase, state):
             validate_transfer_request(commit_input(value), value)
     elif phase == "commit":
         with pytest.raises(ContractError, match="cannot advance"):
-            advance_workflow(completion_request(value), value)
+            advance_workflow_view(completion_request(value), value)
 
 
 @pytest.mark.parametrize("state", ["prepared", "active", "paused", "recovery-required"])
@@ -890,4 +902,4 @@ def test_transfer_completion_cannot_combine_driver_change_with_phase_progress(st
     phases = PHASES[value["type"]]
     query["phase"] = phases[phases.index(value["phase"]) + 1]
     with pytest.raises(ContractError):
-        advance_workflow(query, value)
+        advance_workflow_view(query, value)

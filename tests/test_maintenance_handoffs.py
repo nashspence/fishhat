@@ -26,6 +26,7 @@ from fishhat_contracts.validation import (
 )
 
 from tests.backup_support import backup_result
+from tests.drill_support import attach_drill, drill_result
 from tests.linear_support import assert_linear, measure
 from tests.operation_support import seal_operation
 from tests.support import FIXTURES
@@ -307,7 +308,7 @@ def test_embedded_maintenance_never_supplies_its_own_approval(changed):
 
 
 def test_latest_drill_resolves_once_and_original_plan_survives_new_release_and_backup():
-    old, _, _ = checkpoint_fixture(1)
+    old, _, snapshots = checkpoint_fixture(1)
     policy = {"mode": "latest-verified"}
     inventory = {digest(old): old}
     selected = select_maintenance_checkpoint(
@@ -337,7 +338,7 @@ def test_latest_drill_resolves_once_and_original_plan_survives_new_release_and_b
         effect_certainty="known",
         result_handle=None,
     )
-    seal_operation(child)
+    attach_drill(child, drill_result(old, child, snapshots))
     value = result(parent, plan, child=child)
     attach(parent, value)
     newer = deepcopy(old)
