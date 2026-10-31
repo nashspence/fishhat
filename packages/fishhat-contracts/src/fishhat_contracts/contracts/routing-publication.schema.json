@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fishhat.invalid/contracts/routing-publication.schema.json",
+  "$defs": {
+    "Target": {
+      "type": "object",
+      "properties": {
+        "binding": {
+          "$ref": "adapter.schema.json#/$defs/InstanceReference"
+        },
+        "namespace": {
+          "$ref": "adapter.schema.json#/$defs/MutationNamespace"
+        }
+      },
+      "required": [
+        "binding",
+        "namespace"
+      ],
+      "additionalProperties": false,
+      "description": "Exact independently approved ingress or network executor and canonical native mutation namespace. Scope and role match the request. The receiving owner resolves aliases, verifies complete exclusive ownership of this namespace and confines all effects to it. Request data does not enroll a namespace or authorize a new target. Native configuration and routes/rules outside this namespace remain unchanged."
+    },
+    "Generation": {
+      "type": "object",
+      "properties": {
+        "native_incarnation": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "revision": {
+          "$ref": "adapter.schema.json#/$defs/Handle"
+        },
+        "digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        }
+      },
+      "required": [
+        "native_incarnation",
+        "revision",
+        "digest"
+      ],
+      "additionalProperties": false,
+      "description": "One complete native publication state. native_incarnation identifies the independently verified lifetime of the managed domain. revision is an opaque native or owner-fenced non-reused change token that advances on every publication, including a return to identical content, preventing a content-digest ABA match. digest identifies the complete retained generation artifact. Destroying and recreating the native domain cannot retain its earlier incarnation. Replacing only the contents of an existing domain preserves its incarnation and advances revision. Neither echoing a request nor hashing desired bytes proves the observed native state."
+    },
+    "Observed": {
+      "type": "object",
+      "properties": {
+        "target": {
+          "$ref": "#/$defs/Target"
+        },
+        "generation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Generation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "target",
+        "generation"
+      ],
+      "additionalProperties": false,
+      "description": "Independently observed exact native domain. generation null means verified complete absence of the managed domain, not unavailable state or an empty managed policy. An empty policy is a present generation whose complete artifact contains zero routes/rules. An unknown or unavailable domain has no Observed object at all. Observation does not reserve a predecessor; publication compares it again at the native mutation boundary."
+    },
+    "Receipt": {
+      "type": "object",
+      "properties": {
+        "attempt_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "target": {
+          "$ref": "#/$defs/Target"
+        },
+        "before": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Generation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "after": {
+          "$ref": "#/$defs/Generation"
+        }
+      },
+      "required": [
+        "attempt_id",
+        "target",
+        "before",
+        "after"
+      ],
+      "additionalProperties": false,
+      "description": "Evidence for the exact original durable publication attempt and complete domain transition. before equals the original expected_previous, including explicit absence; after.digest equals the requested complete artifact. Replacement preserves native_incarnation and changes revision. Creation receives a freshly verified native incarnation and revision. The adapter compares the full predecessor and commits the complete replacement atomically, or under continuous independently verified native exclusion spanning comparison, replacement and verification. Omitted old entries are removed. A precondition mismatch changes nothing; unavailable atomic comparison/exclusion is unsupported and must fail before dispatch. A receipt records confirmed native state, never a promise derived from the requested artifact. It remains with the original effect evidence through transport failure or reconciliation; it never permits redispatch."
+    },
+    "Output": {
+      "type": "object",
+      "properties": {
+        "observed": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Observed"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "publication": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Receipt"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "observed",
+        "publication"
+      ],
+      "additionalProperties": false,
+      "description": "Observed state and confirmed publication are distinct. Queries never return a publication receipt. Successful publication requires the exact original receipt and observed after-state under complete coverage. Unknown/partial effects retain their facts without fabricating a complete generation or absence. Reconciliation returns evidence for the original target and precondition; current enrollment or a later matching content digest cannot retarget historical work."
+    }
+  },
+  "$ref": "#/$defs/Target"
+}

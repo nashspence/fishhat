@@ -1,4 +1,12 @@
-"""Owner-native workflow admission changes with immutable local custody.
+"""Complete shared workflow inspection models; no live owner admission.
+
+These full-value helpers construct and validate an explicitly requested audit
+projection from independently retained facts. They are not a journal writer or
+a participant protocol: live admission uses workflow_journal and its partitioned
+owner journals. Materialize complete views only for explicit inspection, never
+after each accepted child or at every participating owner.
+
+Owner-native workflow admission changes with immutable local custody.
 
 These reference transitions do not stop children, release holds or coordinate
 participants. Native owners authorize and durably serialize them with admission.
@@ -83,7 +91,7 @@ def validate_lifecycle_decision(decision: dict[str, Any], workflow: dict[str, An
     return destination
 
 
-def record_native_lifecycle(
+def record_native_lifecycle_view(
     decision: dict[str, Any],
     workflow: dict[str, Any],
     *,
@@ -264,7 +272,7 @@ def _request_decision(
         ),
     )
 )
-def request_workflow_lifecycle(
+def request_workflow_lifecycle_view(
     request: dict[str, Any],
     workflow: dict[str, Any],
     *,
@@ -331,7 +339,7 @@ def request_workflow_lifecycle(
         refuse("PRECONDITION_FAILED", "workflow lifecycle proposal, generation or driver changed")
     try:
         decision = _request_decision(request, workflow, principal, verified_decision)
-        result = record_native_lifecycle(
+        result = record_native_lifecycle_view(
             decision,
             workflow,
             expected_owner=expected_owner,

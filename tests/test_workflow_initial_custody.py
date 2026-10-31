@@ -14,10 +14,14 @@ from fishhat_contracts.witness import sign
 from fishhat_contracts.workflow_preparation import validate_workflow_agreement
 from fishhat_contracts.workflow_recovery import validate_recovery_proposal
 from fishhat_contracts.workflow_unprepared import (
-    retire_unprepared_workflow,
+    retire_unprepared_workflow_view,
     validate_never_prepared,
 )
-from fishhat_contracts.workflows import advance_workflow, decode_workflow_input, prepare_workflow
+from fishhat_contracts.workflows import (
+    advance_workflow_view,
+    decode_workflow_audit_input,
+    prepare_workflow_view,
+)
 
 from tests.test_contracts import uid
 from tests.test_owner_handoffs import (
@@ -26,7 +30,7 @@ from tests.test_owner_handoffs import (
     preparation_witness,
     preparation_witnesses,
     request,
-    staged_workflow_input,
+    staged_workflow_audit_input,
     wire,
 )
 from tests.test_plan_review import reseal
@@ -106,7 +110,7 @@ def retire(query, proof, **changes):
         "verified_no_child_admission": True,
     }
     context.update(changes)
-    return retire_unprepared_workflow(query, **context)
+    return retire_unprepared_workflow_view(query, **context)
 
 
 def partial(historical=True, kinds=None):
@@ -218,7 +222,7 @@ def test_retirement_replay_preserves_proof_and_tombstone_blocks_repreparation():
     with pytest.raises(ContractError):
         retire(changed, proof, retained=proof)
     with pytest.raises(ContractError, match="cannot prepare again"):
-        prepare_workflow(
+        prepare_workflow_view(
             {"owner": query["owner"], "proposal": query["proposal"]},
             expected_owner=query["owner"],
             principal="operator",
@@ -292,16 +296,19 @@ def test_retirement_uses_complete_staged_input_and_finite_lost_reply_result():
         for i in range(3000)
     )
     query, proof = retirement(query["proposal"], query["origin"], query["owner"], query["custody"])
-    reference, data = staged_workflow_input("workflow.recover", query)
+    reference, data = staged_workflow_audit_input("workflow.recover", query)
     assert len(data) > MAX_BYTES
     assert len(frame(request("workflow.recover", reference))) < MAX_BYTES
     assert (
-        decode_workflow_input("workflow.recover", reference, data, expected_owner=query["owner"])
+        decode_workflow_audit_input(
+            "workflow.recover", reference, data, expected_owner=query["owner"]
+        )
         == query
     )
     result = retire(query, proof)
     validate_never_prepared(result, proposal=query["proposal"])
-    validate("ssh-response.schema.json", wire("workflow.recover", result))
+    with pytest.raises(ContractError):
+        validate("ssh-response.schema.json", wire("workflow.recover", result))
     validate("cli-output.schema.json", cli(result))
     validate_cli_result(result)
     assert len(frame(wire("workflow.recover", result))) < MAX_BYTES
@@ -321,8 +328,10 @@ def test_initial_agreement_requires_every_exact_owner_and_retained_local_proof()
     query = advance_request(value, PHASES[value["type"]][1])
     verified = copy.deepcopy(query["phase_evidence"])
     with pytest.raises(ContractError, match="not independently authenticated"):
-        advance_workflow(query, value, verified_phase_evidence=verified, now="2026-11-01T00:00:00Z")
-    advanced = advance_workflow(
+        advance_workflow_view(
+            query, value, verified_phase_evidence=verified, now="2026-11-01T00:00:00Z"
+        )
+    advanced = advance_workflow_view(
         query,
         value,
         verified_phase_evidence=verified,
@@ -330,7 +339,7 @@ def test_initial_agreement_requires_every_exact_owner_and_retained_local_proof()
         verified_preparations=copy.deepcopy(complete),
     )
     validate_workflow_agreement(advanced, require_complete=True)
-    assert advance_workflow(query, advanced) == advanced
+    assert advance_workflow_view(query, advanced) == advanced
 
 
 def test_signed_divergent_intents_cannot_agree_or_commit_one_driver_transfer():

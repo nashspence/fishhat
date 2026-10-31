@@ -8,13 +8,13 @@ import pytest
 from fishhat_contracts.handoffs import PHASES, validate_workflow
 from fishhat_contracts.transfers import validate_transfer_request
 from fishhat_contracts.validation import ContractError, canonical, digest, validate
-from fishhat_contracts.workflow_abandonment import record_workflow_abandonment
+from fishhat_contracts.workflow_abandonment import record_workflow_abandonment_view
 from fishhat_contracts.workflow_bindings import validate_bind_request
 from fishhat_contracts.workflow_lifecycle import (
-    record_native_lifecycle,
+    record_native_lifecycle_view,
     require_workflow_child_admission,
 )
-from fishhat_contracts.workflows import advance_workflow, prepare_workflow
+from fishhat_contracts.workflows import advance_workflow_view, prepare_workflow_view
 
 from tests.test_contracts import uid
 from tests.test_owner_handoffs import workflow
@@ -58,7 +58,7 @@ def record(decision, value, **changes):
         "verified_reconciled": True,
     }
     context.update(changes)
-    return record_native_lifecycle(decision, value, **context)
+    return record_native_lifecycle_view(decision, value, **context)
 
 
 @pytest.mark.parametrize("phase", ["prepared", "draining"])
@@ -77,7 +77,7 @@ def test_pause_and_resume_require_explicit_local_decisions_and_preserve_custody(
         require_workflow_child_admission(paused)
     following = PHASES[value["type"]][PHASES[value["type"]].index(phase) + 1]
     with pytest.raises(ContractError, match="cannot advance"):
-        advance_workflow(advance_request(paused, following), paused)
+        advance_workflow_view(advance_request(paused, following), paused)
     resumed = lifecycle(paused, "resume")
     assert resumed["state"] == value["state"]
     assert resumed["phase"] == value["phase"]
@@ -87,12 +87,12 @@ def test_pause_and_resume_require_explicit_local_decisions_and_preserve_custody(
 
 
 def test_pause_rejects_new_binding_but_preserves_already_accepted_binding_replay():
-    from fishhat_contracts.workflow_bindings import bind_workflow
+    from fishhat_contracts.workflow_bindings import bind_workflow_view
 
     from tests.test_workflow_continuations import context
 
     value, query = publication_stage()
-    accepted = bind_workflow(query, value, **context(query))
+    accepted = bind_workflow_view(query, value, **context(query))
     paused = lifecycle(accepted, "pause")
     assert validate_bind_request(query, paused) == "replay"
     changed = copy.deepcopy(query)
@@ -150,12 +150,12 @@ def test_partial_initial_cancellation_preserves_custody_and_never_claims_remote_
     with pytest.raises(ContractError, match="blocks new child"):
         require_workflow_child_admission(result)
     with pytest.raises(ContractError, match="cannot advance"):
-        advance_workflow(advance_request(result, "draining"), result)
+        advance_workflow_view(advance_request(result, "draining"), result)
     if transfer_phase is not None:
         assert validate_transfer_request(accepted_transfer, result) == "replay"
     assert record(decision, result, verified_decision=None, verified_reconciled=False) == result
     assert (
-        prepare_workflow(
+        prepare_workflow_view(
             {"owner": result["owner"], "proposal": result["proposal"]},
             expected_owner=result["owner"],
             principal="current-reader",
@@ -189,7 +189,7 @@ def test_transfer_completion_preserves_pause_until_native_resume():
         require_workflow_child_admission(result)
     result = lifecycle(result, "resume")
     assert result["state"] == "prepared"
-    assert advance_workflow(accepted, result) == result
+    assert advance_workflow_view(accepted, result) == result
     require_workflow_child_admission(result)
 
 
@@ -201,7 +201,7 @@ def test_recovery_required_cannot_resume_or_advance_and_can_cancel_without_relea
     with pytest.raises(ContractError, match="illegal workflow lifecycle"):
         record(attempted_resume, value)
     with pytest.raises(ContractError, match="cannot advance"):
-        advance_workflow(advance_request(value, "draining"), value)
+        advance_workflow_view(advance_request(value, "draining"), value)
     with pytest.raises(ContractError, match="blocks new child"):
         require_workflow_child_admission(value)
     result = lifecycle(value, "cancel")
@@ -256,7 +256,7 @@ def test_native_lifecycle_identity_replay_cannot_change_input_or_authority():
         validate("workflow.schema.json", decision, "AdvanceRequest")
     query = advance_request(value, "draining", advance_id=decision["advance_id"])
     with pytest.raises(ContractError, match="changed authority"):
-        advance_workflow(query, result)
+        advance_workflow_view(query, result)
 
 
 def test_cancelled_history_cannot_append_a_fabricated_resume():
@@ -286,7 +286,7 @@ def test_terminal_history_rejects_later_retained_transfer_phase(terminal, phase)
         value = settle(native_completion_input(value), value)
     elif terminal == "abandoned":
         _, proof = abandon(recovery, value["owner"])
-        value = record_workflow_abandonment(value, proof)
+        value = record_workflow_abandonment_view(value, proof)
     else:
         value = lifecycle(value, "cancel")
     transferring, request = frozen(base) if phase == "freeze" else committed(base)
@@ -346,12 +346,12 @@ def test_recovery_history_cannot_admit_before_its_committed_preparation(admissio
 
 
 def test_retained_binding_cannot_bypass_an_incomplete_driver_transfer():
-    from fishhat_contracts.workflow_bindings import bind_workflow
+    from fishhat_contracts.workflow_bindings import bind_workflow_view
 
     from tests.test_workflow_continuations import context
 
     value, request = publication_stage()
-    accepted = bind_workflow(request, value, **context(request))
+    accepted = bind_workflow_view(request, value, **context(request))
     freeze, _ = frozen(value)
     changed = copy.deepcopy(request)
     changed["expected_generation"] = freeze["generation"]
@@ -369,7 +369,7 @@ def test_retained_binding_cannot_bypass_an_incomplete_driver_transfer():
 
 
 def test_retained_recovery_commit_cannot_invent_an_earlier_successor_generation():
-    from fishhat_contracts.workflow_recovery import commit_workflow_recovery
+    from fishhat_contracts.workflow_recovery import commit_workflow_recovery_view
 
     recovery, records = scenario()
     prepared = prepare(recovery, records)
@@ -377,7 +377,7 @@ def test_retained_recovery_commit_cannot_invent_an_earlier_successor_generation(
     changed = copy.deepcopy(request)
     changed["expected_generation"] = 1
     with pytest.raises(ContractError, match="recovery commit generation changed"):
-        commit_workflow_recovery(
+        commit_workflow_recovery_view(
             changed,
             prepared,
             recovery_authorized=True,

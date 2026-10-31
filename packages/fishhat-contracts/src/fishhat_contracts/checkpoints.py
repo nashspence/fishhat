@@ -84,6 +84,7 @@ class CheckpointInputs:
     snapshots: dict[str, dict[str, Any]]
     backup_objects: dict[str, dict[str, Any]]
     dataset_backups: dict[str, str]
+    checkpoint_digest: str
 
 
 class _ReceiptReader:
@@ -237,6 +238,14 @@ def resolve_checkpoint(
         captured = reader.result(selected["capture_digest"], "capture", "capture")
         output = captured["response"]["output"]
         snapshot = output["snapshots"][0]
+        from .recovery_points import validate_recovery_point
+
+        validate_recovery_point(snapshot["recovery_point"])
+        if snapshot["recovery_point"] is not None:
+            _require(
+                snapshot["recovery_point"]["evidence_digest"] in closure,
+                "checkpoint closure omits recovery-point evidence",
+            )
         _require(
             all(snapshot["producer"][key] in closure for key in ENROLLMENT_IDENTITIES),
             "checkpoint closure omits historical capture enrollment",
@@ -293,4 +302,4 @@ def resolve_checkpoint(
         )
         snapshots[dataset] = deepcopy(snapshot)
         dataset_backups[dataset] = stored_id
-    return CheckpointInputs(snapshots, objects, dataset_backups)
+    return CheckpointInputs(snapshots, objects, dataset_backups, digest(value))

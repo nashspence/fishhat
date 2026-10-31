@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .validation import ContractError, canonical
+from .validation import ContractError, canonical, digest
 
 
 def _require(ok: bool, code: str) -> None:
@@ -37,6 +37,20 @@ def check_target_request(role: str, request: dict[str, Any]) -> None:
             len({item["listener"] for item in routes}) == len(routes),
             "OVERLAPPING_INGRESS_LISTENER",
         )
+    if role in {"ingress", "network"} and method in {"plan", "publish"}:
+        records = "routes" if role == "ingress" else "rules"
+        _require(
+            inputs["generation_digest" if role == "ingress" else "policy_digest"]
+            == digest(
+                {
+                    "format": "fishhat.routing-generation/v1",
+                    "role": role,
+                    "target": inputs["target"],
+                    records: inputs[records],
+                }
+            ),
+            "PUBLICATION_GENERATION_DIGEST",
+        )
 
 
 def check_target_response(
@@ -45,6 +59,9 @@ def check_target_response(
     response: dict[str, Any],
     attempt: dict[str, Any] | None,
 ) -> None:
+    if role in {"ingress", "network"}:
+        _check_routing_response(role, request, response, attempt)
+        return
     if role not in {"service", "software"}:
         return
     inputs, output, method = request["input"], response["output"], request["method"]
@@ -85,6 +102,67 @@ def check_target_response(
     )
     if succeeded:
         _check_target_success(role, method, inputs, records)
+
+
+def _check_routing_response(
+    role: str,
+    request: dict[str, Any],
+    response: dict[str, Any],
+    attempt: dict[str, Any] | None,
+) -> None:
+    """Correlate domain replacement evidence without claiming native CAS qualification."""
+    inputs, output, method = request["input"], response["output"], request["method"]
+    observed, receipt = output["observed"], output["publication"]
+    if observed is not None:
+        _require(observed["target"] == inputs["target"], "PUBLICATION_OBSERVATION_TARGET")
+        _require(
+            observed["generation"] is not None or response["coverage"] == "complete",
+            "PUBLICATION_ABSENCE_UNVERIFIED",
+        )
+    if method != "publish":
+        _require(receipt is None, "UNREQUESTED_PUBLICATION_RECEIPT")
+        _require(
+            method != "observe" or response["coverage"] != "complete" or observed is not None,
+            "PUBLICATION_OBSERVATION_REQUIRED",
+        )
+        return
+    if receipt is not None:
+        before, after = receipt["before"], receipt["after"]
+        _require(
+            attempt is not None
+            and receipt["attempt_id"] == attempt["attempt_id"]
+            and receipt["target"] == inputs["target"]
+            and before == inputs["expected_previous"]
+            and after["digest"]
+            == inputs["generation_digest" if role == "ingress" else "policy_digest"],
+            "PUBLICATION_RECEIPT_IDENTITY",
+        )
+        _require(
+            before is None
+            or (
+                after["native_incarnation"] == before["native_incarnation"]
+                and after["revision"] != before["revision"]
+            ),
+            "PUBLICATION_PREDECESSOR_IDENTITY",
+        )
+        _require(
+            response["effect"]["effect_certainty"] != "none",
+            "PUBLICATION_RECEIPT_WITHOUT_EFFECT",
+        )
+    effect = response["effect"]
+    succeeded = (
+        effect["task_state"] == "terminal"
+        and effect["effect_certainty"] == "known"
+        and effect["postcondition"] == "satisfied"
+    )
+    if succeeded:
+        _require(
+            response["coverage"] == "complete"
+            and receipt is not None
+            and observed is not None
+            and observed["generation"] == receipt["after"],
+            "PUBLICATION_SUCCESS_EVIDENCE",
+        )
 
 
 def _check_target_success(

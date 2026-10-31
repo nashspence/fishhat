@@ -41,5 +41,18 @@
     "required": [],
     "additionalProperties": false
   },
-  "process_protocol": "fishhat.adapter-process/v1"
+  "process_protocol": "fishhat.adapter-process/v1",
+  "role_contracts": {
+    "ingress": {
+      "request": {
+        "uri": "https://fishhat.invalid/contracts/ingress-adapter.schema.json",
+        "digest": "sha256:21feef2dc4337af009079514f3bdf8eac92ad08d86ec91e30a0257e8a12343a2"
+      },
+      "response": {
+        "uri": "https://fishhat.invalid/contracts/ingress-adapter.schema.json#/$defs/Response",
+        "digest": "sha256:d10e451cb598e4a5187c13b928c5da17f729788ae4ca1602203b7a3b3b1a1eb2"
+      }
+    }
+  },
+  "process_schema_digest": "sha256:648420595f269a4fee9b0437550233c82999d7852d166d2d5555887cb5390863"
 }

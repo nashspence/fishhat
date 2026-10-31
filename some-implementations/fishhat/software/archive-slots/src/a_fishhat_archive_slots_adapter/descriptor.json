@@ -50,5 +50,18 @@
     ],
     "additionalProperties": false
   },
-  "process_protocol": "fishhat.adapter-process/v1"
+  "process_protocol": "fishhat.adapter-process/v1",
+  "role_contracts": {
+    "software": {
+      "request": {
+        "uri": "https://fishhat.invalid/contracts/software-adapter.schema.json",
+        "digest": "sha256:0aacb1947a1dbb5cb4b6e4a60d6d99ef2a6dce81560dd29a9c6308586bb05889"
+      },
+      "response": {
+        "uri": "https://fishhat.invalid/contracts/software-adapter.schema.json#/$defs/Response",
+        "digest": "sha256:a71e6ceea012d292351a1a3f9b50d68fa76a523e18c9939d9a675a29710c8e65"
+      }
+    }
+  },
+  "process_schema_digest": "sha256:648420595f269a4fee9b0437550233c82999d7852d166d2d5555887cb5390863"
 }

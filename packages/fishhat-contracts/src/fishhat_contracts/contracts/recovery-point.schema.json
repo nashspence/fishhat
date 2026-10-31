@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fishhat.invalid/contracts/recovery-point.schema.json",
+  "$defs": {
+    "TimeInterval": {
+      "type": "object",
+      "properties": {
+        "earliest": {
+          "$ref": "common.schema.json#/$defs/Time"
+        },
+        "latest": {
+          "$ref": "common.schema.json#/$defs/Time"
+        },
+        "evidence_digest": {
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
+        }
+      },
+      "required": [
+        "earliest",
+        "latest",
+        "evidence_digest"
+      ],
+      "additionalProperties": false,
+      "description": "Inclusive UTC bounds established by independently trusted clock/native evidence, including measurement uncertainty; earliest must not exceed latest. The evidence is retained and authenticated by its receiving owner. An asserted timestamp or evidence digest alone does not authenticate time. For a Snapshot this bounds recoverable data time and is immutable; for an assessment it bounds the independently observed current time."
+    },
+    "RecoveryPointAssessment": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/recovery-point-assessment/v1"
+        },
+        "kind": {
+          "const": "RecoveryPointAssessment"
+        },
+        "checkpoint_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "snapshot_digests": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "$ref": "common.schema.json#/$defs/Id"
+          },
+          "additionalProperties": {
+            "$ref": "common.schema.json#/$defs/Digest"
+          }
+        },
+        "observed_at": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TimeInterval"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rpo_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "state": {
+          "enum": [
+            "within-objective",
+            "exceeded",
+            "unknown"
+          ]
+        },
+        "age_lower_seconds": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "age_upper_seconds": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "checkpoint_digest",
+        "snapshot_digests",
+        "observed_at",
+        "rpo_seconds",
+        "state",
+        "age_lower_seconds",
+        "age_upper_seconds"
+      ],
+      "additionalProperties": false,
+      "description": "A deterministic protection assessment over the complete independently authenticated checkpoint Snapshot set and an independently supplied current clock interval. The oldest per-dataset bounds govern, without claiming application atomicity. Lower age is rounded down, upper age up; within-objective requires upper <= rpo_seconds and exceeded requires lower > rpo_seconds. Missing data-time/clock evidence, uncertain temporal order, or bounds straddling the objective yield unknown. When age cannot be established both age fields are null. Receipt verified_at, backup verification, retry, restore and drill completion cannot refresh data age. This result is an observation/warning only, not admission authority or a new admission block; later use requires a new current-time assessment."
+    }
+  }
+}

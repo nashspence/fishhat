@@ -7,7 +7,7 @@ import copy
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from fishhat_contracts.validation import digest
 from fishhat_contracts.witness import sign
-from fishhat_contracts.workflow_lifecycle import lifecycle_destination, record_native_lifecycle
+from fishhat_contracts.workflow_lifecycle import lifecycle_destination, record_native_lifecycle_view
 
 from tests.test_contracts import uid
 from tests.test_owner_handoffs import operation
@@ -56,4 +56,4 @@ def lifecycle(value, action, **changes):
         "verified_reconciled": True,
     }
     context.update(changes)
-    return record_native_lifecycle(decision, value, **context)
+    return record_native_lifecycle_view(decision, value, **context)

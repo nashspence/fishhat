@@ -11,7 +11,7 @@ from fishhat_contracts.handoffs import ACTIONS, PHASES, schema_identity
 from fishhat_contracts.validation import canonical, digest
 from fishhat_contracts.witness import sign
 from fishhat_contracts.workflow_evidence import REQUIREMENTS, phase_subject
-from fishhat_contracts.workflows import advance_workflow, bound_plan
+from fishhat_contracts.workflows import advance_workflow_view, bound_plan
 
 from tests.operation_support import seal_operation
 from tests.test_contracts import uid
@@ -191,4 +191,4 @@ def advance_with_evidence(request, workflow, **context: Any):
         "verified_preparations",
         copy.deepcopy([w for w in request["witnesses"] if w["state"] == "workflow-prepared"]),
     )
-    return advance_workflow(request, workflow, **context)
+    return advance_workflow_view(request, workflow, **context)

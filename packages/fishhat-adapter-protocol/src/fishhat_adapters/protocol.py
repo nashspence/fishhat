@@ -13,6 +13,7 @@ from fishhat_contracts.adapter_semantics import (
     check_request,
 )
 from fishhat_contracts.bounds import Bounds, bounds
+from fishhat_contracts.handoffs import schema_document_digest, schema_identity
 from fishhat_contracts.validation import ContractError, canonical, digest, validate
 from referencing.exceptions import Unresolvable
 
@@ -57,6 +58,22 @@ def check_schema(schema: dict[str, Any]) -> None:
 @bounds(_api_bounds("check_descriptor"))
 def check_descriptor(value: dict[str, Any]) -> None:
     validate("adapter.schema.json", value)
+    require(set(value["role_contracts"]) == set(value["roles"]), "ROLE_CONTRACT_CLOSURE")
+    require(
+        value["process_schema_digest"]
+        == schema_document_digest("https://fishhat.invalid/contracts/adapter-process.schema.json"),
+        "PROCESS_CONTRACT_IDENTITY",
+    )
+    for role in value["roles"]:
+        uri = "https://fishhat.invalid/contracts/" + role + "-adapter.schema.json"
+        require(
+            value["role_contracts"][role]
+            == {
+                "request": schema_identity(uri),
+                "response": schema_identity(uri + "#/$defs/Response"),
+            },
+            "ROLE_CONTRACT_IDENTITY",
+        )
     check_schema(value["configuration_schema"])
     check_schema(value["component_schema"])
     check_schema(value["source_schema"])
@@ -380,20 +397,30 @@ class Registry:
         owner_approved: bool,
         invocation: dict[str, Any] | None = None,
         expected_runtime_binding: dict[str, Any] | None = None,
+        expected_publication_target: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Authorize a query against independently retained owner authority.
 
-        Runtime observations require the owner's exact expected runtime binding;
+        Runtime resolution and observation require the owner's exact runtime binding;
         the request's target cannot supply its own approval. Reconciliation
         likewise requires the independently retained original invocation.
+        Routing queries require a separately approved complete native target.
         """
         check_request(role, request)
         require(not ROLES[role][request["method"]]["effect"], "EFFECT_INVOCATION_REQUIRED")
-        if role == "runtime" and request["method"] in {"observe", "inventory"}:
+        if role == "runtime" and request["method"] in {"resolve", "observe", "inventory"}:
             require(
                 expected_runtime_binding is not None
                 and request["input"]["target"] == expected_runtime_binding,
-                "OBSERVATION_APPROVED_TARGET",
+                "RUNTIME_RESOLUTION_APPROVED_TARGET"
+                if request["method"] == "resolve"
+                else "OBSERVATION_APPROVED_TARGET",
+            )
+        if role in {"ingress", "network"} and request["method"] in {"plan", "observe"}:
+            require(
+                expected_publication_target is not None
+                and request["input"]["target"] == expected_publication_target,
+                "PUBLICATION_APPROVED_TARGET",
             )
         instance = self.authorize(
             instance_id,
@@ -470,6 +497,14 @@ class Registry:
         )
         if role == "repository":
             self._check_repository_mapping(request["input"]["repository"])
+        if role in {"ingress", "network"}:
+            namespaces = self._grant(instance, request["input"]["scope"], "change")["mutation"][
+                "namespaces"
+            ]
+            require(
+                request["input"]["target"]["namespace"] in namespaces,
+                "PUBLICATION_NAMESPACE_NOT_GRANTED",
+            )
         self._check_source_target_mapping(role, request)
         self._check_bootstrap_binding(role, request, instance)
         return instance

@@ -13,6 +13,7 @@ from tests.adapter_support import (
     SCOPE,
     D,
     binding,
+    contract_versions,
     fresh_observation,
     identifier,
     request,
@@ -316,6 +317,7 @@ def test_lifecycle_and_resource_envelope_can_have_distinct_owners_on_one_resourc
         id="independent-author.example-compute",
         roles=["compute"],
         implemented=["compute.set-limits", "compute.reconcile"],
+        **contract_versions(["compute"]),
     )
     artifact = "sha256:" + "c" * 64
     registry.install(

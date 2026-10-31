@@ -1290,6 +1290,24 @@
       "use_case": "plan.prepare"
     },
     {
+      "id": "owner-form:content-read",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-owner-form",
+      "tests": {
+        "failure": [],
+        "growth": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops",
+        "app-ops"
+      ],
+      "use_case": "content.get"
+    },
+    {
       "id": "owner-form:help",
       "implementation": null,
       "recovery": "required",
@@ -1758,7 +1776,7 @@
       "use_case": "observe"
     },
     {
-      "id": "owner-form:workflow-advance",
+      "id": "owner-form:workflow-journal-events",
       "implementation": null,
       "recovery": "required",
       "status": "unimplemented",
@@ -1773,10 +1791,10 @@
         "host-ops",
         "app-ops"
       ],
-      "use_case": "workflow.advance"
+      "use_case": "workflow.journal.events"
     },
     {
-      "id": "owner-form:workflow-attest",
+      "id": "owner-form:workflow-journal-events-next",
       "implementation": null,
       "recovery": "required",
       "status": "unimplemented",
@@ -1791,10 +1809,10 @@
         "host-ops",
         "app-ops"
       ],
-      "use_case": "workflow.attest"
+      "use_case": "workflow.journal.events"
     },
     {
-      "id": "owner-form:workflow-attestation-check",
+      "id": "owner-form:workflow-journal-get",
       "implementation": null,
       "recovery": "required",
       "status": "unimplemented",
@@ -1809,10 +1827,10 @@
         "host-ops",
         "app-ops"
       ],
-      "use_case": "workflow.attestation.check"
+      "use_case": "workflow.journal.get"
     },
     {
-      "id": "owner-form:workflow-attestation-show",
+      "id": "owner-form:workflow-journal-input",
       "implementation": null,
       "recovery": "required",
       "status": "unimplemented",
@@ -1827,10 +1845,10 @@
         "host-ops",
         "app-ops"
       ],
-      "use_case": "workflow.attestation.get"
+      "use_case": "workflow.journal.input"
     },
     {
-      "id": "owner-form:workflow-bind",
+      "id": "owner-form:workflow-journal-list",
       "implementation": null,
       "recovery": "required",
       "status": "unimplemented",
@@ -1845,10 +1863,10 @@
         "host-ops",
         "app-ops"
       ],
-      "use_case": "workflow.bind"
+      "use_case": "workflow.journal.list"
     },
     {
-      "id": "owner-form:workflow-lifecycle",
+      "id": "owner-form:workflow-journal-list-next",
       "implementation": null,
       "recovery": "required",
       "status": "unimplemented",
@@ -1863,7 +1881,25 @@
         "host-ops",
         "app-ops"
       ],
-      "use_case": "workflow.lifecycle"
+      "use_case": "workflow.journal.list"
+    },
+    {
+      "id": "owner-form:workflow-journal-submit",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-owner-form",
+      "tests": {
+        "failure": [],
+        "growth": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops",
+        "app-ops"
+      ],
+      "use_case": "workflow.journal.submit"
     },
     {
       "id": "owner-form:workflow-list-active",
@@ -2010,78 +2046,6 @@
       "use_case": "workflow.list"
     },
     {
-      "id": "owner-form:workflow-native-attest",
-      "implementation": null,
-      "recovery": "required",
-      "status": "unimplemented",
-      "surface": "declared-owner-form",
-      "tests": {
-        "failure": [],
-        "growth": [],
-        "recovery": [],
-        "success": []
-      },
-      "tools": [
-        "host-ops",
-        "app-ops"
-      ],
-      "use_case": "workflow.native-attest"
-    },
-    {
-      "id": "owner-form:workflow-native-attestation-check",
-      "implementation": null,
-      "recovery": "required",
-      "status": "unimplemented",
-      "surface": "declared-owner-form",
-      "tests": {
-        "failure": [],
-        "growth": [],
-        "recovery": [],
-        "success": []
-      },
-      "tools": [
-        "host-ops",
-        "app-ops"
-      ],
-      "use_case": "workflow.native-attestation.check"
-    },
-    {
-      "id": "owner-form:workflow-prepare",
-      "implementation": null,
-      "recovery": "required",
-      "status": "unimplemented",
-      "surface": "declared-owner-form",
-      "tests": {
-        "failure": [],
-        "growth": [],
-        "recovery": [],
-        "success": []
-      },
-      "tools": [
-        "host-ops",
-        "app-ops"
-      ],
-      "use_case": "workflow.prepare"
-    },
-    {
-      "id": "owner-form:workflow-recover",
-      "implementation": null,
-      "recovery": "required",
-      "status": "unimplemented",
-      "surface": "declared-owner-form",
-      "tests": {
-        "failure": [],
-        "growth": [],
-        "recovery": [],
-        "success": []
-      },
-      "tools": [
-        "host-ops",
-        "app-ops"
-      ],
-      "use_case": "workflow.recover"
-    },
-    {
       "id": "owner-form:workflow-show",
       "implementation": null,
       "recovery": "required",
@@ -2098,42 +2062,6 @@
         "app-ops"
       ],
       "use_case": "workflow.get"
-    },
-    {
-      "id": "owner-form:workflow-transfer",
-      "implementation": null,
-      "recovery": "required",
-      "status": "unimplemented",
-      "surface": "declared-owner-form",
-      "tests": {
-        "failure": [],
-        "growth": [],
-        "recovery": [],
-        "success": []
-      },
-      "tools": [
-        "host-ops",
-        "app-ops"
-      ],
-      "use_case": "workflow.transfer"
-    },
-    {
-      "id": "owner-form:workflow-transfer-show",
-      "implementation": null,
-      "recovery": "required",
-      "status": "unimplemented",
-      "surface": "declared-owner-form",
-      "tests": {
-        "failure": [],
-        "growth": [],
-        "recovery": [],
-        "success": []
-      },
-      "tools": [
-        "host-ops",
-        "app-ops"
-      ],
-      "use_case": "workflow.transfer.get"
     },
     {
       "id": "rpc:check",
@@ -2544,91 +2472,6 @@
       ]
     },
     {
-      "id": "rpc:workflow.advance",
-      "implementation": null,
-      "recovery": "required",
-      "status": "unimplemented",
-      "surface": "declared-rpc",
-      "tests": {
-        "failure": [],
-        "growth": [],
-        "recovery": [],
-        "success": []
-      },
-      "tools": [
-        "host-ops",
-        "app-ops"
-      ]
-    },
-    {
-      "id": "rpc:workflow.attest",
-      "implementation": null,
-      "recovery": "required",
-      "status": "unimplemented",
-      "surface": "declared-rpc",
-      "tests": {
-        "failure": [],
-        "growth": [],
-        "recovery": [],
-        "success": []
-      },
-      "tools": [
-        "host-ops",
-        "app-ops"
-      ]
-    },
-    {
-      "id": "rpc:workflow.attestation.check",
-      "implementation": null,
-      "recovery": "required",
-      "status": "unimplemented",
-      "surface": "declared-rpc",
-      "tests": {
-        "failure": [],
-        "growth": [],
-        "recovery": [],
-        "success": []
-      },
-      "tools": [
-        "host-ops",
-        "app-ops"
-      ]
-    },
-    {
-      "id": "rpc:workflow.attestation.get",
-      "implementation": null,
-      "recovery": "required",
-      "status": "unimplemented",
-      "surface": "declared-rpc",
-      "tests": {
-        "failure": [],
-        "growth": [],
-        "recovery": [],
-        "success": []
-      },
-      "tools": [
-        "host-ops",
-        "app-ops"
-      ]
-    },
-    {
-      "id": "rpc:workflow.bind",
-      "implementation": null,
-      "recovery": "required",
-      "status": "unimplemented",
-      "surface": "declared-rpc",
-      "tests": {
-        "failure": [],
-        "growth": [],
-        "recovery": [],
-        "success": []
-      },
-      "tools": [
-        "host-ops",
-        "app-ops"
-      ]
-    },
-    {
       "id": "rpc:workflow.get",
       "implementation": null,
       "recovery": "required",
@@ -2646,7 +2489,75 @@
       ]
     },
     {
-      "id": "rpc:workflow.lifecycle",
+      "id": "rpc:workflow.journal.events",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-rpc",
+      "tests": {
+        "failure": [],
+        "growth": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops",
+        "app-ops"
+      ]
+    },
+    {
+      "id": "rpc:workflow.journal.get",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-rpc",
+      "tests": {
+        "failure": [],
+        "growth": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops",
+        "app-ops"
+      ]
+    },
+    {
+      "id": "rpc:workflow.journal.input",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-rpc",
+      "tests": {
+        "failure": [],
+        "growth": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops",
+        "app-ops"
+      ]
+    },
+    {
+      "id": "rpc:workflow.journal.list",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-rpc",
+      "tests": {
+        "failure": [],
+        "growth": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops",
+        "app-ops"
+      ]
+    },
+    {
+      "id": "rpc:workflow.journal.submit",
       "implementation": null,
       "recovery": "required",
       "status": "unimplemented",
@@ -2678,108 +2589,6 @@
         "host-ops",
         "app-ops"
       ]
-    },
-    {
-      "id": "rpc:workflow.native-attest",
-      "implementation": null,
-      "recovery": "required",
-      "status": "unimplemented",
-      "surface": "declared-rpc",
-      "tests": {
-        "failure": [],
-        "growth": [],
-        "recovery": [],
-        "success": []
-      },
-      "tools": [
-        "host-ops",
-        "app-ops"
-      ]
-    },
-    {
-      "id": "rpc:workflow.native-attestation.check",
-      "implementation": null,
-      "recovery": "required",
-      "status": "unimplemented",
-      "surface": "declared-rpc",
-      "tests": {
-        "failure": [],
-        "growth": [],
-        "recovery": [],
-        "success": []
-      },
-      "tools": [
-        "host-ops",
-        "app-ops"
-      ]
-    },
-    {
-      "id": "rpc:workflow.prepare",
-      "implementation": null,
-      "recovery": "required",
-      "status": "unimplemented",
-      "surface": "declared-rpc",
-      "tests": {
-        "failure": [],
-        "growth": [],
-        "recovery": [],
-        "success": []
-      },
-      "tools": [
-        "host-ops",
-        "app-ops"
-      ]
-    },
-    {
-      "id": "rpc:workflow.recover",
-      "implementation": null,
-      "recovery": "required",
-      "status": "unimplemented",
-      "surface": "declared-rpc",
-      "tests": {
-        "failure": [],
-        "growth": [],
-        "recovery": [],
-        "success": []
-      },
-      "tools": [
-        "host-ops",
-        "app-ops"
-      ]
-    },
-    {
-      "id": "rpc:workflow.transfer",
-      "implementation": null,
-      "recovery": "required",
-      "status": "unimplemented",
-      "surface": "declared-rpc",
-      "tests": {
-        "failure": [],
-        "growth": [],
-        "recovery": [],
-        "success": []
-      },
-      "tools": [
-        "host-ops",
-        "app-ops"
-      ]
-    },
-    {
-      "id": "rpc:workflow.transfer.get",
-      "implementation": null,
-      "recovery": "required",
-      "status": "unimplemented",
-      "surface": "declared-rpc",
-      "tests": {
-        "failure": [],
-        "growth": [],
-        "recovery": [],
-        "success": []
-      },
-      "tools": [
-        "host-ops",
-        "app-ops"
-      ]
     }
   ],
   "production_qualified": false,
@@ -2791,12 +2600,12 @@
     "fishhat/domain-ops/src/fishhat_domain/cli.py": "c8e1242a73f5a670e836a35cbb92ffffab44496aff92d198ea80ab14e3279a57",
     "fishhat/host-ops/pyproject.toml": "3cc402bda8fd5e83e36d0bd5a299d0e6904535c69c992754e1aa169f37f88bd6",
     "fishhat/host-ops/src/fishhat_host/cli.py": "d8457ca822e6d01be0b1301fb439ef9f5ed74b6224aca2d85feb189dadeb611c",
-    "packages/fishhat-contracts/src/fishhat_contracts/contracts/actions.json": "76871d05070a3c9a2d1eb01b328646881a7579b06559505e191ea960f70afeed",
+    "packages/fishhat-contracts/src/fishhat_contracts/contracts/actions.json": "d2139b4286ed2f531e4a71a8a1ab38293e2de00197a9560ee37d9c43509cb1bc",
     "packages/fishhat-contracts/src/fishhat_contracts/contracts/client-commands.json": "2ac27c10f8320b37bcdd842ca3f94777a68d7c771986b3dfbc2d01fa67648c74",
-    "packages/fishhat-contracts/src/fishhat_contracts/contracts/owner-cli.json": "9d24cc6edb0782c1bd267163bd118bea853f46ec466367cc58e813052c0d73f8",
-    "packages/fishhat-contracts/src/fishhat_contracts/contracts/ssh-methods.json": "4866e02465337b0af02413484a00def2137887f3580be007140254751ba823fb",
+    "packages/fishhat-contracts/src/fishhat_contracts/contracts/owner-cli.json": "57dab227caf89cef71e0293f04367dc47cf077edfbd624e64453dd6d7b0a0f7a",
+    "packages/fishhat-contracts/src/fishhat_contracts/contracts/ssh-methods.json": "1642d47f2116563b47dcce1a646721f16dbea72068fbd37d84da8dc817f07b21",
     "policy/components.toml": "d83506dc63602aec3932e1ac35244efca0db494a38a5d4cd9ec94c68476b235c",
-    "policy/interfaces.json": "1bfad9eabcd7b0331efe0162179a8d5ea9d1d54d26b8fa54f2c824c9a9ee978d",
+    "policy/interfaces.json": "897e9ea03ce78f3c25cf1a743c1cb1d0f124a13131c770785739cc22420ad329",
     "policy/operation-coverage.toml": "a4f3f76cdbb755ea03ba39eb36ccc5ebcd682f6aabaacaa5fb88f849d42c54c4",
     "release.toml": "87a48bd19f97e977b2be6d6399b1d60a911dcf66ed9b81b59386d8fb7a624996",
     "some-implementations/fishhat/backup/restic/pyproject.toml": "665f88e34c00d431e829678503ae3bb7075294d0db3f303c318f87dbdab651e8",
@@ -2834,8 +2643,8 @@
     "some-implementations/fishhat/software/homebrew/pyproject.toml": "b0f2e3dbe95c73a2dcf6864a1b39a808388282a2579bd0cfbf4e13cc1ac31a95",
     "some-implementations/fishhat/storage/ext4-filesystem/pyproject.toml": "c44f077b5697e948c3a6c2f7bcd4d2061d60521f45ad5b3596c67cbd0d9c1e3f",
     "some-implementations/fishhat/storage/xfs-project/pyproject.toml": "73e00e3691845add0fc45f4d7286bb87bff35a62083f3d310b63694b61da03af",
-    "tests/test_component_policy.py": "c0dc4caac33970b91fd691000cef1e15ecf971c46704fa16f40b29023649856d",
+    "tests/test_component_policy.py": "a3122f420362232c096052a4d53be0052657b46b38e69f87696946a4a54a6cbe",
     "tests/test_linear_growth.py": "238c554ee57c932a2b14c605a17d40bc17e40b979e3b4936cc5ae49f60b2885d",
-    "tests/test_operation_coverage.py": "ba649d41ae5ff5a6396211ad267363bb048ea98425c3caa2e84e9381022f4203"
+    "tests/test_operation_coverage.py": "a49fc33a15a2b35e46e196ae548d8d4f563ae61be9725ca837921f20416d5feb"
   }
 }

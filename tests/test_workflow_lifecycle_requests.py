@@ -15,7 +15,7 @@ from fishhat_contracts.validation import MAX_BYTES, ContractError, canonical, di
 from fishhat_contracts.witness import sign
 from fishhat_contracts.workflow_lifecycle import (
     LifecycleRefusal,
-    request_workflow_lifecycle,
+    request_workflow_lifecycle_view,
     validate_lifecycle_result,
 )
 from fishhat_owner.commands import parse_command
@@ -47,7 +47,7 @@ CHECK_OVERRIDES = {
     "test_accepted_lifecycle_request_replay_preserves_original_result_and_attribution": {
         "purpose": "implementation",
         "authority": [
-            "packages/fishhat-contracts/src/fishhat_contracts/workflow_lifecycle.py#request_workflow_lifecycle",
+            "packages/fishhat-contracts/src/fishhat_contracts/workflow_lifecycle.py#request_workflow_lifecycle_view",
             "packages/fishhat-contracts/src/fishhat_contracts/contracts/workflow.schema.json#/$defs/LifecycleRequest",
             "release.toml#/engineering",
         ],
@@ -59,7 +59,7 @@ CHECK_OVERRIDES = {
     "test_lifecycle_request_linear_complete_history_work": {
         "purpose": "implementation",
         "authority": [
-            "packages/fishhat-contracts/src/fishhat_contracts/workflow_lifecycle.py#request_workflow_lifecycle",
+            "packages/fishhat-contracts/src/fishhat_contracts/workflow_lifecycle.py#request_workflow_lifecycle_view",
             "release.toml#/engineering",
         ],
         "scope": "complete lifecycle request processing and replay over increasing retained histories",
@@ -70,7 +70,7 @@ CHECK_OVERRIDES = {
     "test_lifecycle_request_linear_child_and_binding_work": {
         "purpose": "implementation",
         "authority": [
-            "packages/fishhat-contracts/src/fishhat_contracts/workflow_lifecycle.py#request_workflow_lifecycle",
+            "packages/fishhat-contracts/src/fishhat_contracts/workflow_lifecycle.py#request_workflow_lifecycle_view",
             "packages/fishhat-contracts/src/fishhat_contracts/workflow_bindings.py#validate_workflow_bindings",
             "release.toml#/engineering",
         ],
@@ -117,7 +117,7 @@ def receive(value, proposed, **changes):
     context.update(changes)
     if "verified_decision" not in context:
         context["verified_decision"] = requested_decision(value, proposed, context["principal"])
-    return request_workflow_lifecycle(proposed, value, **context)
+    return request_workflow_lifecycle_view(proposed, value, **context)
 
 
 @pytest.mark.parametrize("action", ["pause", "resume", "require-recovery", "cancel"])
@@ -329,25 +329,26 @@ def test_typed_result_rejects_relabelled_request_attribution_or_outcome(change):
         validate_lifecycle_result(changed)
 
 
-def test_lifecycle_request_wire_and_direct_owner_parity():
+def test_lifecycle_audit_inputs_are_not_live_journal_commands():
     value = workflow()
     proposed = query(value, "pause")
     _, accepted = receive(value, proposed)
     envelope = request("workflow.lifecycle", proposed)
-    validate("ssh-request.schema.json", envelope)
+    with pytest.raises(ContractError):
+        validate("ssh-request.schema.json", envelope)
     assert read_frame(io.BytesIO(frame(envelope))) == envelope
     reply = wire("workflow.lifecycle", accepted)
-    validate("ssh-response.schema.json", reply)
+    with pytest.raises(ContractError):
+        validate("ssh-response.schema.json", reply)
     assert read_frame(io.BytesIO(frame(reply))) == reply
-    assert (
-        parse_command("host-ops workflow lifecycle --request-stdin --json", "host-ops")["use_case"]
-        == "workflow.lifecycle"
-    )
+    with pytest.raises(ContractError):
+        parse_command("host-ops workflow lifecycle --request-stdin --json", "host-ops")
     with pytest.raises(LifecycleRefusal) as caught:
         receive(value, proposed, request_authorized=False)
     refused = {key: item for key, item in reply.items() if key != "result"}
     refused.update(ok=False, problem=caught.value.problem)
-    validate("ssh-response.schema.json", refused)
+    with pytest.raises(ContractError):
+        validate("ssh-response.schema.json", refused)
 
 
 def test_large_lifecycle_evidence_is_read_completely_from_retained_workflow():
@@ -363,7 +364,7 @@ def test_large_lifecycle_evidence_is_read_completely_from_retained_workflow():
         frame(wire("workflow.lifecycle", accepted))
     snapshot = RecordSnapshot(retained, uid("large-lifecycle-result"))
     reference = snapshot.reference
-    response = wire("workflow.lifecycle", reference)
+    response = wire("workflow.get", reference)
     validate("ssh-response.schema.json", response)
     assert read_frame(io.BytesIO(frame(response))) == response
     parts = []

@@ -31,15 +31,15 @@ from fishhat_contracts.witness import sign
 from fishhat_contracts.workflow_acknowledgments import workflow_mutation_acknowledgment
 from fishhat_contracts.workflow_attestations import (
     AttestationRefusal,
-    PhaseAttestationJournal,
+    PhaseAttestationView,
     assemble_phase_evidence,
     validate_attestation,
 )
 from fishhat_contracts.workflow_evidence import REQUIREMENTS
 from fishhat_contracts.workflows import (
-    advance_workflow,
-    decode_workflow_input,
-    prepare_workflow,
+    advance_workflow_view,
+    decode_workflow_audit_input,
+    prepare_workflow_view,
     validate_advance_request,
     validate_workflow_input_custody,
 )
@@ -66,7 +66,7 @@ CHECK_PURPOSE = {
     ],
     "scope": "owner-issued complete phase proofs, current checks, exact replay and bounded wire delivery",
     "relationship": "candidate",
-    "reason": "Two independently keyed synthetic owners answer framed public requests; the driver only sees public keys and immutable proof bytes. Wrong authority, stale state, lost protection, expiry, substitution and interrupted delivery challenge the contract without claiming native qualification.",
+    "reason": "Independently keyed synthetic owners construct complete shared audit views while the live surface rejects distributed full-capsule mutations. Authority, stale state, expiry, substitution and interrupted inspection challenge the audit relationships without claiming live protocol or native qualification.",
     "claims": [],
 }
 
@@ -82,10 +82,10 @@ CHECK_OVERRIDES = {
                 "packages/fishhat-contracts/src/fishhat_contracts/workflow_attestations.py#"
                 + symbol
                 for symbol in (
-                    "PhaseAttestationJournal.__init__",
-                    "PhaseAttestationJournal.issue",
-                    "PhaseAttestationJournal.get",
-                    "PhaseAttestationJournal.check",
+                    "PhaseAttestationView.__init__",
+                    "PhaseAttestationView.issue",
+                    "PhaseAttestationView.get",
+                    "PhaseAttestationView.check",
                     "assemble_phase_evidence",
                 )
             ],
@@ -101,7 +101,7 @@ CHECK_OVERRIDES = {
         (
             "test_two_owner_public_attestation_path_and_lost_reply_replay",
             "complete issuer-local proofs, immutable replay and independently verified public advancement",
-            "The driver obtains every signature through owner RPCs, reads complete records and resumes after a lost reply; native observations and authentication are explicit fake-owner context.",
+            "The complete shared audit-image construction authenticates every supplied proof, preserves exact original outcomes and rejects these audit mutations at the live RPC boundary; native observations and authentication are explicit synthetic context.",
         ),
         (
             "test_attestation_complete_issuance_assembly_restore_and_replay_are_linear",
@@ -117,14 +117,24 @@ DRIVER = "ops-app-operate"
 
 
 def call(owner, method, params, *, principal=DRIVER):
+    """Exercise shared audit views; only inspection/content routes are public."""
     incoming = read_frame(io.BytesIO(frame(request(method, params))))
-    validate("ssh-request.schema.json", incoming)
+    inspection = method in {"workflow.get", "record.read"} or method.startswith("content.")
+    if inspection:
+        validate("ssh-request.schema.json", incoming)
+    else:
+        with pytest.raises(ContractError):
+            validate("ssh-request.schema.json", incoming)
     try:
         reply = wire(method, owner.dispatch(method, incoming["params"], principal))
     except AttestationRefusal as exc:
         reply = {**wire(method, None), "ok": False, "problem": exc.problem}
         del reply["result"]
-    validate("ssh-response.schema.json", reply)
+    if inspection:
+        validate("ssh-response.schema.json", reply)
+    else:
+        with pytest.raises(ContractError):
+            validate("ssh-response.schema.json", reply)
     reply = read_frame(io.BytesIO(frame(reply)))
     if not reply["ok"]:
         raise ContractError(reply["problem"]["code"] + ": " + reply["problem"]["summary"])
@@ -204,14 +214,12 @@ class FakeNativeOwner:
         self.retained_readers = None
         self.__key = Ed25519PrivateKey.from_private_bytes(bytes([seed]) * 32)
         self.public_key = self.__key.public_key()
-        self.__journal = PhaseAttestationJournal(
-            identity, key_id="test-owner", private_key=self.__key
-        )
+        self.__journal = PhaseAttestationView(identity, key_id="test-owner", private_key=self.__key)
         unsigned = {
             k: v for k, v in preparation_witness(proposal, identity).items() if k != "signature"
         }
         unsigned["key_id"] = "test-owner"
-        self.__workflow = prepare_workflow(
+        self.__workflow = prepare_workflow_view(
             {"owner": identity, "proposal": proposal},
             expected_owner=identity,
             principal=DRIVER,
@@ -289,7 +297,7 @@ class FakeNativeOwner:
                     **self.read_context(DRIVER),
                 )
                 retained.append((reference, canonical(read_record(self, reference))))
-        self.__journal = PhaseAttestationJournal(
+        self.__journal = PhaseAttestationView(
             self.identity,
             key_id="test-owner",
             private_key=self.__key,
@@ -325,7 +333,7 @@ class FakeNativeOwner:
         evidence = assemble_phase_evidence(
             [record], query["transition"], workflow, public_keys=trust([self]), now=NOW
         )
-        self.__journal = PhaseAttestationJournal(
+        self.__journal = PhaseAttestationView(
             self.identity,
             key_id="test-owner",
             private_key=self.__key,
@@ -456,7 +464,7 @@ class FakeNativeOwner:
                 self.workflow_id,
             )
         stage_id = reference["input"]["binding"]["staging_id"]
-        proposed = decode_workflow_input(
+        proposed = decode_workflow_audit_input(
             "workflow.advance",
             reference,
             bytes(self.__bytes[stage_id]),
@@ -503,7 +511,7 @@ class FakeNativeOwner:
                 "now": self.now,
                 "verified_preparations": proposed["witnesses"],
             }
-        self.__workflow = advance_workflow(proposed, self.__workflow, **context)
+        self.__workflow = advance_workflow_view(proposed, self.__workflow, **context)
         return workflow_mutation_acknowledgment(
             "workflow.advance",
             next(
@@ -661,7 +669,9 @@ def test_two_owner_public_attestation_path_and_lost_reply_replay(monkeypatch):
         (second_references[0], canonical(second_values[0])),
     ]
     with monkeypatch.context() as changed_schema:
-        changed_schema.setitem(SCHEMAS["common.schema.json"], "description", "updated closure")
+        changed_schema.setitem(
+            SCHEMAS["common.schema.json"]["$defs"]["Owner"], "description", "updated owner closure"
+        )
         with pytest.raises(ContractError, match="schema substitution"):
             receiver.restart(retained=retained)
         readers = {
@@ -792,7 +802,7 @@ def test_assembly_refuses_expired_substituted_or_incomplete_proofs(change):
             "witnesses": preparations,
         }
         with pytest.raises(ContractError, match="proof is not currently valid"):
-            advance_workflow(
+            advance_workflow_view(
                 proposed,
                 value,
                 verified_phase_evidence=cached,
@@ -850,17 +860,13 @@ def test_complete_large_attestation_uses_record_chunks_and_current_check_is_fini
     assert len(canonical(checked)) < MAX_BYTES
     assert checked["reference"] == reference
     assert read_record(owner, reference) == values[0]
-    for verb, method in [
+    for verb, _method in [
         ("attest", "workflow.attest"),
         ("attestation show", "workflow.attestation.get"),
         ("attestation check", "workflow.attestation.check"),
     ]:
-        assert (
-            parse_command("host-ops workflow " + verb + " --request-stdin --json", "host-ops")[
-                "use_case"
-            ]
-            == method
-        )
+        with pytest.raises(ContractError):
+            parse_command("host-ops workflow " + verb + " --request-stdin --json", "host-ops")
 
 
 def test_driver_cannot_submit_native_context_or_inline_proofs_as_attestation_input(monkeypatch):

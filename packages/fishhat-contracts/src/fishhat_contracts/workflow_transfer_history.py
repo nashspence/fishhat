@@ -1,4 +1,12 @@
-"""Discoverable exact driver-transfer custody, independent of the current transfer.
+"""Complete shared workflow inspection models; no live owner admission.
+
+These full-value helpers construct and validate an explicitly requested audit
+projection from independently retained facts. They are not a journal writer or
+a participant protocol: live admission uses workflow_journal and its partitioned
+owner journals. Materialize complete views only for explicit inspection, never
+after each accepted child or at every participating owner.
+
+Discoverable exact driver-transfer custody, independent of the current transfer.
 
 These pure models do not create a store or authenticate a native owner. Native
 lookups use protected transfer identity indexes and current workflow read scope;

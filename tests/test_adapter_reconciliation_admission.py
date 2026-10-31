@@ -8,7 +8,7 @@ import pytest
 from fishhat_adapters import ROLES, Registry, check_descriptor, instance_reference
 from fishhat_contracts.validation import ContractError, digest
 
-from tests.adapter_support import SCOPE, D, request, runtime_registry
+from tests.adapter_support import SCOPE, D, contract_versions, request, runtime_registry
 from tests.test_adapter_handoffs import invocation_for
 from tests.test_adapter_invocations import recovered
 
@@ -33,7 +33,7 @@ CHECK_PURPOSE = {
 )
 def test_every_implemented_mutator_requires_its_role_reconciliation_method(role, method):
     _, descriptor, _ = runtime_registry()
-    descriptor.update(roles=[role], implemented=[role + "." + method])
+    descriptor.update(roles=[role], implemented=[role + "." + method], **contract_versions([role]))
     with pytest.raises(ContractError, match="MISSING_RECONCILIATION_METHOD"):
         check_descriptor(descriptor)
     descriptor["implemented"].append(role + ".reconcile")

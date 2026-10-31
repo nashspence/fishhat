@@ -1,4 +1,12 @@
-"""Later reviewed workflow Plans and retained output lineage; no native admission.
+"""Complete shared workflow inspection models; no live owner admission.
+
+These full-value helpers construct and validate an explicitly requested audit
+projection from independently retained facts. They are not a journal writer or
+a participant protocol: live admission uses workflow_journal and its partitioned
+owner journals. Materialize complete views only for explicit inspection, never
+after each accepted child or at every participating owner.
+
+Later reviewed workflow Plans and retained output lineage; no native admission.
 
 All verified arguments are independently obtained protected receiver context. The
 reference model checks exact joins, not signatures, native derivation, current
@@ -457,7 +465,7 @@ def _verify_binding_custody(
     )
 
 
-def bind_workflow(
+def bind_workflow_view(
     request: dict[str, Any],
     workflow: dict[str, Any],
     *,

@@ -43,12 +43,170 @@ def retained(body, value, *, extra=None):
     record, _, installed = adapter_result()
     selected = {URI: document(URI, body), **(extra or {})}
     installed.update(selected)
-    # Construct a correctly pinned but not pre-admitted fixture. The receiving
-    # boundary itself must reject unsafe schemas, even if earlier checks did not.
-    identity = {"uri": URI, "digest": digest({"root": URI, "documents": selected})}
+    # Invalid installation fixtures still reach the receiving boundary. A valid
+    # identity does not let that boundary skip its independent schema admission.
+    try:
+        identity = handoffs.schema_identity(URI, installed)
+    except ContractError:
+        identity = {"uri": URI, "digest": digest(selected)}
     record["subject"]["arguments"]["result_schema"] = identity
     attach_result(record, value, record["owner"])
     return record, canonical(value), installed
+
+
+def test_rooted_schema_identity_has_an_explicit_graph_preimage():
+    uri = URI + "#/$defs/Result"
+    literal = {"$ref": "literal://not-a-reference", "$defs": {"unused": False}}
+    selected = {
+        URI: document(
+            URI,
+            {
+                "$defs": {
+                    "Result": {
+                        "type": "object",
+                        "properties": {"a/b~%": {"$ref": LEAF + "#/$defs/Value"}},
+                        "required": ["a/b~%"],
+                        "additionalProperties": False,
+                        "description": "The accepted resource retains custody.",
+                    },
+                    "Unused": {"type": "integer"},
+                }
+            },
+        ),
+        LEAF: document(LEAF, {"$defs": {"Value": {"const": literal}, "Other": True}}),
+    }
+    before = canonical(selected)
+    expected = {
+        "profile": "fishhat.schema-closure/v1",
+        "root": uri,
+        "documents": {
+            URI: {"$schema": DIALECT, "$id": URI},
+            LEAF: {"$schema": DIALECT, "$id": LEAF},
+        },
+        "nodes": {
+            URI: {
+                "/$defs/Result": {
+                    "type": "object",
+                    "properties": {"a/b~%": "/$defs/Result/properties/a~1b~0%"},
+                    "required": ["a/b~%"],
+                    "additionalProperties": "/$defs/Result/additionalProperties",
+                    "description": "The accepted resource retains custody.",
+                },
+                "/$defs/Result/properties/a~1b~0%": {"$ref": LEAF + "#/$defs/Value"},
+                "/$defs/Result/additionalProperties": False,
+            },
+            LEAF: {"/$defs/Value": {"const": literal}},
+        },
+    }
+    assert handoffs.schema_identity(uri, selected) == {"uri": uri, "digest": digest(expected)}
+    assert canonical(selected) == before
+
+
+def test_schema_identity_excludes_unused_definitions_but_pins_reachable_meaning():
+    uri = URI + "#/$defs/Result"
+    selected = {
+        URI: document(
+            URI,
+            {"$defs": {"Result": {"$ref": LEAF + "#/$defs/Value"}, "Unused": True}},
+        ),
+        LEAF: document(
+            LEAF,
+            {"$defs": {"Value": {"type": "integer", "description": "Exact count."}}},
+        ),
+    }
+    original = handoffs.schema_identity(uri, selected)
+    unrelated = copy.deepcopy(selected)
+    unrelated[URI]["$defs"]["Unused"] = {"type": "string", "description": "Unrelated."}
+    unrelated[LEAF]["$defs"]["Other"] = {"type": "string"}
+    assert handoffs.schema_identity(uri, unrelated) == original
+    for key, value in [
+        ("type", "number"),
+        ("description", "Count after independent verification."),
+    ]:
+        changed = copy.deepcopy(selected)
+        changed[LEAF]["$defs"]["Value"][key] = value
+        assert handoffs.schema_identity(uri, changed) != original
+    for identity in selected:
+        changed = copy.deepcopy(selected)
+        changed[identity]["description"] = "Every definition requires independent custody."
+        assert handoffs.schema_identity(uri, changed) != original
+
+
+def test_unrelated_core_discovery_definition_does_not_reidentify_retained_workflows(monkeypatch):
+    uri = "https://fishhat.invalid/contracts/records.schema.json#/$defs/Workflow"
+    original = handoffs.schema_identity(uri)
+    changed = copy.deepcopy(handoffs.SCHEMAS["records.schema.json"])
+    changed["$defs"]["Info"]["description"] = "Discovery presentation clarification."
+    monkeypatch.setitem(handoffs.SCHEMAS, "records.schema.json", changed)
+    assert handoffs.schema_identity(uri) == original
+
+
+def test_core_normative_dependencies_are_pinned_and_resolved_offline(monkeypatch):
+    schema = document(
+        URI,
+        {
+            "type": "integer",
+            "x-fishhat-contract-dependencies": [LEAF + "#/$defs/Obligations"],
+        },
+    )
+    obligations = document(
+        LEAF,
+        {"$defs": {"Obligations": {"const": {"custody": "required"}}, "Unused": True}},
+    )
+    monkeypatch.setitem(handoffs.SCHEMAS, "identity-root.schema.json", schema)
+    monkeypatch.setitem(handoffs.SCHEMAS, "identity-obligations.schema.json", obligations)
+    original = handoffs.schema_identity(URI)
+    obligations["$defs"]["Unused"] = {"type": "string"}
+    assert handoffs.schema_identity(URI) == original
+    obligations["$defs"]["Obligations"]["const"]["custody"] = "independently verified"
+    assert handoffs.schema_identity(URI) != original
+    for reference, error in [
+        (LEAF + "#/$defs/Obligations/const", "not a schema position"),
+        (LEAF + "#/$defs/a~2b", "invalid result schema pointer escape"),
+        ("https://uninstalled.invalid/obligations.schema.json", "not installed"),
+    ]:
+        schema["x-fishhat-contract-dependencies"] = [reference]
+        with pytest.raises(ContractError, match=error):
+            handoffs.schema_identity(URI)
+    # These installed bodies are decoded or interpreted outside a structural
+    # $ref: handles, digest preimages and inlined witnesses still pin their rules.
+    base = "https://fishhat.invalid/contracts/"
+    dependencies = [
+        ("ssh-request.schema.json", "plan-input.schema.json", "PrepareRequest"),
+        ("ssh-request.schema.json", "workflow.schema.json", "PrepareRequest"),
+        ("ssh-request.schema.json", "workflow-recovery.schema.json", "RecoveryRequest"),
+        ("ssh-request.schema.json", "observation.schema.json", "SelectionInput"),
+        ("ssh-request.schema.json", "lifecycle-evidence.schema.json", "PrepareRequest"),
+        ("records.schema.json#/$defs/Workflow", "workflow.schema.json", "PreparationWitness"),
+        ("records.schema.json#/$defs/Plan", "records.schema.json", "Witness"),
+        (
+            "lifecycle-evidence.schema.json#/$defs/EvidenceReference",
+            "lifecycle-evidence.schema.json",
+            "Evidence",
+        ),
+        ("ingress-adapter.schema.json", "ingress-adapter.schema.json", "GenerationDocument"),
+        ("network-adapter.schema.json", "network-adapter.schema.json", "GenerationDocument"),
+        ("runtime-adapter.schema.json", "adapter.schema.json", "Instance"),
+        ("runtime-adapter.schema.json", "adapter.schema.json", "EffectKnowledge"),
+    ]
+    for root, filename, definition in dependencies:
+        before = handoffs.schema_identity(base + root)
+        changed = copy.deepcopy(handoffs.SCHEMAS[filename])
+        node = changed["$defs"][definition]
+        node["description"] = node.get("description", "") + " Independently approved semantics."
+        with monkeypatch.context() as installed:
+            installed.setitem(handoffs.SCHEMAS, filename, changed)
+            assert handoffs.schema_identity(base + root) != before, (root, definition)
+
+
+def test_complete_document_digest_is_not_a_rooted_schema_identity():
+    body = {"type": "integer"}
+    record, data, installed = retained(body, 1)
+    old = {"uri": URI, "digest": digest({"root": URI, "documents": {URI: installed[URI]}})}
+    record["subject"]["arguments"]["result_schema"] = old
+    attach_result(record, 1, record["owner"])
+    with pytest.raises(ContractError, match="schema"):
+        handoffs.validate_result_payload(record, data, installed=installed)
 
 
 @pytest.mark.parametrize("location", ["pattern", "pattern-properties", "definition", "reference"])

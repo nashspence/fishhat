@@ -135,6 +135,10 @@
     },
     "request_digest": {
       "$ref": "common.schema.json#/$defs/Digest"
+    },
+    "runtime_binding_digest": {
+      "$ref": "common.schema.json#/$defs/Digest",
+      "description": "The exact accepted runtime binding from the retained request; all result evidence and request_digest bind this same execution target."
     }
   },
   "required": [
@@ -149,7 +153,8 @@
     "executor_component",
     "role",
     "procedure_digest",
-    "request_digest"
+    "request_digest",
+    "runtime_binding_digest"
   ],
   "additionalProperties": false,
   "description": "Exact result of one accepted hook invocation. request_digest covers its complete canonical request; operation, release, executor, role and procedure pins match that request. Check codes and artifact paths are unique. The mandatory check set equals the receiving owner's independently retained accepted procedure requirements; diagnostic checks cannot weaken it. Succeeded requires every mandatory check to pass and effects to be known or none; unknown effects cannot establish success. Observational roles assert effects none for success: this excludes mutation of managed datasets, configuration or external systems, while allowing artifacts in the isolated output directory. Failed, unsupported and unknown results never advance a required phase. A failed mandatory check cannot coexist with succeeded; failed diagnostic checks alone do not block success. Artifacts name canonical relative regular-file paths below the isolated output directory, with no duplicates or ancestor/descendant conflicts. The owner independently opens/confines them, verifies every exact byte and commits immutable result/artifact custody before consuming success. Missing, changed, aliased or unretained artifacts keep the operation unresolved. Replaying a retained result preserves the original observation and cannot establish fresh health, quiescence or verification for a different request."

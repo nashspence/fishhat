@@ -162,5 +162,8 @@
       "additionalProperties": false,
       "description": "Immutable traversal identity. selection_digest covers the complete canonical resolved SelectionInput, including owner, method and ordered resources. All-authorized pins the permission-filtered inventory resolved at start. Every page retains this identity and its original owner epoch. These fields grant no read permission."
     }
-  }
+  },
+  "x-fishhat-contract-dependencies": [
+    "#/$defs/SelectionInput"
+  ]
 }

@@ -21,6 +21,9 @@ from .adapter_semantics import ROLES, check_retained_result
 from .bounds import Bounds, bounds
 from .operations import validate_operation
 from .schema_profile import (
+    MAPPINGS,
+    SEQUENCES,
+    SINGLE,
     SchemaNode,
     check_assertions,
     check_document,
@@ -90,8 +93,24 @@ def _schema_documents(
                 "result schemas require static local references",
             )
             _require("$id" not in value or root, "nested result schema identity")
+            _require(
+                "x-fishhat-contract-dependencies" not in value or root,
+                "contract dependencies require a document root",
+            )
             if custom:
                 check_assertions(value)
+            if root:
+                dependencies = value.get("x-fishhat-contract-dependencies", [])
+                _require(
+                    isinstance(dependencies, list)
+                    and all(isinstance(target, str) for target in dependencies)
+                    and len(set(dependencies)) == len(dependencies),
+                    "invalid contract dependencies",
+                )
+                for dependency in dependencies:
+                    target = urljoin(base, dependency)
+                    targets.append((target, None))
+                    pending.append(urldefrag(target)[0])
             if "$ref" in value:
                 target = urljoin(base, value["$ref"])
                 targets.append((target, position))
@@ -135,10 +154,110 @@ def _schema_documents(
     return found
 
 
+def _schema_closure(
+    uri: str, documents: dict[str, dict[str, Any]], *, document: bool = False
+) -> dict[str, Any]:
+    """Flatten reachable schema positions once, preserving literal data and annotations.
+
+    Definitions declare locations, rather than evaluating their contents. Admission
+    still checks their complete installed documents before this projection is made.
+    A child schema is represented by its absolute document-local JSON Pointer;
+    referenced targets enter the same graph without recursively expanding aliases.
+    """
+    nodes: dict[str, dict[str, Any]] = {}
+    identity, fragment = urldefrag(uri)
+    complete_document = identity if document else None
+    pending = [(identity, pointer_tokens(fragment, code="invalid result schema pointer escape"))]
+
+    def pointer(path: tuple[str, ...]) -> str:
+        return "".join("/" + key.replace("~", "~0").replace("/", "~1") for key in path)
+
+    while pending:
+        identity, path = pending.pop()
+        location = pointer(path)
+        new_document = identity not in nodes
+        locations = nodes.setdefault(identity, {})
+        if new_document:
+            for dependency in documents[identity].get("x-fishhat-contract-dependencies", []):
+                base, fragment = urldefrag(urljoin(identity, dependency))
+                pending.append(
+                    (base, pointer_tokens(fragment, code="invalid result schema pointer escape"))
+                )
+        if location in locations:
+            continue
+        node: Any = documents[identity]
+        for key in path:
+            node = node[int(key)] if isinstance(node, list) else node[key]
+        if isinstance(node, bool):
+            locations[location] = node
+            continue
+        # Shallow copies avoid repeating complete nested schemas at every node.
+        declarations = identity == complete_document
+        projected = {
+            key: value
+            for key, value in node.items()
+            if declarations or key not in {"$defs", "definitions"}
+        }
+        for key in MAPPINGS:
+            if key in projected:
+                projected[key] = dict(projected[key])
+        for key in SEQUENCES:
+            if key in projected:
+                projected[key] = list(projected[key])
+        for suffix, _ in schema_children(node):
+            if not declarations and suffix[0] in {"$defs", "definitions"}:
+                continue
+            child = pointer((*path, *suffix))
+            if suffix[0] in SINGLE:
+                projected[suffix[0]] = child
+            elif suffix[0] in SEQUENCES:
+                projected[suffix[0]][int(suffix[1])] = child
+            else:
+                projected[suffix[0]][suffix[1]] = child
+            # Keep decoded paths: a literal '%' or '#' in a member name must
+            # not become URI syntax or be percent-decoded for a second time.
+            pending.append((identity, (*path, *suffix)))
+        if "$ref" in node:
+            base, fragment = urldefrag(urljoin(identity, node["$ref"]))
+            pending.append(
+                (base, pointer_tokens(fragment, code="invalid result schema pointer escape"))
+            )
+        locations[location] = projected
+    # Document annotations can define rules shared by every definition, such as
+    # canonical commitments or the native authority boundary. Selecting a
+    # fragment must not silently discard that normative context.
+    metadata = (
+        "$schema",
+        "$id",
+        "$comment",
+        "title",
+        "description",
+        "default",
+        "examples",
+        "deprecated",
+        "readOnly",
+        "writeOnly",
+        "x-fishhat-contract-dependencies",
+    )
+    envelopes = {
+        identity: {key: documents[identity][key] for key in metadata if key in documents[identity]}
+        for identity in nodes
+    }
+    profile = "fishhat.schema-document-closure/v1" if document else "fishhat.schema-closure/v1"
+    return {"profile": profile, "root": uri, "documents": envelopes, "nodes": nodes}
+
+
 def schema_identity(uri: str, installed: dict[str, dict[str, Any]] | None = None) -> dict[str, str]:
-    """Pin the complete installed document closure; URI resolution never uses a network."""
+    """Pin the rooted installed schema closure; URI resolution never uses a network."""
     documents = _schema_documents(uri, installed)
-    return {"uri": uri, "digest": digest({"root": uri, "documents": documents})}
+    return {"uri": uri, "digest": digest(_schema_closure(uri, documents))}
+
+
+def schema_document_digest(uri: str) -> str:
+    """Pin one complete core protocol document plus its rooted reference dependencies."""
+    _require(not urldefrag(uri)[1], "protocol document digest requires a document root")
+    documents = _schema_documents(uri)
+    return digest(_schema_closure(uri, documents, document=True))
 
 
 def validate_workflow(
@@ -401,6 +520,10 @@ def validate_result_payload(
         from .backup_results import validate_backup_result
 
         validate_backup_result(value, operation=operation)
+    if action == "app.drill":
+        from .drill_results import validate_drill_result
+
+        validate_drill_result(value, operation=operation)
     if action == "adapter.execute":
         selected = _adapter_result_contract(
             operation["subject"]["arguments"],
@@ -450,7 +573,13 @@ def _validate_workflow_result(
     retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
     recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
 ) -> None:
-    if result["kind"] == "Workflow":
+    if result["kind"] in {
+        "WorkflowJournalRecord",
+        "WorkflowJournalPage",
+        "WorkflowJournalInputReference",
+    }:
+        _validate_journal_result(result, retained_readers)
+    elif result["kind"] == "Workflow":
         validate_workflow(result, recovery_readers=recovery_readers)
     elif result["kind"] == "WorkflowTransferRecord":
         from .workflow_transfer_history import validate_transfer_record
@@ -495,6 +624,53 @@ def _validate_record_result(
         validate_log_page(result, expected_owner=result["owner"], resource=result["resource"])
 
 
+def _validate_content_result(result: dict[str, Any]) -> None:
+    if result["kind"] == "ContentStaging":
+        validate_staging(result)
+        return
+    from .record_delivery import CHUNK_BYTES, validate_content_chunk
+
+    validate_content_chunk(result, result["handle"], offset=result["offset"], length=CHUNK_BYTES)
+
+
+def _validate_journal_result(
+    result: dict[str, Any],
+    retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
+) -> None:
+    from .record_delivery import validate_record_reference
+
+    if result["kind"] == "WorkflowJournalRecord":
+        # An inspection value cannot enroll its key or authenticate its signature.
+        validate("workflow-journal.schema.json", result, "JournalRecord")
+        return
+    if result["kind"] == "WorkflowJournalInputReference":
+        validate("workflow-journal.schema.json", result, "AcceptedInput")
+        reference, handle = result["acceptance"], result["input"]
+        validate_record_reference(reference, retained_readers=retained_readers)
+        _require(
+            reference["owner"] == handle["owner"] == result["owner"]
+            and reference["record"]["id"] == result["command_id"]
+            and reference["record"]["resource"] == {"kind": "workflow", "id": result["workflow_id"]}
+            and handle["purpose"] == "workflow-input"
+            and handle["binding"]
+            == {
+                "kind": "workflow-journal",
+                "workflow_id": result["workflow_id"],
+                "command_id": result["command_id"],
+            },
+            "journal original input scope changed",
+        )
+        return
+    validate("workflow-journal.schema.json", result, "Page")
+    identities: set[str] = set()
+    for item in result["items"]:
+        _require(item["owner"] == result["owner"], "journal page owner changed")
+        identifier = item["record"]["id"]
+        _require(identifier not in identities, "journal page repeats a record")
+        identities.add(identifier)
+        validate_record_reference(item, retained_readers=retained_readers)
+
+
 def validate_cli_result(
     result: Any,
     *,
@@ -519,6 +695,10 @@ def validate_cli_result(
         from .backup_results import validate_backup_result
 
         validate_backup_result(result)
+    elif kind == "DrillResult":
+        from .drill_results import validate_drill_result
+
+        validate_drill_result(result)
     elif kind == "LifecycleEvidenceReference":
         from .lifecycle import validate_lifecycle_reference
 
@@ -528,6 +708,9 @@ def validate_cli_result(
         "WorkflowTransferRecord",
         "WorkflowPhaseAttestation",
         "CurrentWorkflowAttestation",
+        "WorkflowJournalRecord",
+        "WorkflowJournalPage",
+        "WorkflowJournalInputReference",
     }:
         _validate_workflow_result(
             result, retained_readers=retained_readers, recovery_readers=recovery_readers
@@ -536,8 +719,8 @@ def validate_cli_result(
         from .cancellation import validate_cancellation_result
 
         validate_cancellation_result(result)
-    elif kind == "ContentStaging":
-        validate_staging(result)
+    elif kind in ("ContentStaging", "ContentChunk"):
+        _validate_content_result(result)
     elif kind == "WorkflowAbandonment":
         from .workflow_abandonment import validate_abandonment
 

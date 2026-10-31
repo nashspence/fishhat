@@ -1,4 +1,12 @@
-"""Owner-native final settlement of admitted work, separate from driver requests.
+"""Complete shared workflow inspection models; no live owner admission.
+
+These full-value helpers construct and validate an explicitly requested audit
+projection from independently retained facts. They are not a journal writer or
+a participant protocol: live admission uses workflow_journal and its partitioned
+owner journals. Materialize complete views only for explicit inspection, never
+after each accepted child or at every participating owner.
+
+Owner-native final settlement of admitted work, separate from driver requests.
 
 This complete-input reference models exact custody joins and immutable receipts.
 Native authorization, observation, authentication and durable atomic retention
@@ -49,7 +57,7 @@ def validate_native_completion(
     )
 
 
-def record_native_completion(
+def record_native_completion_view(
     completion: dict[str, Any],
     workflow: dict[str, Any],
     *,

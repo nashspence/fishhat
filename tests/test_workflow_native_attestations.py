@@ -16,12 +16,12 @@ from fishhat_contracts.handoffs import PHASES
 from fishhat_contracts.record_delivery import RecordSnapshot
 from fishhat_contracts.validation import ContractError, canonical, digest, validate
 from fishhat_contracts.workflow_attestations import (
-    PhaseAttestationJournal,
+    PhaseAttestationView,
     assemble_native_phase_evidence,
     assemble_phase_evidence,
 )
 from fishhat_contracts.workflow_evidence import REQUIREMENTS
-from fishhat_contracts.workflow_settlement import record_native_completion
+from fishhat_contracts.workflow_settlement import record_native_completion_view
 from fishhat_owner.commands import parse_command
 
 from tests.linear_support import assert_linear, measure
@@ -52,8 +52,8 @@ CHECK_OVERRIDES = {
     "test_two_owner_native_proof_acquisition_settlement_and_replay": {
         "purpose": "implementation",
         "authority": [
-            "packages/fishhat-contracts/src/fishhat_contracts/workflow_attestations.py#PhaseAttestationJournal.issue_native",
-            "packages/fishhat-contracts/src/fishhat_contracts/workflow_attestations.py#PhaseAttestationJournal.check_native",
+            "packages/fishhat-contracts/src/fishhat_contracts/workflow_attestations.py#PhaseAttestationView.issue_native",
+            "packages/fishhat-contracts/src/fishhat_contracts/workflow_attestations.py#PhaseAttestationView.check_native",
             "packages/fishhat-contracts/src/fishhat_contracts/workflow_attestations.py#assemble_native_phase_evidence",
             "packages/fishhat-contracts/src/fishhat_contracts/contracts/workflow-evidence.schema.json",
         ],
@@ -69,8 +69,8 @@ CHECK_OVERRIDES = {
     "test_native_attestation_complete_acquisition_check_and_assembly_are_linear": {
         "purpose": "implementation",
         "authority": [
-            "packages/fishhat-contracts/src/fishhat_contracts/workflow_attestations.py#PhaseAttestationJournal.issue_native",
-            "packages/fishhat-contracts/src/fishhat_contracts/workflow_attestations.py#PhaseAttestationJournal.check_native",
+            "packages/fishhat-contracts/src/fishhat_contracts/workflow_attestations.py#PhaseAttestationView.issue_native",
+            "packages/fishhat-contracts/src/fishhat_contracts/workflow_attestations.py#PhaseAttestationView.check_native",
             "packages/fishhat-contracts/src/fishhat_contracts/workflow_attestations.py#assemble_native_phase_evidence",
             "release.toml#/engineering",
         ],
@@ -130,7 +130,7 @@ class NativeOwner:
         self.principal = "peer-" + str(seed)
         self.__key = Ed25519PrivateKey.from_private_bytes(bytes([seed]) * 32)
         self.public_key = self.__key.public_key()
-        self.__journal = PhaseAttestationJournal(
+        self.__journal = PhaseAttestationView(
             self.identity, key_id="native-peer-key", private_key=self.__key
         )
         self.__accepted = {}
@@ -272,7 +272,7 @@ class NativeOwner:
             },
             "phase_evidence": copy.deepcopy(evidence),
         }
-        self.__workflow = record_native_completion(
+        self.__workflow = record_native_completion_view(
             query,
             self.__workflow,
             expected_owner=self.identity,
@@ -296,7 +296,7 @@ class NativeOwner:
                 **self.read_context(self.principal),
             )
             retained.append((reference, canonical(read_record(self, reference))))
-        self.__journal = PhaseAttestationJournal(
+        self.__journal = PhaseAttestationView(
             self.identity, key_id="native-peer-key", private_key=self.__key, retained=retained
         )
 
@@ -471,18 +471,12 @@ def test_driver_and_native_proof_routes_and_assembly_cannot_be_substituted():
         call(owners[0], "workflow.native-attest", changed, principal=owners[0].principal)
 
 
-def test_native_routes_are_explicit_cli_forms_and_reject_intermediate_phases():
+def test_native_audit_inputs_reject_live_routes_and_intermediate_phases():
     for tool in ("app-ops", "host-ops"):
-        assert (
-            parse_command(tool + " workflow native-attest --request-stdin --json", tool)["use_case"]
-            == "workflow.native-attest"
-        )
-        assert (
-            parse_command(tool + " workflow native-attestation check --request-stdin --json", tool)[
-                "use_case"
-            ]
-            == "workflow.native-attestation.check"
-        )
+        with pytest.raises(ContractError):
+            parse_command(tool + " workflow native-attest --request-stdin --json", tool)
+        with pytest.raises(ContractError):
+            parse_command(tool + " workflow native-attestation check --request-stdin --json", tool)
     issuer, receiver = cluster()
     request = query(issuer, target(current(receiver)))
     request["transition"].update(from_phase="prepared", to_phase="draining")

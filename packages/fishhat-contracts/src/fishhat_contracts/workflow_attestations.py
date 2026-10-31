@@ -1,4 +1,12 @@
-"""Owner-private phase attestation reference journal and complete proof assembly.
+"""Complete shared workflow inspection models; no live owner admission.
+
+These full-value helpers construct and validate an explicitly requested audit
+projection from independently retained facts. They are not a journal writer or
+a participant protocol: live admission uses workflow_journal and its partitioned
+owner journals. Materialize complete views only for explicit inspection, never
+after each accepted child or at every participating owner.
+
+Owner-private phase attestation reference journal and complete proof assembly.
 
 Native owners independently authenticate callers/peers, verify live obligations
 and preserve exclusions and material before using this model. The in-memory
@@ -115,7 +123,7 @@ class AttestationRefusal(ContractError):
         super().__init__(summary)
 
 
-class PhaseAttestationJournal:
+class PhaseAttestationView:
     """Indexed immutable reference custody, supplied only with protected issuer context.
 
     A native owner serializes issuance with its workflow admission/fence state and

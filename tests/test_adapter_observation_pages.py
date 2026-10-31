@@ -8,7 +8,7 @@ import pytest
 from fishhat_adapters import check_response
 from fishhat_contracts.validation import ContractError, digest
 
-from tests.adapter_support import OWNER, observation_target
+from tests.adapter_support import OWNER, identifier, observation_target
 from tests.test_adapter_dns import generation
 from tests.test_adapter_handoffs import artifact, installed
 from tests.test_adapter_quantities import counter, limit
@@ -67,14 +67,19 @@ def page(role, method="observe"):
     if role == "runtime":
         query["input"]["barrier"] = None
         query["input"]["target"] = observation_target(executor)
+    if role in {"ingress", "network"}:
+        query["input"]["target"] = {
+            "binding": executor,
+            "namespace": {"authority": OWNER["id"], "resource": "data", "facet": "content"},
+        }
     outputs = {
         "backup": {"objects": []},
         "build": {"artifacts": []},
         "compute": {"allocation": None, "limits": [], "counters": []},
         "credential-issuer": {"leases": []},
         "dns": {"rrsets": [], "served_generation": generation(executor)},
-        "ingress": {"serving_generation": None},
-        "network": {"policy_generation": None},
+        "ingress": {},
+        "network": {},
         "report": {"receipt_handle": None},
         "repository": {"refs": []},
         "runtime": {"deployment": None, "observation": None, "objects": []},
@@ -83,6 +88,18 @@ def page(role, method="observe"):
         "software": {"packages": []},
         "storage": {"allocations": []},
     }
+    if role in {"ingress", "network"}:
+        outputs[role] = {
+            "observed": {
+                "target": copy.deepcopy(query["input"]["target"]),
+                "generation": {
+                    "native_incarnation": identifier(301),
+                    "revision": "publication:one",
+                    "digest": "sha256:" + "b" * 64,
+                },
+            },
+            "publication": None,
+        }
     reply = {
         "contract": query["contract"],
         "method": method,

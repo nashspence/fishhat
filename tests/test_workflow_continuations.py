@@ -14,9 +14,9 @@ from fishhat_contracts.publication import validate_publication_result
 from fishhat_contracts.transfers import validate_transfer_request
 from fishhat_contracts.validation import MAX_BYTES, ContractError, canonical, digest, validate
 from fishhat_contracts.witness import sign
-from fishhat_contracts.workflow_bindings import bind_workflow, validate_bind_request
+from fishhat_contracts.workflow_bindings import bind_workflow_view, validate_bind_request
 from fishhat_contracts.workflows import (
-    prepare_workflow,
+    prepare_workflow_view,
     validate_workflow_proposal,
 )
 
@@ -28,7 +28,7 @@ from tests.test_owner_handoffs import (
     operation,
     preparation_witness,
     request,
-    staged_workflow_input,
+    staged_workflow_audit_input,
     workflow,
 )
 from tests.test_plan_review import reseal
@@ -40,7 +40,7 @@ from tests.test_workflow_inputs import (
 )
 from tests.test_workflow_transfer import capsule, proposal
 from tests.workflow_evidence_support import advance_request
-from tests.workflow_evidence_support import advance_with_evidence as advance_workflow
+from tests.workflow_evidence_support import advance_with_evidence as advance_workflow_view
 
 CHECK_PURPOSE = {
     "purpose": "public-contract",
@@ -80,7 +80,7 @@ def prepare(intent, owner=None, principal="transport-operator", retained=None):
     adapters = [
         b["adapter"] for p in intent["participants"] for b in p["requests"] if "adapter" in b
     ]
-    return prepare_workflow(
+    return prepare_workflow_view(
         {"owner": owner, "proposal": intent},
         expected_owner=owner,
         principal=principal,
@@ -96,7 +96,7 @@ def move(value, phase):
     phases = PHASES[value["type"]]
     while value["phase"] != phase:
         following = phases[phases.index(value["phase"]) + 1]
-        value = advance_workflow(advance_request(value, following), value)
+        value = advance_workflow_view(advance_request(value, following), value)
     return value
 
 
@@ -270,7 +270,7 @@ def seal_publication(receipt):
 
 def adoption_stage(provider="forgejo-age"):
     value, publication = publication_stage(provider)
-    value = bind_workflow(publication, value, **context(publication))
+    value = bind_workflow_view(publication, value, **context(publication))
     value = move(value, "publishing")
     intent = value["proposal"]
     publisher, consumer = intent["participants"][1:]
@@ -357,7 +357,7 @@ def test_partial_preparation_retains_one_independently_authorized_initial_driver
             == "new"
         )
     with pytest.raises(ContractError, match="independently authorized"):
-        prepare_workflow(
+        prepare_workflow_view(
             {"owner": owner_b, "proposal": intent},
             expected_owner=owner_b,
             principal="bob",
@@ -374,7 +374,7 @@ def test_rotation_prepares_without_future_receipt_then_retains_exact_issued_publ
     assert not any(h["owner"] == intent["participants"][2]["owner"] for h in intent["content"])
     value, query = adoption_stage(provider)
     original = copy.deepcopy(value["proposal"])
-    completed = bind_workflow(query, value, **context(query))
+    completed = bind_workflow_view(query, value, **context(query))
     completed = move(completed, "completed")
     validate_workflow(completed)
     assert completed["proposal"] == original
@@ -471,7 +471,7 @@ def test_output_binding_rejects_substitution_without_independent_review_and_cust
             receipt["state"] = "uncertain"
         seal_material(query["materials"][0], value["id"])
     with pytest.raises(ContractError):
-        bind_workflow(query, value, **trusted)
+        bind_workflow_view(query, value, **trusted)
 
 
 def successor_stage():
@@ -507,7 +507,7 @@ def test_successor_plan_uses_fresh_generation_after_exact_predecessor_and_replay
     value, query = successor_stage()
     trusted = context(query)
     with evidence_group("contract"):
-        advanced = bind_workflow(query, value, **trusted)
+        advanced = bind_workflow_view(query, value, **trusted)
         assert (
             advanced["bindings"][0]["request"]["binding"]["plan"]["preconditions"][0]["generation"]
             == 10
@@ -521,12 +521,12 @@ def test_successor_plan_uses_fresh_generation_after_exact_predecessor_and_replay
             "verified_operations": [],
             "verified_content": [],
         }
-        assert bind_workflow(copy.deepcopy(query), advanced, **late) == advanced
+        assert bind_workflow_view(copy.deepcopy(query), advanced, **late) == advanced
         changed = copy.deepcopy(query)
         changed["binding"]["plan"]["preconditions"][0]["generation"] += 1
         reseal(changed["binding"]["plan"])
         with pytest.raises(ContractError, match="accepted workflow binding input changed"):
-            bind_workflow(changed, advanced, **late)
+            bind_workflow_view(changed, advanced, **late)
     with evidence_group("extent"):
         assert len(advanced["bindings"]) == 1
         assert advanced["bindings"][0]["request"] == query
@@ -535,7 +535,7 @@ def test_successor_plan_uses_fresh_generation_after_exact_predecessor_and_replay
 @pytest.mark.parametrize("change", ["missing", "after-advance", "generation-collision"])
 def test_retained_phase_history_cannot_erase_or_backdate_its_required_binding(change):
     value, query = successor_stage()
-    bound = bind_workflow(query, value, **context(query))
+    bound = bind_workflow_view(query, value, **context(query))
     finished = move(bound, "reconciling")
     receipt = finished["bindings"][0]
     if change == "missing":
@@ -555,7 +555,7 @@ def test_retained_binding_history_checks_first_phase_before_same_phase_transfer(
     from tests.test_workflow_recovery import finish_transfer
 
     value, query = successor_stage()
-    bound = bind_workflow(query, value, **context(query))
+    bound = bind_workflow_view(query, value, **context(query))
     advanced = move(bound, "reconciling")
     first_generation = advanced["generation"]
     transferred, _ = finish_transfer(advanced)
@@ -606,7 +606,7 @@ def test_same_material_other_publication_receipt_is_not_the_exact_child_output()
     seal_material(material, value["id"])
     # Even a newly reviewed envelope cannot substitute another operation output.
     with pytest.raises(ContractError, match="producer result"):
-        bind_workflow(changed, value, **context(changed))
+        bind_workflow_view(changed, value, **context(changed))
 
 
 def test_installed_target_phase_cannot_be_replaced_by_another_allowed_adapter_phase():
@@ -623,7 +623,7 @@ def test_complete_late_binding_larger_than_frame_retains_all_staged_input():
     )
     data = canonical(query)
     assert len(data) > MAX_BYTES
-    reference, decoded_data = staged_workflow_input("workflow.bind", query)
+    reference, decoded_data = staged_workflow_audit_input("workflow.bind", query)
     assert decoded_data == data
     assert len(frame(request("workflow.bind", reference))) < 4096
     with pytest.raises(ContractError, match="frame size"):

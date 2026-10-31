@@ -6,9 +6,10 @@ import copy
 
 import pytest
 from fishhat_adapters import check_request
-from fishhat_contracts.validation import ContractError
+from fishhat_contracts.validation import ContractError, digest
 
-from tests.adapter_support import OWNER
+from tests.adapter_support import OWNER, identifier
+from tests.test_adapter_handoffs import installed
 
 CHECK_PURPOSE = {
     "purpose": "public-contract",
@@ -24,15 +25,41 @@ CHECK_PURPOSE = {
 
 
 def query(role, method, records):
-    return {
+    _, executor = installed(role)
+    value = {
         "contract": "fishhat." + role,
         "method": method,
         "input": {
-            "scope": {"authority": OWNER["id"], "kind": role, "handle": "demo"},
+            "scope": copy.deepcopy(executor["scope"]),
+            "target": {
+                "binding": executor,
+                "namespace": {"authority": OWNER["id"], "resource": "data", "facet": "content"},
+            },
+            "expected_previous": {
+                "native_incarnation": identifier(301),
+                "revision": "publication:one",
+                "digest": "sha256:" + "b" * 64,
+            },
             "policy_digest" if role == "network" else "generation_digest": "sha256:" + "a" * 64,
             "rules" if role == "network" else "routes": records,
         },
     }
+    value["input"]["policy_digest" if role == "network" else "generation_digest"] = (
+        generation_digest(role, value["input"])
+    )
+    return value
+
+
+def generation_digest(role, inputs):
+    records = "rules" if role == "network" else "routes"
+    return digest(
+        {
+            "format": "fishhat.routing-generation/v1",
+            "role": role,
+            "target": inputs["target"],
+            records: inputs[records],
+        }
+    )
 
 
 @pytest.mark.parametrize("method", ["plan", "publish"])

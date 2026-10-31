@@ -92,7 +92,7 @@ def seal(checkpoint):
     )
 
 
-def fixture(count=2, *, shared=True):
+def fixture(count=2, *, shared=True, recovery_points=None):
     _, capture = installed("capture")
     _, backup = installed("backup", endpoint="original-repository")
     records = {}
@@ -124,11 +124,14 @@ def fixture(count=2, *, shared=True):
             "dataset": dataset,
             "format": "independent.snapshot",
             "consistency": "quiesced",
+            "recovery_point": deepcopy((recovery_points or {}).get(dataset)),
             "artifacts": [artifact],
             "restore_requirements": ["independent.reader"],
             "producer": deepcopy(capture),
         }
         snapshots[dataset] = snapshot
+        if snapshot["recovery_point"] is not None:
+            closure.add(snapshot["recovery_point"]["evidence_digest"])
         inputs = {
             "scope": deepcopy(capture["scope"]),
             "dataset": dataset,
@@ -187,7 +190,6 @@ def fixture(count=2, *, shared=True):
         "backup_executor": backup,
         "recovery_closure": sorted(closure),
         "verified_at": "2026-10-24T00:00:00Z",
-        "restore_tested_at": None,
         "consistency_scope": "independent-datasets",
         "quiescence_evidence": None,
     }

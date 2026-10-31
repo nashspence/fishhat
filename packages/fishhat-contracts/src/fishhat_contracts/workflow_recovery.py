@@ -1,4 +1,12 @@
-"""Explicit successor workflow custody; no native retirement or authorization.
+"""Complete shared workflow inspection models; no live owner admission.
+
+These full-value helpers construct and validate an explicitly requested audit
+projection from independently retained facts. They are not a journal writer or
+a participant protocol: live admission uses workflow_journal and its partitioned
+owner journals. Materialize complete views only for explicit inspection, never
+after each accepted child or at every participating owner.
+
+Explicit successor workflow custody; no native retirement or authorization.
 
 Every verified argument is independently selected protected receiving context.
 Preparing a successor requires positive old-admission retirement and native
@@ -30,7 +38,7 @@ from .workflows import (
     _request_key,
     bound_plan,
     child_action,
-    prepared_capsule,
+    prepared_workflow_view,
     proposal_children,
     retained_transition_input,
     validate_workflow_proposal,
@@ -708,7 +716,7 @@ def validate_recovery_custody(
     )
 
 
-def prepare_workflow_recovery(
+def prepare_workflow_recovery_view(
     request: dict[str, Any],
     *,
     expected_owner: dict[str, Any],
@@ -806,7 +814,7 @@ def prepare_workflow_recovery(
     _require(
         all(canonical(h) in content for h in local), "successor local material custody incomplete"
     )
-    result = prepared_capsule(proposal["successor"], expected_owner)
+    result = prepared_workflow_view(proposal["successor"], expected_owner)
     result["recovery"] = {
         "phase": "prepared",
         "request": copy.deepcopy(request),
@@ -819,7 +827,7 @@ def prepare_workflow_recovery(
     return result
 
 
-def commit_workflow_recovery(
+def commit_workflow_recovery_view(
     request: dict[str, Any],
     workflow: dict[str, Any],
     *,
