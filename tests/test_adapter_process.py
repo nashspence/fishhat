@@ -96,6 +96,8 @@ def run_peer(
     *,
     mode="mutation",
     children_quiescent=True,
+    peer_prelude="",
+    before_ready=None,
 ):
     work = tmp_path / mode
     work.mkdir()
@@ -133,7 +135,7 @@ def run_peer(
     (work / "inputs.ndjson").write_bytes(lines)
     template = Path(__file__).parent / "fixtures/adapter-process" / (peer + ".py")
     executable = tmp_path / (peer + "-" + mode)
-    executable.write_text("#!" + sys.executable + "\n" + template.read_text())
+    executable.write_text("#!" + sys.executable + "\n" + peer_prelude + template.read_text())
     executable.chmod(0o700)
     timed_out = False
     intentional_timeout = mode == "mutation" and call["request"]["input"]["destination"] in {
@@ -152,6 +154,8 @@ def run_peer(
         )
         try:
             if intentional_timeout:
+                if before_ready is not None:
+                    before_ready(work, child)
                 readiness = work / "output/timeout-ready"
                 ready_deadline = Deadline.after(10)
                 while not readiness.exists() and child.poll() is None:
@@ -274,6 +278,61 @@ def test_uncertain_transport_never_repeats_native_effect_and_keeps_known_respons
     assert json.loads(state.read_bytes())["writes"] == 1
     if receipt.response is not None:
         assert resolved.response["output"] == receipt.response["output"]
+
+
+@pytest.mark.parametrize("peer", ["independent_a", "independent_b"])
+@pytest.mark.parametrize("failure", ["timeout", "timeout-after-response"])
+def test_timeout_readiness_is_published_only_after_complete_write(tmp_path, peer, failure):
+    state = tmp_path / "native.json"
+    call, installation, descriptor, configuration = invocation(str(state), destination=failure)
+    peer_prelude = """
+from pathlib import Path as _ReadyPath
+import time as _ready_time
+_ready_write_text = _ReadyPath.write_text
+
+def _pause_ready_write(path, text, *args, **kwargs):
+    if path.name.startswith("timeout-ready"):
+        with path.open("w", encoding="utf-8") as stream:
+            _ReadyPath("output/marker-write-paused").touch()
+            while not _ReadyPath("output/marker-write-resume").exists():
+                _ready_time.sleep(0.001)
+            return stream.write(text)
+    return _ready_write_text(path, text, *args, **kwargs)
+
+_ReadyPath.write_text = _pause_ready_write
+"""
+    observed = []
+
+    def before_ready(work, child):
+        paused = work / "output/marker-write-paused"
+        deadline = Deadline.after(10)
+        while not paused.exists() and child.poll() is None:
+            if not deadline.remaining():
+                pytest.fail("synthetic readiness writer did not reach the controlled pause")
+            time.sleep(0.01)
+        assert paused.is_file() and child.poll() is None
+        assert not (work / "output/timeout-ready").exists()
+        assert json.loads(state.read_bytes())["attempt_id"] == call["attempt"]["attempt_id"]
+        observed.append(True)
+        (work / "output/marker-write-resume").touch()
+
+    receipt, retained, material = run_peer(
+        tmp_path,
+        peer,
+        call,
+        installation,
+        descriptor,
+        configuration,
+        peer_prelude=peer_prelude,
+        before_ready=before_ready,
+    )
+    assert observed == [True] and not receipt.complete
+    assert json.loads(state.read_bytes())["writes"] == 1
+    if failure == "timeout-after-response":
+        assert receipt.response["effect"]["effect_certainty"] == "known"
+        assert retained == canonical(receipt.response) and material
+    else:
+        assert receipt.response is None and not retained and not material
 
 
 def test_descriptor_must_select_the_fixed_protocol():
@@ -526,6 +585,14 @@ def test_process_boundaries_linear_work():
 
 
 CHECK_OVERRIDES = {
+    "test_timeout_readiness_is_published_only_after_complete_write": {
+        "purpose": "validation-tooling",
+        "authority": ["tests/test_adapter_process.py#run_peer"],
+        "scope": "synthetic timeout peer readiness under interrupted file publication",
+        "relationship": "no-product-claim",
+        "reason": "A controlled empty-file write pause verifies fixture synchronization for both independent peers and timeout phases; it does not qualify native process supervision.",
+        "claims": [],
+    },
     "test_process_boundaries_linear_work": {
         "purpose": "implementation",
         "authority": [
@@ -552,5 +619,5 @@ CHECK_OVERRIDES = {
                 "receive_process_result",
             )
         ],
-    }
+    },
 }

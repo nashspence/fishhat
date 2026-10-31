@@ -2024,7 +2024,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-adapter-protocol/src/fishhat_adapters/process.py": "a3ce06ff8225dafcee2ffb0899b64fa134e6ab504c2f9bae068edb1a6766fd7e",
-        "tests/test_adapter_process.py": "e78b3ec428763a97b5fc900bab69f1512dd71adacd08130388e84e57783c4759"
+        "tests/test_adapter_process.py": "475ad8c260a5e0898912cd43e670efaa6064fb42b2d2f409254a570f3fa87824"
       },
       "symbol": "fishhat_adapters.process:receive_process_result",
       "work": "O(B) complete manifests, typed request/response and every selected artifact byte"
@@ -2078,7 +2078,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-adapter-protocol/src/fishhat_adapters/process.py": "a3ce06ff8225dafcee2ffb0899b64fa134e6ab504c2f9bae068edb1a6766fd7e",
-        "tests/test_adapter_process.py": "e78b3ec428763a97b5fc900bab69f1512dd71adacd08130388e84e57783c4759"
+        "tests/test_adapter_process.py": "475ad8c260a5e0898912cd43e670efaa6064fb42b2d2f409254a570f3fa87824"
       },
       "symbol": "fishhat_adapters.process:validate_process_launch",
       "work": "O(B) complete manifests, typed request/response and every selected artifact byte"
@@ -2105,7 +2105,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-adapter-protocol/src/fishhat_adapters/process.py": "a3ce06ff8225dafcee2ffb0899b64fa134e6ab504c2f9bae068edb1a6766fd7e",
-        "tests/test_adapter_process.py": "e78b3ec428763a97b5fc900bab69f1512dd71adacd08130388e84e57783c4759"
+        "tests/test_adapter_process.py": "475ad8c260a5e0898912cd43e670efaa6064fb42b2d2f409254a570f3fa87824"
       },
       "symbol": "fishhat_adapters.process:verify_process_inputs",
       "work": "O(B) complete manifests, typed request/response and every selected artifact byte"
@@ -2132,7 +2132,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-adapter-protocol/src/fishhat_adapters/process.py": "a3ce06ff8225dafcee2ffb0899b64fa134e6ab504c2f9bae068edb1a6766fd7e",
-        "tests/test_adapter_process.py": "e78b3ec428763a97b5fc900bab69f1512dd71adacd08130388e84e57783c4759"
+        "tests/test_adapter_process.py": "475ad8c260a5e0898912cd43e670efaa6064fb42b2d2f409254a570f3fa87824"
       },
       "symbol": "fishhat_adapters.process:verify_process_outputs",
       "work": "O(B) complete manifests, typed request/response and every selected artifact byte"

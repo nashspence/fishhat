@@ -61,7 +61,9 @@ print("synthetic diagnostic", file=sys.stderr)
 if mode == "missing-response":
     raise SystemExit(4)
 if mode == "timeout":
-    Path("output/timeout-ready").write_text(attempt["attempt_id"])
+    ready = Path("output/timeout-ready.pending")
+    ready.write_text(attempt["attempt_id"])
+    ready.replace("output/timeout-ready")
     signal.pause()
 query = original if manifest["mode"] == "mutation" else payload
 produced_digest = hashlib.sha256(produced_bytes).hexdigest()
@@ -120,6 +122,8 @@ else:
     )
 sys.stdout.flush()
 if mode == "timeout-after-response":
-    Path("output/timeout-ready").write_text(attempt["attempt_id"])
+    ready = Path("output/timeout-ready.pending")
+    ready.write_text(attempt["attempt_id"])
+    ready.replace("output/timeout-ready")
     signal.pause()
 raise SystemExit(9 if mode == "nonzero-after-response" else 0)
