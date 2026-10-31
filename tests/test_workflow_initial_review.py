@@ -7,7 +7,7 @@ import copy
 import pytest
 from fishhat_contracts.handoffs import validate_workflow
 from fishhat_contracts.validation import ContractError, canonical, digest
-from fishhat_contracts.workflow_bindings import bind_workflow
+from fishhat_contracts.workflow_bindings import bind_workflow_view
 from fishhat_contracts.workflows import validate_workflow_proposal
 
 from scripts.check_evidence import evidence_group
@@ -21,7 +21,7 @@ from tests.test_workflow_recovery import commit as commit_recovery
 from tests.test_workflow_recovery import prepare as prepare_recovery
 from tests.test_workflow_recovery import scenario
 from tests.workflow_evidence_support import advance_request, seal_phase_participant
-from tests.workflow_evidence_support import advance_with_evidence as advance_workflow
+from tests.workflow_evidence_support import advance_with_evidence as advance_workflow_view
 
 CHECK_PURPOSE = {
     "purpose": "public-contract",
@@ -141,7 +141,7 @@ def test_consumer_first_plan_is_reviewed_after_provider_success_without_superses
             query["binding"]["plan"]["created_at"]
             > proposal["participants"][0]["requests"][0]["plan"]["expires_at"]
         )
-        bound = bind_workflow(query, value, **trusted)
+        bound = bind_workflow_view(query, value, **trusted)
         assert bound["id"] == value["id"]
         assert bound["proposal"] == proposal
         assert provider_outcome(bound) == provider
@@ -152,7 +152,9 @@ def test_consumer_first_plan_is_reviewed_after_provider_success_without_superses
         assert query["binding"]["plan"]["preconditions"][0]["generation"] == 12
         assert proposal["participants"][1]["expected_generation"] == 9
         assert "recovery" not in bound
-        assert bind_workflow(query, bound, **{**trusted, "now": "2026-10-19T00:00:00Z"}) == bound
+        assert (
+            bind_workflow_view(query, bound, **{**trusted, "now": "2026-10-19T00:00:00Z"}) == bound
+        )
         final = move(bound, "completed")
         assert final["state"] == "completed"
     with evidence_group("extent"):
@@ -166,7 +168,7 @@ def test_initial_review_cannot_precede_the_installed_barrier(phase):
     value = move(prepare(interface_proposal()), phase)
     query, trusted = initial_request(value)
     with pytest.raises(ContractError):
-        bind_workflow(query, value, **trusted)
+        bind_workflow_view(query, value, **trusted)
 
 
 def test_failed_provider_cannot_create_a_consumer_review_barrier():
@@ -178,7 +180,7 @@ def test_failed_provider_cannot_create_a_consumer_review_barrier():
     seal_operation(operation)
     seal_phase_participant(query["phase_evidence"], proof)
     with pytest.raises(ContractError, match="successful known child"):
-        advance_workflow(query, value)
+        advance_workflow_view(query, value)
 
 
 @pytest.mark.parametrize("change", ["first-phase", "later-child", "graph", "resource"])
@@ -220,14 +222,14 @@ def test_initial_review_still_requires_fresh_exact_authorized_context(change):
     else:
         query["predecessors"] = [copy.deepcopy(provider_outcome(value))]
     with pytest.raises(ContractError):
-        bind_workflow(query, value, **trusted)
+        bind_workflow_view(query, value, **trusted)
 
 
 @pytest.mark.parametrize("after_exit", [False, True])
 def test_retained_initial_binding_cannot_be_moved_outside_its_phase_window(after_exit):
     value = initial_stage()
     query, trusted = initial_request(value)
-    bound = bind_workflow(query, value, **trusted)
+    bound = bind_workflow_view(query, value, **trusted)
     if after_exit:
         bound = move(bound, "consumer-verified")
     receipt = bound["bindings"][0]
@@ -242,7 +244,7 @@ def test_retained_initial_binding_cannot_be_moved_outside_its_phase_window(after
 def test_binding_expiry_cannot_replace_its_plan_and_uses_safe_successor_recovery():
     value = initial_stage()
     query, trusted = initial_request(value)
-    bound = bind_workflow(query, value, **trusted)
+    bound = bind_workflow_view(query, value, **trusted)
     changed = copy.deepcopy(query)
     changed["bind_id"] = uid("replacement-bind")
     changed["expected_generation"] = bound["generation"]
@@ -253,7 +255,7 @@ def test_binding_expiry_cannot_replace_its_plan_and_uses_safe_successor_recovery
     )
     reseal(changed["binding"]["plan"])
     with pytest.raises(ContractError, match="already bound"):
-        bind_workflow(changed, bound, **trusted)
+        bind_workflow_view(changed, bound, **trusted)
     provider = provider_outcome(bound)
     selected, records = scenario(
         original=bound,

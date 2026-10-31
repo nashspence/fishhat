@@ -7,7 +7,7 @@ import copy
 import pytest
 from fishhat_contracts.handoffs import validate_workflow
 from fishhat_contracts.validation import ContractError, digest
-from fishhat_contracts.workflow_bindings import bind_workflow
+from fishhat_contracts.workflow_bindings import bind_workflow_view
 from fishhat_contracts.workflow_evidence import validate_phase_evidence
 from fishhat_contracts.workflow_recovery import validate_recovery_proposal
 
@@ -36,12 +36,12 @@ CHECK_PURPOSE = {
 @pytest.mark.parametrize("workflow_id", [None, uid("unrelated-workflow")])
 def test_binding_and_phase_reject_standalone_or_other_workflow_child(workflow_id):
     value, query = successor_stage()
-    bound = bind_workflow(query, value, **context(query))
+    bound = bind_workflow_view(query, value, **context(query))
     operation = query["predecessors"][0]
     operation["witness"]["workflow_id"] = workflow_id
     seal_operation(operation)
     with pytest.raises(ContractError, match="exact successful child"):
-        bind_workflow(query, value, **context(query))
+        bind_workflow_view(query, value, **context(query))
 
     transition = advance_request(bound, "reconciling")
     participant = transition["phase_evidence"]["participants"][0]
@@ -69,7 +69,7 @@ def test_recovery_rejects_standalone_or_other_workflow_child(workflow_id):
 @pytest.mark.parametrize("workflow_id", [None, uid("unrelated-workflow")])
 def test_retained_binding_cannot_reassign_its_predecessor_membership(workflow_id):
     original, query = successor_stage()
-    bound = bind_workflow(query, original, **context(query))
+    bound = bind_workflow_view(query, original, **context(query))
     receipt = bound["bindings"][0]
     operation = receipt["request"]["predecessors"][0]
     operation["witness"]["workflow_id"] = workflow_id
@@ -111,7 +111,7 @@ def test_completed_ancestor_keeps_original_workflow_membership_for_later_binding
         },
         now="2026-10-18T12:30:00Z",
     )
-    bound = bind_workflow(query, successor, **trusted)
+    bound = bind_workflow_view(query, successor, **trusted)
     assert bound["bindings"][0]["request"]["predecessors"][0] == predecessor
     assert predecessor["witness"]["workflow_id"] == original["id"]
     assert predecessor["witness"]["workflow_id"] != bound["id"]
@@ -120,4 +120,4 @@ def test_completed_ancestor_keeps_original_workflow_membership_for_later_binding
     changed["predecessors"][0]["witness"]["workflow_id"] = successor["id"]
     seal_operation(changed["predecessors"][0])
     with pytest.raises(ContractError, match="exact successful child"):
-        bind_workflow(changed, successor, **trusted)
+        bind_workflow_view(changed, successor, **trusted)

@@ -1,4 +1,12 @@
-"""Finite original mutation outcomes, separate from complete workflow inspection.
+"""Complete shared workflow inspection models; no live owner admission.
+
+These full-value helpers construct and validate an explicitly requested audit
+projection from independently retained facts. They are not a journal writer or
+a participant protocol: live admission uses workflow_journal and its partitioned
+owner journals. Materialize complete views only for explicit inspection, never
+after each accepted child or at every participating owner.
+
+Finite original mutation outcomes, separate from complete workflow inspection.
 
 Inputs are individual independently validated, durably committed owner receipts.
 Neither this codec nor an acknowledgment supplies native acceptance, authority or

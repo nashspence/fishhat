@@ -7,8 +7,8 @@ import copy
 import pytest
 from fishhat_contracts.handoffs import PHASES, validate_workflow
 from fishhat_contracts.validation import ContractError, canonical, digest, validate
-from fishhat_contracts.workflow_settlement import record_native_completion
-from fishhat_contracts.workflows import advance_workflow
+from fishhat_contracts.workflow_settlement import record_native_completion_view
+from fishhat_contracts.workflows import advance_workflow_view
 
 from tests.operation_support import seal_operation
 from tests.test_contracts import uid
@@ -56,7 +56,7 @@ def settle(query, value, **changes):
         "verified_phase_evidence": copy.deepcopy(query["phase_evidence"]),
     }
     context.update(changes)
-    return record_native_completion(query, value, **context)
+    return record_native_completion_view(query, value, **context)
 
 
 @pytest.mark.parametrize("transfer_phase", [None, "freeze", "commit", "completed"])
@@ -152,7 +152,7 @@ def test_native_replay_cannot_change_input_or_become_a_driver_request():
     with pytest.raises(ContractError):
         validate("workflow.schema.json", native_claim, "AdvanceRequest")
     with pytest.raises(ContractError, match="changed authority"):
-        advance_workflow(driver, result)
+        advance_workflow_view(driver, result)
     driver["phase_evidence"] = copy.deepcopy(query["phase_evidence"])
     with pytest.raises(ContractError):
         validate("workflow.schema.json", driver, "AdvanceRequest")
@@ -163,7 +163,7 @@ def test_history_rejects_a_fabricated_driver_advance_during_pending_transfer(tra
     value = ready(transfer_phase)
     query = advance_request(value, PHASES[value["type"]][-1])
     with pytest.raises(ContractError, match="transfer"):
-        advance_workflow(query, value, verified_phase_evidence=query["phase_evidence"])
+        advance_workflow_view(query, value, verified_phase_evidence=query["phase_evidence"])
     forged = copy.deepcopy(value)
     forged.update(generation=value["generation"] + 1, phase=query["phase"], state="completed")
     forged["advances"].append(
@@ -184,7 +184,7 @@ def test_native_terminal_history_cannot_accept_a_later_transfer_completion():
     query = completion_request(value)
     query["phase"] = value["phase"]
     with pytest.raises(ContractError, match="cannot advance"):
-        advance_workflow(query, value)
+        advance_workflow_view(query, value)
     forged = copy.deepcopy(value)
     forged["transfer"]["phase"] = "completed"
     forged["transfer"]["commit_witnesses"] = copy.deepcopy(

@@ -737,42 +737,49 @@
         "native_qualified": false,
         "status": "unimplemented"
       },
-      "owner-form:workflow-advance": {
+      "owner-form:workflow-journal-events": {
         "growth_proofs": [],
         "growth_requirement": "linear",
         "implementation": null,
         "native_qualified": false,
         "status": "unimplemented"
       },
-      "owner-form:workflow-attest": {
+      "owner-form:workflow-journal-events-next": {
         "growth_proofs": [],
         "growth_requirement": "linear",
         "implementation": null,
         "native_qualified": false,
         "status": "unimplemented"
       },
-      "owner-form:workflow-attestation-check": {
+      "owner-form:workflow-journal-get": {
         "growth_proofs": [],
         "growth_requirement": "linear",
         "implementation": null,
         "native_qualified": false,
         "status": "unimplemented"
       },
-      "owner-form:workflow-attestation-show": {
+      "owner-form:workflow-journal-input": {
         "growth_proofs": [],
         "growth_requirement": "linear",
         "implementation": null,
         "native_qualified": false,
         "status": "unimplemented"
       },
-      "owner-form:workflow-bind": {
+      "owner-form:workflow-journal-list": {
         "growth_proofs": [],
         "growth_requirement": "linear",
         "implementation": null,
         "native_qualified": false,
         "status": "unimplemented"
       },
-      "owner-form:workflow-lifecycle": {
+      "owner-form:workflow-journal-list-next": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:workflow-journal-submit": {
         "growth_proofs": [],
         "growth_requirement": "linear",
         "implementation": null,
@@ -835,49 +842,7 @@
         "native_qualified": false,
         "status": "unimplemented"
       },
-      "owner-form:workflow-native-attest": {
-        "growth_proofs": [],
-        "growth_requirement": "linear",
-        "implementation": null,
-        "native_qualified": false,
-        "status": "unimplemented"
-      },
-      "owner-form:workflow-native-attestation-check": {
-        "growth_proofs": [],
-        "growth_requirement": "linear",
-        "implementation": null,
-        "native_qualified": false,
-        "status": "unimplemented"
-      },
-      "owner-form:workflow-prepare": {
-        "growth_proofs": [],
-        "growth_requirement": "linear",
-        "implementation": null,
-        "native_qualified": false,
-        "status": "unimplemented"
-      },
-      "owner-form:workflow-recover": {
-        "growth_proofs": [],
-        "growth_requirement": "linear",
-        "implementation": null,
-        "native_qualified": false,
-        "status": "unimplemented"
-      },
       "owner-form:workflow-show": {
-        "growth_proofs": [],
-        "growth_requirement": "linear",
-        "implementation": null,
-        "native_qualified": false,
-        "status": "unimplemented"
-      },
-      "owner-form:workflow-transfer": {
-        "growth_proofs": [],
-        "growth_requirement": "linear",
-        "implementation": null,
-        "native_qualified": false,
-        "status": "unimplemented"
-      },
-      "owner-form:workflow-transfer-show": {
         "growth_proofs": [],
         "growth_requirement": "linear",
         "implementation": null,
@@ -1052,41 +1017,6 @@
         "native_qualified": false,
         "status": "unimplemented"
       },
-      "rpc:workflow.advance": {
-        "growth_proofs": [],
-        "growth_requirement": "linear",
-        "implementation": null,
-        "native_qualified": false,
-        "status": "unimplemented"
-      },
-      "rpc:workflow.attest": {
-        "growth_proofs": [],
-        "growth_requirement": "linear",
-        "implementation": null,
-        "native_qualified": false,
-        "status": "unimplemented"
-      },
-      "rpc:workflow.attestation.check": {
-        "growth_proofs": [],
-        "growth_requirement": "linear",
-        "implementation": null,
-        "native_qualified": false,
-        "status": "unimplemented"
-      },
-      "rpc:workflow.attestation.get": {
-        "growth_proofs": [],
-        "growth_requirement": "linear",
-        "implementation": null,
-        "native_qualified": false,
-        "status": "unimplemented"
-      },
-      "rpc:workflow.bind": {
-        "growth_proofs": [],
-        "growth_requirement": "linear",
-        "implementation": null,
-        "native_qualified": false,
-        "status": "unimplemented"
-      },
       "rpc:workflow.get": {
         "growth_proofs": [],
         "growth_requirement": "linear",
@@ -1094,7 +1024,35 @@
         "native_qualified": false,
         "status": "unimplemented"
       },
-      "rpc:workflow.lifecycle": {
+      "rpc:workflow.journal.events": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:workflow.journal.get": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:workflow.journal.input": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:workflow.journal.list": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:workflow.journal.submit": {
         "growth_proofs": [],
         "growth_requirement": "linear",
         "implementation": null,
@@ -1102,48 +1060,6 @@
         "status": "unimplemented"
       },
       "rpc:workflow.list": {
-        "growth_proofs": [],
-        "growth_requirement": "linear",
-        "implementation": null,
-        "native_qualified": false,
-        "status": "unimplemented"
-      },
-      "rpc:workflow.native-attest": {
-        "growth_proofs": [],
-        "growth_requirement": "linear",
-        "implementation": null,
-        "native_qualified": false,
-        "status": "unimplemented"
-      },
-      "rpc:workflow.native-attestation.check": {
-        "growth_proofs": [],
-        "growth_requirement": "linear",
-        "implementation": null,
-        "native_qualified": false,
-        "status": "unimplemented"
-      },
-      "rpc:workflow.prepare": {
-        "growth_proofs": [],
-        "growth_requirement": "linear",
-        "implementation": null,
-        "native_qualified": false,
-        "status": "unimplemented"
-      },
-      "rpc:workflow.recover": {
-        "growth_proofs": [],
-        "growth_requirement": "linear",
-        "implementation": null,
-        "native_qualified": false,
-        "status": "unimplemented"
-      },
-      "rpc:workflow.transfer": {
-        "growth_proofs": [],
-        "growth_requirement": "linear",
-        "implementation": null,
-        "native_qualified": false,
-        "status": "unimplemented"
-      },
-      "rpc:workflow.transfer.get": {
         "growth_proofs": [],
         "growth_requirement": "linear",
         "implementation": null,
@@ -2820,7 +2736,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/handoffs.py": "a38907bf4f76e70ed575376f1677c8c17b802cc3cedb920e40a62b91405dc8f4",
+        "packages/fishhat-contracts/src/fishhat_contracts/handoffs.py": "e736fff9fb0105699c6b150414eb5679e6df6ce0a089d1ac57153acb1a300416",
         "tests/test_result_schema_admission.py": "2e89bd083a8c019f39172e2049d4cbeac262dff46facfbf6b036dc1272711211",
         "tests/test_retained_result_growth.py": "6b9ac27a2d0a04ca2e403cd8add2b194d592ab453f2c5442dd82b60c76e958d0"
       },
@@ -3420,9 +3336,9 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/record_delivery.py": "df42d9cf57259d02104b6782ffd7e81d816fa40e79ceb2035a20e6a2c95c0d41",
+        "packages/fishhat-contracts/src/fishhat_contracts/record_delivery.py": "99901b6f100c7b0dd32f17b9c34a29ccc489008a39be5c671453b98a9502c4f4",
         "tests/test_linear_growth.py": "238c554ee57c932a2b14c605a17d40bc17e40b979e3b4936cc5ae49f60b2885d",
-        "tests/test_record_delivery.py": "5800ef151f94d4f54c6c9ea17f71ce8efa02227ac48fd5d6a824723fde61cb2d"
+        "tests/test_record_delivery.py": "07df2d04fe0795d403f8666ba728db2baa58f78753b0b356ddde64c055f46954"
       },
       "symbol": "fishhat_contracts.record_delivery:RecordSnapshot.chunk",
       "work": "O(chunk_bytes)"
@@ -3850,8 +3766,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_attestations.py": "b5e4da3c0381954a2d782085cede710e74bf7e84c18699ed3a151098e724c416",
-        "tests/test_workflow_attestations.py": "6131a0a0d8571dedaeaae2ed89b61732e718a8f6ddc072ae7b6e5b3c360a82b8"
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_attestations.py": "356b97bacf387ef178c623c07819783678e0c41e1689cb882da0a4386dc25a6a",
+        "tests/test_workflow_attestations.py": "ca739ec1d08d518adaf89764e21eeabe831f9ec478f13fc8cc08e22f974b3e80"
       },
       "symbol": "fishhat_contracts.workflow_attestations:assemble_phase_evidence",
       "work": "O(B + P) complete supplied capsule/proof bytes and participant closure for issuance or assembly; indexed replay/lookup returns one bounded reference; restore visits each complete retained record once; record.read accounts for each requested chunk"
@@ -3873,10 +3789,10 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_attestations.py": "b5e4da3c0381954a2d782085cede710e74bf7e84c18699ed3a151098e724c416",
-        "tests/test_workflow_attestations.py": "6131a0a0d8571dedaeaae2ed89b61732e718a8f6ddc072ae7b6e5b3c360a82b8"
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_attestations.py": "356b97bacf387ef178c623c07819783678e0c41e1689cb882da0a4386dc25a6a",
+        "tests/test_workflow_attestations.py": "ca739ec1d08d518adaf89764e21eeabe831f9ec478f13fc8cc08e22f974b3e80"
       },
-      "symbol": "fishhat_contracts.workflow_attestations:PhaseAttestationJournal.check",
+      "symbol": "fishhat_contracts.workflow_attestations:PhaseAttestationView.check",
       "work": "O(B + P) complete supplied capsule/proof bytes and participant closure for issuance or assembly; indexed replay/lookup returns one bounded reference; restore visits each complete retained record once; record.read accounts for each requested chunk"
     },
     "workflow.attestation-issue": {
@@ -3896,10 +3812,10 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_attestations.py": "b5e4da3c0381954a2d782085cede710e74bf7e84c18699ed3a151098e724c416",
-        "tests/test_workflow_attestations.py": "6131a0a0d8571dedaeaae2ed89b61732e718a8f6ddc072ae7b6e5b3c360a82b8"
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_attestations.py": "356b97bacf387ef178c623c07819783678e0c41e1689cb882da0a4386dc25a6a",
+        "tests/test_workflow_attestations.py": "ca739ec1d08d518adaf89764e21eeabe831f9ec478f13fc8cc08e22f974b3e80"
       },
-      "symbol": "fishhat_contracts.workflow_attestations:PhaseAttestationJournal.issue",
+      "symbol": "fishhat_contracts.workflow_attestations:PhaseAttestationView.issue",
       "work": "O(B + P) complete supplied capsule/proof bytes and participant closure for issuance or assembly; indexed replay/lookup returns one bounded reference; restore visits each complete retained record once; record.read accounts for each requested chunk"
     },
     "workflow.attestation-lookup": {
@@ -3919,10 +3835,10 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_attestations.py": "b5e4da3c0381954a2d782085cede710e74bf7e84c18699ed3a151098e724c416",
-        "tests/test_workflow_attestations.py": "6131a0a0d8571dedaeaae2ed89b61732e718a8f6ddc072ae7b6e5b3c360a82b8"
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_attestations.py": "356b97bacf387ef178c623c07819783678e0c41e1689cb882da0a4386dc25a6a",
+        "tests/test_workflow_attestations.py": "ca739ec1d08d518adaf89764e21eeabe831f9ec478f13fc8cc08e22f974b3e80"
       },
-      "symbol": "fishhat_contracts.workflow_attestations:PhaseAttestationJournal.get",
+      "symbol": "fishhat_contracts.workflow_attestations:PhaseAttestationView.get",
       "work": "O(B + P) complete supplied capsule/proof bytes and participant closure for issuance or assembly; indexed replay/lookup returns one bounded reference; restore visits each complete retained record once; record.read accounts for each requested chunk"
     },
     "workflow.attestation-native-assemble": {
@@ -3942,8 +3858,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_attestations.py": "b5e4da3c0381954a2d782085cede710e74bf7e84c18699ed3a151098e724c416",
-        "tests/test_workflow_native_attestations.py": "9a89b83319c63bbd2049c4e85b47623f9137b88c10c4c8d43735a6d24aa38d87"
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_attestations.py": "356b97bacf387ef178c623c07819783678e0c41e1689cb882da0a4386dc25a6a",
+        "tests/test_workflow_native_attestations.py": "8aa93f5b0340979da66f1de4e5d6c30834d3808f01700db5b10e7b07b36ee3b3"
       },
       "symbol": "fishhat_contracts.workflow_attestations:assemble_native_phase_evidence",
       "work": "O(B + P) complete supplied capsule/proof bytes and participant closure for issuance or assembly; indexed replay/lookup returns one bounded reference; restore visits each complete retained record once; record.read accounts for each requested chunk"
@@ -3965,10 +3881,10 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_attestations.py": "b5e4da3c0381954a2d782085cede710e74bf7e84c18699ed3a151098e724c416",
-        "tests/test_workflow_native_attestations.py": "9a89b83319c63bbd2049c4e85b47623f9137b88c10c4c8d43735a6d24aa38d87"
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_attestations.py": "356b97bacf387ef178c623c07819783678e0c41e1689cb882da0a4386dc25a6a",
+        "tests/test_workflow_native_attestations.py": "8aa93f5b0340979da66f1de4e5d6c30834d3808f01700db5b10e7b07b36ee3b3"
       },
-      "symbol": "fishhat_contracts.workflow_attestations:PhaseAttestationJournal.check_native",
+      "symbol": "fishhat_contracts.workflow_attestations:PhaseAttestationView.check_native",
       "work": "O(B + P) complete supplied capsule/proof bytes and participant closure for issuance or assembly; indexed replay/lookup returns one bounded reference; restore visits each complete retained record once; record.read accounts for each requested chunk"
     },
     "workflow.attestation-native-issue": {
@@ -3988,10 +3904,10 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_attestations.py": "b5e4da3c0381954a2d782085cede710e74bf7e84c18699ed3a151098e724c416",
-        "tests/test_workflow_native_attestations.py": "9a89b83319c63bbd2049c4e85b47623f9137b88c10c4c8d43735a6d24aa38d87"
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_attestations.py": "356b97bacf387ef178c623c07819783678e0c41e1689cb882da0a4386dc25a6a",
+        "tests/test_workflow_native_attestations.py": "8aa93f5b0340979da66f1de4e5d6c30834d3808f01700db5b10e7b07b36ee3b3"
       },
-      "symbol": "fishhat_contracts.workflow_attestations:PhaseAttestationJournal.issue_native",
+      "symbol": "fishhat_contracts.workflow_attestations:PhaseAttestationView.issue_native",
       "work": "O(B + P) complete supplied capsule/proof bytes and participant closure for issuance or assembly; indexed replay/lookup returns one bounded reference; restore visits each complete retained record once; record.read accounts for each requested chunk"
     },
     "workflow.attestation-restore": {
@@ -4011,10 +3927,10 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_attestations.py": "b5e4da3c0381954a2d782085cede710e74bf7e84c18699ed3a151098e724c416",
-        "tests/test_workflow_attestations.py": "6131a0a0d8571dedaeaae2ed89b61732e718a8f6ddc072ae7b6e5b3c360a82b8"
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_attestations.py": "356b97bacf387ef178c623c07819783678e0c41e1689cb882da0a4386dc25a6a",
+        "tests/test_workflow_attestations.py": "ca739ec1d08d518adaf89764e21eeabe831f9ec478f13fc8cc08e22f974b3e80"
       },
-      "symbol": "fishhat_contracts.workflow_attestations:PhaseAttestationJournal.__init__",
+      "symbol": "fishhat_contracts.workflow_attestations:PhaseAttestationView.__init__",
       "work": "O(B + P) complete supplied capsule/proof bytes and participant closure for issuance or assembly; indexed replay/lookup returns one bounded reference; restore visits each complete retained record once; record.read accounts for each requested chunk"
     },
     "workflow.bindings": {
@@ -4037,14 +3953,846 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_bindings.py": "7528154876e44cff2c6a2bd7d5d980646b863893b01286488b2466444f50fa4a",
-        "tests/test_workflow_continuations.py": "15e5fdb46554efbbbe024c06b07816140896a81efef17dc398465e86ecf80eb4",
-        "tests/test_workflow_initial_review.py": "246538be59e0f279857773f5bb4a4a21ea6216a2cf5326586ef1d13b4ccc8a46",
-        "tests/test_workflow_initial_review_growth.py": "0e62fadab27f1347673692f34ee131ec1f71b5b4c046c74f99c3df4334f22aa8",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_bindings.py": "fa2984707df87bee2abfc3e16bff227bdf491335c1edb876e9ee2ef3ebc75f0d",
+        "tests/test_workflow_continuations.py": "aa7227b67d05bc538e57952de9acdd56a86dc1360874e345271de3ba4d492eed",
+        "tests/test_workflow_initial_review.py": "aaa824b852176e78ca4c9d02ff038b36c2e0398a33577f253211954035551e60",
+        "tests/test_workflow_initial_review_growth.py": "77452983d4831ed4c3e70ecb0710b3315481713e04a81b4b7d929126e0bc927d",
         "tests/test_workflow_validation_growth.py": "789e9b8b22d11804bb3c9b050c8a09483da9f2cae1a7bdd341a45b8b259eaaf2"
       },
       "symbol": "fishhat_contracts.workflow_bindings:validate_workflow_bindings",
       "work": "O(B) complete proposal, binding and retained phase-history bytes with one child index and one installed phase-window index per validation"
+    },
+    "workflow.journal-delivery.custody": {
+      "capacity": [
+        "Explicit receiving byte capacity may refuse new input without truncation"
+      ],
+      "extent": "Every complete selected command and record byte across all chunks and retries",
+      "growth": "linear",
+      "id": "workflow.journal-delivery.custody",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_workflow_journal_surface.py::test_complete_journal_delivery_growth"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal_surface.py::test_staged_command_and_record_delivery_bind_exact_owner_and_bytes",
+        "tests/test_workflow_journal_surface.py::test_complete_journal_delivery_growth"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_delivery.py": "7c6eb01fb6376b77303d99e7b0b18669a20b58826e59464334119033d153af52",
+        "tests/test_workflow_journal_surface.py": "825d65d4a15acde01455b34d8c29db131945584f559733ef8bd708586bd704d7"
+      },
+      "symbol": "fishhat_contracts.workflow_journal_delivery:validate_journal_input_custody",
+      "work": "O(B) one complete new command/record; O(chunk bytes) per read; immutable references use indexed lookup"
+    },
+    "workflow.journal-delivery.decode": {
+      "capacity": [
+        "Explicit receiving byte capacity may refuse new input without truncation"
+      ],
+      "extent": "Every complete selected command and record byte across all chunks and retries",
+      "growth": "linear",
+      "id": "workflow.journal-delivery.decode",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_workflow_journal_surface.py::test_complete_journal_delivery_growth"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal_surface.py::test_staged_command_and_record_delivery_bind_exact_owner_and_bytes",
+        "tests/test_workflow_journal_surface.py::test_complete_journal_delivery_growth"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_delivery.py": "7c6eb01fb6376b77303d99e7b0b18669a20b58826e59464334119033d153af52",
+        "tests/test_workflow_journal_surface.py": "825d65d4a15acde01455b34d8c29db131945584f559733ef8bd708586bd704d7"
+      },
+      "symbol": "fishhat_contracts.workflow_journal_delivery:decode_journal_command",
+      "work": "O(B) one complete new command/record; O(chunk bytes) per read; immutable references use indexed lookup"
+    },
+    "workflow.journal-delivery.events": {
+      "capacity": [
+        "Explicit receiving byte capacity may refuse new input without truncation"
+      ],
+      "extent": "Every complete selected command and record byte across all chunks and retries",
+      "growth": "linear",
+      "id": "workflow.journal-delivery.events",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_workflow_journal_surface.py::test_complete_journal_delivery_growth"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal_surface.py::test_staged_command_and_record_delivery_bind_exact_owner_and_bytes",
+        "tests/test_workflow_journal_surface.py::test_complete_journal_delivery_growth"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_delivery.py": "7c6eb01fb6376b77303d99e7b0b18669a20b58826e59464334119033d153af52",
+        "tests/test_workflow_journal_surface.py": "825d65d4a15acde01455b34d8c29db131945584f559733ef8bd708586bd704d7"
+      },
+      "symbol": "fishhat_contracts.workflow_journal_delivery:WorkflowRecordDelivery.events",
+      "work": "O(B) one complete new command/record; O(chunk bytes) per read; immutable references use indexed lookup"
+    },
+    "workflow.journal-delivery.get": {
+      "capacity": [
+        "Explicit receiving byte capacity may refuse new input without truncation"
+      ],
+      "extent": "Every complete selected command and record byte across all chunks and retries",
+      "growth": "linear",
+      "id": "workflow.journal-delivery.get",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_workflow_journal_surface.py::test_complete_journal_delivery_growth"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal_surface.py::test_staged_command_and_record_delivery_bind_exact_owner_and_bytes",
+        "tests/test_workflow_journal_surface.py::test_complete_journal_delivery_growth"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_delivery.py": "7c6eb01fb6376b77303d99e7b0b18669a20b58826e59464334119033d153af52",
+        "tests/test_workflow_journal_surface.py": "825d65d4a15acde01455b34d8c29db131945584f559733ef8bd708586bd704d7"
+      },
+      "symbol": "fishhat_contracts.workflow_journal_delivery:WorkflowRecordDelivery.get",
+      "work": "O(B) one complete new command/record; O(chunk bytes) per read; immutable references use indexed lookup"
+    },
+    "workflow.journal-delivery.heads": {
+      "capacity": [
+        "Explicit receiving byte capacity may refuse new input without truncation"
+      ],
+      "extent": "Every complete selected command and record byte across all chunks and retries",
+      "growth": "linear",
+      "id": "workflow.journal-delivery.heads",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_workflow_journal_surface.py::test_complete_journal_delivery_growth"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal_surface.py::test_staged_command_and_record_delivery_bind_exact_owner_and_bytes",
+        "tests/test_workflow_journal_surface.py::test_complete_journal_delivery_growth"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_delivery.py": "7c6eb01fb6376b77303d99e7b0b18669a20b58826e59464334119033d153af52",
+        "tests/test_workflow_journal_surface.py": "825d65d4a15acde01455b34d8c29db131945584f559733ef8bd708586bd704d7"
+      },
+      "symbol": "fishhat_contracts.workflow_journal_delivery:WorkflowRecordDelivery.heads",
+      "work": "O(B) one complete new command/record; O(chunk bytes) per read; immutable references use indexed lookup"
+    },
+    "workflow.journal-delivery.input": {
+      "capacity": [
+        "Explicit receiving byte capacity may refuse new input without truncation"
+      ],
+      "extent": "Every complete selected command and record byte across all chunks and retries",
+      "growth": "linear",
+      "id": "workflow.journal-delivery.input",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_workflow_journal_surface.py::test_complete_journal_delivery_growth"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal_surface.py::test_staged_command_and_record_delivery_bind_exact_owner_and_bytes",
+        "tests/test_workflow_journal_surface.py::test_complete_journal_delivery_growth"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_delivery.py": "7c6eb01fb6376b77303d99e7b0b18669a20b58826e59464334119033d153af52",
+        "tests/test_workflow_journal_surface.py": "825d65d4a15acde01455b34d8c29db131945584f559733ef8bd708586bd704d7"
+      },
+      "symbol": "fishhat_contracts.workflow_journal_delivery:WorkflowRecordDelivery.input",
+      "work": "O(B) one complete new command/record; O(chunk bytes) per read; immutable references use indexed lookup"
+    },
+    "workflow.journal-delivery.read": {
+      "capacity": [
+        "Explicit receiving byte capacity may refuse new input without truncation"
+      ],
+      "extent": "Every complete selected command and record byte across all chunks and retries",
+      "growth": "linear",
+      "id": "workflow.journal-delivery.read",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_workflow_journal_surface.py::test_complete_journal_delivery_growth"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal_surface.py::test_staged_command_and_record_delivery_bind_exact_owner_and_bytes",
+        "tests/test_workflow_journal_surface.py::test_complete_journal_delivery_growth"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_delivery.py": "7c6eb01fb6376b77303d99e7b0b18669a20b58826e59464334119033d153af52",
+        "tests/test_workflow_journal_surface.py": "825d65d4a15acde01455b34d8c29db131945584f559733ef8bd708586bd704d7"
+      },
+      "symbol": "fishhat_contracts.workflow_journal_delivery:WorkflowRecordDelivery.read",
+      "work": "O(B) one complete new command/record; O(chunk bytes) per read; immutable references use indexed lookup"
+    },
+    "workflow.journal-delivery.read-input": {
+      "capacity": [
+        "Explicit receiving byte capacity may refuse new input without truncation"
+      ],
+      "extent": "Every complete selected command and record byte across all chunks and retries",
+      "growth": "linear",
+      "id": "workflow.journal-delivery.read-input",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_workflow_journal_surface.py::test_complete_journal_delivery_growth"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal_surface.py::test_staged_command_and_record_delivery_bind_exact_owner_and_bytes",
+        "tests/test_workflow_journal_surface.py::test_complete_journal_delivery_growth"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_delivery.py": "7c6eb01fb6376b77303d99e7b0b18669a20b58826e59464334119033d153af52",
+        "tests/test_workflow_journal_surface.py": "825d65d4a15acde01455b34d8c29db131945584f559733ef8bd708586bd704d7"
+      },
+      "symbol": "fishhat_contracts.workflow_journal_delivery:WorkflowRecordDelivery.read_input",
+      "work": "O(B) one complete new command/record; O(chunk bytes) per read; immutable references use indexed lookup"
+    },
+    "workflow.journal-delivery.retain": {
+      "capacity": [
+        "Explicit receiving byte capacity may refuse new input without truncation"
+      ],
+      "extent": "Every complete selected command and record byte across all chunks and retries",
+      "growth": "linear",
+      "id": "workflow.journal-delivery.retain",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_workflow_journal_surface.py::test_complete_journal_delivery_growth"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal_surface.py::test_staged_command_and_record_delivery_bind_exact_owner_and_bytes",
+        "tests/test_workflow_journal_surface.py::test_complete_journal_delivery_growth"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_delivery.py": "7c6eb01fb6376b77303d99e7b0b18669a20b58826e59464334119033d153af52",
+        "tests/test_workflow_journal_surface.py": "825d65d4a15acde01455b34d8c29db131945584f559733ef8bd708586bd704d7"
+      },
+      "symbol": "fishhat_contracts.workflow_journal_delivery:WorkflowRecordDelivery.retain",
+      "work": "O(B) one complete new command/record; O(chunk bytes) per read; immutable references use indexed lookup"
+    },
+    "workflow.journal-recovery.apply": {
+      "capacity": [
+        "Unavailable authoritative custody refuses new work without erasing local outcomes"
+      ],
+      "extent": "Every original owner, child disposition, retained outcome and successor slot; no collection limit",
+      "growth": "linear",
+      "id": "workflow.journal-recovery.apply",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal.py::test_complete_workflow_survives_disk_restart_and_lost_replies",
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "6a9442289707067b2b497f4d33a0dd4a95c10e8dca75c4dfaeb068195f3610d6",
+        "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
+        "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
+      },
+      "symbol": "fishhat_contracts.workflow_journal_recovery:JournalRecovery.apply",
+      "work": "O(B + N + E + H + R) complete transfer/recovery with one gate closure and exact local projections; indexed replay and append-only state"
+    },
+    "workflow.journal-recovery.blocks_work": {
+      "capacity": [
+        "Unavailable authoritative custody refuses new work without erasing local outcomes"
+      ],
+      "extent": "Every original owner, child disposition, retained outcome and successor slot; no collection limit",
+      "growth": "linear",
+      "id": "workflow.journal-recovery.blocks_work",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal.py::test_complete_workflow_survives_disk_restart_and_lost_replies",
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "6a9442289707067b2b497f4d33a0dd4a95c10e8dca75c4dfaeb068195f3610d6",
+        "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
+        "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
+      },
+      "symbol": "fishhat_contracts.workflow_journal_recovery:JournalRecovery.blocks_work",
+      "work": "O(B + N + E + H + R) complete transfer/recovery with one gate closure and exact local projections; indexed replay and append-only state"
+    },
+    "workflow.journal-recovery.context": {
+      "capacity": [
+        "Unavailable authoritative custody refuses new work without erasing local outcomes"
+      ],
+      "extent": "Every original owner, child disposition, retained outcome and successor slot; no collection limit",
+      "growth": "linear",
+      "id": "workflow.journal-recovery.context",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal.py::test_complete_workflow_survives_disk_restart_and_lost_replies",
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "6a9442289707067b2b497f4d33a0dd4a95c10e8dca75c4dfaeb068195f3610d6",
+        "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
+        "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
+      },
+      "symbol": "fishhat_contracts.workflow_journal_recovery:JournalRecovery.context",
+      "work": "O(B + N + E + H + R) complete transfer/recovery with one gate closure and exact local projections; indexed replay and append-only state"
+    },
+    "workflow.journal-recovery.initialize_gate": {
+      "capacity": [
+        "Unavailable authoritative custody refuses new work without erasing local outcomes"
+      ],
+      "extent": "Every original owner, child disposition, retained outcome and successor slot; no collection limit",
+      "growth": "linear",
+      "id": "workflow.journal-recovery.initialize_gate",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal.py::test_complete_workflow_survives_disk_restart_and_lost_replies",
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "6a9442289707067b2b497f4d33a0dd4a95c10e8dca75c4dfaeb068195f3610d6",
+        "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
+        "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
+      },
+      "symbol": "fishhat_contracts.workflow_journal_recovery:JournalRecovery.initialize_gate",
+      "work": "O(B + N + E + H + R) complete transfer/recovery with one gate closure and exact local projections; indexed replay and append-only state"
+    },
+    "workflow.journal-recovery.initialize_member": {
+      "capacity": [
+        "Unavailable authoritative custody refuses new work without erasing local outcomes"
+      ],
+      "extent": "Every original owner, child disposition, retained outcome and successor slot; no collection limit",
+      "growth": "linear",
+      "id": "workflow.journal-recovery.initialize_member",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal.py::test_complete_workflow_survives_disk_restart_and_lost_replies",
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "6a9442289707067b2b497f4d33a0dd4a95c10e8dca75c4dfaeb068195f3610d6",
+        "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
+        "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
+      },
+      "symbol": "fishhat_contracts.workflow_journal_recovery:JournalRecovery.initialize_member",
+      "work": "O(B + N + E + H + R) complete transfer/recovery with one gate closure and exact local projections; indexed replay and append-only state"
+    },
+    "workflow.journal-recovery.member-restore": {
+      "capacity": [
+        "Missing qualified original custody blocks recovery and never becomes empty state"
+      ],
+      "extent": "All original local accepted Plans, outcomes and recovery tombstones; no history count limit",
+      "growth": "linear",
+      "id": "workflow.journal-recovery.member-restore",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_workflow_journal_epoch.py::test_restored_epoch_recovery_is_linear"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal_epoch.py::test_restored_epoch_requires_exact_custody_and_preserves_original_bytes",
+        "tests/test_workflow_journal_epoch.py::test_restored_epoch_recovery_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "6a9442289707067b2b497f4d33a0dd4a95c10e8dca75c4dfaeb068195f3610d6",
+        "tests/test_workflow_journal_epoch.py": "c9114c7edc2573c83cf145658fe3ab0ea0baf5b818a7d4ea0cf7941dba436dcb"
+      },
+      "symbol": "fishhat_contracts.workflow_journal_recovery:WorkflowRecoveryMember.__init__",
+      "work": "O(L + H) one original owner-local projection and one verified replay of each original and current retained event"
+    },
+    "workflow.journal-recovery.outcome": {
+      "capacity": [
+        "Unavailable authoritative custody refuses new work without erasing local outcomes"
+      ],
+      "extent": "Every original owner, child disposition, retained outcome and successor slot; no collection limit",
+      "growth": "linear",
+      "id": "workflow.journal-recovery.outcome",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal.py::test_complete_workflow_survives_disk_restart_and_lost_replies",
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "6a9442289707067b2b497f4d33a0dd4a95c10e8dca75c4dfaeb068195f3610d6",
+        "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
+        "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
+      },
+      "symbol": "fishhat_contracts.workflow_journal_recovery:JournalRecovery.outcome",
+      "work": "O(B + N + E + H + R) complete transfer/recovery with one gate closure and exact local projections; indexed replay and append-only state"
+    },
+    "workflow.journal-store.append": {
+      "capacity": [
+        "Protected owner filesystem capacity; failure retains uncertainty and blocks appends"
+      ],
+      "extent": "Complete journal and selected records; no history or record-count ceiling",
+      "growth": "linear",
+      "id": "workflow.journal-store.append",
+      "limits": [
+        [
+          "io_chunk_bytes",
+          65536
+        ]
+      ],
+      "linear_proofs": [
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal.py::test_complete_workflow_survives_disk_restart_and_lost_replies",
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "fishhat/owner-support/src/fishhat_owner/workflow_journal.py": "b2eab9260fed83a5cd9342378116ce7210738c19152198addb796289b9ce6120",
+        "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
+        "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
+      },
+      "symbol": "fishhat_owner.workflow_journal:WorkflowJournal.append",
+      "work": "O(B) selected new/replayed record bytes; cold open reads and validates each retained frame once"
+    },
+    "workflow.journal-store.close": {
+      "capacity": [
+        "Protected owner filesystem capacity; failure retains uncertainty and blocks appends"
+      ],
+      "extent": "Complete journal and selected records; no history or record-count ceiling",
+      "growth": "linear",
+      "id": "workflow.journal-store.close",
+      "limits": [
+        [
+          "io_chunk_bytes",
+          65536
+        ]
+      ],
+      "linear_proofs": [
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal.py::test_complete_workflow_survives_disk_restart_and_lost_replies",
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "fishhat/owner-support/src/fishhat_owner/workflow_journal.py": "b2eab9260fed83a5cd9342378116ce7210738c19152198addb796289b9ce6120",
+        "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
+        "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
+      },
+      "symbol": "fishhat_owner.workflow_journal:WorkflowJournal.close",
+      "work": "O(B) selected new/replayed record bytes; cold open reads and validates each retained frame once"
+    },
+    "workflow.journal-store.command_bytes": {
+      "capacity": [
+        "Protected owner filesystem capacity; failure retains uncertainty and blocks appends"
+      ],
+      "extent": "Complete journal and selected records; no history or record-count ceiling",
+      "growth": "linear",
+      "id": "workflow.journal-store.command_bytes",
+      "limits": [
+        [
+          "io_chunk_bytes",
+          65536
+        ]
+      ],
+      "linear_proofs": [
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal.py::test_complete_workflow_survives_disk_restart_and_lost_replies",
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "fishhat/owner-support/src/fishhat_owner/workflow_journal.py": "b2eab9260fed83a5cd9342378116ce7210738c19152198addb796289b9ce6120",
+        "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
+        "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
+      },
+      "symbol": "fishhat_owner.workflow_journal:WorkflowJournal.command_bytes",
+      "work": "O(B) selected new/replayed record bytes; cold open reads and validates each retained frame once"
+    },
+    "workflow.journal-store.create": {
+      "capacity": [
+        "Protected owner filesystem capacity; failure retains uncertainty and blocks appends"
+      ],
+      "extent": "Complete journal and selected records; no history or record-count ceiling",
+      "growth": "linear",
+      "id": "workflow.journal-store.create",
+      "limits": [
+        [
+          "io_chunk_bytes",
+          65536
+        ]
+      ],
+      "linear_proofs": [
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal.py::test_complete_workflow_survives_disk_restart_and_lost_replies",
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "fishhat/owner-support/src/fishhat_owner/workflow_journal.py": "b2eab9260fed83a5cd9342378116ce7210738c19152198addb796289b9ce6120",
+        "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
+        "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
+      },
+      "symbol": "fishhat_owner.workflow_journal:WorkflowJournal.create",
+      "work": "O(B) selected new/replayed record bytes; cold open reads and validates each retained frame once"
+    },
+    "workflow.journal-store.genesis": {
+      "capacity": [
+        "Protected owner filesystem capacity; failure retains uncertainty and blocks appends"
+      ],
+      "extent": "Complete journal and selected records; no history or record-count ceiling",
+      "growth": "linear",
+      "id": "workflow.journal-store.genesis",
+      "limits": [
+        [
+          "io_chunk_bytes",
+          65536
+        ]
+      ],
+      "linear_proofs": [
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal.py::test_complete_workflow_survives_disk_restart_and_lost_replies",
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "fishhat/owner-support/src/fishhat_owner/workflow_journal.py": "b2eab9260fed83a5cd9342378116ce7210738c19152198addb796289b9ce6120",
+        "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
+        "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
+      },
+      "symbol": "fishhat_owner.workflow_journal:validate_journal_genesis",
+      "work": "O(B) selected new/replayed record bytes; cold open reads and validates each retained frame once"
+    },
+    "workflow.journal-store.guard": {
+      "capacity": [
+        "Protected owner filesystem capacity; failure retains uncertainty and blocks appends"
+      ],
+      "extent": "Complete journal and selected records; no history or record-count ceiling",
+      "growth": "linear",
+      "id": "workflow.journal-store.guard",
+      "limits": [
+        [
+          "io_chunk_bytes",
+          65536
+        ]
+      ],
+      "linear_proofs": [
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal.py::test_complete_workflow_survives_disk_restart_and_lost_replies",
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "fishhat/owner-support/src/fishhat_owner/workflow_journal.py": "b2eab9260fed83a5cd9342378116ce7210738c19152198addb796289b9ce6120",
+        "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
+        "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
+      },
+      "symbol": "fishhat_owner.workflow_journal:WorkflowJournal.guard",
+      "work": "O(B) selected new/replayed record bytes; cold open reads and validates each retained frame once"
+    },
+    "workflow.journal-store.iter_events": {
+      "capacity": [
+        "Protected owner filesystem capacity; failure retains uncertainty and blocks appends"
+      ],
+      "extent": "Complete journal and selected records; no history or record-count ceiling",
+      "growth": "linear",
+      "id": "workflow.journal-store.iter_events",
+      "limits": [
+        [
+          "io_chunk_bytes",
+          65536
+        ]
+      ],
+      "linear_proofs": [
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal.py::test_complete_workflow_survives_disk_restart_and_lost_replies",
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "fishhat/owner-support/src/fishhat_owner/workflow_journal.py": "b2eab9260fed83a5cd9342378116ce7210738c19152198addb796289b9ce6120",
+        "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
+        "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
+      },
+      "symbol": "fishhat_owner.workflow_journal:WorkflowJournal.iter_events",
+      "work": "O(B) selected new/replayed record bytes; cold open reads and validates each retained frame once"
+    },
+    "workflow.journal-store.lookup": {
+      "capacity": [
+        "Protected owner filesystem capacity; failure retains uncertainty and blocks appends"
+      ],
+      "extent": "Complete journal and selected records; no history or record-count ceiling",
+      "growth": "linear",
+      "id": "workflow.journal-store.lookup",
+      "limits": [
+        [
+          "io_chunk_bytes",
+          65536
+        ]
+      ],
+      "linear_proofs": [
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal.py::test_complete_workflow_survives_disk_restart_and_lost_replies",
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "fishhat/owner-support/src/fishhat_owner/workflow_journal.py": "b2eab9260fed83a5cd9342378116ce7210738c19152198addb796289b9ce6120",
+        "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
+        "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
+      },
+      "symbol": "fishhat_owner.workflow_journal:WorkflowJournal.lookup",
+      "work": "O(B) selected new/replayed record bytes; cold open reads and validates each retained frame once"
+    },
+    "workflow.journal-store.open": {
+      "capacity": [
+        "Protected owner filesystem capacity; failure retains uncertainty and blocks appends"
+      ],
+      "extent": "Complete journal and selected records; no history or record-count ceiling",
+      "growth": "linear",
+      "id": "workflow.journal-store.open",
+      "limits": [
+        [
+          "io_chunk_bytes",
+          65536
+        ]
+      ],
+      "linear_proofs": [
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal.py::test_complete_workflow_survives_disk_restart_and_lost_replies",
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "fishhat/owner-support/src/fishhat_owner/workflow_journal.py": "b2eab9260fed83a5cd9342378116ce7210738c19152198addb796289b9ce6120",
+        "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
+        "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
+      },
+      "symbol": "fishhat_owner.workflow_journal:WorkflowJournal.open",
+      "work": "O(B) selected new/replayed record bytes; cold open reads and validates each retained frame once"
+    },
+    "workflow.journal-store.outcome_bytes": {
+      "capacity": [
+        "Protected owner filesystem capacity; failure retains uncertainty and blocks appends"
+      ],
+      "extent": "Complete journal and selected records; no history or record-count ceiling",
+      "growth": "linear",
+      "id": "workflow.journal-store.outcome_bytes",
+      "limits": [
+        [
+          "io_chunk_bytes",
+          65536
+        ]
+      ],
+      "linear_proofs": [
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal.py::test_complete_workflow_survives_disk_restart_and_lost_replies",
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "fishhat/owner-support/src/fishhat_owner/workflow_journal.py": "b2eab9260fed83a5cd9342378116ce7210738c19152198addb796289b9ce6120",
+        "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
+        "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
+      },
+      "symbol": "fishhat_owner.workflow_journal:WorkflowJournal.outcome_bytes",
+      "work": "O(B) selected new/replayed record bytes; cold open reads and validates each retained frame once"
+    },
+    "workflow.journal.gate-initialize": {
+      "capacity": [
+        "Protected native owners may refuse new capacity without discarding accepted work"
+      ],
+      "extent": "Complete owner-local inputs, dependency edges and fixed installed phases; no owner, child, material or history count ceiling",
+      "growth": "linear",
+      "id": "workflow.journal.gate-initialize",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal.py::test_complete_workflow_survives_disk_restart_and_lost_replies",
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "1894bdaa939f706c0e3e3226f4b693a7932c1127c04f618d1d7ea71c71d222cf",
+        "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
+        "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
+      },
+      "symbol": "fishhat_contracts.workflow_journal:WorkflowGate.__init__",
+      "work": "O(B + N + E + H) full manifest partition and one cold journal replay"
+    },
+    "workflow.journal.get": {
+      "capacity": [
+        "Protected native owners may refuse new capacity without discarding accepted work"
+      ],
+      "extent": "Complete owner-local inputs, dependency edges and fixed installed phases; no owner, child, material or history count ceiling",
+      "growth": "linear",
+      "id": "workflow.journal.get",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal.py::test_complete_workflow_survives_disk_restart_and_lost_replies",
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "1894bdaa939f706c0e3e3226f4b693a7932c1127c04f618d1d7ea71c71d222cf",
+        "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
+        "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
+      },
+      "symbol": "fishhat_contracts.workflow_journal:_JournalTarget.record",
+      "work": "O(B) exact indexed selected record bytes, independent of retained history"
+    },
+    "workflow.journal.initialize": {
+      "capacity": [
+        "Protected native owners may refuse new capacity without discarding accepted work"
+      ],
+      "extent": "Complete owner-local inputs, dependency edges and fixed installed phases; no owner, child, material or history count ceiling",
+      "growth": "linear",
+      "id": "workflow.journal.initialize",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal.py::test_complete_workflow_survives_disk_restart_and_lost_replies",
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "1894bdaa939f706c0e3e3226f4b693a7932c1127c04f618d1d7ea71c71d222cf",
+        "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
+        "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
+      },
+      "symbol": "fishhat_contracts.workflow_journal:initialize_workflow_journal",
+      "work": "O(B + N + E + H) one exact create/join/recovery command, one manifest partition or local projection, and one cold replay"
+    },
+    "workflow.journal.member-initialize": {
+      "capacity": [
+        "Protected native owners may refuse new capacity without discarding accepted work"
+      ],
+      "extent": "Complete owner-local inputs, dependency edges and fixed installed phases; no owner, child, material or history count ceiling",
+      "growth": "linear",
+      "id": "workflow.journal.member-initialize",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal.py::test_complete_workflow_survives_disk_restart_and_lost_replies",
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "1894bdaa939f706c0e3e3226f4b693a7932c1127c04f618d1d7ea71c71d222cf",
+        "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
+        "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
+      },
+      "symbol": "fishhat_contracts.workflow_journal:WorkflowMember.__init__",
+      "work": "O(L + E + H) exact local projection, incoming dependency bytes and one cold replay"
+    },
+    "workflow.journal.operation-admission": {
+      "capacity": [
+        "Protected native owners may refuse new capacity without discarding accepted work"
+      ],
+      "extent": "Complete owner-local inputs, dependency edges and fixed installed phases; no owner, child, material or history count ceiling",
+      "growth": "linear",
+      "id": "workflow.journal.operation-admission",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal.py::test_complete_workflow_survives_disk_restart_and_lost_replies",
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "1894bdaa939f706c0e3e3226f4b693a7932c1127c04f618d1d7ea71c71d222cf",
+        "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
+        "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
+      },
+      "symbol": "fishhat_contracts.workflow_journal:WorkflowMember.require_operation_admission",
+      "work": "O(B + E) exact retained local Plan, selected child permit and independently acquired native admission context; no peer or history traversal"
+    },
+    "workflow.journal.replay-reference": {
+      "capacity": [
+        "Protected native owners may refuse new capacity without discarding accepted work"
+      ],
+      "extent": "Complete owner-local inputs, dependency edges and fixed installed phases; no owner, child, material or history count ceiling",
+      "growth": "linear",
+      "id": "workflow.journal.replay-reference",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal.py::test_complete_workflow_survives_disk_restart_and_lost_replies",
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "1894bdaa939f706c0e3e3226f4b693a7932c1127c04f618d1d7ea71c71d222cf",
+        "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
+        "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
+      },
+      "symbol": "fishhat_contracts.workflow_journal:_JournalTarget.replay_reference",
+      "work": "O(1) bounded command identity and digest lookup; retained proposal, command and outcome bytes are not materialized"
+    },
+    "workflow.journal.submit": {
+      "capacity": [
+        "Protected native owners may refuse new capacity without discarding accepted work"
+      ],
+      "extent": "Complete owner-local inputs, dependency edges and fixed installed phases; no owner, child, material or history count ceiling",
+      "growth": "linear",
+      "id": "workflow.journal.submit",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "proofs": [
+        "tests/test_workflow_journal.py::test_complete_workflow_survives_disk_restart_and_lost_replies",
+        "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "1894bdaa939f706c0e3e3226f4b693a7932c1127c04f618d1d7ea71c71d222cf",
+        "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
+        "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
+      },
+      "symbol": "fishhat_contracts.workflow_journal:dispatch_journal_command",
+      "work": "O(B + E) new command and its exact affected local dependencies; preparation and each fixed phase visit each owner once; replay reads only the indexed original command/outcome"
     },
     "workflow.lifecycle-request": {
       "capacity": [
@@ -4065,10 +4813,10 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_lifecycle.py": "35bc98c0b7f1ef70dd9a2698f58b5a2f5ea33f3261db59f12b099dc7859ea707",
-        "tests/test_workflow_lifecycle_requests.py": "25c174cb52f4bd9aaf0b2f0b6d5ac58f39e11e159803dbfca9a569f053e063fc"
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_lifecycle.py": "1a116be015990e18ba829cbea4961afe9f85027c5b6c38036e2da49dbc7094b9",
+        "tests/test_workflow_lifecycle_requests.py": "ce2e80ab129f74d4a0c39dec124b3b0d8daa0deb3fe39f79fb0f3463dc49ae73"
       },
-      "symbol": "fishhat_contracts.workflow_lifecycle:request_workflow_lifecycle",
+      "symbol": "fishhat_contracts.workflow_lifecycle:request_workflow_lifecycle_view",
       "work": "O(B + H) complete capsule validation, exact history lookup and copying; B complete retained workflow/proposal/evidence bytes and H retained transition entries; the finite request never bounds retained result evidence"
     },
     "workflow.mutation-acknowledgment": {
@@ -4087,7 +4835,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_acknowledgments.py": "8cd1e801b994ba383c547518a74fcd44944723317c586843707fc9e0ddecefc4",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_acknowledgments.py": "1925b3b91e8881be422f4e15dcdc384cfc13387a7ac209f15ac3188f9c3b312d",
         "tests/test_workflow_acknowledgment_growth.py": "1633182ff184c41fb2980311c61bf388fd0207a6934fce34db410d8b51314156"
       },
       "symbol": "fishhat_contracts.workflow_acknowledgments:workflow_mutation_acknowledgment",
@@ -4107,7 +4855,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_acknowledgments.py": "8cd1e801b994ba383c547518a74fcd44944723317c586843707fc9e0ddecefc4",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_acknowledgments.py": "1925b3b91e8881be422f4e15dcdc384cfc13387a7ac209f15ac3188f9c3b312d",
         "tests/test_workflow_acknowledgment_growth.py": "1633182ff184c41fb2980311c61bf388fd0207a6934fce34db410d8b51314156"
       },
       "symbol": "fishhat_contracts.workflow_acknowledgments:validate_workflow_mutation_acknowledgment",
@@ -4134,8 +4882,8 @@
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/workflow_evidence.py": "9afdff817b2a1a4ab2478c5c852ba55d3630fa9cc9362dc73fec67d87b9f8b07",
         "tests/test_linear_growth.py": "238c554ee57c932a2b14c605a17d40bc17e40b979e3b4936cc5ae49f60b2885d",
-        "tests/test_relocation_participants.py": "aa23b98e1487567ba1fe15d62588a109265c25422f22e55dbcc26846996ccefa",
-        "tests/test_workflow_evidence.py": "0c21c6d5eaccc25211682fff5d8383a483f97287b8c09975cfe7df7f2316064d"
+        "tests/test_relocation_participants.py": "d652c272806af555d7cc93ff9c74a0d412010924fed769735972a845dad3bd98",
+        "tests/test_workflow_evidence.py": "e8065ac6f530a08f534f6efa03e1d30f0b7daba71dbc58d7d8ee5953e973c060"
       },
       "symbol": "fishhat_contracts.workflow_evidence:validate_phase_evidence",
       "work": "O(B + P + C + K) complete-input validation with hash-indexed structural uniqueness for fixed installed schema/phase closure; B serialized proposal/evidence/Plan bytes, P participants, C child slots and K retained bindings"
@@ -4162,8 +4910,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_recovery.py": "6428557e788a0c8adf74902e54c3ff5f20123cb573589af7a6a53cd7de861e8d",
-        "tests/test_workflow_abandonment.py": "d6658d4dcc5aed63cab901784872f633669354ba2bd6c2b93100abba2dbe83ad",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_recovery.py": "0d5ca141d0f879e5b13177f1707159b38e093d3499ce45c82d77fc51c6d73028",
+        "tests/test_workflow_abandonment.py": "9b23228d771abc02ae704a05c6b7faba1e2d014c1aa3817bd39f165bb0b7c3ca",
         "tests/test_workflow_validation_growth.py": "789e9b8b22d11804bb3c9b050c8a09483da9f2cae1a7bdd341a45b8b259eaaf2"
       },
       "symbol": "fishhat_contracts.workflow_recovery:validate_recovery_proposal",
@@ -4187,8 +4935,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_transfer_history.py": "653efff2409c6d6f1366b30c9260429a9f300b9ddda51bea004ac36a88622d3f",
-        "tests/test_workflow_transfer_history.py": "ba7d4b5876a27d9d5f4e9d7249660a19ab5b21871a2f94e8618f8af7b93c53dd",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_transfer_history.py": "616c6caddb6d83d7e2ddda8d83d4231c155157e4908c5e27d79077b71c510b91",
+        "tests/test_workflow_transfer_history.py": "a76303a7c331366834646730825bc5e09f832fe51bdb304212043924d0fa9845",
         "tests/test_workflow_transfer_history_growth.py": "2d349c853e7504f29082e82d2a79ee373adb55e3c34008e54a28b8e415121451"
       },
       "symbol": "fishhat_contracts.workflow_transfer_history:validate_transfer_record",

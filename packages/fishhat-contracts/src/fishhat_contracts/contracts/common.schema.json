@@ -265,7 +265,7 @@
         "size"
       ],
       "additionalProperties": false,
-      "description": "An owner-minted reference to complete immutable bytes. Every redemption rechecks the actual receiving principal, resource, purpose and owner epoch against protected owner state; possession is not bearer authority. Only content.commit exposes an input handle. Planning binds its exact digest and identity; operation admission and accepted workflow preparation or phase input atomically pin referenced inputs before acknowledgement or effects. Unadmitted staging expiry cannot collect accepted references. Restoring owner state invalidates mutable staging and requires explicit recovery of retained bindings. Complete content size uses the interoperable integer range, while independently approved receiver capacity may explicitly reject new staging; transport chunks never impose a hidden total closure limit."
+      "description": "An owner-minted reference to complete immutable bytes. Every redemption rechecks the actual receiving principal, resource, purpose and owner epoch against protected owner state; possession is not bearer authority. Only content.commit exposes an input handle. Planning binds its exact digest and identity; operation admission and accepted workflow preparation or phase input atomically pin referenced inputs before acknowledgement or effects. Unadmitted staging expiry cannot collect accepted references. Restoring owner state invalidates mutable staging and requires explicit recovery of retained bindings. Complete content size uses the interoperable integer range, while independently approved receiver capacity may explicitly reject new staging; transport chunks never impose a hidden total closure limit. workflow.journal.input may also expose an owner-minted read-only handle for exact original accepted command bytes already pinned in the native journal; this does not replace content.commit for new staged admission."
     },
     "Cursor": {
       "type": "string",
@@ -343,9 +343,29 @@
             "preparation_id"
           ],
           "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "workflow-journal"
+            },
+            "workflow_id": {
+              "$ref": "common.schema.json#/$defs/UUID"
+            },
+            "command_id": {
+              "$ref": "common.schema.json#/$defs/UUID"
+            }
+          },
+          "required": [
+            "kind",
+            "workflow_id",
+            "command_id"
+          ],
+          "additionalProperties": false
         }
       ],
-      "description": "Input staging has its own durable identity before any plan or operation acceptance. Owner-produced output binds to its accepted operation. Adoption pins the original immutable staging handle; it does not rewrite its identity or turn staging into execution. Owner-issued observational lifecycle evidence instead binds its exact non-effectful preparation_id. It is not an Operation or uploaded caller evidence."
+      "description": "Input staging has its own durable identity before any plan or operation acceptance. Owner-produced output binds to its accepted operation. Adoption pins the original immutable staging handle; it does not rewrite its identity or turn staging into execution. Owner-issued observational lifecycle evidence instead binds its exact non-effectful preparation_id. It is not an Operation or uploaded caller evidence. Owner-retained original workflow commands use workflow-journal binding to the exact accepted command and workflow; this is read-only accepted custody, never caller staging or new execution authority."
     },
     "ResultHandle": {
       "type": "object",
@@ -417,7 +437,8 @@
                 "Observation",
                 "ProblemEvidence",
                 "WorkflowTransferRecord",
-                "WorkflowPhaseAttestation"
+                "WorkflowPhaseAttestation",
+                "WorkflowJournalRecord"
               ]
             },
             "id": {
@@ -454,7 +475,8 @@
                       "Observation",
                       "ProblemEvidence",
                       "WorkflowTransferRecord",
-                      "WorkflowPhaseAttestation"
+                      "WorkflowPhaseAttestation",
+                      "WorkflowJournalRecord"
                     ]
                   }
                 }
@@ -469,6 +491,22 @@
                   "required": [
                     "resource"
                   ]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "WorkflowJournalRecord"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "generation": {
+                    "type": "null"
+                  }
                 }
               }
             }
@@ -497,7 +535,7 @@
         "size"
       ],
       "additionalProperties": false,
-      "description": "An owner-minted immutable canonical-JSON snapshot of one complete record, independently of operation admission. The record identity, exact owner epoch, record-declared generation, installed schema closure, complete byte digest and size are inseparable. Immutable Plans use null generation; Operations, Workflows and WorkflowTransferRecords use their declared generation, with the digest distinguishing every snapshot. Possession grants no read or execution authority: every record.read rechecks the actual receiving principal and the protected snapshot resource closure. The owner commits complete retrievable snapshot custody before advertising this reference. Later generations never replace its bytes. Plan expiry affects admission, not completion of an already advertised traversal; accepted, active, uncertain and recovery-required custody cannot lose its only retrievable evidence. An explicit expired or restored snapshot requires a fresh record lookup, never silent rebinding. Accepted work must remain discoverable and fully retrievable through its current record even if old completed traversals are collected. This reference does not establish plan review, acceptance or execution success before its complete payload is verified. Size describes the record and adds no total-size limit beyond its owning contract; transfers use bounded chunks and local capacity failures must be explicit. A historical schema closure is readable only through an immutable reader independently installed by the receiver for that exact digest and the declared record-kind URI. CLI envelopes, SSH results, pages and chunks propagate the same trusted reader context; neither the record nor its caller can install a reader. Historical retrieval does not admit new work under an obsolete schema. Discovery and ResourceReport use immutable observation snapshot identities: record.id equals snapshot_id and generation is null, because neither invents a ledger generation. Discovery pins records.schema.json#/$defs/Info; ResourceReport pins resource-records.schema.json#/$defs/ResourceReport. Reassembly yields exactly the complete inline payload under that schema. Each read reauthorizes its protected disclosure scope and snapshot; later observations never change these bytes. A retained reader is selected by this exact kind URI and closure digest, not by treating an observation as an Operation. Observation and ProblemEvidence also use snapshot_id as record.id and null generation. Their record.resource is required and equals the complete payload resource. WorkflowTransferRecord also requires record.resource equal to its workflow resource, uses transfer_id as record.id and its last retained transfer generation, and pins workflow-transfer-history.schema.json#/$defs/WorkflowTransferRecord. WorkflowPhaseAttestation also requires record.resource equal to {kind: workflow, id: workflow_id}; record.id equals the attestation_id carried as payload.id, generation equals the issuer capsule generation observed at issuance, and its schema is workflow-evidence.schema.json#/$defs/WorkflowPhaseAttestation. Its independent issuance journal does not advance the workflow capsule generation. The resource is absent for other record kinds. Observation pins records.schema.json#/$defs/Observation and preserves the observed resource generation inside its payload, without treating that value as a mutable snapshot generation. ProblemEvidence pins records.schema.json#/$defs/ProblemEvidence and retains the complete evidence selection for one exact owner/resource. Each lookup and chunk read independently checks current permission for that protected disclosure scope; an authenticated failure or possession of its evidence reference grants no additional read permission.",
+      "description": "An owner-minted immutable canonical-JSON snapshot of one complete record, independently of operation admission. The record identity, exact owner epoch, record-declared generation, installed schema closure, complete byte digest and size are inseparable. Immutable Plans use null generation; Operations, Workflows and WorkflowTransferRecords use their declared generation, with the digest distinguishing every snapshot. Possession grants no read or execution authority: every record.read rechecks the actual receiving principal and the protected snapshot resource closure. The owner commits complete retrievable snapshot custody before advertising this reference. Later generations never replace its bytes. Plan expiry affects admission, not completion of an already advertised traversal; accepted, active, uncertain and recovery-required custody cannot lose its only retrievable evidence. An explicit expired or restored snapshot requires a fresh record lookup, never silent rebinding. Accepted work must remain discoverable and fully retrievable through its current record even if old completed traversals are collected. This reference does not establish plan review, acceptance or execution success before its complete payload is verified. Size describes the record and adds no total-size limit beyond its owning contract; transfers use bounded chunks and local capacity failures must be explicit. A historical schema closure is readable only through an immutable reader independently installed by the receiver for that exact digest and the declared record-kind URI. CLI envelopes, SSH results, pages and chunks propagate the same trusted reader context; neither the record nor its caller can install a reader. Historical retrieval does not admit new work under an obsolete schema. Discovery and ResourceReport use immutable observation snapshot identities: record.id equals snapshot_id and generation is null, because neither invents a ledger generation. Discovery pins records.schema.json#/$defs/Info; ResourceReport pins resource-records.schema.json#/$defs/ResourceReport. Reassembly yields exactly the complete inline payload under that schema. Each read reauthorizes its protected disclosure scope and snapshot; later observations never change these bytes. A retained reader is selected by this exact kind URI and closure digest, not by treating an observation as an Operation. Observation and ProblemEvidence also use snapshot_id as record.id and null generation. Their record.resource is required and equals the complete payload resource. WorkflowTransferRecord also requires record.resource equal to its workflow resource, uses transfer_id as record.id and its last retained transfer generation, and pins workflow-transfer-history.schema.json#/$defs/WorkflowTransferRecord. WorkflowPhaseAttestation also requires record.resource equal to {kind: workflow, id: workflow_id}; record.id equals the attestation_id carried as payload.id, generation equals the issuer capsule generation observed at issuance, and its schema is workflow-evidence.schema.json#/$defs/WorkflowPhaseAttestation. Its independent issuance journal does not advance the workflow capsule generation. The resource is absent for other record kinds. Observation pins records.schema.json#/$defs/Observation and preserves the observed resource generation inside its payload, without treating that value as a mutable snapshot generation. ProblemEvidence pins records.schema.json#/$defs/ProblemEvidence and retains the complete evidence selection for one exact owner/resource. Each lookup and chunk read independently checks current permission for that protected disclosure scope; an authenticated failure or possession of its evidence reference grants no additional read permission. WorkflowJournalRecord is an immutable signed journal outcome with record.id equal to its payload id, null record.generation and record.resource equal to {kind: workflow, id: workflow_id}. It pins workflow-journal.schema.json#/$defs/JournalRecord. A local journal record retains local scope and a gate route, never a full peer capsule closure. A schema-valid signature envelope is not authenticated until verified against independently approved owner keys and the exact retained gate delegation.",
       "allOf": [
         {
           "if": {
@@ -510,7 +548,8 @@
                       "Discovery",
                       "ResourceReport",
                       "Observation",
-                      "ProblemEvidence"
+                      "ProblemEvidence",
+                      "WorkflowJournalRecord"
                     ]
                   }
                 }

@@ -62,6 +62,7 @@
     "tracking-profile.schema.json",
     "tracking-records.schema.json",
     "workflow-evidence.schema.json",
+    "workflow-journal.schema.json",
     "workflow-recovery.schema.json",
     "workflow-transfer-history.schema.json",
     "workflow.schema.json",

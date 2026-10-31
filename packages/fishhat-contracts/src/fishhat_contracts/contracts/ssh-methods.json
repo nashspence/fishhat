@@ -32,16 +32,7 @@
       "name": "operation.cancel"
     },
     {
-      "name": "workflow.prepare"
-    },
-    {
       "name": "workflow.get"
-    },
-    {
-      "name": "workflow.advance"
-    },
-    {
-      "name": "workflow.transfer"
     },
     {
       "name": "content.begin"
@@ -80,40 +71,28 @@
       "name": "history.content"
     },
     {
-      "name": "workflow.bind"
-    },
-    {
-      "name": "workflow.recover"
-    },
-    {
-      "name": "workflow.lifecycle"
-    },
-    {
       "name": "operation.cancellation.get"
     },
     {
       "name": "operation.cancellation.list"
     },
     {
-      "name": "workflow.transfer.get"
-    },
-    {
-      "name": "workflow.attest"
-    },
-    {
-      "name": "workflow.attestation.get"
-    },
-    {
-      "name": "workflow.attestation.check"
-    },
-    {
-      "name": "workflow.native-attest"
-    },
-    {
-      "name": "workflow.native-attestation.check"
-    },
-    {
       "name": "lifecycle.evidence.prepare"
+    },
+    {
+      "name": "workflow.journal.submit"
+    },
+    {
+      "name": "workflow.journal.get"
+    },
+    {
+      "name": "workflow.journal.list"
+    },
+    {
+      "name": "workflow.journal.events"
+    },
+    {
+      "name": "workflow.journal.input"
     }
   ],
   "max_frame_bytes": 1048576,

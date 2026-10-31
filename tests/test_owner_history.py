@@ -593,10 +593,12 @@ def test_historical_reads_cannot_bypass_new_recovery_admission(change):
 
 
 @pytest.mark.parametrize(
-    "method", ["owner.history", "history.list", "history.read", "history.content", "workflow.bind"]
+    "method",
+    ["owner.history", "history.list", "history.read", "history.content", "workflow.journal.submit"],
 )
 def test_direct_owner_history_and_binding_commands_use_closed_stdin(method):
-    command = "app-ops " + method.replace(".", " ") + " --request-stdin --json"
+    stdin_flag = "--input-stdin" if method == "workflow.journal.submit" else "--request-stdin"
+    command = f"app-ops {method.replace('.', ' ')} {stdin_flag} --json"
     assert parse_command(command, "app-ops")["use_case"] == method
     with pytest.raises(ContractError):
         parse_command(command + " --execute", "app-ops")

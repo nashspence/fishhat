@@ -1,4 +1,12 @@
-"""Decoded immutable workflow inputs and finite transition reference models.
+"""Complete shared workflow inspection models; no live owner admission.
+
+These full-value helpers construct and validate an explicitly requested audit
+projection from independently retained facts. They are not a journal writer or
+a participant protocol: live admission uses workflow_journal and its partitioned
+owner journals. Materialize complete views only for explicit inspection, never
+after each accepted child or at every participating owner.
+
+Decoded immutable workflow inputs and finite transition reference models.
 
 These complete-input checks make no native authorization, persistence or bounded
 streaming claim. Receivers independently authenticate Plans and witnesses, verify
@@ -538,7 +546,7 @@ def validate_workflow_proposal_binding(
     validate_recovery_custody(workflow, recovery_readers=recovery_readers)
 
 
-def prepare_workflow(
+def prepare_workflow_view(
     request: dict[str, Any],
     *,
     expected_owner: dict[str, Any],
@@ -612,13 +620,15 @@ def prepare_workflow(
     _require(verified_preparation is not None, "workflow local preparation proof required")
     assert verified_preparation is not None
     validate_preparation_witness(verified_preparation, proposal, owner=expected_owner)
-    result = prepared_capsule(proposal, expected_owner)
+    result = prepared_workflow_view(proposal, expected_owner)
     result["prerequisite_witnesses"] = [copy.deepcopy(verified_preparation)]
     validate_workflow(result, recovery_readers=recovery_readers)
     return result
 
 
-def prepared_capsule(proposal: dict[str, Any], expected_owner: dict[str, Any]) -> dict[str, Any]:
+def prepared_workflow_view(
+    proposal: dict[str, Any], expected_owner: dict[str, Any]
+) -> dict[str, Any]:
     """Construct decoded fields only; callers establish custody before validation."""
     return {
         "format": "deployment-ops/record/v1",
@@ -643,7 +653,7 @@ def prepared_capsule(proposal: dict[str, Any], expected_owner: dict[str, Any]) -
     }
 
 
-def decode_workflow_input(
+def decode_workflow_audit_input(
     method: str,
     reference: dict[str, Any],
     data: bytes,
@@ -1048,7 +1058,7 @@ def validate_advance_request(
     return "new"
 
 
-def advance_workflow(
+def advance_workflow_view(
     request: dict[str, Any],
     workflow: dict[str, Any],
     *,

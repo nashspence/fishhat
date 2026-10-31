@@ -454,152 +454,7 @@
           "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "method": {
-          "const": "workflow.prepare"
-        },
-        "ok": {
-          "const": true
-        },
-        "result": {
-          "oneOf": [
-            {
-              "$ref": "records.schema.json#/$defs/Workflow"
-            },
-            {
-              "allOf": [
-                {
-                  "$ref": "common.schema.json#/$defs/RecordReference"
-                },
-                {
-                  "properties": {
-                    "record": {
-                      "properties": {
-                        "kind": {
-                          "const": "Workflow"
-                        }
-                      }
-                    }
-                  }
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "required": [
-        "format",
-        "message_id",
-        "method",
-        "ok",
-        "result"
-      ],
-      "additionalProperties": false
-    },
-    {
-      "type": "object",
-      "properties": {
-        "format": {
-          "const": "deployment-ops/owner/v1"
-        },
-        "message_id": {
-          "type": "string",
-          "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-        },
-        "method": {
           "const": "workflow.get"
-        },
-        "ok": {
-          "const": true
-        },
-        "result": {
-          "oneOf": [
-            {
-              "$ref": "records.schema.json#/$defs/Workflow"
-            },
-            {
-              "allOf": [
-                {
-                  "$ref": "common.schema.json#/$defs/RecordReference"
-                },
-                {
-                  "properties": {
-                    "record": {
-                      "properties": {
-                        "kind": {
-                          "const": "Workflow"
-                        }
-                      }
-                    }
-                  }
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "required": [
-        "format",
-        "message_id",
-        "method",
-        "ok",
-        "result"
-      ],
-      "additionalProperties": false
-    },
-    {
-      "type": "object",
-      "properties": {
-        "format": {
-          "const": "deployment-ops/owner/v1"
-        },
-        "message_id": {
-          "type": "string",
-          "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-        },
-        "method": {
-          "const": "workflow.advance"
-        },
-        "ok": {
-          "const": true
-        },
-        "result": {
-          "allOf": [
-            {
-              "$ref": "workflow.schema.json#/$defs/MutationAcknowledgment"
-            },
-            {
-              "properties": {
-                "method": {
-                  "const": "workflow.advance"
-                }
-              }
-            }
-          ]
-        }
-      },
-      "required": [
-        "format",
-        "message_id",
-        "method",
-        "ok",
-        "result"
-      ],
-      "additionalProperties": false
-    },
-    {
-      "type": "object",
-      "properties": {
-        "format": {
-          "const": "deployment-ops/owner/v1"
-        },
-        "message_id": {
-          "type": "string",
-          "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-        },
-        "method": {
-          "const": "workflow.transfer"
         },
         "ok": {
           "const": true
@@ -781,10 +636,7 @@
             "operation.submit",
             "operation.get",
             "operation.cancel",
-            "workflow.prepare",
             "workflow.get",
-            "workflow.advance",
-            "workflow.transfer",
             "content.begin",
             "content.chunk",
             "content.commit",
@@ -798,18 +650,14 @@
             "history.list",
             "history.read",
             "history.content",
-            "workflow.bind",
-            "workflow.recover",
-            "workflow.lifecycle",
             "operation.cancellation.get",
             "operation.cancellation.list",
-            "workflow.transfer.get",
-            "workflow.attest",
-            "workflow.attestation.get",
-            "workflow.attestation.check",
-            "workflow.native-attest",
-            "workflow.native-attestation.check",
-            "lifecycle.evidence.prepare"
+            "lifecycle.evidence.prepare",
+            "workflow.journal.submit",
+            "workflow.journal.get",
+            "workflow.journal.list",
+            "workflow.journal.events",
+            "workflow.journal.input"
           ]
         },
         "ok": {
@@ -1096,157 +944,6 @@
           "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "method": {
-          "const": "workflow.bind"
-        },
-        "ok": {
-          "const": true
-        },
-        "result": {
-          "allOf": [
-            {
-              "$ref": "workflow.schema.json#/$defs/MutationAcknowledgment"
-            },
-            {
-              "properties": {
-                "method": {
-                  "const": "workflow.bind"
-                }
-              }
-            }
-          ]
-        }
-      },
-      "required": [
-        "format",
-        "message_id",
-        "method",
-        "ok",
-        "result"
-      ],
-      "additionalProperties": false
-    },
-    {
-      "type": "object",
-      "properties": {
-        "format": {
-          "const": "deployment-ops/owner/v1"
-        },
-        "message_id": {
-          "type": "string",
-          "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-        },
-        "method": {
-          "const": "workflow.recover"
-        },
-        "ok": {
-          "const": true
-        },
-        "result": {
-          "oneOf": [
-            {
-              "$ref": "records.schema.json#/$defs/Workflow"
-            },
-            {
-              "allOf": [
-                {
-                  "$ref": "common.schema.json#/$defs/RecordReference"
-                },
-                {
-                  "properties": {
-                    "record": {
-                      "properties": {
-                        "kind": {
-                          "const": "Workflow"
-                        }
-                      }
-                    }
-                  }
-                }
-              ]
-            },
-            {
-              "$ref": "workflow-recovery.schema.json#/$defs/Abandonment"
-            },
-            {
-              "$ref": "workflow-recovery.schema.json#/$defs/NeverPrepared"
-            }
-          ]
-        }
-      },
-      "required": [
-        "format",
-        "message_id",
-        "method",
-        "ok",
-        "result"
-      ],
-      "additionalProperties": false
-    },
-    {
-      "type": "object",
-      "properties": {
-        "format": {
-          "const": "deployment-ops/owner/v1"
-        },
-        "message_id": {
-          "type": "string",
-          "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-        },
-        "method": {
-          "const": "workflow.lifecycle"
-        },
-        "ok": {
-          "const": true
-        },
-        "result": {
-          "oneOf": [
-            {
-              "$ref": "workflow.schema.json#/$defs/LifecycleResult"
-            },
-            {
-              "allOf": [
-                {
-                  "$ref": "common.schema.json#/$defs/RecordReference"
-                },
-                {
-                  "properties": {
-                    "record": {
-                      "properties": {
-                        "kind": {
-                          "const": "Workflow"
-                        }
-                      }
-                    }
-                  }
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "required": [
-        "format",
-        "message_id",
-        "method",
-        "ok",
-        "result"
-      ],
-      "additionalProperties": false
-    },
-    {
-      "type": "object",
-      "properties": {
-        "format": {
-          "const": "deployment-ops/owner/v1"
-        },
-        "message_id": {
-          "type": "string",
-          "format": "uuid",
-          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-        },
-        "method": {
           "const": "operation.cancellation.get"
         },
         "ok": {
@@ -1307,35 +1004,13 @@
           "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "method": {
-          "const": "workflow.transfer.get"
+          "const": "lifecycle.evidence.prepare"
         },
         "ok": {
           "const": true
         },
         "result": {
-          "oneOf": [
-            {
-              "$ref": "workflow-transfer-history.schema.json#/$defs/WorkflowTransferRecord"
-            },
-            {
-              "allOf": [
-                {
-                  "$ref": "common.schema.json#/$defs/RecordReference"
-                },
-                {
-                  "properties": {
-                    "record": {
-                      "properties": {
-                        "kind": {
-                          "const": "WorkflowTransferRecord"
-                        }
-                      }
-                    }
-                  }
-                }
-              ]
-            }
-          ]
+          "$ref": "lifecycle-evidence.schema.json#/$defs/EvidenceReference"
         }
       },
       "required": [
@@ -1354,16 +1029,18 @@
           "const": "deployment-ops/owner/v1"
         },
         "message_id": {
-          "$ref": "common.schema.json#/$defs/UUID"
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "method": {
-          "const": "workflow.attest"
+          "const": "workflow.journal.submit"
         },
         "ok": {
           "const": true
         },
         "result": {
-          "$ref": "workflow-evidence.schema.json#/$defs/AttestationReference"
+          "$ref": "workflow-journal.schema.json#/$defs/RecordReference"
         }
       },
       "required": [
@@ -1373,124 +1050,7 @@
         "ok",
         "result"
       ],
-      "additionalProperties": false,
-      "description": "Issue or retrieve complete owner-authenticated phase evidence through bounded immutable record delivery."
-    },
-    {
-      "type": "object",
-      "properties": {
-        "format": {
-          "const": "deployment-ops/owner/v1"
-        },
-        "message_id": {
-          "$ref": "common.schema.json#/$defs/UUID"
-        },
-        "method": {
-          "const": "workflow.attestation.get"
-        },
-        "ok": {
-          "const": true
-        },
-        "result": {
-          "$ref": "workflow-evidence.schema.json#/$defs/AttestationReference"
-        }
-      },
-      "required": [
-        "format",
-        "message_id",
-        "method",
-        "ok",
-        "result"
-      ],
-      "additionalProperties": false,
-      "description": "Issue or retrieve complete owner-authenticated phase evidence through bounded immutable record delivery."
-    },
-    {
-      "type": "object",
-      "properties": {
-        "format": {
-          "const": "deployment-ops/owner/v1"
-        },
-        "message_id": {
-          "$ref": "common.schema.json#/$defs/UUID"
-        },
-        "method": {
-          "const": "workflow.attestation.check"
-        },
-        "ok": {
-          "const": true
-        },
-        "result": {
-          "$ref": "workflow-evidence.schema.json#/$defs/CurrentAttestation"
-        }
-      },
-      "required": [
-        "format",
-        "message_id",
-        "method",
-        "ok",
-        "result"
-      ],
-      "additionalProperties": false,
-      "description": "Independently recheck one exact retained attestation without renewal or new authority."
-    },
-    {
-      "type": "object",
-      "properties": {
-        "format": {
-          "const": "deployment-ops/owner/v1"
-        },
-        "message_id": {
-          "$ref": "common.schema.json#/$defs/UUID"
-        },
-        "method": {
-          "const": "workflow.native-attest"
-        },
-        "ok": {
-          "const": true
-        },
-        "result": {
-          "$ref": "workflow-evidence.schema.json#/$defs/AttestationReference"
-        }
-      },
-      "required": [
-        "format",
-        "message_id",
-        "method",
-        "ok",
-        "result"
-      ],
-      "additionalProperties": false,
-      "description": "Protected independently authenticated owner-to-owner native final-settlement proof boundary. Driver or caller data cannot select peer authority."
-    },
-    {
-      "type": "object",
-      "properties": {
-        "format": {
-          "const": "deployment-ops/owner/v1"
-        },
-        "message_id": {
-          "$ref": "common.schema.json#/$defs/UUID"
-        },
-        "method": {
-          "const": "workflow.native-attestation.check"
-        },
-        "ok": {
-          "const": true
-        },
-        "result": {
-          "$ref": "workflow-evidence.schema.json#/$defs/CurrentAttestation"
-        }
-      },
-      "required": [
-        "format",
-        "message_id",
-        "method",
-        "ok",
-        "result"
-      ],
-      "additionalProperties": false,
-      "description": "Protected independently authenticated owner-to-owner native final-settlement proof boundary. Driver or caller data cannot select peer authority."
+      "additionalProperties": false
     },
     {
       "type": "object",
@@ -1504,13 +1064,103 @@
           "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
         },
         "method": {
-          "const": "lifecycle.evidence.prepare"
+          "const": "workflow.journal.get"
         },
         "ok": {
           "const": true
         },
         "result": {
-          "$ref": "lifecycle-evidence.schema.json#/$defs/EvidenceReference"
+          "$ref": "workflow-journal.schema.json#/$defs/RecordReference"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "ok",
+        "result"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "workflow.journal.list"
+        },
+        "ok": {
+          "const": true
+        },
+        "result": {
+          "$ref": "workflow-journal.schema.json#/$defs/Page"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "ok",
+        "result"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "workflow.journal.events"
+        },
+        "ok": {
+          "const": true
+        },
+        "result": {
+          "$ref": "workflow-journal.schema.json#/$defs/Page"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "ok",
+        "result"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "workflow.journal.input"
+        },
+        "ok": {
+          "const": true
+        },
+        "result": {
+          "$ref": "workflow-journal.schema.json#/$defs/AcceptedInput"
         }
       },
       "required": [

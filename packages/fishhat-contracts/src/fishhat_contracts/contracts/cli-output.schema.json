@@ -163,6 +163,15 @@
             },
             {
               "$ref": "common.schema.json#/$defs/ContentChunk"
+            },
+            {
+              "$ref": "workflow-journal.schema.json#/$defs/JournalRecord"
+            },
+            {
+              "$ref": "workflow-journal.schema.json#/$defs/Page"
+            },
+            {
+              "$ref": "workflow-journal.schema.json#/$defs/AcceptedInput"
             }
           ]
         },

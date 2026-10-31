@@ -573,7 +573,13 @@ def _validate_workflow_result(
     retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
     recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
 ) -> None:
-    if result["kind"] == "Workflow":
+    if result["kind"] in {
+        "WorkflowJournalRecord",
+        "WorkflowJournalPage",
+        "WorkflowJournalInputReference",
+    }:
+        _validate_journal_result(result, retained_readers)
+    elif result["kind"] == "Workflow":
         validate_workflow(result, recovery_readers=recovery_readers)
     elif result["kind"] == "WorkflowTransferRecord":
         from .workflow_transfer_history import validate_transfer_record
@@ -627,6 +633,44 @@ def _validate_content_result(result: dict[str, Any]) -> None:
     validate_content_chunk(result, result["handle"], offset=result["offset"], length=CHUNK_BYTES)
 
 
+def _validate_journal_result(
+    result: dict[str, Any],
+    retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
+) -> None:
+    from .record_delivery import validate_record_reference
+
+    if result["kind"] == "WorkflowJournalRecord":
+        # An inspection value cannot enroll its key or authenticate its signature.
+        validate("workflow-journal.schema.json", result, "JournalRecord")
+        return
+    if result["kind"] == "WorkflowJournalInputReference":
+        validate("workflow-journal.schema.json", result, "AcceptedInput")
+        reference, handle = result["acceptance"], result["input"]
+        validate_record_reference(reference, retained_readers=retained_readers)
+        _require(
+            reference["owner"] == handle["owner"] == result["owner"]
+            and reference["record"]["id"] == result["command_id"]
+            and reference["record"]["resource"] == {"kind": "workflow", "id": result["workflow_id"]}
+            and handle["purpose"] == "workflow-input"
+            and handle["binding"]
+            == {
+                "kind": "workflow-journal",
+                "workflow_id": result["workflow_id"],
+                "command_id": result["command_id"],
+            },
+            "journal original input scope changed",
+        )
+        return
+    validate("workflow-journal.schema.json", result, "Page")
+    identities: set[str] = set()
+    for item in result["items"]:
+        _require(item["owner"] == result["owner"], "journal page owner changed")
+        identifier = item["record"]["id"]
+        _require(identifier not in identities, "journal page repeats a record")
+        identities.add(identifier)
+        validate_record_reference(item, retained_readers=retained_readers)
+
+
 def validate_cli_result(
     result: Any,
     *,
@@ -664,6 +708,9 @@ def validate_cli_result(
         "WorkflowTransferRecord",
         "WorkflowPhaseAttestation",
         "CurrentWorkflowAttestation",
+        "WorkflowJournalRecord",
+        "WorkflowJournalPage",
+        "WorkflowJournalInputReference",
     }:
         _validate_workflow_result(
             result, retained_readers=retained_readers, recovery_readers=recovery_readers

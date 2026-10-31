@@ -22,7 +22,7 @@ from fishhat_contracts.workflow_transfer_history import (
     validate_transfer_record,
     workflow_transfer_ids,
 )
-from fishhat_contracts.workflows import advance_workflow
+from fishhat_contracts.workflows import advance_workflow_view
 
 from scripts.check_evidence import evidence_group
 from tests.test_contracts import uid
@@ -82,7 +82,7 @@ CHECK_OVERRIDES = {
 
 def completed_record():
     value, _ = committed()
-    value = advance_workflow(completion_request(value), value)
+    value = advance_workflow_view(completion_request(value), value)
     return transfer_record(value)
 
 
@@ -131,7 +131,7 @@ def second_transfer(value):
     validate_workflow(value)
     completion = completion_request(value)
     completion["advance_id"] = uid("second-transfer-completion")
-    return advance_workflow(completion, value)
+    return advance_workflow_view(completion, value)
 
 
 def lookup(record):
@@ -170,7 +170,7 @@ def many_participant_record(count):
 
 def test_two_transfers_are_rediscoverable_without_client_state():
     first, _ = committed()
-    first = advance_workflow(completion_request(first), first)
+    first = advance_workflow_view(completion_request(first), first)
     retained = transfer_record(first)
     current = second_transfer(first)
     current_record = transfer_record(current)
@@ -200,8 +200,10 @@ def test_two_transfers_are_rediscoverable_without_client_state():
                 "transfer_id": identifier,
             }
             result = protected[identifier]
-            validate("ssh-request.schema.json", request("workflow.transfer.get", query))
-            validate("ssh-response.schema.json", wire("workflow.transfer.get", result))
+            with pytest.raises(ContractError):
+                validate("ssh-request.schema.json", request("workflow.transfer.get", query))
+            with pytest.raises(ContractError):
+                validate("ssh-response.schema.json", wire("workflow.transfer.get", result))
             validate_cli_result(result)
             validate_transfer_lookup_result(query, result)
             for phase in ("freeze", "commit"):
@@ -218,7 +220,7 @@ def test_two_transfers_are_rediscoverable_without_client_state():
 @pytest.mark.parametrize("field", ["generation", "witnesses", "principal"])
 def test_old_transfer_replay_does_not_refresh_original_input(field):
     first, _ = committed()
-    first = advance_workflow(completion_request(first), first)
+    first = advance_workflow_view(completion_request(first), first)
     retained = transfer_record(first)
     current = second_transfer(first)
     changed = transfer_phase_request(retained, "commit")
@@ -289,7 +291,8 @@ def test_transfer_record_preserves_complete_witness_extent():
         result = snapshot.delivery(max_inline_bytes=4096)
         assert result["kind"] == "RecordReference"
         validate_transfer_lookup_result(lookup(value), result)
-        validate("ssh-response.schema.json", wire("workflow.transfer.get", result))
+        with pytest.raises(ContractError):
+            validate("ssh-response.schema.json", wire("workflow.transfer.get", result))
         assert len(frame(wire("workflow.transfer.get", result))) < 4096
         parts = []
         offset = 0

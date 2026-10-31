@@ -11,8 +11,8 @@ from fishhat_contracts.handoffs import schema_identity, validate_workflow
 from fishhat_contracts.transfers import validate_transfer_proposal
 from fishhat_contracts.validation import MAX_BYTES, ContractError, canonical, digest, validate
 from fishhat_contracts.workflows import (
-    decode_workflow_input,
-    prepare_workflow,
+    decode_workflow_audit_input,
+    prepare_workflow_view,
     validate_advance_request,
     validate_workflow_input_custody,
     validate_workflow_proposal,
@@ -28,13 +28,13 @@ from tests.test_owner_handoffs import (
     preparation_witness,
     rebind_workflow_proposal,
     request,
-    staged_workflow_input,
+    staged_workflow_audit_input,
     workflow,
 )
 from tests.test_plan_review import reseal
 from tests.test_workflow_transfer import committed, completion_request, frozen, proposal
 from tests.workflow_evidence_support import advance_request
-from tests.workflow_evidence_support import advance_with_evidence as advance_workflow
+from tests.workflow_evidence_support import advance_with_evidence as advance_workflow_view
 
 CHECK_PURPOSE = {
     "purpose": "public-contract",
@@ -185,8 +185,8 @@ def adapter_proposal(role="ingress"):
 def test_preparation_retains_typed_plans_and_content_after_client_loss():
     expected = workflow()
     original = preparation(expected)
-    reference, data = staged_workflow_input("workflow.prepare", original)
-    decoded = decode_workflow_input(
+    reference, data = staged_workflow_audit_input("workflow.prepare", original)
+    decoded = decode_workflow_audit_input(
         "workflow.prepare", reference, data, expected_owner=expected["owner"]
     )
     validate_workflow_input_custody(
@@ -196,7 +196,7 @@ def test_preparation_retains_typed_plans_and_content_after_client_loss():
         principal=expected["driver_principal"],
         now=NOW,
     )
-    retained = prepare_workflow(
+    retained = prepare_workflow_view(
         decoded,
         expected_owner=expected["owner"],
         principal=expected["driver_principal"],
@@ -213,7 +213,7 @@ def test_preparation_retains_typed_plans_and_content_after_client_loss():
     assert retained["proposal_digest"] == digest(recovered["proposal"])
     retained["generation"] = 7
     assert (
-        prepare_workflow(
+        prepare_workflow_view(
             recovered,
             expected_owner=retained["owner"],
             principal="replacement-operator",
@@ -248,7 +248,7 @@ def test_workflow_proposal_rejects_incomplete_or_changed_target_closure(change):
 def test_capsule_cannot_substitute_a_different_proposal_or_unverified_local_content():
     value = workflow()
     with pytest.raises(ContractError, match="local content custody"):
-        prepare_workflow(
+        prepare_workflow_view(
             preparation(value),
             expected_owner=value["owner"],
             principal=value["driver_principal"],
@@ -340,7 +340,7 @@ def test_generic_adapter_role_retains_typed_input_and_requires_independent_selec
     selected = participant["requests"][0]["adapter"]
     payload = {"owner": participant["owner"], "proposal": intent}
     with pytest.raises(ContractError, match="independently verified"):
-        prepare_workflow(
+        prepare_workflow_view(
             payload,
             expected_owner=payload["owner"],
             principal="operator",
@@ -348,7 +348,7 @@ def test_generic_adapter_role_retains_typed_input_and_requires_independent_selec
             verified_preparation=preparation_witness(intent, payload["owner"]),
             verified_content=intent["content"],
         )
-    prepared = prepare_workflow(
+    prepared = prepare_workflow_view(
         payload,
         expected_owner=payload["owner"],
         principal="operator",
@@ -562,21 +562,24 @@ def test_complete_workflow_inputs_larger_than_a_frame_use_bounded_references(met
             "witnesses": witnesses,
         }
         validate_transfer_proposal(intent)
-    reference, data = staged_workflow_input(method, payload)
+    reference, data = staged_workflow_audit_input(method, payload)
     assert len(data) > MAX_BYTES
     assert len(frame(request(method, reference))) < 4096
-    assert decode_workflow_input(method, reference, data, expected_owner=value["owner"]) == payload
+    assert (
+        decode_workflow_audit_input(method, reference, data, expected_owner=value["owner"])
+        == payload
+    )
     with pytest.raises(ContractError, match="bytes changed"):
-        decode_workflow_input(method, reference, data[:-1], expected_owner=value["owner"])
+        decode_workflow_audit_input(method, reference, data[:-1], expected_owner=value["owner"])
     with pytest.raises(ContractError, match="size limit"):
-        decode_workflow_input(
+        decode_workflow_audit_input(
             method, reference, data, expected_owner=value["owner"], max_bytes=len(data) - 1
         )
 
 
 def test_staging_size_is_capacity_bound_without_a_ten_gibibyte_contract_cutoff():
     value = workflow()
-    reference, _ = staged_workflow_input("workflow.prepare", preparation(value))
+    reference, _ = staged_workflow_audit_input("workflow.prepare", preparation(value))
     large = 11 * 1024**3
     reference["input"]["size"] = large
     validate("workflow.schema.json", reference, "InputReference")
@@ -609,7 +612,7 @@ def test_staging_size_is_capacity_bound_without_a_ten_gibibyte_contract_cutoff()
 def test_new_workflow_staging_cannot_change_receiving_scope(change):
     value = workflow()
     payload = preparation(value)
-    reference, _ = staged_workflow_input("workflow.prepare", payload)
+    reference, _ = staged_workflow_audit_input("workflow.prepare", payload)
     custody = stage(reference, value["id"])
     if change == "owner":
         custody["owner"]["epoch"] = U
@@ -630,7 +633,7 @@ def test_new_workflow_staging_cannot_change_receiving_scope(change):
 def test_exact_retained_input_replays_after_deadline_and_original_client_loss():
     value = workflow()
     payload = preparation(value)
-    reference, _ = staged_workflow_input("workflow.prepare", payload)
+    reference, _ = staged_workflow_audit_input("workflow.prepare", payload)
     custody = stage(reference, value["id"], pinned=1)
     validate_workflow_input_custody(
         reference,
@@ -677,7 +680,7 @@ def test_exact_retained_input_replays_after_deadline_and_original_client_loss():
 @pytest.mark.parametrize("change", ["missing", "generation", "proposal", "witnesses"])
 def test_completed_capsule_cannot_omit_its_atomic_advance_receipt(change):
     value, _ = committed()
-    complete = advance_workflow(completion_request(value), value)
+    complete = advance_workflow_view(completion_request(value), value)
     receipt = complete["advances"][0]
     if change == "missing":
         complete["advances"] = []
@@ -717,7 +720,7 @@ def test_transfer_completion_rejects_incomplete_or_substituted_current_evidence(
     else:
         query["driver_term"] -= 1
     with pytest.raises(ContractError):
-        advance_workflow(query, value)
+        advance_workflow_view(query, value)
 
 
 def test_transfer_completion_requires_local_commit_and_replay_is_immutable():
@@ -727,22 +730,22 @@ def test_transfer_completion_requires_local_commit_and_replay_is_immutable():
     query["expected_generation"] = pending["generation"]
     query["driver_term"] = pending["driver_term"]
     with pytest.raises(ContractError, match="not committed locally"):
-        advance_workflow(query, pending)
+        advance_workflow_view(query, pending)
     query = completion_request(value)
     query["phase"] = value["phase"]
-    complete = advance_workflow(query, value)
+    complete = advance_workflow_view(query, value)
     assert complete["phase"] == "prepared"
     assert complete["state"] == "prepared"
     assert complete["holds"] == value["holds"]
     original_receipt = copy.deepcopy(complete["advances"][0])
     following = normal_advance(complete)
-    advanced = advance_workflow(following, complete)
+    advanced = advance_workflow_view(following, complete)
     assert validate_advance_request(query, advanced) == "replay"
-    assert advance_workflow(query, advanced)["advances"][0] == original_receipt
+    assert advance_workflow_view(query, advanced)["advances"][0] == original_receipt
     changed = copy.deepcopy(query)
     changed["phase"] = "draining"
     with pytest.raises(ContractError, match="accepted workflow advance input changed"):
-        advance_workflow(changed, advanced)
+        advance_workflow_view(changed, advanced)
 
 
 def test_ordinary_advance_rejects_phase_skips_and_retains_original_receipt():
@@ -751,14 +754,14 @@ def test_ordinary_advance_rejects_phase_skips_and_retains_original_receipt():
     changed = copy.deepcopy(query)
     changed["phase"] = "host-effect"
     with pytest.raises(ContractError, match="skips installed phase"):
-        advance_workflow(changed, value)
-    result = advance_workflow(query, value)
+        advance_workflow_view(changed, value)
+    result = advance_workflow_view(query, value)
     assert result["generation"] == 1
     assert result["advances"][0]["request_digest"] == digest(query)
     result["generation"] = 7
     result["driver_term"] = 2
-    assert advance_workflow(query, result) == result
+    assert advance_workflow_view(query, result) == result
     changed = copy.deepcopy(query)
     changed["expected_generation"] = 7
     with pytest.raises(ContractError, match="accepted workflow advance input changed"):
-        advance_workflow(changed, result)
+        advance_workflow_view(changed, result)

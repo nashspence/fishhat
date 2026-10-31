@@ -456,42 +456,6 @@
       "description": "Inspect the exact retained owner capsule, including preparation before child operations exist."
     },
     {
-      "name": "workflow-prepare",
-      "tokens": [
-        "{tool}",
-        "workflow",
-        "prepare",
-        "--proposal-stdin",
-        "--json"
-      ],
-      "use_case": "workflow.prepare",
-      "description": "Read a complete workflow PrepareRequest from stdin, stage its canonical bytes as workflow-input through content.begin/chunk/commit, and submit the bounded InputReference. Retain its typed immutable proposal and locally owned content before acknowledging the non-effectful capsule. Preparation is not acceptance of child effects; stdin or frame bounds cannot silently cut its complete closure."
-    },
-    {
-      "name": "workflow-advance",
-      "tokens": [
-        "{tool}",
-        "workflow",
-        "advance",
-        "--request-stdin",
-        "--json"
-      ],
-      "use_case": "workflow.advance",
-      "description": "Read a complete AdvanceRequest from stdin and submit it through staged workflow-input custody using the bounded InputReference. New advances compare the exact local generation and driver term. Transfer completion requires every participant's verified transferred witness and atomically retains the completion evidence, procedure phase and immutable advance receipt. Exact accepted advance IDs replay before new-admission expiry or generation checks. Return only the original finite WorkflowMutationAcknowledgment with exact decoded request commitment and committed generation; whole Workflow inspection is a separate read and exact replay never substitutes current state."
-    },
-    {
-      "name": "workflow-transfer",
-      "tokens": [
-        "{tool}",
-        "workflow",
-        "transfer",
-        "--request-stdin",
-        "--json"
-      ],
-      "use_case": "workflow.transfer",
-      "description": "Read a complete WorkflowTransferRequest from stdin and submit it through staged workflow-input custody using the bounded InputReference. Preserve every participant and prerequisite witness, regardless of frame size. New phases compare the current local generation; an identical accepted phase replays its discoverable original generation, proposal and witnesses. The new driver completes the transfer through workflow.advance with the complete commit closure. Timeout never releases custody."
-    },
-    {
       "name": "record-read",
       "tokens": [
         "{tool}",
@@ -563,18 +527,6 @@
       "description": "Read original retained input or result bytes after current-owner authorization of the handle's protected resource and its membership in the verified restoration closure. A known handle or former principal permission is insufficient. Original handle identity and digest remain unchanged; complete bytes must be verified before use. Read the exact closed request from stdin."
     },
     {
-      "name": "workflow-bind",
-      "tokens": [
-        "{tool}",
-        "workflow",
-        "bind",
-        "--request-stdin",
-        "--json"
-      ],
-      "use_case": "workflow.bind",
-      "description": "Read a complete reviewed BindRequest from stdin, stage its canonical workflow-input bytes and submit the bounded InputReference. Bind a declared continuation to actual verified predecessor outputs and current participant generation, retain exact content and immutable replay receipt, and preserve installed phase ordering. Binding does not accept child effects. Return only the original finite WorkflowMutationAcknowledgment with exact decoded request commitment and committed generation; whole Workflow inspection is a separate read and exact replay never substitutes current state."
-    },
-    {
       "name": "plan-get",
       "tokens": [
         "{tool}",
@@ -585,18 +537,6 @@
       ],
       "use_case": "plan.get",
       "description": "Read the exact closed owner/plan_digest lookup from stdin. All fields are discoverable from the accepted Operation. Current read authorization and retained immutable Plan identity apply even after its admission deadline; client state is not required."
-    },
-    {
-      "name": "workflow-recover",
-      "tokens": [
-        "{tool}",
-        "workflow",
-        "recover",
-        "--request-stdin",
-        "--json"
-      ],
-      "use_case": "workflow.recover",
-      "description": "Read a complete closed workflow recovery phase input, stage its canonical workflow-input bytes and submit the bounded reference. Preparation durably reserves one exact successor and retires the original child-admission set; commit requires the independently authenticated complete participant preparation closure. Retire-unprepared obtains a finite current-owner proof for an original participant that never prepared, only after positive authoritative no-preparation/no-child checks, native fencing, permanent old-admission tombstones and retained input/hold custody. It does not invent an original capsule or select a successor. Abandonment irreversibly closes an unused successor at every current participant, including peers that never prepared it, before a different successor may be reviewed. An accepted successor child forbids abandonment. Current scoped recovery authority, settled original effects and retained holds remain required. Old work and abandoned child requests never regain execution authority."
     },
     {
       "name": "observe-request",
@@ -619,18 +559,6 @@
       ],
       "use_case": "check",
       "description": "Read one closed StartRequest or ContinueRequest for observational checks, with exact staged selection or all-authorized inventory and bounded retained continuation."
-    },
-    {
-      "name": "workflow-lifecycle",
-      "tokens": [
-        "{tool}",
-        "workflow",
-        "lifecycle",
-        "--request-stdin",
-        "--json"
-      ],
-      "use_case": "workflow.lifecycle",
-      "description": "Ask this receiving owner to authorize a finite lifecycle decision for the exact workflow, generation, driver term and original request identity. The request cannot supply native authorization or reconciliation evidence. Resume requires independently verified current driver and native conditions; acceptance retains the original decision receipt for exact replay."
     },
     {
       "name": "cancellation-show",
@@ -659,82 +587,6 @@
       "description": "Read a closed cancellation ListRequest from stdin and discover all retained cancellation decisions for an original Operation request without knowing cancellation IDs. Follow opaque continuations with the same owner, target, principal and limit. Expiry fails explicitly; page completion does not prove absence of concurrent future intent. For restored history, first discover custody with owner.history and the original Operation request_id with history.list/read, then select that origin and current custodian with the verified custody_id."
     },
     {
-      "name": "workflow-transfer-show",
-      "tokens": [
-        "{tool}",
-        "workflow",
-        "transfer",
-        "show",
-        "--request-stdin",
-        "--json"
-      ],
-      "use_case": "workflow.transfer.get",
-      "description": "Read the closed exact owner/workflow/transfer lookup from stdin. Retrieve the complete immutable original transfer record, directly or through all RecordReference chunks, including its original completion receipt. Current transfer state never replaces earlier accepted history."
-    },
-    {
-      "name": "workflow-attest",
-      "tokens": [
-        "{tool}",
-        "workflow",
-        "attest",
-        "--request-stdin",
-        "--json"
-      ],
-      "use_case": "workflow.attest",
-      "description": "Request owner-private phase attestation for the exact issuer and receiving transition under current native authority. Return the immutable complete result through RecordReference and record.read. Success does not advance a workflow, accept a child or renew protection on replay."
-    },
-    {
-      "name": "workflow-attestation-show",
-      "tokens": [
-        "{tool}",
-        "workflow",
-        "attestation",
-        "show",
-        "--request-stdin",
-        "--json"
-      ],
-      "use_case": "workflow.attestation.get",
-      "description": "Read the exact retained attestation by owner, workflow and attestation identity. Current read scope is required; inspect all RecordReference chunks without renewing its expiry or native authority."
-    },
-    {
-      "name": "workflow-native-attest",
-      "tokens": [
-        "{tool}",
-        "workflow",
-        "native-attest",
-        "--request-stdin",
-        "--json"
-      ],
-      "use_case": "workflow.native-attest",
-      "description": "Protected owner-to-owner issuance for the exact final native settlement. Independently authenticated peer owner epoch must equal the intended receiver; a driver or administrator cannot obtain this authority from request fields. Paused work and incomplete driver transfer remain intact. Return the complete signed result through immutable RecordReference and record.read without advancing or admitting work."
-    },
-    {
-      "name": "workflow-native-attestation-check",
-      "tokens": [
-        "{tool}",
-        "workflow",
-        "native-attestation",
-        "check",
-        "--request-stdin",
-        "--json"
-      ],
-      "use_case": "workflow.native-attestation.check",
-      "description": "Protected peer check of the exact retained native final-settlement proof, current receiver and issuer generations, signed expiry and continuing native protection. The independently authenticated receiver-owner epoch is required. This observation grants no driver authority, renews no lease and releases no holds."
-    },
-    {
-      "name": "workflow-attestation-check",
-      "tokens": [
-        "{tool}",
-        "workflow",
-        "attestation",
-        "check",
-        "--request-stdin",
-        "--json"
-      ],
-      "use_case": "workflow.attestation.check",
-      "description": "Ask the original issuer to recheck exact retained phase evidence under current authority and native protection. An authenticated success is a current observation, never a renewed lease, new phase admission or release authority."
-    },
-    {
       "name": "lifecycle-evidence-prepare",
       "tokens": [
         "{tool}",
@@ -757,6 +609,107 @@
       ],
       "use_case": "content.get",
       "description": "Read the exact handle, offset and bounded length supplied on standard input through the same protected content.get use case. Return an observed typed ContentChunk with the full handle and range. Preserve the independently retained handle across every chunk, check contiguous progress, then verify complete size and digest before interpreting evidence. A read does not admit an operation, grant authority, refresh retention or prove the contained task succeeded."
+    },
+    {
+      "name": "workflow-journal-submit",
+      "tokens": [
+        "{tool}",
+        "workflow",
+        "journal",
+        "submit",
+        "--input-stdin",
+        "--json"
+      ],
+      "use_case": "workflow.journal.submit",
+      "description": "workflow.journal.submit carries a content-staged canonical JournalCommand under exact receiving owner, workflow scope, current principal, digest and byte length. Replies are immutable typed record references, read through bounded record.read chunks with current scope authorization on every read. Lost replies rediscover the original request outcome by ID. Upload and download interruption retain complete extent and resume offsets; frame/page limits do not cap total owners, children, material or history. Request-selected schema readers or trust keys are forbidden."
+    },
+    {
+      "name": "workflow-journal-get",
+      "tokens": [
+        "{tool}",
+        "workflow",
+        "journal",
+        "show",
+        "--workflow-id",
+        "{uuid}",
+        "--record-id",
+        "{uuid}",
+        "--json"
+      ],
+      "use_case": "workflow.journal.get",
+      "description": "Retrieve the original signed local or gate journal outcome by its immutable record ID. Current owner and workflow scope authorization applies. Inspecting a record grants no native execution authority."
+    },
+    {
+      "name": "workflow-journal-list",
+      "tokens": [
+        "{tool}",
+        "workflow",
+        "journal",
+        "list",
+        "--json"
+      ],
+      "use_case": "workflow.journal.list",
+      "description": "Discover all authorized owner-local workflow journal heads without client state. Follow every continuation to cover the complete selected set."
+    },
+    {
+      "name": "workflow-journal-list-next",
+      "tokens": [
+        "{tool}",
+        "workflow",
+        "journal",
+        "list",
+        "--cursor",
+        "{cursor}",
+        "--json"
+      ],
+      "use_case": "workflow.journal.list",
+      "description": "Resume the same stable local journal traversal with current disclosure permission; the page limit is not a collection limit."
+    },
+    {
+      "name": "workflow-journal-events",
+      "tokens": [
+        "{tool}",
+        "workflow",
+        "journal",
+        "events",
+        "--workflow-id",
+        "{uuid}",
+        "--json"
+      ],
+      "use_case": "workflow.journal.events",
+      "description": "Enumerate every retained local journal event through a stable high-water boundary. Follow all pages to recover initialization, gate route, child permits, original outcomes and recovery custody without original client IDs. Current disclosure scope is checked on every page."
+    },
+    {
+      "name": "workflow-journal-events-next",
+      "tokens": [
+        "{tool}",
+        "workflow",
+        "journal",
+        "events",
+        "--workflow-id",
+        "{uuid}",
+        "--cursor",
+        "{cursor}",
+        "--json"
+      ],
+      "use_case": "workflow.journal.events",
+      "description": "Enumerate every retained local journal event through a stable high-water boundary. Follow all pages to recover initialization, gate route, child permits, original outcomes and recovery custody without original client IDs. Current disclosure scope is checked on every page."
+    },
+    {
+      "name": "workflow-journal-input",
+      "tokens": [
+        "{tool}",
+        "workflow",
+        "journal",
+        "input",
+        "--workflow-id",
+        "{uuid}",
+        "--record-id",
+        "{uuid}",
+        "--json"
+      ],
+      "use_case": "workflow.journal.input",
+      "description": "Retrieve immutable original accepted input custody by outcome ID; bounded content reads reauthorize exact owner and workflow scope."
     }
   ],
   "parser": "bounded tokens; no shell evaluation",

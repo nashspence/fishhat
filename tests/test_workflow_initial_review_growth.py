@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from fishhat_contracts.handoffs import validate_workflow
-from fishhat_contracts.workflow_bindings import bind_workflow
+from fishhat_contracts.workflow_bindings import bind_workflow_view
 
 from tests.linear_support import assert_linear, measure
 from tests.test_workflow_initial_review import initial_request, initial_stage
@@ -27,7 +27,7 @@ def test_initial_binding_validation_linear_complete_history_work():
         value = initial_stage(consumers=count)
         for index in range(1, count + 1):
             query, trusted = initial_request(value, index)
-            value = bind_workflow(query, value, **trusted)
+            value = bind_workflow_view(query, value, **trusted)
         _, work = measure(lambda value=value: validate_workflow(value))
         assert len(value["bindings"]) == count
         assert len(value["proposal"]["participants"]) == count + 1

@@ -27,3 +27,15 @@ classification = "durable-reference-state"
 qualification = "reference-model"
 fixture = "state/fixtures/v1/reporting.sql"
 sha256 = "d7e2cacf755a357fe8b359e701c940dc54496e6d48a13825a07eea41a47cb80e"
+
+[[journals]]
+id = "workflow-journal"
+module = "fishhat_owner.workflow_journal"
+source = "fishhat/owner-support/src/fishhat_owner/workflow_journal.py"
+format_version = 1
+version_authority = "journal-genesis"
+transition = "explicit-forward-only"
+classification = "durable-reference-state"
+qualification = "reference-model"
+fixture = "state/fixtures/v1/workflow-journal.json"
+sha256 = "b50b573b4515651d818e2a3697ab82404d3d48d7259c3e199a353eadb7680bbd"

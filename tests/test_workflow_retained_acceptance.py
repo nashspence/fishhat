@@ -10,7 +10,7 @@ from fishhat_contracts.handoffs import validate_workflow
 from fishhat_contracts.record_delivery import RecordSnapshot
 from fishhat_contracts.validation import ContractError, canonical, digest
 from fishhat_contracts.witness import verify
-from fishhat_contracts.workflow_bindings import bind_workflow
+from fishhat_contracts.workflow_bindings import bind_workflow_view
 from fishhat_contracts.workflow_evidence import phase_subject
 from fishhat_contracts.workflow_recovery import validate_recovery_proposal
 
@@ -83,7 +83,7 @@ def _phase_outcomes(value):
 def _retained_case(source):
     if source == "predecessor":
         value, request = successor_stage()
-        value = bind_workflow(request, value, **context(request))
+        value = bind_workflow_view(request, value, **context(request))
         operation = request["predecessors"][0]
         reference = {"owner": operation["owner"], "request_id": operation["request_id"]}
         return value, {canonical(reference): operation}, ["completed", "unaccepted"], 0

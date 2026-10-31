@@ -148,7 +148,7 @@ def test_pre_admission_plan_larger_than_frame_is_fully_retrievable():
 def test_workflow_remains_retrievable_after_evidence_grows_past_frame():
     prepared = expanded_workflow(witnesses=False)
     validate_workflow(prepared)
-    assert frame(wire("workflow.prepare", prepared))
+    assert frame(wire("workflow.get", prepared))
     active = expanded_workflow(witnesses=True)
     validate_workflow(active)
     with pytest.raises(ContractError, match="frame size"):

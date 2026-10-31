@@ -37,13 +37,16 @@ RECORD_SCHEMAS = {
     "ProblemEvidence": ("records.schema.json", "ProblemEvidence"),
     "WorkflowTransferRecord": ("workflow-transfer-history.schema.json", "WorkflowTransferRecord"),
     "WorkflowPhaseAttestation": ("workflow-evidence.schema.json", "WorkflowPhaseAttestation"),
+    "WorkflowJournalRecord": ("workflow-journal.schema.json", "JournalRecord"),
 }
 SNAPSHOT_ID_KINDS = {"Discovery", "ResourceReport", "Observation", "ProblemEvidence"}
+IMMUTABLE_KINDS = {"Plan", "WorkflowJournalRecord"}
 SCOPED_KINDS = {
     "Observation",
     "ProblemEvidence",
     "WorkflowTransferRecord",
     "WorkflowPhaseAttestation",
+    "WorkflowJournalRecord",
 }
 
 
@@ -58,10 +61,16 @@ def _identity(record: dict[str, Any], kind: str, snapshot_id: str) -> dict[str, 
     identity = {
         "kind": kind,
         "id": snapshot_id if kind in SNAPSHOT_ID_KINDS else record["id"],
-        "generation": None if kind == "Plan" or kind in SNAPSHOT_ID_KINDS else record["generation"],
+        "generation": (
+            None if kind in IMMUTABLE_KINDS or kind in SNAPSHOT_ID_KINDS else record["generation"]
+        ),
     }
     if kind in SCOPED_KINDS:
-        identity["resource"] = copy.deepcopy(record["resource"])
+        identity["resource"] = (
+            {"kind": "workflow", "id": record["workflow_id"]}
+            if kind == "WorkflowJournalRecord"
+            else copy.deepcopy(record["resource"])
+        )
     return identity
 
 
@@ -142,6 +151,24 @@ def validate_record_reference(
         )
 
 
+class InstalledRecordSchema:
+    """One independently loaded record schema for an owner process.
+
+    Construct this from the installed contract set during owner initialization,
+    never from a request or record reference. The exact closure is computed once
+    and charged to that initialization. A new contract installation requires a
+    new instance; this is not a global mutable-schema cache or a historical reader.
+    """
+
+    def __init__(self, kind: str) -> None:
+        self.kind = kind
+        self._identity = schema_identity(_schema_uri(kind))
+
+    @property
+    def identity(self) -> dict[str, str]:
+        return dict(self._identity)
+
+
 class RecordSnapshot:
     """Pure immutable-byte model for an already authorized owner record.
 
@@ -156,6 +183,7 @@ class RecordSnapshot:
         *,
         record_kind: str | None = None,
         recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
+        installed_schema: InstalledRecordSchema | None = None,
     ) -> None:
         # Info has no kind discriminator. Its only valid snapshot kind is the
         # explicitly schema-pinned Discovery projection, never a ledger record.
@@ -164,14 +192,15 @@ class RecordSnapshot:
         validate("common.schema.json", snapshot_id, "UUID")
         self._record = copy.deepcopy(record)
         self._data = canonical(self._record)
-        uri = _schema_uri(kind)
+        schema = installed_schema or InstalledRecordSchema(kind)
+        _require(schema.kind == kind, "record codec kind changed")
         self._reference = {
             "format": "deployment-ops/record-reference/v1",
             "kind": "RecordReference",
             "snapshot_id": snapshot_id,
             "owner": copy.deepcopy(record["owner"]),
             "record": _identity(record, kind, snapshot_id),
-            "schema": schema_identity(uri),
+            "schema": schema.identity,
             "digest": "sha256:" + hashlib.sha256(self._data).hexdigest(),
             "size": len(self._data),
         }
