@@ -350,15 +350,18 @@ def test_operation_owned_bounds_are_discovered_and_never_claim_native_qualificat
     assert phase_evidence["proofs"] == [
         "tests/test_workflow_evidence.py::test_phase_evidence_checks_complete_child_extent",
         "tests/test_linear_growth.py::test_phase_evidence_linear_work",
+        "tests/test_relocation_participants.py::test_relocation_destination_evidence_complete_linear_work",
     ]
     assert phase_evidence["growth"] == "linear"
     assert phase_evidence["linear_proofs"] == (
         "tests/test_linear_growth.py::test_phase_evidence_linear_work",
+        "tests/test_relocation_participants.py::test_relocation_destination_evidence_complete_linear_work",
     )
     assert set(phase_evidence["sources"]) == {
         "packages/fishhat-contracts/src/fishhat_contracts/workflow_evidence.py",
         "tests/test_workflow_evidence.py",
         "tests/test_linear_growth.py",
+        "tests/test_relocation_participants.py",
     }
 
 
