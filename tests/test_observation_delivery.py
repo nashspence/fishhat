@@ -284,7 +284,7 @@ def test_scoped_snapshots_require_installed_readers_without_weakening_resource_b
     value = observation() if kind == "Observation" else evidence_record(65)
     reference = RecordSnapshot(value, U, record_kind=kind).reference
     reference["schema"]["digest"] = "sha256:" + "e" * 64
-    readers = {reference["schema"]["digest"]: lambda item: None}
+    readers = {(reference["schema"]["uri"], reference["schema"]["digest"]): lambda item: None}
     if kind == "Observation":
         envelope = cli(observation_page([reference]))
     else:

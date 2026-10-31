@@ -17,6 +17,7 @@
     "common.schema.json",
     "compute-adapter.schema.json",
     "credential-issuer-adapter.schema.json",
+    "dataset-obligations.schema.json",
     "directory-release.schema.json",
     "directory-result.schema.json",
     "directory-runtime.schema.json",
@@ -29,6 +30,7 @@
     "host-preimages.schema.json",
     "ingress-adapter.schema.json",
     "install-bundle.schema.json",
+    "lifecycle-evidence.schema.json",
     "maintenance.schema.json",
     "network-adapter.schema.json",
     "observation.schema.json",
@@ -351,6 +353,11 @@
       "path": "plan-input.json",
       "schema": "plan-input.schema.json",
       "definition": "PrepareRequest"
+    },
+    {
+      "path": "workflow/relocation-proposal.json",
+      "schema": "workflow.schema.json",
+      "definition": "WorkflowProposal"
     }
   ],
   "semantic_entrypoints": [

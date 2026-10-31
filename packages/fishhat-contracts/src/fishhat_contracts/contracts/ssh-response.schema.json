@@ -830,7 +830,8 @@
             "workflow.attestation.get",
             "workflow.attestation.check",
             "workflow.native-attest",
-            "workflow.native-attestation.check"
+            "workflow.native-attestation.check",
+            "lifecycle.evidence.prepare"
           ]
         },
         "ok": {
@@ -1512,6 +1513,36 @@
       ],
       "additionalProperties": false,
       "description": "Protected independently authenticated owner-to-owner native final-settlement proof boundary. Driver or caller data cannot select peer authority."
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "lifecycle.evidence.prepare"
+        },
+        "ok": {
+          "const": true
+        },
+        "result": {
+          "$ref": "lifecycle-evidence.schema.json#/$defs/EvidenceReference"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "ok",
+        "result"
+      ],
+      "additionalProperties": false
     }
   ]
 }

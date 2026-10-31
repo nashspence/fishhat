@@ -59,6 +59,7 @@
             "common.schema.json",
             "compute-adapter.schema.json",
             "credential-issuer-adapter.schema.json",
+            "dataset-obligations.schema.json",
             "directory-release.schema.json",
             "directory-result.schema.json",
             "directory-runtime.schema.json",
@@ -71,6 +72,7 @@
             "host-preimages.schema.json",
             "ingress-adapter.schema.json",
             "install-bundle.schema.json",
+            "lifecycle-evidence.schema.json",
             "maintenance.schema.json",
             "network-adapter.schema.json",
             "observation.schema.json",
@@ -167,7 +169,7 @@
         ],
         "kind": "class",
         "methods": {
-          "__init__": "(self, role: 'str', request: 'dict[str, Any]', *, approved_binding: 'dict[str, Any]', approved_runtime_binding: 'dict[str, Any] | None' = None, approved_issuers: 'Iterable[dict[str, Any]]' = ()) -> 'None'",
+          "__init__": "(self, role: 'str', request: 'dict[str, Any]', *, approved_binding: 'dict[str, Any]', approved_owner: 'dict[str, Any] | None' = None, approved_runtime_binding: 'dict[str, Any] | None' = None, approved_issuers: 'Iterable[dict[str, Any]]' = ()) -> 'None'",
           "accept": "(self, request: 'dict[str, Any]', response: 'dict[str, Any]') -> 'bool'"
         }
       },
@@ -271,7 +273,7 @@
   "schemas": {
     "actions.schema.json": {
       "id": "https://fishhat.invalid/contracts/actions.schema.json",
-      "sha256": "8bff1b2dffeb0a8558aa8494bfaa6f817fcc0990d6b315e7bfea9b44aa893da4"
+      "sha256": "4d0933ef2427b96958b8645ce69beab81ca948a9bfc67d58360efa5c6423411d"
     },
     "adapter-process.schema.json": {
       "id": "https://fishhat.invalid/contracts/adapter-process.schema.json",
@@ -287,7 +289,7 @@
     },
     "backup-result.schema.json": {
       "id": "https://fishhat.invalid/contracts/backup-result.schema.json",
-      "sha256": "41822c12c4d904f1aec59d88292baaf36f1bf53a0e5cab916be723e18b9889a0"
+      "sha256": "e3491cd02d4cc01ebf1b89ecdab8ef3253859bd7f6bc07d83fdf6e8cb60226ed"
     },
     "bootstrap-catalogue.schema.json": {
       "id": "https://fishhat.invalid/contracts/bootstrap-catalogue.schema.json",
@@ -319,7 +321,7 @@
     },
     "cli-output.schema.json": {
       "id": "https://fishhat.invalid/contracts/cli-output.schema.json",
-      "sha256": "316f240ccfca7702707648bc61e0235d7625f60e434ffd4e6ad9a46ef102fdd9"
+      "sha256": "38b6dfcb21b54b7fbcb05cce4f5b600fd39a3f44a1be67ddc76cf7119b7373a0"
     },
     "client-records.schema.json": {
       "id": "https://fishhat.invalid/contracts/client-records.schema.json",
@@ -327,7 +329,7 @@
     },
     "common.schema.json": {
       "id": "https://fishhat.invalid/contracts/common.schema.json",
-      "sha256": "453d8d3a41a12802a106ee588c00fe21057a298b1443c4f55aa8e37e8c43e969"
+      "sha256": "f33f87eb7acdf0ceacee6f4a862d12a1d029b95f0def7ea0d883f897d29047cc"
     },
     "compute-adapter.schema.json": {
       "id": "https://fishhat.invalid/contracts/compute-adapter.schema.json",
@@ -336,6 +338,10 @@
     "credential-issuer-adapter.schema.json": {
       "id": "https://fishhat.invalid/contracts/credential-issuer-adapter.schema.json",
       "sha256": "1c5c2033d7c0f043a611e12d345ae80aaf9202f73899fbf035e879c17e7716c9"
+    },
+    "dataset-obligations.schema.json": {
+      "id": "https://fishhat.invalid/contracts/dataset-obligations.schema.json",
+      "sha256": "14db60ba6d5fbb23addc496751316a34186ead66e822cbf24cb5b09dedfc690d"
     },
     "directory-release.schema.json": {
       "id": "https://fishhat.invalid/contracts/directory-release.schema.json",
@@ -355,11 +361,11 @@
     },
     "dns-adapter.schema.json": {
       "id": "https://fishhat.invalid/contracts/dns-adapter.schema.json",
-      "sha256": "33110f826ff27121c8059381ee18a535b3bf71fd2124770b6e39bcd0ef9e3baf"
+      "sha256": "3531c1955d9dac58f32fd4786d17be4ba0d1c170f1437f6e9114f1580fb3fd4a"
     },
     "dns-changes.schema.json": {
       "id": "https://fishhat.invalid/contracts/dns-changes.schema.json",
-      "sha256": "66ffeea4eecd6ab00abf7983d72afe323154a3eb446169e0d843fb86882b243b"
+      "sha256": "a969b85d3415191a4456981142d712e6d2c3ab7c43cdccc4d1683a1700aea15c"
     },
     "dns-intent.schema.json": {
       "id": "https://fishhat.invalid/contracts/dns-intent.schema.json",
@@ -384,6 +390,10 @@
     "install-bundle.schema.json": {
       "id": "https://fishhat.invalid/contracts/install-bundle.schema.json",
       "sha256": "21210bfda0a596ee14e4ea0862f41fba82fa3129aa46f490e6d7bb72cf6adde4"
+    },
+    "lifecycle-evidence.schema.json": {
+      "id": "https://fishhat.invalid/contracts/lifecycle-evidence.schema.json",
+      "sha256": "37edae2f5c848a20ea1bf7ca2e5b35631611f913139fc958f8f610884f203f77"
     },
     "maintenance.schema.json": {
       "id": "https://fishhat.invalid/contracts/maintenance.schema.json",
@@ -423,7 +433,7 @@
     },
     "records.schema.json": {
       "id": "https://fishhat.invalid/contracts/records.schema.json",
-      "sha256": "e71ef3ad2d7587bf151cdac5799a170e2207fb559fc51da4813dd9609ed37256"
+      "sha256": "80a13c4913ba9c80a8d4020bfe7371440fa0ba8ba7f531cc472c83acf0020916"
     },
     "recovery-set.schema.json": {
       "id": "https://fishhat.invalid/contracts/recovery-set.schema.json",
@@ -463,15 +473,15 @@
     },
     "source.schema.json": {
       "id": "https://fishhat.invalid/contracts/source.schema.json",
-      "sha256": "d8e28b59daf3ba5eddd364f98ef045410f0e0b1f4e3bac14d06626163af36079"
+      "sha256": "a207fb2308b784a27c05ed6027c023e7c102498f94510f81b0884f9d57d4648b"
     },
     "ssh-request.schema.json": {
       "id": "https://fishhat.invalid/contracts/ssh-request.schema.json",
-      "sha256": "617040998027d1a925470249f3e03a361cc8ae4c53788a2fef8797213ba0fc04"
+      "sha256": "f38afcebbf24340e00b18283f773f48578846c2b3f79a2683d1c26b3e21ccbc1"
     },
     "ssh-response.schema.json": {
       "id": "https://fishhat.invalid/contracts/ssh-response.schema.json",
-      "sha256": "d60582445c0af48fdb7c47feffa7eed01d0414575c5056e2868d6880f597e3bd"
+      "sha256": "70542d98be556f39bc200067b6192e6ea5faede421df853b51f0618b30842722"
     },
     "storage-adapter.schema.json": {
       "id": "https://fishhat.invalid/contracts/storage-adapter.schema.json",
@@ -495,11 +505,11 @@
     },
     "workflow-evidence.schema.json": {
       "id": "https://fishhat.invalid/contracts/workflow-evidence.schema.json",
-      "sha256": "07bb62aeacb7ea09a6bf87dcddb4de5c10e90b982001ee7576fbcee95cb66d72"
+      "sha256": "a3a953d97217abe8117bc0a8f97a12185df505996af4c63af7676d8145b7b6e1"
     },
     "workflow-recovery.schema.json": {
       "id": "https://fishhat.invalid/contracts/workflow-recovery.schema.json",
-      "sha256": "35f3e8dd2ca345237e45aab892be7f7c82ce7742915701af217732a00eb2e86b"
+      "sha256": "01ed510c7cb3615322d2e0e0b61a4ff2367ee2b072bbab25c1f249cc5818e2c3"
     },
     "workflow-transfer-history.schema.json": {
       "id": "https://fishhat.invalid/contracts/workflow-transfer-history.schema.json",
@@ -507,7 +517,7 @@
     },
     "workflow.schema.json": {
       "id": "https://fishhat.invalid/contracts/workflow.schema.json",
-      "sha256": "0f14ec0592e59f83cc05e12eda32fda50834b415aeb3739a60a108d1d80caef8"
+      "sha256": "4d18d2170f80c08c49a65703ef0b0666462aa00e2ff63483fc53066c11d5f878"
     },
     "workspace.schema.json": {
       "id": "https://fishhat.invalid/contracts/workspace.schema.json",

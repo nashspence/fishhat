@@ -20,6 +20,8 @@ def validate_backup_selection(
     resource: dict[str, Any],
     expected_resource: dict[str, Any],
     expected_selection: dict[str, Any],
+    expected_owner: dict[str, Any],
+    expected_inventory: dict[str, Any],
 ) -> None:
     """Join independently loaded accepted state before review and native admission.
 
@@ -37,6 +39,28 @@ def validate_backup_selection(
         "backup application resource changed",
     )
     _require(selection == expected_selection, "backup accepted application selection changed")
+    from .datasets import validate_dataset_inventory
+    from .validation import digest
+
+    validate_dataset_inventory(expected_inventory)
+    _require(
+        expected_inventory["owner"] == expected_owner
+        and expected_inventory["resource"] == expected_resource
+        and expected_inventory["app_instance"] == selection["app_instance"]
+        and expected_inventory["accepted_release_digest"] == selection["release_digest"]
+        and digest(expected_inventory) == selection["dataset_inventory_digest"],
+        "backup differs from retained dataset inventory",
+    )
+    preserved = {
+        entry["dataset"]
+        for entry in expected_inventory["entries"]
+        if entry["discharge"] is None
+        and entry["obligation"]["declaration"]["recovery"] == "preserve"
+    }
+    _require(
+        set(selection["preserved_datasets"]) == preserved,
+        "backup omits retained preserved dataset obligations",
+    )
 
 
 @bounds(

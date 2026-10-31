@@ -8,7 +8,8 @@ import pytest
 from fishhat_adapters import check_response
 from fishhat_contracts.validation import ContractError, digest
 
-from tests.adapter_support import observation_target
+from tests.adapter_support import OWNER, observation_target
+from tests.test_adapter_dns import generation
 from tests.test_adapter_handoffs import artifact, installed
 from tests.test_adapter_quantities import counter, limit
 
@@ -58,8 +59,11 @@ def page(role, method="observe"):
         "runtime",
         "secret-source",
         "credential-issuer",
+        "dns",
     }:
         query["input"]["binding"] = executor
+    if role == "dns":
+        query["input"]["owner"] = copy.deepcopy(OWNER)
     if role == "runtime":
         query["input"]["barrier"] = None
         query["input"]["target"] = observation_target(executor)
@@ -68,7 +72,7 @@ def page(role, method="observe"):
         "build": {"artifacts": []},
         "compute": {"allocation": None, "limits": [], "counters": []},
         "credential-issuer": {"leases": []},
-        "dns": {"rrsets": [], "served_generation": None},
+        "dns": {"rrsets": [], "served_generation": generation(executor)},
         "ingress": {"serving_generation": None},
         "network": {"policy_generation": None},
         "report": {"receipt_handle": None},

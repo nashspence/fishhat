@@ -27,7 +27,6 @@ from .workflow_unprepared import (
 )
 from .workflows import (
     _child_identity_matches,
-    _pair,
     _request_key,
     bound_plan,
     child_action,
@@ -62,7 +61,7 @@ def _recovery_record(
     record: dict[str, Any],
     kind: str,
     *,
-    retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None,
+    retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
     recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
 ) -> dict[str, Any]:
     """Read exact original bytes under independently installed recovery semantics.
@@ -215,7 +214,7 @@ def _structure(
 def _origin_records(
     proposal: dict[str, Any],
     verified_origins: list[dict[str, Any]],
-    retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None,
+    retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
     recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
 ) -> dict[bytes, dict[str, Any]]:
     owners = _owners(proposal)
@@ -275,10 +274,14 @@ def _origin_records(
         "workflow recovery omits an original participant owner",
     )
     expected = {
-        _pair(owners[canonical(p["owner"])], p["resource"]) for p in original["participants"]
+        canonical([owners[canonical(p["owner"])], p["resource"], p.get("native_role")])
+        for p in original["participants"]
     }
-    actual = {_pair(p["owner"], p["resource"]) for p in proposal["successor"]["participants"]}
-    _require(expected == actual, "workflow recovery changed participant resource closure")
+    actual = {
+        canonical([p["owner"], p["resource"], p.get("native_role")])
+        for p in proposal["successor"]["participants"]
+    }
+    _require(expected == actual, "workflow recovery changed participant resource or role closure")
     return result
 
 
@@ -365,7 +368,7 @@ def _retained_acceptance(
 def _evidence(
     evidence: dict[str, Any],
     *,
-    retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None,
+    retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
     recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
 ) -> dict[str, Any]:
     reference, record = evidence["reference"], evidence["operation"]
@@ -383,7 +386,7 @@ def _recovered_child(
     original: dict[str, Any],
     current_owner: dict[str, Any],
     origin: dict[str, Any],
-    retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None,
+    retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
     recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
 ) -> None:
     recovered = disposition["recovery"]
@@ -423,7 +426,7 @@ def _recovered_child(
 def _dispositions(
     proposal: dict[str, Any],
     records: dict[bytes, dict[str, Any]],
-    retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None,
+    retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
     recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
 ) -> None:
     original = next(iter(records.values()))["proposal"]
@@ -446,7 +449,14 @@ def _dispositions(
             else mapped[_key(reference)]
         )
         for role, reference in original["target"].items()
+        if original["type"] != "relocation" or role != "destination"
     }
+    if original["type"] == "relocation":
+        destination = original["target"]["destination"]
+        target["destination"] = {
+            "owner": _owners(proposal)[canonical(destination["owner"])],
+            "resource": destination["resource"],
+        }
     _require(proposal["successor"]["target"] == target, "workflow recovery changed target lineage")
     origins = {canonical(origin_owner(o)): o for o in proposal["origins"]}
     for disposition in proposal["children"]:
@@ -541,7 +551,7 @@ def validate_recovery_proposal(
     proposal: dict[str, Any],
     *,
     verified_origins: list[dict[str, Any]],
-    retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None = None,
+    retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
     recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> None:
     """Check exact latest protected origin joins, without proving native retirement."""
@@ -711,7 +721,7 @@ def prepare_workflow_recovery(
     reserved_successor: dict[str, Any] | None,
     verified_abandonments: list[dict[str, Any]],
     local_abandonments: list[dict[str, Any]],
-    retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None = None,
+    retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
     recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> dict[str, Any]:
     """Model atomic successor preparation after independent local retirement.

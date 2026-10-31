@@ -591,6 +591,9 @@
           "maxLength": 1024,
           "pattern": "\\S",
           "description": "Explain what can be resumed or restored after interruption and what requires another explicit decision. Name irreversible effects or first-write limits where applicable. Cancellation and returning to an earlier software release do not imply that data is rolled back."
+        },
+        "dataset_transition": {
+          "$ref": "dataset-obligations.schema.json#/$defs/DatasetTransition"
         }
       },
       "required": [
@@ -660,6 +663,34 @@
             "not": {
               "required": [
                 "maintenance"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "subject": {
+                "properties": {
+                  "action": {
+                    "enum": [
+                      "app.deploy",
+                      "app.upgrade"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "dataset_transition"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "dataset_transition"
               ]
             }
           }
@@ -1637,7 +1668,6 @@
                   "format": "uuid",
                   "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
                 },
-                "minItems": 1,
                 "uniqueItems": true
               },
               "last_witness": {
@@ -1782,6 +1812,10 @@
                     "type": "null"
                   }
                 ]
+              },
+              "native_role": {
+                "const": "relocation-destination",
+                "description": "The exact destination host owner supplies native admission, isolation, resource-binding, fencing and placement evidence without inventing a second relocation Operation. This role is valid only in the installed relocation procedure."
               }
             },
             "required": [
@@ -1791,7 +1825,30 @@
               "request_ids",
               "last_witness"
             ],
-            "additionalProperties": false
+            "additionalProperties": false,
+            "allOf": [
+              {
+                "if": {
+                  "required": [
+                    "native_role"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "request_ids": {
+                      "const": []
+                    }
+                  }
+                },
+                "else": {
+                  "properties": {
+                    "request_ids": {
+                      "minItems": 1
+                    }
+                  }
+                }
+              }
+            ]
           },
           "minItems": 1
         },
@@ -2020,7 +2077,7 @@
         "bindings"
       ],
       "additionalProperties": false,
-      "description": "A finite procedure coordinating exact participant operations while each local owner retains authority and accepted state. A workflow is not a permanent central controller or an authorization supplied by an optional tracker. Each receiving owner retains its own identified, generation-checked capsule before child effects. Preparation records no accepted native operation. An authorized caller can enumerate these capsules without knowing a workflow ID; optional tracking is never required. A capsule with an incomplete transfer includes its complete retained transfer proposal and original locally accepted phase inputs. workflow.get and workflow.list expose them under current receiving authorization so recovery never depends on the original client or an optional report. The complete immutable proposal and its canonical digest survive original-client loss; its type, workflow ID and complete child-request/Plan closure match this capsule. advances retains authority-discriminated driver advance, owner-native final settlement and owner-native lifecycle decision inputs with their finite outcomes. Every retained lifecycle decision must match its exact predecessor and the current capsule state; terminal history can never be relabeled as live work. Transfer completion is performed only through workflow.advance with the full commit closure; it preserves the installed procedure phase and lifecycle state atomically with transfer completion. A separate normally authorized driver advance owns subsequent procedure progress. Independently authorized owner-native settlement may record the final completed facts of already admitted work while preserving incomplete transfer custody; it does not admit new work or complete that transfer. bindings retains complete later-reviewed child Plans, authenticated predecessor/material lineage and original binding requests without changing the immutable proposal. Unbound continuation slots cannot authorize child work or be skipped when completing their installed phase. Driver-transfer progress is orthogonal to lifecycle state. Freeze and commit preserve prepared, active, paused or recovery-required status; completion changes only transfer custody and driver authority. Terminal capsules reject new transfers, while exact previously accepted transfer requests remain replayable. Recovery custody is present only on a newly identified successor prepared through workflow.recover; incomplete recovery preparation forbids child admission, binding, phase advance and transfer. Its committed lineage never retargets original records or reexecutes completed child slots. An initial capsule always retains its exact local PreparationWitness in prerequisite_witnesses. Before first ordinary phase progress or child admission the owner independently authenticates and retains the complete same-proposal participant preparation closure. Merely preparing a local capsule, supplying matching IDs or transferring the driver does not waive this agreement. Committed recovery preparation supplies the corresponding agreement for successor capsules. Every ordinary phase transition preserves complete original phase evidence and ordered accepted history; neither evidence nor intermediate transitions can be erased from a later capsule. states.json owns the lifecycle meanings and edges. Paused capsules block new child admission, binding and ordinary phase progress until an independently authorized native resume reconciles current driver, accepted child and hold facts. Same-phase transfer completion and final native settlement of already admitted work may preserve or finish paused custody. Cancelled capsules permanently close local future child admission while preserving accepted child outcomes, exact replay, complete proposal/input/hold custody and pending transfer evidence. Initial local cancellation does not require a complete participant preparation closure and never certifies that other participants stopped. It does not replace positive retirement at a participant that never prepared. Retained recovery successors must also prove admission order: every binding, advance, native lifecycle decision and local transfer phase uses an original expected_generation at or after the committed recovery-preparation generation. A later committed marker cannot retroactively authorize changes accepted before that boundary. Explicit unused-successor abandonment remains the only pre-commit lifecycle path."
+      "description": "A finite procedure coordinating exact participant operations while each local owner retains authority and accepted state. A workflow is not a permanent central controller or an authorization supplied by an optional tracker. Each receiving owner retains its own identified, generation-checked capsule before child effects. Preparation records no accepted native operation. An authorized caller can enumerate these capsules without knowing a workflow ID; optional tracking is never required. A capsule with an incomplete transfer includes its complete retained transfer proposal and original locally accepted phase inputs. workflow.get and workflow.list expose them under current receiving authorization so recovery never depends on the original client or an optional report. The complete immutable proposal and its canonical digest survive original-client loss; its type, workflow ID and complete child-request/Plan closure match this capsule. advances retains authority-discriminated driver advance, owner-native final settlement and owner-native lifecycle decision inputs with their finite outcomes. Every retained lifecycle decision must match its exact predecessor and the current capsule state; terminal history can never be relabeled as live work. Transfer completion is performed only through workflow.advance with the full commit closure; it preserves the installed procedure phase and lifecycle state atomically with transfer completion. A separate normally authorized driver advance owns subsequent procedure progress. Independently authorized owner-native settlement may record the final completed facts of already admitted work while preserving incomplete transfer custody; it does not admit new work or complete that transfer. bindings retains complete later-reviewed child Plans, authenticated predecessor/material lineage and original binding requests without changing the immutable proposal. Unbound continuation slots cannot authorize child work or be skipped when completing their installed phase. Driver-transfer progress is orthogonal to lifecycle state. Freeze and commit preserve prepared, active, paused or recovery-required status; completion changes only transfer custody and driver authority. Terminal capsules reject new transfers, while exact previously accepted transfer requests remain replayable. Recovery custody is present only on a newly identified successor prepared through workflow.recover; incomplete recovery preparation forbids child admission, binding, phase advance and transfer. Its committed lineage never retargets original records or reexecutes completed child slots. An initial capsule always retains its exact local PreparationWitness in prerequisite_witnesses. Before first ordinary phase progress or child admission the owner independently authenticates and retains the complete same-proposal participant preparation closure. Merely preparing a local capsule, supplying matching IDs or transferring the driver does not waive this agreement. Committed recovery preparation supplies the corresponding agreement for successor capsules. Every ordinary phase transition preserves complete original phase evidence and ordered accepted history; neither evidence nor intermediate transitions can be erased from a later capsule. states.json owns the lifecycle meanings and edges. Paused capsules block new child admission, binding and ordinary phase progress until an independently authorized native resume reconciles current driver, accepted child and hold facts. Same-phase transfer completion and final native settlement of already admitted work may preserve or finish paused custody. Cancelled capsules permanently close local future child admission while preserving accepted child outcomes, exact replay, complete proposal/input/hold custody and pending transfer evidence. Initial local cancellation does not require a complete participant preparation closure and never certifies that other participants stopped. It does not replace positive retirement at a participant that never prepared. Retained recovery successors must also prove admission order: every binding, advance, native lifecycle decision and local transfer phase uses an original expected_generation at or after the committed recovery-preparation generation. A later committed marker cannot retroactively authorize changes accepted before that boundary. Explicit unused-successor abandonment remains the only pre-commit lifecycle path. A relocation destination retains its exact native_role from the immutable proposal and an empty request_ids list, while remaining in every owner/resource, preparation, evidence, transfer and recovery closure. It cannot be dropped, relabeled or treated as a successful child merely because it has no ordinary child request."
     },
     "Hold": {
       "type": "object",
@@ -4687,7 +4744,8 @@
             "native-config",
             "secret-candidate",
             "workflow-input",
-            "plan-input"
+            "plan-input",
+            "lifecycle-input"
           ]
         },
         "digest": {

@@ -292,6 +292,9 @@ def scenario(
     successor["participants"] = declarations
 
     successor["target"] = remap_children(original["proposal"]["target"], changed_refs)
+    if original["type"] == "relocation":
+        destination = successor["target"]["destination"]
+        destination["owner"] = current(destination["owner"])
     for participant in successor["participants"]:
         for slot in participant["requests"]:
             if "intent" in slot:
@@ -535,7 +538,11 @@ def test_other_historical_schema_reader_is_inspection_only_for_workflow_recovery
     reference["schema"]["digest"] = reader_digest
     if kind == "Workflow":
         records[0]["reference"] = copy.deepcopy(reference)
-    readers = {reader_digest: lambda value: validate("records.schema.json", value, kind)}
+    readers = {
+        (reference["schema"]["uri"], reader_digest): lambda value: validate(
+            "records.schema.json", value, kind
+        )
+    }
     assert (
         validate_record_payload(
             reference,

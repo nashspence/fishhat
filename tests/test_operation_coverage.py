@@ -105,7 +105,7 @@ def test_map_exhaustively_tracks_current_surfaces_and_native_gaps():
     coverage = check()
     rows = {row["id"]: row for row in coverage["operations"]}
     assert len([key for key in rows if key.startswith("action:")]) == 35
-    assert len([key for key in rows if key.startswith("rpc:")]) == 37
+    assert len([key for key in rows if key.startswith("rpc:")]) == 38
     assert {
         "rpc:workflow.list",
         "rpc:workflow.bind",
@@ -125,6 +125,7 @@ def test_map_exhaustively_tracks_current_surfaces_and_native_gaps():
         "rpc:history.list",
         "rpc:history.read",
         "rpc:history.content",
+        "rpc:lifecycle.evidence.prepare",
     } <= rows.keys()
     assert rows["action:operation.recover"]["tools"] == ["app-ops", "host-ops"]
     assert all(

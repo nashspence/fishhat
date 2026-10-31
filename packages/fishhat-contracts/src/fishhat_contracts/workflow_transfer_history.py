@@ -225,7 +225,7 @@ def validate_transfer_lookup_result(
     request: dict[str, Any],
     result: dict[str, Any],
     *,
-    retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None = None,
+    retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> None:
     """Correlate inline or bounded-reference lookup output before using its custody."""
     validate("workflow-transfer-history.schema.json", request, "LookupRequest")

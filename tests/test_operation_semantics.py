@@ -208,6 +208,7 @@ def producer(action):
                     "release_digest": digest("accepted application release"),
                     "preserved_datasets": ["database"],
                     "secret_generations": [],
+                    "dataset_inventory_digest": digest("accepted dataset inventory"),
                 }
             },
             "app.cleanup": {

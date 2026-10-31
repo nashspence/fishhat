@@ -664,7 +664,12 @@ def test_two_owner_public_attestation_path_and_lost_reply_replay(monkeypatch):
         changed_schema.setitem(SCHEMAS["common.schema.json"], "description", "updated closure")
         with pytest.raises(ContractError, match="schema substitution"):
             receiver.restart(retained=retained)
-        readers = {references[0]["schema"]["digest"]: validate_attestation}
+        readers = {
+            (
+                references[0]["schema"]["uri"],
+                references[0]["schema"]["digest"],
+            ): validate_attestation
+        }
         receiver.restart(retained=retained, retained_readers=readers)
         assert call(receiver, "workflow.attest", queries[0]) == references[0]
         assert read_record(receiver, references[0]) == values[0]

@@ -81,7 +81,10 @@ def _child_outcome(
 @bounds(
     Bounds(
         id="workflow.phase-evidence",
-        linear_proofs=("tests/test_linear_growth.py::test_phase_evidence_linear_work",),
+        linear_proofs=(
+            "tests/test_linear_growth.py::test_phase_evidence_linear_work",
+            "tests/test_relocation_participants.py::test_relocation_destination_evidence_complete_linear_work",
+        ),
         work="O(B + P + C + K) complete-input validation with hash-indexed structural uniqueness for fixed installed schema/phase closure; B serialized proposal/evidence/Plan bytes, P participants, C child slots and K retained bindings",
         extent="Every participant resource, every child started before the destination phase and every native evidence handle; no prefix selection or total-size cap",
         limits=(),

@@ -1,0 +1,743 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fishhat.invalid/contracts/lifecycle-evidence.schema.json",
+  "$defs": {
+    "NativeIdentity": {
+      "type": "object",
+      "properties": {
+        "scope": {
+          "$ref": "adapter.schema.json#/$defs/Scope"
+        },
+        "incarnation": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        }
+      },
+      "required": [
+        "scope",
+        "incarnation"
+      ],
+      "additionalProperties": false,
+      "description": "Exact independently observed native incarnation in its authority-scoped namespace. A display name, reusable selector or adapter handle alone cannot identify a retirement target, protected object or deletion candidate. Re-creation under the same scope has a different incarnation commitment."
+    },
+    "RetirementTarget": {
+      "type": "object",
+      "properties": {
+        "resource": {
+          "$ref": "common.schema.json#/$defs/Resource"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "native_identity": {
+          "$ref": "lifecycle-evidence.schema.json#/$defs/NativeIdentity"
+        }
+      },
+      "required": [
+        "resource",
+        "generation",
+        "native_identity"
+      ],
+      "additionalProperties": false
+    },
+    "DatasetRetention": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "resource": {
+          "$ref": "common.schema.json#/$defs/Resource"
+        },
+        "app_instance": {
+          "$ref": "dataset-obligations.schema.json#/$defs/DatasetInventory/properties/app_instance"
+        },
+        "inventory_digest": {
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
+        },
+        "retained_obligations": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/UUID"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "owner",
+        "resource",
+        "app_instance",
+        "inventory_digest",
+        "retained_obligations"
+      ],
+      "additionalProperties": false,
+      "description": "Commit the exact complete DatasetInventory, including omitted source names and discharged tombstones, and every immutable obligation ID. Authenticate and retrieve the full inventory independently; its source declaration, native incarnation and complete recovery closure cannot be inferred from a current source name."
+    },
+    "RetirementSelection": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "enum": [
+            "app.retire",
+            "host.retire"
+          ]
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "$ref": "lifecycle-evidence.schema.json#/$defs/RetirementTarget"
+          },
+          "minItems": 1
+        },
+        "datasets": {
+          "type": "array",
+          "items": {
+            "$ref": "lifecycle-evidence.schema.json#/$defs/DatasetRetention"
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "action",
+        "targets",
+        "datasets"
+      ],
+      "additionalProperties": false,
+      "description": "The complete exact management scopes to retire and all affected application dataset inventories, independently derived by the owner. app.retire selects exactly its application; host.retire selects exactly the reviewed named host resources. Retirement ends management only. Native data, retained recovery material and accepted work remain in explicit continuing custody; this evidence never authorizes deletion or silently discharges a dataset obligation."
+    },
+    "BackupTarget": {
+      "type": "object",
+      "properties": {
+        "native_identity": {
+          "$ref": "lifecycle-evidence.schema.json#/$defs/NativeIdentity"
+        },
+        "object": {
+          "$ref": "adapter.schema.json#/$defs/BackupObject"
+        }
+      },
+      "required": [
+        "native_identity",
+        "object"
+      ],
+      "additionalProperties": false,
+      "description": "Exact repository object, complete artifact identity and native incarnation. Native identity scope is the approved backup executor scope; object.repository and that scope handle equal the selected repository. Object handles cannot be rebound to a later incarnation."
+    },
+    "PruningSelection": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "const": "backend.prune"
+        },
+        "executor": {
+          "allOf": [
+            {
+              "$ref": "adapter.schema.json#/$defs/InstanceReference"
+            },
+            {
+              "properties": {
+                "role": {
+                  "const": "backup"
+                }
+              }
+            }
+          ]
+        },
+        "repository": {
+          "$ref": "adapter.schema.json#/$defs/Handle"
+        },
+        "objects": {
+          "type": "array",
+          "items": {
+            "$ref": "lifecycle-evidence.schema.json#/$defs/BackupTarget"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "action",
+        "executor",
+        "repository",
+        "objects"
+      ],
+      "additionalProperties": false,
+      "description": "Only these exact backup objects may be deleted. The executor must equal the currently approved receiving-owner enrollment and repository scope; substituted instance/configuration, repository, object, incarnation or artifact closure requires new evidence and Plan. Preparation and retirement never perform this deletion."
+    },
+    "Selection": {
+      "oneOf": [
+        {
+          "$ref": "lifecycle-evidence.schema.json#/$defs/RetirementSelection"
+        },
+        {
+          "$ref": "lifecycle-evidence.schema.json#/$defs/PruningSelection"
+        }
+      ]
+    },
+    "RetentionBinding": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "account": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "policy_generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "policy_digest": {
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
+        },
+        "inventory_digest": {
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
+        },
+        "protection_generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "resource": {
+          "allOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Resource"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "const": "app"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "owner",
+        "account",
+        "policy_generation",
+        "policy_digest",
+        "inventory_digest",
+        "protection_generation",
+        "resource"
+      ],
+      "additionalProperties": false,
+      "description": "Bind an independently loaded current AcceptedRetentionPolicy and complete RetentionInventory. The policy is selected by its owning application, not the requester or backup adapter. Reuse the retention decision rules, including keep-local, holds, accepted releases, hot predecessors, freshness and verified cold demotion; lifecycle evidence cannot relax them. resource is the exact independently approved application-to-account mapping, including when a host owner prunes shared backup storage; same-owner custody for another resource is not interchangeable."
+    },
+    "Context": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "resource": {
+          "$ref": "common.schema.json#/$defs/Resource"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "holds_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "selection": {
+          "$ref": "lifecycle-evidence.schema.json#/$defs/Selection"
+        },
+        "retention": {
+          "type": "array",
+          "items": {
+            "$ref": "lifecycle-evidence.schema.json#/$defs/RetentionBinding"
+          },
+          "minItems": 0
+        },
+        "protection_generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "protected_objects": {
+          "type": "array",
+          "items": {
+            "$ref": "lifecycle-evidence.schema.json#/$defs/NativeIdentity"
+          },
+          "minItems": 0
+        },
+        "required_materials": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/MaterialDigest"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "protected_references": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/MaterialDigest"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "observed_at": {
+          "$ref": "common.schema.json#/$defs/Time"
+        },
+        "valid_until": {
+          "$ref": "common.schema.json#/$defs/Time"
+        }
+      },
+      "required": [
+        "owner",
+        "resource",
+        "generation",
+        "holds_digest",
+        "selection",
+        "retention",
+        "protection_generation",
+        "protected_objects",
+        "required_materials",
+        "protected_references",
+        "observed_at",
+        "valid_until"
+      ],
+      "additionalProperties": false,
+      "description": "Complete current protected owner state for one proposed lifecycle decision, loaded independently from the request. Native resource-to-selection/enrollment mapping, every affected accepted retention policy, dataset inventory, hold, accepted operation, workflow, recovery root and surviving material are exhaustive. protection_generation changes whenever any protected reference or required custody changes; generation and holds_digest match the subject resource Plan precondition. The owner refuses an incomplete/unresolved scan and sets valid_until from independently accepted observation policy. Revalidate exact current context under exclusion at admission and immediately before each deletion or management release. A requester-provided Context, signature, timestamp or generation is not authorization."
+    },
+    "ContentLocation": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "content"
+        },
+        "handle": {
+          "$ref": "common.schema.json#/$defs/Handle"
+        }
+      },
+      "required": [
+        "kind",
+        "handle"
+      ],
+      "additionalProperties": false
+    },
+    "NativeLocation": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "native"
+        },
+        "identity": {
+          "$ref": "lifecycle-evidence.schema.json#/$defs/NativeIdentity"
+        }
+      },
+      "required": [
+        "kind",
+        "identity"
+      ],
+      "additionalProperties": false
+    },
+    "BackupLocation": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "backup"
+        },
+        "executor": {
+          "allOf": [
+            {
+              "$ref": "adapter.schema.json#/$defs/InstanceReference"
+            },
+            {
+              "properties": {
+                "role": {
+                  "const": "backup"
+                }
+              }
+            }
+          ]
+        },
+        "target": {
+          "$ref": "lifecycle-evidence.schema.json#/$defs/BackupTarget"
+        }
+      },
+      "required": [
+        "kind",
+        "executor",
+        "target"
+      ],
+      "additionalProperties": false
+    },
+    "Custody": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "resource": {
+          "$ref": "common.schema.json#/$defs/Resource"
+        },
+        "material_digest": {
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
+        },
+        "location": {
+          "oneOf": [
+            {
+              "$ref": "lifecycle-evidence.schema.json#/$defs/ContentLocation"
+            },
+            {
+              "$ref": "lifecycle-evidence.schema.json#/$defs/NativeLocation"
+            },
+            {
+              "$ref": "lifecycle-evidence.schema.json#/$defs/BackupLocation"
+            }
+          ]
+        },
+        "local": {
+          "type": "boolean"
+        },
+        "state": {
+          "enum": [
+            "retained",
+            "handoff-complete"
+          ]
+        },
+        "previous_custodian": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Owner"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "verified_at": {
+          "$ref": "common.schema.json#/$defs/Time"
+        },
+        "valid_until": {
+          "$ref": "common.schema.json#/$defs/Time"
+        },
+        "witness": {
+          "$ref": "records.schema.json#/$defs/Witness"
+        },
+        "previous_resource": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Resource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "obligation": {
+          "anyOf": [
+            {
+              "$ref": "lifecycle-evidence.schema.json#/$defs/DatasetCustody"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "owner",
+        "resource",
+        "material_digest",
+        "location",
+        "local",
+        "state",
+        "previous_custodian",
+        "verified_at",
+        "valid_until",
+        "witness",
+        "previous_resource",
+        "obligation"
+      ],
+      "additionalProperties": false,
+      "description": "A completed, independently verified surviving recovery closure, authenticated by the named current custodian using its approved scoped witness key. witness.kind is effect, state equals this state and subject_digest commits all fields except witness. retained has no previous_custodian; handoff-complete names the exact former owner and means the successor has verified and durably accepted the entire closure, including retrievability and native restore prerequisites, before signing. An offer, upload, intent or permission to transfer is insufficient. local means continued local custody by the required owning application; a successor or remote archive cannot satisfy keep-local. Content locations bind exact immutable bytes; native and backup locations bind exact native incarnation and scope. Verification independently follows the complete closure, not only a manifest. The receiving owner rechecks authenticated current custody and freshness; no wire boolean or digest proves availability. Any location selected for deletion cannot serve as surviving custody. previous_resource is null for retained custody and names the exact former managed resource for a completed handoff. Recovery joins use former owner, former resource and material together; shared digests or owner IDs alone cannot borrow custody from another application. Every retained dataset obligation also requires positive DatasetCustody at a native or backup location. Bare content custody satisfies metadata roots only; it never proves that the mutable native dataset survived."
+    },
+    "PrepareRequest": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/lifecycle-evidence/v1"
+        },
+        "preparation_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "resource": {
+          "$ref": "common.schema.json#/$defs/Resource"
+        },
+        "selection": {
+          "$ref": "lifecycle-evidence.schema.json#/$defs/Selection"
+        }
+      },
+      "required": [
+        "format",
+        "preparation_id",
+        "owner",
+        "resource",
+        "selection"
+      ],
+      "additionalProperties": false,
+      "description": "Complete canonical observational evidence request. The receiving owner independently authenticates the actual principal and authorizes the exact resource and every selected native scope, derives current protection/policy state and verifies completed custody. It never executes retirement/pruning, changes retention policy, creates a dataset discharge or accepts native work. The caller-allocated preparation_id binds this exact request and principal; an identical retained retry returns the original evidence before new-input freshness checks, and changed input conflicts. Retain input, full evidence and schema reader atomically before acknowledgment. No incomplete selection is issued as evidence."
+    },
+    "InputReference": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "preparation_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "input": {
+          "allOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Handle"
+            },
+            {
+              "properties": {
+                "purpose": {
+                  "const": "lifecycle-input"
+                },
+                "binding": {
+                  "properties": {
+                    "kind": {
+                      "const": "staging"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "owner",
+        "preparation_id",
+        "input"
+      ],
+      "additionalProperties": false,
+      "description": "Finite lifecycle.evidence.prepare request; complete selection bytes use content.begin/chunk/commit with lifecycle-input purpose. Independently verify exact owner epoch, actual principal, resource, committed handle, preparation identity, canonical bytes, digest and size. Input capacity may explicitly refuse new work, never truncate a collection."
+    },
+    "RetirementEvidence": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/lifecycle-evidence/v1"
+        },
+        "kind": {
+          "const": "RetirementEvidence"
+        },
+        "preparation_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "request_digest": {
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
+        },
+        "context": {
+          "allOf": [
+            {
+              "$ref": "lifecycle-evidence.schema.json#/$defs/Context"
+            },
+            {
+              "properties": {
+                "selection": {
+                  "$ref": "lifecycle-evidence.schema.json#/$defs/RetirementSelection"
+                }
+              }
+            }
+          ]
+        },
+        "custody": {
+          "type": "array",
+          "items": {
+            "$ref": "lifecycle-evidence.schema.json#/$defs/Custody"
+          },
+          "minItems": 0
+        },
+        "witness": {
+          "$ref": "records.schema.json#/$defs/Witness"
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "preparation_id",
+        "request_digest",
+        "context",
+        "custody",
+        "witness"
+      ],
+      "additionalProperties": false,
+      "description": "Owner-issued evidence snapshot, produced only by lifecycle.evidence.prepare after independently checking the complete current context and surviving custody. The issuer is context.owner at its exact epoch. Its approved owner witness key signs kind approval, state prepared, generation context.generation and a subject_digest of all fields except witness; approval attests preparation only and grants no execution permission. A consuming Plan pins this complete evidence, request, selected native identities, retention and recovery material. Admission independently authenticates the issuer and every custody witness, matches exact current state and Plan, and revalidates exclusion/freshness before the effect. Old epoch, stale policy/protection, missing closure, unfinished handoff and object substitution fail closed."
+    },
+    "PruningEvidence": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/lifecycle-evidence/v1"
+        },
+        "kind": {
+          "const": "PruningEvidence"
+        },
+        "preparation_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "request_digest": {
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
+        },
+        "context": {
+          "allOf": [
+            {
+              "$ref": "lifecycle-evidence.schema.json#/$defs/Context"
+            },
+            {
+              "properties": {
+                "selection": {
+                  "$ref": "lifecycle-evidence.schema.json#/$defs/PruningSelection"
+                }
+              }
+            }
+          ]
+        },
+        "custody": {
+          "type": "array",
+          "items": {
+            "$ref": "lifecycle-evidence.schema.json#/$defs/Custody"
+          },
+          "minItems": 0
+        },
+        "witness": {
+          "$ref": "records.schema.json#/$defs/Witness"
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "preparation_id",
+        "request_digest",
+        "context",
+        "custody",
+        "witness"
+      ],
+      "additionalProperties": false,
+      "description": "Owner-issued evidence snapshot, produced only by lifecycle.evidence.prepare after independently checking the complete current context and surviving custody. The issuer is context.owner at its exact epoch. Its approved owner witness key signs kind approval, state prepared, generation context.generation and a subject_digest of all fields except witness; approval attests preparation only and grants no execution permission. A consuming Plan pins this complete evidence, request, selected native identities, retention and recovery material. Admission independently authenticates the issuer and every custody witness, matches exact current state and Plan, and revalidates exclusion/freshness before the effect. Old epoch, stale policy/protection, missing closure, unfinished handoff and object substitution fail closed."
+    },
+    "Evidence": {
+      "oneOf": [
+        {
+          "$ref": "lifecycle-evidence.schema.json#/$defs/RetirementEvidence"
+        },
+        {
+          "$ref": "lifecycle-evidence.schema.json#/$defs/PruningEvidence"
+        }
+      ]
+    },
+    "EvidenceReference": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "LifecycleEvidenceReference"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "resource": {
+          "$ref": "common.schema.json#/$defs/Resource"
+        },
+        "action": {
+          "enum": [
+            "app.retire",
+            "host.retire",
+            "backend.prune"
+          ]
+        },
+        "preparation_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "holds_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "request_digest": {
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
+        },
+        "handle": {
+          "allOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Handle"
+            },
+            {
+              "properties": {
+                "purpose": {
+                  "const": "content"
+                },
+                "binding": {
+                  "properties": {
+                    "kind": {
+                      "const": "lifecycle-evidence"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "schema": {
+          "$ref": "common.schema.json#/$defs/SchemaIdentity"
+        }
+      },
+      "required": [
+        "kind",
+        "owner",
+        "resource",
+        "action",
+        "preparation_id",
+        "generation",
+        "holds_digest",
+        "request_digest",
+        "handle",
+        "schema"
+      ],
+      "additionalProperties": false,
+      "description": "Finite immutable evidence result and Plan argument. The exact schema URI is RetirementEvidence for retire actions or PruningEvidence for backend.prune, with its approved closure digest. The handle has the same owner and preparation_id lifecycle-evidence binding and commits full canonical typed bytes. A digest without this type, issuer and custody reference is not accepted. Read complete evidence via existing bounded content.get calls; every chunk is the same handle, and final digest/size/schema/canonical checks precede use. Accepted Plan/Operation custody retains the reference, full evidence, input, inventory, policy, custody material and exact reader independently of clients for as long as review, replay or recovery needs them. Plan expiry/evidence staleness prevents new admission, not retained reads. Old epochs use historical custody without rebinding authority. This handle is not a bearer credential."
+    },
+    "DatasetCustody": {
+      "type": "object",
+      "properties": {
+        "inventory_digest": {
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
+        },
+        "obligation_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "obligation_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "native_identity": {
+          "$ref": "lifecycle-evidence.schema.json#/$defs/NativeIdentity"
+        }
+      },
+      "required": [
+        "inventory_digest",
+        "obligation_id",
+        "obligation_digest",
+        "native_identity"
+      ],
+      "additionalProperties": false,
+      "description": "Positive custody of the complete current data for one exact immutable DatasetInventory obligation, separate from its source/procedure recovery metadata. The authenticated current custodian verifies the source native incarnation and complete current data under the required fence at verified_at; native retention keeps that exact incarnation, while a completed handoff or sealed available backup binds the original incarnation to its verified surviving location and complete native-restorable closure. A source manifest, metadata bytes, empty snapshot or mere recovery procedure cannot satisfy this binding."
+    }
+  }
+}

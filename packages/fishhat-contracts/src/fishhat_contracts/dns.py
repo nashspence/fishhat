@@ -5,6 +5,7 @@ from __future__ import annotations
 import ipaddress
 from typing import Any
 
+from .bounds import Bounds, bounds
 from .validation import ContractError, canonical, validate
 
 
@@ -64,6 +65,9 @@ def validate_changes(value: dict[str, Any]) -> None:
     validate("dns-changes.schema.json", value)
     if value["scope"]["kind"] != "dns-service":
         raise ContractError("WRONG_DNS_SCOPE")
+    validate_generation(
+        value["expected_generation"], owner=value["custodian"], scope=value["scope"]
+    )
     before, after, changed = [], [], set()
     for change in value["changes"]:
         a, b = change["before"], change["after"]
@@ -83,3 +87,67 @@ def validate_changes(value: dict[str, Any]) -> None:
             after.append(b)
     validate_rrsets(before)
     validate_rrsets(after)
+
+
+def validate_generation(
+    generation: dict[str, Any], *, owner: dict[str, Any], scope: dict[str, Any]
+) -> None:
+    """Bind a revision's data identity without authenticating its native producer."""
+    validate("dns-changes.schema.json", generation, "DNSGeneration")
+    if (
+        generation["owner"] != owner
+        or owner["id"] != scope["authority"]
+        or generation["binding"]["role"] != "dns"
+        or generation["binding"]["scope"] != scope
+        or scope["kind"] != "dns-service"
+    ):
+        raise ContractError("DNS_GENERATION_IDENTITY")
+
+
+@bounds(
+    Bounds(
+        id="dns.publication-precondition",
+        work="O(B) complete current RRsets and changeset bytes; one indexed before-state join",
+        extent="Complete authoritative scoped RRsets and every requested change",
+        limits=(),
+        capacity=("No total RRset or changeset cap; native capacity must refuse explicitly",),
+        proofs=("tests/test_dns_generations.py::test_dns_precondition_linear_work",),
+        linear_proofs=("tests/test_dns_generations.py::test_dns_precondition_linear_work",),
+    )
+)
+def validate_publication_precondition(
+    change: dict[str, Any],
+    *,
+    current_generation: dict[str, Any],
+    current_rrsets: list[dict[str, Any]],
+) -> None:
+    """Compare a reviewed change to independently acquired complete native state.
+
+    The native owner supplies the current generation and complete scoped RRsets
+    under the same exclusion used for mutation, after authenticating authority.
+    Caller-provided state or this pure check alone cannot authorize publication.
+    Incomplete observation pages must not be passed as a complete native view.
+    """
+    validate_changes(change)
+    validate_generation(current_generation, owner=change["custodian"], scope=change["scope"])
+    if current_generation != change["expected_generation"]:
+        raise ContractError("DNS_STALE_GENERATION")
+    if current_generation["generation"] == 9007199254740991:
+        raise ContractError("DNS_GENERATION_EXHAUSTED")
+    validate_rrsets(current_rrsets)
+    projected = {rrset_key(rrset): rrset for rrset in current_rrsets}
+    for item in change["changes"]:
+        before, after = item["before"], item["after"]
+        key = rrset_key(before if before is not None else after)
+        observed = projected.get(key)
+        if (before is None) != (observed is None) or (
+            before is not None
+            and observed is not None
+            and _rrset_identity(before) != _rrset_identity(observed)
+        ):
+            raise ContractError("DNS_BEFORE_STATE_CHANGED")
+        if after is None:
+            del projected[key]
+        else:
+            projected[key] = after
+    validate_rrsets(list(projected.values()))

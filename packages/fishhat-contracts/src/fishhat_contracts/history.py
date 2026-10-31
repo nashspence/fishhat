@@ -102,7 +102,7 @@ def validate_history_result(
     *,
     expected_request: dict[str, Any] | None = None,
     verified_custody: dict[str, Any] | None = None,
-    retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None = None,
+    retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> None:
     """Check immutable read correlations, not permission to read or execute.
 
@@ -234,7 +234,7 @@ def validate_historical_recovery(
     verified_custody: dict[str, Any],
     verified_reference: dict[str, Any],
     recovery_authorized: bool,
-    retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None = None,
+    retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> dict[str, Any]:
     """Join a newly reviewed recovery Plan to unchanged original accepted work.
 

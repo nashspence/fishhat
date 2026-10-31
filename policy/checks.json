@@ -5484,6 +5484,150 @@
       "purpose_sha256": "ca8446e164090f11e4ea32dad59c0e725d6a2b9d041cee222471d562a4319e6f"
     },
     {
+      "node": "tests/test_dataset_transitions.py::test_changed_native_mapping_is_not_an_ordinary_source_continuation[grant]",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_changed_native_mapping_is_not_an_ordinary_source_continuation[native_format]",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_dataset_transition_linear_work[admit]",
+      "purpose_sha256": "cf1e37a64aeb6ad419fbf49787d696f486e21d951005494f74fad5d6549c611c"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_dataset_transition_linear_work[continue]",
+      "purpose_sha256": "cf1e37a64aeb6ad419fbf49787d696f486e21d951005494f74fad5d6549c611c"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_dataset_transition_linear_work[discharge]",
+      "purpose_sha256": "cf1e37a64aeb6ad419fbf49787d696f486e21d951005494f74fad5d6549c611c"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_discharge_cannot_relabel_same_native_incarnation_as_fresh_data",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_discharge_requires_exact_explicit_selection[also-continued]",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_discharge_requires_exact_explicit_selection[missing]",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_discharge_requires_exact_explicit_selection[verified-boolean]",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_discharge_requires_exact_explicit_selection[wrong-original]",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_explicit_reclassification_admits_a_verified_successor_and_retains_original[external]",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_explicit_reclassification_admits_a_verified_successor_and_retains_original[rebuild]",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_explicit_rename_preserves_original_native_obligation_and_recovery_closure",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_inventory_checks_every_obligation_without_a_count_cap[16]",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_inventory_checks_every_obligation_without_a_count_cap[1]",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_inventory_checks_every_obligation_without_a_count_cap[4]",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_new_dataset_requires_complete_independent_native_admission",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_old_obligations_block_source_only_backup_and_release_relocation",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_policy_or_custody_reclassification_cannot_continue_old_obligation[external]",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_policy_or_custody_reclassification_cannot_continue_old_obligation[rebuild]",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_release_plan_commits_complete_dataset_transition[app.deploy]",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_release_plan_commits_complete_dataset_transition[app.upgrade]",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_request_fields_cannot_override_independent_refusal[authorize_transition]",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_request_fields_cannot_override_independent_refusal[verify_discharges]",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_source_identity_cannot_borrow_another_applications_inventory",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_source_omission_cannot_become_an_accepted_data_free_release",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_stale_transition_does_not_reapply_or_rewrite_accepted_inventory",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_transition_rejects_stale_or_substituted_accepted_context[epoch]",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_transition_rejects_stale_or_substituted_accepted_context[generation]",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_transition_rejects_stale_or_substituted_accepted_context[instance]",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_transition_rejects_stale_or_substituted_accepted_context[inventory]",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_transition_rejects_stale_or_substituted_accepted_context[previous-release]",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_transition_rejects_stale_or_substituted_accepted_context[release]",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_transition_rejects_stale_or_substituted_accepted_context[resource]",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_unreviewed_native_rebinding_is_rejected_even_with_same_source",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
+      "node": "tests/test_dataset_transitions.py::test_verified_retirement_retains_original_obligation_and_complete_evidence",
+      "purpose_sha256": "94793b9d131adb9e082cb06dfa7461d91aafe1488112b0aa67771608cb91aa3e"
+    },
+    {
       "node": "tests/test_directory.py::Directory::test_anchor_yaml",
       "purpose_sha256": "03b922da1480e825929a76fd6f6ed093b054fae9e461da73a1ace439b6a7c400"
     },
@@ -5654,6 +5798,114 @@
     {
       "node": "tests/test_directory.py::Directory::test_wrong_listener_network",
       "purpose_sha256": "03b922da1480e825929a76fd6f6ed093b054fae9e461da73a1ace439b6a7c400"
+    },
+    {
+      "node": "tests/test_dns_generations.py::test_dns_observation_sequence_linear_work",
+      "purpose_sha256": "1be76fd4942292cbbb39a5acdd4f211c1e286de38a2e4cc81c4cc7e0466dac61"
+    },
+    {
+      "node": "tests/test_dns_generations.py::test_dns_precondition_linear_work",
+      "purpose_sha256": "489dd853c7c66dff9891bd318dca9d4a171f9b24a3032ef4dc9bf2dcb6c5b7cb"
+    },
+    {
+      "node": "tests/test_dns_generations.py::test_dns_snapshot_rejects_cross_page_cname_collision_without_consuming_the_page",
+      "purpose_sha256": "22fc74530a73916d8cd89eedb0604ffa1e8b9636ea817aad8cd8d3c5f4166e18"
+    },
+    {
+      "node": "tests/test_dns_generations.py::test_integer_precondition_and_counter_wrap_are_not_accepted",
+      "purpose_sha256": "22fc74530a73916d8cd89eedb0604ffa1e8b9636ea817aad8cd8d3c5f4166e18"
+    },
+    {
+      "node": "tests/test_dns_generations.py::test_invalidated_dns_snapshot_closes_unknown_without_a_replacement_generation",
+      "purpose_sha256": "22fc74530a73916d8cd89eedb0604ffa1e8b9636ea817aad8cd8d3c5f4166e18"
+    },
+    {
+      "node": "tests/test_dns_generations.py::test_native_before_state_is_required_even_with_an_equal_generation[missing]",
+      "purpose_sha256": "22fc74530a73916d8cd89eedb0604ffa1e8b9636ea817aad8cd8d3c5f4166e18"
+    },
+    {
+      "node": "tests/test_dns_generations.py::test_native_before_state_is_required_even_with_an_equal_generation[rdata]",
+      "purpose_sha256": "22fc74530a73916d8cd89eedb0604ffa1e8b9636ea817aad8cd8d3c5f4166e18"
+    },
+    {
+      "node": "tests/test_dns_generations.py::test_native_before_state_is_required_even_with_an_equal_generation[ttl]",
+      "purpose_sha256": "22fc74530a73916d8cd89eedb0604ffa1e8b9636ea817aad8cd8d3c5f4166e18"
+    },
+    {
+      "node": "tests/test_dns_generations.py::test_native_precondition_rejects_every_changed_revision_namespace_field[binding]",
+      "purpose_sha256": "22fc74530a73916d8cd89eedb0604ffa1e8b9636ea817aad8cd8d3c5f4166e18"
+    },
+    {
+      "node": "tests/test_dns_generations.py::test_native_precondition_rejects_every_changed_revision_namespace_field[generation]",
+      "purpose_sha256": "22fc74530a73916d8cd89eedb0604ffa1e8b9636ea817aad8cd8d3c5f4166e18"
+    },
+    {
+      "node": "tests/test_dns_generations.py::test_native_precondition_rejects_every_changed_revision_namespace_field[native_incarnation]",
+      "purpose_sha256": "22fc74530a73916d8cd89eedb0604ffa1e8b9636ea817aad8cd8d3c5f4166e18"
+    },
+    {
+      "node": "tests/test_dns_generations.py::test_native_precondition_rejects_every_changed_revision_namespace_field[owner]",
+      "purpose_sha256": "22fc74530a73916d8cd89eedb0604ffa1e8b9636ea817aad8cd8d3c5f4166e18"
+    },
+    {
+      "node": "tests/test_dns_generations.py::test_observation_traversal_rejects_mixed_generations_and_requires_independent_owner",
+      "purpose_sha256": "22fc74530a73916d8cd89eedb0604ffa1e8b9636ea817aad8cd8d3c5f4166e18"
+    },
+    {
+      "node": "tests/test_dns_generations.py::test_observe_publish_and_lost_reply_use_the_same_exact_generation_identity",
+      "purpose_sha256": "22fc74530a73916d8cd89eedb0604ffa1e8b9636ea817aad8cd8d3c5f4166e18"
+    },
+    {
+      "node": "tests/test_dns_generations.py::test_success_cannot_substitute_or_reuse_a_served_generation[binding-False]",
+      "purpose_sha256": "22fc74530a73916d8cd89eedb0604ffa1e8b9636ea817aad8cd8d3c5f4166e18"
+    },
+    {
+      "node": "tests/test_dns_generations.py::test_success_cannot_substitute_or_reuse_a_served_generation[binding-True]",
+      "purpose_sha256": "22fc74530a73916d8cd89eedb0604ffa1e8b9636ea817aad8cd8d3c5f4166e18"
+    },
+    {
+      "node": "tests/test_dns_generations.py::test_success_cannot_substitute_or_reuse_a_served_generation[digest-False]",
+      "purpose_sha256": "22fc74530a73916d8cd89eedb0604ffa1e8b9636ea817aad8cd8d3c5f4166e18"
+    },
+    {
+      "node": "tests/test_dns_generations.py::test_success_cannot_substitute_or_reuse_a_served_generation[digest-True]",
+      "purpose_sha256": "22fc74530a73916d8cd89eedb0604ffa1e8b9636ea817aad8cd8d3c5f4166e18"
+    },
+    {
+      "node": "tests/test_dns_generations.py::test_success_cannot_substitute_or_reuse_a_served_generation[generation-False]",
+      "purpose_sha256": "22fc74530a73916d8cd89eedb0604ffa1e8b9636ea817aad8cd8d3c5f4166e18"
+    },
+    {
+      "node": "tests/test_dns_generations.py::test_success_cannot_substitute_or_reuse_a_served_generation[generation-True]",
+      "purpose_sha256": "22fc74530a73916d8cd89eedb0604ffa1e8b9636ea817aad8cd8d3c5f4166e18"
+    },
+    {
+      "node": "tests/test_dns_generations.py::test_success_cannot_substitute_or_reuse_a_served_generation[native_incarnation-False]",
+      "purpose_sha256": "22fc74530a73916d8cd89eedb0604ffa1e8b9636ea817aad8cd8d3c5f4166e18"
+    },
+    {
+      "node": "tests/test_dns_generations.py::test_success_cannot_substitute_or_reuse_a_served_generation[native_incarnation-True]",
+      "purpose_sha256": "22fc74530a73916d8cd89eedb0604ffa1e8b9636ea817aad8cd8d3c5f4166e18"
+    },
+    {
+      "node": "tests/test_dns_generations.py::test_success_cannot_substitute_or_reuse_a_served_generation[null-False]",
+      "purpose_sha256": "22fc74530a73916d8cd89eedb0604ffa1e8b9636ea817aad8cd8d3c5f4166e18"
+    },
+    {
+      "node": "tests/test_dns_generations.py::test_success_cannot_substitute_or_reuse_a_served_generation[null-True]",
+      "purpose_sha256": "22fc74530a73916d8cd89eedb0604ffa1e8b9636ea817aad8cd8d3c5f4166e18"
+    },
+    {
+      "node": "tests/test_dns_generations.py::test_success_cannot_substitute_or_reuse_a_served_generation[owner-False]",
+      "purpose_sha256": "22fc74530a73916d8cd89eedb0604ffa1e8b9636ea817aad8cd8d3c5f4166e18"
+    },
+    {
+      "node": "tests/test_dns_generations.py::test_success_cannot_substitute_or_reuse_a_served_generation[owner-True]",
+      "purpose_sha256": "22fc74530a73916d8cd89eedb0604ffa1e8b9636ea817aad8cd8d3c5f4166e18"
+    },
+    {
+      "node": "tests/test_dns_generations.py::test_unknown_observation_never_completes_a_traversal",
+      "purpose_sha256": "22fc74530a73916d8cd89eedb0604ffa1e8b9636ea817aad8cd8d3c5f4166e18"
     },
     {
       "node": "tests/test_dns_rrset_membership.py::test_empty_dns_change_is_still_rejected",
@@ -7234,6 +7486,246 @@
     {
       "node": "tests/test_journal_concurrency.py::test_competing_terminal_transitions_preserve_first_outcome[succeeded-known]",
       "purpose_sha256": "71a3baec7660d2ec244b6130a42b3d9768e45042b8832b384f910a6f5bae6977"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_completed_successor_handoff_is_required_and_retirement_never_deletes_data",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_dataset_metadata_never_substitutes_for_positive_current_native_custody[binding]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_dataset_metadata_never_substitutes_for_positive_current_native_custody[content-only]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_dataset_metadata_never_substitutes_for_positive_current_native_custody[incarnation]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_dataset_metadata_never_substitutes_for_positive_current_native_custody[missing]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_evidence_and_custody_require_exact_approved_issuer_and_type[binding]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_evidence_and_custody_require_exact_approved_issuer_and_type[custodian-signature]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_evidence_and_custody_require_exact_approved_issuer_and_type[issuer-signature]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_evidence_and_custody_require_exact_approved_issuer_and_type[schema-digest]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_evidence_and_custody_require_exact_approved_issuer_and_type[schema-uri]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_exact_preparation_retry_retains_original_bytes_before_freshness_and_client_loss",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_large_evidence_and_selection_keep_complete_content_across_frames",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_lifecycle_complete_work_is_linear",
+      "purpose_sha256": "1fcb4f703a5c47fdba9d4472346b6e1c139c454b9b5dfe3a822cf490b857990d"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_new_admission_rejects_changed_independent_current_authority[epoch]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_new_admission_rejects_changed_independent_current_authority[expired]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_new_admission_rejects_changed_independent_current_authority[generation]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_new_admission_rejects_changed_independent_current_authority[holds]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_new_admission_rejects_changed_independent_current_authority[owner]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_new_admission_rejects_changed_independent_current_authority[protection]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_new_admission_rejects_changed_independent_current_authority[resource]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_new_admission_rejects_changed_independent_current_authority[selection]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_preparation_requires_exact_authenticated_staging_custody[digest]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_preparation_requires_exact_authenticated_staging_custody[epoch]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_preparation_requires_exact_authenticated_staging_custody[expiry]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_preparation_requires_exact_authenticated_staging_custody[noncanonical]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_preparation_requires_exact_authenticated_staging_custody[principal]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_preparation_requires_exact_authenticated_staging_custody[purpose]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_preparation_requires_exact_authenticated_staging_custody[resource]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_producer_refuses_unsafe_selection_before_issuing_owner_approval[missing-custody]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_producer_refuses_unsafe_selection_before_issuing_owner_approval[protected-object]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_pruning_cannot_replace_accepted_policy_or_required_local_custody[incomplete]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_pruning_cannot_replace_accepted_policy_or_required_local_custody[local]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_pruning_cannot_replace_accepted_policy_or_required_local_custody[missing]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_pruning_cannot_replace_accepted_policy_or_required_local_custody[policy-digest]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_pruning_cannot_replace_accepted_policy_or_required_local_custody[policy-generation]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_pruning_cannot_replace_accepted_policy_or_required_local_custody[protection-generation]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_pruning_rejects_substituted_or_protected_exact_native_objects[artifact]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_pruning_rejects_substituted_or_protected_exact_native_objects[duplicate]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_pruning_rejects_substituted_or_protected_exact_native_objects[executor]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_pruning_rejects_substituted_or_protected_exact_native_objects[incarnation]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_pruning_rejects_substituted_or_protected_exact_native_objects[protected]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_pruning_rejects_substituted_or_protected_exact_native_objects[repository]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_pruning_rejects_substituted_or_protected_exact_native_objects[scope]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_retirement_keeps_discharged_obligation_tombstones_and_original_closure",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_retirement_preserves_every_original_dataset_obligation[instance]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_retirement_preserves_every_original_dataset_obligation[inventory]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_retirement_preserves_every_original_dataset_obligation[material]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_retirement_preserves_every_original_dataset_obligation[obligation]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_retirement_preserves_every_original_dataset_obligation[owner]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_retirement_preserves_every_original_dataset_obligation[resource]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_reviewed_plan_must_pin_exact_context_selection_and_all_material[generation]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_reviewed_plan_must_pin_exact_context_selection_and_all_material[holds]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_reviewed_plan_must_pin_exact_context_selection_and_all_material[material]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_reviewed_plan_must_pin_exact_context_selection_and_all_material[owner]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_reviewed_plan_must_pin_exact_context_selection_and_all_material[resources]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_same_owner_and_digest_cannot_borrow_another_resources_custody",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_selected_prune_object_cannot_be_its_own_sole_recovery_copy",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_typed_owner_evidence_is_the_only_retirement_or_pruning_input[app.retire]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_typed_owner_evidence_is_the_only_retirement_or_pruning_input[backend.prune]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
+    },
+    {
+      "node": "tests/test_lifecycle_evidence.py::test_typed_owner_evidence_is_the_only_retirement_or_pruning_input[host.retire]",
+      "purpose_sha256": "123e20b7b8ee0068dd1ebf3a0e9a98646aa91c68820d24c262e3599a6b2211e4"
     },
     {
       "node": "tests/test_linear_growth.py::test_catalogue_linear_work",
@@ -9448,6 +9940,94 @@
       "purpose_sha256": "929afbe512c31da4c5980902447b54a572d7caa813359f8204c4923ddaef1cd3"
     },
     {
+      "node": "tests/test_relocation_participants.py::test_childless_destination_still_requires_positive_unprepared_retirement",
+      "purpose_sha256": "383ce7662dbdd3df1a87db4f465e590645e14d1525b951b813ef9d9072b5c9e0"
+    },
+    {
+      "node": "tests/test_relocation_participants.py::test_childless_native_role_cannot_relax_other_installed_procedures",
+      "purpose_sha256": "383ce7662dbdd3df1a87db4f465e590645e14d1525b951b813ef9d9072b5c9e0"
+    },
+    {
+      "node": "tests/test_relocation_participants.py::test_destination_preparation_requires_local_material_and_its_own_proof",
+      "purpose_sha256": "383ce7662dbdd3df1a87db4f465e590645e14d1525b951b813ef9d9072b5c9e0"
+    },
+    {
+      "node": "tests/test_relocation_participants.py::test_destination_proof_and_current_native_verification_are_required_at_every_phase[activated]",
+      "purpose_sha256": "383ce7662dbdd3df1a87db4f465e590645e14d1525b951b813ef9d9072b5c9e0"
+    },
+    {
+      "node": "tests/test_relocation_participants.py::test_destination_proof_and_current_native_verification_are_required_at_every_phase[completed]",
+      "purpose_sha256": "383ce7662dbdd3df1a87db4f465e590645e14d1525b951b813ef9d9072b5c9e0"
+    },
+    {
+      "node": "tests/test_relocation_participants.py::test_destination_proof_and_current_native_verification_are_required_at_every_phase[destination-restoring]",
+      "purpose_sha256": "383ce7662dbdd3df1a87db4f465e590645e14d1525b951b813ef9d9072b5c9e0"
+    },
+    {
+      "node": "tests/test_relocation_participants.py::test_destination_proof_and_current_native_verification_are_required_at_every_phase[destination-verifying]",
+      "purpose_sha256": "383ce7662dbdd3df1a87db4f465e590645e14d1525b951b813ef9d9072b5c9e0"
+    },
+    {
+      "node": "tests/test_relocation_participants.py::test_destination_proof_and_current_native_verification_are_required_at_every_phase[placement-committing]",
+      "purpose_sha256": "383ce7662dbdd3df1a87db4f465e590645e14d1525b951b813ef9d9072b5c9e0"
+    },
+    {
+      "node": "tests/test_relocation_participants.py::test_destination_proof_and_current_native_verification_are_required_at_every_phase[source-fenced]",
+      "purpose_sha256": "383ce7662dbdd3df1a87db4f465e590645e14d1525b951b813ef9d9072b5c9e0"
+    },
+    {
+      "node": "tests/test_relocation_participants.py::test_destination_proof_and_current_native_verification_are_required_at_every_phase[source-quiescing]",
+      "purpose_sha256": "383ce7662dbdd3df1a87db4f465e590645e14d1525b951b813ef9d9072b5c9e0"
+    },
+    {
+      "node": "tests/test_relocation_participants.py::test_driver_loss_preserves_source_fence_and_destination_transfer_obligation",
+      "purpose_sha256": "383ce7662dbdd3df1a87db4f465e590645e14d1525b951b813ef9d9072b5c9e0"
+    },
+    {
+      "node": "tests/test_relocation_participants.py::test_relocation_destination_evidence_complete_linear_work",
+      "purpose_sha256": "bb4ca2291500709fdfcad598a0837b31a07f7e0c89a16bc50703a0b32025d867"
+    },
+    {
+      "node": "tests/test_relocation_participants.py::test_relocation_recovery_retains_childless_destination_custody[restored-epochs]",
+      "purpose_sha256": "383ce7662dbdd3df1a87db4f465e590645e14d1525b951b813ef9d9072b5c9e0"
+    },
+    {
+      "node": "tests/test_relocation_participants.py::test_relocation_recovery_retains_childless_destination_custody[same-epoch]",
+      "purpose_sha256": "383ce7662dbdd3df1a87db4f465e590645e14d1525b951b813ef9d9072b5c9e0"
+    },
+    {
+      "node": "tests/test_relocation_participants.py::test_relocation_requires_exact_destination_and_childless_role[fake-child]",
+      "purpose_sha256": "383ce7662dbdd3df1a87db4f465e590645e14d1525b951b813ef9d9072b5c9e0"
+    },
+    {
+      "node": "tests/test_relocation_participants.py::test_relocation_requires_exact_destination_and_childless_role[host]",
+      "purpose_sha256": "383ce7662dbdd3df1a87db4f465e590645e14d1525b951b813ef9d9072b5c9e0"
+    },
+    {
+      "node": "tests/test_relocation_participants.py::test_relocation_requires_exact_destination_and_childless_role[missing-participant]",
+      "purpose_sha256": "383ce7662dbdd3df1a87db4f465e590645e14d1525b951b813ef9d9072b5c9e0"
+    },
+    {
+      "node": "tests/test_relocation_participants.py::test_relocation_requires_exact_destination_and_childless_role[missing-target]",
+      "purpose_sha256": "383ce7662dbdd3df1a87db4f465e590645e14d1525b951b813ef9d9072b5c9e0"
+    },
+    {
+      "node": "tests/test_relocation_participants.py::test_relocation_requires_exact_destination_and_childless_role[owner]",
+      "purpose_sha256": "383ce7662dbdd3df1a87db4f465e590645e14d1525b951b813ef9d9072b5c9e0"
+    },
+    {
+      "node": "tests/test_relocation_participants.py::test_relocation_requires_exact_destination_and_childless_role[role]",
+      "purpose_sha256": "383ce7662dbdd3df1a87db4f465e590645e14d1525b951b813ef9d9072b5c9e0"
+    },
+    {
+      "node": "tests/test_relocation_participants.py::test_relocation_requires_exact_destination_and_childless_role[unmarked]",
+      "purpose_sha256": "383ce7662dbdd3df1a87db4f465e590645e14d1525b951b813ef9d9072b5c9e0"
+    },
+    {
+      "node": "tests/test_relocation_participants.py::test_two_owner_relocation_retains_destination_authority_through_every_phase",
+      "purpose_sha256": "383ce7662dbdd3df1a87db4f465e590645e14d1525b951b813ef9d9072b5c9e0"
+    },
+    {
       "node": "tests/test_replay_retention.py::test_later_successful_work_cannot_make_original_identity_new",
       "purpose_sha256": "6d122344502cf95901f4abd885185b4a785a2d5a09a6951f7ba9b060d56e171d"
     },
@@ -10500,6 +11080,14 @@
       "purpose_sha256": "8e172d0d96261e4f15a635542aeddbc885fc83801ce99bc2950e579acabbfbae"
     },
     {
+      "node": "tests/test_retained_readers.py::test_historical_payload_discriminator_must_match_pinned_record_kind[None]",
+      "purpose_sha256": "8e172d0d96261e4f15a635542aeddbc885fc83801ce99bc2950e579acabbfbae"
+    },
+    {
+      "node": "tests/test_retained_readers.py::test_historical_payload_discriminator_must_match_pinned_record_kind[Operation]",
+      "purpose_sha256": "8e172d0d96261e4f15a635542aeddbc885fc83801ce99bc2950e579acabbfbae"
+    },
+    {
       "node": "tests/test_retained_readers.py::test_historical_reader_cannot_override_independent_snapshot_identity[generation]",
       "purpose_sha256": "8e172d0d96261e4f15a635542aeddbc885fc83801ce99bc2950e579acabbfbae"
     },
@@ -10509,6 +11097,10 @@
     },
     {
       "node": "tests/test_retained_readers.py::test_historical_reader_cannot_override_independent_snapshot_identity[schema]",
+      "purpose_sha256": "8e172d0d96261e4f15a635542aeddbc885fc83801ce99bc2950e579acabbfbae"
+    },
+    {
+      "node": "tests/test_retained_readers.py::test_historical_reader_registry_binds_kind_uri_as_well_as_closure_digest",
       "purpose_sha256": "8e172d0d96261e4f15a635542aeddbc885fc83801ce99bc2950e579acabbfbae"
     },
     {

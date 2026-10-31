@@ -29,16 +29,20 @@
             "$ref": "common.schema.json#/$defs/MaterialDigest"
           },
           "uniqueItems": true
+        },
+        "dataset_inventory_digest": {
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
         }
       },
       "required": [
         "app_instance",
         "release_digest",
         "preserved_datasets",
-        "secret_generations"
+        "secret_generations",
+        "dataset_inventory_digest"
       ],
       "additionalProperties": false,
-      "description": "The complete receiving-owner-selected currently accepted application recovery context, retained in the reviewed app.backup Subject. The owner independently resolves the Subject resource to this production instance and selects the exact accepted release, all application-owned preserve datasets and secret generations before Plan review. A caller or source may propose values but cannot authenticate that mapping, adopt another release or omit a dataset. New admission and capture revalidate this exact selection against protected accepted state and current generations under the required native exclusion. Empty preserve sets are rejected. Dataset and secret arrays are complete sets without a collection cap; ordering is retained as part of the original request identity."
+      "description": "The complete receiving-owner-selected currently accepted application recovery context, retained in the reviewed app.backup Subject. The owner independently resolves the Subject resource to this production instance and selects the exact accepted release, all application-owned preserve datasets and secret generations before Plan review. A caller or source may propose values but cannot authenticate that mapping, adopt another release or omit a dataset. New admission and capture revalidate this exact selection against protected accepted state and current generations under the required native exclusion. Empty preserve sets are rejected. Dataset and secret arrays are complete sets without a collection cap; ordering is retained as part of the original request identity. dataset_inventory_digest pins the complete current DatasetInventory; preserved_datasets equals its active preserve bindings after the accepted source transition. All original obligations and retained discharge evidence survive a release change and remain in that inventory custody. A source-only selection cannot remove prior obligations."
     },
     "BackupResult": {
       "type": "object",

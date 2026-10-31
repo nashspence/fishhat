@@ -74,7 +74,7 @@ def installed_readers(proposal):
                 validate_operation(value, recovery_readers=qualified)
 
         identity = reference["schema"]
-        inspected[identity["digest"]] = reader
+        inspected[(identity["uri"], identity["digest"])] = reader
         qualified[(identity["uri"], identity["digest"])] = reader
     return inspected, qualified
 

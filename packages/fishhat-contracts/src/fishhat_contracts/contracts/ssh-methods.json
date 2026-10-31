@@ -111,6 +111,9 @@
     },
     {
       "name": "workflow.native-attestation.check"
+    },
+    {
+      "name": "lifecycle.evidence.prepare"
     }
   ],
   "max_frame_bytes": 1048576,

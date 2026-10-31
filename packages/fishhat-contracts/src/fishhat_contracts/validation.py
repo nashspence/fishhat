@@ -620,7 +620,7 @@ def require_acyclic(edges: dict[str, list[str]]) -> None:
 def validate_cli(
     value: dict[str, Any],
     *,
-    retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None = None,
+    retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
     recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> None:
     """Validate a CLI envelope using independently installed historical readers.
@@ -813,6 +813,12 @@ def validate_plan(value: dict[str, Any]) -> None:
     from .maintenance import validate_maintenance_plan
 
     validate_maintenance_plan(value)
+    from .datasets import validate_dataset_plan
+
+    validate_dataset_plan(value)
+    from .lifecycle import validate_lifecycle_plan
+
+    validate_lifecycle_plan(value)
     if "none-needed" in value["recovery"] and len(value["recovery"]) != 1:
         raise ContractError("conflicting recovery procedures")
     if datetime.fromisoformat(value["expires_at"].replace("Z", "+00:00")) <= datetime.fromisoformat(

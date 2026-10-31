@@ -397,8 +397,11 @@ def validate_workflow_proposal(
                 recovery_readers=recovery_readers,
             )
             requests[key] = binding
+    _validate_native_participants(proposal)
     seen: set[bytes] = set()
     for role, reference in proposal["target"].items():
+        if proposal["type"] == "relocation" and role == "destination":
+            continue
         references = reference if isinstance(reference, list) else [reference]
         for item in references:
             key = _request_key(item["owner"], item["request_id"])
@@ -433,6 +436,35 @@ def validate_workflow_proposal(
                 )
 
 
+def _validate_native_participants(proposal: dict[str, Any]) -> None:
+    """Keep the destination's native obligations in every ordinary owner closure.
+
+    This is an identity/role join, not native authorization, fencing or dispatch.
+    The installed relocation is the only procedure with a childless participant.
+    """
+    native = [p for p in proposal["participants"] if "native_role" in p]
+    if proposal["type"] != "relocation":
+        _require(not native, "native participant outside installed relocation")
+        return
+    destination = proposal["target"]["destination"]
+    _require(
+        len(native) == 1
+        and all(native[0][key] == destination[key] for key in ("owner", "resource")),
+        "relocation requires its exact native destination participant",
+    )
+    for participant in proposal["participants"]:
+        for binding in participant["requests"]:
+            subject = (
+                binding["intent"]["subject"]
+                if "intent" in binding
+                else bound_plan(binding)["subject"]
+            )
+            _require(
+                subject["arguments"]["destination_host"] == destination["resource"]["id"],
+                "relocation child changed destination host",
+            )
+
+
 def _target_binding(proposal: dict[str, Any], role: str, binding: dict[str, Any]) -> None:
     _require(
         binding["phase"] == TARGET_PHASES[proposal["type"]][role],
@@ -459,6 +491,7 @@ def _participants(proposal: dict[str, Any]) -> list[dict[str, Any]]:
                 key: copy.deepcopy(item[key])
                 for key in ("owner", "resource", "expected_generation")
             },
+            **({"native_role": item["native_role"]} if "native_role" in item else {}),
             "request_ids": [binding["request_id"] for binding in item["requests"]],
             "last_witness": None,
         }

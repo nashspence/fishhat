@@ -12,7 +12,7 @@ from typing import Any
 from .bounds import Bounds, bounds
 from .validation import ContractError, canonical, digest, validate
 
-_ROLES = {"runtime", "secret-source", "credential-issuer"}
+_ROLES = {"runtime", "secret-source", "credential-issuer", "dns"}
 
 
 def _require(condition: bool, code: str) -> None:
@@ -34,12 +34,16 @@ def _observation_keys(role: str, request: dict[str, Any], response: dict[str, An
         return set()
     inputs, output = request["input"], response["output"]
     binding = inputs["binding"]
-    records = output[{"runtime": "objects", "secret-source": "versions"}.get(role, "leases")]
+    records = output[
+        {"runtime": "objects", "secret-source": "versions", "dns": "rrsets"}.get(role, "leases")
+    ]
     keys: set[bytes] = set()
     for record in records:
         if role == "runtime":
             _require(record["scope"] == inputs["scope"], "OBSERVATION_OBJECT_SCOPE")
             key = canonical(record["handle"])
+        elif role == "dns":
+            key = canonical([record["name"], record["class"], record["type"]])
         elif role == "secret-source":
             _require(record["source"] == binding["instance"], "OBSERVATION_SOURCE_IDENTITY")
             key = canonical([record["source"], record["entry"], record["version"]])
@@ -69,6 +73,7 @@ def _query(request: dict[str, Any]) -> bytes:
 
 def _sequence_bounds(name: str) -> Bounds:
     proof = "tests/test_adapter_observation_identity.py::test_observation_sequence_linear_work"
+    dns_proof = "tests/test_dns_generations.py::test_dns_observation_sequence_linear_work"
     return Bounds(
         id="adapters.observation-sequence." + name,
         work=(
@@ -78,8 +83,8 @@ def _sequence_bounds(name: str) -> Bounds:
         extent="All records and pages; indexed logical identities and exact page retry commitments",
         limits=(),
         capacity=("Receiver capacity failures remain explicit; no total record or page cap",),
-        proofs=(proof,),
-        linear_proofs=(proof,),
+        proofs=(proof, dns_proof),
+        linear_proofs=(proof, dns_proof),
     )
 
 
@@ -104,6 +109,7 @@ class ObservationSequence:
         request: dict[str, Any],
         *,
         approved_binding: dict[str, Any],
+        approved_owner: dict[str, Any] | None = None,
         approved_runtime_binding: dict[str, Any] | None = None,
         approved_issuers: Iterable[dict[str, Any]] = (),
     ) -> None:
@@ -117,6 +123,8 @@ class ObservationSequence:
             "OBSERVATION_SEQUENCE_START",
         )
         _require(request["input"]["binding"] == approved_binding, "OBSERVATION_APPROVED_BINDING")
+        if role == "dns":
+            _require(request["input"]["owner"] == approved_owner, "DNS_OBSERVATION_APPROVED_OWNER")
         _require(
             (role == "runtime" and request["input"]["target"] == approved_runtime_binding)
             or (role != "runtime" and approved_runtime_binding is None),
@@ -138,6 +146,9 @@ class ObservationSequence:
         self._identities: set[bytes] = set()
         self._closed = False
         self._complete = False
+        self._dns_generation: bytes | None = None
+        self._dns_cnames: set[str] = set()
+        self._dns_ordinary: set[str] = set()
 
     @property
     def complete(self) -> bool:
@@ -163,6 +174,22 @@ class ObservationSequence:
             "OBSERVATION_CURSOR_CYCLE",
         )
         identities = _observation_keys(self._role, request, response)
+        dns_generation = None
+        cnames: set[str] = set()
+        ordinary: set[str] = set()
+        if self._role == "dns":
+            for rrset in response["output"]["rrsets"]:
+                (cnames if rrset["type"] == "CNAME" else ordinary).add(rrset["name"])
+            _require(
+                not (cnames & self._dns_ordinary or ordinary & self._dns_cnames),
+                "CNAME_COLLISION",
+            )
+        if self._role == "dns" and response["output"]["served_generation"] is not None:
+            dns_generation = canonical(response["output"]["served_generation"])
+            _require(
+                self._dns_generation is None or dns_generation == self._dns_generation,
+                "DNS_OBSERVATION_GENERATION_CHANGED",
+            )
         _require(
             all(identity not in self._identities for identity in identities),
             "OBSERVATION_DUPLICATE_IDENTITY",
@@ -176,6 +203,10 @@ class ObservationSequence:
                 "OBSERVATION_HISTORICAL_ISSUER_UNAPPROVED",
             )
         self._identities.update(identities)
+        if dns_generation is not None:
+            self._dns_generation = dns_generation
+        self._dns_cnames.update(cnames)
+        self._dns_ordinary.update(ordinary)
         self._cursors.add(cursor)
         self._replies[request_digest] = response_digest
         self._next_cursor = continuation
