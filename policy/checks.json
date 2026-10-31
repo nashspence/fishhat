@@ -2428,6 +2428,22 @@
       "purpose_sha256": "4889ca9bbfdc75f3dcfbd62730fe65f44cb7b2377d65cea845b086eb131bc2f2"
     },
     {
+      "node": "tests/test_adapter_process.py::test_timeout_readiness_is_published_only_after_complete_write[timeout-after-response-independent_a]",
+      "purpose_sha256": "bfecb65d860019337d479ea3e79a0c717f9937c19be35815f459ef11ad625469"
+    },
+    {
+      "node": "tests/test_adapter_process.py::test_timeout_readiness_is_published_only_after_complete_write[timeout-after-response-independent_b]",
+      "purpose_sha256": "bfecb65d860019337d479ea3e79a0c717f9937c19be35815f459ef11ad625469"
+    },
+    {
+      "node": "tests/test_adapter_process.py::test_timeout_readiness_is_published_only_after_complete_write[timeout-independent_a]",
+      "purpose_sha256": "bfecb65d860019337d479ea3e79a0c717f9937c19be35815f459ef11ad625469"
+    },
+    {
+      "node": "tests/test_adapter_process.py::test_timeout_readiness_is_published_only_after_complete_write[timeout-independent_b]",
+      "purpose_sha256": "bfecb65d860019337d479ea3e79a0c717f9937c19be35815f459ef11ad625469"
+    },
+    {
       "node": "tests/test_adapter_process.py::test_transport_completion_preserves_a_failed_operation_postcondition",
       "purpose_sha256": "4889ca9bbfdc75f3dcfbd62730fe65f44cb7b2377d65cea845b086eb131bc2f2"
     },

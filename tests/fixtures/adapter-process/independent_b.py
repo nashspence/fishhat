@@ -52,7 +52,9 @@ stderr.write("second independent diagnostic\n")
 if failure == "missing-response":
     raise SystemExit(4)
 if failure == "timeout":
-    Path("output/timeout-ready").write_text(attempt["attempt_id"])
+    ready = Path("output/timeout-ready.pending")
+    ready.write_text(attempt["attempt_id"])
+    ready.rename("output/timeout-ready")
     pause()
 product_name = sha256(product).hexdigest()
 destination = Path("output/artifacts")
@@ -104,6 +106,8 @@ footer = dict(
 stdout.buffer.write(b"malformed response\n" if failure == "malformed" else serial(footer) + b"\n")
 stdout.flush()
 if failure == "timeout-after-response":
-    Path("output/timeout-ready").write_text(attempt["attempt_id"])
+    ready = Path("output/timeout-ready.pending")
+    ready.write_text(attempt["attempt_id"])
+    ready.rename("output/timeout-ready")
     pause()
 raise SystemExit(9 if failure == "nonzero-after-response" else 0)
