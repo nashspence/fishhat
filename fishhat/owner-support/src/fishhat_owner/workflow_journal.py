@@ -8,7 +8,6 @@ empty state, and interrupted/corrupt records never disappear during restoration.
 from __future__ import annotations
 
 import copy
-import fcntl
 import hashlib
 import os
 import stat
@@ -213,6 +212,11 @@ class WorkflowJournal:
 
     @staticmethod
     def _descriptor(path: str | Path, *, create: bool) -> int:
+        try:
+            import fcntl
+        except ModuleNotFoundError as exc:
+            raise ContractError("workflow journal requires POSIX file custody") from exc
+
         flags = os.O_RDWR | os.O_CLOEXEC | os.O_NOFOLLOW
         if create:
             _require(

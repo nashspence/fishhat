@@ -14992,6 +14992,14 @@
       "purpose_sha256": "002307ed74ad3a279fc3052dc4f383f744a5e882211b9dbe28862543100231b9"
     },
     {
+      "node": "tests/test_workflow_journal_platform.py::test_journal_without_posix_locking_refuses_custody_before_touching_files[create]",
+      "purpose_sha256": "a06f3d66ea36f4cd31eeb0c1d13d9c4576d232ed4508a34511eb76b22bc07f9b"
+    },
+    {
+      "node": "tests/test_workflow_journal_platform.py::test_journal_without_posix_locking_refuses_custody_before_touching_files[open]",
+      "purpose_sha256": "a06f3d66ea36f4cd31eeb0c1d13d9c4576d232ed4508a34511eb76b22bc07f9b"
+    },
+    {
       "node": "tests/test_workflow_journal_store_fixture.py::test_original_workflow_journal_fixture_preserves_exact_input_and_outcome",
       "purpose_sha256": "ebc8b46e9d3cd1e822a8579753ab63929b2ddf6395c20c357276a779ee3ffcdf"
     },
