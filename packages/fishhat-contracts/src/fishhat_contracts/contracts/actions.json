@@ -193,7 +193,11 @@
       },
       "requires_plan": true,
       "result": {
-        "mode": "receipt-only"
+        "mode": "schema",
+        "schema": {
+          "$ref": "drill-result.schema.json#/$defs/DrillResult"
+        },
+        "required_on_success": true
       }
     },
     {

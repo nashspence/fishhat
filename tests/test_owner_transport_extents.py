@@ -155,9 +155,12 @@ def test_plan_input_rejects_changed_bytes_and_payload(change):
 
 
 def discovery(count=1):
+    from fishhat_contracts.discovery import owner_contract_schemas
+
     return {
         "owner": operation()["owner"],
         "wire": "deployment-ops/owner/v1",
+        "contract_schemas": owner_contract_schemas(),
         "source_formats": ["deployment-ops/source/v2"],
         "actions": ["app.restart"],
         "adapters": ["sha256:" + f"{index:064x}" for index in range(count)],

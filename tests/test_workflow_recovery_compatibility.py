@@ -29,16 +29,19 @@ CHECK_PURPOSE = {
     ],
     "scope": "explicit installed recovery compatibility and unchanged original evidence",
     "relationship": "candidate",
-    "reason": "Editorial closure changes exercise retained compatible records and producer outputs through successor custody. Missing, miskeyed, mutating and semantically incompatible readers are rejected. Synthetic installed context does not prove native authentication, qualification or execution.",
+    "reason": "Reachable description changes exercise retained compatible records and producer outputs through successor custody. Missing, miskeyed, mutating and semantically incompatible readers are rejected. Synthetic installed context does not prove native authentication, qualification or execution.",
     "claims": [],
 }
 
 
 def editorial_change(monkeypatch):
     changed = copy.deepcopy(SCHEMAS["records.schema.json"])
-    info = changed["$defs"]["Info"]
-    info["description"] = info.get("description", "") + " Discovery editorial clarification."
+    workflow = changed["$defs"]["Workflow"]
+    workflow["description"] = workflow.get("description", "") + " Retained workflow clarification."
     monkeypatch.setitem(SCHEMAS, "records.schema.json", changed)
+    changed = copy.deepcopy(SCHEMAS["publisher-receipt.schema.json"])
+    changed["description"] = changed.get("description", "") + " Retained publication clarification."
+    monkeypatch.setitem(SCHEMAS, "publisher-receipt.schema.json", changed)
 
 
 def installed_readers(proposal):

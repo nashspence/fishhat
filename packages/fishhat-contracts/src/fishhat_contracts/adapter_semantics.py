@@ -31,14 +31,19 @@ def require(ok: bool, code: str) -> None:
 
 def _semantic_bounds(name: str) -> Bounds:
     proof = "tests/test_export_growth.py::test_adapter_semantics_linear_work"
+    proofs: tuple[str, ...] = (proof,)
+    if name in {"check_request", "check_invocation", "check_response"}:
+        proofs += ("tests/test_routing_publication.py::test_routing_publication_linear_work",)
+    if name in {"check_request", "check_response"}:
+        proofs += ("tests/test_runtime_resolution.py::test_runtime_resolution_linear_work",)
     return Bounds(
         id="adapters." + name,
         work="O(B) complete typed request, retained invocation and response bytes",
         extent="Exact whole inputs and outputs; observation pages retain explicit continuation",
         limits=(),
         capacity=("Existing typed scalar and page limits remain explicit admission boundaries",),
-        proofs=(proof,),
-        linear_proofs=(proof,),
+        proofs=proofs,
+        linear_proofs=proofs,
     )
 
 
@@ -81,7 +86,10 @@ def check_request(role: str, value: dict[str, Any]) -> None:
             "HANDOFF_BINDING_SCOPE",
         )
     if role == "capture" and method in {"restore", "verify"}:
+        from .recovery_points import validate_recovery_point
+
         snapshot = inputs["snapshot"]
+        validate_recovery_point(snapshot["recovery_point"])
         require(
             snapshot["dataset"] == inputs["dataset"] and snapshot["producer"]["role"] == "capture",
             "SNAPSHOT_INPUT_IDENTITY",
@@ -98,7 +106,7 @@ def check_request(role: str, value: dict[str, Any]) -> None:
             inputs["candidate"]["repository"] == inputs["repository"],
             "REPOSITORY_CANDIDATE_IDENTITY",
         )
-    if role == "runtime" and method in {"observe", "inventory"}:
+    if role == "runtime" and method in {"resolve", "observe", "inventory"}:
         target, executor = inputs["target"], inputs["binding"]
         require(
             target["scope"] == inputs["scope"]
@@ -114,9 +122,9 @@ def check_request(role: str, value: dict[str, Any]) -> None:
                     "instance_digest",
                 )
             ),
-            "OBSERVATION_TARGET_IDENTITY",
+            "RUNTIME_RESOLUTION_TARGET" if method == "resolve" else "OBSERVATION_TARGET_IDENTITY",
         )
-        barrier = inputs["barrier"]
+        barrier = inputs.get("barrier")
         if barrier is not None:
             require(
                 barrier["scope"] == inputs["scope"]
@@ -183,6 +191,10 @@ def _handoff_binding(role: str, request: dict[str, Any]) -> dict[str, Any] | Non
             if method == "observe"
             else inputs["change"]["expected_generation"]["binding"],
         )
+    if role == "runtime" and method == "resolve":
+        return cast(dict[str, Any], inputs["binding"])
+    if role in {"ingress", "network"} and method in {"plan", "publish", "observe"}:
+        return cast(dict[str, Any], inputs["target"]["binding"])
     if role in {"runtime", "secret-source", "credential-issuer"} and method in {
         "observe",
         "inventory",
@@ -364,7 +376,10 @@ def _check_handoff_response(role: str, request: dict[str, Any], response: dict[s
             "SECRET_RESOLUTION_IDENTITY",
         )
     if role == "capture" and method in {"assess", "capture", "restore", "verify"}:
+        from .recovery_points import validate_recovery_point
+
         for snapshot in output["snapshots"]:
+            validate_recovery_point(snapshot["recovery_point"])
             require(snapshot["dataset"] == inputs["dataset"], "SNAPSHOT_OUTPUT_IDENTITY")
             if method in {"restore", "verify"}:
                 require(snapshot == inputs["snapshot"], "SNAPSHOT_OUTPUT_IDENTITY")
@@ -390,6 +405,33 @@ def _check_handoff_response(role: str, request: dict[str, Any], response: dict[s
         )
     if role == "repository":
         _check_repository_response(request, response)
+    if role == "runtime" and method == "resolve":
+        deployment, proposal = output["deployment"], response["proposal"]
+        complete = response["coverage"] == "complete"
+        require(
+            response["continuation"] is None
+            and output["observation"] is None
+            and not output["objects"]
+            and (
+                (deployment is not None and proposal is not None)
+                if complete
+                else (deployment is None and proposal is None)
+            ),
+            "RUNTIME_RESOLUTION_COVERAGE",
+        )
+        if deployment is not None:
+            target = inputs["target"]
+            require(
+                deployment["release_digest"] == inputs["release_digest"]
+                and deployment["source_digest"] == inputs["source"]["digest"]
+                and deployment["binding_digest"]
+                == digest(
+                    {key: value for key, value in target.items() if key != "admission_generation"}
+                )
+                and deployment["projection_digest"] == proposal["digest"]
+                and _same_set(deployment["components"], inputs["components"]),
+                "RUNTIME_RESOLUTION_IDENTITY",
+            )
     if role == "runtime" and method in {"observe", "inventory"}:
         observation = output["observation"]
         if observation is not None:
@@ -535,8 +577,6 @@ def _check_success_output(
             and output["objects"][0]["repository"] == inputs["repository"]
             and _same_set(output["objects"][0]["artifacts"], inputs["artifacts"])
         ),
-        "ingress": lambda: output["serving_generation"] == inputs["generation_digest"],
-        "network": lambda: output["policy_generation"] == inputs["policy_digest"],
         "dns": lambda: (
             {_rrset_identity(value) for value in output["rrsets"]}
             == {

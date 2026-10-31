@@ -35,7 +35,7 @@ from fishhat_contracts.workflow_attestations import (
     assemble_phase_evidence,
     validate_attestation,
 )
-from fishhat_contracts.workflow_evidence import REQUIREMENTS
+from fishhat_contracts.workflow_evidence import REQUIREMENTS, phase_subject
 from fishhat_contracts.workflows import (
     advance_workflow,
     decode_workflow_input,
@@ -45,6 +45,7 @@ from fishhat_contracts.workflows import (
 )
 from fishhat_owner.commands import parse_command
 
+from scripts.project_policy import ROOT, read_toml
 from tests.linear_support import assert_linear, measure
 from tests.test_contracts import uid
 from tests.test_owner_handoffs import (
@@ -109,6 +110,19 @@ CHECK_OVERRIDES = {
             "Executed Python, serialization and container counters cover at least sixteenfold evidence growth with full results and retries; no native or elapsed-time qualification is inferred.",
         ),
     ]
+}
+CHECK_OVERRIDES["test_receiver_bound_phase_closure_cannot_qualify_as_aggregate_linear"] = {
+    "purpose": "validation-tooling",
+    "authority": [
+        "release.toml#/engineering",
+        "packages/fishhat-contracts/src/fishhat_contracts/contracts/workflow-evidence.schema.json#/$defs/PhaseEvidence",
+        "packages/fishhat-contracts/src/fishhat_contracts/contracts/workflow.schema.json#/$defs/WorkflowProposal",
+        "tests/linear_support.py#assert_linear",
+    ],
+    "scope": "aggregate lower bounds over distinct participant owners, complete retained proposals and receiver-bound signed phase subjects",
+    "relationship": "no-product-claim",
+    "reason": "Increasing owner counts expose replication and distinct proof subjects outside issuer-local growth witnesses. The maintained linear proof guard rejects these aggregate costs; correctness and local linear evidence cannot qualify this composition. This is a structural lower bound, not an aggregate CPU, native or elapsed-time proof.",
+    "claims": [],
 }
 
 NOW = "2026-11-01T00:00:00Z"
@@ -661,7 +675,9 @@ def test_two_owner_public_attestation_path_and_lost_reply_replay(monkeypatch):
         (second_references[0], canonical(second_values[0])),
     ]
     with monkeypatch.context() as changed_schema:
-        changed_schema.setitem(SCHEMAS["common.schema.json"], "description", "updated closure")
+        changed_schema.setitem(
+            SCHEMAS["common.schema.json"]["$defs"]["Owner"], "description", "updated owner closure"
+        )
         with pytest.raises(ContractError, match="schema substitution"):
             receiver.restart(retained=retained)
         readers = {
@@ -904,3 +920,45 @@ def test_attestation_complete_issuance_assembly_restore_and_replay_are_linear():
         assert len(result["participants"][0]["native_evidence"]) == count
         samples.append((count, work))
     assert_linear(samples)
+
+
+def test_receiver_bound_phase_closure_cannot_qualify_as_aggregate_linear():
+    samples = []
+    for count in (1, 4, 16):
+        owners = cluster(count)
+        capsules = [current(owner) for owner in owners]
+        assert len({canonical(value["owner"]) for value in capsules}) == count
+        proposals = [canonical(value["proposal"]) for value in capsules]
+        assert all(proposal == proposals[0] for proposal in proposals)
+        subjects = set()
+        for receiver in capsules:
+            target = transition(receiver)
+            for issuer in owners:
+                for participant in issuer.native_participants():
+                    participant["attestation_id"] = uid(
+                        "attest-" + issuer.identity["id"] + digest(target)
+                    )
+                    subject = canonical(phase_subject(target, participant))
+                    assert subject not in subjects
+                    subjects.add(subject)
+        # These are actual complete proposal copies and the exact canonical
+        # preimages required by the signing boundary, before signature envelopes,
+        # current native checks, framing, additional phases or retry delivery.
+        samples.append(
+            (
+                count,
+                {
+                    "proposal_replica_bytes": sum(map(len, proposals)),
+                    "distinct_signed_subjects": len(subjects),
+                    "signed_subject_bytes": sum(map(len, subjects)),
+                },
+            )
+        )
+        assert len(subjects) == count * count
+    for metric in samples[0][1]:
+        with pytest.raises(AssertionError, match=metric):
+            assert_linear([(count, {metric: costs[metric]}) for count, costs in samples])
+    policy = read_toml(ROOT / "release.toml")
+    assert policy["engineering"] == {"growth": "linear", "implementations": "all"}
+    assert policy["production_qualified"] is False
+    assert policy["publication"]["qualified_native_release_allowed"] is False

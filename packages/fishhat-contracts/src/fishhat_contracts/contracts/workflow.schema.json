@@ -1608,5 +1608,13 @@
       "additionalProperties": false,
       "description": "The exact independently enrolled destination host owner epoch and host resource, selected before preparation. Its host resource ID equals the relocation Subject destination_host. This owner/resource is a retained native-role participant; a host name alone, another epoch or the source app owner cannot supply its authority."
     }
-  }
+  },
+  "x-fishhat-contract-dependencies": [
+    "#/$defs/PrepareRequest",
+    "#/$defs/BindRequest",
+    "#/$defs/AdvanceRequest",
+    "records.schema.json#/$defs/WorkflowTransferRequest",
+    "workflow-recovery.schema.json#/$defs/RecoveryRequest",
+    "#/$defs/PreparationWitness"
+  ]
 }

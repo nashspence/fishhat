@@ -1045,6 +1045,7 @@
                     "enum": [
                       "app.backup",
                       "app.cleanup",
+                      "app.drill",
                       "app.maintenance-run",
                       "host.capture-changes",
                       "publisher.publish",
@@ -1224,7 +1225,8 @@
             "overdue",
             "unknown",
             "not-applicable"
-          ]
+          ],
+          "description": "Current assessment of the accepted protection objectives, separate from health and mutation authority. Retain the exact RecoveryPointAssessment and applicable immutable DrillResult/procedure evidence with this observation's provenance; cached delivery preserves original assessment time. Verified requires all applicable objectives to be established within their bounds. A demonstrated violation is overdue; otherwise missing or uncertain data-time, clock, drill or custody evidence is unknown. Not-applicable means no protection objective applies. Verification timestamps, retries and drills cannot refresh captured-data age. This status is an assessment/warning and by itself creates no admission block or authorization grant."
         },
         "generation": {
           "type": "integer",
@@ -2457,20 +2459,10 @@
           },
           "minItems": 1,
           "uniqueItems": true,
-          "description": "Complete retained closure includes the accepted release, secret generations, any quiescence evidence, every dataset's three signed Operation snapshots, their exact result_handle payloads, all Snapshot and backup-object artifacts, and the installed compatible readers and protected historical enrollment/configuration needed to interpret them. Receipt and payload digests hash canonical JSON; material digests hash original bytes. The checkpoint witness authenticates membership, while native retention and verified materialization establish custody. Missing members block recovery explicitly; current aliases or client caches cannot substitute."
+          "description": "Complete retained closure includes the accepted release, secret generations, any quiescence evidence, every dataset's three signed Operation snapshots, their exact result_handle payloads, all Snapshot and backup-object artifacts, every non-null Snapshot.recovery_point evidence digest, and the installed compatible readers and protected historical enrollment/configuration needed to interpret them. Receipt and payload digests hash canonical JSON; material digests hash original bytes. The checkpoint witness authenticates membership, while native retention and verified materialization establish custody. Missing members block recovery explicitly; current aliases or client caches cannot substitute."
         },
         "verified_at": {
           "$ref": "common.schema.json#/$defs/Time"
-        },
-        "restore_tested_at": {
-          "anyOf": [
-            {
-              "$ref": "common.schema.json#/$defs/Time"
-            },
-            {
-              "type": "null"
-            }
-          ]
         },
         "witness": {
           "type": "object",
@@ -2639,13 +2631,12 @@
         "backup_executor",
         "recovery_closure",
         "verified_at",
-        "restore_tested_at",
         "witness",
         "consistency_scope",
         "quiescence_evidence"
       ],
       "additionalProperties": false,
-      "description": "A complete checkpoint binds exactly every preserved application-owned dataset selected by the accepted release, its secret generations, signed capture/store/verify Operation receipts and exact historical backup executor. Resolve each receipt through its immutable result_handle to the existing typed RetainedResult, reapply original invocation/output joins and authenticate the signed Operation with independently trusted owner keys. Capture must return one consistently captured Snapshot for the named dataset; backup verification must cover the same sealed object and all snapshot artifacts. Its checkpoint-kind, verified-state witness subject covers the entire canonical body excluding witness. Application-quiesced requires one verifiable writer fence and capture cohort and quiesced snapshots; independent-datasets is not an application-atomic recovery point. A fresh owner reconstructs these same snapshots and objects before independently authorizing current retrieval/restore and verifying actual bytes. No missing dataset, closure member or inconsistent archive may be omitted.",
+      "description": "A complete checkpoint binds exactly every preserved application-owned dataset selected by the accepted release, its secret generations, signed capture/store/verify Operation receipts and exact historical backup executor. Resolve each receipt through its immutable result_handle to the existing typed RetainedResult, reapply original invocation/output joins and authenticate the signed Operation with independently trusted owner keys. Capture must return one consistently captured Snapshot for the named dataset; backup verification must cover the same sealed object and all snapshot artifacts. Its checkpoint-kind, verified-state witness subject covers the entire canonical body excluding witness. Application-quiesced requires one verifiable writer fence and capture cohort and quiesced snapshots; independent-datasets is not an application-atomic recovery point. A fresh owner reconstructs these same snapshots and objects before independently authorizing current retrieval/restore and verifying actual bytes. No missing dataset, closure member or inconsistent archive may be omitted. This record is immutable after verification. Later drills retain separate DrillResult evidence selecting this original digest and never annotate or rewrite the checkpoint. verified_at is verification completion only, not recoverable-data time; RPO uses immutable per-Snapshot recovery_point bounds and an independently current assessment.",
       "allOf": [
         {
           "if": {
@@ -3011,6 +3002,31 @@
         "wire": {
           "const": "deployment-ops/owner/v1"
         },
+        "contract_schemas": {
+          "type": "object",
+          "properties": {
+            "request": {
+              "$ref": "common.schema.json#/$defs/SchemaIdentity"
+            },
+            "response": {
+              "$ref": "common.schema.json#/$defs/SchemaIdentity"
+            },
+            "cli": {
+              "$ref": "common.schema.json#/$defs/SchemaIdentity"
+            },
+            "source": {
+              "$ref": "common.schema.json#/$defs/SchemaIdentity"
+            }
+          },
+          "required": [
+            "request",
+            "response",
+            "cli",
+            "source"
+          ],
+          "additionalProperties": false,
+          "description": "Exact rooted installed identities for ssh-request.schema.json, ssh-response.schema.json, cli-output.schema.json and source.schema.json respectively. This advertisement is observational and grants no compatibility, authority or capability. Before sending new work, callers compare each boundary they use to independently approved exact identities; a shared v1 label is insufficient. A mismatch rejects new use of that boundary unless a separately approved exact reader or writer is installed. Existing accepted work and historical inspection retain their original schema readers and custody; discovery must not rewrite those identities. Full boundary unions conservatively pin all reachable alternatives. This field does not claim arbitrary cross-version compatibility or native qualification."
+        },
         "source_formats": {
           "type": "array",
           "items": {
@@ -3045,6 +3061,7 @@
       "required": [
         "owner",
         "wire",
+        "contract_schemas",
         "source_formats",
         "actions",
         "adapters"
@@ -5071,5 +5088,8 @@
       "additionalProperties": false,
       "description": "One regular file in a complete captured source scope. content identifies retrievable immutable bytes and retains original producer ownership; its digest is SHA-256 of the exact file bytes. Filesystem confinement and source mapping are independently verified by the native owner. Multiple paths may share the same exact content handle. Reusing an owner/id with different handle fields, or a digest with a different byte size, rejects."
     }
-  }
+  },
+  "x-fishhat-contract-dependencies": [
+    "#/$defs/Witness"
+  ]
 }

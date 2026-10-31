@@ -17,6 +17,7 @@ from fishhat_contracts.hooks import (
 from fishhat_contracts.validation import ContractError, digest
 
 from tests.linear_support import assert_linear, measure
+from tests.test_hook_handoffs import D as RUNTIME_BINDING
 from tests.test_hook_handoffs import request as hook_request
 
 CHECK_PURPOSE = {
@@ -72,6 +73,7 @@ def records(count=1, role="verify-config"):
                 "executor_component",
                 "role",
                 "procedure_digest",
+                "runtime_binding_digest",
             )
         },
     }
@@ -89,7 +91,13 @@ def artifact(data):
 @pytest.mark.parametrize("change", ["failed", "omitted", "diagnostic", "downgraded-source"])
 def test_mandatory_verification_cannot_be_weakened(change):
     request, result, procedure = records()
-    require_hook_success(request, result, accepted_procedure=procedure, artifact_streams={})
+    require_hook_success(
+        request,
+        result,
+        accepted_procedure=procedure,
+        expected_runtime_binding_digest=RUNTIME_BINDING,
+        artifact_streams={},
+    )
     if change == "failed":
         result["checks"][0]["passed"] = False
     elif change == "omitted":
@@ -101,7 +109,13 @@ def test_mandatory_verification_cannot_be_weakened(change):
         result["request_digest"] = digest(request)
         result["checks"][0]["code"] = "OTHER_OK"
     with pytest.raises(ContractError):
-        require_hook_success(request, result, accepted_procedure=procedure, artifact_streams={})
+        require_hook_success(
+            request,
+            result,
+            accepted_procedure=procedure,
+            expected_runtime_binding_digest=RUNTIME_BINDING,
+            artifact_streams={},
+        )
 
 
 @pytest.mark.parametrize(
@@ -114,6 +128,7 @@ def test_mandatory_verification_cannot_be_weakened(change):
         "executor_component",
         "role",
         "procedure_digest",
+        "runtime_binding_digest",
     ],
 )
 def test_result_must_match_every_exact_request_pin(field):
@@ -130,6 +145,20 @@ def test_result_must_match_every_exact_request_pin(field):
         validate_hook_result(request, result)
 
 
+def test_hook_cannot_substitute_runtime_in_both_request_and_result():
+    request, result, procedure = records()
+    request["runtime_binding_digest"] = result["runtime_binding_digest"] = "sha256:" + "f" * 64
+    result["request_digest"] = digest(request)
+    with pytest.raises(ContractError, match="accepted binding"):
+        require_hook_success(
+            request,
+            result,
+            accepted_procedure=procedure,
+            expected_runtime_binding_digest=RUNTIME_BINDING,
+            artifact_streams={},
+        )
+
+
 @pytest.mark.parametrize("role", sorted(hooks.READ_ROLES))
 def test_read_only_success_can_emit_artifacts_without_claiming_managed_mutation(role):
     request, result, procedure = records(role=role)
@@ -141,6 +170,7 @@ def test_read_only_success_can_emit_artifacts_without_claiming_managed_mutation(
         request,
         result,
         accepted_procedure=procedure,
+        expected_runtime_binding_digest=RUNTIME_BINDING,
         artifact_streams={"verification/result.bin": BytesIO(data)},
     )
     result["effects"] = "known"
@@ -158,7 +188,13 @@ def test_failed_diagnostics_do_not_replace_or_fail_passing_required_checks():
             "requirement": "diagnostic",
         }
     )
-    require_hook_success(request, result, accepted_procedure=procedure, artifact_streams={})
+    require_hook_success(
+        request,
+        result,
+        accepted_procedure=procedure,
+        expected_runtime_binding_digest=RUNTIME_BINDING,
+        artifact_streams={},
+    )
     result["checks"].append(deepcopy(result["checks"][0]))
     with pytest.raises(ContractError, match="duplicate"):
         validate_hook_result(request, result)
@@ -177,7 +213,13 @@ def test_non_success_or_uncertainty_cannot_advance_required_phase(outcome, effec
     request, result, procedure = records(role="configure")
     result.update(outcome=outcome, effects=effects)
     with pytest.raises(ContractError):
-        require_hook_success(request, result, accepted_procedure=procedure, artifact_streams={})
+        require_hook_success(
+            request,
+            result,
+            accepted_procedure=procedure,
+            expected_runtime_binding_digest=RUNTIME_BINDING,
+            artifact_streams={},
+        )
 
 
 @pytest.mark.parametrize(
@@ -218,12 +260,19 @@ def test_result_artifacts_need_exact_owner_opened_custody_and_immutable_replay()
         {"path": "proof", "bytes": len(data), "digest": artifact(data)["digest"]}
     ]
     with pytest.raises(ContractError, match="custody"):
-        require_hook_success(request, result, accepted_procedure=procedure, artifact_streams={})
+        require_hook_success(
+            request,
+            result,
+            accepted_procedure=procedure,
+            expected_runtime_binding_digest=RUNTIME_BINDING,
+            artifact_streams={},
+        )
     original = digest(result)
     require_hook_success(
         request,
         result,
         accepted_procedure=procedure,
+        expected_runtime_binding_digest=RUNTIME_BINDING,
         artifact_streams={"proof": BytesIO(data)},
         retained_result_digest=original,
     )
@@ -233,6 +282,7 @@ def test_result_artifacts_need_exact_owner_opened_custody_and_immutable_replay()
             request,
             result,
             accepted_procedure=procedure,
+            expected_runtime_binding_digest=RUNTIME_BINDING,
             artifact_streams={"proof": BytesIO(data)},
             retained_result_digest=original,
         )
@@ -281,7 +331,11 @@ def hook_growth_case(count):
             snapshots=snapshots,
         )
         require_hook_success(
-            request, result, accepted_procedure=procedure, artifact_streams=streams
+            request,
+            result,
+            accepted_procedure=procedure,
+            expected_runtime_binding_digest=RUNTIME_BINDING,
+            artifact_streams=streams,
         )
 
     return run

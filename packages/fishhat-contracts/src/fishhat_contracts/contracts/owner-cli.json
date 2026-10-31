@@ -745,6 +745,18 @@
       ],
       "use_case": "lifecycle.evidence.prepare",
       "description": "Stage the complete canonical lifecycle evidence PrepareRequest through lifecycle-input custody and request one observational snapshot. Preserve its preparation identity across retries. Return the finite typed immutable evidence reference; full content remains readable through content.get and any consuming retained Plan/Operation. Preparation does not retire, discharge or delete anything."
+    },
+    {
+      "name": "content-read",
+      "tokens": [
+        "{tool}",
+        "content",
+        "read",
+        "--request-stdin",
+        "--json"
+      ],
+      "use_case": "content.get",
+      "description": "Read the exact handle, offset and bounded length supplied on standard input through the same protected content.get use case. Return an observed typed ContentChunk with the full handle and range. Preserve the independently retained handle across every chunk, check contiguous progress, then verify complete size and digest before interpreting evidence. A read does not admit an operation, grant authority, refresh retention or prove the contained task succeeded."
     }
   ],
   "parser": "bounded tokens; no shell evaluation",

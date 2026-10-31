@@ -117,8 +117,25 @@ def adapter_proposal(role="ingress"):
                 "scope": copy.deepcopy(executor["scope"]),
                 "generation_digest": "sha256:" + "d" * 64,
                 "routes": [],
+                "target": {
+                    "binding": copy.deepcopy(executor),
+                    "namespace": {
+                        "authority": participant["owner"]["id"],
+                        "resource": "demo",
+                        "facet": "routes",
+                    },
+                },
+                "expected_previous": None,
             },
         }
+        selected["input"]["generation_digest"] = digest(
+            {
+                "format": "fishhat.routing-generation/v1",
+                "role": "ingress",
+                "target": selected["input"]["target"],
+                "routes": selected["input"]["routes"],
+            }
+        )
     else:
         selected = {
             "contract": "fishhat.credential-issuer",

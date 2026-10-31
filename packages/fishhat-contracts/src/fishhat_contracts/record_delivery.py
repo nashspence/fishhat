@@ -297,6 +297,65 @@ def validate_record_chunk(
     return data
 
 
+def validate_content_chunk(
+    chunk: dict[str, Any],
+    handle: dict[str, Any],
+    *,
+    offset: int,
+    length: int,
+) -> bytes:
+    """Join current content to the independently retained handle and range.
+
+    The receiving owner separately authorizes every read. This byte validation
+    grants no access and does not interpret the complete content's type.
+    """
+    validate("common.schema.json", handle, "Handle")
+    validate("common.schema.json", chunk, "ContentChunk")
+    _require(
+        type(offset) is int
+        and 0 <= offset <= handle["size"]
+        and type(length) is int
+        and 1 <= length <= CHUNK_BYTES,
+        "content range request invalid",
+    )
+    _require(
+        chunk["handle"] == handle and chunk["offset"] == offset,
+        "content chunk identity or offset substitution",
+    )
+    try:
+        data = base64.b64decode(chunk["base64"], validate=True)
+    except (ValueError, binascii.Error) as exc:
+        raise ContractError("invalid content chunk encoding") from exc
+    end = offset + len(data)
+    _require(
+        len(data) <= length and end <= handle["size"] and chunk["next_offset"] == end,
+        "content chunk range mismatch",
+    )
+    _require(chunk["complete"] == (end == handle["size"]), "content completion mismatch")
+    _require(bool(data) or chunk["complete"], "content chunk made no progress")
+    return data
+
+
+def validate_content_payload(
+    handle: dict[str, Any],
+    data: bytes,
+    *,
+    expected_owner: dict[str, Any],
+) -> None:
+    """Check complete immutable bytes before the caller's content-specific reader.
+
+    A handle is independently retained request context, never an assertion of
+    custody or permission. Historical epochs require the historical reader.
+    """
+    validate("common.schema.json", handle, "Handle")
+    _require(handle["owner"] == expected_owner, "content owner epoch mismatch")
+    _require(
+        len(data) == handle["size"]
+        and "sha256:" + hashlib.sha256(data).hexdigest() == handle["digest"],
+        "content identity mismatch",
+    )
+
+
 def validate_record_payload(
     reference: dict[str, Any],
     data: bytes,

@@ -70,6 +70,38 @@
     "process_protocol": {
       "const": "fishhat.adapter-process/v1",
       "description": "The fixed executable invocation boundary owned by adapter-process.schema.json. Every role uses the same launch, custody, response, failure and observational reconciliation rules; per-implementation command conventions are not permitted."
+    },
+    "role_contracts": {
+      "type": "object",
+      "propertyNames": {
+        "enum": [
+          "runtime",
+          "compute",
+          "storage",
+          "capture",
+          "backup",
+          "secret-source",
+          "credential-issuer",
+          "dns",
+          "ingress",
+          "network",
+          "software",
+          "service",
+          "repository",
+          "build",
+          "report",
+          "bootstrap-source"
+        ]
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/RoleContract"
+      },
+      "minProperties": 1,
+      "description": "Exact request and response schema identities for every advertised role, with no missing or additional role. The receiving installation compares both URI and digest with its installed role contracts before accepting the descriptor. Role names, implemented method names and v1 labels do not establish wire compatibility. Matching schema identities neither supplies native qualification nor approves the installation."
+    },
+    "process_schema_digest": {
+      "$ref": "common.schema.json#/$defs/Digest",
+      "description": "Exact digest of the complete installed adapter-process.schema.json and its referenced dependencies. Use the SchemaIdentity node projection with profile fishhat.schema-document-closure/v1 and root https://fishhat.invalid/contracts/adapter-process.schema.json, additionally retaining and traversing every $defs and definitions schema child in that root document. Referenced documents retain the ordinary rooted projection. This includes the manifest, input, completion and private-input definitions that jointly own the executable boundary without absorbing unrelated definitions from shared documents. The receiving installation requires exact digest equality before accepting the descriptor; process_protocol names the family and does not replace this identity."
     }
   },
   "required": [
@@ -82,7 +114,9 @@
     "implemented",
     "native_qualified",
     "source_schema",
-    "process_protocol"
+    "process_protocol",
+    "role_contracts",
+    "process_schema_digest"
   ],
   "additionalProperties": false,
   "$defs": {
@@ -451,6 +485,10 @@
         "release_digest": {
           "$ref": "common.schema.json#/$defs/Digest"
         },
+        "source_digest": {
+          "$ref": "common.schema.json#/$defs/Digest",
+          "description": "Exact immutable native input artifact from runtime.resolve.source, selected by the independently accepted release. This is separate from release_digest and remains pinned through every later deployment mutation."
+        },
         "binding_digest": {
           "$ref": "common.schema.json#/$defs/Digest",
           "description": "The stable RuntimeBinding digest, computed over its canonical JSON with only admission_generation omitted. The receiving runtime owner must match it to the accepted binding before preparing a new effect."
@@ -470,6 +508,7 @@
       "required": [
         "handle",
         "release_digest",
+        "source_digest",
         "binding_digest",
         "projection_digest",
         "components"
@@ -1056,6 +1095,17 @@
             "native-transaction"
           ]
         },
+        "recovery_point": {
+          "anyOf": [
+            {
+              "$ref": "recovery-point.schema.json#/$defs/TimeInterval"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Immutable bounds on the recoverable data's time, including source-clock uncertainty, authenticated by the signed capture receipt and retained evidence. This is not upload, verification or retry completion time. Null means the capture owner cannot establish trustworthy data-time bounds. Later verification, storage, restore or replay preserves this field exactly and cannot refresh recovery age."
+        },
         "artifacts": {
           "type": "array",
           "items": {
@@ -1084,6 +1134,7 @@
         "dataset",
         "format",
         "consistency",
+        "recovery_point",
         "artifacts",
         "restore_requirements",
         "producer"
@@ -2490,7 +2541,27 @@
       ],
       "additionalProperties": false,
       "description": "A redacted adapter-domain problem, projected from the core Problem code, summary and retry vocabulary. Owner admission, attribution and evidence references remain with the receiving owner; this record cannot claim an owner epoch, reserve a request or expose additional material. The summary is bounded human-readable text and must exclude secret values, credentials, raw provider diagnostics and private byte content. Preserve the complete typed Response in owner custody before presenting its approved disclosure. A non-null problem explains a provider, capability, precondition, access, capacity or execution condition; it never changes or replaces acknowledgment, effect certainty, native task identity, postcondition, returned output or existing custody. In particular, a delivery or reconciliation problem may coexist with confirmed original native effects. Null reports no adapter-domain problem and is not a success assertion. none offers no automatic retry; safe-read permits only a fresh currently authorized observational query, including reconciliation of the retained original invocation. Mutation responses require none. Neither value authorizes dispatch, redispatch, corrective mutation, permission changes or release of holds. same-request-after-reconcile is intentionally an owner-level decision and is not an adapter hint. Transport framing, exit and child cessation failures remain separate process facts; a diagnostic code cannot turn those facts into a verified no-effect rejection."
+    },
+    "RoleContract": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "$ref": "common.schema.json#/$defs/SchemaIdentity"
+        },
+        "response": {
+          "$ref": "common.schema.json#/$defs/SchemaIdentity"
+        }
+      },
+      "required": [
+        "request",
+        "response"
+      ],
+      "additionalProperties": false
     }
   },
-  "description": "Descriptor for a separately approved implementation. Provider-owned configuration, component and source schemas retain their JSON Schema format semantics. Bare date-time asserts RFC3339 syntax and Gregorian calendar validity without normalizing strings or inheriting core Time precision/UTC restrictions. Leap-second syntax is checked only at the offset-adjusted UTC end of a month; actual insertion or negative-leap schedules require provider authority and are not qualification supplied by this validator. Provider schemas assert only date, date-time, ipv4, ipv6 and uuid formats. Unknown formats, nested dialect declarations, dialect vocabularies and unsupported keywords (including unevaluatedItems and unevaluatedProperties) reject during descriptor approval. The profile permits at most 262144 schema bytes, depth 32 and 4096 expanded schema positions. Pattern strings are at most 256 characters and use a conservative shared Python/ECMAScript spelling subset over Unicode scalar strings: ECMAScript Unicode (u) mode with no other flags, and Python Unicode mode with no additional flags. Admit literal scalars, explicit scalar ranges and negated classes, the beginning anchor, the strict end assertion (?![\\s\\S]), ordinary/capture/noncapture groups and forward lookahead within the linearity profile. Shared escapes are regex syntax characters including slash, f/n/r/t/v, xHH, scalar uHHHH, hyphen only inside classes, and s/S only together as the universal [\\s\\S] class. Dot, dollar anchors, standalone shorthand categories, word boundaries, surrogate values, Python-only/octal/control/named/backreference escapes, malformed braces or brackets, directly quantified assertions, lookbehind and inline flags reject. Variable repetition applies only to character atoms apart from optional groups; every optional atom or group consumes branching capacity, and at most eight complete alternative paths are admitted. Only patterns with a linear work bound are admitted; this is an explicit subset, not a general regular-expression equivalence checker. Pattern inputs are at most 4096 characters. Configuration evaluation admits at most 2000000 charged work units including linear regex bounds and compared bytes for const, enum and hash-indexed structural uniqueness; exhausted capacity is an explicit rejection, never successful partial validation. Source configuration bytes retain the separate 1048576-byte boundary."
+  "description": "Descriptor for a separately approved implementation. Provider-owned configuration, component and source schemas retain their JSON Schema format semantics. Bare date-time asserts RFC3339 syntax and Gregorian calendar validity without normalizing strings or inheriting core Time precision/UTC restrictions. Leap-second syntax is checked only at the offset-adjusted UTC end of a month; actual insertion or negative-leap schedules require provider authority and are not qualification supplied by this validator. Provider schemas assert only date, date-time, ipv4, ipv6 and uuid formats. Unknown formats, nested dialect declarations, dialect vocabularies and unsupported keywords (including unevaluatedItems and unevaluatedProperties) reject during descriptor approval. The profile permits at most 262144 schema bytes, depth 32 and 4096 expanded schema positions. Pattern strings are at most 256 characters and use a conservative shared Python/ECMAScript spelling subset over Unicode scalar strings: ECMAScript Unicode (u) mode with no other flags, and Python Unicode mode with no additional flags. Admit literal scalars, explicit scalar ranges and negated classes, the beginning anchor, the strict end assertion (?![\\s\\S]), ordinary/capture/noncapture groups and forward lookahead within the linearity profile. Shared escapes are regex syntax characters including slash, f/n/r/t/v, xHH, scalar uHHHH, hyphen only inside classes, and s/S only together as the universal [\\s\\S] class. Dot, dollar anchors, standalone shorthand categories, word boundaries, surrogate values, Python-only/octal/control/named/backreference escapes, malformed braces or brackets, directly quantified assertions, lookbehind and inline flags reject. Variable repetition applies only to character atoms apart from optional groups; every optional atom or group consumes branching capacity, and at most eight complete alternative paths are admitted. Only patterns with a linear work bound are admitted; this is an explicit subset, not a general regular-expression equivalence checker. Pattern inputs are at most 4096 characters. Configuration evaluation admits at most 2000000 charged work units including linear regex bounds and compared bytes for const, enum and hash-indexed structural uniqueness; exhausted capacity is an explicit rejection, never successful partial validation. Source configuration bytes retain the separate 1048576-byte boundary.",
+  "x-fishhat-contract-dependencies": [
+    "#/$defs/Instance",
+    "#/$defs/EffectKnowledge"
+  ]
 }

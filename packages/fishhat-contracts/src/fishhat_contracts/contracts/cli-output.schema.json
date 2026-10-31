@@ -72,6 +72,9 @@
               "$ref": "backup-result.schema.json#/$defs/BackupResult"
             },
             {
+              "$ref": "drill-result.schema.json#/$defs/DrillResult"
+            },
+            {
               "$ref": "records.schema.json#/$defs/Release"
             },
             {
@@ -157,6 +160,9 @@
             },
             {
               "$ref": "lifecycle-evidence.schema.json#/$defs/EvidenceReference"
+            },
+            {
+              "$ref": "common.schema.json#/$defs/ContentChunk"
             }
           ]
         },
@@ -200,7 +206,7 @@
     "problem"
   ],
   "additionalProperties": false,
-  "description": "Human and machine result envelope. Acceptance, execution progress, terminal outcome, and certainty stay distinct. A successful command response or accepted request is not evidence that requested work has completed. RecordReference and RecordChunk replies use observed and establish only retrieval of that reference or chunk. The caller must verify the complete record before presenting a Plan as reviewed or claiming acceptance, execution or complete workflow inspection.",
+  "description": "Human and machine result envelope. Acceptance, execution progress, terminal outcome, and certainty stay distinct. A successful command response or accepted request is not evidence that requested work has completed. RecordReference, RecordChunk and ContentChunk replies use observed and establish only retrieval of that reference or chunk. Complete content requires its exact handle size and digest, then the approved content-specific validation. The caller must verify the complete record before presenting a Plan as reviewed or claiming acceptance, execution or complete workflow inspection.",
   "allOf": [
     {
       "if": {
@@ -223,7 +229,8 @@
                   "OperationCancellationReceipt",
                   "OperationCancellationPage",
                   "WorkflowTransferRecord",
-                  "CurrentWorkflowAttestation"
+                  "CurrentWorkflowAttestation",
+                  "ContentChunk"
                 ]
               }
             },

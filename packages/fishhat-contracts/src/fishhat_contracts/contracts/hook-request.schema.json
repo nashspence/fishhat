@@ -28,6 +28,10 @@
       "maxLength": 24,
       "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
     },
+    "runtime_binding_digest": {
+      "$ref": "common.schema.json#/$defs/Digest",
+      "description": "Stable digest of the independently accepted execution RuntimeBinding, omitting only admission_generation. The receiving owner verifies the original binding and native dataset/credential/endpoint mapping before invoking the hook. Replaying this request cannot retarget another runtime, and a production invocation cannot establish isolated drill evidence."
+    },
     "subject": {
       "type": "object",
       "properties": {
@@ -175,6 +179,7 @@
     "operation_id",
     "release_digest",
     "executor_component",
+    "runtime_binding_digest",
     "subject",
     "role",
     "dataset_handles",

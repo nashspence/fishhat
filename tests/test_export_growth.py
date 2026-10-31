@@ -24,7 +24,7 @@ from fishhat_adapters import (
 from fishhat_contracts import canonical, digest, strict_json, strict_yaml, validate
 
 from scripts.project_policy import ROOT
-from tests.adapter_support import INCARNATION, OWNER, D, identifier
+from tests.adapter_support import INCARNATION, OWNER, D, contract_versions, identifier
 from tests.linear_support import assert_linear, measure
 from tests.source_target_support import host_target
 from tests.test_adapter_handoffs import handoff, invocation_for, response_for
@@ -85,6 +85,7 @@ def bundle(count, role="capture"):
         "roles": [role],
         "entrypoint": "bin/adapter",
         "process_protocol": "fishhat.adapter-process/v1",
+        **contract_versions([role]),
         "configuration_schema": schema,
         "component_schema": selector,
         "source_schema": selector,

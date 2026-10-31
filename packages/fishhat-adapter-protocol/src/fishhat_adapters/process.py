@@ -74,6 +74,7 @@ def validate_process_launch(
     expected_executor: dict[str, Any],
     expected_private_use: dict[str, Any] | None,
     expected_runtime_binding: dict[str, Any] | None = None,
+    expected_publication_target: dict[str, Any] | None = None,
 ) -> None:
     """Join files to independently approved descriptor/executor before native launch.
 
@@ -133,11 +134,21 @@ def validate_process_launch(
                 "process reconciliation executor changed",
             )
     _require(request["input"]["scope"] == executor["scope"], "process scope changed")
-    if role == "runtime" and request["method"] in {"observe", "inventory"}:
+    if role == "runtime" and request["method"] in {"resolve", "observe", "inventory"}:
         _require(
             expected_runtime_binding is not None
-            and request["input"]["target"] == expected_runtime_binding,
-            "process runtime observation target is not approved",
+            and request["input"]["target"] == expected_runtime_binding
+            and request["input"]["binding"] == executor,
+            "process runtime resolution target is not approved"
+            if request["method"] == "resolve"
+            else "process runtime observation target is not approved",
+        )
+    if role in {"ingress", "network"} and request["method"] in {"plan", "observe"}:
+        _require(
+            expected_publication_target is not None
+            and request["input"]["target"] == expected_publication_target
+            and request["input"]["target"]["binding"] == executor,
+            "process publication target is not approved",
         )
     _require(
         role + "." + request["method"] in descriptor["implemented"],
@@ -258,6 +269,8 @@ def verify_process_outputs(
     The receiving owner derives expected_artifacts from the validated typed
     method result and its accepted material handoff. Remote observation metadata
     alone does not select a local material transfer or establish byte custody.
+    Complete runtime.resolve results select their entire proposal projection;
+    the owner must retain those verified bytes before admitting the Deployment.
     The owner independently acquires immutable custody and supplies fresh stable
     streams after confinement, permission and native lifetime checks. Merely
     opening or hashing a still-mutable adapter output does not establish custody.

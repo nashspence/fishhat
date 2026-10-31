@@ -1290,6 +1290,24 @@
       "use_case": "plan.prepare"
     },
     {
+      "id": "owner-form:content-read",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-owner-form",
+      "tests": {
+        "failure": [],
+        "growth": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops",
+        "app-ops"
+      ],
+      "use_case": "content.get"
+    },
+    {
       "id": "owner-form:help",
       "implementation": null,
       "recovery": "required",
@@ -2791,12 +2809,12 @@
     "fishhat/domain-ops/src/fishhat_domain/cli.py": "c8e1242a73f5a670e836a35cbb92ffffab44496aff92d198ea80ab14e3279a57",
     "fishhat/host-ops/pyproject.toml": "3cc402bda8fd5e83e36d0bd5a299d0e6904535c69c992754e1aa169f37f88bd6",
     "fishhat/host-ops/src/fishhat_host/cli.py": "d8457ca822e6d01be0b1301fb439ef9f5ed74b6224aca2d85feb189dadeb611c",
-    "packages/fishhat-contracts/src/fishhat_contracts/contracts/actions.json": "76871d05070a3c9a2d1eb01b328646881a7579b06559505e191ea960f70afeed",
+    "packages/fishhat-contracts/src/fishhat_contracts/contracts/actions.json": "d2139b4286ed2f531e4a71a8a1ab38293e2de00197a9560ee37d9c43509cb1bc",
     "packages/fishhat-contracts/src/fishhat_contracts/contracts/client-commands.json": "2ac27c10f8320b37bcdd842ca3f94777a68d7c771986b3dfbc2d01fa67648c74",
-    "packages/fishhat-contracts/src/fishhat_contracts/contracts/owner-cli.json": "9d24cc6edb0782c1bd267163bd118bea853f46ec466367cc58e813052c0d73f8",
+    "packages/fishhat-contracts/src/fishhat_contracts/contracts/owner-cli.json": "517f795c7d7e6e8cdfaaa9e0af1201f513bb03a931046c3786da589865e286ea",
     "packages/fishhat-contracts/src/fishhat_contracts/contracts/ssh-methods.json": "4866e02465337b0af02413484a00def2137887f3580be007140254751ba823fb",
     "policy/components.toml": "d83506dc63602aec3932e1ac35244efca0db494a38a5d4cd9ec94c68476b235c",
-    "policy/interfaces.json": "1bfad9eabcd7b0331efe0162179a8d5ea9d1d54d26b8fa54f2c824c9a9ee978d",
+    "policy/interfaces.json": "b226066ba0fe65e5204430fd20756f528af0cc86a7b9fca1b790532d0a1f8c6e",
     "policy/operation-coverage.toml": "a4f3f76cdbb755ea03ba39eb36ccc5ebcd682f6aabaacaa5fb88f849d42c54c4",
     "release.toml": "87a48bd19f97e977b2be6d6399b1d60a911dcf66ed9b81b59386d8fb7a624996",
     "some-implementations/fishhat/backup/restic/pyproject.toml": "665f88e34c00d431e829678503ae3bb7075294d0db3f303c318f87dbdab651e8",

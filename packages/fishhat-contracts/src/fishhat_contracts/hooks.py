@@ -107,7 +107,10 @@ def validate_hook_request(value: dict[str, Any]) -> None:
     paths: dict[PurePosixPath, bytes] = {}
     materializations = _PathIndex()
     for dataset, item in selected["datasets"].items():
+        from .recovery_points import validate_recovery_point
+
         snapshot = item["snapshot"]
+        validate_recovery_point(snapshot["recovery_point"])
         _require(
             snapshot["dataset"] == dataset and snapshot["producer"]["role"] == "capture",
             "restore snapshot dataset or producer mismatch",
@@ -181,6 +184,7 @@ def validate_hook_result(request: dict[str, Any], result: dict[str, Any]) -> Non
                 "executor_component",
                 "role",
                 "procedure_digest",
+                "runtime_binding_digest",
             )
         ),
         "hook result identity mismatch",
@@ -219,21 +223,29 @@ def require_hook_success(
     result: dict[str, Any],
     *,
     accepted_procedure: dict[str, Any],
+    expected_runtime_binding_digest: str,
     artifact_streams: Mapping[str, BinaryIO],
     retained_result_digest: str | None = None,
 ) -> None:
     """Check success against independent procedure and byte custody before phase advance.
 
     The receiving owner loads accepted_procedure from the accepted release and
-    opens immutable/confined regular-file streams independently. These arguments
-    are trusted context, never request-selected authority. Native isolation,
+    opens immutable/confined regular-file streams independently. It supplies the
+    stable runtime binding digest from that accepted execution context, never
+    from the hook reply. These arguments are trusted context, never
+    request-selected authority. Native isolation,
     authentication, and atomic retention with the owning operation remain owner
     duties. A caller must not advance on a failed check or before that retention.
     An exact replay may supply its independently retained result digest; it never
     upgrades an old observation to evidence for a fresh request or changed state.
     """
     validate("source.schema.json", accepted_procedure, "Hook")
+    validate("common.schema.json", expected_runtime_binding_digest, "Digest")
     validate_hook_result(request, result)
+    _require(
+        request["runtime_binding_digest"] == expected_runtime_binding_digest,
+        "hook execution runtime differs from accepted binding",
+    )
     _require(
         request["procedure_digest"] == digest(accepted_procedure)
         and request["executor_component"] == accepted_procedure["component"]
