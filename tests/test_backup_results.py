@@ -8,7 +8,7 @@ from fishhat_contracts.backup_results import validate_backup_result, validate_ba
 from fishhat_contracts.handoffs import schema_identity, validate_result_payload
 from fishhat_contracts.validation import ContractError, canonical, digest, validate, validate_plan
 
-from tests.backup_support import backup_result, backup_selection
+from tests.backup_support import backup_inventory, backup_result, backup_selection
 from tests.linear_support import assert_linear, measure
 from tests.operation_support import seal_operation
 from tests.test_checkpoint_resolution import fixture, resolve_checkpoint, seal
@@ -152,6 +152,8 @@ def test_backup_selection_requires_independently_retained_accepted_owner_context
         resource=resource,
         expected_resource=result["resource"],
         expected_selection=result["selection"],
+        expected_owner=result["owner"],
+        expected_inventory=backup_inventory(result["checkpoint"]),
     )
     selection["app_instance"] = "prod:" + "c" * 64
     with pytest.raises(ContractError, match="accepted application selection changed"):
@@ -160,6 +162,8 @@ def test_backup_selection_requires_independently_retained_accepted_owner_context
             resource=resource,
             expected_resource=result["resource"],
             expected_selection=result["selection"],
+            expected_owner=result["owner"],
+            expected_inventory=backup_inventory(result["checkpoint"]),
         )
     resource["id"] = "another-application"
     with pytest.raises(ContractError, match="application resource changed"):
@@ -168,6 +172,8 @@ def test_backup_selection_requires_independently_retained_accepted_owner_context
             resource=resource,
             expected_resource=result["resource"],
             expected_selection=result["selection"],
+            expected_owner=result["owner"],
+            expected_inventory=backup_inventory(result["checkpoint"]),
         )
 
 
@@ -187,6 +193,7 @@ def test_backup_plan_retains_exact_release_and_secret_generation_material():
         "release_digest": digest("accepted release"),
         "preserved_datasets": ["database"],
         "secret_generations": [digest("accepted secrets")],
+        "dataset_inventory_digest": digest("accepted dataset inventory"),
     }
     value["subject"].update(action="app.backup", arguments={"selection": selection})
     with pytest.raises(ContractError, match="subject material input outside reviewed plan"):
@@ -195,6 +202,9 @@ def test_backup_plan_retains_exact_release_and_secret_generation_material():
     with pytest.raises(ContractError, match="subject material input outside reviewed plan"):
         validate_plan(reseal(value))
     value["input_digests"].extend(selection["secret_generations"])
+    with pytest.raises(ContractError, match="subject material input outside reviewed plan"):
+        validate_plan(reseal(value))
+    value["input_digests"].append(selection["dataset_inventory_digest"])
     validate_plan(reseal(value))
 
 

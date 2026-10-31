@@ -240,7 +240,8 @@
             "native-config",
             "secret-candidate",
             "workflow-input",
-            "plan-input"
+            "plan-input",
+            "lifecycle-input"
           ]
         },
         "binding": {
@@ -326,9 +327,25 @@
             "operation_id"
           ],
           "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "lifecycle-evidence"
+            },
+            "preparation_id": {
+              "$ref": "common.schema.json#/$defs/UUID"
+            }
+          },
+          "required": [
+            "kind",
+            "preparation_id"
+          ],
+          "additionalProperties": false
         }
       ],
-      "description": "Input staging has its own durable identity before any plan or operation acceptance. Owner-produced output binds to its accepted operation. Adoption pins the original immutable staging handle; it does not rewrite its identity or turn staging into execution."
+      "description": "Input staging has its own durable identity before any plan or operation acceptance. Owner-produced output binds to its accepted operation. Adoption pins the original immutable staging handle; it does not rewrite its identity or turn staging into execution. Owner-issued observational lifecycle evidence instead binds its exact non-effectful preparation_id. It is not an Operation or uploaded caller evidence."
     },
     "ResultHandle": {
       "type": "object",

@@ -397,7 +397,7 @@ def test_retained_reader_requires_exact_digest_and_preserves_independent_identit
     context = {"expected_owner": value["owner"], "expected_record": reference["record"]}
     with pytest.raises(ContractError, match="schema substitution"):
         validate_record_payload(reference, data, **context)
-    readers = {reference["schema"]["digest"]: retained_reader}
+    readers = {(reference["schema"]["uri"], reference["schema"]["digest"]): retained_reader}
     result = validate_record_payload(reference, data, retained_readers=readers, **context)
     assert result == value and calls == [value]
     with pytest.raises(ContractError, match="owner epoch"):

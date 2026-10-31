@@ -7,7 +7,7 @@ from fishhat_adapters import check_invocation, check_request, check_response
 from fishhat_contracts.validation import ContractError, digest
 
 from tests.adapter_support import OWNER, identifier
-from tests.test_adapter_dns import change, rrset
+from tests.test_adapter_dns import change, generation, rrset
 from tests.test_adapter_effects import coordinator, prepare, result
 from tests.test_adapter_handoffs import (
     artifact,
@@ -358,7 +358,7 @@ def test_dns_change_scope_and_success_result_cover_exact_affected_rrsets():
     changed["input"]["change"]["scope"]["handle"] = "ungranted"
     with pytest.raises(ContractError, match="DNS_SCOPE_IDENTITY"):
         check_request("dns", changed)
-    output = {"rrsets": [rrset()], "served_generation": artifact("d")["digest"]}
+    output = {"rrsets": [rrset()], "served_generation": generation(executor, 2)}
     reply = response_for(query, invocation["attempt"], output)
     check_response("dns", query, reply, invocation=invocation)
     output["rrsets"] = []

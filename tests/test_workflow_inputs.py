@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import json
 
 import pytest
 from fishhat_client.wire import frame
@@ -17,6 +18,7 @@ from fishhat_contracts.workflows import (
     validate_workflow_proposal,
 )
 
+from tests.support import FIXTURES
 from tests.test_contracts import uid
 from tests.test_owner_handoffs import (
     NOW,
@@ -247,41 +249,7 @@ def test_capsule_cannot_substitute_a_different_proposal_or_unverified_local_cont
 
 
 def test_relocation_target_recovers_the_exact_planned_recovery_basis():
-    value = workflow()
-    binding = value["proposal"]["participants"][0]
-    binding["owner"]["tool"] = "app-ops"
-    binding["requests"][0]["phase"] = "source-quiescing"
-    binding["resource"] = {"kind": "app", "id": "demo-app"}
-    plan = binding["requests"][0]["plan"]
-    plan["owner"] = copy.deepcopy(binding["owner"])
-    plan["subject"] = {
-        "action": "app.relocate",
-        "resource": copy.deepcopy(binding["resource"]),
-        "arguments": {
-            "destination_host": "node-b",
-            "placement_generation": 3,
-            "recovery_basis": {"kind": "checkpoint", "checkpoint_digest": "sha256:" + "b" * 64},
-        },
-    }
-    for condition in plan["preconditions"]:
-        condition.update(
-            owner=copy.deepcopy(binding["owner"]), resource=copy.deepcopy(binding["resource"])
-        )
-    for effect in plan["effects"]:
-        effect.update(
-            executor=copy.deepcopy(binding["owner"]), resource=copy.deepcopy(binding["resource"])
-        )
-    checkpoint = plan["subject"]["arguments"]["recovery_basis"]["checkpoint_digest"]
-    plan["input_digests"].append(checkpoint)
-    plan["witness"]["owner"] = copy.deepcopy(plan["owner"])
-    reseal(plan)
-    intent = value["proposal"]
-    intent.update(
-        type="relocation", target={"relocation": {"owner": binding["owner"], "request_id": V}}
-    )
-    for handle in intent["content"]:
-        handle["owner"] = copy.deepcopy(binding["owner"])
-    intent["content"].append(material_handle(binding["owner"], checkpoint))
+    intent = json.loads((FIXTURES / "workflow/relocation-proposal.json").read_text())
     validate_workflow_proposal(intent)
     restored = copy.deepcopy(intent)
     assert restored["participants"][0]["requests"][0]["plan"]["subject"]["arguments"][

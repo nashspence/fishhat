@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import json
 
 import pytest
 from fishhat_contracts.handoffs import PHASES, schema_identity, validate_workflow
@@ -12,8 +13,9 @@ from fishhat_contracts.workflows import PHASE_ACTIONS, advance_workflow
 
 from scripts.check_evidence import evidence_group
 from tests.operation_support import seal_operation
+from tests.support import FIXTURES
 from tests.test_contracts import uid
-from tests.test_owner_handoffs import V, workflow
+from tests.test_owner_handoffs import workflow
 from tests.test_plan_review import reseal
 from tests.test_workflow_continuations import move, prepare
 from tests.test_workflow_inputs import material_handle
@@ -55,38 +57,7 @@ CHECK_OVERRIDES = {
 
 
 def relocation():
-    intent = workflow()["proposal"]
-    participant = intent["participants"][0]
-    participant["owner"]["tool"] = "app-ops"
-    participant["resource"] = {"kind": "app", "id": "demo-app"}
-    binding = participant["requests"][0]
-    binding["phase"] = "source-quiescing"
-    plan = binding["plan"]
-    plan["owner"] = copy.deepcopy(participant["owner"])
-    checkpoint = "sha256:" + "b" * 64
-    plan["subject"] = {
-        "action": "app.relocate",
-        "resource": copy.deepcopy(participant["resource"]),
-        "arguments": {
-            "destination_host": "node-b",
-            "placement_generation": 3,
-            "recovery_basis": {"kind": "checkpoint", "checkpoint_digest": checkpoint},
-        },
-    }
-    for condition in plan["preconditions"]:
-        condition.update(owner=participant["owner"], resource=participant["resource"])
-    for effect in plan["effects"]:
-        effect.update(executor=participant["owner"], resource=participant["resource"])
-    plan["input_digests"].append(checkpoint)
-    plan["witness"]["owner"] = copy.deepcopy(participant["owner"])
-    reseal(plan)
-    for handle in intent["content"]:
-        handle["owner"] = copy.deepcopy(participant["owner"])
-    intent["content"].append(material_handle(participant["owner"], checkpoint))
-    intent.update(
-        type="relocation",
-        target={"relocation": {"owner": participant["owner"], "request_id": V}},
-    )
+    intent = json.loads((FIXTURES / "workflow/relocation-proposal.json").read_text())
     return prepare(intent)
 
 

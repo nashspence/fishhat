@@ -102,8 +102,11 @@
                 "$ref": "workflow.schema.json#/$defs/CompletedBinding"
               }
             ]
-          },
-          "minItems": 1
+          }
+        },
+        "native_role": {
+          "const": "relocation-destination",
+          "description": "The exact destination host owner supplies native admission, isolation, resource-binding, fencing and placement evidence without inventing a second relocation Operation. This role is valid only in the installed relocation procedure."
         }
       },
       "required": [
@@ -112,7 +115,31 @@
         "expected_generation",
         "requests"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "native_role"
+            ]
+          },
+          "then": {
+            "properties": {
+              "requests": {
+                "const": []
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "requests": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ],
+      "description": "An exact owner/resource obligation in the immutable procedure closure. Ordinary participants retain one or more child requests. Only the named relocation destination may declare native_role relocation-destination and an empty requests list. It remains a full participant for local preparation, current scoped authorization, phase evidence, driver transfer, lifecycle and successor recovery; no-child does not mean no obligation or permission to omit it. Its owner retains the source relocation Plan, exact child identity and local native protection/material custody. The role itself admits no ordinary child or unreviewed native effect."
     },
     "HostDrainTarget": {
       "type": "object",
@@ -204,13 +231,17 @@
       "properties": {
         "relocation": {
           "$ref": "workflow.schema.json#/$defs/ChildReference"
+        },
+        "destination": {
+          "$ref": "workflow.schema.json#/$defs/RelocationDestination"
         }
       },
       "required": [
-        "relocation"
+        "relocation",
+        "destination"
       ],
       "additionalProperties": false,
-      "description": "The exact relocation Plan binds the source application identity, destination, fencing and checkpoint or release recovery basis."
+      "description": "relocation identifies the source application child whose complete reviewed Plan owns the move, fencing and checkpoint or release recovery basis. destination identifies the independently approving destination host participant with native_role relocation-destination and no ordinary child. Every relocation child selects that same destination_host, and every Plan effect executor/resource remains in the complete participant closure. The destination retains and independently authorizes the exact proposal and its local native obligations before preparation; it does not run a duplicate app.relocate. Source cessation and destination isolation, approved bindings, placement and activation are independently verified through the installed phase obligations. Native owners must retain protection and custody through effects and recovery; this declaration does not implement cross-host dispatch or grant native authority."
     },
     "SourcePublicationTarget": {
       "type": "object",
@@ -424,6 +455,19 @@
             "properties": {
               "target": {
                 "$ref": "workflow.schema.json#/$defs/RelocationTarget"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "participants": {
+                "items": {
+                  "not": {
+                    "required": [
+                      "native_role"
+                    ]
+                  }
+                }
               }
             }
           }
@@ -1524,6 +1568,45 @@
       ],
       "additionalProperties": false,
       "description": "The finite immutable local acknowledgment for exactly one accepted workflow.bind or workflow.advance. mutation_id is the decoded original bind_id or advance_id, request_digest commits the complete canonical decoded request rather than a staging locator, and generation is that request expected_generation plus one. owner and workflow_id exactly match the request and receiving owner epoch. Before replying the owner independently authorizes the mutation and atomically retains its complete original input, individual outcome, acknowledgment and required material/evidence custody. The same exact accepted request returns this same acknowledgment under current read permission even after later generations, driver changes or deadline expiry; changed input under the identity conflicts. Acknowledgment creation and replay use the individual retained outcome and must not require copying, serializing, hashing or fetching the whole Workflow. workflow.get/list and record.read separately disclose complete retained history; no history, evidence or custody is omitted by a finite reply. Receivers correlate every field with their independently retained request commitment and expected owner before treating this as local acceptance. This record is neither current workflow state, proof of child execution or global completion, native authentication nor permission to execute. A missing reply remains acceptance uncertainty. No full-Workflow or RecordReference alternate is accepted for these two mutation responses. Linear reply-production and correlation work does not qualify full workflow validation, admission, storage or execution growth, which retain their separate requirements."
+    },
+    "RelocationDestination": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "allOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Owner"
+            },
+            {
+              "properties": {
+                "tool": {
+                  "const": "host-ops"
+                }
+              }
+            }
+          ]
+        },
+        "resource": {
+          "allOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Resource"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "const": "host"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "owner",
+        "resource"
+      ],
+      "additionalProperties": false,
+      "description": "The exact independently enrolled destination host owner epoch and host resource, selected before preparation. Its host resource ID equals the relocation Subject destination_host. This owner/resource is a retained native-role participant; a host name alone, another epoch or the source app owner cannot supply its authority."
     }
   }
 }

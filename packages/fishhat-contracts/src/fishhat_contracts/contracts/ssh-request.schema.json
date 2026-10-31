@@ -662,7 +662,8 @@
                 "native-config",
                 "secret-candidate",
                 "workflow-input",
-                "plan-input"
+                "plan-input",
+                "lifecycle-input"
               ]
             },
             "digest": {
@@ -1449,6 +1450,32 @@
       ],
       "additionalProperties": false,
       "description": "Protected independently authenticated owner-to-owner native final-settlement proof boundary. Driver or caller data cannot select peer authority."
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "lifecycle.evidence.prepare"
+        },
+        "params": {
+          "$ref": "lifecycle-evidence.schema.json#/$defs/InputReference"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "params"
+      ],
+      "additionalProperties": false
     }
   ]
 }

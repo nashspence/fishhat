@@ -134,7 +134,7 @@ class PhaseAttestationJournal:
         private_key: Ed25519PrivateKey,
         boot_id: str | None = None,
         retained: Iterable[tuple[dict[str, Any], bytes]] = (),
-        retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None = None,
+        retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
     ) -> None:
         validate("common.schema.json", owner, "Owner")
         validate("common.schema.json", key_id, "Id")

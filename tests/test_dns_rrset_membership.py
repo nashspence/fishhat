@@ -9,8 +9,8 @@ from fishhat_adapters import check_response
 from fishhat_contracts.dns import validate_changes, validate_rrsets
 from fishhat_contracts.validation import ContractError, canonical
 
-from tests.test_adapter_dns import change, rrset
-from tests.test_adapter_handoffs import artifact, installed, invocation_for, response_for
+from tests.test_adapter_dns import change, generation, rrset
+from tests.test_adapter_handoffs import installed, invocation_for, response_for
 from tests.test_adapter_invocations import recovered
 
 CHECK_PURPOSE = {
@@ -80,7 +80,7 @@ def test_success_can_observe_identical_rrset_members_in_a_different_order(typ, r
     reply = response_for(
         query,
         invocation["attempt"],
-        {"rrsets": [observed], "served_generation": artifact("b")["digest"]},
+        {"rrsets": [observed], "served_generation": generation(executor, 2)},
     )
     check_response("dns", query, reply, invocation=invocation)
     assert canonical(invocation) == accepted_bytes

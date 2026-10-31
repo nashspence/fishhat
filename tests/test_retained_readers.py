@@ -8,6 +8,7 @@ import io
 import pytest
 from fishhat_client.wire import frame, read_frame
 from fishhat_contracts.handoffs import validate_cli_result
+from fishhat_contracts.operations import validate_operation
 from fishhat_contracts.record_delivery import (
     RecordSnapshot,
     validate_record_chunk,
@@ -53,7 +54,7 @@ def test_installed_historical_reader_survives_cli_ssh_page_and_complete_retrieva
         assert record["retained_extension"] == "read-only"
         calls.append(copy.deepcopy(record))
 
-    readers = {reference["schema"]["digest"]: reader}
+    readers = {(reference["schema"]["uri"], reference["schema"]["digest"]): reader}
     page = work_page("OperationPage", [reference])
     for result in (reference, page):
         validate_cli(cli(result), retained_readers=readers)
@@ -63,7 +64,10 @@ def test_installed_historical_reader_survives_cli_ssh_page_and_complete_retrieva
         with pytest.raises(ContractError, match="schema substitution"):
             validate_cli_result(result)
         with pytest.raises(ContractError, match="schema substitution"):
-            validate_cli(cli(result), retained_readers={"sha256:" + "f" * 64: reader})
+            validate_cli(
+                cli(result),
+                retained_readers={(reference["schema"]["uri"], "sha256:" + "f" * 64): reader},
+            )
 
     received = []
     for offset in range(0, len(data), 137):
@@ -99,7 +103,7 @@ def test_installed_historical_reader_survives_cli_ssh_page_and_complete_retrieva
 @pytest.mark.parametrize("field", ["schema", "owner", "generation"])
 def test_historical_reader_cannot_override_independent_snapshot_identity(field):
     value, reference, data = retained_record()
-    readers = {reference["schema"]["digest"]: lambda record: None}
+    readers = {(reference["schema"]["uri"], reference["schema"]["digest"]): lambda record: None}
     changed = copy.deepcopy(reference)
     if field == "schema":
         changed["schema"]["digest"] = "sha256:" + "f" * 64
@@ -124,7 +128,7 @@ def test_historical_reader_cannot_override_independent_snapshot_identity(field):
 
 def test_envelope_cannot_supply_a_reader_registry_or_authorize_inline_history():
     value, reference, _ = retained_record()
-    readers = {reference["schema"]["digest"]: lambda record: None}
+    readers = {(reference["schema"]["uri"], reference["schema"]["digest"]): lambda record: None}
     injected = cli(reference)
     injected["retained_readers"] = {reference["schema"]["digest"]: "caller-selected"}
     with pytest.raises(ContractError):
@@ -133,3 +137,47 @@ def test_envelope_cannot_supply_a_reader_registry_or_authorize_inline_history():
         validate_cli(cli(value), retained_readers=readers)
     with pytest.raises(ContractError):
         validate_cli({**cli(reference), "state": "succeeded"}, retained_readers=readers)
+
+
+def test_historical_reader_registry_binds_kind_uri_as_well_as_closure_digest():
+    value = operation()
+    reference = RecordSnapshot(value, U).reference
+    original_schema = copy.deepcopy(reference["schema"])
+    calls = []
+
+    def strict_operation_reader(record):
+        validate_operation(record)
+        calls.append(record)
+
+    readers = {(original_schema["uri"], original_schema["digest"]): strict_operation_reader}
+    reference["record"] = {"kind": "Plan", "id": value["id"], "generation": None}
+    reference["schema"]["uri"] = original_schema["uri"].rsplit("/", 1)[0] + "/Plan"
+    with pytest.raises(ContractError, match="schema substitution"):
+        validate_record_payload(
+            reference,
+            canonical(value),
+            expected_owner=value["owner"],
+            expected_record=reference["record"],
+            retained_readers=readers,
+        )
+    assert calls == []
+
+
+@pytest.mark.parametrize("payload_kind", ["Operation", None])
+def test_historical_payload_discriminator_must_match_pinned_record_kind(payload_kind):
+    value = operation()
+    reference = RecordSnapshot(value, U).reference
+    reference["record"] = {"kind": "Plan", "id": value["id"], "generation": None}
+    reference["schema"]["uri"] = reference["schema"]["uri"].rsplit("/", 1)[0] + "/Plan"
+    reference["schema"]["digest"] = "sha256:" + "e" * 64
+    if payload_kind is None:
+        del value["kind"]
+    data = canonical(value)
+    reference.update(size=len(data), digest="sha256:" + hashlib.sha256(data).hexdigest())
+    # Even an incorrectly installed permissive reader cannot replace the shared
+    # discriminator join with the kind claimed only by the untrusted reference.
+    readers = {(reference["schema"]["uri"], reference["schema"]["digest"]): lambda record: None}
+    with pytest.raises(ContractError, match="payload kind substitution"):
+        validate_record_payload(
+            reference, data, expected_owner=value["owner"], retained_readers=readers
+        )

@@ -234,12 +234,12 @@
             "source-quiescing": "completed"
           },
           "phases": {
-            "source-quiescing": "Resolve current placement generation, exact destination and reviewed checkpoint or release recovery basis against accepted source; close conflicting production admission and account for every writer and externally owned dependency.",
-            "source-fenced": "Positively verify complete source-writer cessation and durable fencing under the original placement identity. Timeout, disconnection or a changed owner epoch is not proof that the source stopped.",
-            "destination-restoring": "Maintain source fencing; verify destination isolation, approved resource bindings and exact retained recovery basis before restoration or declared reconstruction. A release basis cannot replace preserved data or waive external custody.",
+            "source-quiescing": "Resolve current placement generation, exact destination and reviewed checkpoint or release recovery basis against accepted source; close conflicting production admission and account for every writer and externally owned dependency. The source app owner and exact target.destination host owner both independently approve this proposal and its local scope; the destination native-role participant proves current host admission and binding custody despite its empty child list.",
+            "source-fenced": "Positively verify complete source-writer cessation and durable fencing under the original placement identity. Timeout, disconnection or a changed owner epoch is not proof that the source stopped. The destination independently authenticates the source cessation and fencing proof and preserves its own isolation; neither owner may substitute its claim for the other owner native authority.",
+            "destination-restoring": "Maintain source fencing; verify destination isolation, approved resource bindings and exact retained recovery basis before restoration or declared reconstruction. A release basis cannot replace preserved data or waive external custody. The named destination host owner proves its exact host/resource generation and local isolation, approved binding and source-fence verification obligations through its own complete phase proof.",
             "destination-verifying": "Verify complete restored or reconstructed dataset, release and secret identity in isolation, with the source still fenced. Required verification must not activate another production writer.",
-            "placement-committing": "Require positive destination verification and a current compare-and-swap of the exact reviewed placement generation while retaining source exclusion and recovery custody.",
-            "activated": "Verify committed destination ownership and actual production activation with the source still fenced. Establish that the same application has at most one admitted production writer.",
+            "placement-committing": "Require positive destination verification and a current compare-and-swap of the exact reviewed placement generation while retaining source exclusion and recovery custody. The destination host owner independently approves the exact placement and local admission while the source app owner retains responsibility for the original accepted relocation child.",
+            "activated": "Verify committed destination ownership and actual production activation with the source still fenced. Establish that the same application has at most one admitted production writer. The destination host owner proves its actual production admission and preserved exclusion; its native evidence is mandatory although its operations collection is empty.",
             "completed": "Require the exact relocation child to have succeeded; verify placement, destination checks, source fencing and complete data/secret/release custody. Completion does not authorize source data deletion."
           }
         },
@@ -259,9 +259,9 @@
             "applying": "verifying"
           },
           "phases": {
-            "provider-observed": "Observe the complete reviewed DNS changeset under the approved provider, zone and authority; verify exact current before-RRsets and generation with no silently omitted record or changed scope.",
-            "applying": "Revalidate exact before-RRsets and expected generation under native atomic prerequisites or equivalent exclusion immediately before the dns.reconcile child. Required semantics include TTL and complete RDATA membership.",
-            "verifying": "Require the exact DNS child to have succeeded; verify authoritative after-RRsets, deletions and generation for the complete changeset under DNS set semantics, not merely adapter acceptance.",
+            "provider-observed": "Observe the complete reviewed DNS changeset under the approved provider, zone and authority; verify exact current before-RRsets and generation with no silently omitted record or changed scope. Retain one complete stable observation traversal and its DNSGeneration, joining owner epoch, approved executor and native service incarnation exactly.",
+            "applying": "Revalidate exact before-RRsets and expected generation under native atomic prerequisites or equivalent exclusion immediately before the dns.reconcile child. Required semantics include TTL and complete RDATA membership. expected_generation is the exact observed DNSGeneration; changed owner, executor, incarnation or counter requires a new observation and reviewed change.",
+            "verifying": "Require the exact DNS child to have succeeded; verify authoritative after-RRsets, deletions and generation for the complete changeset under DNS set semantics, not merely adapter acceptance. served_generation retains the original owner/executor/incarnation namespace with a strictly newer counter; a digest or SOA serial cannot stand in for that identity.",
             "completed": "Verify the complete requested authoritative state and retained provider evidence. Success does not assert unrelated recursive-cache propagation or erase recovery obligations."
           }
         },

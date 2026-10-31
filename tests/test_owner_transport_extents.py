@@ -196,7 +196,9 @@ def test_observation_snapshot_never_invents_generation_or_reinterprets_a_prior_s
     data = canonical(value)
     reference["schema"]["digest"] = "sha256:" + "e" * 64
     readers = {
-        reference["schema"]["digest"]: lambda item: validate("records.schema.json", item, "Info")
+        (reference["schema"]["uri"], reference["schema"]["digest"]): lambda item: validate(
+            "records.schema.json", item, "Info"
+        )
     }
     with pytest.raises(ContractError, match="schema substitution"):
         validate_record_payload(reference, data, expected_owner=value["owner"])

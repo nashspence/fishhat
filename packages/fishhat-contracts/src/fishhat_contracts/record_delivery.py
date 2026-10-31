@@ -53,6 +53,8 @@ def _require(condition: bool, message: str) -> None:
 
 
 def _identity(record: dict[str, Any], kind: str, snapshot_id: str) -> dict[str, Any]:
+    if kind not in {"Discovery", "Observation"}:
+        _require(record.get("kind") == kind, "record payload kind substitution")
     identity = {
         "kind": kind,
         "id": snapshot_id if kind in SNAPSHOT_ID_KINDS else record["id"],
@@ -103,7 +105,7 @@ def validate_record_reference(
     expected_owner: dict[str, Any] | None = None,
     expected_record: dict[str, Any] | None = None,
     expected_resource: dict[str, Any] | None = None,
-    retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None = None,
+    retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> None:
     """Check exact installed/retained schema and independent owner/record expectations.
 
@@ -120,9 +122,10 @@ def validate_record_reference(
         )
     current = reference["schema"] == schema_identity(uri)
     # Historical documents are read-only. The independent receiving owner installs
-    # and qualifies an immutable reader against the exact prior closure digest;
+    # and qualifies an immutable reader against the exact kind URI and closure digest;
     # an untrusted record, payload, URL or caller cannot register that reader.
-    retained = retained_readers is not None and reference["schema"]["digest"] in retained_readers
+    schema_key = (reference["schema"]["uri"], reference["schema"]["digest"])
+    retained = retained_readers is not None and schema_key in retained_readers
     _require(
         reference["schema"]["uri"] == uri and (current or retained), "record schema substitution"
     )
@@ -181,7 +184,7 @@ class RecordSnapshot:
         data: bytes,
         *,
         expected_owner: dict[str, Any],
-        retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None = None,
+        retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
         recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
     ) -> RecordSnapshot:
         """Restore original custody without rebinding its historical schema closure.
@@ -301,7 +304,7 @@ def validate_record_payload(
     expected_owner: dict[str, Any],
     expected_record: dict[str, Any] | None = None,
     expected_resource: dict[str, Any] | None = None,
-    retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None = None,
+    retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
     recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> dict[str, Any]:
     """Verify complete transferred bytes once; a transport frame cap is not a record cap.
@@ -329,7 +332,7 @@ def validate_record_payload(
         _validate_record(value, kind, recovery_readers=recovery_readers)
     else:
         assert retained_readers is not None
-        retained_readers[reference["schema"]["digest"]](value)
+        retained_readers[(reference["schema"]["uri"], reference["schema"]["digest"])](value)
     _require(
         value["owner"] == reference["owner"]
         and _identity(value, kind, reference["snapshot_id"]) == reference["record"],
@@ -354,7 +357,7 @@ def validate_observation_page(
     selection: Set[bytes] | None = None,
     expected_traversal: dict[str, Any] | None = None,
     expected_position: int | None = None,
-    retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None = None,
+    retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> None:
     """Join inline/reference observations to the retained query, including empty replies.
 
@@ -393,7 +396,7 @@ def validate_observation_page(
 def validate_problem(
     problem: dict[str, Any],
     *,
-    retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None = None,
+    retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> None:
     """Check complete inline evidence or its exact owner/resource snapshot binding.
 

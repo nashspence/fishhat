@@ -1245,7 +1245,7 @@
         "release_digest"
       ],
       "additionalProperties": false,
-      "description": "Activate an exact reviewed application release on its approved host. Activation uses the existing application identity and data custody; publishing source alone does not deploy it."
+      "description": "Activate an exact reviewed application release on its approved host. Activation uses the existing application identity and data custody; publishing source alone does not deploy it. Plan.dataset_transition pins the complete previous dataset inventory and explicit proposed-source bindings, admissions and custody-verified discharges. Source omission, rename or weaker custody/recovery cannot discharge an existing obligation. Native admission requires independently retained current inventory and approved native bindings; exact accepted replay preserves the original transition. Discharge requires current administrator authority and typed retirement evidence, separately from ordinary release permission."
     },
     "app.upgrade": {
       "type": "object",
@@ -1258,7 +1258,7 @@
         "release_digest"
       ],
       "additionalProperties": false,
-      "description": "Change an application to an exact reviewed release. The plan must disclose availability and data/schema consequences; returning to the previous executable does not by itself reverse data changes."
+      "description": "Change an application to an exact reviewed release. The plan must disclose availability and data/schema consequences; returning to the previous executable does not by itself reverse data changes. Plan.dataset_transition pins the complete previous dataset inventory and explicit proposed-source bindings, admissions and custody-verified discharges. Source omission, rename or weaker custody/recovery cannot discharge an existing obligation. Native admission requires independently retained current inventory and approved native bindings; exact accepted replay preserves the original transition. Discharge requires current administrator authority and typed retirement evidence, separately from ordinary release permission."
     },
     "app.repair": {
       "type": "object",
@@ -1283,7 +1283,7 @@
       },
       "required": ["selection"],
       "additionalProperties": false,
-      "description": "Capture and publish an application recovery checkpoint using its declared data procedures. The receiving owner independently resolves and pins selection from protected accepted application state before Plan review: exact production instance, accepted release, complete preserve dataset set and secret generations. The exact release and secret material roots belong in Plan.input_digests. Revalidate this same resource-to-instance mapping and accepted selection under current native exclusion before new admission and capture; a caller or source cannot self-approve another selection. Reject before admission when the accepted application release declares no application-owned dataset with preserve recovery policy; a stateless, rebuild-only or externally owned dataset set cannot produce an empty or fabricated checkpoint. Success returns BackupResult bound to this exact owner, Operation, request, reviewed Plan, resource and selection, wrapping the unchanged Checkpoint recovery object. It requires the exact signed capture, backup.store and backup.verify receipt closure for every preserved dataset and the historical backup executor, as defined by Checkpoint. Native owners verify that this accepted producer actually created the selected checkpoint and retain complete result and immutable artifact bytes under independent custody before success. An unrelated old result from the same owner is insufficient. Reconstruction does not consult mutable backend aliases. A successful capture and backup verification remain distinct from evidence that restoration has been tested."
+      "description": "Capture and publish an application recovery checkpoint using its declared data procedures. The receiving owner independently resolves and pins selection from protected accepted application state before Plan review: exact production instance, accepted release, complete preserve dataset set and secret generations. The exact release, dataset inventory and secret material roots belong in Plan.input_digests. Revalidate this same resource-to-instance mapping and accepted selection under current native exclusion before new admission and capture; a caller or source cannot self-approve another selection. Reject before admission when the accepted application release declares no application-owned dataset with preserve recovery policy; a stateless, rebuild-only or externally owned dataset set cannot produce an empty or fabricated checkpoint. Success returns BackupResult bound to this exact owner, Operation, request, reviewed Plan, resource and selection, wrapping the unchanged Checkpoint recovery object. It requires the exact signed capture, backup.store and backup.verify receipt closure for every preserved dataset and the historical backup executor, as defined by Checkpoint. Native owners verify that this accepted producer actually created the selected checkpoint and retain complete result and immutable artifact bytes under independent custody before success. An unrelated old result from the same owner is insufficient. Reconstruction does not consult mutable backend aliases. A successful capture and backup verification remain distinct from evidence that restoration has been tested."
     },
     "app.backup-check": {
       "type": "object",
@@ -1448,15 +1448,26 @@
     "app.retire": {
       "type": "object",
       "properties": {
-        "retention_receipt": {
-          "$ref": "common.schema.json#/$defs/MaterialDigest"
+        "evidence": {
+          "allOf": [
+            {
+              "$ref": "lifecycle-evidence.schema.json#/$defs/EvidenceReference"
+            },
+            {
+              "properties": {
+                "action": {
+                  "const": "app.retire"
+                }
+              }
+            }
+          ]
         }
       },
       "required": [
-        "retention_receipt"
+        "evidence"
       ],
       "additionalProperties": false,
-      "description": "End management of this application only with explicit retention and custody evidence. Retirement is separate from temporary inactivity and does not imply erasing retained data."
+      "description": "End management of this application only with explicit retention and custody evidence. Retirement is separate from temporary inactivity and does not imply erasing retained data. The evidence must be the exact typed lifecycle.evidence.prepare output; load its complete payload and independently validate current owner, resource, native selection, accepted policies, protection and completed surviving custody before admission and immediately before each effect."
     },
     "app.relocate": {
       "type": "object",
@@ -1508,15 +1519,19 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 9007199254740991
+        },
+        "dataset_inventory_digest": {
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
         }
       },
       "required": [
         "destination_host",
         "recovery_basis",
-        "placement_generation"
+        "placement_generation",
+        "dataset_inventory_digest"
       ],
       "additionalProperties": false,
-      "description": "Move the same application identity to the selected host through a fenced ownership handoff under the exact recovery basis. The receiving owner checks the basis against independently loaded accepted source and custody; a caller cannot reclassify preserved data as rebuildable or data-free. Source and destination must not become concurrent production writers. A release basis changes neither fencing nor permissions and cannot authorize deletion; changing placement text alone does not move the application."
+      "description": "Move the same application identity to the selected host through a fenced ownership handoff under the exact recovery basis. The receiving owner checks the basis against independently loaded accepted source and custody; a caller cannot reclassify preserved data as rebuildable or data-free. Source and destination must not become concurrent production writers. A release basis changes neither fencing nor permissions and cannot authorize deletion; changing placement text alone does not move the application. dataset_inventory_digest pins the complete independently retained current DatasetInventory. Recovery-basis selection covers every active obligation and preserves all historical discharge/recovery custody; a replaced source map cannot conceal previously admitted preserve obligations."
     },
     "host.apply": {
       "type": "object",
@@ -1765,16 +1780,27 @@
           "minItems": 1,
           "uniqueItems": true
         },
-        "retention_receipt": {
-          "$ref": "common.schema.json#/$defs/MaterialDigest"
+        "evidence": {
+          "allOf": [
+            {
+              "$ref": "lifecycle-evidence.schema.json#/$defs/EvidenceReference"
+            },
+            {
+              "properties": {
+                "action": {
+                  "const": "host.retire"
+                }
+              }
+            }
+          ]
         }
       },
       "required": [
         "resources",
-        "retention_receipt"
+        "evidence"
       ],
       "additionalProperties": false,
-      "description": "Retire only the named host resources after their retention and replacement custody is established. This does not authorize bulk deletion of unrelated or unmanaged resources."
+      "description": "Retire only the named host resources after their retention and replacement custody is established. This does not authorize bulk deletion of unrelated or unmanaged resources. The evidence must be the exact typed lifecycle.evidence.prepare output; load its complete payload and independently validate current owner, resource, native selection, accepted policies, protection and completed surviving custody before admission and immediately before each effect."
     },
     "source.publish": {
       "type": "object",
@@ -1917,15 +1943,26 @@
     "backend.prune": {
       "type": "object",
       "properties": {
-        "retention_receipt": {
-          "$ref": "common.schema.json#/$defs/MaterialDigest"
+        "evidence": {
+          "allOf": [
+            {
+              "$ref": "lifecycle-evidence.schema.json#/$defs/EvidenceReference"
+            },
+            {
+              "properties": {
+                "action": {
+                  "const": "backend.prune"
+                }
+              }
+            }
+          ]
         }
       },
       "required": [
-        "retention_receipt"
+        "evidence"
       ],
       "additionalProperties": false,
-      "description": "Remove only backup material authorized by the exact retention evidence, the current owner-accepted retention policy and current protected references. Revalidate policy identity, holds, accepted work and recovery roots at deletion. A backup adapter, generic adapter action or cleanup plan cannot weaken an accepted keep-local policy or delete the sole viable recovery copy. A policy relaxation requires a separately reviewed owner-accepted change."
+      "description": "Remove only backup material authorized by the exact retention evidence, the current owner-accepted retention policy and current protected references. Revalidate policy identity, holds, accepted work and recovery roots at deletion. A backup adapter, generic adapter action or cleanup plan cannot weaken an accepted keep-local policy or delete the sole viable recovery copy. A policy relaxation requires a separately reviewed owner-accepted change. The evidence must be the exact typed lifecycle.evidence.prepare output; load its complete payload and independently validate current owner, resource, native selection, accepted policies, protection and completed surviving custody before admission and immediately before each effect."
     },
     "adapter.execute": {
       "type": "object",

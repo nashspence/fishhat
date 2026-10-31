@@ -733,6 +733,18 @@
       ],
       "use_case": "workflow.attestation.check",
       "description": "Ask the original issuer to recheck exact retained phase evidence under current authority and native protection. An authenticated success is a current observation, never a renewed lease, new phase admission or release authority."
+    },
+    {
+      "name": "lifecycle-evidence-prepare",
+      "tokens": [
+        "{tool}",
+        "lifecycle",
+        "evidence",
+        "--request-stdin",
+        "--json"
+      ],
+      "use_case": "lifecycle.evidence.prepare",
+      "description": "Stage the complete canonical lifecycle evidence PrepareRequest through lifecycle-input custody and request one observational snapshot. Preserve its preparation identity across retries. Return the finite typed immutable evidence reference; full content remains readable through content.get and any consuming retained Plan/Operation. Preparation does not retire, discharge or delete anything."
     }
   ],
   "parser": "bounded tokens; no shell evaluation",

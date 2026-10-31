@@ -251,7 +251,9 @@ def test_transfer_lookup_preserves_independently_installed_reader_context():
     reference["schema"]["digest"] = "sha256:" + "9" * 64
     with pytest.raises(ContractError, match="schema substitution"):
         validate_transfer_lookup_result(lookup(value), reference)
-    readers = {reference["schema"]["digest"]: validate_transfer_record}
+    readers = {
+        (reference["schema"]["uri"], reference["schema"]["digest"]): validate_transfer_record
+    }
     validate_transfer_lookup_result(lookup(value), reference, retained_readers=readers)
     reference["record"]["resource"]["id"] = uid("unrelated-retained-workflow")
     with pytest.raises(ContractError, match="resource substitution"):

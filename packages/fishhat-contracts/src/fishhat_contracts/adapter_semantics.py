@@ -13,7 +13,7 @@ from typing import Any, cast
 
 from .adapter_observations import _observation_keys
 from .bounds import Bounds, bounds
-from .dns import _rrset_identity, validate_changes, validate_rrsets
+from .dns import _rrset_identity, validate_changes, validate_generation, validate_rrsets
 from .protected_values import check_value_request, check_value_response, require_value_custody
 from .publication import validate_publication_intent
 from .targets import check_target_request, check_target_response
@@ -64,8 +64,16 @@ def check_request(role: str, value: dict[str, Any]) -> None:
     if role == "compute" and method in {"plan", "set-limits"}:
         _check_limits(inputs["limits"])
     if role == "dns" and method in {"plan", "publish"}:
-        validate_changes(inputs["change"])
         require(inputs["scope"] == inputs["change"]["scope"], "DNS_SCOPE_IDENTITY")
+        validate_changes(inputs["change"])
+    if role == "dns" and method == "observe":
+        require(
+            inputs["binding"]["role"] == "dns"
+            and inputs["binding"]["scope"] == inputs["scope"]
+            and inputs["scope"]["kind"] == "dns-service"
+            and inputs["owner"]["id"] == inputs["scope"]["authority"],
+            "DNS_GENERATION_IDENTITY",
+        )
     binding = _handoff_binding(role, value)
     if binding is not None:
         require(
@@ -150,6 +158,11 @@ def check_invocation(role: str, value: dict[str, Any]) -> None:
     )
     binding = _handoff_binding(role, request)
     require(binding is None or binding == executor, "INVOCATION_EXECUTOR_IDENTITY")
+    if role == "dns":
+        require(
+            request["input"]["change"]["custodian"] == attempt["owner"],
+            "DNS_GENERATION_OWNER",
+        )
     if role == "bootstrap-source":
         selected = request["input"]["selection"]["adapter"]
         require(
@@ -163,6 +176,13 @@ def check_invocation(role: str, value: dict[str, Any]) -> None:
 
 def _handoff_binding(role: str, request: dict[str, Any]) -> dict[str, Any] | None:
     method, inputs = request["method"], request["input"]
+    if role == "dns" and method in {"plan", "publish", "observe"}:
+        return cast(
+            dict[str, Any],
+            inputs["binding"]
+            if method == "observe"
+            else inputs["change"]["expected_generation"]["binding"],
+        )
     if role in {"runtime", "secret-source", "credential-issuer"} and method in {
         "observe",
         "inventory",
@@ -262,6 +282,8 @@ def check_response(
     _check_observation_page(request, response)
     _observation_keys(role, request, response)
     _check_observed_quantities(role, response["output"])
+    if role == "dns":
+        _check_dns_generation(request, response)
     check_target_response(role, request, response, invocation["attempt"] if invocation else None)
     if "effect" in response and _succeeded(response["effect"]):
         assert invocation is not None
@@ -276,6 +298,31 @@ def _succeeded(effect: dict[str, Any]) -> bool:
         and effect["effect_certainty"] == "known"
         and effect["postcondition"] == "satisfied"
     )
+
+
+def _check_dns_generation(request: dict[str, Any], response: dict[str, Any]) -> None:
+    inputs = request["input"]
+    generation = response["output"]["served_generation"]
+    if generation is None:
+        return
+    if request["method"] == "observe":
+        expected = None
+        owner, binding = inputs["owner"], inputs["binding"]
+    else:
+        expected = inputs["change"]["expected_generation"]
+        owner, binding = inputs["change"]["custodian"], expected["binding"]
+    validate_generation(generation, owner=owner, scope=inputs["scope"])
+    require(generation["binding"] == binding, "DNS_GENERATION_EXECUTOR")
+    if expected is not None:
+        require(
+            generation["native_incarnation"] == expected["native_incarnation"],
+            "DNS_GENERATION_INCARNATION",
+        )
+        if "effect" in response and _succeeded(response["effect"]):
+            require(
+                generation["generation"] > expected["generation"],
+                "DNS_GENERATION_NOT_ADVANCED",
+            )
 
 
 def _check_observation_page(request: dict[str, Any], response: dict[str, Any]) -> None:

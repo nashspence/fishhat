@@ -1,0 +1,324 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fishhat.invalid/contracts/dataset-obligations.schema.json",
+  "$defs": {
+    "NativeIdentity": {
+      "type": "object",
+      "properties": {
+        "scope": {
+          "allOf": [
+            {
+              "$ref": "adapter.schema.json#/$defs/Scope"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "const": "dataset"
+                }
+              }
+            }
+          ]
+        },
+        "incarnation": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        }
+      },
+      "required": [
+        "scope",
+        "incarnation"
+      ],
+      "additionalProperties": false,
+      "description": "Receiving-owner-verified exact dataset identity within its canonical native authority and scope. The owner resolves provider/path aliases independently; distinct strings do not establish distinct datasets. The incarnation changes when the logical native dataset is replaced or reinitialized. This metadata grants no access and does not prove existence or custody."
+    },
+    "DatasetObligation": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "origin_release_digest": {
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
+        },
+        "origin_dataset": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "declaration": {
+          "$ref": "source.schema.json#/$defs/Dataset"
+        },
+        "native_identity": {
+          "$ref": "dataset-obligations.schema.json#/$defs/NativeIdentity"
+        },
+        "recovery_closure": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/MaterialDigest"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "id",
+        "origin_release_digest",
+        "origin_dataset",
+        "declaration",
+        "native_identity",
+        "recovery_closure"
+      ],
+      "additionalProperties": false,
+      "description": "Immutable owner-admitted dataset obligation. Its UUID, first admitted release/name, original custody/recovery/native-format/grant and native incarnation never change through source edits or aliases. recovery_closure retains that original source and every required procedure, secret generation and recovery input under protected or encrypted custody, never public plaintext-derived commitments. The origin release is included. Current releases may change procedure selections only under their normal review while retaining this original recovery closure. A new obligation requires independently approved native admission, not a new source label. Discharging management never authorizes byte deletion."
+    },
+    "DatasetDischarge": {
+      "type": "object",
+      "properties": {
+        "obligation_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "obligation_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "evidence_digest": {
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
+        }
+      },
+      "required": [
+        "obligation_id",
+        "obligation_digest",
+        "evidence_digest"
+      ],
+      "additionalProperties": false,
+      "description": "An exact selection of separately retained typed RetirementEvidence for the immutable obligation in the complete current DatasetInventory. The receiving owner independently authenticates that evidence, current administrator authority, complete old recovery commitments and positive retained or successor custody before review and again before committing discharge. The evidence must bind this inventory digest, owner/epoch, application, native incarnation and exact obligation UUID; an arbitrary digest or requester claim cannot establish it. No deletion permission is implied. Source reclassification is not evidence."
+    },
+    "InventoryEntry": {
+      "type": "object",
+      "properties": {
+        "obligation": {
+          "$ref": "dataset-obligations.schema.json#/$defs/DatasetObligation"
+        },
+        "dataset": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "discharge": {
+          "anyOf": [
+            {
+              "$ref": "dataset-obligations.schema.json#/$defs/DatasetDischarge"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "obligation",
+        "dataset",
+        "discharge"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "discharge": {
+                "type": "null"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "dataset": {
+                "$ref": "common.schema.json#/$defs/Id"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "dataset": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "DatasetInventory": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/dataset-obligations/v1"
+        },
+        "kind": {
+          "const": "DatasetInventory"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "resource": {
+          "allOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Resource"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "const": "app"
+                }
+              }
+            }
+          ]
+        },
+        "app_instance": {
+          "type": "string",
+          "minLength": 69,
+          "maxLength": 69,
+          "pattern": "^prod:[0-9a-f]{64}(?![\\s\\S])"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "accepted_release_digest": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/MaterialDigest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "dataset-obligations.schema.json#/$defs/InventoryEntry"
+          }
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "owner",
+        "resource",
+        "app_instance",
+        "generation",
+        "accepted_release_digest",
+        "entries"
+      ],
+      "additionalProperties": false,
+      "description": "Complete protected receiving-owner state, obtained independently of a proposed release or request. Entries retain every active obligation and every settled discharge with its immutable original obligation and evidence. The resource id equals the independently accepted App.id. Active dataset names are unique and exactly match the accepted source; discharged entries have no current name and cannot be resurrected or replaced by a fresh UUID for the same native incarnation. Empty initial state has generation zero and null accepted release. Every accepted transition increments generation and atomically preserves original source, native and recovery custody. Restoring an owner epoch requires separately verified current custody and cannot rewrite historical identities. Complete canonical inventories use existing content/record transport; there is no entry-count cap. Inventory metadata is not itself permission, proof of native completeness or a database implementation."
+    },
+    "DatasetBinding": {
+      "type": "object",
+      "properties": {
+        "dataset": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "obligation_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        }
+      },
+      "required": [
+        "dataset",
+        "obligation_id"
+      ],
+      "additionalProperties": false
+    },
+    "DatasetTransition": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/dataset-obligations/v1"
+        },
+        "kind": {
+          "const": "DatasetTransition"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "resource": {
+          "allOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Resource"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "const": "app"
+                }
+              }
+            }
+          ]
+        },
+        "app_instance": {
+          "type": "string",
+          "minLength": 69,
+          "maxLength": 69,
+          "pattern": "^prod:[0-9a-f]{64}(?![\\s\\S])"
+        },
+        "expected_generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "before_inventory_digest": {
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
+        },
+        "previous_release_digest": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/MaterialDigest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "release_digest": {
+          "$ref": "common.schema.json#/$defs/MaterialDigest"
+        },
+        "bindings": {
+          "type": "array",
+          "items": {
+            "$ref": "dataset-obligations.schema.json#/$defs/DatasetBinding"
+          }
+        },
+        "admissions": {
+          "type": "array",
+          "items": {
+            "$ref": "dataset-obligations.schema.json#/$defs/DatasetObligation"
+          }
+        },
+        "discharges": {
+          "type": "array",
+          "items": {
+            "$ref": "dataset-obligations.schema.json#/$defs/DatasetDischarge"
+          }
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "owner",
+        "resource",
+        "app_instance",
+        "expected_generation",
+        "before_inventory_digest",
+        "previous_release_digest",
+        "release_digest",
+        "bindings",
+        "admissions",
+        "discharges"
+      ],
+      "additionalProperties": false,
+      "description": "Complete reviewed application release transition embedded in the app.deploy/app.upgrade Plan. Pin the exact protected previous inventory, accepted release, generation and proposed release. Bind every proposed source dataset exactly once to one retained active obligation or explicitly admitted new obligation. Every previously active obligation must continue exactly once or have an explicit verified discharge; omission cannot silently end management. An explicit rename retains the obligation and native incarnation. Changed custody, recovery, external owner, native format or grant cannot masquerade as continuation. New obligation identities and native incarnations cannot reuse any active or discharged identity. An approved policy or custody reclassification explicitly discharges the original obligation with verified retained or successor custody and admits a separately verified successor native incarnation; the native handle may be reused only after independently verified replacement or reinitialization. Relabeling the same native object is not a new incarnation and cannot weaken its original obligations. Admissions require independently approved native bindings and source/recovery closure; discharges require independently authenticated typed retirement evidence and current administrator authorization. Reference validators accept those facts only as independently supplied owner context/callbacks, never wire booleans. The native owner revalidates under exclusion and commits the exact successor inventory only after verified accepted effects and complete custody; interrupted or unknown work preserves the old inventory and every newly created obligation in its original Operation recovery closure. Accepted retries replay the original transition and outcome before considering a newer source. The complete predecessor, transition, admitted closures and discharge evidence remain retrievable after client loss. This surface neither provisions storage nor executes deletion; providers that cannot positively establish a selected new native incarnation must block admission."
+    }
+  }
+}

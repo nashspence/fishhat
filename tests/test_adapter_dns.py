@@ -9,6 +9,7 @@ from fishhat_contracts.dns import validate_changes, validate_rrsets
 from fishhat_contracts.validation import ContractError
 
 from tests.adapter_support import OWNER, identifier
+from tests.test_adapter_handoffs import installed
 
 CHECK_PURPOSE = {
     "purpose": "implementation",
@@ -32,12 +33,24 @@ def rrset(typ="A", name="web.example.test."):
     }
 
 
+def generation(executor=None, revision=1):
+    if executor is None:
+        _, executor = installed("dns")
+    return {
+        "owner": copy.deepcopy(OWNER),
+        "binding": copy.deepcopy(executor),
+        "native_incarnation": identifier(56),
+        "generation": revision,
+    }
+
+
 def change(before=None, after=None):
+    observed = generation()
     return {
         "format": "deployment-ops/dns-change/v1",
         "id": identifier(55),
-        "scope": {"authority": OWNER["id"], "kind": "dns-service", "handle": "lan-dns"},
-        "expected_generation": 1,
+        "scope": copy.deepcopy(observed["binding"]["scope"]),
+        "expected_generation": observed,
         "changes": [{"before": before, "after": after}],
         "custodian": OWNER,
     }

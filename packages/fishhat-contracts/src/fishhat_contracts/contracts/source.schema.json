@@ -1043,266 +1043,9 @@
             "$ref": "common.schema.json#/$defs/Id"
           },
           "additionalProperties": {
-            "type": "object",
-            "properties": {
-              "custody": {
-                "enum": [
-                  "app",
-                  "reference"
-                ],
-                "description": "Who is responsible for recovery of this dataset: this application, or the explicitly named external owner."
-              },
-              "recovery": {
-                "enum": [
-                  "preserve",
-                  "rebuild",
-                  "external"
-                ],
-                "description": "Declared recovery policy, separate from custody and storage lifetime. Preserve requires capture and restore; rebuild requires reconstruction and verification; external delegates recovery to the named owner. A declaration is neither recovery proof nor permission to delete data."
-              },
-              "native_format": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 160
-              },
-              "writers": {
-                "type": "array",
-                "items": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 24,
-                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
-                },
-                "minItems": 0,
-                "uniqueItems": true
-              },
-              "readers": {
-                "type": "array",
-                "items": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 24,
-                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
-                },
-                "minItems": 0,
-                "uniqueItems": true
-              },
-              "grant": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 24,
-                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
-              },
-              "capture": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 24,
-                    "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "restore": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 24,
-                    "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ]
-              },
-              "verify_restore": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 24,
-                    "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "description": "Read-only verification hook for restoring a preserved dataset."
-              },
-              "owner": {
-                "anyOf": [
-                  {
-                    "type": "object",
-                    "properties": {
-                      "kind": {
-                        "enum": [
-                          "domain",
-                          "host",
-                          "app",
-                          "source",
-                          "dns",
-                          "recovery",
-                          "publisher",
-                          "backend",
-                          "adapter",
-                          "interface",
-                          "dataset",
-                          "component"
-                        ]
-                      },
-                      "id": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 160
-                      }
-                    },
-                    "required": [
-                      "kind",
-                      "id"
-                    ],
-                    "additionalProperties": false
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "description": "Resource responsible for a referenced dataset. Datasets managed by this application use null because the enclosing application owns their recovery."
-              },
-              "rebuild": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 24,
-                    "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "description": "Declared write hook that reconstructs a dataset for which this app is responsible from retained inputs. Invoking it requires separately authorized owner work."
-              },
-              "verify_rebuild": {
-                "anyOf": [
-                  {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 24,
-                    "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "description": "Read-only hook that verifies reconstructed data before it is accepted as usable."
-              }
-            },
-            "required": [
-              "custody",
-              "recovery",
-              "native_format",
-              "writers",
-              "readers",
-              "grant",
-              "capture",
-              "restore",
-              "verify_restore",
-              "owner",
-              "rebuild",
-              "verify_rebuild"
-            ],
-            "additionalProperties": false,
-            "oneOf": [
-              {
-                "properties": {
-                  "custody": {
-                    "const": "app"
-                  },
-                  "recovery": {
-                    "const": "preserve"
-                  },
-                  "owner": {
-                    "type": "null"
-                  },
-                  "capture": {
-                    "type": "string"
-                  },
-                  "restore": {
-                    "type": "string"
-                  },
-                  "verify_restore": {
-                    "type": "string"
-                  },
-                  "rebuild": {
-                    "type": "null"
-                  },
-                  "verify_rebuild": {
-                    "type": "null"
-                  }
-                }
-              },
-              {
-                "properties": {
-                  "custody": {
-                    "const": "app"
-                  },
-                  "recovery": {
-                    "const": "rebuild"
-                  },
-                  "owner": {
-                    "type": "null"
-                  },
-                  "capture": {
-                    "type": "null"
-                  },
-                  "restore": {
-                    "type": "null"
-                  },
-                  "verify_restore": {
-                    "type": "null"
-                  },
-                  "rebuild": {
-                    "type": "string"
-                  },
-                  "verify_rebuild": {
-                    "type": "string"
-                  }
-                }
-              },
-              {
-                "properties": {
-                  "custody": {
-                    "const": "reference"
-                  },
-                  "recovery": {
-                    "const": "external"
-                  },
-                  "owner": {
-                    "type": "object"
-                  },
-                  "capture": {
-                    "type": "null"
-                  },
-                  "restore": {
-                    "type": "null"
-                  },
-                  "verify_restore": {
-                    "type": "null"
-                  },
-                  "rebuild": {
-                    "type": "null"
-                  },
-                  "verify_rebuild": {
-                    "type": "null"
-                  }
-                }
-              }
-            ]
-          }
+            "$ref": "source.schema.json#/$defs/Dataset"
+          },
+          "description": "Source declarations select current dataset names, not lifetime ownership. Accepting a changed release requires the reviewed DatasetTransition and independently retained complete DatasetInventory. Every admitted obligation remains active until an explicit independently authorized and custody-verified discharge; omission, rename, policy reclassification and a new release cannot erase it. Renaming binds the same obligation and native incarnation explicitly. This source map alone supplies neither native identity nor admission, transfer or deletion authority."
         },
         "hooks": {
           "type": "object",
@@ -2047,7 +1790,7 @@
         "reason"
       ],
       "additionalProperties": false,
-      "description": "Explicit retirement of one previously managed file, secret-file or artifact destination in the selected concern kind. New retirement requires the receiving owner’s retained managed claim and an exact reviewed native target and live preimage. Confidential or unclassified live scopes, including retiring secret-file destinations, require the confidential host-preimage and private or encrypted capture form. The ordinary host.apply preserve/capture/overwrite and immediate pre-mutation checks still apply; a tombstone is not permission to erase a live edit, recurse into a directory, follow an alias or discard recovery custody. The previous prescription and original source/material closure stay retained until the owning Operation has verified removal and settled every remaining obligation. Only then does active management end. A settled tombstone is inert on later applications: it cannot delete a subsequently created unrelated object at the same pathname. Retrying accepted work uses its original operation identity; omitting a tombstone never erases unresolved retirement."
+      "description": "Explicit retirement of one previously managed file, secret-file or artifact destination in the selected concern kind. New retirement requires the receiving owner\u2019s retained managed claim and an exact reviewed native target and live preimage. Confidential or unclassified live scopes, including retiring secret-file destinations, require the confidential host-preimage and private or encrypted capture form. The ordinary host.apply preserve/capture/overwrite and immediate pre-mutation checks still apply; a tombstone is not permission to erase a live edit, recurse into a directory, follow an alias or discard recovery custody. The previous prescription and original source/material closure stay retained until the owning Operation has verified removal and settled every remaining obligation. Only then does active management end. A settled tombstone is inert on later applications: it cannot delete a subsequently created unrelated object at the same pathname. Retrying accepted work uses its original operation identity; omitting a tombstone never erases unresolved retirement."
     },
     "HostGroupNames": {
       "type": "array",
@@ -2095,7 +1838,268 @@
         "reason"
       ],
       "additionalProperties": false,
-      "description": "A patch to the receiving owner’s managed supplementary-group claims for one exact native user. Primary-group identity and membership are outside this surface and cannot be added, removed or reclassified here. add and remove are disjoint complete sets; add explicitly adopts responsibility for the listed supplementary memberships, including already-present memberships, and that adoption must be disclosed in the reviewed Plan. remove may revoke only a membership covered by an independently retained managed claim for this same user; presence in the live group list or source alone is not ownership. Unmentioned accepted claims and all other live memberships are preserved. Empty add/remove is a no-op; omission of the declaration is also a no-op, never replacement of the whole supplementary list. Native planning resolves user/group aliases and captures exact identities and baseline/live/proposed memberships under host.apply’s three-way review. A missing previously managed membership is live drift, not permission to silently repair it. Claims are updated only with verified accepted outcomes; failure or uncertainty retains original claims and recovery obligations. After a removal settles, repeating the identical accepted request replays its result and cannot remove a newly unmanaged membership. Independently retained settled-removal tombstones make repeated source application inert for those pairs; they never authorize removing a later unmanaged membership. An explicit reviewed add may adopt the pair again. Unmentioned missing managed memberships remain disclosed live drift rather than implicit repair; add must explicitly reaffirm any proposed repair."
+      "description": "A patch to the receiving owner\u2019s managed supplementary-group claims for one exact native user. Primary-group identity and membership are outside this surface and cannot be added, removed or reclassified here. add and remove are disjoint complete sets; add explicitly adopts responsibility for the listed supplementary memberships, including already-present memberships, and that adoption must be disclosed in the reviewed Plan. remove may revoke only a membership covered by an independently retained managed claim for this same user; presence in the live group list or source alone is not ownership. Unmentioned accepted claims and all other live memberships are preserved. Empty add/remove is a no-op; omission of the declaration is also a no-op, never replacement of the whole supplementary list. Native planning resolves user/group aliases and captures exact identities and baseline/live/proposed memberships under host.apply\u2019s three-way review. A missing previously managed membership is live drift, not permission to silently repair it. Claims are updated only with verified accepted outcomes; failure or uncertainty retains original claims and recovery obligations. After a removal settles, repeating the identical accepted request replays its result and cannot remove a newly unmanaged membership. Independently retained settled-removal tombstones make repeated source application inert for those pairs; they never authorize removing a later unmanaged membership. An explicit reviewed add may adopt the pair again. Unmentioned missing managed memberships remain disclosed live drift rather than implicit repair; add must explicitly reaffirm any proposed repair."
+    },
+    "Dataset": {
+      "type": "object",
+      "properties": {
+        "custody": {
+          "enum": [
+            "app",
+            "reference"
+          ],
+          "description": "Who is responsible for recovery of this dataset: this application, or the explicitly named external owner."
+        },
+        "recovery": {
+          "enum": [
+            "preserve",
+            "rebuild",
+            "external"
+          ],
+          "description": "Declared recovery policy, separate from custody and storage lifetime. Preserve requires capture and restore; rebuild requires reconstruction and verification; external delegates recovery to the named owner. A declaration is neither recovery proof nor permission to delete data."
+        },
+        "native_format": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "writers": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 24,
+            "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "readers": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 24,
+            "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "grant": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 24,
+          "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
+        },
+        "capture": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 24,
+              "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "restore": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 24,
+              "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "verify_restore": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 24,
+              "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Read-only verification hook for restoring a preserved dataset."
+        },
+        "owner": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "domain",
+                    "host",
+                    "app",
+                    "source",
+                    "dns",
+                    "recovery",
+                    "publisher",
+                    "backend",
+                    "adapter",
+                    "interface",
+                    "dataset",
+                    "component"
+                  ]
+                },
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 160
+                }
+              },
+              "required": [
+                "kind",
+                "id"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Resource responsible for a referenced dataset. Datasets managed by this application use null because the enclosing application owns their recovery."
+        },
+        "rebuild": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 24,
+              "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Declared write hook that reconstructs a dataset for which this app is responsible from retained inputs. Invoking it requires separately authorized owner work."
+        },
+        "verify_rebuild": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 24,
+              "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Read-only hook that verifies reconstructed data before it is accepted as usable."
+        }
+      },
+      "required": [
+        "custody",
+        "recovery",
+        "native_format",
+        "writers",
+        "readers",
+        "grant",
+        "capture",
+        "restore",
+        "verify_restore",
+        "owner",
+        "rebuild",
+        "verify_rebuild"
+      ],
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "properties": {
+            "custody": {
+              "const": "app"
+            },
+            "recovery": {
+              "const": "preserve"
+            },
+            "owner": {
+              "type": "null"
+            },
+            "capture": {
+              "type": "string"
+            },
+            "restore": {
+              "type": "string"
+            },
+            "verify_restore": {
+              "type": "string"
+            },
+            "rebuild": {
+              "type": "null"
+            },
+            "verify_rebuild": {
+              "type": "null"
+            }
+          }
+        },
+        {
+          "properties": {
+            "custody": {
+              "const": "app"
+            },
+            "recovery": {
+              "const": "rebuild"
+            },
+            "owner": {
+              "type": "null"
+            },
+            "capture": {
+              "type": "null"
+            },
+            "restore": {
+              "type": "null"
+            },
+            "verify_restore": {
+              "type": "null"
+            },
+            "rebuild": {
+              "type": "string"
+            },
+            "verify_rebuild": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "properties": {
+            "custody": {
+              "const": "reference"
+            },
+            "recovery": {
+              "const": "external"
+            },
+            "owner": {
+              "type": "object"
+            },
+            "capture": {
+              "type": "null"
+            },
+            "restore": {
+              "type": "null"
+            },
+            "verify_restore": {
+              "type": "null"
+            },
+            "rebuild": {
+              "type": "null"
+            },
+            "verify_rebuild": {
+              "type": "null"
+            }
+          }
+        }
+      ]
     }
   }
 }

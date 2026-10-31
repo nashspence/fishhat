@@ -1,0 +1,252 @@
+{
+  "format": "deployment-ops/workflow-proposal/v1",
+  "workflow_id": "256f4fa7-61b2-565a-b876-30d2dcf65f5d",
+  "type": "relocation",
+  "target": {
+    "relocation": {
+      "owner": {
+        "tool": "app-ops",
+        "id": "58735bda-2152-5b96-9fcf-5a1ffd14872e",
+        "epoch": "37de5c4a-33ee-55a5-adff-564fd3748ac8"
+      },
+      "request_id": "22222222-2222-4222-8222-222222222222"
+    },
+    "destination": {
+      "owner": {
+        "tool": "host-ops",
+        "id": "20b4e68f-040c-5aec-b5a4-d03e1c2f1e17",
+        "epoch": "4078ba19-3754-5f2b-a8c9-e11867f39610"
+      },
+      "resource": {
+        "kind": "host",
+        "id": "node-b"
+      }
+    }
+  },
+  "participants": [
+    {
+      "owner": {
+        "tool": "app-ops",
+        "id": "58735bda-2152-5b96-9fcf-5a1ffd14872e",
+        "epoch": "37de5c4a-33ee-55a5-adff-564fd3748ac8"
+      },
+      "resource": {
+        "kind": "app",
+        "id": "demo-app"
+      },
+      "expected_generation": 9,
+      "requests": [
+        {
+          "request_id": "22222222-2222-4222-8222-222222222222",
+          "plan": {
+            "format": "deployment-ops/record/v1",
+            "kind": "Plan",
+            "id": "eab76305-c3b1-550f-9a61-30ccc23ac8fc",
+            "owner": {
+              "tool": "app-ops",
+              "id": "58735bda-2152-5b96-9fcf-5a1ffd14872e",
+              "epoch": "37de5c4a-33ee-55a5-adff-564fd3748ac8"
+            },
+            "subject": {
+              "action": "app.relocate",
+              "resource": {
+                "kind": "app",
+                "id": "demo-app"
+              },
+              "arguments": {
+                "destination_host": "node-b",
+                "placement_generation": 3,
+                "recovery_basis": {
+                  "kind": "checkpoint",
+                  "checkpoint_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+                },
+                "dataset_inventory_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+              }
+            },
+            "summary": "Relocate the synthetic application from its source to the separately approved node-b host.",
+            "data_consequences": "Restore the exact selected checkpoint in destination isolation; retain source data and fencing.",
+            "recovery_limits": "Neither driver loss nor destination isolation proves source writer cessation; retain both owners custody.",
+            "created_at": "2026-10-17T00:00:00Z",
+            "expires_at": "2026-10-17T01:00:00Z",
+            "input_digests": [
+              "sha256:f60fa8fdf1458e0573e731e274de6789c98a7955a8d39e20b31adb8c3063f9d1",
+              "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+              "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+            ],
+            "preconditions": [
+              {
+                "owner": {
+                  "tool": "app-ops",
+                  "id": "58735bda-2152-5b96-9fcf-5a1ffd14872e",
+                  "epoch": "37de5c4a-33ee-55a5-adff-564fd3748ac8"
+                },
+                "resource": {
+                  "kind": "app",
+                  "id": "demo-app"
+                },
+                "generation": 9,
+                "source_digests": [],
+                "holds_digest": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+              },
+              {
+                "owner": {
+                  "tool": "host-ops",
+                  "id": "20b4e68f-040c-5aec-b5a4-d03e1c2f1e17",
+                  "epoch": "4078ba19-3754-5f2b-a8c9-e11867f39610"
+                },
+                "resource": {
+                  "kind": "host",
+                  "id": "node-b"
+                },
+                "generation": 7,
+                "source_digests": [],
+                "holds_digest": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+              }
+            ],
+            "effects": [
+              {
+                "step": "relocate",
+                "executor": {
+                  "tool": "app-ops",
+                  "id": "58735bda-2152-5b96-9fcf-5a1ffd14872e",
+                  "epoch": "37de5c4a-33ee-55a5-adff-564fd3748ac8"
+                },
+                "resource": {
+                  "kind": "app",
+                  "id": "demo-app"
+                },
+                "summary": "Fence the source and perform the exact reviewed application handoff.",
+                "action": "fenced-relocation",
+                "input_digest": "sha256:f60fa8fdf1458e0573e731e274de6789c98a7955a8d39e20b31adb8c3063f9d1",
+                "reconciliation": "inspect-runtime"
+              },
+              {
+                "step": "destination-admission",
+                "executor": {
+                  "tool": "host-ops",
+                  "id": "20b4e68f-040c-5aec-b5a4-d03e1c2f1e17",
+                  "epoch": "4078ba19-3754-5f2b-a8c9-e11867f39610"
+                },
+                "resource": {
+                  "kind": "host",
+                  "id": "node-b"
+                },
+                "summary": "Approve and preserve the exact destination host admission and isolation.",
+                "action": "admit-relocation",
+                "input_digest": "sha256:f60fa8fdf1458e0573e731e274de6789c98a7955a8d39e20b31adb8c3063f9d1",
+                "reconciliation": "inspect-runtime"
+              }
+            ],
+            "checkpoint_required": false,
+            "interruption": "One admitted component restart",
+            "recovery": [
+              "native-reconcile"
+            ],
+            "blockers": [],
+            "digest": "sha256:f5436f4dc7784c86df73229293fbb63cc12cd1554279bf7c4919eb3c47a721ee",
+            "witness": {
+              "format": "deployment-ops/witness/v1",
+              "id": "5018df02-0aaa-5c56-90ff-5afcd81bf3f6",
+              "owner": {
+                "tool": "app-ops",
+                "id": "58735bda-2152-5b96-9fcf-5a1ffd14872e",
+                "epoch": "37de5c4a-33ee-55a5-adff-564fd3748ac8"
+              },
+              "kind": "plan",
+              "subject_digest": "sha256:f5436f4dc7784c86df73229293fbb63cc12cd1554279bf7c4919eb3c47a721ee",
+              "workflow_id": null,
+              "generation": 9,
+              "state": "planned",
+              "boot_id": null,
+              "evidence_digests": [],
+              "created_at": "2026-10-17T00:00:00Z",
+              "key_id": "test-owner",
+              "signature": "624lO4ulPs02FJQAdpuio59rzov1cakrF1F/ruY8teph3+tffM1OpjU3ipU7JTLe6x6LBzYJoX+p1cpO7AUGBA=="
+            }
+          },
+          "phase": "source-quiescing"
+        }
+      ]
+    },
+    {
+      "owner": {
+        "tool": "host-ops",
+        "id": "20b4e68f-040c-5aec-b5a4-d03e1c2f1e17",
+        "epoch": "4078ba19-3754-5f2b-a8c9-e11867f39610"
+      },
+      "resource": {
+        "kind": "host",
+        "id": "node-b"
+      },
+      "expected_generation": 7,
+      "requests": [],
+      "native_role": "relocation-destination"
+    }
+  ],
+  "content": [
+    {
+      "owner": {
+        "tool": "app-ops",
+        "id": "58735bda-2152-5b96-9fcf-5a1ffd14872e",
+        "epoch": "37de5c4a-33ee-55a5-adff-564fd3748ac8"
+      },
+      "id": "62b35a76-841d-5668-b620-5c0c9bdad224",
+      "purpose": "content",
+      "binding": {
+        "kind": "staging",
+        "staging_id": "07d4a591-7521-57f1-af9e-4ae25cceefba"
+      },
+      "digest": "sha256:f60fa8fdf1458e0573e731e274de6789c98a7955a8d39e20b31adb8c3063f9d1",
+      "size": 1
+    },
+    {
+      "owner": {
+        "tool": "app-ops",
+        "id": "58735bda-2152-5b96-9fcf-5a1ffd14872e",
+        "epoch": "37de5c4a-33ee-55a5-adff-564fd3748ac8"
+      },
+      "id": "8a181d3b-3a39-5db1-a364-99d935ece807",
+      "purpose": "content",
+      "binding": {
+        "kind": "staging",
+        "staging_id": "17c17b2e-a34b-5042-b714-95c3b20433ad"
+      },
+      "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "size": 1
+    },
+    {
+      "owner": {
+        "tool": "host-ops",
+        "id": "20b4e68f-040c-5aec-b5a4-d03e1c2f1e17",
+        "epoch": "4078ba19-3754-5f2b-a8c9-e11867f39610"
+      },
+      "id": "878f4c91-5e27-5a88-9e0b-45ba185b046e",
+      "purpose": "content",
+      "binding": {
+        "kind": "staging",
+        "staging_id": "b9f5eef8-4a3d-541a-b131-61ce01aee58b"
+      },
+      "digest": "sha256:f60fa8fdf1458e0573e731e274de6789c98a7955a8d39e20b31adb8c3063f9d1",
+      "size": 1
+    },
+    {
+      "owner": {
+        "tool": "app-ops",
+        "id": "58735bda-2152-5b96-9fcf-5a1ffd14872e",
+        "epoch": "37de5c4a-33ee-55a5-adff-564fd3748ac8"
+      },
+      "id": "ee81a405-8bef-595f-88f0-24d09e79ffa3",
+      "purpose": "content",
+      "binding": {
+        "kind": "staging",
+        "staging_id": "65b96c70-bafe-5245-b72c-e83629e04573"
+      },
+      "digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "size": 1
+    }
+  ],
+  "initial_driver": {
+    "principal": "ops-app-operate",
+    "term": 1
+  }
+}

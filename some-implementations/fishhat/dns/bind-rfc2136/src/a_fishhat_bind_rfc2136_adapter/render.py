@@ -17,6 +17,12 @@ def _data(rrset: dict[str, Any], value: dict[str, Any]) -> str:
 
 
 def render_update(change: dict[str, Any], *, zone: str) -> bytes:
+    """Compile RRset prerequisites; native revision/TTL exclusion remains external.
+
+    This source does not establish the owner epoch, native incarnation or counter
+    from expected_generation. A native executor must enforce that full identity
+    and exact TTL policy under exclusion before using this compiled update.
+    """
     validate_changes(change)
     # Validate the selected zone using the same absolute ASCII DNS-name grammar.
     from fishhat_contracts.validation import validate

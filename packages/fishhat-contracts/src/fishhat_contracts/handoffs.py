@@ -447,7 +447,7 @@ def validate_result_payload(
 def _validate_workflow_result(
     result: dict[str, Any],
     *,
-    retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None,
+    retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
     recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
 ) -> None:
     if result["kind"] == "Workflow":
@@ -472,10 +472,33 @@ def _validate_workflow_result(
         )
 
 
+def _validate_record_result(
+    result: dict[str, Any],
+    *,
+    retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
+) -> None:
+    from .record_delivery import (
+        CHUNK_BYTES,
+        validate_log_page,
+        validate_record_chunk,
+        validate_record_reference,
+    )
+
+    if result["kind"] == "RecordReference":
+        validate_record_reference(result, retained_readers=retained_readers)
+    elif result["kind"] == "RecordChunk":
+        validate_record_reference(result["reference"], retained_readers=retained_readers)
+        validate_record_chunk(
+            result, result["reference"], offset=result["offset"], length=CHUNK_BYTES
+        )
+    else:
+        validate_log_page(result, expected_owner=result["owner"], resource=result["resource"])
+
+
 def validate_cli_result(
     result: Any,
     *,
-    retained_readers: Mapping[str, Callable[[dict[str, Any]], None]] | None = None,
+    retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
     recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> None:
     """Check CLI and SSH results with the receiving owner's installed readers.
@@ -496,6 +519,10 @@ def validate_cli_result(
         from .backup_results import validate_backup_result
 
         validate_backup_result(result)
+    elif kind == "LifecycleEvidenceReference":
+        from .lifecycle import validate_lifecycle_reference
+
+        validate_lifecycle_reference(result)
     elif kind in {
         "Workflow",
         "WorkflowTransferRecord",
@@ -544,22 +571,7 @@ def validate_cli_result(
 
         validate_history_result(result, retained_readers=retained_readers)
     elif kind in ("RecordReference", "RecordChunk", "EventPage"):
-        from .record_delivery import (
-            CHUNK_BYTES,
-            validate_log_page,
-            validate_record_chunk,
-            validate_record_reference,
-        )
-
-        if kind == "RecordReference":
-            validate_record_reference(result, retained_readers=retained_readers)
-        elif kind == "RecordChunk":
-            validate_record_reference(result["reference"], retained_readers=retained_readers)
-            validate_record_chunk(
-                result, result["reference"], offset=result["offset"], length=CHUNK_BYTES
-            )
-        else:
-            validate_log_page(result, expected_owner=result["owner"], resource=result["resource"])
+        _validate_record_result(result, retained_readers=retained_readers)
     elif kind in ("OperationPage", "WorkflowPage"):
         validate("records.schema.json", result, kind)
         identities: set[str] = set()

@@ -388,7 +388,7 @@ def test_historical_schema_reader_is_installed_independently_and_remains_read_on
         validate("ssh-response.schema.json", wire("history.list", page))
         with pytest.raises(ContractError, match="schema substitution"):
             validate_history_result(page)
-        readers = {reference["schema"]["digest"]: reader}
+        readers = {(reference["schema"]["uri"], reference["schema"]["digest"]): reader}
         validate_history_result(
             page, expected_request=query, verified_custody=custody, retained_readers=readers
         )
