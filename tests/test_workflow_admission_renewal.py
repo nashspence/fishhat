@@ -1,10 +1,12 @@
 """Unused permits can advance protection without turning accepted work into a retry."""
 
+import json
 from copy import deepcopy
 
 import pytest
 from fishhat_contracts.validation import ContractError, digest
 
+from tests.linear_support import assert_linear
 from tests.workflow_journal_support import (
     DRIVER,
     LogicalWorkload,
@@ -23,6 +25,23 @@ CHECK_PURPOSE = {
     "relationship": "candidate",
     "reason": "Real journal persistence and independently retained synthetic native acceptance challenge renewal safety and liveness; these checks do not qualify a production native fence.",
     "claims": [],
+}
+
+
+CHECK_OVERRIDES = {
+    "test_unused_permit_renewal_history_is_linear": {
+        **CHECK_PURPOSE,
+        "purpose": "implementation",
+        "authority": [
+            "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py#dispatch_journal_command",
+            "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py#NativeWorkflowContext.renew_admission",
+            "release.toml#/engineering",
+        ],
+        "scope": "complete repeated permit-renewal histories, original-result reads, staged lost-reply replay and final native acceptance",
+        "relationship": "scoped-witness",
+        "reason": "All actual wire, serialization, signature, durable journal and native index work is measured across sixteenfold retained-history and background local-child growth. Setup is outside this selected operation; the complete workflow keeps its separate aggregate proof. Synthetic native facts do not qualify a production fence.",
+        "claims": ["engineering:workflow.journal.submit"],
+    }
 }
 
 
@@ -153,3 +172,33 @@ def test_renewal_failed_journal_write_keeps_native_predecessor_closed(tmp_path, 
             assert len(run.native[0].retired_permits) == 1
         finally:
             run.close()
+
+
+def test_unused_permit_renewal_history_is_linear(tmp_path):
+    samples = []
+    for count in (2, 8, 32):
+        meter = WorkMeter()
+        with meter.account():
+            run = WorkflowRun(tmp_path / str(count), LogicalWorkload(children=count), meter)
+            try:
+                previous = permit(run)
+                original = previous
+                before = meter.values.copy()
+                for _ in range(count):
+                    previous = run.members[0].submit(renewal(run, previous), lost_reply=True)
+                submission = run.native_submission(0, 0)
+                accepted = run.submit_native(0, submission)
+                assert run.submit_native(0, submission) == accepted
+                assert len(run.native[0].admissions) == 1
+                assert len(run.native[0].retired_permits) == count
+                assert run.members[0].read(original["id"]) == original
+                assert run.members[0].read(previous["id"]) == previous
+                work = meter.values - before
+                assert work["native_renewal_index_visits"] == count
+                assert work["lost_reply_replays"] == count
+                assert work["bytes_written"] > 0 and work["wire_bytes"] > 0
+                samples.append((count, work))
+            finally:
+                run.close()
+    (tmp_path / "renewal-work.json").write_text(json.dumps(samples, indent=2) + "\n")
+    assert_linear(samples)

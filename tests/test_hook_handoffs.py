@@ -288,5 +288,13 @@ def test_nonrestore_hook_paths_cannot_hide_aliases_in_noncanonical_spelling(fiel
         value["dataset_handles"]["state"]["path"] = path
     else:
         value["secret_paths"]["credential"] = path
-    with pytest.raises(ContractError, match="noncanonical hook path"):
+    location = {
+        "output": "output_directory",
+        "dataset": "dataset_handles/state/path",
+        "secret": "secret_paths/credential",
+    }[field]
+    with pytest.raises(
+        ContractError,
+        match=rf"^schema hook-request\.schema\.json rejected input at {location}$",
+    ):
         validate_hook_request(value)

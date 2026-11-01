@@ -14700,6 +14700,10 @@
       "purpose_sha256": "ae6d9b7e9b172c6107c5e1ce9c087ad4b9eceb0ab9f2caacfa87eab432acf394"
     },
     {
+      "node": "tests/test_workflow_admission_renewal.py::test_unused_permit_renewal_history_is_linear",
+      "purpose_sha256": "039e6c565a747ad424f4e332c064702c407341146812f8f7e21cd6d9f478517b"
+    },
+    {
       "node": "tests/test_workflow_admission_renewal.py::test_unused_permit_renews_after_refresh_or_completed_transfer[refresh]",
       "purpose_sha256": "ae6d9b7e9b172c6107c5e1ce9c087ad4b9eceb0ab9f2caacfa87eab432acf394"
     },

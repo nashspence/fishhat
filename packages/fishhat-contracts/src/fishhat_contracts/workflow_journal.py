@@ -105,6 +105,11 @@ def _recovery_digest(context: RecoveryContext | None) -> str | None:
 
 
 def _declaration(name: str, work: str) -> Bounds:
+    additional_proofs = (
+        ("tests/test_workflow_admission_renewal.py::test_unused_permit_renewal_history_is_linear",)
+        if name == "submit"
+        else ()
+    )
     return Bounds(
         id="workflow.journal." + name,
         work=work,
@@ -115,9 +120,11 @@ def _declaration(name: str, work: str) -> Bounds:
         ),
         proofs=(
             "tests/test_workflow_journal.py::test_complete_workflow_survives_disk_restart_and_lost_replies",
+            *additional_proofs,
         ),
         linear_proofs=(
             "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear",
+            *additional_proofs,
         ),
     )
 

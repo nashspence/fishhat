@@ -569,7 +569,7 @@ def test_gate_recovery_recertifies_missed_terminal_abandonment(tmp_path):
 
 def test_gate_recovery_growth_counts_complete_owner_closure(tmp_path):
     samples = []
-    for owners in (1, 4, 12):
+    for owners in (1, 4, 16):
         meter = WorkMeter()
         with meter.account():
             run = WorkflowRun(
@@ -600,7 +600,7 @@ def test_gate_recovery_growth_counts_complete_owner_closure(tmp_path):
         first_count, first = samples[0]
         assert first[metric] > 0
         for count, values in samples[1:]:
-            assert values[metric] * first_count <= first[metric] * count * 1.5, (metric, samples)
+            assert values[metric] * first_count <= first[metric] * count * 1.25, (metric, samples)
 
 
 def test_member_epoch_restore_preserves_a_prior_gate_reapproval(tmp_path):
