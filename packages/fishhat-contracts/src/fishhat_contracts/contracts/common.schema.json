@@ -39,13 +39,15 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 240,
-      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*(?![\\s\\S])"
+      "pattern": "^(?!(?:\\.|\\.\\.)(?:/|(?![\\s\\S])))[^/\\\\\\u0000-\\u001f]+(?:/(?!(?:\\.|\\.\\.)(?:/|(?![\\s\\S])))[^/\\\\\\u0000-\\u001f]+)*(?![\\s\\S])",
+      "description": "Canonical nonempty relative path with nonempty slash-separated segments. Dot and parent segments, backslashes and C0 controls are rejected. Other Unicode scalars, including line separators inside ordinary names, do not change segment or end-of-input matching."
     },
     "AbsolutePath": {
       "type": "string",
       "minLength": 2,
       "maxLength": 512,
-      "pattern": "^/(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*[\\u0000-\\u001f\\\\])[^\\n]+(?![\\s\\S])"
+      "pattern": "^/(?!(?:\\.|\\.\\.)(?:/|(?![\\s\\S])))[^/\\\\\\u0000-\\u001f]+(?:/(?!(?:\\.|\\.\\.)(?:/|(?![\\s\\S])))[^/\\\\\\u0000-\\u001f]+)*(?![\\s\\S])",
+      "description": "Canonical absolute path below the filesystem root with nonempty slash-separated segments. Dot and parent segments, repeated or trailing slashes, backslashes and C0 controls are rejected. Other Unicode scalars do not change segment or end-of-input matching."
     },
     "Commit": {
       "type": "string",
@@ -203,7 +205,7 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 240,
-          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*[\\\\\\u0000-\\u001f])[^/]+(?:/[^/]+)*(?![\\s\\S])"
+          "pattern": "^(?!(?:\\.|\\.\\.)(?:/|(?![\\s\\S])))[^/\\\\\\u0000-\\u001f]+(?:/(?!(?:\\.|\\.\\.)(?:/|(?![\\s\\S])))[^/\\\\\\u0000-\\u001f]+)*(?![\\s\\S])"
         },
         "closure_digest": {
           "type": "string",
@@ -403,11 +405,11 @@
       "type": "string",
       "minLength": 11,
       "maxLength": 240,
-      "pattern": "^refs/(heads|tags)/[^\\s]+(?![\\s\\S])",
+      "pattern": "^refs/(heads|tags)/[^\\u0000-\\u0020\\u007f\\u0085\\u00a0\\u1680\\u2000-\\u200a\\u2028\\u2029\\u202f\\u205f\\u3000\\ufeff]+(?![\\s\\S])",
       "not": {
-        "pattern": "(^|/)\\.|\\.\\.|@\\{|//|\\.lock(/|$)|[\\u0000-\\u0020\\u007f~^:?*\\[\\\\]|[./]$"
+        "pattern": "(^|/)\\.|\\.\\.|@\\{|//|\\.lock(/|(?![\\s\\S]))|[\\u0000-\\u0020\\u007f~^:?*\\[\\\\]|[./](?![\\s\\S])"
       },
-      "description": "A literal full Git branch or tag reference. Source selection and independent source recovery use the same grammar and bound; revision expressions, malformed path components and ref metacharacters are rejected. The exact commit remains separately pinned."
+      "description": "A literal full Git branch or tag reference. Source selection and independent source recovery use the same grammar and bound; revision expressions, malformed path components and ref metacharacters are rejected. Whitespace rejection is a fixed scalar set shared by Python and ECMAScript-u: U+0000 through U+0020, U+007F, U+0085, U+00A0, U+1680, U+2000 through U+200A, U+2028, U+2029, U+202F, U+205F, U+3000 and U+FEFF. It does not depend on an engine Unicode whitespace category. The exact commit remains separately pinned."
     },
     "RecordReference": {
       "type": "object",

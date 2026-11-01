@@ -165,6 +165,7 @@ class WorkMeter:
             if module not in {
                 "fishhat_contracts.workflow_journal",
                 "fishhat_contracts.workflow_journal_recovery",
+                "fishhat_contracts.workflow_gate_recovery",
                 "fishhat_contracts.workflow_journal_delivery",
                 "fishhat_contracts.workflow_bindings",
                 "fishhat_contracts.workflows",
@@ -562,8 +563,13 @@ class NativeOwner:
         self.retired = False
         self.successor = None
         self.dispositions = {}
+        self.abandonments = {}
+        self.abandoned = set()
         self.denied_principals = set()
         self.paused = False
+        self.retired_permits = {}
+        self.gate_recovery_enrollments = {}
+        self.gate_reapprovals = {}
         self._allowed_children = {
             child_key(workload.child(index, slot)): slot for slot in range(workload.children)
         }
@@ -607,6 +613,16 @@ class NativeOwner:
             self.dispositions[outcome["successor_workflow_id"]] = outcome
         elif action == "lifecycle":
             self.paused = outcome["admission_closed"]
+        elif action == "renew-admission":
+            self.retired_permits[outcome["previous_permit_id"]] = outcome
+        elif action == "gate-reapproval":
+            self.retired = True
+            self.gate_reapprovals[outcome["authority_digest"]] = outcome
+        elif action == "abandon":
+            self.abandonments[outcome["successor_workflow_id"]] = outcome
+        elif action == "observe-abandon":
+            self.abandoned.add(outcome["successor_workflow_id"])
+            self.successor = None
         else:
             raise ContractError("unknown protected synthetic native event")
 
@@ -761,6 +777,54 @@ class NativeOwner:
         review = self._review_context(context["request"], context["child"])
         return review
 
+    def renew_admission(self, context):
+        with self._native_lock:
+            child = context["child"]
+            key = child_key(child)
+            require(
+                context["owner"] == self.owner
+                and key in self._allowed_children
+                and key not in self.admissions,
+                "native positive unaccepted proof unavailable",
+            )
+            self.meter.values["native_renewal_index_visits"] += 1
+            previous = context["previous_permit"]
+            result = {
+                "owner": self.owner,
+                "workflow_id": context["workflow_id"],
+                "child": child,
+                "previous_permit_id": previous["id"],
+                "previous_permit_digest": digest(previous),
+                "native_generation": self.resource_generation,
+                "unaccepted": True,
+                "previous_permit_closed": True,
+            }
+            self._append("native-renew-" + previous["id"], "renew-admission", result)
+            return deepcopy(result)
+
+    def approve_gate_recovery(self, context):
+        authority = context["authority"]
+        identity = digest(authority)
+        require(
+            self.gate_recovery_enrollments.get(identity) == context
+            and self.prepared is not None
+            and self.prepared["workflow_id"] == context["workflow_id"],
+            "native gate recovery was not independently approved",
+        )
+        self.meter.values["native_gate_reapproval_visits"] += 1
+        result = {
+            "owner": self.owner,
+            "workflow_id": context["workflow_id"],
+            "authority_digest": identity,
+            "grant_id": context["grant_id"],
+            "previous_authority_digest": context["previous_authority_digest"],
+            "native_generation": self.resource_generation,
+            "original_admission_closed": True,
+            "custody_preserved": True,
+        }
+        self._append("native-gate-reapproval-" + identity, "gate-reapproval", result)
+        return deepcopy(result)
+
     def submit_native(self, submission, member, *, principal):
         child = {"owner": submission["owner"], "request_id": submission["request_id"]}
         key = child_key(child)
@@ -771,16 +835,19 @@ class NativeOwner:
             require(accepted["submission"] == submission, "native request changed accepted input")
             self.meter.values["native_exact_replays"] += 1
             return deepcopy(accepted["operation"])
-        with member.operation_admission_guard(submission, principal=principal):
+        with member.operation_admission_guard(submission, principal=principal) as permit:
             with self._native_lock:
-                return self._accept_native(submission, member, principal, child, key)
+                return self._accept_native(submission, member, principal, child, key, permit)
 
-    def _accept_native(self, submission, member, principal, child, key):
+    def _accept_native(self, submission, member, principal, child, key, permit):
         accepted = self.admissions.get(key)
         if accepted is not None:
             require(accepted["submission"] == submission, "native request changed accepted input")
             self.meter.values["native_exact_replays"] += 1
             return deepcopy(accepted["operation"])
+        require(
+            permit["id"] not in self.retired_permits, "native admission permit permanently closed"
+        )
         require(
             not self.retired and not self.paused and key in self.bindings,
             "native original admission unavailable",
@@ -1005,7 +1072,8 @@ class NativeOwner:
         recovery = projection["recovery"]
         successor_id = recovery["successor_workflow_id"]
         require(
-            self.successor in {None, successor_id}, "native different successor already reserved"
+            successor_id not in self.abandoned and self.successor in {None, successor_id},
+            "native successor abandoned or different successor already reserved",
         )
         if successor_id in self.dispositions:
             return deepcopy(self.dispositions[successor_id])
@@ -1081,6 +1149,50 @@ class NativeOwner:
             self.meter.read_material(self.root / "source.material")
             == self.workload.material(self.index),
             "native retained recovery material lost",
+        )
+
+    def abandon_recovery(self, projection, proposal):
+        recovery = projection["recovery"]
+        successor = recovery["successor_workflow_id"]
+        require(
+            self.successor == successor
+            and proposal["recovery"] == recovery
+            and all(
+                item["operation"]["witness"]["workflow_id"] != successor
+                for item in self.admissions.values()
+            ),
+            "native successor used or exact reservation unavailable",
+        )
+        facts = {
+            **{
+                name: recovery[name]
+                for name in (
+                    "origin_workflow_id",
+                    "successor_workflow_id",
+                    "successor_proposal_digest",
+                )
+            },
+            "unused": True,
+            "successor_admission_closed": True,
+            "native_stopped": True,
+            "custody_digest": self.store.head,
+        }
+        self._append("native-abandon-" + successor, "abandon", facts)
+        return deepcopy(facts)
+
+    def observe_abandonment(self, projection, facts, certificate):
+        successor = projection["recovery"]["successor_workflow_id"]
+        require(
+            self.abandonments.get(successor) == facts
+            and certificate["body"]["recovery"] == projection["recovery"],
+            "native abandonment closure changed",
+        )
+        self._append(
+            "native-observe-abandon-" + successor,
+            "observe-abandon",
+            {
+                "successor_workflow_id": successor,
+            },
         )
 
     def close(self):

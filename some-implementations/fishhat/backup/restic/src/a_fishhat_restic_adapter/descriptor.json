@@ -46,7 +46,7 @@
     "backup": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/backup-adapter.schema.json",
-        "digest": "sha256:2d2b78a61b9ae6bf750c2857685ba6a94bec50eb0e72d157d8af713ba36e561b"
+        "digest": "sha256:26f36b801bd1f71f51ddd0979431cbab8cf9a1b3b52c7c20cc6bd5295f8c18a9"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/backup-adapter.schema.json#/$defs/Response",

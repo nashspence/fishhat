@@ -812,6 +812,46 @@
       "purpose_sha256": "8a7ee0ee2bda925ffc5e2d1c957cf9be26b01bcbc270fdeb95e59041d2c5af52"
     },
     {
+      "node": "tests/test_adapter_commit_growth.py::test_adapter_commit_history_linear_work[attempts]",
+      "purpose_sha256": "2a5e9b4416b2cfa4340fa2bc4c4d2c0f1e53ca63c4dd861b1c910870ed25232d"
+    },
+    {
+      "node": "tests/test_adapter_commit_growth.py::test_adapter_commit_history_linear_work[observations]",
+      "purpose_sha256": "2a5e9b4416b2cfa4340fa2bc4c4d2c0f1e53ca63c4dd861b1c910870ed25232d"
+    },
+    {
+      "node": "tests/test_adapter_commit_growth.py::test_delta_receiver_reconstructs_exact_custody_before_dispatch_and_after_settlement",
+      "purpose_sha256": "da85331f4abdd18fc7a9a50b452567cda53f5a5e5d45ebb110a1f49b96d87a2c"
+    },
+    {
+      "node": "tests/test_adapter_commit_growth.py::test_failed_delta_acknowledgment_preserves_recoverable_exact_work[before-write]",
+      "purpose_sha256": "da85331f4abdd18fc7a9a50b452567cda53f5a5e5d45ebb110a1f49b96d87a2c"
+    },
+    {
+      "node": "tests/test_adapter_commit_growth.py::test_failed_delta_acknowledgment_preserves_recoverable_exact_work[lost-ack]",
+      "purpose_sha256": "da85331f4abdd18fc7a9a50b452567cda53f5a5e5d45ebb110a1f49b96d87a2c"
+    },
+    {
+      "node": "tests/test_adapter_commit_growth.py::test_interrupted_delta_acknowledgment_also_poisons_dispatch",
+      "purpose_sha256": "da85331f4abdd18fc7a9a50b452567cda53f5a5e5d45ebb110a1f49b96d87a2c"
+    },
+    {
+      "node": "tests/test_adapter_commit_growth.py::test_one_observation_appends_only_new_response_history",
+      "purpose_sha256": "da85331f4abdd18fc7a9a50b452567cda53f5a5e5d45ebb110a1f49b96d87a2c"
+    },
+    {
+      "node": "tests/test_adapter_commit_growth.py::test_ordinary_updates_do_not_traverse_retained_collections",
+      "purpose_sha256": "da85331f4abdd18fc7a9a50b452567cda53f5a5e5d45ebb110a1f49b96d87a2c"
+    },
+    {
+      "node": "tests/test_adapter_commit_growth.py::test_restored_indexes_preserve_effect_retry_and_pending_scope_rules",
+      "purpose_sha256": "da85331f4abdd18fc7a9a50b452567cda53f5a5e5d45ebb110a1f49b96d87a2c"
+    },
+    {
+      "node": "tests/test_adapter_commit_growth.py::test_stale_checkpoint_cannot_replace_newer_committed_work",
+      "purpose_sha256": "da85331f4abdd18fc7a9a50b452567cda53f5a5e5d45ebb110a1f49b96d87a2c"
+    },
+    {
       "node": "tests/test_adapter_contracts.py::test_adapter_health_result_does_not_stand_in_for_check_capability",
       "purpose_sha256": "0ae2eef45a94a5c7d6f0b15292209cf1b2c7700867eebddbb907826436ffff3c"
     },
@@ -5456,6 +5496,430 @@
       "purpose_sha256": "c38cc11e69cd15bf02fc216f465a00d893386464d62f68f497258aeece7cf916"
     },
     {
+      "node": "tests/test_core_regex.py::test_bootstrap_consumers_use_the_frozen_ref_whitespace_policy",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[AbsolutePath-backslash]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[AbsolutePath-dot]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[AbsolutePath-emoji]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[AbsolutePath-empty-segment]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[AbsolutePath-empty]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[AbsolutePath-line-separator-control]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[AbsolutePath-line-separator-empty]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[AbsolutePath-line-separator-name]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[AbsolutePath-line-separator-parent]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[AbsolutePath-maximum]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[AbsolutePath-nested-dot]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[AbsolutePath-nested-parent]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[AbsolutePath-nested]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[AbsolutePath-newline]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[AbsolutePath-nul]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[AbsolutePath-ordinary-dot]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[AbsolutePath-ordinary-dots]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[AbsolutePath-oversized]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[AbsolutePath-paragraph-separator-backslash]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[AbsolutePath-paragraph-separator-dot]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[AbsolutePath-paragraph-separator-name]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[AbsolutePath-parent]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[AbsolutePath-simple]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[AbsolutePath-space-name]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[AbsolutePath-trailing-slash]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[AbsolutePath-unicode]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[AbsolutePath-wrong-root]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-abbreviated]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-backslash]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-branch]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-colon]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-empty-segment]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-empty]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-excluded-U0000]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-excluded-U0009]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-excluded-U000A]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-excluded-U000D]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-excluded-U001C]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-excluded-U001F]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-excluded-U0020]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-excluded-U007F]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-excluded-U0085]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-excluded-U00A0]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-excluded-U1680]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-excluded-U2000]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-excluded-U2001]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-excluded-U2002]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-excluded-U2003]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-excluded-U2004]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-excluded-U2005]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-excluded-U2006]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-excluded-U2007]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-excluded-U2008]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-excluded-U2009]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-excluded-U200A]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-excluded-U2028]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-excluded-U2029]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-excluded-U202F]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-excluded-U205F]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-excluded-U3000]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-excluded-UFEFF]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-hidden]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-line-before-lock]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-lock]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-maximum]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-nested-hidden]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-nested-lock]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-nested]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-ordinary-nonspace-control]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-oversized]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-parent]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-reflog]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-tag]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-trailing-dot]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-trailing-slash]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-unicode]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-wildcard]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[GitRef-zero-width-space]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[RelativePath-backslash]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[RelativePath-dot]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[RelativePath-emoji]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[RelativePath-empty-segment]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[RelativePath-empty]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[RelativePath-line-separator-control]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[RelativePath-line-separator-empty]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[RelativePath-line-separator-name]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[RelativePath-line-separator-parent]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[RelativePath-maximum]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[RelativePath-nested-dot]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[RelativePath-nested-parent]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[RelativePath-nested]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[RelativePath-newline]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[RelativePath-nul]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[RelativePath-ordinary-dot]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[RelativePath-ordinary-dots]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[RelativePath-oversized]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[RelativePath-paragraph-separator-backslash]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[RelativePath-paragraph-separator-dot]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[RelativePath-paragraph-separator-name]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[RelativePath-parent]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[RelativePath-simple]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[RelativePath-space-name]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[RelativePath-trailing-slash]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[RelativePath-unicode]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
+      "node": "tests/test_core_regex.py::test_core_string_grammar_has_explicit_expected_language[RelativePath-wrong-root]",
+      "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
+    },
+    {
       "node": "tests/test_dataset_contracts.py::test_ambiguous_dataset_fields_are_rejected[kind-owned]",
       "purpose_sha256": "ca8446e164090f11e4ea32dad59c0e725d6a2b9d041cee222471d562a4319e6f"
     },
@@ -6518,6 +6982,98 @@
     {
       "node": "tests/test_git_sessions.py::GitWorkspaceTests::test_fetch_preserves_dirty_head_and_untracked",
       "purpose_sha256": "4e0bee7abee6ed91528a7292d009f6beef194391788e8b56bc217068d2afc64e"
+    },
+    {
+      "node": "tests/test_historical_journal.py::test_complete_historical_journal_delivery_is_linear",
+      "purpose_sha256": "d92140d619943698e6d2b29c7823ec9c94403b8d6f7c1b07a59234bf69cfa177"
+    },
+    {
+      "node": "tests/test_historical_journal.py::test_empty_filtered_window_continues_and_every_chunk_rechecks_current_permission",
+      "purpose_sha256": "766ca1e2e9c9761ec93240e4bf99980b629128d4cc5320963f5019ab92232f70"
+    },
+    {
+      "node": "tests/test_historical_journal.py::test_fresh_restored_client_discovers_journal_and_original_commands_without_saved_ids",
+      "purpose_sha256": "766ca1e2e9c9761ec93240e4bf99980b629128d4cc5320963f5019ab92232f70"
+    },
+    {
+      "node": "tests/test_historical_journal.py::test_historical_command_reader_is_independent_and_preserves_original_schema",
+      "purpose_sha256": "766ca1e2e9c9761ec93240e4bf99980b629128d4cc5320963f5019ab92232f70"
+    },
+    {
+      "node": "tests/test_historical_journal.py::test_historical_cursor_cannot_rebind_scope_or_survive_a_different_receiver[current-epoch]",
+      "purpose_sha256": "766ca1e2e9c9761ec93240e4bf99980b629128d4cc5320963f5019ab92232f70"
+    },
+    {
+      "node": "tests/test_historical_journal.py::test_historical_cursor_cannot_rebind_scope_or_survive_a_different_receiver[custody]",
+      "purpose_sha256": "766ca1e2e9c9761ec93240e4bf99980b629128d4cc5320963f5019ab92232f70"
+    },
+    {
+      "node": "tests/test_historical_journal.py::test_historical_cursor_cannot_rebind_scope_or_survive_a_different_receiver[limit]",
+      "purpose_sha256": "766ca1e2e9c9761ec93240e4bf99980b629128d4cc5320963f5019ab92232f70"
+    },
+    {
+      "node": "tests/test_historical_journal.py::test_historical_cursor_cannot_rebind_scope_or_survive_a_different_receiver[principal]",
+      "purpose_sha256": "766ca1e2e9c9761ec93240e4bf99980b629128d4cc5320963f5019ab92232f70"
+    },
+    {
+      "node": "tests/test_historical_journal.py::test_historical_cursor_cannot_rebind_scope_or_survive_a_different_receiver[restart]",
+      "purpose_sha256": "766ca1e2e9c9761ec93240e4bf99980b629128d4cc5320963f5019ab92232f70"
+    },
+    {
+      "node": "tests/test_historical_journal.py::test_historical_cursor_cannot_rebind_scope_or_survive_a_different_receiver[scope]",
+      "purpose_sha256": "766ca1e2e9c9761ec93240e4bf99980b629128d4cc5320963f5019ab92232f70"
+    },
+    {
+      "node": "tests/test_historical_journal.py::test_historical_input_rejects_substitution_and_never_rebinds_original_bytes[digest]",
+      "purpose_sha256": "766ca1e2e9c9761ec93240e4bf99980b629128d4cc5320963f5019ab92232f70"
+    },
+    {
+      "node": "tests/test_historical_journal.py::test_historical_input_rejects_substitution_and_never_rebinds_original_bytes[handle]",
+      "purpose_sha256": "766ca1e2e9c9761ec93240e4bf99980b629128d4cc5320963f5019ab92232f70"
+    },
+    {
+      "node": "tests/test_historical_journal.py::test_historical_input_rejects_substitution_and_never_rebinds_original_bytes[noncanonical]",
+      "purpose_sha256": "766ca1e2e9c9761ec93240e4bf99980b629128d4cc5320963f5019ab92232f70"
+    },
+    {
+      "node": "tests/test_historical_journal.py::test_historical_input_rejects_substitution_and_never_rebinds_original_bytes[origin]",
+      "purpose_sha256": "766ca1e2e9c9761ec93240e4bf99980b629128d4cc5320963f5019ab92232f70"
+    },
+    {
+      "node": "tests/test_historical_journal.py::test_historical_input_rejects_substitution_and_never_rebinds_original_bytes[reference]",
+      "purpose_sha256": "766ca1e2e9c9761ec93240e4bf99980b629128d4cc5320963f5019ab92232f70"
+    },
+    {
+      "node": "tests/test_historical_journal.py::test_historical_input_rejects_substitution_and_never_rebinds_original_bytes[schema]",
+      "purpose_sha256": "766ca1e2e9c9761ec93240e4bf99980b629128d4cc5320963f5019ab92232f70"
+    },
+    {
+      "node": "tests/test_historical_journal.py::test_historical_input_rejects_substitution_and_never_rebinds_original_bytes[truncated]",
+      "purpose_sha256": "766ca1e2e9c9761ec93240e4bf99980b629128d4cc5320963f5019ab92232f70"
+    },
+    {
+      "node": "tests/test_historical_journal.py::test_historical_input_rejects_substitution_and_never_rebinds_original_bytes[workflow]",
+      "purpose_sha256": "766ca1e2e9c9761ec93240e4bf99980b629128d4cc5320963f5019ab92232f70"
+    },
+    {
+      "node": "tests/test_historical_journal.py::test_historical_journal_identity_includes_workflow_when_command_ids_coincide",
+      "purpose_sha256": "766ca1e2e9c9761ec93240e4bf99980b629128d4cc5320963f5019ab92232f70"
+    },
+    {
+      "node": "tests/test_historical_journal.py::test_historical_pages_have_no_total_event_cap_and_pin_stable_high_water",
+      "purpose_sha256": "766ca1e2e9c9761ec93240e4bf99980b629128d4cc5320963f5019ab92232f70"
+    },
+    {
+      "node": "tests/test_historical_journal.py::test_journal_history_requires_complete_events_and_exact_workflow_scope",
+      "purpose_sha256": "766ca1e2e9c9761ec93240e4bf99980b629128d4cc5320963f5019ab92232f70"
+    },
+    {
+      "node": "tests/test_historical_journal.py::test_live_journal_delivery_keeps_same_command_ids_in_distinct_workflows",
+      "purpose_sha256": "d8eb3470d1bb64be450047f873ea898e4da2d46dfaf6e68fbd093dedf21a3f54"
+    },
+    {
+      "node": "tests/test_historical_journal.py::test_original_command_schema_survives_live_lookup_and_historical_registration",
+      "purpose_sha256": "766ca1e2e9c9761ec93240e4bf99980b629128d4cc5320963f5019ab92232f70"
     },
     {
       "node": "tests/test_hook_handoffs.py::test_consistent_new_input_cannot_replace_retained_restore_selection[artifact]",
@@ -8825,6 +9381,10 @@
     },
     {
       "node": "tests/test_owner_history.py::test_direct_owner_history_and_binding_commands_use_closed_stdin[history.content]",
+      "purpose_sha256": "7c53fb0b00b07f505c1a2e3f844d34b2930ff12963a05bcdc3caf54c95bc2e39"
+    },
+    {
+      "node": "tests/test_owner_history.py::test_direct_owner_history_and_binding_commands_use_closed_stdin[history.input]",
       "purpose_sha256": "7c53fb0b00b07f505c1a2e3f844d34b2930ff12963a05bcdc3caf54c95bc2e39"
     },
     {
@@ -14124,6 +14684,30 @@
       "purpose_sha256": "751c6de7ac0b3a86b12bed8e43468217d5088d64f7c265086c4bea15974d14b0"
     },
     {
+      "node": "tests/test_workflow_admission_renewal.py::test_renewal_cas_rejects_substitution_and_preserves_lost_reply",
+      "purpose_sha256": "ae6d9b7e9b172c6107c5e1ce9c087ad4b9eceb0ab9f2caacfa87eab432acf394"
+    },
+    {
+      "node": "tests/test_workflow_admission_renewal.py::test_renewal_failed_journal_write_keeps_native_predecessor_closed",
+      "purpose_sha256": "ae6d9b7e9b172c6107c5e1ce9c087ad4b9eceb0ab9f2caacfa87eab432acf394"
+    },
+    {
+      "node": "tests/test_workflow_admission_renewal.py::test_renewal_never_reexecutes_an_accepted_native_operation[reported]",
+      "purpose_sha256": "ae6d9b7e9b172c6107c5e1ce9c087ad4b9eceb0ab9f2caacfa87eab432acf394"
+    },
+    {
+      "node": "tests/test_workflow_admission_renewal.py::test_renewal_never_reexecutes_an_accepted_native_operation[unreported]",
+      "purpose_sha256": "ae6d9b7e9b172c6107c5e1ce9c087ad4b9eceb0ab9f2caacfa87eab432acf394"
+    },
+    {
+      "node": "tests/test_workflow_admission_renewal.py::test_unused_permit_renews_after_refresh_or_completed_transfer[refresh]",
+      "purpose_sha256": "ae6d9b7e9b172c6107c5e1ce9c087ad4b9eceb0ab9f2caacfa87eab432acf394"
+    },
+    {
+      "node": "tests/test_workflow_admission_renewal.py::test_unused_permit_renews_after_refresh_or_completed_transfer[transfer]",
+      "purpose_sha256": "ae6d9b7e9b172c6107c5e1ce9c087ad4b9eceb0ab9f2caacfa87eab432acf394"
+    },
+    {
       "node": "tests/test_workflow_attestations.py::test_assembly_refuses_expired_substituted_or_incomplete_proofs[duplicate-owner]",
       "purpose_sha256": "6299c87f146477d0a92317dd3c4d45fe065d6b40e42ce9959ea81f1bafb2970a"
     },
@@ -14542,6 +15126,58 @@
     {
       "node": "tests/test_workflow_evidence.py::test_signed_phase_evidence_cannot_substitute_its_exact_context[witness-subject]",
       "purpose_sha256": "359d8e20b36b6495e9acfd49f7d1a08f910b348c436f8072d0bf6919f4054ef3"
+    },
+    {
+      "node": "tests/test_workflow_gate_recovery.py::test_gate_epoch_recovery_requires_every_local_approval_and_preserves_custody",
+      "purpose_sha256": "42640bd81ecfc3a6e10a3eb18ea207c66f9e6242b8d348d9ca35a1eacae19ec2"
+    },
+    {
+      "node": "tests/test_workflow_gate_recovery.py::test_gate_recovery_cold_reopen_preserves_current_epoch_outcomes",
+      "purpose_sha256": "4fbe39fd48e544b52c4e437517b9c57be8c1637dda93c525c182b38798fa8b94"
+    },
+    {
+      "node": "tests/test_workflow_gate_recovery.py::test_gate_recovery_growth_counts_complete_owner_closure",
+      "purpose_sha256": "42640bd81ecfc3a6e10a3eb18ea207c66f9e6242b8d348d9ca35a1eacae19ec2"
+    },
+    {
+      "node": "tests/test_workflow_gate_recovery.py::test_gate_recovery_preserves_and_recertifies_an_existing_successor",
+      "purpose_sha256": "4fbe39fd48e544b52c4e437517b9c57be8c1637dda93c525c182b38798fa8b94"
+    },
+    {
+      "node": "tests/test_workflow_gate_recovery.py::test_gate_recovery_recertifies_missed_terminal_abandonment",
+      "purpose_sha256": "4fbe39fd48e544b52c4e437517b9c57be8c1637dda93c525c182b38798fa8b94"
+    },
+    {
+      "node": "tests/test_workflow_gate_recovery.py::test_gate_recovery_rejects_substituted_or_unapproved_authority[changed-custody]",
+      "purpose_sha256": "4fbe39fd48e544b52c4e437517b9c57be8c1637dda93c525c182b38798fa8b94"
+    },
+    {
+      "node": "tests/test_workflow_gate_recovery.py::test_gate_recovery_rejects_substituted_or_unapproved_authority[changed-head]",
+      "purpose_sha256": "4fbe39fd48e544b52c4e437517b9c57be8c1637dda93c525c182b38798fa8b94"
+    },
+    {
+      "node": "tests/test_workflow_gate_recovery.py::test_gate_recovery_rejects_substituted_or_unapproved_authority[missing-enrollment]",
+      "purpose_sha256": "4fbe39fd48e544b52c4e437517b9c57be8c1637dda93c525c182b38798fa8b94"
+    },
+    {
+      "node": "tests/test_workflow_gate_recovery.py::test_member_catches_up_after_missing_intermediate_recertification",
+      "purpose_sha256": "4fbe39fd48e544b52c4e437517b9c57be8c1637dda93c525c182b38798fa8b94"
+    },
+    {
+      "node": "tests/test_workflow_gate_recovery.py::test_member_epoch_restore_preserves_a_prior_gate_reapproval",
+      "purpose_sha256": "4fbe39fd48e544b52c4e437517b9c57be8c1637dda93c525c182b38798fa8b94"
+    },
+    {
+      "node": "tests/test_workflow_gate_recovery.py::test_member_skips_unapproved_gate_epoch_with_exact_local_predecessor",
+      "purpose_sha256": "4fbe39fd48e544b52c4e437517b9c57be8c1637dda93c525c182b38798fa8b94"
+    },
+    {
+      "node": "tests/test_workflow_gate_recovery.py::test_reapproval_history_uses_one_index_without_recursive_key_layers",
+      "purpose_sha256": "4fbe39fd48e544b52c4e437517b9c57be8c1637dda93c525c182b38798fa8b94"
+    },
+    {
+      "node": "tests/test_workflow_gate_recovery.py::test_repeated_gate_epoch_recovery_preserves_every_source_segment",
+      "purpose_sha256": "4fbe39fd48e544b52c4e437517b9c57be8c1637dda93c525c182b38798fa8b94"
     },
     {
       "node": "tests/test_workflow_initial_custody.py::test_initial_agreement_requires_every_exact_owner_and_retained_local_proof",

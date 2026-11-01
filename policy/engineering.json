@@ -569,6 +569,13 @@
         "native_qualified": false,
         "status": "unimplemented"
       },
+      "owner-form:history-input": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
       "owner-form:history-list": {
         "growth_proofs": [],
         "growth_requirement": "linear",
@@ -899,6 +906,13 @@
         "status": "unimplemented"
       },
       "rpc:history.content": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:history.input": {
         "growth_proofs": [],
         "growth_requirement": "linear",
         "implementation": null,
@@ -2736,12 +2750,198 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/handoffs.py": "e736fff9fb0105699c6b150414eb5679e6df6ce0a089d1ac57153acb1a300416",
+        "packages/fishhat-contracts/src/fishhat_contracts/handoffs.py": "6e2702b1a15a47f4f54582da20c060ecc35b1c52377dbf64879e886821dfd667",
         "tests/test_result_schema_admission.py": "2e89bd083a8c019f39172e2049d4cbeac262dff46facfbf6b036dc1272711211",
         "tests/test_retained_result_growth.py": "6b9ac27a2d0a04ca2e403cd8add2b194d592ab453f2c5442dd82b60c76e958d0"
       },
       "symbol": "fishhat_contracts.handoffs:validate_result_payload",
       "work": "Admission O(S + E) schema bytes and references without unfolding; payload O(B) complete bytes under a fixed admitted schema profile"
+    },
+    "history.journal.command": {
+      "capacity": [
+        "current owner retains complete verified historical record/input custody"
+      ],
+      "extent": "Every retained original event and accepted command across bounded pages and chunks, including denied scan windows and exact retries",
+      "growth": "linear",
+      "id": "history.journal.command",
+      "limits": [
+        [
+          "page_scan",
+          128
+        ],
+        [
+          "chunk_bytes",
+          196608
+        ]
+      ],
+      "linear_proofs": [
+        "tests/test_historical_journal.py::test_complete_historical_journal_delivery_is_linear"
+      ],
+      "proofs": [
+        "tests/test_historical_journal.py::test_complete_historical_journal_delivery_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/historical_journal.py": "d66032eaf4debb27783ebffb4e67d5ac3e83feac93aed23713b8e2666351efb5",
+        "tests/test_historical_journal.py": "f3e8efb391cc6df2fd49beebdcbdbff343d16b1442c3a6634eb7ea111a2fbfc1"
+      },
+      "symbol": "fishhat_contracts.historical_journal:validate_historical_journal_command",
+      "work": "O(B) complete original registration once; indexed O(page window) discovery and O(selected chunk bytes) reads without journal rescans"
+    },
+    "history.journal.content": {
+      "capacity": [
+        "current owner retains complete verified historical record/input custody"
+      ],
+      "extent": "Every retained original event and accepted command across bounded pages and chunks, including denied scan windows and exact retries",
+      "growth": "linear",
+      "id": "history.journal.content",
+      "limits": [
+        [
+          "page_scan",
+          128
+        ],
+        [
+          "chunk_bytes",
+          196608
+        ]
+      ],
+      "linear_proofs": [
+        "tests/test_historical_journal.py::test_complete_historical_journal_delivery_is_linear"
+      ],
+      "proofs": [
+        "tests/test_historical_journal.py::test_complete_historical_journal_delivery_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/historical_journal.py": "d66032eaf4debb27783ebffb4e67d5ac3e83feac93aed23713b8e2666351efb5",
+        "tests/test_historical_journal.py": "f3e8efb391cc6df2fd49beebdcbdbff343d16b1442c3a6634eb7ea111a2fbfc1"
+      },
+      "symbol": "fishhat_contracts.historical_journal:HistoricalJournalDelivery.content",
+      "work": "O(B) complete original registration once; indexed O(page window) discovery and O(selected chunk bytes) reads without journal rescans"
+    },
+    "history.journal.input": {
+      "capacity": [
+        "current owner retains complete verified historical record/input custody"
+      ],
+      "extent": "Every retained original event and accepted command across bounded pages and chunks, including denied scan windows and exact retries",
+      "growth": "linear",
+      "id": "history.journal.input",
+      "limits": [
+        [
+          "page_scan",
+          128
+        ],
+        [
+          "chunk_bytes",
+          196608
+        ]
+      ],
+      "linear_proofs": [
+        "tests/test_historical_journal.py::test_complete_historical_journal_delivery_is_linear"
+      ],
+      "proofs": [
+        "tests/test_historical_journal.py::test_complete_historical_journal_delivery_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/historical_journal.py": "d66032eaf4debb27783ebffb4e67d5ac3e83feac93aed23713b8e2666351efb5",
+        "tests/test_historical_journal.py": "f3e8efb391cc6df2fd49beebdcbdbff343d16b1442c3a6634eb7ea111a2fbfc1"
+      },
+      "symbol": "fishhat_contracts.historical_journal:HistoricalJournalDelivery.input",
+      "work": "O(B) complete original registration once; indexed O(page window) discovery and O(selected chunk bytes) reads without journal rescans"
+    },
+    "history.journal.list": {
+      "capacity": [
+        "current owner retains complete verified historical record/input custody"
+      ],
+      "extent": "Every retained original event and accepted command across bounded pages and chunks, including denied scan windows and exact retries",
+      "growth": "linear",
+      "id": "history.journal.list",
+      "limits": [
+        [
+          "page_scan",
+          128
+        ],
+        [
+          "chunk_bytes",
+          196608
+        ]
+      ],
+      "linear_proofs": [
+        "tests/test_historical_journal.py::test_complete_historical_journal_delivery_is_linear"
+      ],
+      "proofs": [
+        "tests/test_historical_journal.py::test_complete_historical_journal_delivery_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/historical_journal.py": "d66032eaf4debb27783ebffb4e67d5ac3e83feac93aed23713b8e2666351efb5",
+        "tests/test_historical_journal.py": "f3e8efb391cc6df2fd49beebdcbdbff343d16b1442c3a6634eb7ea111a2fbfc1"
+      },
+      "symbol": "fishhat_contracts.historical_journal:HistoricalJournalDelivery.list",
+      "work": "O(B) complete original registration once; indexed O(page window) discovery and O(selected chunk bytes) reads without journal rescans"
+    },
+    "history.journal.read": {
+      "capacity": [
+        "current owner retains complete verified historical record/input custody"
+      ],
+      "extent": "Every retained original event and accepted command across bounded pages and chunks, including denied scan windows and exact retries",
+      "growth": "linear",
+      "id": "history.journal.read",
+      "limits": [
+        [
+          "page_scan",
+          128
+        ],
+        [
+          "chunk_bytes",
+          196608
+        ]
+      ],
+      "linear_proofs": [
+        "tests/test_historical_journal.py::test_complete_historical_journal_delivery_is_linear"
+      ],
+      "proofs": [
+        "tests/test_historical_journal.py::test_complete_historical_journal_delivery_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/historical_journal.py": "d66032eaf4debb27783ebffb4e67d5ac3e83feac93aed23713b8e2666351efb5",
+        "tests/test_historical_journal.py": "f3e8efb391cc6df2fd49beebdcbdbff343d16b1442c3a6634eb7ea111a2fbfc1"
+      },
+      "symbol": "fishhat_contracts.historical_journal:HistoricalJournalDelivery.read",
+      "work": "O(B) complete original registration once; indexed O(page window) discovery and O(selected chunk bytes) reads without journal rescans"
+    },
+    "history.journal.register": {
+      "capacity": [
+        "current owner retains complete verified historical record/input custody"
+      ],
+      "extent": "Every retained original event and accepted command across bounded pages and chunks, including denied scan windows and exact retries",
+      "growth": "linear",
+      "id": "history.journal.register",
+      "limits": [
+        [
+          "page_scan",
+          128
+        ],
+        [
+          "chunk_bytes",
+          196608
+        ]
+      ],
+      "linear_proofs": [
+        "tests/test_historical_journal.py::test_complete_historical_journal_delivery_is_linear"
+      ],
+      "proofs": [
+        "tests/test_historical_journal.py::test_complete_historical_journal_delivery_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/historical_journal.py": "d66032eaf4debb27783ebffb4e67d5ac3e83feac93aed23713b8e2666351efb5",
+        "tests/test_historical_journal.py": "f3e8efb391cc6df2fd49beebdcbdbff343d16b1442c3a6634eb7ea111a2fbfc1"
+      },
+      "symbol": "fishhat_contracts.historical_journal:HistoricalJournalDelivery.register",
+      "work": "O(B) complete original registration once; indexed O(page window) discovery and O(selected chunk bytes) reads without journal rescans"
     },
     "hooks.require_hook_success": {
       "capacity": [
@@ -3315,6 +3515,28 @@
       },
       "symbol": "fishhat_contracts.observations:ObservationTraversal.__init__",
       "work": "O(B + N) complete admitted selection/inventory bytes and selected records"
+    },
+    "owner.adapter-commits": {
+      "capacity": [
+        "Explicit owner storage failure poisons dispatch; no history is discarded"
+      ],
+      "extent": "All exact requests and response records remain retained without history caps",
+      "growth": "linear",
+      "id": "owner.adapter-commits",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_adapter_commit_growth.py::test_adapter_commit_history_linear_work"
+      ],
+      "proofs": [
+        "tests/test_adapter_commit_growth.py::test_adapter_commit_history_linear_work"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "fishhat/owner-support/src/fishhat_owner/adapter_state.py": "12e98272768d822f9647da0da48278d11c8d63cf4b1805159f29d37ced5c26ec",
+        "tests/test_adapter_commit_growth.py": "0baa3f8e7a49359b0f0a1948816076b1e707b88a41e05c532a4b48e988366dbc"
+      },
+      "symbol": "fishhat_owner.adapter_state:AdapterCoordinator._publish",
+      "work": "O(B) changed records and affected scope identities per atomic delta; O(sum(B)) across complete prepare/dispatch/observation/retry histories"
     },
     "record-delivery.chunk": {
       "capacity": [],
@@ -3979,7 +4201,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_delivery.py": "7c6eb01fb6376b77303d99e7b0b18669a20b58826e59464334119033d153af52",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_delivery.py": "c742646ed69bd081162e9acc846061e4a9d4cfa18c1974f5029bae383f855919",
         "tests/test_workflow_journal_surface.py": "825d65d4a15acde01455b34d8c29db131945584f559733ef8bd708586bd704d7"
       },
       "symbol": "fishhat_contracts.workflow_journal_delivery:validate_journal_input_custody",
@@ -4002,7 +4224,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_delivery.py": "7c6eb01fb6376b77303d99e7b0b18669a20b58826e59464334119033d153af52",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_delivery.py": "c742646ed69bd081162e9acc846061e4a9d4cfa18c1974f5029bae383f855919",
         "tests/test_workflow_journal_surface.py": "825d65d4a15acde01455b34d8c29db131945584f559733ef8bd708586bd704d7"
       },
       "symbol": "fishhat_contracts.workflow_journal_delivery:decode_journal_command",
@@ -4025,7 +4247,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_delivery.py": "7c6eb01fb6376b77303d99e7b0b18669a20b58826e59464334119033d153af52",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_delivery.py": "c742646ed69bd081162e9acc846061e4a9d4cfa18c1974f5029bae383f855919",
         "tests/test_workflow_journal_surface.py": "825d65d4a15acde01455b34d8c29db131945584f559733ef8bd708586bd704d7"
       },
       "symbol": "fishhat_contracts.workflow_journal_delivery:WorkflowRecordDelivery.events",
@@ -4048,7 +4270,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_delivery.py": "7c6eb01fb6376b77303d99e7b0b18669a20b58826e59464334119033d153af52",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_delivery.py": "c742646ed69bd081162e9acc846061e4a9d4cfa18c1974f5029bae383f855919",
         "tests/test_workflow_journal_surface.py": "825d65d4a15acde01455b34d8c29db131945584f559733ef8bd708586bd704d7"
       },
       "symbol": "fishhat_contracts.workflow_journal_delivery:WorkflowRecordDelivery.get",
@@ -4071,7 +4293,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_delivery.py": "7c6eb01fb6376b77303d99e7b0b18669a20b58826e59464334119033d153af52",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_delivery.py": "c742646ed69bd081162e9acc846061e4a9d4cfa18c1974f5029bae383f855919",
         "tests/test_workflow_journal_surface.py": "825d65d4a15acde01455b34d8c29db131945584f559733ef8bd708586bd704d7"
       },
       "symbol": "fishhat_contracts.workflow_journal_delivery:WorkflowRecordDelivery.heads",
@@ -4094,7 +4316,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_delivery.py": "7c6eb01fb6376b77303d99e7b0b18669a20b58826e59464334119033d153af52",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_delivery.py": "c742646ed69bd081162e9acc846061e4a9d4cfa18c1974f5029bae383f855919",
         "tests/test_workflow_journal_surface.py": "825d65d4a15acde01455b34d8c29db131945584f559733ef8bd708586bd704d7"
       },
       "symbol": "fishhat_contracts.workflow_journal_delivery:WorkflowRecordDelivery.input",
@@ -4117,7 +4339,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_delivery.py": "7c6eb01fb6376b77303d99e7b0b18669a20b58826e59464334119033d153af52",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_delivery.py": "c742646ed69bd081162e9acc846061e4a9d4cfa18c1974f5029bae383f855919",
         "tests/test_workflow_journal_surface.py": "825d65d4a15acde01455b34d8c29db131945584f559733ef8bd708586bd704d7"
       },
       "symbol": "fishhat_contracts.workflow_journal_delivery:WorkflowRecordDelivery.read",
@@ -4140,7 +4362,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_delivery.py": "7c6eb01fb6376b77303d99e7b0b18669a20b58826e59464334119033d153af52",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_delivery.py": "c742646ed69bd081162e9acc846061e4a9d4cfa18c1974f5029bae383f855919",
         "tests/test_workflow_journal_surface.py": "825d65d4a15acde01455b34d8c29db131945584f559733ef8bd708586bd704d7"
       },
       "symbol": "fishhat_contracts.workflow_journal_delivery:WorkflowRecordDelivery.read_input",
@@ -4163,7 +4385,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_delivery.py": "7c6eb01fb6376b77303d99e7b0b18669a20b58826e59464334119033d153af52",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_delivery.py": "c742646ed69bd081162e9acc846061e4a9d4cfa18c1974f5029bae383f855919",
         "tests/test_workflow_journal_surface.py": "825d65d4a15acde01455b34d8c29db131945584f559733ef8bd708586bd704d7"
       },
       "symbol": "fishhat_contracts.workflow_journal_delivery:WorkflowRecordDelivery.retain",
@@ -4186,7 +4408,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "6a9442289707067b2b497f4d33a0dd4a95c10e8dca75c4dfaeb068195f3610d6",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "0eb3c9eff1fefc1a068520b9e36882f4a7abcd64e462230542555c87ae4d3cc4",
         "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
@@ -4210,7 +4432,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "6a9442289707067b2b497f4d33a0dd4a95c10e8dca75c4dfaeb068195f3610d6",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "0eb3c9eff1fefc1a068520b9e36882f4a7abcd64e462230542555c87ae4d3cc4",
         "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
@@ -4234,7 +4456,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "6a9442289707067b2b497f4d33a0dd4a95c10e8dca75c4dfaeb068195f3610d6",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "0eb3c9eff1fefc1a068520b9e36882f4a7abcd64e462230542555c87ae4d3cc4",
         "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
@@ -4258,7 +4480,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "6a9442289707067b2b497f4d33a0dd4a95c10e8dca75c4dfaeb068195f3610d6",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "0eb3c9eff1fefc1a068520b9e36882f4a7abcd64e462230542555c87ae4d3cc4",
         "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
@@ -4282,7 +4504,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "6a9442289707067b2b497f4d33a0dd4a95c10e8dca75c4dfaeb068195f3610d6",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "0eb3c9eff1fefc1a068520b9e36882f4a7abcd64e462230542555c87ae4d3cc4",
         "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
@@ -4306,7 +4528,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "6a9442289707067b2b497f4d33a0dd4a95c10e8dca75c4dfaeb068195f3610d6",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "0eb3c9eff1fefc1a068520b9e36882f4a7abcd64e462230542555c87ae4d3cc4",
         "tests/test_workflow_journal_epoch.py": "c9114c7edc2573c83cf145658fe3ab0ea0baf5b818a7d4ea0cf7941dba436dcb"
       },
       "symbol": "fishhat_contracts.workflow_journal_recovery:WorkflowRecoveryMember.__init__",
@@ -4329,7 +4551,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "6a9442289707067b2b497f4d33a0dd4a95c10e8dca75c4dfaeb068195f3610d6",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "0eb3c9eff1fefc1a068520b9e36882f4a7abcd64e462230542555c87ae4d3cc4",
         "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
@@ -4643,12 +4865,35 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "e15970184402df34022d875fe35c365a665be0b61d000468f6405c3e8fb3b389",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "62e2b699fe2c2ae54738c3ed43544dfb93c8cec3a8112f12be8657a83f8df2e3",
         "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
       "symbol": "fishhat_contracts.workflow_journal:WorkflowGate.__init__",
       "work": "O(B + N + E + H) full manifest partition and one cold journal replay"
+    },
+    "workflow.journal.gate-recover": {
+      "capacity": [
+        "Missing complete authoritative custody blocks gate replacement"
+      ],
+      "extent": "Complete original gate custody, every original participant and every retained transfer/recovery reservation; no history or owner-count cap",
+      "growth": "linear",
+      "id": "workflow.journal.gate-recover",
+      "limits": [],
+      "linear_proofs": [
+        "tests/test_workflow_gate_recovery.py::test_gate_recovery_growth_counts_complete_owner_closure"
+      ],
+      "proofs": [
+        "tests/test_workflow_gate_recovery.py::test_gate_epoch_recovery_requires_every_local_approval_and_preserves_custody",
+        "tests/test_workflow_gate_recovery.py::test_gate_recovery_growth_counts_complete_owner_closure"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_gate_recovery.py": "6a506aab001cf1c6e3581a62ed8052012338d0c10e39992f36175222a11b96fd",
+        "tests/test_workflow_gate_recovery.py": "bccda3152407e9b11abcdd16e27dd6f69ab97b53f6f0491de678a18bad9b2cd9"
+      },
+      "symbol": "fishhat_contracts.workflow_gate_recovery:WorkflowRecoveryGate.__init__",
+      "work": "O(B + N + H) one manifest partition, one pass over each qualified epoch segment and one current journal replay; each local reapproval is indexed once"
     },
     "workflow.journal.get": {
       "capacity": [
@@ -4667,7 +4912,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "e15970184402df34022d875fe35c365a665be0b61d000468f6405c3e8fb3b389",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "62e2b699fe2c2ae54738c3ed43544dfb93c8cec3a8112f12be8657a83f8df2e3",
         "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
@@ -4691,7 +4936,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "e15970184402df34022d875fe35c365a665be0b61d000468f6405c3e8fb3b389",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "62e2b699fe2c2ae54738c3ed43544dfb93c8cec3a8112f12be8657a83f8df2e3",
         "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
@@ -4715,7 +4960,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "e15970184402df34022d875fe35c365a665be0b61d000468f6405c3e8fb3b389",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "62e2b699fe2c2ae54738c3ed43544dfb93c8cec3a8112f12be8657a83f8df2e3",
         "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
@@ -4739,7 +4984,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "e15970184402df34022d875fe35c365a665be0b61d000468f6405c3e8fb3b389",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "62e2b699fe2c2ae54738c3ed43544dfb93c8cec3a8112f12be8657a83f8df2e3",
         "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
@@ -4763,7 +5008,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "e15970184402df34022d875fe35c365a665be0b61d000468f6405c3e8fb3b389",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "62e2b699fe2c2ae54738c3ed43544dfb93c8cec3a8112f12be8657a83f8df2e3",
         "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
@@ -4787,7 +5032,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "e15970184402df34022d875fe35c365a665be0b61d000468f6405c3e8fb3b389",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "62e2b699fe2c2ae54738c3ed43544dfb93c8cec3a8112f12be8657a83f8df2e3",
         "tests/test_workflow_journal.py": "fc27e34abe686f8404ff725d764aa2de36dd99c2e93c28c62bafe11c4961e971",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },

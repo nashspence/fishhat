@@ -7,6 +7,7 @@ import pytest
 from fishhat_contracts.validation import ContractError, digest
 from fishhat_owner.adapter_state import AdapterCoordinator
 
+from tests.adapter_commit_support import CommitStore
 from tests.adapter_support import (
     OWNER,
     binding,
@@ -99,7 +100,7 @@ def test_dispatch_commits_unknown_before_releasing_native_attempt():
     c, commits = coordinator()
     attempt = prepare(c)
     returned = c.dispatch("demo", attempt["attempt_id"])
-    assert commits[-1]["attempts"][attempt["attempt_id"]] == returned["attempt"]
+    assert commits[-1]["updates"]["attempts"][attempt["attempt_id"]] == returned["attempt"]
     assert returned["attempt"]["certainty"] == "unknown"
     with pytest.raises(ContractError, match="RECONCILE_REQUIRED"):
         c.dispatch("demo", attempt["attempt_id"])
@@ -112,7 +113,7 @@ def test_failed_commit_makes_owner_stop_dispatching():
     def fail(_):
         raise OSError("synthetic disk failure")
 
-    c.commit = fail
+    c.commit_delta = fail
     with pytest.raises(OSError):
         c.dispatch("demo", attempt["attempt_id"])
     with pytest.raises(ContractError, match="OWNER_COMMIT_UNCERTAIN"):
@@ -195,13 +196,21 @@ def test_incomplete_or_stale_observation_never_proves_cessation(field, value):
 
 
 def test_retained_state_preserves_uncertainty_and_restores_under_hold(tmp_path):
-    state = tmp_path / "owner-record.json"
-    c, _ = coordinator(lambda value: state.write_text(json.dumps(value)))
+    state = tmp_path / "owner-commits.jsonl"
+
+    def persist(value):
+        with state.open("a") as output:
+            output.write(json.dumps(value) + "\n")
+
+    c, _ = coordinator(persist)
     attempt = prepare(c)
     c.dispatch("demo", attempt["attempt_id"])
     registry, _, _ = runtime_registry()
-    recovered = AdapterCoordinator(OWNER, registry, lambda value: None)
-    recovered.restore(json.loads(state.read_text()))
+    store = CommitStore(OWNER)
+    for record in state.read_text().splitlines():
+        store(json.loads(record))
+    recovered = AdapterCoordinator(OWNER, registry, store)
+    recovered.restore(store.snapshot())
     assert recovered.snapshot()["admission"]["demo"] is False
     assert recovered.snapshot()["attempts"][attempt["attempt_id"]]["certainty"] == "unknown"
     with pytest.raises(ContractError, match="ADMISSION_CLOSED"):

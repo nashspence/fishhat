@@ -53,7 +53,7 @@
     "report": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/report-adapter.schema.json",
-        "digest": "sha256:050ab843c1a31bbe154fe78d4ab880e9702f42b2bbe0b3e4a1e8abb1cfd331c4"
+        "digest": "sha256:846bce6f146b72566b06c6c225de9440301025527929a11bcd51e4158d1ffd04"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/report-adapter.schema.json#/$defs/Response",
