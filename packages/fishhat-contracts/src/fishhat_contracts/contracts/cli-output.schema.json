@@ -132,6 +132,9 @@
               "$ref": "owner-history.schema.json#/$defs/HistoricalRecordChunk"
             },
             {
+              "$ref": "owner-history.schema.json#/$defs/HistoricalJournalInputReference"
+            },
+            {
               "$ref": "owner-history.schema.json#/$defs/HistoricalContentChunk"
             },
             {
@@ -230,6 +233,7 @@
                   "OwnerHistoryPage",
                   "HistoricalRecordPage",
                   "HistoricalRecordChunk",
+                  "HistoricalJournalInputReference",
                   "HistoricalContentChunk",
                   "WorkflowAbandonment",
                   "WorkflowNeverPrepared",

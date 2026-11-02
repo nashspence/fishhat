@@ -660,12 +660,18 @@ def _validate_journal_result(
             },
             "journal original input scope changed",
         )
+        identity = result["input_schema"]
+        _require(
+            identity == schema_identity(identity["uri"])
+            or (identity["uri"], identity["digest"]) in (retained_readers or {}),
+            "journal original input reader is not installed",
+        )
         return
     validate("workflow-journal.schema.json", result, "Page")
-    identities: set[str] = set()
+    identities: set[tuple[str, str]] = set()
     for item in result["items"]:
         _require(item["owner"] == result["owner"], "journal page owner changed")
-        identifier = item["record"]["id"]
+        identifier = (item["record"]["resource"]["id"], item["record"]["id"])
         _require(identifier not in identities, "journal page repeats a record")
         identities.add(identifier)
         validate_record_reference(item, retained_readers=retained_readers)
@@ -748,6 +754,7 @@ def validate_cli_result(
         "OwnerHistoryPage",
         "HistoricalRecordPage",
         "HistoricalRecordChunk",
+        "HistoricalJournalInputReference",
         "HistoricalContentChunk",
     ):
         from .history import validate_history_result

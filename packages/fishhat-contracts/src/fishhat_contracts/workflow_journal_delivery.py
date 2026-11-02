@@ -15,7 +15,7 @@ from typing import Any
 from uuid import UUID, uuid4, uuid5
 
 from .bounds import Bounds, bounds
-from .handoffs import validate_staged_input, validate_staging
+from .handoffs import schema_identity, validate_staged_input, validate_staging
 from .record_delivery import (
     CHUNK_BYTES,
     InstalledRecordSchema,
@@ -143,10 +143,12 @@ class WorkflowRecordDelivery:
         self.owner = dict(owner)
         self._authorize = authorize_read
         self._schema = InstalledRecordSchema("WorkflowJournalRecord")
-        self._records: dict[str, RecordSnapshot] = {}
-        self._inputs: dict[str, tuple[dict[str, Any], bytes]] = {}
-        self._workflows: dict[str, str] = {}
-        self._by_workflow: dict[str, list[str]] = {}
+        self._command_schema = schema_identity(
+            "https://fishhat.invalid/contracts/workflow-journal.schema.json#/$defs/Command"
+        )
+        self._records: dict[tuple[str, str], RecordSnapshot] = {}
+        self._inputs: dict[tuple[str, str], tuple[dict[str, Any], dict[str, str], bytes]] = {}
+        self._by_workflow: dict[str, list[tuple[str, str]]] = {}
         self._workflow_order: list[str] = []
         self._cursors: dict[str, tuple[str | None, int, int]] = {}
         self._cursor_namespace = uuid4()
@@ -169,16 +171,17 @@ class WorkflowRecordDelivery:
             and record["body"]["command_digest"] == command_digest,
             "journal accepted input bytes changed",
         )
-        existing = self._records.get(record_id)
+        workflow_id = record["workflow_id"]
+        record_key = (workflow_id, record_id)
+        existing = self._records.get(record_key)
         identity = "sha256:" + hashlib.sha256(data).hexdigest()
         if existing is not None:
             _require(existing.reference["digest"] == identity, "journal record ID conflict")
             return existing.reference
         snapshot_id = str(uuid5(UUID(record_id), identity))
         snapshot = RecordSnapshot(record, snapshot_id, installed_schema=self._schema)
-        self._records[record_id] = snapshot
-        workflow_id = record["workflow_id"]
-        self._inputs[record_id] = (
+        self._records[record_key] = snapshot
+        self._inputs[record_key] = (
             {
                 "owner": dict(self.owner),
                 "id": str(uuid5(UUID(record_id), "accepted-input:" + command_digest)),
@@ -191,13 +194,13 @@ class WorkflowRecordDelivery:
                 "digest": command_digest,
                 "size": len(command_bytes),
             },
+            dict(self._command_schema),
             command_bytes,
         )
-        self._workflows[record_id] = workflow_id
         if workflow_id not in self._by_workflow:
             self._by_workflow[workflow_id] = []
             self._workflow_order.append(workflow_id)
-        self._by_workflow[workflow_id].append(record_id)
+        self._by_workflow[workflow_id].append(record_key)
         return snapshot.reference
 
     @bounds(_bounds("get"))
@@ -205,15 +208,15 @@ class WorkflowRecordDelivery:
         validate("workflow-journal.schema.json", lookup, "Lookup")
         _require(lookup["owner"] == self.owner, "journal lookup owner changed")
         _require(self._authorize(principal, lookup["workflow_id"]), "journal read denied")
-        identifier = lookup["record_id"]
-        _require(self._workflows.get(identifier) == lookup["workflow_id"], "journal record missing")
+        identifier = (lookup["workflow_id"], lookup["record_id"])
+        _require(identifier in self._records, "journal record missing")
         return self._records[identifier].reference
 
     @bounds(_bounds("input"))
     def input(self, lookup: dict[str, Any], *, principal: str) -> dict[str, Any]:
         """Locate complete original accepted bytes without the driver's saved IDs."""
         acceptance = self.get(lookup, principal=principal)
-        handle, _ = self._inputs[lookup["record_id"]]
+        handle, input_schema, _ = self._inputs[(lookup["workflow_id"], lookup["record_id"])]
         return {
             "format": "deployment-ops/workflow-journal-input/v1",
             "kind": "WorkflowJournalInputReference",
@@ -222,6 +225,7 @@ class WorkflowRecordDelivery:
             "command_id": lookup["record_id"],
             "acceptance": acceptance,
             "input": copy.deepcopy(handle),
+            "input_schema": dict(input_schema),
         }
 
     @bounds(_bounds("read-input"))
@@ -236,12 +240,12 @@ class WorkflowRecordDelivery:
         """Read a bounded exact input range under current local disclosure rights."""
         validate("common.schema.json", handle, "Handle")
         _require(handle["binding"]["kind"] == "workflow-journal", "journal input binding changed")
-        identifier = handle["binding"]["command_id"]
-        workflow_id = self._workflows.get(identifier)
-        _require(workflow_id is not None, "journal input missing")
-        assert workflow_id is not None
+        _require(handle["owner"] == self.owner, "journal input owner changed")
+        workflow_id = handle["binding"]["workflow_id"]
         _require(self._authorize(principal, workflow_id), "journal input read denied")
-        expected, data = self._inputs[identifier]
+        identifier = (workflow_id, handle["binding"]["command_id"])
+        _require(identifier in self._inputs, "journal input missing")
+        expected, _, data = self._inputs[identifier]
         _require(handle == expected, "journal input handle changed")
         _require(
             type(offset) is int
@@ -274,11 +278,10 @@ class WorkflowRecordDelivery:
     ) -> dict[str, Any]:
         validate("workflow-journal.schema.json", reference, "RecordReference")
         _require(reference["owner"] == self.owner, "journal read owner changed")
-        identifier = reference["record"]["id"]
-        workflow_id = self._workflows.get(identifier)
-        _require(workflow_id is not None, "journal record missing")
-        assert workflow_id is not None
+        workflow_id = reference["record"]["resource"]["id"]
         _require(self._authorize(principal, workflow_id), "journal read denied")
+        identifier = (workflow_id, reference["record"]["id"])
+        _require(identifier in self._records, "journal record missing")
         return self._records[identifier].chunk(reference, offset=offset, length=length)
 
     @bounds(_bounds("events"))
