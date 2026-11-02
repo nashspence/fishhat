@@ -45,7 +45,7 @@ def records(provider):
     prefix = "" if provider == "forgejo-restic" else "git-bundle-"
     descriptor = json.loads(next(p for p in descriptors() if provider in p.parts).read_text())
     selection = fixture(prefix + "selection")
-    return {
+    value = {
         "selection": selection,
         "catalogue": fixture(prefix + "catalogue"),
         "installation": {
@@ -65,6 +65,9 @@ def records(provider):
         "trusted_catalogue_digest": selection["catalogue_digest"],
         "trusted_kit_digest": selection["kit_manifest_digest"],
     }
+
+    reseal(value)
+    return value
 
 
 def reseal(value):
@@ -90,6 +93,20 @@ def reseal(value):
     )
     selection["catalogue_digest"] = digest(catalogue)
     value["trusted_catalogue_digest"] = digest(catalogue)
+
+
+def selected_receipt(selection):
+    """Build a current synthetic receipt without rewriting retained fixture bytes."""
+    receipt = fixture("source-receipt")
+    receipt.update(
+        selection_digest=digest(selection),
+        domain_id=selection["domain_id"],
+        source_id=selection["source_id"],
+        ref=selection["ref"],
+        commit=selection["expected_commit"],
+        destination=selection["recovery_root"] + "/source.git",
+    )
+    return receipt
 
 
 @pytest.mark.parametrize("provider", PROVIDERS)
@@ -382,7 +399,7 @@ def test_prepare_does_not_widen_source_scope(member, replacement):
 
 def test_receipt_is_inert_and_bound_to_the_exact_selection():
     selection = records("forgejo-restic")["selection"]
-    receipt = fixture("source-receipt")
+    receipt = selected_receipt(selection)
     validate_receipt(receipt, selection)
     for field in (
         "policy_activated",
@@ -409,10 +426,11 @@ def test_receipt_is_inert_and_bound_to_the_exact_selection():
     ids=["live-directory", "staging-root", "prefix-collision"],
 )
 def test_receipt_cannot_claim_an_output_outside_dedicated_staging(destination):
-    receipt = fixture("source-receipt")
+    selection = records("forgejo-restic")["selection"]
+    receipt = selected_receipt(selection)
     receipt["destination"] = destination
     with pytest.raises(ContractError, match="outside staging"):
-        validate_receipt(receipt, records("forgejo-restic")["selection"])
+        validate_receipt(receipt, selection)
 
 
 @pytest.mark.parametrize("provider", PROVIDERS)
@@ -501,7 +519,7 @@ def test_bootstrap_wire_requires_repository_scope_and_an_evidenced_result(method
         "continuation": None,
         "proposal": None,
         "problem": None,
-        "output": {"receipt": fixture("source-receipt")},
+        "output": {"receipt": selected_receipt(value["selection"])},
         "effect": {
             "attempt_id": attempt["attempt_id"],
             "input_digest": digest(request),
@@ -518,16 +536,16 @@ def test_bootstrap_wire_requires_repository_scope_and_an_evidenced_result(method
         response["output"]["receipt"]["output_digest"] = "sha256:" + "f" * 64
         with pytest.raises(ContractError, match="SUCCESS_OUTPUT_IDENTITY"):
             check_response("bootstrap-source", request, response, invocation=invocation)
-        response["output"]["receipt"] = fixture("source-receipt")
+        response["output"]["receipt"] = selected_receipt(value["selection"])
     for changed_field, replacement in (("commit", "f" * 40), ("source_id", "other")):
         response["output"]["receipt"][changed_field] = replacement
         with pytest.raises(ContractError, match="SUCCESS_OUTPUT_IDENTITY"):
             check_response("bootstrap-source", request, response, invocation=invocation)
-        response["output"]["receipt"] = fixture("source-receipt")
+        response["output"]["receipt"] = selected_receipt(value["selection"])
     response["output"]["receipt"] = None
     with pytest.raises(ContractError):
         check_response("bootstrap-source", request, response, invocation=invocation)
-    response["output"]["receipt"] = fixture("source-receipt")
+    response["output"]["receipt"] = selected_receipt(value["selection"])
     response["effect"]["effect_certainty"] = "unknown"
     with pytest.raises(ContractError, match="UNKNOWN_EFFECT_CANNOT_SUCCEED"):
         check_response("bootstrap-source", request, response, invocation=invocation)

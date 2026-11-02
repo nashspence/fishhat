@@ -105,6 +105,11 @@ def _recovery_digest(context: RecoveryContext | None) -> str | None:
 
 
 def _declaration(name: str, work: str) -> Bounds:
+    additional_proofs = (
+        ("tests/test_workflow_admission_renewal.py::test_unused_permit_renewal_history_is_linear",)
+        if name == "submit"
+        else ()
+    )
     return Bounds(
         id="workflow.journal." + name,
         work=work,
@@ -115,9 +120,11 @@ def _declaration(name: str, work: str) -> Bounds:
         ),
         proofs=(
             "tests/test_workflow_journal.py::test_complete_workflow_survives_disk_restart_and_lost_replies",
+            *additional_proofs,
         ),
         linear_proofs=(
             "tests/test_workflow_journal_growth.py::test_complete_multi_owner_workflow_is_linear",
+            *additional_proofs,
         ),
     )
 
@@ -198,6 +205,19 @@ class NativeWorkflowContext(Protocol):
 
     def admit(self, context: JSON) -> JSON: ...
 
+    def renew_admission(self, context: JSON) -> JSON:
+        """Prove the exact child unaccepted while fencing its superseded permit.
+
+        This runs inside the same protected boundary as operation.submit. The
+        native request index must positively establish no accepted Operation and
+        permanently close the old permit before returning. Timeout, an absent
+        client reply or an empty restored index cannot establish this fact. The
+        returned evidence is retained with the replacement permit; it grants no
+        permission to repeat accepted work. Native acceptance checks that durable
+        permit-closure index even if journal persistence of the replacement fails.
+        """
+        ...
+
     def result_payload(self, operation: JSON) -> bytes | None: ...
 
     def lifecycle(self, action: str, context: JSON) -> JSON: ...
@@ -213,6 +233,16 @@ class NativeWorkflowContext(Protocol):
     def abandon_recovery(self, projection: JSON, proposal: JSON) -> JSON: ...
 
     def observe_abandonment(self, projection: JSON, facts: JSON, certificate: JSON) -> None: ...
+
+    def approve_gate_recovery(self, context: JSON) -> JSON:
+        """Independently verify the exact new gate and close original admission.
+
+        Retain all local accepted work, material, holds and exclusive successor
+        reservations. Fence original gate-based admission durably before returning;
+        failed journal persistence cannot reopen it. This supplies no permission
+        to execute new work under the original workflow.
+        """
+        ...
 
 
 class JournalExtension(Protocol):
@@ -848,16 +878,52 @@ class WorkflowGate(_JournalTarget):
             recovery_context is None or extension is not None,
             "workflow successor requires independently installed recovery validation",
         )
-        validate_workflow_proposal(proposal, recovery=recovery_context is not None)
+        self._index_manifest(proposal, recovery=recovery_context is not None)
+        if recovery_context is not None:
+            assert extension is not None
+            extension.initialize_gate(self, proposal, recovery_context)
+        command = command or self._command(
+            "gate.create", _identity("gate-init", self.workflow_id, owner), {"proposal": proposal}
+        )
+        _require(
+            command["action"] == "gate.create"
+            and command["workflow_id"] == self.workflow_id
+            and command["payload"] == {"proposal": proposal},
+            "workflow gate initialization changed exact caller command",
+        )
+        self._initialize(
+            command,
+            self._outcome(
+                command,
+                {
+                    "type": "initialized",
+                    "header_digest": self.header_digest,
+                    "recovery_digest": _recovery_digest(recovery_context),
+                },
+            ),
+            principal,
+        )
+
+    def _index_manifest(
+        self,
+        proposal: JSON,
+        *,
+        recovery: bool,
+        gate_owner: JSON | None = None,
+        gate_key_id: str | None = None,
+    ) -> None:
+        """Index one exact manifest once; restored custody keeps its original header."""
+        validate_workflow_proposal(proposal, recovery=recovery)
         self.proposal = copy.deepcopy(proposal)
+        proposal = self.proposal
         self.workflow_id = proposal["workflow_id"]
         self.header = {
             "workflow_id": self.workflow_id,
             "proposal_digest": digest(proposal),
             "procedure": proposal["type"],
             "requirements_digest": digest(REQUIREMENTS[proposal["type"]]),
-            "gate_owner": copy.deepcopy(owner),
-            "gate_key_id": key_id,
+            "gate_owner": copy.deepcopy(self.owner if gate_owner is None else gate_owner),
+            "gate_key_id": self.key_id if gate_key_id is None else gate_key_id,
             "driver_principal": proposal["initial_driver"]["principal"],
             "driver_term": 1,
             "owner_count": len({canonical(p["owner"]) for p in proposal["participants"]}),
@@ -907,7 +973,7 @@ class WorkflowGate(_JournalTarget):
                         self._projections[member]["dependencies"].append(dependency)
         for handle in proposal["content"]:
             member = canonical(handle["owner"])
-            if member not in self._members and recovery_context is not None:
+            if member not in self._members and recovery:
                 logical = canonical([handle["owner"]["tool"], handle["owner"]["id"]])
                 candidates = logical_members.get(logical, [])
                 _require(
@@ -930,30 +996,6 @@ class WorkflowGate(_JournalTarget):
         self._remaining = len(self._members)
         self._evidence_digest = digest([])
         self._earliest_expiry: str | None = None
-        if recovery_context is not None:
-            assert extension is not None
-            extension.initialize_gate(self, proposal, recovery_context)
-        command = command or self._command(
-            "gate.create", _identity("gate-init", self.workflow_id, owner), {"proposal": proposal}
-        )
-        _require(
-            command["action"] == "gate.create"
-            and command["workflow_id"] == self.workflow_id
-            and command["payload"] == {"proposal": proposal},
-            "workflow gate initialization changed exact caller command",
-        )
-        self._initialize(
-            command,
-            self._outcome(
-                command,
-                {
-                    "type": "initialized",
-                    "header_digest": self.header_digest,
-                    "recovery_digest": _recovery_digest(recovery_context),
-                },
-            ),
-            principal,
-        )
 
     def _authorize(self, principal: str, action: str) -> None:
         self.authorize(
@@ -1551,6 +1593,10 @@ class WorkflowMember(_JournalTarget):
         )
 
     def _gate_record(self, record: JSON, kind: str) -> JSON:
+        _require(
+            getattr(self, "_recovery_gate_authority", None) is None,
+            "original gate authority is retired; only explicit recovery remains",
+        )
         self._verify(record, self.enrollment.gate_owner)
         body = record["body"]
         _require(
@@ -1768,14 +1814,25 @@ class WorkflowMember(_JournalTarget):
                     "generation": self.generation + 1,
                 },
             )
-        if action == "admit":
-            _fields(payload, {"expected_generation", "driver_term", "child"})
+        if action in {"admit", "admit.renew"}:
+            fields = {"expected_generation", "driver_term", "child"}
+            if action == "admit.renew":
+                fields |= {"previous_permit_id", "previous_permit_digest"}
+            _fields(payload, fields)
             self._fresh(payload, principal)
             child, key = payload["child"], _key(payload["child"])
             _require(
-                key in self.ready and key not in self._admissions,
+                key in self.ready and ((key in self._admissions) == (action == "admit.renew")),
                 "workflow child is absent, unbound or already admitted",
             )
+            if action == "admit.renew":
+                previous_permit = self._admissions[key]
+                _require(
+                    previous_permit["id"] == payload["previous_permit_id"]
+                    and digest(previous_permit) == payload["previous_permit_digest"],
+                    "workflow admission renewal changed exact predecessor permit",
+                )
+                _require(key not in self.outcomes, "known accepted child cannot renew admission")
             binding = self.ready[key]
             _require(
                 "completed" not in binding and binding["phase"] == self.phase,
@@ -1823,6 +1880,27 @@ class WorkflowMember(_JournalTarget):
                 _time(review["now"]) <= _time(self.clock()) < _time(plan["expires_at"]),
                 "workflow child Plan is not currently valid",
             )
+            renewal = None
+            if action == "admit.renew":
+                renewal = self.native.renew_admission(
+                    {
+                        "owner": self.owner,
+                        "workflow_id": self.workflow_id,
+                        "child": child,
+                        "previous_permit": self._admissions[key],
+                        "driver_term": self.driver_term,
+                        "authenticated_principal": principal,
+                    }
+                )
+                validate("workflow-journal.schema.json", renewal, "AdmissionRenewalEvidence")
+                _require(
+                    renewal["owner"] == self.owner
+                    and renewal["workflow_id"] == self.workflow_id
+                    and renewal["child"] == child
+                    and renewal["previous_permit_id"] == payload["previous_permit_id"]
+                    and renewal["previous_permit_digest"] == payload["previous_permit_digest"],
+                    "native admission renewal changed exact unaccepted child or permit",
+                )
             return self._outcome(
                 command,
                 {
@@ -1839,6 +1917,7 @@ class WorkflowMember(_JournalTarget):
                     "certificate_id": self._certificate["id"],
                     "reservation_id": self._reservation["id"],
                     "reservation_generation": self._reservation["generation"],
+                    "renewal": renewal,
                 },
             )
         if action == "complete":
@@ -1919,7 +1998,7 @@ class WorkflowMember(_JournalTarget):
             key = _key(request["child"])
             self.ready[key] = request["binding"]
             self._binding_content[key] = request["content"]
-        elif action == "admit":
+        elif action in {"admit", "admit.renew"}:
             self._admissions[_key(payload["child"])] = outcome
         elif action == "complete":
             operation = payload["operation"]
@@ -2125,6 +2204,25 @@ class WorkflowMember(_JournalTarget):
             principal,
         )
 
+    def renew_admission(
+        self, event_id: str, child: JSON, previous_permit: JSON, *, principal: str
+    ) -> JSON:
+        """Renew one exact positively unaccepted permit under the current barrier."""
+        return self._run(
+            self._command(
+                "admit.renew",
+                event_id,
+                {
+                    "expected_generation": self.generation,
+                    "driver_term": self.driver_term,
+                    "child": child,
+                    "previous_permit_id": previous_permit["id"],
+                    "previous_permit_digest": digest(previous_permit),
+                },
+            ),
+            principal,
+        )
+
     def complete(self, event_id: str, operation: JSON, *, principal: str) -> JSON:
         return self._run(self._command("complete", event_id, {"operation": operation}), principal)
 
@@ -2158,8 +2256,10 @@ def initialize_workflow_journal(
     key ring, journal, native callbacks and (for members) exact GateEnrollment.
     It is never read from the staged command. The returned target retains the
     original command ID as its signed initialized outcome for normal record.read.
-    Recovery commands commit the exact signed projection already held in trusted
-    OriginRecoveryContext; they do not carry or reinterpret historical payloads.
+    Member recovery commits the exact signed projection already held in protected
+    OriginRecoveryContext. Gate recovery commits the exact source head and custody
+    digest of protected OriginGateRecoveryContext. Neither carries or reinterprets
+    caller-supplied historical payloads.
     """
     _fields(command, {"id", "workflow_id", "action", "payload"})
     validate("workflow-journal.schema.json", command, "Command")
@@ -2190,6 +2290,12 @@ def initialize_workflow_journal(
             "workflow recovery source differs from independently restored custody",
         )
         return WorkflowRecoveryMember(principal=principal, command=command, **context)
+    if command["action"] == "gate.recover":
+        from .workflow_gate_recovery import WorkflowRecoveryGate
+
+        _fields(command["payload"], {"source_head", "custody_digest"})
+        _require("origin" in context, "gate recovery requires protected complete origin custody")
+        return WorkflowRecoveryGate(principal=principal, command=command, **context)
     raise ContractError(
-        "workflow initialization requires gate.create, member.join or member.recover"
+        "workflow initialization requires gate.create, member.join, member.recover or gate.recover"
     )

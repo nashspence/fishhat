@@ -102,7 +102,8 @@
             "Operation",
             "Workflow",
             "WorkflowTransferRecord",
-            "WorkflowPhaseAttestation"
+            "WorkflowPhaseAttestation",
+            "WorkflowJournalRecord"
           ]
         },
         "resource": {
@@ -144,7 +145,7 @@
         "limit"
       ],
       "additionalProperties": false,
-      "description": "Enumerate original immutable record references under one verified custody descriptor, using current principal permission. Native filtering retains terminal work with unresolved effects or holds, and non-effectful prepared workflow capsules. active_only is false for Plans, WorkflowTransferRecords and WorkflowPhaseAttestations. WorkflowTransferRecord enumeration returns the latest retained custody for every original transfer identity, including in-progress and completed transfers, with a workflow resource filter matched to record.resource. WorkflowPhaseAttestation enumeration returns every retained original attestation identity under the same exact workflow resource filter, including expired proofs. Its original request, authenticated attribution, issuer epoch, observed generation, signed proofs and expiry remain immutable; historical inspection never renews protection or authorizes current phase progress. Both record kinds retain their original schema closures and require independently installed historical readers when the installed closure differs. Original epochs, generation, accepted input, phase witnesses and completion receipts remain unchanged across restoration; later transfers or attestations never hide earlier identities. A page is not a total collection cap; permission, exact filters and custody remain pinned across continuation. References disclose no execution authority.",
+      "description": "Enumerate original immutable record references under one verified custody descriptor, using current principal permission. Native filtering retains terminal work with unresolved effects or holds, and non-effectful prepared workflow capsules. active_only is false for Plans, WorkflowTransferRecords and WorkflowPhaseAttestations. WorkflowTransferRecord enumeration returns the latest retained custody for every original transfer identity, including in-progress and completed transfers, with a workflow resource filter matched to record.resource. WorkflowPhaseAttestation enumeration returns every retained original attestation identity under the same exact workflow resource filter, including expired proofs. Its original request, authenticated attribution, issuer epoch, observed generation, signed proofs and expiry remain immutable; historical inspection never renews protection or authorizes current phase progress. Both record kinds retain their original schema closures and require independently installed historical readers when the installed closure differs. Original epochs, generation, accepted input, phase witnesses and completion receipts remain unchanged across restoration; later transfers or attestations never hide earlier identities. A page is not a total collection cap; permission, exact filters and custody remain pinned across continuation. References disclose no execution authority. WorkflowJournalRecord enumeration includes every original immutable event, including initialization, retained projections, bindings, permits, outcomes, transfer and recovery events. active_only is false. A null resource discovers all authorized journal events and their workflow identities without saved client IDs; a workflow resource filters exactly that workflow. Pagination pins a stable high-water event boundary, current custodian, custody descriptor, actual principal and exact filters. New retained events cannot replace or rebind a cursor prefix. Expired cursors fail explicitly and a fresh traversal rediscovers all retained events. The owner uses retained indexes and bounded scan windows, including denied entries, rather than rescanning a complete journal per page. Original accepted inputs are discovered from each event reference through history.input and read through history.content.",
       "allOf": [
         {
           "if": {
@@ -153,7 +154,8 @@
                 "enum": [
                   "Plan",
                   "WorkflowTransferRecord",
-                  "WorkflowPhaseAttestation"
+                  "WorkflowPhaseAttestation",
+                  "WorkflowJournalRecord"
                 ]
               }
             }
@@ -162,6 +164,40 @@
             "properties": {
               "active_only": {
                 "const": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "record_kind": {
+                "const": "WorkflowJournalRecord"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "resource": {
+                "anyOf": [
+                  {
+                    "allOf": [
+                      {
+                        "$ref": "common.schema.json#/$defs/Resource"
+                      },
+                      {
+                        "properties": {
+                          "kind": {
+                            "const": "workflow"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
               }
             }
           }
@@ -324,7 +360,7 @@
         "history_complete"
       ],
       "additionalProperties": false,
-      "description": "All references belong to the selected custody origin and record kind. References are read through history.read and verified with the exact installed retained reader before interpreting their resource, state or result. Current native authorization and filtering precede disclosure. history_complete false exposes unavailable retained history; unresolved custody must not be reported as absent. Return one latest retained authoritative snapshot per logical record per traversal; older pinned snapshots remain readable by exact reference. A selected recovery origin must include all later confirmed outcomes and unresolved holds."
+      "description": "All references belong to the selected custody origin and record kind. References are read through history.read and verified with the exact installed retained reader before interpreting their resource, state or result. Current native authorization and filtering precede disclosure. history_complete false exposes unavailable retained history; unresolved custody must not be reported as absent. Return one latest retained authoritative snapshot per logical record per traversal; older pinned snapshots remain readable by exact reference. A selected recovery origin must include all later confirmed outcomes and unresolved holds. For WorkflowJournalRecord, every immutable event is a distinct logical record and retains its original workflow resource, owner epoch, reference and schema identity. An empty permission-filtered page may still have next_cursor; no page or scan window truncates complete extent."
     },
     "HistoricalRecordChunk": {
       "type": "object",
@@ -431,6 +467,99 @@
       ],
       "additionalProperties": false,
       "description": "Exact historical Operation selected for a newly reviewed current-epoch recovery Plan. operation_id must match this reference. The verified original operation and its accepted input/hold closure remain in custody; its digest is an explicit Plan material input. Receiving permission to read does not authorize recovery. Fresh owner authority, resource generation, native reconciliation and recovery admission are required; neither old execution tokens nor old driver terms are revived. The owner independently selects the latest retained authoritative Operation snapshot from verified custody; an older valid member cannot replace later known outcomes or holds."
+    },
+    "JournalReference": {
+      "allOf": [
+        {
+          "$ref": "common.schema.json#/$defs/RecordReference"
+        },
+        {
+          "properties": {
+            "record": {
+              "properties": {
+                "kind": {
+                  "const": "WorkflowJournalRecord"
+                },
+                "resource": {
+                  "properties": {
+                    "kind": {
+                      "const": "workflow"
+                    }
+                  }
+                }
+              },
+              "required": [
+                "resource"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "InputRequest": {
+      "type": "object",
+      "properties": {
+        "custodian": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "custody_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "reference": {
+          "$ref": "owner-history.schema.json#/$defs/JournalReference"
+        }
+      },
+      "required": [
+        "custodian",
+        "custody_id",
+        "reference"
+      ],
+      "additionalProperties": false,
+      "description": "Resolve the exact original accepted command of a retained journal event discovered by history.list. The current custodian independently authenticates its verified restoration membership and current principal permission for the original workflow before disclosing anything. The reference retains the original owner epoch, immutable event identity and exact historical schema. No original staging handle or client cache is required. A caller cannot select another command, install a historical reader, revive execution authority or turn an unknown record into accepted work."
+    },
+    "HistoricalJournalInputReference": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner-history/v1"
+        },
+        "kind": {
+          "const": "HistoricalJournalInputReference"
+        },
+        "request": {
+          "$ref": "owner-history.schema.json#/$defs/InputRequest"
+        },
+        "origin": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "input": {
+          "$ref": "common.schema.json#/$defs/Handle"
+        },
+        "input_schema": {
+          "allOf": [
+            {
+              "$ref": "common.schema.json#/$defs/SchemaIdentity"
+            },
+            {
+              "properties": {
+                "uri": {
+                  "const": "https://fishhat.invalid/contracts/workflow-journal.schema.json#/$defs/Command"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "request",
+        "origin",
+        "input",
+        "input_schema"
+      ],
+      "additionalProperties": false,
+      "description": "Immutable original command custody selected solely from the verified restoration index, never reconstructed from a new command or current schema. The reference owner and input owner equal origin; the input purpose is workflow-input and its workflow-journal binding has exactly the event command ID and workflow resource ID. Its digest equals the original signed acceptance body.command_digest. input_schema is the exact originally retained command schema closure and has an independently installed qualified reader; URI equality alone cannot select current semantics. Read full unchanged bytes through history.content using this same custody_id, verify digest, size, canonical encoding and original command/workflow identities, and validate under that exact installed schema before interpretation. Current permission and custody membership apply to lookup and every content chunk. This record grants only inspection, never execution, re-admission or old-epoch authority."
     }
   }
 }

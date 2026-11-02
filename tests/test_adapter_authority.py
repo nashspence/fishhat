@@ -430,7 +430,7 @@ def test_delegated_stop_obeys_containment_gate_and_commits_before_native_dispatc
         c.dispatch("demo", attempt["attempt_id"])
     c.close_admission("demo")
     dispatched = c.dispatch("demo", attempt["attempt_id"])
-    assert commits[-1]["attempts"][attempt["attempt_id"]] == dispatched["attempt"]
+    assert commits[-1]["updates"]["attempts"][attempt["attempt_id"]] == dispatched["attempt"]
     assert dispatched["attempt"]["executor"]["instance"] == "service-demo"
     assert dispatched["attempt"]["certainty"] == "unknown"
 

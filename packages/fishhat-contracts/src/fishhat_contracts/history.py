@@ -23,12 +23,14 @@ REQUESTS = {
     "owner.history": "HistoryRequest",
     "history.list": "ListRequest",
     "history.read": "ReadRequest",
+    "history.input": "InputRequest",
     "history.content": "ContentRequest",
 }
 RESULTS = {
     "OwnerHistoryPage": "owner.history",
     "HistoricalRecordPage": "history.list",
     "HistoricalRecordChunk": "history.read",
+    "HistoricalJournalInputReference": "history.input",
     "HistoricalContentChunk": "history.content",
 }
 
@@ -89,12 +91,13 @@ def authorize_history_request(
     assert verified_custody is not None
     validate_owner_custody(verified_custody, expected_custodian=current_owner)
     _require(request["custody_id"] == verified_custody["id"], "historical custody substitution")
-    if method in ("history.read", "history.content"):
-        material = request["reference"] if method == "history.read" else request["handle"]
+    if method in ("history.read", "history.input", "history.content"):
+        material = request["handle"] if method == "history.content" else request["reference"]
         _require(
             material["owner"] == verified_custody["origin"], "historical material origin changed"
         )
-        _require(request["offset"] <= material["size"], "historical range outside material")
+        if method != "history.input":
+            _require(request["offset"] <= material["size"], "historical range outside material")
 
 
 def validate_history_result(
@@ -149,7 +152,12 @@ def validate_history_result(
                     "historical record kind substitution",
                 )
                 if (
-                    request["record_kind"] in {"WorkflowTransferRecord", "WorkflowPhaseAttestation"}
+                    request["record_kind"]
+                    in {
+                        "WorkflowTransferRecord",
+                        "WorkflowPhaseAttestation",
+                        "WorkflowJournalRecord",
+                    }
                     and request["resource"] is not None
                 ):
                     _require(
@@ -169,6 +177,30 @@ def validate_history_result(
                 )
                 records.add(identity)
                 snapshots.add(item["snapshot_id"])
+        elif kind == "HistoricalJournalInputReference":
+            reference, handle = request["reference"], result["input"]
+            validate_record_reference(
+                reference, expected_owner=result["origin"], retained_readers=retained_readers
+            )
+            _require(
+                handle["owner"] == result["origin"]
+                and handle["purpose"] == "workflow-input"
+                and handle["binding"]
+                == {
+                    "kind": "workflow-journal",
+                    "workflow_id": reference["record"]["resource"]["id"],
+                    "command_id": reference["record"]["id"],
+                },
+                "historical journal input identity substitution",
+            )
+            from .handoffs import schema_identity
+
+            identity = result["input_schema"]
+            _require(
+                identity == schema_identity(identity["uri"])
+                or (identity["uri"], identity["digest"]) in (retained_readers or {}),
+                "historical journal input reader is not installed",
+            )
         elif kind == "HistoricalRecordChunk":
             reference = request["reference"]
             validate_record_reference(

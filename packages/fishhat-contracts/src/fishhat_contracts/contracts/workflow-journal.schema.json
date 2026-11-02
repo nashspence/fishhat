@@ -1591,6 +1591,16 @@
         "authenticated_principal": {
           "type": "string",
           "minLength": 1
+        },
+        "renewal": {
+          "anyOf": [
+            {
+              "$ref": "workflow-journal.schema.json#/$defs/AdmissionRenewalEvidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -1607,7 +1617,8 @@
         "reservation_id",
         "reservation_generation",
         "command_digest",
-        "authenticated_principal"
+        "authenticated_principal",
+        "renewal"
       ],
       "additionalProperties": false
     },
@@ -2669,7 +2680,13 @@
             "recover.abandon",
             "recover.collect_abandon",
             "recover.abandon_commit",
-            "recover.observe_abandon"
+            "recover.observe_abandon",
+            "admit.renew",
+            "gate.recover",
+            "recover.gate_approve",
+            "recover.gate_collect",
+            "recover.gate_commit",
+            "recover.abandon_recertify"
           ]
         }
       },
@@ -3417,6 +3434,114 @@
           "then": {
             "$ref": "workflow-journal.schema.json#/$defs/RecoveryObserveAbandonCommand"
           }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "enum": [
+                  "admit.renew"
+                ]
+              }
+            },
+            "required": [
+              "action"
+            ]
+          },
+          "then": {
+            "$ref": "workflow-journal.schema.json#/$defs/AdmissionRenewCommand"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "enum": [
+                  "gate.recover"
+                ]
+              }
+            },
+            "required": [
+              "action"
+            ]
+          },
+          "then": {
+            "$ref": "workflow-journal.schema.json#/$defs/GateRecoverCommand"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "enum": [
+                  "recover.gate_approve"
+                ]
+              }
+            },
+            "required": [
+              "action"
+            ]
+          },
+          "then": {
+            "$ref": "workflow-journal.schema.json#/$defs/GateRecoveryApproveCommand"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "enum": [
+                  "recover.gate_collect"
+                ]
+              }
+            },
+            "required": [
+              "action"
+            ]
+          },
+          "then": {
+            "$ref": "workflow-journal.schema.json#/$defs/GateRecoveryCollectCommand"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "enum": [
+                  "recover.gate_commit"
+                ]
+              }
+            },
+            "required": [
+              "action"
+            ]
+          },
+          "then": {
+            "$ref": "workflow-journal.schema.json#/$defs/GateRecoveryCommitCommand"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "enum": [
+                  "recover.abandon_recertify"
+                ]
+              }
+            },
+            "required": [
+              "action"
+            ]
+          },
+          "then": {
+            "$ref": "workflow-journal.schema.json#/$defs/RecoveryAbandonRecertifyCommand"
+          }
         }
       ],
       "description": "One exact caller identity and closed action-specific input. The independently selected receiving owner chooses gate/member context, installed signing keys, gate enrollment, permissions and native services. These are never supplied by payload fields. gate.create stages the complete proposal exactly once at its gate; member.join stages only the approved signed local projection."
@@ -3467,7 +3592,11 @@
                 "recovery-abandonment",
                 "recovery-abandonment-accepted",
                 "recovery-abandon-certificate",
-                "recovery-abandoned"
+                "recovery-abandoned",
+                "gate-recovery-initialized",
+                "gate-recovery-approved",
+                "gate-recovery-approval-accepted",
+                "gate-recovery-certificate"
               ]
             }
           },
@@ -4492,6 +4621,110 @@
           },
           "then": {
             "$ref": "workflow-journal.schema.json#/$defs/RecoveryAbandonedRecord"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "body": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "enum": [
+                      "gate-recovery-initialized"
+                    ]
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "body"
+            ]
+          },
+          "then": {
+            "$ref": "workflow-journal.schema.json#/$defs/GateRecoveryInitializedRecord"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "body": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "enum": [
+                      "gate-recovery-approved"
+                    ]
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "body"
+            ]
+          },
+          "then": {
+            "$ref": "workflow-journal.schema.json#/$defs/GateRecoveryApprovedRecord"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "body": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "enum": [
+                      "gate-recovery-approval-accepted"
+                    ]
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "body"
+            ]
+          },
+          "then": {
+            "$ref": "workflow-journal.schema.json#/$defs/GateRecoveryApprovalAcceptedRecord"
+          }
+        },
+        {
+          "if": {
+            "type": "object",
+            "properties": {
+              "body": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "enum": [
+                      "gate-recovery-certificate"
+                    ]
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            },
+            "required": [
+              "body"
+            ]
+          },
+          "then": {
+            "$ref": "workflow-journal.schema.json#/$defs/GateRecoveryCertificateRecord"
           }
         }
       ],
@@ -5688,6 +5921,29 @@
         },
         "command_digest": {
           "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "supersedes": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "$ref": "common.schema.json#/$defs/UUID"
+                },
+                "digest": {
+                  "$ref": "common.schema.json#/$defs/Digest"
+                }
+              },
+              "required": [
+                "id",
+                "digest"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -5696,9 +5952,11 @@
         "recovery",
         "owner_count",
         "disposition_closure_digest",
-        "command_digest"
+        "command_digest",
+        "supersedes"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "Complete positive retirement of one exact successor reservation. supersedes is null for initial commitment. A fully reapproved current-epoch recovery gate may append a new certificate for the unchanged already-committed closure; it names the exact original certificate id/digest without replacing original bytes, reopening admission or reserving another successor. Members that missed intermediate recertification may install the current independently approved gate certificate when their already-committed exact recovery, original header, owner count and complete disposition closure are unchanged. The gate still records its own exact immediate predecessor and verifies the entire original lineage; local receipt catch-up never reexecutes accepted work."
     },
     "RecoveryCertificateRecord": {
       "type": "object",
@@ -6889,6 +7147,29 @@
         },
         "command_digest": {
           "$ref": "common.schema.json#/$defs/MaterialDigest"
+        },
+        "supersedes": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "$ref": "common.schema.json#/$defs/UUID"
+                },
+                "digest": {
+                  "$ref": "common.schema.json#/$defs/Digest"
+                }
+              },
+              "required": [
+                "id",
+                "digest"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -6898,9 +7179,11 @@
         "abandon_id",
         "owner_count",
         "closure_digest",
-        "command_digest"
+        "command_digest",
+        "supersedes"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "Complete immutable terminal abandonment of one exact unused successor. supersedes is null on original commit; a current independently reapproved recovery gate can recertify the unchanged terminal result with the exact prior certificate id/digest, allowing a member that missed delivery to close its retained reservation. Earlier signatures remain unchanged and the abandoned successor stays permanently closed."
     },
     "RecoveryAbandonCertificateRecord": {
       "type": "object",
@@ -7223,6 +7506,21 @@
         },
         "input": {
           "$ref": "common.schema.json#/$defs/Handle"
+        },
+        "input_schema": {
+          "allOf": [
+            {
+              "$ref": "common.schema.json#/$defs/SchemaIdentity"
+            },
+            {
+              "properties": {
+                "uri": {
+                  "const": "https://fishhat.invalid/contracts/workflow-journal.schema.json#/$defs/Command"
+                }
+              }
+            }
+          ],
+          "description": "Original installed Command schema retained atomically with the immutable accepted command bytes and original acceptance record. Inspection and epoch restore preserve this identity exactly; they never rebind original bytes to the current installed schema."
         }
       },
       "required": [
@@ -7232,10 +7530,11 @@
         "workflow_id",
         "command_id",
         "acceptance",
-        "input"
+        "input",
+        "input_schema"
       ],
       "additionalProperties": false,
-      "description": "Immutable accepted input custody, discovered from an outcome without saved driver input IDs. The command_id is the acceptance record id, workflow_id is its protected workflow resource, and all owners equal the receiver. Input purpose is workflow-input and binding is workflow-journal with that exact command and workflow. Read complete bytes through content.get; verify digest/size against the handle and digest against the original signed acceptance body.command_digest before interpreting the exact original Command. The receiver indexes complete canonical input once on durable append or cold restore. Lookup and every chunk reauthorize current local disclosure; possession grants no admission. Historical owner epochs use separately qualified historical readers and explicit custody recovery."
+      "description": "Immutable accepted input custody, discovered from an outcome without saved driver input IDs. The command_id is the acceptance record id, workflow_id is its protected workflow resource, and all owners equal the receiver. Input purpose is workflow-input and binding is workflow-journal with that exact command and workflow. Read complete bytes through content.get; verify digest/size against the handle and digest against the original signed acceptance body.command_digest before interpreting the exact original Command. The receiver indexes complete canonical input once on durable append or cold restore. Lookup and every chunk reauthorize current local disclosure; possession grants no admission. Historical owner epochs use separately qualified historical readers and explicit custody recovery. After an epoch-changing restore, discover original references with owner.history and history.list record_kind WorkflowJournalRecord; history.input resolves the original accepted command handle and schema under that custody, and history.content reads unchanged original bytes. Current custodian permission applies to every step; old epochs never regain execution authority. The required input_schema pins the exact original installed Command schema; no inspection or restore may replace it with a current schema. A null history.list resource discovers every workflow, while an exact workflow resource narrows the result."
     },
     "ProtocolRules": {
       "description": "Normative authority, custody, concurrency, recovery and aggregate work rules for the live workflow journal protocol. This installed-only dependency is part of every rooted journal schema identity; it is not a caller-provided authority object.",
@@ -7245,14 +7544,661 @@
         "agreement": "Each member durably retains and independently authorizes its exact local projection, driver and gate delegation, then signs one preparation for the exact common manifest and local projection digest. The gate accepts exactly one authenticated preparation for each indexed owner. Duplicates cannot replace missing owners. It commits agreement only after the entire installed closure is present; local preparation alone permits no child effects. All native-role participants, including a relocation destination without an ordinary child, remain required.",
         "rounds": "A round binds the workflow, manifest, installed procedure and requirement identities, gate epoch, adjacent from/to phases, authority and one common round identity. A driver-authority round binds the current driver term. A native-owner round and its decision use null driver_term and can only settle or refresh the final adjacent barrier; each local command still selects that receiver's current retained generation and term. Native settlement preserves mixed terms during partial transfer, cannot admit a new child or advance an intermediate phase, and does not activate a transfer. Issuers sign the same common round once; receiver advance IDs and capsule generations are absent from its subject. Each member vote binds its exact local projection, local generation, child outcomes, native evidence and durable reservation. The gate verifies every indexed owner once and commits a decision only after exact complete coverage. It retains an indexed source for every round, preserving the original round, issuer votes, committed decision and member certificates across later rounds, transfer activation and native settlement. Certificate requests select an exact round_id and owner; each member has one immutable certificate per committed round, and a changed request identity cannot replace that certificate. An ordinary next or refresh round cannot replace a committed current round until all member certificates have been durably minted. Delivery acknowledgments are unnecessary: lost delivery rediscovers the original immutable certificate through bounded journal discovery. An uncommitted current round requires its exact supersedes identity before replacement and cannot acquire a decision afterward. Native terminal settlement can establish a fresh terminal round while preserving every prior committed certificate source. Materializing a certificate for an already committed round preserves that original decision and supplies no renewed protection. Members verify the approved gate signature, exact common round and their own retained reservation and local state; current local permission, term, lifecycle, expiry and actual native protection govern application and effects. Members never receive an all-owner proof bundle.",
         "native_protection": "A current observation is not a lease. Native conditions required by an installed phase must be protected by owner-held reservations, exclusions or fencing through the corresponding effects. The owner acquires and durably records that protection before voting, checks its exact generation and current permission at local admission, and refuses admission when protection cannot be maintained. Expiry, timeout, restart, a certificate or an exact retry neither renews protection nor releases a hold. Release and abort require positively established owner-native conditions. Lost protection closes new admission and preserves uncertainty and accepted work for reconciliation. The native primitive must maintain the promised protection across owner process failure or fence every dependent effect boundary closed. It cannot revoke unilaterally while a dependent admission remains possible. If the installed backend cannot provide that guarantee, preparation/reservation refuses; polling, expiry, notifications and signed observations are not substitutes. Controlled release first closes dependent admissions and positively settles the relevant accepted obligations. The protection discriminator names this required primitive; merely asserting its spelling in JSON never supplies it.",
-        "children": "Every child remains bound to the exact local reviewed Plan, owner epoch, resource, request ID, workflow membership, phase, material custody, approved adapter/runtime selection and installed continuation lineage. Gate certificates do not replace current Plan review, native permission or normal Operation admission. Known-success barriers require exact retained succeeded Operations with known effects and the correct result/Plan/workflow identities. Failed, unknown, unrelated-workflow or unaccepted work cannot count as success. Local child acceptance and immutable outcome custody precede acknowledgement. Completed recovery slots are nonexecutable.",
+        "children": "Every child remains bound to the exact local reviewed Plan, owner epoch, resource, request ID, workflow membership, phase, material custody, approved adapter/runtime selection and installed continuation lineage. Gate certificates do not replace current Plan review, native permission or normal Operation admission. Known-success barriers require exact retained succeeded Operations with known effects and the correct result/Plan/workflow identities. Failed, unknown, unrelated-workflow or unaccepted work cannot count as success. Local child acceptance and immutable outcome custody precede acknowledgement. Completed recovery slots are nonexecutable. A journal admission permit is distinct from native acceptance. admit.renew may append an exact predecessor-bound replacement after a same-phase barrier refresh or completed driver transfer only when the native owner positively proves no accepted Operation and permanently fences the old permit under the native acceptance serialization boundary. Known accepted work, unknown request custody and existing native outcomes cannot be renewed. The unchanged child and reviewed Plan must still pass all current checks; accepted native retries retain original attribution. Native operation acceptance consults the durable superseded-permit closure index inside the acceptance transaction even if appending a replacement journal permit failed; unchanged barrier protection alone cannot resurrect that closed permit.",
         "journal": "Owners serialize admission and append immutable request/outcome events before acknowledgement. Opening requires explicit initialization for a genuinely new journal; missing, wrong-epoch, wrong-schema, corrupt or truncated accepted custody is never treated as an empty owner. An exact retained request ID is resolved from a protected index before freshness checks; identical input returns its original outcome and attribution after current read authorization. Changed input conflicts. Ordinary admission processes only new local bytes and exact indexed dependencies; it does not reserialize a whole manifest or rescan all retained events. Cold restore reads and validates the complete journal once to rebuild indexes. An explicit complete audit inspection may materialize a shared Workflow view; such a view is not a member admission input or a required per-event rewrite.",
         "transfer": "A driver transfer has one common gate-owned proposal. Each member durably freezes its own old-term admission once and signs its exact freeze. The gate verifies all freezes once before committing the new term. Each member installs that term only against its own retained freeze and independently approved new driver. New work remains closed until the gate has the complete installation closure and each admitting member has the matching activation decision. Partial transfer cannot reopen old admission, admit under a partially installed new term, change gate authority or manufacture missing evidence. Already accepted native work may settle under owner authority independently of transfer, without admitting new children or completing the transfer.",
-        "recovery": "The gate owns one complete recovery manifest; each member retains only its exact local recovery projection and custody dependencies. Original admissions are durably retired and one successor is exclusively reserved before successor execution. A different successor requires positive, verified abandonment of the prior unused reservation. Missing or unreachable custody, timeout, expiry and an empty restored journal are not evidence of never-prepared, unaccepted, stopped or successful work. Positive local disposition evidence preserves exact known completed Operations, explicit unknown effects, holds, material and original schema identities. Uncertainty blocks redispatch until native recovery establishes a safe disposition. Missing gate custody blocks new shared admissions while local accepted work remains independently inspectable and settleable. Gate restoration or replacement requires qualified exact authoritative custody and explicit owner approval; local snapshots cannot invent a missing shared head. Before replacing an uncommitted unused successor, the gate first records an abandonment proposal that closes recovery commitment. Each local owner then positively proves that exact successor unused and permanently tombstoned. Only complete all-owner abandonment permits a gate certificate and a new successor reservation; each local owner must observe that certificate before replacement. The original remains retired and its uncertain/completed effects do not change. A known accepted original Operation can never become unaccepted through reconciliation: per-child updates bind the exact prior disposition and original Operation to a separate successful typed recovery Operation and Plan. Completed and positive-unaccepted facts remain immutable. A current-epoch recovery-only member initializes through member.recover using only the digest of the exact complete originally signed projection. The original projection bytes and qualified historical schema reader come from independently approved native custody context. A historically valid projection is never forced through the current closed projection body schema or accepted on a caller-chosen reader. Digest substitution conflicts, and this recovery-only actor cannot admit ordinary children.",
+        "recovery": "The gate owns one complete recovery manifest; each member retains only its exact local recovery projection and custody dependencies. Original admissions are durably retired and one successor is exclusively reserved before successor execution. A different successor requires positive, verified abandonment of the prior unused reservation. Missing or unreachable custody, timeout, expiry and an empty restored journal are not evidence of never-prepared, unaccepted, stopped or successful work. Positive local disposition evidence preserves exact known completed Operations, explicit unknown effects, holds, material and original schema identities. Uncertainty blocks redispatch until native recovery establishes a safe disposition. Missing gate custody blocks new shared admissions while local accepted work remains independently inspectable and settleable. Gate restoration or replacement requires qualified exact authoritative custody and explicit owner approval; local snapshots cannot invent a missing shared head. Before replacing an uncommitted unused successor, the gate first records an abandonment proposal that closes recovery commitment. Each local owner then positively proves that exact successor unused and permanently tombstoned. Only complete all-owner abandonment permits a gate certificate and a new successor reservation; each local owner must observe that certificate before replacement. The original remains retired and its uncertain/completed effects do not change. A known accepted original Operation can never become unaccepted through reconciliation: per-child updates bind the exact prior disposition and original Operation to a separate successful typed recovery Operation and Plan. Completed and positive-unaccepted facts remain immutable. A current-epoch recovery-only member initializes through member.recover using only the digest of the exact complete originally signed projection. The original projection bytes and qualified historical schema reader come from independently approved native custody context. A historically valid projection is never forced through the current closed projection body schema or accepted on a caller-chosen reader. Digest substitution conflicts, and this recovery-only actor cannot admit ordinary children. gate.recover establishes a distinct current-epoch recovery-only gate from the exact complete authoritative epoch-journal lineage and verified custody. Native restoration verifies anti-rollback, permanent prior-gate fencing, unchanged original proposal/signatures and every retained transfer or exclusive successor reservation. Original reducer/custody mappings are preserved per source segment rather than recomputed from new configuration. Every member independently enrolls the exact bounded replacement authority/key, durably closes original admission while preserving local custody, and signs recover.gate_approve. The current gate collects each indexed original member/current custodian once and recover.gate_commit requires complete coverage. Before that commitment it cannot issue any shared recovery decision; afterward it still cannot run ordinary rounds, child admission or driver transfer. Recovery can create a separately authorized successor. An existing committed successor is preserved: a current gate may recertify its unchanged retirement closure with exact supersedes identity, and members revalidate that certificate without repeating accepted work. Repeated gate restoration retains and verifies every original epoch segment once; native and member approval contexts are independently installed, never selected by commands. A member may miss intermediate certificate deliveries and safely advance directly to the current approved gate certificate only for its unchanged already-committed recovery and complete disposition closure. Terminal abandonment certificates remain indexed by exact successor after reservation cleanup; recover.abandon_recertify reissues only their unchanged all-owner terminal closure under the fully reapproved current gate, so a lagging member can observe abandonment without reviving an old gate or reservation. A restored member epoch can independently approve the same current gate authority anew, preserving its prior member signature and requiring a fresh current-native closure and grant. A recovery gate authority commits its complete member-custodian mapping once; its reapproval closure cannot be replayed under changed native owner or custody configuration. A changed mapping requires a new gate epoch and all current members' independent approval. Each local gate-recovery grant independently pins previous_authority_digest, null before the first recovery approval or the digest of that receiver's exact current recovery authority. The native approval and durable local receipt preserve that compare-and-swap. A receiver that never approved an aborted intermediate gate can approve the independently enrolled current replacement without first installing obsolete authority; the current gate still verifies every source segment and all current local approvals.",
         "transport": "workflow.journal.submit carries a content-staged canonical JournalCommand under exact receiving owner, workflow scope, current principal, digest and byte length. Replies are immutable typed record references, read through bounded record.read chunks with current scope authorization on every read. Lost replies rediscover the original request outcome by ID. Upload and download interruption retain complete extent and resume offsets; frame/page limits do not cap total owners, children, material or history. Request-selected schema readers or trust keys are forbidden. The bounded submit reference carries exact workflow_id and command_id. After current read authorization, an indexed accepted command whose immutable command digest equals input.digest returns its original record reference before any staged-byte read or admission freshness check. Changed digest under that identity conflicts. New inputs must decode to the same workflow_id/command_id; wire identities alone never create an accepted command. Exact retained replay survives expiry or loss of the original unpinned staging copy.",
         "growth": "For an entire execution including initialization, preparation, all installed phases, child binds and outcomes, driver transfer, successor recovery, durable writes, cold restoration, pages and exact retries, required work is O(B + N + E + Q + H + R + S). B is the unique logical manifest and local intent/material input bytes, counted before protocol replication; N is distinct owners; E is actual declared dependency delivery extent; Q is required owner-phase participation; H is newly accepted history bytes; R is actual retry bytes. Material genuinely required at N native consumers has N consumer incidences. Gratuitous protocol copies and all-to-all messages cannot inflate these denominators. All transmitted, canonicalized, hashed, signed, verified, stored, rewritten, read and parsed bytes across all participants count. Per-owner linear checks, precomputed setup, caches and fixed owner counts do not establish this aggregate bound. H counts each logical accepted input/outcome once per semantic event, not copies, expanded proof delivery or whole-history rewrites. R is the declared retry schedule and logically selected retry payload, not permission to absorb repeated whole-resource work into a larger denominator. Increasing owner, local child, material and retry axes are measured separately; a prescribed fixed-phase complete workload must also demonstrate O(B + N + E) growth without using generated storage as input extent. S is the complete authoritative byte input to independently required cold restorations. Each such restoration validates each retained byte once. Ordinary admissions and retries cannot invoke a whole-history rebuild or charge it to S. The fixed-restore-schedule aggregate proof includes every actual restore read, parse and reconstruction; it does not promise a restart-count-independent cost when an external failure schedule repeatedly requires rereading growing authoritative history. A stronger bound across arbitrary process restarts requires a separately qualified persistent trusted index and is not established by this reference model.",
-        "discovery": "workflow.journal.list discovers authorized local workflow heads without caller state. Each reference scopes its workflow ID. workflow.journal.events then enumerates every retained immutable event reference for that exact owner/workflow, including initialization, local projection/gate route, accepted bindings, permits, outcomes, transfer and recovery. A cursor pins one stable high-water event boundary and exact scope; appending later work cannot replace its members or restart a prefix. Pages contain at most 64 references but have no total-count limit. Current permission is checked on every page and chunk. The reference delivery model explicitly expires its cursors on owner-process restart; a fresh traversal rediscovers all durable events without deleting, rebinding or silently omitting custody. workflow.journal.input then content.get makes the exact original accepted command retrievable for every event, including shared gate proposals and collected owner votes. Each selected complete input is returned once during complete inspection; bounded retries do not reserialize full history."
+        "discovery": "workflow.journal.list discovers authorized local workflow heads without caller state. Each reference scopes its workflow ID. workflow.journal.events then enumerates every retained immutable event reference for that exact owner/workflow, including initialization, local projection/gate route, accepted bindings, permits, outcomes, transfer and recovery. A cursor pins one stable high-water event boundary and exact scope; appending later work cannot replace its members or restart a prefix. Pages contain at most 64 references but have no total-count limit. Current permission is checked on every page and chunk. The reference delivery model explicitly expires its cursors on owner-process restart; a fresh traversal rediscovers all durable events without deleting, rebinding or silently omitting custody. workflow.journal.input then content.get makes the exact original accepted command retrievable for every event, including shared gate proposals and collected owner votes. Each selected complete input is returned once during complete inspection; bounded retries do not reserialize full history. After an epoch-changing restore, discover original references with owner.history and history.list record_kind WorkflowJournalRecord; history.input resolves the original accepted command handle and schema under that custody, and history.content reads unchanged original bytes. Current custodian permission applies to every step; old epochs never regain execution authority. Historical journal discovery accepts a null workflow resource to discover all retained workflows or an exact workflow resource to narrow scope; history.input retains each accepted command's original input_schema without current-schema rebinding."
       }
+    },
+    "AdmissionRenewalEvidence": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "workflow_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "child": {
+          "$ref": "workflow.schema.json#/$defs/ChildReference"
+        },
+        "previous_permit_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "previous_permit_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "native_generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "unaccepted": {
+          "const": true
+        },
+        "previous_permit_closed": {
+          "const": true
+        }
+      },
+      "required": [
+        "owner",
+        "workflow_id",
+        "child",
+        "previous_permit_id",
+        "previous_permit_digest",
+        "native_generation",
+        "unaccepted",
+        "previous_permit_closed"
+      ],
+      "additionalProperties": false,
+      "description": "Positive protected native proof for exactly one child and predecessor permit. Under the same serialization boundary as native operation.submit, the owner checks its complete authoritative request index, permanently closes that old permit and proves no Operation was accepted. Absence of a reply, timeout, missing store, or caller assertion cannot establish this evidence. Accepted native replay and original attribution remain unchanged."
+    },
+    "AdmissionRenewCommand": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "workflow_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "action": {
+          "const": "admit.renew"
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "expected_generation": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "driver_term": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "child": {
+              "$ref": "workflow.schema.json#/$defs/ChildReference"
+            },
+            "previous_permit_id": {
+              "$ref": "common.schema.json#/$defs/UUID"
+            },
+            "previous_permit_digest": {
+              "$ref": "common.schema.json#/$defs/Digest"
+            }
+          },
+          "required": [
+            "expected_generation",
+            "driver_term",
+            "child",
+            "previous_permit_id",
+            "previous_permit_digest"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "workflow_id",
+        "action",
+        "payload"
+      ],
+      "additionalProperties": false,
+      "description": "Append a replacement permit for the exact positively unaccepted child after a current-phase barrier refresh or completed driver transfer. Compare-and-swap the complete prior permit identity and digest; preserve its immutable record. Revalidate the unchanged Plan, child, current driver, scope, native protection and authorization. A known accepted or unknown native request cannot be renewed. Exact command replay returns the original replacement without repeating native retirement."
+    },
+    "GateRecoveryAuthority": {
+      "type": "object",
+      "properties": {
+        "workflow_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "proposal_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "header_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "origin": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "predecessor": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "key_id": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "source_head": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "source_schema": {
+          "$ref": "common.schema.json#/$defs/SchemaIdentity"
+        },
+        "custody_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "member_custody_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        }
+      },
+      "required": [
+        "workflow_id",
+        "proposal_digest",
+        "header_digest",
+        "origin",
+        "predecessor",
+        "owner",
+        "key_id",
+        "source_head",
+        "source_schema",
+        "custody_digest",
+        "member_custody_digest"
+      ],
+      "additionalProperties": false,
+      "description": "Bounded current gate authority commitment. origin is the original header gate, predecessor is the immediately retired gate epoch, and owner is the new custodian epoch of that same logical owner. Complete source journal segments, original schema readers, exact last head and native anti-rollback/fencing are independently verified custody, never supplied or granted by this object. Each member independently enrolls this exact value and signing key before approving recovery. This authority permits successor recovery only; original execution, phase advance and driver transfer remain retired. member_custody_digest commits the complete indexed original-member to current-custodian mapping and each independently verified custody. This mapping is immutable within the gate epoch; cold reopen with changed mapping refuses, and a new mapping requires a new gate epoch and complete fresh reapproval. The new owner epoch must differ from every retained source epoch; an earlier identity may never be reused even when it differs from the immediate predecessor."
+    },
+    "GateRecoveryApprovalEvidence": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "workflow_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "authority_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "grant_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "native_generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "original_admission_closed": {
+          "const": true
+        },
+        "custody_preserved": {
+          "const": true
+        },
+        "previous_authority_digest": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Digest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "owner",
+        "workflow_id",
+        "authority_digest",
+        "grant_id",
+        "native_generation",
+        "original_admission_closed",
+        "custody_preserved",
+        "previous_authority_digest"
+      ],
+      "additionalProperties": false,
+      "description": "Protected receiver-local native approval. previous_authority_digest compare-and-swaps the exact locally retained recovery-gate authority, or null before its first approval, as independently installed with the grant. It need not equal the new gate's immediate lineage predecessor: a receiver may miss approval of an aborted intervening gate epoch. Complete original gate lineage remains independently verified at the replacement gate; no all-history payload is sent to each member."
+    },
+    "GateRecoveryInitializedBody": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "gate-recovery-initialized"
+        },
+        "header_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "authority": {
+          "$ref": "workflow-journal.schema.json#/$defs/GateRecoveryAuthority"
+        },
+        "command_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        }
+      },
+      "required": [
+        "type",
+        "header_digest",
+        "authority",
+        "command_digest"
+      ],
+      "additionalProperties": false
+    },
+    "GateRecoveryInitializedRecord": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "fishhat.workflow-journal/v1"
+        },
+        "kind": {
+          "const": "WorkflowJournalRecord"
+        },
+        "id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "workflow_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "key_id": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "body": {
+          "$ref": "workflow-journal.schema.json#/$defs/GateRecoveryInitializedBody"
+        },
+        "signature": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9+/]{86}==(?![\\s\\S])"
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "id",
+        "owner",
+        "workflow_id",
+        "key_id",
+        "body",
+        "signature"
+      ],
+      "additionalProperties": false
+    },
+    "GateRecoveryApprovedBody": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "gate-recovery-approved"
+        },
+        "header_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "authority": {
+          "$ref": "workflow-journal.schema.json#/$defs/GateRecoveryAuthority"
+        },
+        "native": {
+          "$ref": "workflow-journal.schema.json#/$defs/GateRecoveryApprovalEvidence"
+        },
+        "command_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        }
+      },
+      "required": [
+        "type",
+        "header_digest",
+        "authority",
+        "native",
+        "command_digest"
+      ],
+      "additionalProperties": false
+    },
+    "GateRecoveryApprovedRecord": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "fishhat.workflow-journal/v1"
+        },
+        "kind": {
+          "const": "WorkflowJournalRecord"
+        },
+        "id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "workflow_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "key_id": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "body": {
+          "$ref": "workflow-journal.schema.json#/$defs/GateRecoveryApprovedBody"
+        },
+        "signature": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9+/]{86}==(?![\\s\\S])"
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "id",
+        "owner",
+        "workflow_id",
+        "key_id",
+        "body",
+        "signature"
+      ],
+      "additionalProperties": false
+    },
+    "GateRecoveryApprovalAcceptedBody": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "gate-recovery-approval-accepted"
+        },
+        "header_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "authority_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "member": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "approval_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "command_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        }
+      },
+      "required": [
+        "type",
+        "header_digest",
+        "authority_digest",
+        "member",
+        "approval_digest",
+        "command_digest"
+      ],
+      "additionalProperties": false
+    },
+    "GateRecoveryApprovalAcceptedRecord": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "fishhat.workflow-journal/v1"
+        },
+        "kind": {
+          "const": "WorkflowJournalRecord"
+        },
+        "id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "workflow_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "key_id": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "body": {
+          "$ref": "workflow-journal.schema.json#/$defs/GateRecoveryApprovalAcceptedBody"
+        },
+        "signature": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9+/]{86}==(?![\\s\\S])"
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "id",
+        "owner",
+        "workflow_id",
+        "key_id",
+        "body",
+        "signature"
+      ],
+      "additionalProperties": false
+    },
+    "GateRecoveryCertificateBody": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "gate-recovery-certificate"
+        },
+        "header_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "authority": {
+          "$ref": "workflow-journal.schema.json#/$defs/GateRecoveryAuthority"
+        },
+        "owner_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "approval_closure_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "command_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        }
+      },
+      "required": [
+        "type",
+        "header_digest",
+        "authority",
+        "owner_count",
+        "approval_closure_digest",
+        "command_digest"
+      ],
+      "additionalProperties": false
+    },
+    "GateRecoveryCertificateRecord": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "fishhat.workflow-journal/v1"
+        },
+        "kind": {
+          "const": "WorkflowJournalRecord"
+        },
+        "id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "workflow_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "key_id": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "body": {
+          "$ref": "workflow-journal.schema.json#/$defs/GateRecoveryCertificateBody"
+        },
+        "signature": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9+/]{86}==(?![\\s\\S])"
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "id",
+        "owner",
+        "workflow_id",
+        "key_id",
+        "body",
+        "signature"
+      ],
+      "additionalProperties": false
+    },
+    "GateRecoverCommand": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "workflow_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "action": {
+          "const": "gate.recover"
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "source_head": {
+              "$ref": "common.schema.json#/$defs/Digest"
+            },
+            "custody_digest": {
+              "$ref": "common.schema.json#/$defs/Digest"
+            }
+          },
+          "required": [
+            "source_head",
+            "custody_digest"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "workflow_id",
+        "action",
+        "payload"
+      ],
+      "additionalProperties": false,
+      "description": "Initialize a recovery-only gate under the current owner epoch. The selected complete original proposal, ordered original/replacement journal segments, exact authoritative heads, historical schema readers, keys, original reducer mappings, verified custody and native fencing callback come solely from protected OriginGateRecoveryContext. This command only commits that independently selected custody. Missing history or source-head substitution refuses; an empty new journal cannot reconstruct accepted state."
+    },
+    "GateRecoveryApproveCommand": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "workflow_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "action": {
+          "const": "recover.gate_approve"
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "initialization": {
+              "$ref": "workflow-journal.schema.json#/$defs/GateRecoveryInitializedRecord"
+            }
+          },
+          "required": [
+            "initialization"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "workflow_id",
+        "action",
+        "payload"
+      ],
+      "additionalProperties": false
+    },
+    "GateRecoveryCollectCommand": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "workflow_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "action": {
+          "const": "recover.gate_collect"
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "approval": {
+              "$ref": "workflow-journal.schema.json#/$defs/GateRecoveryApprovedRecord"
+            }
+          },
+          "required": [
+            "approval"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "workflow_id",
+        "action",
+        "payload"
+      ],
+      "additionalProperties": false
+    },
+    "GateRecoveryCommitCommand": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "workflow_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "action": {
+          "const": "recover.gate_commit"
+        },
+        "payload": {
+          "type": "object",
+          "properties": {},
+          "required": [],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "workflow_id",
+        "action",
+        "payload"
+      ],
+      "additionalProperties": false
+    },
+    "RecoveryAbandonRecertifyCommand": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "workflow_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "action": {
+          "const": "recover.abandon_recertify"
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "successor_workflow_id": {
+              "$ref": "common.schema.json#/$defs/UUID"
+            }
+          },
+          "required": [
+            "successor_workflow_id"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "id",
+        "workflow_id",
+        "action",
+        "payload"
+      ],
+      "additionalProperties": false,
+      "description": "A fully reapproved current-epoch recovery-only gate appends a current signature for an indexed, already committed terminal abandonment. The exact recovery, abandonment id, owner count and complete closure stay unchanged; supersedes names the exact retained predecessor certificate. This bounded receipt catch-up never opens or restores a reservation, alters accepted work, or authorizes fresh native effects."
     }
   }
 }

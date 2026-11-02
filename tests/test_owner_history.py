@@ -594,7 +594,14 @@ def test_historical_reads_cannot_bypass_new_recovery_admission(change):
 
 @pytest.mark.parametrize(
     "method",
-    ["owner.history", "history.list", "history.read", "history.content", "workflow.journal.submit"],
+    [
+        "owner.history",
+        "history.list",
+        "history.read",
+        "history.input",
+        "history.content",
+        "workflow.journal.submit",
+    ],
 )
 def test_direct_owner_history_and_binding_commands_use_closed_stdin(method):
     stdin_flag = "--input-stdin" if method == "workflow.journal.submit" else "--request-stdin"

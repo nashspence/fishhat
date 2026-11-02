@@ -1,0 +1,632 @@
+[
+  {
+    "id": "RelativePath-simple",
+    "definition": "RelativePath",
+    "value": "app",
+    "valid": true
+  },
+  {
+    "id": "RelativePath-nested",
+    "definition": "RelativePath",
+    "value": "app/data",
+    "valid": true
+  },
+  {
+    "id": "RelativePath-unicode",
+    "definition": "RelativePath",
+    "value": "\u90e8\u7f72/\u96ea",
+    "valid": true
+  },
+  {
+    "id": "RelativePath-emoji",
+    "definition": "RelativePath",
+    "value": "app/\ud83d\udc1f",
+    "valid": true
+  },
+  {
+    "id": "RelativePath-ordinary-dot",
+    "definition": "RelativePath",
+    "value": "app/.config",
+    "valid": true
+  },
+  {
+    "id": "RelativePath-ordinary-dots",
+    "definition": "RelativePath",
+    "value": "app/..name",
+    "valid": true
+  },
+  {
+    "id": "RelativePath-line-separator-name",
+    "definition": "RelativePath",
+    "value": "app/\u2028/data",
+    "valid": true
+  },
+  {
+    "id": "RelativePath-paragraph-separator-name",
+    "definition": "RelativePath",
+    "value": "app/\u2029/data",
+    "valid": true
+  },
+  {
+    "id": "RelativePath-space-name",
+    "definition": "RelativePath",
+    "value": "app/two words",
+    "valid": true
+  },
+  {
+    "id": "RelativePath-empty",
+    "definition": "RelativePath",
+    "value": "",
+    "valid": false
+  },
+  {
+    "id": "RelativePath-dot",
+    "definition": "RelativePath",
+    "value": ".",
+    "valid": false
+  },
+  {
+    "id": "RelativePath-parent",
+    "definition": "RelativePath",
+    "value": "..",
+    "valid": false
+  },
+  {
+    "id": "RelativePath-nested-dot",
+    "definition": "RelativePath",
+    "value": "app/./data",
+    "valid": false
+  },
+  {
+    "id": "RelativePath-nested-parent",
+    "definition": "RelativePath",
+    "value": "app/../data",
+    "valid": false
+  },
+  {
+    "id": "RelativePath-empty-segment",
+    "definition": "RelativePath",
+    "value": "app//data",
+    "valid": false
+  },
+  {
+    "id": "RelativePath-trailing-slash",
+    "definition": "RelativePath",
+    "value": "app/data/",
+    "valid": false
+  },
+  {
+    "id": "RelativePath-backslash",
+    "definition": "RelativePath",
+    "value": "app\\data",
+    "valid": false
+  },
+  {
+    "id": "RelativePath-newline",
+    "definition": "RelativePath",
+    "value": "app/data\n",
+    "valid": false
+  },
+  {
+    "id": "RelativePath-nul",
+    "definition": "RelativePath",
+    "value": "app/\u0000/data",
+    "valid": false
+  },
+  {
+    "id": "RelativePath-line-separator-parent",
+    "definition": "RelativePath",
+    "value": "app/\u2028/../outside",
+    "valid": false
+  },
+  {
+    "id": "RelativePath-paragraph-separator-dot",
+    "definition": "RelativePath",
+    "value": "app/\u2029/./data",
+    "valid": false
+  },
+  {
+    "id": "RelativePath-line-separator-control",
+    "definition": "RelativePath",
+    "value": "app/\u2028/\u0001/data",
+    "valid": false
+  },
+  {
+    "id": "RelativePath-paragraph-separator-backslash",
+    "definition": "RelativePath",
+    "value": "app/\u2029/\\data",
+    "valid": false
+  },
+  {
+    "id": "RelativePath-line-separator-empty",
+    "definition": "RelativePath",
+    "value": "app/\u2028//data",
+    "valid": false
+  },
+  {
+    "id": "RelativePath-wrong-root",
+    "definition": "RelativePath",
+    "value": "/app",
+    "valid": false
+  },
+  {
+    "id": "AbsolutePath-simple",
+    "definition": "AbsolutePath",
+    "value": "/app",
+    "valid": true
+  },
+  {
+    "id": "AbsolutePath-nested",
+    "definition": "AbsolutePath",
+    "value": "/app/data",
+    "valid": true
+  },
+  {
+    "id": "AbsolutePath-unicode",
+    "definition": "AbsolutePath",
+    "value": "/\u90e8\u7f72/\u96ea",
+    "valid": true
+  },
+  {
+    "id": "AbsolutePath-emoji",
+    "definition": "AbsolutePath",
+    "value": "/app/\ud83d\udc1f",
+    "valid": true
+  },
+  {
+    "id": "AbsolutePath-ordinary-dot",
+    "definition": "AbsolutePath",
+    "value": "/app/.config",
+    "valid": true
+  },
+  {
+    "id": "AbsolutePath-ordinary-dots",
+    "definition": "AbsolutePath",
+    "value": "/app/..name",
+    "valid": true
+  },
+  {
+    "id": "AbsolutePath-line-separator-name",
+    "definition": "AbsolutePath",
+    "value": "/app/\u2028/data",
+    "valid": true
+  },
+  {
+    "id": "AbsolutePath-paragraph-separator-name",
+    "definition": "AbsolutePath",
+    "value": "/app/\u2029/data",
+    "valid": true
+  },
+  {
+    "id": "AbsolutePath-space-name",
+    "definition": "AbsolutePath",
+    "value": "/app/two words",
+    "valid": true
+  },
+  {
+    "id": "AbsolutePath-empty",
+    "definition": "AbsolutePath",
+    "value": "/",
+    "valid": false
+  },
+  {
+    "id": "AbsolutePath-dot",
+    "definition": "AbsolutePath",
+    "value": "/.",
+    "valid": false
+  },
+  {
+    "id": "AbsolutePath-parent",
+    "definition": "AbsolutePath",
+    "value": "/..",
+    "valid": false
+  },
+  {
+    "id": "AbsolutePath-nested-dot",
+    "definition": "AbsolutePath",
+    "value": "/app/./data",
+    "valid": false
+  },
+  {
+    "id": "AbsolutePath-nested-parent",
+    "definition": "AbsolutePath",
+    "value": "/app/../data",
+    "valid": false
+  },
+  {
+    "id": "AbsolutePath-empty-segment",
+    "definition": "AbsolutePath",
+    "value": "/app//data",
+    "valid": false
+  },
+  {
+    "id": "AbsolutePath-trailing-slash",
+    "definition": "AbsolutePath",
+    "value": "/app/data/",
+    "valid": false
+  },
+  {
+    "id": "AbsolutePath-backslash",
+    "definition": "AbsolutePath",
+    "value": "/app\\data",
+    "valid": false
+  },
+  {
+    "id": "AbsolutePath-newline",
+    "definition": "AbsolutePath",
+    "value": "/app/data\n",
+    "valid": false
+  },
+  {
+    "id": "AbsolutePath-nul",
+    "definition": "AbsolutePath",
+    "value": "/app/\u0000/data",
+    "valid": false
+  },
+  {
+    "id": "AbsolutePath-line-separator-parent",
+    "definition": "AbsolutePath",
+    "value": "/app/\u2028/../outside",
+    "valid": false
+  },
+  {
+    "id": "AbsolutePath-paragraph-separator-dot",
+    "definition": "AbsolutePath",
+    "value": "/app/\u2029/./data",
+    "valid": false
+  },
+  {
+    "id": "AbsolutePath-line-separator-control",
+    "definition": "AbsolutePath",
+    "value": "/app/\u2028/\u0001/data",
+    "valid": false
+  },
+  {
+    "id": "AbsolutePath-paragraph-separator-backslash",
+    "definition": "AbsolutePath",
+    "value": "/app/\u2029/\\data",
+    "valid": false
+  },
+  {
+    "id": "AbsolutePath-line-separator-empty",
+    "definition": "AbsolutePath",
+    "value": "/app/\u2028//data",
+    "valid": false
+  },
+  {
+    "id": "AbsolutePath-wrong-root",
+    "definition": "AbsolutePath",
+    "value": "app",
+    "valid": false
+  },
+  {
+    "id": "GitRef-branch",
+    "definition": "GitRef",
+    "value": "refs/heads/main",
+    "valid": true
+  },
+  {
+    "id": "GitRef-tag",
+    "definition": "GitRef",
+    "value": "refs/tags/v1.0",
+    "valid": true
+  },
+  {
+    "id": "GitRef-nested",
+    "definition": "GitRef",
+    "value": "refs/heads/team/next",
+    "valid": true
+  },
+  {
+    "id": "GitRef-unicode",
+    "definition": "GitRef",
+    "value": "refs/tags/\u7248\u672c-\ud83d\udc1f",
+    "valid": true
+  },
+  {
+    "id": "GitRef-zero-width-space",
+    "definition": "GitRef",
+    "value": "refs/heads/a\u200bb",
+    "valid": true
+  },
+  {
+    "id": "GitRef-ordinary-nonspace-control",
+    "definition": "GitRef",
+    "value": "refs/heads/a\u0080b",
+    "valid": true
+  },
+  {
+    "id": "GitRef-abbreviated",
+    "definition": "GitRef",
+    "value": "main",
+    "valid": false
+  },
+  {
+    "id": "GitRef-empty",
+    "definition": "GitRef",
+    "value": "refs/heads/",
+    "valid": false
+  },
+  {
+    "id": "GitRef-parent",
+    "definition": "GitRef",
+    "value": "refs/heads/a..b",
+    "valid": false
+  },
+  {
+    "id": "GitRef-hidden",
+    "definition": "GitRef",
+    "value": "refs/heads/.hidden",
+    "valid": false
+  },
+  {
+    "id": "GitRef-nested-hidden",
+    "definition": "GitRef",
+    "value": "refs/heads/a/.hidden",
+    "valid": false
+  },
+  {
+    "id": "GitRef-lock",
+    "definition": "GitRef",
+    "value": "refs/heads/a.lock",
+    "valid": false
+  },
+  {
+    "id": "GitRef-nested-lock",
+    "definition": "GitRef",
+    "value": "refs/heads/a.lock/b",
+    "valid": false
+  },
+  {
+    "id": "GitRef-empty-segment",
+    "definition": "GitRef",
+    "value": "refs/heads/a//b",
+    "valid": false
+  },
+  {
+    "id": "GitRef-trailing-slash",
+    "definition": "GitRef",
+    "value": "refs/heads/a/",
+    "valid": false
+  },
+  {
+    "id": "GitRef-trailing-dot",
+    "definition": "GitRef",
+    "value": "refs/heads/a.",
+    "valid": false
+  },
+  {
+    "id": "GitRef-reflog",
+    "definition": "GitRef",
+    "value": "refs/heads/a@{0}",
+    "valid": false
+  },
+  {
+    "id": "GitRef-backslash",
+    "definition": "GitRef",
+    "value": "refs/heads/a\\b",
+    "valid": false
+  },
+  {
+    "id": "GitRef-wildcard",
+    "definition": "GitRef",
+    "value": "refs/heads/a*b",
+    "valid": false
+  },
+  {
+    "id": "GitRef-colon",
+    "definition": "GitRef",
+    "value": "refs/heads/a:b",
+    "valid": false
+  },
+  {
+    "id": "GitRef-line-before-lock",
+    "definition": "GitRef",
+    "value": "refs/heads/a\u2028b.lock",
+    "valid": false
+  },
+  {
+    "id": "GitRef-excluded-U0000",
+    "definition": "GitRef",
+    "value": "refs/heads/a\u0000b",
+    "valid": false
+  },
+  {
+    "id": "GitRef-excluded-U0009",
+    "definition": "GitRef",
+    "value": "refs/heads/a\tb",
+    "valid": false
+  },
+  {
+    "id": "GitRef-excluded-U000A",
+    "definition": "GitRef",
+    "value": "refs/heads/a\nb",
+    "valid": false
+  },
+  {
+    "id": "GitRef-excluded-U000D",
+    "definition": "GitRef",
+    "value": "refs/heads/a\rb",
+    "valid": false
+  },
+  {
+    "id": "GitRef-excluded-U001C",
+    "definition": "GitRef",
+    "value": "refs/heads/a\u001cb",
+    "valid": false
+  },
+  {
+    "id": "GitRef-excluded-U001F",
+    "definition": "GitRef",
+    "value": "refs/heads/a\u001fb",
+    "valid": false
+  },
+  {
+    "id": "GitRef-excluded-U0020",
+    "definition": "GitRef",
+    "value": "refs/heads/a b",
+    "valid": false
+  },
+  {
+    "id": "GitRef-excluded-U007F",
+    "definition": "GitRef",
+    "value": "refs/heads/a\u007fb",
+    "valid": false
+  },
+  {
+    "id": "GitRef-excluded-U0085",
+    "definition": "GitRef",
+    "value": "refs/heads/a\u0085b",
+    "valid": false
+  },
+  {
+    "id": "GitRef-excluded-U00A0",
+    "definition": "GitRef",
+    "value": "refs/heads/a\u00a0b",
+    "valid": false
+  },
+  {
+    "id": "GitRef-excluded-U1680",
+    "definition": "GitRef",
+    "value": "refs/heads/a\u1680b",
+    "valid": false
+  },
+  {
+    "id": "GitRef-excluded-U2000",
+    "definition": "GitRef",
+    "value": "refs/heads/a\u2000b",
+    "valid": false
+  },
+  {
+    "id": "GitRef-excluded-U2001",
+    "definition": "GitRef",
+    "value": "refs/heads/a\u2001b",
+    "valid": false
+  },
+  {
+    "id": "GitRef-excluded-U2002",
+    "definition": "GitRef",
+    "value": "refs/heads/a\u2002b",
+    "valid": false
+  },
+  {
+    "id": "GitRef-excluded-U2003",
+    "definition": "GitRef",
+    "value": "refs/heads/a\u2003b",
+    "valid": false
+  },
+  {
+    "id": "GitRef-excluded-U2004",
+    "definition": "GitRef",
+    "value": "refs/heads/a\u2004b",
+    "valid": false
+  },
+  {
+    "id": "GitRef-excluded-U2005",
+    "definition": "GitRef",
+    "value": "refs/heads/a\u2005b",
+    "valid": false
+  },
+  {
+    "id": "GitRef-excluded-U2006",
+    "definition": "GitRef",
+    "value": "refs/heads/a\u2006b",
+    "valid": false
+  },
+  {
+    "id": "GitRef-excluded-U2007",
+    "definition": "GitRef",
+    "value": "refs/heads/a\u2007b",
+    "valid": false
+  },
+  {
+    "id": "GitRef-excluded-U2008",
+    "definition": "GitRef",
+    "value": "refs/heads/a\u2008b",
+    "valid": false
+  },
+  {
+    "id": "GitRef-excluded-U2009",
+    "definition": "GitRef",
+    "value": "refs/heads/a\u2009b",
+    "valid": false
+  },
+  {
+    "id": "GitRef-excluded-U200A",
+    "definition": "GitRef",
+    "value": "refs/heads/a\u200ab",
+    "valid": false
+  },
+  {
+    "id": "GitRef-excluded-U2028",
+    "definition": "GitRef",
+    "value": "refs/heads/a\u2028b",
+    "valid": false
+  },
+  {
+    "id": "GitRef-excluded-U2029",
+    "definition": "GitRef",
+    "value": "refs/heads/a\u2029b",
+    "valid": false
+  },
+  {
+    "id": "GitRef-excluded-U202F",
+    "definition": "GitRef",
+    "value": "refs/heads/a\u202fb",
+    "valid": false
+  },
+  {
+    "id": "GitRef-excluded-U205F",
+    "definition": "GitRef",
+    "value": "refs/heads/a\u205fb",
+    "valid": false
+  },
+  {
+    "id": "GitRef-excluded-U3000",
+    "definition": "GitRef",
+    "value": "refs/heads/a\u3000b",
+    "valid": false
+  },
+  {
+    "id": "GitRef-excluded-UFEFF",
+    "definition": "GitRef",
+    "value": "refs/heads/a\ufeffb",
+    "valid": false
+  },
+  {
+    "id": "RelativePath-maximum",
+    "definition": "RelativePath",
+    "value": "abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "valid": true
+  },
+  {
+    "id": "RelativePath-oversized",
+    "definition": "RelativePath",
+    "value": "abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "valid": false
+  },
+  {
+    "id": "AbsolutePath-maximum",
+    "definition": "AbsolutePath",
+    "value": "/abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "valid": true
+  },
+  {
+    "id": "AbsolutePath-oversized",
+    "definition": "AbsolutePath",
+    "value": "/abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "valid": false
+  },
+  {
+    "id": "GitRef-maximum",
+    "definition": "GitRef",
+    "value": "refs/heads/abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "valid": true
+  },
+  {
+    "id": "GitRef-oversized",
+    "definition": "GitRef",
+    "value": "refs/heads/abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "valid": false
+  }
+]

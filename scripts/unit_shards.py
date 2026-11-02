@@ -9,7 +9,6 @@ import io
 import json
 import math
 import re
-import statistics
 import subprocess
 import sys
 import time
@@ -76,7 +75,8 @@ def observations(
             measured = {}
             status = {"status": "unusable", "sha256": None}
     matches = [measured[xml_key(node)] for node in nodes if xml_key(node) in measured]
-    fallback = max(0.001, statistics.median(matches)) if matches else 1.0
+    # Schedule unmeasured cases alongside the slowest observed work.
+    fallback = max(1.0, max(matches, default=0.0))
     weights = {node: max(0.001, measured.get(xml_key(node), fallback)) for node in nodes}
     return weights, {
         **status,
@@ -607,13 +607,17 @@ def reference(repository: str, destination: Path) -> None:
         ).stdout
 
     try:
-        runs = json.loads(
-            api(
-                f"repos/{repository}/actions/workflows/ci.yml/runs?branch=main&event=push&status=success&per_page=1"
+        runs = []
+        for event in ("push", "workflow_dispatch"):
+            runs.extend(
+                json.loads(
+                    api(
+                        f"repos/{repository}/actions/workflows/ci.yml/runs?branch=main&event={event}&status=success&per_page=1"
+                    )
+                )["workflow_runs"]
             )
-        )["workflow_runs"]
         if runs:
-            run = runs[0]
+            run = max(runs, key=lambda value: (value["created_at"], value["id"]))
             report.update(source_run=run["id"], source_commit=run["head_sha"])
             artifacts = []
             page = 1

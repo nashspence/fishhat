@@ -500,7 +500,7 @@
         "--json"
       ],
       "use_case": "history.list",
-      "description": "Enumerate original immutable record references under one verified custody descriptor, using current principal permission. Native filtering retains terminal work with unresolved effects or holds, and non-effectful prepared workflow capsules. active_only is false for Plans. A page is not a total collection cap; permission, exact filters and custody remain pinned across continuation. References disclose no execution authority. Read the exact closed request from stdin."
+      "description": "Enumerate original immutable record references under one verified custody descriptor, using current principal permission. Native filtering retains terminal work with unresolved effects or holds, and non-effectful prepared workflow capsules. active_only is false for Plans, WorkflowTransferRecords and WorkflowPhaseAttestations. WorkflowTransferRecord enumeration returns the latest retained custody for every original transfer identity, including in-progress and completed transfers, with a workflow resource filter matched to record.resource. WorkflowPhaseAttestation enumeration returns every retained original attestation identity under the same exact workflow resource filter, including expired proofs. Its original request, authenticated attribution, issuer epoch, observed generation, signed proofs and expiry remain immutable; historical inspection never renews protection or authorizes current phase progress. Both record kinds retain their original schema closures and require independently installed historical readers when the installed closure differs. Original epochs, generation, accepted input, phase witnesses and completion receipts remain unchanged across restoration; later transfers or attestations never hide earlier identities. A page is not a total collection cap; permission, exact filters and custody remain pinned across continuation. References disclose no execution authority. WorkflowJournalRecord enumeration includes every original immutable event, including initialization, retained projections, bindings, permits, outcomes, transfer and recovery events. active_only is false. A null resource discovers all authorized journal events and their workflow identities without saved client IDs; a workflow resource filters exactly that workflow. Pagination pins a stable high-water event boundary, current custodian, custody descriptor, actual principal and exact filters. New retained events cannot replace or rebind a cursor prefix. Expired cursors fail explicitly and a fresh traversal rediscovers all retained events. The owner uses retained indexes and bounded scan windows, including denied entries, rather than rescanning a complete journal per page. Original accepted inputs are discovered from each event reference through history.input and read through history.content. Read the exact closed request from stdin."
     },
     {
       "name": "history-read",
@@ -513,6 +513,18 @@
       ],
       "use_case": "history.read",
       "description": "Read exact original snapshot bytes after current-owner authorization of its protected resource and verified custody membership. The reference retains the original owner epoch and exact installed historical schema closure. It cannot register a reader or authorize new work. Read the exact closed request from stdin."
+    },
+    {
+      "name": "history-input",
+      "tokens": [
+        "{tool}",
+        "history",
+        "input",
+        "--request-stdin",
+        "--json"
+      ],
+      "use_case": "history.input",
+      "description": "Resolve the exact original accepted command of a retained journal event discovered by history.list. The current custodian independently authenticates its verified restoration membership and current principal permission for the original workflow before disclosing anything. The reference retains the original owner epoch, immutable event identity and exact historical schema. No original staging handle or client cache is required. A caller cannot select another command, install a historical reader, revive execution authority or turn an unknown record into accepted work. Read the exact closed request from stdin."
     },
     {
       "name": "history-content",

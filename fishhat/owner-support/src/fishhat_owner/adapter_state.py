@@ -1,4 +1,4 @@
-"""Owner dispatch reference with an injected authoritative commit boundary.
+"""Owner dispatch reference with atomic bounded commits and explicit checkpoints.
 
 This models persistence ordering, not native supervision or a separate journal.
 Native observations must be authenticated and qualified by the installed owner.
@@ -21,6 +21,7 @@ from fishhat_adapters import (
     runtime_binding_digest,
 )
 from fishhat_contracts.adapter_semantics import accumulate_result
+from fishhat_contracts.bounds import Bounds, bounds
 from fishhat_contracts.validation import ContractError, canonical, digest, validate
 
 
@@ -30,17 +31,42 @@ def require(ok: bool, code: str) -> None:
 
 
 class AdapterCoordinator:
+    """Retain accepted work through an independently supplied atomic commit receiver.
+
+    commit_delta receives a closed fishhat.adapter-commit/v1 envelope, never a
+    replacement snapshot for ordinary work. Its exact fields are format, kind
+    (delta), owner, expected_revision, revision and updates. Updates contain only
+    changed entries in bindings, admission, quiescent, attempts, requests and
+    results, keyed by subject or attempt ID as in the checkpoint. A result update
+    contains latest, knowledge and records, with only newly appended digest-keyed
+    request/response records. The receiver atomically checks its exact owner and
+    expected revision, appends new requests and result records, updates only the
+    selected binding/admission/attempt/result heads, and advances revision before
+    acknowledging. Existing request and result bytes are immutable; result records
+    merge by their digest, while latest and knowledge replace their selected head.
+    Updates omit unchanged entries and never mean deletion. Native receivers must
+    enforce these preconditions in the same durable transaction as the writes.
+
+    Only explicit restore emits kind checkpoint with a complete checkpoint instead
+    of updates. Its expected revision is the independently verified restored store
+    head in the supplied snapshot, not permission to overwrite a newer store.
+    Receivers must reject a stale revision or changed owner. Snapshot and restore
+    may traverse complete retained state; ordinary work never rewrites that history.
+    A failed commit acknowledgment poisons the coordinator because commit may have
+    succeeded; a fresh coordinator must load independently verified durable state.
+    """
+
     def __init__(
         self,
         owner: dict[str, Any],
         registry: Registry,
-        commit: Callable[[dict[str, Any]], None],
+        commit_delta: Callable[[dict[str, Any]], None],
         *,
         native_exclusion: Callable[[dict[str, Any]], str | None] | None = None,
     ) -> None:
         validate("common.schema.json", owner, "Owner")
         self.registry = registry
-        self.commit = commit
+        self.commit_delta = commit_delta
         # This callback is trusted supervisor context, never a request field. Its
         # identity covers one continuously held exclusion of all native writers;
         # releasing and reacquiring that exclusion must return a new identity.
@@ -48,8 +74,12 @@ class AdapterCoordinator:
         self._poisoned = False
         self._observation_barriers: dict[str, dict[str, Any]] = {}
         self._quiescence_proofs: dict[str, dict[str, Any]] = {}
+        self._effect_attempts: dict[tuple[str, str], str] = {}
+        self._scope_subjects: dict[bytes, str] = {}
+        self._pending_by_scope: dict[bytes, int] = {}
         self.state: dict[str, Any] = {
             "owner": copy.deepcopy(owner),
+            "revision": 0,
             "bindings": {},
             "admission": {},
             "attempts": {},
@@ -58,44 +88,116 @@ class AdapterCoordinator:
             "quiescent": {},
         }
 
-    def _publish(self, candidate: dict[str, Any]) -> None:
+    @bounds(
+        Bounds(
+            id="owner.adapter-commits",
+            work=(
+                "O(B) changed records and affected scope identities per atomic delta; "
+                "O(sum(B)) across complete prepare/dispatch/observation/retry histories"
+            ),
+            extent="All exact requests and response records remain retained without history caps",
+            limits=(),
+            capacity=("Explicit owner storage failure poisons dispatch; no history is discarded",),
+            proofs=(
+                "tests/test_adapter_commit_growth.py::test_adapter_commit_history_linear_work",
+            ),
+            linear_proofs=(
+                "tests/test_adapter_commit_growth.py::test_adapter_commit_history_linear_work",
+            ),
+        )
+    )
+    def _publish(self, updates: dict[str, Any], *, invalidate: tuple[str, ...] = ()) -> None:
+        """Commit only this transition and invalidate only independently indexed scopes."""
         require(not self._poisoned, "OWNER_COMMIT_UNCERTAIN")
-        self._invalidate_observations(candidate)
-        canonical(candidate)
-        try:
-            self.commit(copy.deepcopy(candidate))
-        except Exception:
-            # A failed acknowledgment can follow a successful commit. Stop all dispatch.
-            self._poisoned = True
-            raise
-        self.state = candidate
-
-    def _invalidate_observations(self, candidate: dict[str, Any]) -> None:
-        """A changed local execution boundary invalidates its scans and clearance."""
-        bindings = {**self.state["bindings"], **candidate["bindings"]}
-        changed = {
-            subject
-            for subject in bindings
-            if self.state["owner"] != candidate["owner"]
-            or self.state["bindings"].get(subject) != candidate["bindings"].get(subject)
-            or self.state["admission"].get(subject) != candidate["admission"].get(subject)
-        }
-        scopes = {canonical(binding["scope"]): subject for subject, binding in bindings.items()}
-        for attempt_id in self.state["attempts"].keys() | candidate["attempts"].keys():
-            if all(
-                self.state[key].get(attempt_id) == candidate[key].get(attempt_id)
-                for key in ("attempts", "requests", "results")
-            ):
-                continue
-            for state in (self.state, candidate):
-                attempt = state["attempts"].get(attempt_id)
-                if attempt is not None and canonical(attempt["scope"]) in scopes:
-                    changed.add(scopes[canonical(attempt["scope"])])
-        for subject in changed:
+        changed = copy.deepcopy(updates)
+        for subject in invalidate:
             self._observation_barriers.pop(subject, None)
             self._quiescence_proofs.pop(subject, None)
-            if subject in candidate["quiescent"]:
-                candidate["quiescent"][subject] = False
+            changed.setdefault("quiescent", {})[subject] = False
+        previous = self.state["revision"]
+        validate("adapter.schema.json", previous + 1, "Generation")
+        envelope = {
+            "format": "fishhat.adapter-commit/v1",
+            "kind": "delta",
+            "owner": copy.deepcopy(self.state["owner"]),
+            "expected_revision": previous,
+            "revision": previous + 1,
+            "updates": changed,
+        }
+        canonical(envelope)
+        try:
+            self.commit_delta(copy.deepcopy(envelope))
+            self._apply_updates(changed)
+            self.state["revision"] = previous + 1
+        except BaseException:
+            # A failed acknowledgment or local application may follow a durable commit.
+            self._poisoned = True
+            raise
+
+    def _apply_updates(self, updates: dict[str, Any]) -> None:
+        for subject, binding in updates.get("bindings", {}).items():
+            self._scope_subjects[canonical(binding["scope"])] = subject
+        for attempt_id, attempt in updates.get("attempts", {}).items():
+            previous = self.state["attempts"].get(attempt_id)
+            scope = canonical(attempt["scope"])
+            pending = self._pending_by_scope.get(scope, 0)
+            if previous is not None and previous["state"] != "resolved":
+                pending -= 1
+            if attempt["state"] != "resolved":
+                pending += 1
+            self._pending_by_scope[scope] = pending
+            self._effect_attempts[(attempt["operation_id"], attempt["effect_id"])] = attempt_id
+        for key, records in updates.items():
+            if key != "results":
+                self.state[key].update(records)
+                continue
+            for attempt_id, added in records.items():
+                evidence = self.state["results"].setdefault(attempt_id, {"records": {}})
+                evidence["records"].update(added["records"])
+                evidence["latest"] = added["latest"]
+                evidence["knowledge"] = added["knowledge"]
+
+    @staticmethod
+    def _checkpoint_indexes(
+        snapshot: dict[str, Any],
+    ) -> tuple[dict[tuple[str, str], str], dict[bytes, str], dict[bytes, int]]:
+        subjects = {
+            canonical(binding["scope"]): subject
+            for subject, binding in snapshot["bindings"].items()
+        }
+        effects: dict[tuple[str, str], str] = {}
+        pending: dict[bytes, int] = {}
+        for attempt_id, attempt in snapshot["attempts"].items():
+            key = (attempt["operation_id"], attempt["effect_id"])
+            require(key not in effects, "RESTORE_EFFECT_IDENTITY")
+            effects[key] = attempt_id
+            if attempt["state"] != "resolved":
+                scope = canonical(attempt["scope"])
+                pending[scope] = pending.get(scope, 0) + 1
+        return effects, subjects, pending
+
+    def _checkpoint(self, candidate: dict[str, Any]) -> None:
+        require(not self._poisoned, "OWNER_COMMIT_UNCERTAIN")
+        previous = candidate["revision"]
+        validate("adapter.schema.json", previous + 1, "Generation")
+        candidate["revision"] = previous + 1
+        indexes = self._checkpoint_indexes(candidate)
+        envelope = {
+            "format": "fishhat.adapter-commit/v1",
+            "kind": "checkpoint",
+            "owner": copy.deepcopy(candidate["owner"]),
+            "expected_revision": previous,
+            "revision": previous + 1,
+            "checkpoint": candidate,
+        }
+        canonical(envelope)
+        try:
+            self.commit_delta(copy.deepcopy(envelope))
+            self.state = candidate
+            self._effect_attempts, self._scope_subjects, self._pending_by_scope = indexes
+        except BaseException:
+            self._poisoned = True
+            raise
 
     def _exclusion_identity(self, scope: dict[str, Any]) -> str:
         require(self.native_exclusion is not None, "NATIVE_EXCLUSION_REQUIRED")
@@ -108,10 +210,7 @@ class AdapterCoordinator:
 
     def _require_drained(self, scope: dict[str, Any]) -> None:
         require(
-            not any(
-                attempt["scope"] == scope and attempt["state"] != "resolved"
-                for attempt in self.state["attempts"].values()
-            ),
+            self._pending_by_scope.get(canonical(scope), 0) == 0,
             "PENDING_NATIVE_WORK",
         )
 
@@ -135,11 +234,10 @@ class AdapterCoordinator:
         require(subject not in self.state["bindings"], "EXPLICIT_REBIND_REQUIRED")
         self._instance_matches(binding)
         self._source_matches(binding, host, app)
-        candidate = copy.deepcopy(self.state)
-        candidate["bindings"][subject] = copy.deepcopy(binding)
-        candidate["admission"][subject] = False
-        candidate["quiescent"][subject] = False
-        self._publish(candidate)
+        self._publish(
+            {"bindings": {subject: binding}, "admission": {subject: False}},
+            invalidate=(subject,),
+        )
 
     def _source_matches(
         self, binding: dict[str, Any], host: dict[str, Any], app: dict[str, Any]
@@ -198,19 +296,17 @@ class AdapterCoordinator:
             and proof["exclusion_id"] == self._exclusion_identity(binding["scope"]),
             "STALE_QUIESCENCE_PROOF",
         )
-        candidate = copy.deepcopy(self.state)
-        candidate["admission"][subject] = True
-        candidate["quiescent"][subject] = False
-        self._publish(candidate)
+        self._publish({"admission": {subject: True}}, invalidate=(subject,))
 
     def close_admission(self, subject: str) -> None:
         require(subject in self.state["bindings"], "UNKNOWN_BINDING")
-        candidate = copy.deepcopy(self.state)
-        candidate["admission"][subject] = False
-        candidate["quiescent"][subject] = False
-        candidate["bindings"][subject]["admission_generation"] += 1
-        validate("adapter.schema.json", candidate["bindings"][subject], "RuntimeBinding")
-        self._publish(candidate)
+        binding = copy.deepcopy(self.state["bindings"][subject])
+        binding["admission_generation"] += 1
+        validate("adapter.schema.json", binding, "RuntimeBinding")
+        self._publish(
+            {"bindings": {subject: binding}, "admission": {subject: False}},
+            invalidate=(subject,),
+        )
 
     def prepare(
         self,
@@ -372,15 +468,16 @@ class AdapterCoordinator:
                 "ATTEMPT_IDENTITY_CONFLICT",
             )
             return cast(dict[str, Any], copy.deepcopy(previous))
-        for old in self.state["attempts"].values():
-            if old["effect_id"] == effect_id and old["operation_id"] == operation_id:
-                require(old["state"] == "resolved", "UNCERTAIN_EFFECT_RETRY")
-                raise ContractError("EFFECT_RETRY_REQUIRES_NEW_PLAN")
-        candidate = copy.deepcopy(self.state)
-        candidate["attempts"][attempt_id] = attempt
-        candidate["requests"][attempt_id] = copy.deepcopy(request)
+        earlier = self._effect_attempts.get((operation_id, effect_id))
+        if earlier is not None:
+            old = self.state["attempts"][earlier]
+            require(old["state"] == "resolved", "UNCERTAIN_EFFECT_RETRY")
+            raise ContractError("EFFECT_RETRY_REQUIRES_NEW_PLAN")
         check_invocation(instance["role"], {"attempt": attempt, "request": request})
-        self._publish(candidate)
+        self._publish(
+            {"attempts": {attempt_id: attempt}, "requests": {attempt_id: request}},
+            invalidate=(binding["subject"],),
+        )
         return copy.deepcopy(attempt)
 
     def cancel_prepared(self, attempt_id: str, *, owner_approved: bool) -> None:
@@ -389,9 +486,9 @@ class AdapterCoordinator:
         require(attempt is not None, "UNKNOWN_ATTEMPT")
         assert attempt is not None
         require(attempt["state"] == "prepared", "CANNOT_CANCEL_DISPATCHED_EFFECT")
-        candidate = copy.deepcopy(self.state)
-        candidate["attempts"][attempt_id].update(state="resolved", outcome="cancelled")
-        self._publish(candidate)
+        changed = {**attempt, "state": "resolved", "outcome": "cancelled"}
+        subject = self._scope_subjects[canonical(attempt["scope"])]
+        self._publish({"attempts": {attempt_id: changed}}, invalidate=(subject,))
 
     def dispatch(self, subject: str, attempt_id: str) -> dict[str, Any]:
         require(not self._poisoned, "OWNER_COMMIT_UNCERTAIN")
@@ -413,10 +510,8 @@ class AdapterCoordinator:
             "STALE_DISPATCH",
         )
         require(attempt["state"] == "prepared", "RECONCILE_REQUIRED")
-        candidate = copy.deepcopy(self.state)
-        candidate["attempts"][attempt_id].update(state="dispatched", certainty="unknown")
-        candidate["quiescent"][subject] = False
-        self._publish(candidate)
+        changed = {**attempt, "state": "dispatched", "certainty": "unknown"}
+        self._publish({"attempts": {attempt_id: changed}}, invalidate=(subject,))
         # Release the exact executable closure only after the owner commit has returned.
         invocation = {
             "attempt": copy.deepcopy(self.state["attempts"][attempt_id]),
@@ -503,15 +598,13 @@ class AdapterCoordinator:
             response["effect"],
             previous=None if previous is None else previous["knowledge"],
         )
-        candidate = copy.deepcopy(self.state)
-        candidate["attempts"][attempt_id].update(self._settlement(knowledge))
-        evidence = candidate["results"].setdefault(
-            attempt_id, {"latest": identity, "records": {}, "knowledge": knowledge}
+        changed = {**attempt, **self._settlement(knowledge)}
+        evidence = {"latest": identity, "records": {identity: retained}, "knowledge": knowledge}
+        subject = self._scope_subjects[canonical(attempt["scope"])]
+        self._publish(
+            {"attempts": {attempt_id: changed}, "results": {attempt_id: evidence}},
+            invalidate=(subject,),
         )
-        evidence["records"][identity] = retained
-        evidence["latest"] = identity
-        evidence["knowledge"] = knowledge
-        self._publish(candidate)
 
     @staticmethod
     def _settlement(knowledge: dict[str, Any]) -> dict[str, Any]:
@@ -631,9 +724,7 @@ class AdapterCoordinator:
             expected_runtime_binding=binding,
         )
         if self.state["quiescent"][subject]:
-            candidate = copy.deepcopy(self.state)
-            candidate["quiescent"][subject] = False
-            self._publish(candidate)
+            self._publish({"quiescent": {subject: False}})
         self._quiescence_proofs.pop(subject, None)
         self._observation_barriers[subject] = copy.deepcopy(barrier)
         return query
@@ -680,9 +771,7 @@ class AdapterCoordinator:
             and observation["quiescence"] == "verified",
             "INCOMPLETE_QUIESCENCE",
         )
-        candidate = copy.deepcopy(self.state)
-        candidate["quiescent"][subject] = True
-        self._publish(candidate)
+        self._publish({"quiescent": {subject: True}})
         self._observation_barriers.pop(subject, None)
         self._quiescence_proofs[subject] = copy.deepcopy(barrier)
 
@@ -699,6 +788,7 @@ class AdapterCoordinator:
             set(snapshot) == set(self.state) and snapshot["owner"] == self.state["owner"],
             "RESTORE_OWNER_IDENTITY",
         )
+        validate("adapter.schema.json", snapshot["revision"], "Generation")
         scopes = {}
         for key, binding in snapshot["bindings"].items():
             validate("adapter.schema.json", binding, "RuntimeBinding")
@@ -735,4 +825,4 @@ class AdapterCoordinator:
         for binding in candidate["bindings"].values():
             binding["admission_generation"] += 1
             validate("adapter.schema.json", binding, "RuntimeBinding")
-        self._publish(candidate)
+        self._checkpoint(candidate)

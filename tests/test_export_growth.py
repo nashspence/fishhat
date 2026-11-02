@@ -137,42 +137,48 @@ def selected_registry(count, role="capture"):
 
 @pytest.mark.parametrize("name", DATA_APIS)
 def test_data_exports_linear_work(name):
-    samples = []
-    for count in SCALES:
-        value = records("git-bundle")["catalogue"]
-        template = value["sources"][0]
-        value["sources"] = [
-            {**copy.deepcopy(template), "source_id": f"source-{i:04d}"} for i in range(count)
-        ]
-        if name in {"canonical", "digest"}:
-            # Wide objects and long common prefixes exercise actual key ordering,
-            # including JCS UTF-16 order and nested mapping/list preservation.
-            value = {
-                "é🙂" + "x" * 64 + f"{index:04d}": {
-                    "z": [index, {"\ue000": None, "😀": 1e-7, "é": True}],
-                    "a": "value",
+    for ascii_keys in (False, True) if name in {"canonical", "digest"} else (False,):
+        samples = []
+        for count in SCALES:
+            value = records("git-bundle")["catalogue"]
+            template = value["sources"][0]
+            value["sources"] = [
+                {**copy.deepcopy(template), "source_id": f"source-{i:04d}"} for i in range(count)
+            ]
+            if name in {"canonical", "digest"}:
+                # Wide objects and long common prefixes exercise actual key ordering,
+                # including JCS UTF-16 order and nested mapping/list preservation.
+                value = {
+                    ("" if ascii_keys else "é🙂") + "x" * 64 + f"{index:04d}": {
+                        "z": [
+                            index,
+                            {"z": None, "b": 1e-7, "c": True}
+                            if ascii_keys
+                            else {"\ue000": None, "😀": 1e-7, "é": True},
+                        ],
+                        "a": "value",
+                    }
+                    for index in sorted(range(count), key=digest)
                 }
-                for index in sorted(range(count), key=digest)
+            encoded = rfc8785.dumps(value)
+            calls = {
+                "canonical": partial(canonical, value),
+                "digest": partial(digest, value),
+                "strict_json": partial(strict_json, encoded),
+                "strict_yaml": partial(strict_yaml, encoded.decode()),
+                "validate": partial(validate, "bootstrap-catalogue.schema.json", value),
             }
-        encoded = rfc8785.dumps(value)
-        calls = {
-            "canonical": partial(canonical, value),
-            "digest": partial(digest, value),
-            "strict_json": partial(strict_json, encoded),
-            "strict_yaml": partial(strict_yaml, encoded.decode()),
-            "validate": partial(validate, "bootstrap-catalogue.schema.json", value),
-        }
-        result, work = measure(calls[name])
-        if name in {"strict_json", "strict_yaml"}:
-            assert result == value and len(result["sources"]) == count
-        elif name == "canonical":
-            assert result == encoded
-        elif name == "digest":
-            assert result == digest(value)
-        else:
-            assert result is None
-        samples.append((count, work))
-    assert_linear(samples)
+            result, work = measure(calls[name])
+            if name in {"strict_json", "strict_yaml"}:
+                assert result == value and len(result["sources"]) == count
+            elif name == "canonical":
+                assert result == encoded
+            elif name == "digest":
+                assert result == digest(value)
+            else:
+                assert result is None
+            samples.append((count, work))
+        assert_linear(samples)
 
 
 @pytest.mark.parametrize("name", ADAPTER_APIS)

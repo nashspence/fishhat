@@ -68,6 +68,9 @@
       "name": "history.read"
     },
     {
+      "name": "history.input"
+    },
+    {
       "name": "history.content"
     },
     {

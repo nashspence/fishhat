@@ -649,6 +649,7 @@
             "owner.history",
             "history.list",
             "history.read",
+            "history.input",
             "history.content",
             "operation.cancellation.get",
             "operation.cancellation.list",
@@ -891,6 +892,36 @@
         },
         "result": {
           "$ref": "owner-history.schema.json#/$defs/HistoricalRecordChunk"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "ok",
+        "result"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "history.input"
+        },
+        "ok": {
+          "const": true
+        },
+        "result": {
+          "$ref": "owner-history.schema.json#/$defs/HistoricalJournalInputReference"
         }
       },
       "required": [

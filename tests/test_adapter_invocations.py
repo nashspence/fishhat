@@ -277,8 +277,8 @@ def test_dispatch_releases_exact_committed_request_and_executor():
     attempt = prepare(owner)
     invocation = owner.dispatch("demo", attempt["attempt_id"])
     check_invocation("runtime", invocation)
-    assert invocation["attempt"] == commits[-1]["attempts"][attempt["attempt_id"]]
-    assert invocation["request"] == commits[-1]["requests"][attempt["attempt_id"]]
+    assert invocation["attempt"] == commits[-1]["updates"]["attempts"][attempt["attempt_id"]]
+    assert invocation["request"] == commits[-2]["updates"]["requests"][attempt["attempt_id"]]
     assert invocation["attempt"]["input_digest"] == digest(invocation["request"])
     lost = owner.snapshot()
     lost["requests"][attempt["attempt_id"]]["input"]["deployment"]["handle"] = "other"

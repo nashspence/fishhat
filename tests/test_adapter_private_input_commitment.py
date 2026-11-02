@@ -68,11 +68,11 @@ def test_private_operation_values_are_committed_before_executable_invocation(sel
     prepared = prepare_private(owner, role)
     attempt_id = prepared["attempt_id"]
     assert prepared["private_inputs_digest"] == PRIVATE_INPUTS_DIGEST
-    assert commits[-1]["attempts"][attempt_id] == prepared
+    assert commits[-1]["updates"]["attempts"][attempt_id] == prepared
 
     invocation = owner.dispatch("demo", attempt_id)
     assert invocation["attempt"]["private_inputs_digest"] == PRIVATE_INPUTS_DIGEST
-    assert commits[-1]["attempts"][attempt_id] == invocation["attempt"]
+    assert commits[-1]["updates"]["attempts"][attempt_id] == invocation["attempt"]
     assert prepare_private(owner, role) == invocation["attempt"]
 
 

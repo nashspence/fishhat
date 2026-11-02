@@ -11,7 +11,7 @@ from __future__ import annotations
 import copy
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
 
@@ -44,6 +44,9 @@ from .workflows import (
 )
 
 JSON = dict[str, Any]
+
+if TYPE_CHECKING:
+    from .workflow_gate_recovery import GateRecoveryEnrollment
 
 
 def _bounds(name: str) -> Bounds:
@@ -78,14 +81,19 @@ def _is_gate(target: Any) -> bool:
 
 
 def _body(target: Any, record: JSON, kind: str, owner: JSON | None = None) -> JSON:
+    authority = getattr(target, "_recovery_gate_authority", None)
+    gate = owner == target.header["gate_owner"]
+    if gate and authority is not None:
+        owner = authority["owner"]
     target._verify(record, owner)
     body = record["body"]
     _require(
         body.get("type") == kind and body.get("header_digest") == target.header_digest,
         "journal recovery signed subject changed",
     )
-    if owner == target.header["gate_owner"]:
-        _require(record["key_id"] == target.header["gate_key_id"], "journal gate key changed")
+    if gate:
+        expected_key = target.header["gate_key_id"] if authority is None else authority["key_id"]
+        _require(record["key_id"] == expected_key, "journal gate key changed")
     return {key: value for key, value in body.items() if key != "command_digest"}
 
 
@@ -223,6 +231,7 @@ class RecoveryContext:
     certificate: JSON
     projection: JSON | None = None
     disposition: JSON | None = None
+    historical_gate_keys: KeyRing | None = None
 
 
 @dataclass(frozen=True)
@@ -462,7 +471,7 @@ class WorkflowRecoveryMember(_JournalTarget):
             key = _key(request["child"])
             _require(key in self.children, "restored binding changed original local slot")
             self.ready[key] = request["binding"]
-        elif action == "admit":
+        elif action in {"admit", "admit.renew"}:
             key = _key(payload["child"])
             _require(key in self.ready, "restored admission omitted original Plan")
             self._admissions[key] = record
@@ -475,6 +484,9 @@ class WorkflowRecoveryMember(_JournalTarget):
             )
             extension._operation(self, operation, bound_plan(self.ready[key]), self.workflow_id)
             self.outcomes[key] = operation
+        elif action == "recover.gate_approve":
+            self._recovery_gate_authority = copy.deepcopy(record["body"]["authority"])
+            self._recovery_gate_approval = copy.deepcopy(record)
         elif action in {
             "member.join",
             "agreement",
@@ -532,6 +544,7 @@ class JournalRecovery:
         verified_custody: Mapping[bytes, JSON] | None = None,
         retained_readers: Mapping[tuple[str, str], Callable[[JSON], None]] | None = None,
         recovery_readers: Mapping[tuple[str, str], Callable[[JSON], None]] | None = None,
+        gate_recovery_enrollments: Mapping[str, GateRecoveryEnrollment] | None = None,
     ) -> None:
         # Independently installed indexes may cover many unrelated workflows.
         # Select exact entries; neither local preparation nor restoration copies
@@ -539,6 +552,9 @@ class JournalRecovery:
         self.current_owners = current_owners if current_owners is not None else {}
         self.verified_custody = verified_custody if verified_custody is not None else {}
         self.retained_readers, self.recovery_readers = retained_readers, recovery_readers
+        self.gate_recovery_enrollments = (
+            gate_recovery_enrollments if gate_recovery_enrollments is not None else {}
+        )
 
     def _current_owner(self, origin: JSON) -> JSON:
         owner = self.current_owners.get(canonical(origin), origin)
@@ -560,7 +576,16 @@ class JournalRecovery:
     @bounds(_bounds("outcome"))
     def outcome(self, target: Any, command: JSON, principal: str) -> JSON:
         action = command["action"]
-        if action.startswith("transfer."):
+        if action == "recover.gate_approve":
+            from .workflow_gate_recovery import approve_recovery_gate
+
+            _require(not _is_gate(target), "gate reapproval belongs to each native member")
+            authority = command["payload"]["initialization"]["body"]["authority"]
+            selected = self.gate_recovery_enrollments.get(digest(authority))
+            _require(selected is not None, "recovery gate is not independently enrolled")
+            assert selected is not None
+            body = approve_recovery_gate(target, command, selected)
+        elif action.startswith("transfer."):
             body = self._transfer_outcome(target, command, principal)
         elif action.startswith("recover."):
             body = self._recovery_outcome(target, command, principal)
@@ -751,6 +776,30 @@ class JournalRecovery:
         action, payload = command["action"], command["payload"]
         common = {"header_digest": target.header_digest}
         gate = _is_gate(target)
+        if action == "recover.abandon_recertify":
+            _require(
+                gate and getattr(target, "_gate_recovery_certificate", None) is not None,
+                "terminal abandonment recertification requires an approved recovery gate",
+            )
+            _fields(payload, {"successor_workflow_id"})
+            previous = target._recovery_state.get("abandonment_certificates", {}).get(
+                payload["successor_workflow_id"]
+            )
+            _require(
+                previous is not None and previous["owner"] != target.owner,
+                "terminal abandonment certificate missing or already current",
+            )
+            assert previous is not None
+            body = previous["body"]
+            return {
+                **common,
+                "type": "recovery-abandon-certificate",
+                "recovery": body["recovery"],
+                "abandon_id": body["abandon_id"],
+                "owner_count": body["owner_count"],
+                "closure_digest": body["closure_digest"],
+                "supersedes": {"id": previous["id"], "digest": digest(previous)},
+            }
         if action == "recover.propose":
             _require(gate, "successor manifest belongs to the gate")
             _fields(payload, {"successor", "mapping"})
@@ -877,8 +926,14 @@ class JournalRecovery:
         if action == "recover.commit":
             _require(gate, "recovery closure belongs to the gate")
             _fields(payload, set())
+            previous = state.get("certificate")
+            recertify = (
+                previous is not None
+                and previous["owner"] != target.owner
+                and getattr(target, "_gate_recovery_certificate", None) is not None
+            )
             _require(
-                state.get("certificate") is None
+                (previous is None or recertify)
                 and state.get("abandonment") is None
                 and len(state["dispositions"]) == len(target._members),
                 "recovery disposition closure incomplete or committed",
@@ -892,6 +947,9 @@ class JournalRecovery:
                 "recovery": recovery,
                 "owner_count": len(target._members),
                 "disposition_closure_digest": state["disposition_closure_digest"],
+                "supersedes": (
+                    None if previous is None else {"id": previous["id"], "digest": digest(previous)}
+                ),
             }
         if action == "recover.reconcile":
             _require(
@@ -972,15 +1030,27 @@ class JournalRecovery:
                 "update_digest": digest(record),
             }
         if action == "recover.install":
-            _require(
-                not gate and state.get("certificate") is None,
-                "local successor is already installed",
-            )
+            _require(not gate, "local recovery installation belongs to the member")
             _fields(payload, {"certificate"})
             body = _body(
                 target, payload["certificate"], "recovery-certificate", target.header["gate_owner"]
             )
             _same_recovery(body, state)
+            previous = state.get("certificate")
+            if previous is not None:
+                _require(
+                    previous["owner"] != payload["certificate"]["owner"]
+                    and body["supersedes"] is not None
+                    and getattr(target, "_recovery_gate_authority", None) is not None
+                    and body["owner_count"] == previous["body"]["owner_count"]
+                    and body["disposition_closure_digest"]
+                    == previous["body"]["disposition_closure_digest"],
+                    "local successor certificate changed its committed reservation or closure",
+                )
+                # The current gate reconstructs the complete authoritative lineage
+                # and signs its exact predecessor. A member may have missed an
+                # intermediate delivery; its already committed reservation and
+                # complete disposition closure must still be exactly unchanged.
             _require(
                 body.get("owner_count") == target.header["owner_count"],
                 "recovery owner closure changed",
@@ -1095,6 +1165,7 @@ class JournalRecovery:
                 "type": "recovery-abandon-certificate",
                 "owner_count": len(target._members),
                 "closure_digest": abandonment["closure_digest"],
+                "supersedes": None,
             }
         if action == "recover.observe_abandon":
             _require(not gate, "local abandonment installation belongs to a member")
@@ -1530,6 +1601,15 @@ class JournalRecovery:
     def apply(self, target: Any, command: JSON, outcome: JSON) -> None:
         """Apply only an already durable event, including one cold restore pass."""
         action, payload, body = command["action"], command["payload"], outcome["body"]
+        if action == "recover.gate_approve":
+            from .workflow_gate_recovery import retain_recovery_gate
+
+            selected = self.gate_recovery_enrollments.get(digest(body["authority"]))
+            _require(selected is not None, "retained recovery gate enrollment missing")
+            assert selected is not None
+            retain_recovery_gate(target, outcome, selected)
+            target.generation += 1
+            return
         if action.startswith("transfer."):
             self._apply_transfer(target, command, outcome)
             target.generation += 1
@@ -1591,10 +1671,18 @@ class JournalRecovery:
             )
         elif action in {"recover.abandon_commit", "recover.observe_abandon"}:
             state = _recovery(target)
+            certificate = outcome if action == "recover.abandon_commit" else payload["certificate"]
+            target._recovery_state.setdefault("abandonment_certificates", {})[
+                state["recovery"]["successor_workflow_id"]
+            ] = certificate
             abandoned = target._recovery_state.setdefault("abandoned", {})
             abandoned[state["recovery"]["successor_workflow_id"]] = outcome["id"]
             target._recovery_state["recovery"] = None
             target._recovery_state["retired"] = True
+        elif action == "recover.abandon_recertify":
+            target._recovery_state["abandonment_certificates"][
+                body["recovery"]["successor_workflow_id"]
+            ] = outcome
         elif action == "recover.inspect":
             target._recovery_state["retired"] = True
             projection = {
@@ -1655,7 +1743,11 @@ class JournalRecovery:
     def blocks_work(self, target: Any) -> bool:
         state = target._recovery_state
         transfer = state.get("transfer")
-        return bool(state.get("retired") or (transfer is not None and not transfer["active"]))
+        return bool(
+            state.get("retired")
+            or getattr(target, "_recovery_gate_authority", None) is not None
+            or (transfer is not None and not transfer["active"])
+        )
 
     @bounds(_bounds("context"))
     def context(self, target: Any, *, principal: str) -> RecoveryContext:
@@ -1665,7 +1757,7 @@ class JournalRecovery:
         _require(
             state.get("certificate") is not None, "successor retirement closure is not committed"
         )
-        gate_owner, key_id = target.header["gate_owner"], target.header["gate_key_id"]
+        gate_owner, key_id = state["certificate"]["owner"], state["certificate"]["key_id"]
         key = target.keys.get((canonical(gate_owner), key_id))
         _require(key is not None, "original recovery gate is not independently enrolled")
         return RecoveryContext(
@@ -1675,6 +1767,7 @@ class JournalRecovery:
             copy.deepcopy(state["certificate"]),
             copy.deepcopy(state.get("projection")),
             copy.deepcopy(state.get("installed", state.get("disposition"))),
+            target.keys,
         )
 
     def _certificate(self, context: RecoveryContext) -> JSON:
@@ -1720,13 +1813,15 @@ class JournalRecovery:
         assert context.projection is not None and context.disposition is not None
         verify_journal_record(
             context.projection,
-            {
-                (
-                    canonical(context.origin_gate_owner),
-                    context.origin_gate_key_id,
-                ): context.origin_gate_public_key
-            },
-            expected_owner=context.origin_gate_owner,
+            _KeyOverlay(
+                {
+                    (
+                        canonical(context.origin_gate_owner),
+                        context.origin_gate_key_id,
+                    ): context.origin_gate_public_key
+                },
+                context.historical_gate_keys if context.historical_gate_keys is not None else {},
+            ),
             expected_workflow_id=body["recovery"]["origin_workflow_id"],
         )
         selected = {
@@ -1736,6 +1831,11 @@ class JournalRecovery:
         }
         _require(
             selected.get("type") == "recovery-projection"
+            and all(
+                context.projection["owner"][name] == context.origin_gate_owner[name]
+                for name in ("tool", "id")
+            )
+            and selected["header_digest"] == body["header_digest"]
             and selected["recovery"] == body["recovery"]
             and selected["owner"] == target.owner
             and target.header["proposal_digest"] == body["recovery"]["successor_proposal_digest"]

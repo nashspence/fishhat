@@ -111,14 +111,23 @@ def measure(call, *, database=None, modules=()):
     previous, previous_profile = sys.gettrace(), sys.getprofile()
     observe, restore = _container_observer(work)
 
+    python_lines = 0
+
+    def count_lines(frame, event, arg):
+        nonlocal python_lines
+        if event == "line":
+            python_lines += 1
+        return count_lines
+
     def trace(frame, event, arg):
         if event == "call" and frame.f_globals.get("__name__", "").startswith(
             ("fishhat_", "a_fishhat_")
         ):
             observe(frame.f_globals)
-        if event == "line" and frame.f_code.co_filename != __file__:
-            work["python"] += 1
-        return trace
+        # Select the same counted files once per call; count every line inside them.
+        if frame.f_code.co_filename != __file__:
+            return count_lines
+        return None
 
     def profile(frame, event, arg):
         if event == "c_call" and getattr(arg, "__name__", None) == "copy":
@@ -159,6 +168,7 @@ def measure(call, *, database=None, modules=()):
     finally:
         sys.settrace(previous)
         sys.setprofile(previous_profile)
+        work["python"] = python_lines
         restore()
         if database is not None:
             database.set_progress_handler(None, 0)

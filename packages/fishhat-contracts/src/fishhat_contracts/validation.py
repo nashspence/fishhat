@@ -100,7 +100,7 @@ def value_check(value: Any, depth: int = 0) -> None:
             raise ContractError("nonfinite number")
         return
     if type(value) is str:
-        if any(0xD800 <= ord(c) <= 0xDFFF for c in value):
+        if not value.isascii() and any(0xD800 <= ord(c) <= 0xDFFF for c in value):
             raise ContractError("invalid Unicode surrogate")
         return
     if type(value) is list:
