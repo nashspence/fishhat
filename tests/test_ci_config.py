@@ -34,15 +34,15 @@ class WorkflowSafety(unittest.TestCase):
             step.get("run", "") for step in self.workflow["jobs"]["tests"]["steps"]
         )
         self.assertIn(
-            'uv sync --locked --all-packages --group dev --python "${{ matrix.python }}"', commands
+            'uv sync --locked --all-packages --group dev --python "$FISHHAT_CI_PYTHON"', commands
         )
         self.assertIn(
-            'uv run --locked --all-packages --group dev --python "${{ matrix.python }}"', commands
+            'uv run --locked --all-packages --group dev --python "$FISHHAT_CI_PYTHON"', commands
         )
         report = next(
             line for line in commands.splitlines() if "scripts.engineering report" in line
         )
-        self.assertIn('--python "${{ matrix.python }}"', report)
+        self.assertIn('--python "$FISHHAT_CI_PYTHON"', report)
 
     def test_no_privileged_pr_target(self):
         self.assertNotIn("pull_request_target", self.workflow["on"])
