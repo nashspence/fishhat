@@ -342,7 +342,33 @@ def test_workflow_requires_complete_aggregation_and_attempt_scoped_raw_artifacts
         s for s in aggregate["steps"] if "scripts.unit_shards aggregate" in s.get("run", "")
     )
     assert assembly["if"] == "${{ always() }}"
+    runtimes = jobs["watchdogs"]["outputs"].get("pythons")
+    assert runtimes == (
+        '${{ format(\'{{"3.11":"{0}","3.12":"{1}","3.13":"{2}"}}\', '
+        "steps.python311.outputs.python-version, steps.python312.outputs.python-version, "
+        "steps.python313.outputs.python-version) }}"
+    )
+    for minor in aggregate["strategy"]["matrix"]["python"]:
+        resolver = next(
+            step
+            for step in jobs["watchdogs"]["steps"]
+            if step.get("id") == "python" + minor.replace(".", "")
+        )
+        assert resolver["uses"].startswith("actions/setup-python@")
+        assert resolver["with"] == {"python-version": minor, "check-latest": "true"}
     for job in (shards, aggregate):
+        assert job["env"]["FISHHAT_CI_PYTHON"] == (
+            "${{ fromJSON(needs.watchdogs.outputs.pythons)[matrix.python] }}"
+        )
+        setup = next(
+            step
+            for step in job["steps"]
+            if step.get("uses", "").startswith("actions/setup-python@")
+        )
+        assert setup["with"]["python-version"] == "${{ env.FISHHAT_CI_PYTHON }}"
+        for step in job["steps"]:
+            if "uv " in step.get("run", ""):
+                assert '--python "$FISHHAT_CI_PYTHON"' in step["run"]
         assert job["env"]["FISHHAT_VALIDATION_NOMINAL_MINUTES"] == "45"
         assert not any(step.get("continue-on-error") for step in job["steps"])
     upload = next(

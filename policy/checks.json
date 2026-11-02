@@ -111,7 +111,7 @@
       "requiredness_authority": "release.toml#/governance/required_checks",
       "result_authority": "GitHub job conclusion; classification supplies no execution proof",
       "scope": "pytest groups retain separate authority and exact local scopes",
-      "work_sha256": "a05f55042aee4c8d6c4ec1cab1a55586257b9a2ec5df61177a297145816b24bd"
+      "work_sha256": "87a5529977e22a4fcb5af9901b76c1a734248bda9b7d4e7c274496cefc223ba1"
     },
     ".github/workflows/ci.yml:unit-shards": {
       "authority": "release.toml",
@@ -124,7 +124,7 @@
       "requiredness_authority": "release.toml#/governance/required_checks",
       "result_authority": "GitHub job conclusion; classification supplies no execution proof",
       "scope": "pytest groups retain separate authority and exact local scopes",
-      "work_sha256": "589638aa79275be11350b7c7ca4cecc03ea342003420b6408808fd360ea1b677"
+      "work_sha256": "dd8ca4039283fcf80b94eb62c2ef59e9f4eeaf853b3113cedf7fe0fcad4e0fe7"
     },
     ".github/workflows/ci.yml:watchdog-regressions": {
       "authority": "scripts/validation_timeouts.py",
@@ -146,7 +146,7 @@
       "requiredness_authority": "release.toml#/governance/required_checks",
       "result_authority": "GitHub job conclusion; classification supplies no execution proof",
       "scope": "validation budget planning and advisory scheduling reference; no product qualification",
-      "work_sha256": "3b35c45c024de8130f8d047017072f80126e431e94f6e6c69b25826e694ebe0d"
+      "work_sha256": "553df4d0f253dea751c30b535ac2ce3a6ec9b576dea584851a74b6ae73e34551"
     },
     ".github/workflows/codeql.yml:analyze": {
       "authority": "release.toml",
