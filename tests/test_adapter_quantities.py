@@ -33,7 +33,11 @@ def request(limits=None):
         "method": "set-limits",
         "input": {
             "scope": executor["scope"],
-            "allocation": "allocation:demo",
+            "target": {
+                "executor": executor,
+                "handle": "allocation:demo",
+                "incarnation": "incarnation:demo",
+            },
             "limits": [limit()] if limits is None else limits,
         },
     }
@@ -54,11 +58,12 @@ def counter(metric="memory-used", value=1024, unit="bytes", **changes):
 
 
 def observe(counters):
-    scope = request()["input"]["scope"]
+    inputs = request()["input"]
+    scope, target = inputs["scope"], inputs["target"]
     query = {
         "contract": "fishhat.compute",
         "method": "observe",
-        "input": {"scope": scope, "cursor": None, "limit": 10},
+        "input": {"scope": scope, "cursor": None, "limit": 10, "target": target},
     }
     reply = {
         "contract": query["contract"],
@@ -69,7 +74,7 @@ def observe(counters):
         "continuation": None,
         "proposal": None,
         "problem": None,
-        "output": {"allocation": "allocation:demo", "limits": [], "counters": counters},
+        "output": {"target": copy.deepcopy(target), "limits": [], "counters": counters},
     }
     return query, reply
 
@@ -133,7 +138,7 @@ def test_success_proves_the_exact_requested_limit_set(change):
     query = request([limit(), limit("tasks-max", 128, "tasks")])
     invocation = invocation_for(query)
     output = {
-        "allocation": query["input"]["allocation"],
+        "target": copy.deepcopy(query["input"]["target"]),
         "limits": copy.deepcopy(query["input"]["limits"]),
         "counters": [],
     }
@@ -146,8 +151,9 @@ def test_success_proves_the_exact_requested_limit_set(change):
     elif change == "changed":
         output["limits"][0]["value"] += 1
     else:
-        output["allocation"] = "allocation:other"
-    with pytest.raises(ContractError, match="SUCCESS_OUTPUT_IDENTITY"):
+        output["target"]["handle"] = "allocation:other"
+    expected = "COMPUTE_TARGET_IDENTITY" if change == "allocation" else "SUCCESS_OUTPUT_IDENTITY"
+    with pytest.raises(ContractError, match=expected):
         check_response("compute", query, reply, invocation=invocation)
 
 
@@ -170,7 +176,11 @@ def test_patch_receipt_and_full_observation_have_distinct_quantity_extents():
     reply = response_for(
         query,
         invocation["attempt"],
-        {"allocation": "allocation:demo", "limits": [limit(value=4096)], "counters": []},
+        {
+            "target": copy.deepcopy(query["input"]["target"]),
+            "limits": [limit(value=4096)],
+            "counters": [],
+        },
     )
     check_response("compute", query, reply, invocation=invocation)
     observation, complete = observe([])

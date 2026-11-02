@@ -251,6 +251,11 @@ def strict_yaml(data: str, *, capacity_bytes: int | None = None) -> Any:
 
 
 SCHEMAS = {p.name: json.loads(p.read_text()) for p in (ROOT / "contracts").glob("*.schema.json")}
+CATALOGUES = {
+    urljoin("https://fishhat.invalid/contracts/", p.name): json.loads(p.read_text())
+    for p in (ROOT / "contracts").glob("*.json")
+    if not p.name.endswith(".schema.json")
+}
 REGISTRY = Registry().with_resources(
     # The installed dialect is fixed. Keep its declaration in SCHEMAS and its
     # published bytes; omit it only from evaluation resources so $ref evolution

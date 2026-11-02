@@ -23,11 +23,12 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey,
 
 from .bounds import Bounds, bounds
 from .handoffs import PHASES, validate_result_payload
-from .operations import validate_operation_plan
+from .operations import _TERMINAL_STATES, validate_operation_plan
 from .validation import ContractError, canonical, digest, validate, validate_plan
 from .witness import verify as verify_witness
 from .workflow_bindings import _binding_shape, _key, _predecessor, _verify_binding_custody
-from .workflow_evidence import REQUIREMENTS, _child_outcome
+from .workflow_evidence import REQUIREMENTS, _child_outcome, procedure_commitment
+from .workflow_lifecycle import lifecycle_destination
 from .workflows import (
     _child_identity_matches,
     _handles,
@@ -351,7 +352,7 @@ def _known_outcome(previous: JSON | None, operation: JSON) -> None:
         "workflow evidence replaced or regressed a retained native Operation",
     )
     _require(
-        previous["state"] not in {"succeeded", "failed", "cancelled"},
+        previous["state"] not in _TERMINAL_STATES,
         "workflow evidence replaced a retained terminal outcome",
     )
 
@@ -560,6 +561,18 @@ class _JournalTarget:
             "workflow admission is frozen by transfer or recovery",
         )
 
+    def _require_phase_progress(self, authority: str) -> None:
+        if authority == "native-owner":
+            _require(
+                self.state in {"active", "paused", "completed"}
+                and not self._cancelled
+                and not self._recovery_state.get("retired")
+                and getattr(self, "_recovery_gate_authority", None) is None,
+                "native settlement cannot advance a restricted workflow lifecycle",
+            )
+        else:
+            self._new_work_allowed()
+
     def _run(self, command: JSON, principal: str) -> JSON:
         _fields(command, {"id", "workflow_id", "action", "payload"})
         validate("common.schema.json", command["id"], "UUID")
@@ -599,8 +612,11 @@ class _JournalTarget:
             "terminal workflow cannot change lifecycle",
         )
         _require(not self._cancelled, "workflow cancellation is a retained admission tombstone")
+        destination = lifecycle_destination(
+            {"from_state": self.state, "action": action, "phase": self.phase},
+            {"type": self.header["procedure"]},
+        )
         if action == "resume":
-            _require(self.state == "paused", "only a paused workflow can resume")
             _require(
                 not self.extension or not self.extension.blocks_work(self),
                 "frozen workflow cannot resume admission",
@@ -638,14 +654,20 @@ class _JournalTarget:
                 "type": "lifecycle",
                 "header_digest": self.header_digest,
                 "action": action,
-                "state": {"pause": "paused", "resume": "active", "cancel": "cancelled"}[action],
+                "state": destination,
                 "evidence": evidence,
                 "generation": self.generation + 1,
             },
         )
 
     def _apply_lifecycle(self, outcome: JSON) -> None:
-        self.state = outcome["body"]["state"]
+        body = outcome["body"]
+        destination = lifecycle_destination(
+            {"from_state": self.state, "action": body["action"], "phase": self.phase},
+            {"type": self.header["procedure"]},
+        )
+        _require(body["state"] == destination, "retained workflow lifecycle outcome changed")
+        self.state = destination
         self._cancelled = self._cancelled or self.state == "cancelled"
         self.generation += 1
 
@@ -921,7 +943,7 @@ class WorkflowGate(_JournalTarget):
             "workflow_id": self.workflow_id,
             "proposal_digest": digest(proposal),
             "procedure": proposal["type"],
-            "requirements_digest": digest(REQUIREMENTS[proposal["type"]]),
+            "requirements_digest": digest(procedure_commitment(proposal["type"])),
             "gate_owner": copy.deepcopy(self.owner if gate_owner is None else gate_owner),
             "gate_key_id": self.key_id if gate_key_id is None else gate_key_id,
             "driver_principal": proposal["initial_driver"]["principal"],
@@ -1073,6 +1095,7 @@ class WorkflowGate(_JournalTarget):
                 "workflow phase is not adjacent or a current barrier refresh",
             )
             if action == "settle":
+                self._require_phase_progress("native-owner")
                 _require(
                     destination == len(phases) - 1 and current >= len(phases) - 2,
                     "native workflow settlement is terminal only",
@@ -1112,8 +1135,7 @@ class WorkflowGate(_JournalTarget):
             )
             assert self._round is not None
             round = self._round["body"]
-            if round["authority"] == "driver":
-                self._new_work_allowed()
+            self._require_phase_progress(round["authority"])
             _require(
                 member in self._members and member not in self._votes,
                 "workflow vote issuer absent or duplicated",
@@ -1164,8 +1186,7 @@ class WorkflowGate(_JournalTarget):
                 "workflow complete proof closure expired",
             )
             round = self._round["body"]
-            if round["authority"] == "driver":
-                self._new_work_allowed()
+            self._require_phase_progress(round["authority"])
             return self._outcome(
                 command,
                 {
@@ -1290,8 +1311,6 @@ class WorkflowGate(_JournalTarget):
             self._prepared[canonical(record["owner"])] = record
         elif action == "agreement":
             self._agreement = outcome
-            if self.state == "prepared":
-                self.state = "active"
         elif action in {"round", "settle"}:
             self._round, self._decision = outcome, None
             self._votes = {}
@@ -1319,12 +1338,14 @@ class WorkflowGate(_JournalTarget):
                 for result in proof["operations"]:
                     self._known_outcomes[_key(result["child"])] = result["operation"]
         elif action == "decision":
+            self._require_phase_progress(body["authority"])
             self._decision = outcome
             self._round_sources[body["round_id"]]["decision"] = outcome
             previous = self.phase
             self.phase = body["to_phase"]
-            if self.phase == PHASES[self.header["procedure"]][-1] and not self._cancelled:
-                self.state = "completed"
+            self.state = (
+                "completed" if self.phase == PHASES[self.header["procedure"]][-1] else "active"
+            )
             if self.phase != previous:
                 if previous in self.phase_windows:
                     self.phase_windows[previous] = (
@@ -1477,7 +1498,7 @@ class WorkflowMember(_JournalTarget):
         _require(
             bool(enrollment.grant_id)
             and self.header["requirements_digest"]
-            == digest(REQUIREMENTS[self.header["procedure"]]),
+            == digest(procedure_commitment(self.header["procedure"])),
             "workflow requirements or independent gate grant changed",
         )
         self.signed_projection, self.projection = (
@@ -1653,6 +1674,7 @@ class WorkflowMember(_JournalTarget):
                 driver=round["authority"] != "native-owner",
                 settlement=round["authority"] == "native-owner",
             )
+            self._require_phase_progress(round["authority"])
             _require(self._agreement is not None, "workflow complete preparation agreement absent")
             phases = PHASES[self.header["procedure"]]
             _require(
@@ -1710,6 +1732,7 @@ class WorkflowMember(_JournalTarget):
                 driver=decision["authority"] != "native-owner",
                 settlement=decision["authority"] == "native-owner",
             )
+            self._require_phase_progress(decision["authority"])
             _require(
                 self._vote is not None
                 and self._round is not None
@@ -1946,7 +1969,7 @@ class WorkflowMember(_JournalTarget):
                     "workflow child observation did not advance exact operation",
                 )
                 _require(
-                    previous["state"] not in {"succeeded", "failed", "cancelled"},
+                    previous["state"] not in _TERMINAL_STATES,
                     "workflow terminal child outcome cannot be replaced",
                 )
             if operation["result_handle"] is not None:
@@ -1983,16 +2006,17 @@ class WorkflowMember(_JournalTarget):
             self._preparation = outcome
         elif action == "agreement":
             self._agreement = payload["agreement"]
-            if self.state == "prepared":
-                self.state = "active"
         elif action == "vote":
             self._vote, self._round = outcome, payload["round"]
             self._reservation = outcome["body"]["reservation"]
         elif action == "apply":
+            decision = payload["certificate"]["body"]["decision"]["body"]
+            self._require_phase_progress(decision["authority"])
             self._certificate = payload["certificate"]
             self.phase = outcome["body"]["phase"]
-            if self.phase == PHASES[self.header["procedure"]][-1] and not self._cancelled:
-                self.state = "completed"
+            self.state = (
+                "completed" if self.phase == PHASES[self.header["procedure"]][-1] else "active"
+            )
         elif action == "bind":
             request = payload["binding"]["body"]["request"]
             key = _key(request["child"])

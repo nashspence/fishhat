@@ -490,5 +490,8 @@
       ],
       "additionalProperties": false
     }
-  }
+  },
+  "x-fishhat-catalogue-dependencies": [
+    "receipts-api.openapi.json"
+  ]
 }

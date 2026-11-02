@@ -10,7 +10,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from fishhat_contracts.handoffs import ACTIONS, PHASES, schema_identity
 from fishhat_contracts.validation import canonical, digest
 from fishhat_contracts.witness import sign
-from fishhat_contracts.workflow_evidence import REQUIREMENTS, phase_subject
+from fishhat_contracts.workflow_evidence import phase_subject, procedure_commitment
 from fishhat_contracts.workflows import advance_workflow_view, bound_plan
 
 from tests.operation_support import seal_operation
@@ -108,7 +108,7 @@ def phase_evidence(workflow, request, *, operations=None, authority="driver"):
             },
             "proposal_digest": workflow["proposal_digest"],
             "procedure": workflow["type"],
-            "requirements_digest": digest(REQUIREMENTS[workflow["type"]]),
+            "requirements_digest": digest(procedure_commitment(workflow["type"])),
             "from_phase": phases[position - 1],
             "to_phase": request["phase"],
         },

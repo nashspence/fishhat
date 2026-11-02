@@ -15,9 +15,8 @@ from dataclasses import dataclass
 from typing import Any
 
 from .bounds import Bounds, bounds
+from .operations import _TERMINAL_STATES
 from .validation import ContractError, digest, validate
-
-_TERMINAL = {"succeeded", "failed", "cancelled", "quarantined"}
 
 
 def _require(condition: bool, code: str) -> None:
@@ -275,7 +274,7 @@ class CancellationJournal:
             target["owner"] == self._owner and target["request_id"] == request["request_id"],
             "CANCELLATION_TARGET_CHANGED",
         )
-        terminal = target["state"] in _TERMINAL
+        terminal = target["state"] in _TERMINAL_STATES
         _require(terminal or cancellation_supported is True, "UNSUPPORTED_CAPABILITY")
         validate("common.schema.json", now, "Time")
         receipt = {

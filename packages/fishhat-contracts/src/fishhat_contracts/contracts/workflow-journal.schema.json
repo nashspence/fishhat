@@ -187,7 +187,8 @@
           ]
         },
         "requirements_digest": {
-          "$ref": "common.schema.json#/$defs/Digest"
+          "$ref": "workflow-evidence.schema.json#/$defs/ProcedureDigest",
+          "description": "The exact installed procedure commitment for this header's immutable procedure. The gate retains it in the signed header and every receiving member independently compares the same installed commitment before accepting it. A proposal, journal command, advertised digest or signature cannot approve a different installed procedure."
         },
         "gate_owner": {
           "$ref": "common.schema.json#/$defs/Owner"
@@ -834,7 +835,8 @@
           ]
         },
         "requirements_digest": {
-          "$ref": "common.schema.json#/$defs/Digest"
+          "$ref": "workflow-journal.schema.json#/$defs/Header/properties/requirements_digest",
+          "description": "The exact requirements_digest of the retained signed workflow header."
         },
         "command_digest": {
           "$ref": "common.schema.json#/$defs/Digest"
@@ -1760,6 +1762,7 @@
         },
         "state": {
           "enum": [
+            "prepared",
             "active",
             "paused",
             "cancelled"

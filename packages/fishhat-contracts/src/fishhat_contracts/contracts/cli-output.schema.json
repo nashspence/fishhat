@@ -270,5 +270,9 @@
         }
       }
     }
+  ],
+  "x-fishhat-catalogue-dependencies": [
+    "owner-cli.json",
+    "client-commands.json"
   ]
 }

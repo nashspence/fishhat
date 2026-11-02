@@ -3025,7 +3025,7 @@
             "source"
           ],
           "additionalProperties": false,
-          "description": "Exact rooted installed identities for ssh-request.schema.json, ssh-response.schema.json, cli-output.schema.json and source.schema.json respectively. This advertisement is observational and grants no compatibility, authority or capability. Before sending new work, callers compare each boundary they use to independently approved exact identities; a shared v1 label is insufficient. A mismatch rejects new use of that boundary unless a separately approved exact reader or writer is installed. Existing accepted work and historical inspection retain their original schema readers and custody; discovery must not rewrite those identities. Full boundary unions conservatively pin all reachable alternatives. This field does not claim arbitrary cross-version compatibility or native qualification."
+          "description": "Exact rooted installed identities for ssh-request.schema.json, ssh-response.schema.json, cli-output.schema.json and source.schema.json respectively, including every reached normative schema annotation and installed catalogue dependency. This advertisement is observational and grants no compatibility, authority or capability. Before sending new work, callers compare each complete boundary they use to independently approved exact identities; a shared v1 label is insufficient. A mismatch rejects new use of that boundary unless a separately approved exact reader or writer is installed. Each advertised boundary describes one current installed revision. Callers and owners coordinate installation and approval of a changed boundary before new work uses it; discovery does not negotiate compatible subsets or approve an observed revision automatically. Full boundary unions conservatively pin all reachable alternatives, so an edit to any reached schema or normative catalogue changes every affected boundary even when a particular request would not select that alternative. Existing accepted work and historical inspection retain their original schema readers, commitments and custody; a coordinated current-revision update must preserve those readers for as long as retained work requires them. Discovery must not rewrite accepted identities or re-admit accepted work. This field does not claim arbitrary cross-version compatibility or native qualification."
         },
         "source_formats": {
           "type": "array",
@@ -5091,5 +5091,8 @@
   },
   "x-fishhat-contract-dependencies": [
     "#/$defs/Witness"
+  ],
+  "x-fishhat-catalogue-dependencies": [
+    "states.json"
   ]
 }

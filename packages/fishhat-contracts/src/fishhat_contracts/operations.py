@@ -11,7 +11,10 @@ from collections.abc import Callable, Mapping
 from typing import Any
 from urllib.parse import urljoin
 
-from .validation import SCHEMAS, ContractError, digest, validate, validate_plan
+from .validation import CATALOGUES, SCHEMAS, ContractError, digest, validate, validate_plan
+
+_OWNER_STATES = CATALOGUES["https://fishhat.invalid/contracts/states.json"]["owner"]
+_TERMINAL_STATES = frozenset(state for state, successors in _OWNER_STATES.items() if not successors)
 
 
 def validate_operation(

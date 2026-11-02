@@ -34,6 +34,10 @@ def require_owner_contracts(
     Callers select every boundary used by their next operation. This comparison
     cannot establish transport authentication, current permissions or native
     qualification, and must not displace retained readers for accepted work.
+    The full selected boundary, including its normative catalogue dependencies,
+    must match one independently approved revision. New work across a changed
+    boundary requires a coordinated installation and policy update; this is not
+    automatic negotiation or permission to discard an accepted-work reader.
     """
     validate("records.schema.json", info, "Info")
     if info["owner"] != expected_owner:

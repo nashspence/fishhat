@@ -33,6 +33,21 @@ def test_components_and_public_contracts_are_current():
         assert snapshot() == json.loads((ROOT / "policy/interfaces.json").read_text())
 
 
+def test_public_snapshot_detects_normative_catalogue_changes(monkeypatch):
+    from fishhat_contracts.validation import CATALOGUES
+
+    original = snapshot()
+    uri = "https://fishhat.invalid/contracts/actions.json"
+    changed = copy.deepcopy(CATALOGUES[uri])
+    changed["actions"][0]["minimum_role"] = "administrator"
+    assert changed != CATALOGUES[uri]
+    monkeypatch.setitem(CATALOGUES, uri, changed)
+    revised = snapshot()
+    assert set(revised["catalogues"]) == set(CATALOGUES)
+    assert revised["catalogues"][uri] != original["catalogues"][uri]
+    assert revised["schemas"] == original["schemas"]
+
+
 def test_component_import_violation_is_detected(tmp_path):
     shutil.copytree(
         ROOT / "packages",

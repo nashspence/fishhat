@@ -43,7 +43,7 @@ def fingerprint(path: Path) -> str:
 
 def snapshot() -> dict[str, Any]:
     from fishhat_cli.validation import build_parser
-    from fishhat_contracts.validation import SCHEMAS
+    from fishhat_contracts.validation import CATALOGUES, SCHEMAS
 
     policy = read_toml(ROOT / "release.toml")
     public: dict[str, Any] = {}
@@ -111,6 +111,10 @@ def snapshot() -> dict[str, Any]:
                 "sha256": hashlib.sha256(canonical(data)).hexdigest(),
             }
             for name, data in sorted(SCHEMAS.items())
+        },
+        "catalogues": {
+            uri: {"sha256": hashlib.sha256(canonical(data)).hexdigest()}
+            for uri, data in sorted(CATALOGUES.items())
         },
     }
 

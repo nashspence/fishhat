@@ -34,7 +34,7 @@ from fishhat_contracts.record_delivery import (
 )
 from fishhat_contracts.validation import ContractError, canonical, digest, strict_json, validate
 from fishhat_contracts.witness import sign
-from fishhat_contracts.workflow_evidence import REQUIREMENTS
+from fishhat_contracts.workflow_evidence import procedure_commitment
 from fishhat_contracts.workflow_journal import (
     GateEnrollment,
     dispatch_journal_command,
@@ -1441,6 +1441,7 @@ class WorkflowRun:
                     "member_keys": member_keys,
                     "authorize": self.authorize_gate,
                     "check_reservation": self.check_reservation,
+                    "lifecycle": self.gate_lifecycle,
                     "journal": gate_store,
                     "clock": lambda: NOW,
                     "extension": JournalRecovery(),
@@ -1457,7 +1458,7 @@ class WorkflowRun:
             "workflow_id": self.manifest["workflow_id"],
             "proposal_digest": digest(self.manifest),
             "procedure": "host-drain",
-            "requirements_digest": digest(REQUIREMENTS["host-drain"]),
+            "requirements_digest": digest(procedure_commitment("host-drain")),
             "gate_owner": self.gate_owner,
             "gate_key_id": KEY_ID,
             "driver_principal": DRIVER,
@@ -1596,6 +1597,18 @@ class WorkflowRun:
         self.meter.values["gate_authorization_visits"] += 1
         require(principal in {DRIVER, NEXT_DRIVER}, "gate current permission denied")
         require(context["owner"] == self.gate_owner, "gate owner changed")
+
+    def gate_lifecycle(self, action, snapshot):
+        require(snapshot["owner"] == self.gate_owner, "native gate lifecycle owner changed")
+        return {
+            "action": action,
+            "owner": self.gate_owner,
+            "workflow_id": snapshot["workflow_id"],
+            "admission_closed": action != "resume",
+            "holds_digest": digest([]),
+            "accepted_digest": self.gate.target.journal.head,
+            "generation": snapshot["generation"],
+        }
 
     def check_reservation(self, owner, reservation, round):
         self.meter.values["gate_native_index_visits"] += 1
@@ -2219,8 +2232,8 @@ def execute_workflow(root, workload, *, regression=None, meter=None):
                             )
                 if phase == "host-effect":
                     run.children()
+                    run.transfer()
             completed = run.assert_complete()
-            run.transfer()
             run.recover()
         finally:
             run.close()

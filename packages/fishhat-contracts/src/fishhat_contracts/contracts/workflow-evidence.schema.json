@@ -30,7 +30,7 @@
           "$ref": "common.schema.json#/$defs/Id"
         },
         "requirements_digest": {
-          "$ref": "common.schema.json#/$defs/Digest"
+          "$ref": "workflow-evidence.schema.json#/$defs/ProcedureDigest"
         },
         "expected_generation": {
           "type": "integer",
@@ -63,7 +63,7 @@
         "to_phase"
       ],
       "additionalProperties": false,
-      "description": "One exact receiving-owner transition, including its immutable proposal, local capsule generation, retained driver term and transition identity advance_id. The signed authority distinguishes an ordinary driver advance from native-owner settlement of already accepted work. Native-owner authority permits only the final adjacent phase transition with every required child succeeded and effects known; it grants no driver, child-admission or transfer authority and is never a workflow.advance transport input. requirements_digest is the canonical digest of this procedure's complete installed InstalledProcedureRequirements.const entry, never caller-selected semantics. from_phase and to_phase are consecutive installed phases. Retained accepted transitions keep these original bytes after later advances, owner observations or driver changes."
+      "description": "One exact receiving-owner transition, including its immutable proposal, local capsule generation, retained driver term and transition identity advance_id. The signed authority distinguishes an ordinary driver advance from native-owner settlement of already accepted work. Native-owner authority permits only the final adjacent phase transition with every required child succeeded and effects known; it grants no driver, child-admission or transfer authority and the complete audit projection is never a live mutation input. requirements_digest is the installed ProcedureDigest commitment for this immutable procedure, covering its ordered phases, lifecycle edges, meanings, common rules and native obligations, never caller-selected semantics. from_phase and to_phase are consecutive installed phases. Retained accepted transitions keep these original bytes after later advances, owner observations or driver changes."
     },
     "ChildOutcome": {
       "type": "object",
@@ -215,7 +215,7 @@
           "phases": {
             "participants-quiescent": "Resolve the exact issuer, publisher and complete consumer set; enforce the rotation's required consumer quiescence or exclusion and pin accepted secret generations and recovery custody.",
             "issuer-changing": "Revalidate continuing participant exclusion, current generations and the exact credential-issuer issue input immediately before the issuer child. No prior credential receipt can stand in for its future result.",
-            "publishing": "Require the exact issuer child to have succeeded with committed output; verify the real ciphertext derivation and later-reviewed publisher Plan through workflow.bind, preserving issuer identity and native credential custody.",
+            "publishing": "Require the exact issuer child to have succeeded with committed output; verify the real ciphertext derivation and later-reviewed publisher Plan through the approved journal bind commands, preserving issuer identity and native credential custody.",
             "consumers-adopting": "Require the exact publisher child to have succeeded with its complete retained receipt; verify publication of this issuer's candidate and exact predecessor before reviewing each consumer adoption.",
             "verifying": "Require every selected consumer adoption child to have succeeded; verify each actual accepted consumer secret generation and required native checks against that exact publication receipt.",
             "completed": "Verify the entire issuer/publication/consumer lineage and required consumer checks, with no omitted consumer or unresolved rotation effect. Retire old secret material only through its owning retention and recovery conditions."
@@ -306,7 +306,7 @@
           }
         }
       },
-      "description": "The sole installed native phase obligations and child completion barriers for all v1 procedures. Every phase after prepared is covered; every admitted child start phase has a later completion barrier no later than the terminal phase. Phase order remains owned by states.json. This normative constant is part of the complete JSON Schema closure pinned by record delivery and independently installed historical readers; altering an obligation changes that identity. Requirements are never supplied or relaxed by a workflow proposal or phase-evidence caller."
+      "description": "The sole installed native phase obligations and child completion barriers for all v1 procedures. Every phase after prepared is covered; every admitted child start phase has a later completion barrier no later than the terminal phase. Phase order and lifecycle edges, meanings and common rules are owned by states.json, whose complete installed value participates through this document's catalogue dependency. This normative constant is part of the schema closure pinned by record delivery and independently installed historical readers; altering an obligation or the installed state catalogue changes that identity. ProcedureDigest additionally commits the selected ordered phases, lifecycle semantics and these procedure obligations in its defined canonical preimage. Requirements are never supplied or relaxed by a workflow proposal or phase-evidence caller."
     },
     "UnsignedParticipantEvidence": {
       "type": "object",
@@ -624,8 +624,15 @@
       ],
       "additionalProperties": false,
       "description": "Protected peer check of one exact retained native-owner final-settlement attestation. The issuer independently authenticates the peer owner epoch exactly equal to the retained transition.owner and independently loads current issuer and receiver capsules, complete accepted successful outcomes, native material, resource generations and continuing protections. Current complete read scope and native check authority are required. This route rejects driver proofs; the driver check route rejects native-owner proofs. The receiver remains active or paused at the exact final source phase, generation and driver term; an issuer may already be terminal. Incomplete driver transfer is preserved, and recovery custody is committed. Check signed expiry against current time. Missing or stale native protection refuses; a caller-provided prior check or signed record is insufficient. Return the bounded CurrentAttestation without mutating bytes, renewing expiry, completing transfer, releasing holds or granting native authority. The receiver serializes final settlement under its own native exclusion; this observation is not a lease."
+    },
+    "ProcedureDigest": {
+      "$ref": "common.schema.json#/$defs/Digest",
+      "description": "SHA-256 over canonical {profile: 'fishhat.workflow-procedure/v1', procedure: the immutable workflow procedure, phases: states.workflow_phases[procedure], lifecycle: states.workflow_lifecycle, lifecycle_meanings: states.workflow_meanings, rules: states.rules, requirements: InstalledProcedureRequirements[procedure]}. states is the complete independently installed states.json catalogue; InstalledProcedureRequirements is the normative constant in workflow-evidence.schema.json. Phases retain their array order. Lifecycle edges, meanings and common rules retain their complete JSON values. The signed workflow header and every complete phase transition use this same commitment. Independently installed receiving owners compare it before accepting new work; callers cannot supply or relax the procedure rules."
     }
   },
   "$ref": "workflow-evidence.schema.json#/$defs/PhaseEvidence",
-  "description": "Complete shared phase-evidence audit relationships and installed native obligations. The live protocol in workflow-journal.schema.json uses one common round, issuer-local protected reservations and one gate verification of complete coverage. Full PhaseEvidence and receiver-bound Transition values are inspection projections assembled only for explicit complete audit, never one transmitted/stored bundle per receiving member."
+  "description": "Complete shared phase-evidence audit relationships and installed native obligations. The live protocol in workflow-journal.schema.json uses one common round, issuer-local protected reservations and one gate verification of complete coverage. Full PhaseEvidence and receiver-bound Transition values are inspection projections assembled only for explicit complete audit, never one transmitted/stored bundle per receiving member.",
+  "x-fishhat-catalogue-dependencies": [
+    "states.json"
+  ]
 }

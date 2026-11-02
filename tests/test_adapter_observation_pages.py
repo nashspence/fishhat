@@ -60,8 +60,15 @@ def page(role, method="observe"):
         "secret-source",
         "credential-issuer",
         "dns",
+        "storage",
     }:
         query["input"]["binding"] = executor
+    if role == "compute":
+        query["input"]["target"] = {
+            "executor": executor,
+            "handle": "allocation:demo",
+            "incarnation": "incarnation:demo",
+        }
     if role == "dns":
         query["input"]["owner"] = copy.deepcopy(OWNER)
     if role == "runtime":
@@ -75,7 +82,11 @@ def page(role, method="observe"):
     outputs = {
         "backup": {"objects": []},
         "build": {"artifacts": []},
-        "compute": {"allocation": None, "limits": [], "counters": []},
+        "compute": {
+            "target": copy.deepcopy(query["input"].get("target")),
+            "limits": [],
+            "counters": [],
+        },
         "credential-issuer": {"leases": []},
         "dns": {"rrsets": [], "served_generation": generation(executor)},
         "ingress": {},
@@ -191,7 +202,7 @@ def test_backup_limit_bounds_each_page_without_limiting_total_collection_extent(
 def test_compute_limit_counts_all_top_level_collections_together():
     query, reply = page("compute")
     reply["output"] = {
-        "allocation": "allocation:demo",
+        "target": copy.deepcopy(query["input"]["target"]),
         "limits": [limit()],
         "counters": [counter()],
     }

@@ -18,7 +18,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey,
 from .bounds import Bounds, bounds
 from .handoffs import schema_identity, validate_result_payload
 from .history import validate_owner_custody
-from .operations import validate_operation_plan
+from .operations import _TERMINAL_STATES, validate_operation_plan
 from .validation import ContractError, canonical, digest, validate
 from .witness import verify as verify_witness
 from .workflow_bindings import _key
@@ -29,6 +29,7 @@ from .workflow_journal import (
     _identity,
     _JournalTarget,
     _KeyOverlay,
+    _known_outcome,
     _now,
     _verify_plan,
     verify_journal_record,
@@ -483,6 +484,7 @@ class WorkflowRecoveryMember(_JournalTarget):
                 "restored outcome lacks original admission",
             )
             extension._operation(self, operation, bound_plan(self.ready[key]), self.workflow_id)
+            _known_outcome(self.outcomes.get(key), operation)
             self.outcomes[key] = operation
         elif action == "recover.gate_approve":
             self._recovery_gate_authority = copy.deepcopy(record["body"]["authority"])
@@ -595,6 +597,10 @@ class JournalRecovery:
 
     def _transfer_outcome(self, target: Any, command: JSON, principal: str) -> JSON:
         action, payload = command["action"], command["payload"]
+        _require(
+            target.state not in {"completed", "cancelled"} and not target._cancelled,
+            "terminal workflow lifecycle cannot transfer",
+        )
         common = {"header_digest": target.header_digest}
         gate = _is_gate(target)
         if action == "transfer.propose":
@@ -1360,7 +1366,7 @@ class JournalRecovery:
                 ),
                 "native disposition changed retained original Operation",
             )
-            if known["state"] in {"succeeded", "failed", "cancelled"}:
+            if known["state"] in _TERMINAL_STATES:
                 _require(
                     operation == known, "native disposition replaced a terminal retained Operation"
                 )
@@ -1541,6 +1547,10 @@ class JournalRecovery:
 
     def _apply_transfer(self, target: Any, command: JSON, outcome: JSON) -> None:
         action, payload, body = command["action"], command["payload"], outcome["body"]
+        _require(
+            target.state not in {"completed", "cancelled"} and not target._cancelled,
+            "retained driver transfer follows terminal workflow lifecycle",
+        )
         if action in {"transfer.propose", "transfer.freeze"}:
             target._recovery_state["transfer"] = {
                 "proposal": outcome if action == "transfer.propose" else payload["proposal"],

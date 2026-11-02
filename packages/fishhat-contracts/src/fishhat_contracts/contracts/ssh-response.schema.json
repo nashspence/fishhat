@@ -1203,5 +1203,8 @@
       ],
       "additionalProperties": false
     }
+  ],
+  "x-fishhat-catalogue-dependencies": [
+    "ssh-methods.json"
   ]
 }
