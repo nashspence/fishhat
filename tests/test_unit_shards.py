@@ -415,3 +415,27 @@ def test_advisory_reference_uses_latest_successful_full_main_run(tmp_path, monke
     assert set(report["files"]) == {"3.11", "3.12", "3.13"}
     assert sum("/workflows/ci.yml/runs?" in endpoint for endpoint in contacts) == 2
     assert all((tmp_path / "reference" / (python + ".xml")).is_file() for python in report["files"])
+
+
+@pytest.mark.parametrize("slowest", [0.1, 120.0], ids=["fast-history", "slow-history"])
+def test_unobserved_cases_start_as_primary_work_without_losing_selection(tmp_path, slowest):
+    known = [f"tests/test_known.py::test_case_{index:02d}" for index in range(16)]
+    unknown = {"tests/test_new.py::test_alpha", "tests/test_new.py::test_beta"}
+    nodes = [*known, *sorted(unknown)]
+    cases = "".join(
+        f'<testcase classname="tests.test_known" name="test_case_{index:02d}" '
+        f'time="{slowest if index == 0 else 0.1}"/>'
+        for index in range(16)
+    )
+    path = tmp_path / "reference.xml"
+    path.write_text("<testsuites><testsuite>" + cases + "</testsuite></testsuites>")
+    weights, report = unit_shards.observations(nodes, path)
+    shards = unit_shards.partition(weights)
+    assigned = [node for shard in shards for node in shard]
+    assert len(assigned) == len(nodes) and set(assigned) == set(nodes)
+    assert report["matched_nodes"] == len(known) and report["unobserved_nodes"] == len(unknown)
+    primary = set()
+    for shard in shards:
+        order = unit_shards.execution_order(shard, weights)
+        primary.update(order[: 2 * unit_shards.WORKERS : 2])
+    assert unknown <= primary

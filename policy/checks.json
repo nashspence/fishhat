@@ -14280,6 +14280,14 @@
       "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
     },
     {
+      "node": "tests/test_unit_shards.py::test_unobserved_cases_start_as_primary_work_without_losing_selection[fast-history]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_unobserved_cases_start_as_primary_work_without_losing_selection[slow-history]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
       "node": "tests/test_unit_shards.py::test_workflow_requires_complete_aggregation_and_attempt_scoped_raw_artifacts",
       "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
     },

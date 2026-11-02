@@ -9,7 +9,6 @@ import io
 import json
 import math
 import re
-import statistics
 import subprocess
 import sys
 import time
@@ -76,7 +75,8 @@ def observations(
             measured = {}
             status = {"status": "unusable", "sha256": None}
     matches = [measured[xml_key(node)] for node in nodes if xml_key(node) in measured]
-    fallback = max(0.001, statistics.median(matches)) if matches else 1.0
+    # Schedule unmeasured cases alongside the slowest observed work.
+    fallback = max(1.0, max(matches, default=0.0))
     weights = {node: max(0.001, measured.get(xml_key(node), fallback)) for node in nodes}
     return weights, {
         **status,
