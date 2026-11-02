@@ -9,7 +9,7 @@ description = "Fishhat owner-state reference scaffold"
 requires-python = ">=3.11"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
-dependencies = ["fishhat-adapter-protocol==0.1.0.dev0", "fishhat-contracts==0.1.0.dev0", "alembic>=1.18,<2", "SQLAlchemy>=2.0,<3"]
+dependencies = ["fishhat-adapter-protocol==0.1.0.dev0", "fishhat-contracts==0.1.0.dev0", "alembic>=1.20.1,<2", "SQLAlchemy>=2.0,<3"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
