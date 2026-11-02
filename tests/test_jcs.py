@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 import pytest
+import rfc8785
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
 from fishhat_adapters import check_configuration, check_schema
 from fishhat_contracts import ContractError, canonical, digest, strict_json, strict_yaml
@@ -247,3 +248,27 @@ def test_encoding_never_mutates_signed_or_schema_values():
     before = copy.deepcopy(value)
     canonical(value)
     assert value == before
+
+
+@pytest.mark.parametrize("family", ["ascii", "bmp", "supplementary", "nested"])
+def test_complete_unicode_key_order_and_values_match_independent_jcs(family):
+    keys = {
+        "ascii": [chr(value) for value in range(128)] + ["", "a", "aa", "a\x00", "a\x7f"],
+        "bmp": ["\x7f", "\x80", "\u07ff", "\u0800", "\ud7ff", "\ue000", "\uffff"],
+        "supplementary": ["\ue000", "\U00010000", "\U0001f600", "\U0010ffff"],
+        "nested": ["", "a", "é", "😀"],
+    }[family]
+    value = {key: {"items": [key, {"z": True, "a": None}], "empty": {}} for key in reversed(keys)}
+    before = copy.deepcopy(value)
+    expected = rfc8785.dumps(value)
+    assert canonical(value) == expected
+    assert strict_json(expected) == value
+    assert value == before
+
+
+@pytest.mark.parametrize("text", ["\ud800", "\udfff", "\ud800\udc00"], ids=["high", "low", "pair"])
+@pytest.mark.parametrize("position", ["key", "value"])
+def test_non_scalar_unicode_remains_rejected_in_keys_and_values(text, position):
+    value = {text: "ascii"} if position == "key" else {"ascii": text}
+    with pytest.raises(ContractError, match="invalid Unicode surrogate"):
+        canonical(value)

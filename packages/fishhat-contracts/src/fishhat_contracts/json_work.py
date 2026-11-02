@@ -60,7 +60,9 @@ def jcs_bytes(value: Any) -> bytes:
 def _jcs_write(value: Any, sink: BytesIO) -> None:
     if isinstance(value, dict):
         sink.write(b"{")
-        for index, key in enumerate(_radix(value, str, "utf-16be")):
+        # ASCII byte order equals UTF-16 order without its zero high bytes.
+        encoding = "ascii" if all(key.isascii() for key in value) else "utf-16be"
+        for index, key in enumerate(_radix(value, str, encoding)):
             if index:
                 sink.write(b",")
             rfc8785.dump(key, sink)
