@@ -6984,7 +6984,11 @@
       "purpose_sha256": "4e0bee7abee6ed91528a7292d009f6beef194391788e8b56bc217068d2afc64e"
     },
     {
-      "node": "tests/test_historical_journal.py::test_complete_historical_journal_delivery_is_linear",
+      "node": "tests/test_historical_journal.py::test_complete_historical_journal_delivery_is_linear[events]",
+      "purpose_sha256": "d92140d619943698e6d2b29c7823ec9c94403b8d6f7c1b07a59234bf69cfa177"
+    },
+    {
+      "node": "tests/test_historical_journal.py::test_complete_historical_journal_delivery_is_linear[original-bytes]",
       "purpose_sha256": "d92140d619943698e6d2b29c7823ec9c94403b8d6f7c1b07a59234bf69cfa177"
     },
     {
@@ -14144,6 +14148,14 @@
       "purpose_sha256": "53a023a3fef7b9eb36fa1c06d0776f8641e10c42d545f723b4fc338287a6b6e3"
     },
     {
+      "node": "tests/test_unit_shards.py::test_advisory_reference_uses_latest_successful_full_main_run[push]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_advisory_reference_uses_latest_successful_full_main_run[workflow_dispatch]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
       "node": "tests/test_unit_shards.py::test_constituent_semantics_are_rechecked_after_digest_changes[attempt]",
       "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
     },
@@ -14546,6 +14558,14 @@
     {
       "node": "tests/test_validation_timeouts.py::test_watchdog_arithmetic_and_budget_receipt[4]",
       "purpose_sha256": "ae4211b47e8886b4cd2e9c6f7080f8e52ba4d8b3fe011793614c1bb9b53379b6"
+    },
+    {
+      "node": "tests/test_work_measurement.py::test_complete_line_accounting_matches_independent_live_events[exception]",
+      "purpose_sha256": "6ac467464602c8ffa12562a66ca09fc53adf9fadda4f05b7390749543e0d20b0"
+    },
+    {
+      "node": "tests/test_work_measurement.py::test_complete_line_accounting_matches_independent_live_events[return]",
+      "purpose_sha256": "6ac467464602c8ffa12562a66ca09fc53adf9fadda4f05b7390749543e0d20b0"
     },
     {
       "node": "tests/test_workflow_abandonment.py::test_abandoned_absent_peer_cannot_later_prepare_the_old_successor",

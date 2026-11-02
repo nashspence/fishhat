@@ -516,16 +516,16 @@ def complete_delivery(materials):
     return len(seen)
 
 
-def test_complete_historical_journal_delivery_is_linear():
-    for axis in ("events", "original-bytes"):
-        samples = []
-        for extent in (2, 8, 32):
-            materials = (
-                [material(index) for index in range(extent)]
-                if axis == "events"
-                else [material(evidence=extent)]
-            )
-            count, work = measure(lambda selected=materials: complete_delivery(selected))
-            assert count == len(materials)
-            samples.append((extent, work))
-        assert_linear(samples)
+@pytest.mark.parametrize("axis", ["events", "original-bytes"])
+def test_complete_historical_journal_delivery_is_linear(axis):
+    samples = []
+    for extent in (2, 8, 32):
+        materials = (
+            [material(index) for index in range(extent)]
+            if axis == "events"
+            else [material(evidence=extent)]
+        )
+        count, work = measure(lambda selected=materials: complete_delivery(selected))
+        assert count == len(materials)
+        samples.append((extent, work))
+    assert_linear(samples)

@@ -2783,7 +2783,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/historical_journal.py": "d66032eaf4debb27783ebffb4e67d5ac3e83feac93aed23713b8e2666351efb5",
-        "tests/test_historical_journal.py": "f3e8efb391cc6df2fd49beebdcbdbff343d16b1442c3a6634eb7ea111a2fbfc1"
+        "tests/test_historical_journal.py": "1cbfd7817cdc129ec04e30d5dd1e845e41913eb45b9d4d2c89eca6ca0bb6f111"
       },
       "symbol": "fishhat_contracts.historical_journal:validate_historical_journal_command",
       "work": "O(B) complete original registration once; indexed O(page window) discovery and O(selected chunk bytes) reads without journal rescans"
@@ -2814,7 +2814,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/historical_journal.py": "d66032eaf4debb27783ebffb4e67d5ac3e83feac93aed23713b8e2666351efb5",
-        "tests/test_historical_journal.py": "f3e8efb391cc6df2fd49beebdcbdbff343d16b1442c3a6634eb7ea111a2fbfc1"
+        "tests/test_historical_journal.py": "1cbfd7817cdc129ec04e30d5dd1e845e41913eb45b9d4d2c89eca6ca0bb6f111"
       },
       "symbol": "fishhat_contracts.historical_journal:HistoricalJournalDelivery.content",
       "work": "O(B) complete original registration once; indexed O(page window) discovery and O(selected chunk bytes) reads without journal rescans"
@@ -2845,7 +2845,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/historical_journal.py": "d66032eaf4debb27783ebffb4e67d5ac3e83feac93aed23713b8e2666351efb5",
-        "tests/test_historical_journal.py": "f3e8efb391cc6df2fd49beebdcbdbff343d16b1442c3a6634eb7ea111a2fbfc1"
+        "tests/test_historical_journal.py": "1cbfd7817cdc129ec04e30d5dd1e845e41913eb45b9d4d2c89eca6ca0bb6f111"
       },
       "symbol": "fishhat_contracts.historical_journal:HistoricalJournalDelivery.input",
       "work": "O(B) complete original registration once; indexed O(page window) discovery and O(selected chunk bytes) reads without journal rescans"
@@ -2876,7 +2876,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/historical_journal.py": "d66032eaf4debb27783ebffb4e67d5ac3e83feac93aed23713b8e2666351efb5",
-        "tests/test_historical_journal.py": "f3e8efb391cc6df2fd49beebdcbdbff343d16b1442c3a6634eb7ea111a2fbfc1"
+        "tests/test_historical_journal.py": "1cbfd7817cdc129ec04e30d5dd1e845e41913eb45b9d4d2c89eca6ca0bb6f111"
       },
       "symbol": "fishhat_contracts.historical_journal:HistoricalJournalDelivery.list",
       "work": "O(B) complete original registration once; indexed O(page window) discovery and O(selected chunk bytes) reads without journal rescans"
@@ -2907,7 +2907,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/historical_journal.py": "d66032eaf4debb27783ebffb4e67d5ac3e83feac93aed23713b8e2666351efb5",
-        "tests/test_historical_journal.py": "f3e8efb391cc6df2fd49beebdcbdbff343d16b1442c3a6634eb7ea111a2fbfc1"
+        "tests/test_historical_journal.py": "1cbfd7817cdc129ec04e30d5dd1e845e41913eb45b9d4d2c89eca6ca0bb6f111"
       },
       "symbol": "fishhat_contracts.historical_journal:HistoricalJournalDelivery.read",
       "work": "O(B) complete original registration once; indexed O(page window) discovery and O(selected chunk bytes) reads without journal rescans"
@@ -2938,7 +2938,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/historical_journal.py": "d66032eaf4debb27783ebffb4e67d5ac3e83feac93aed23713b8e2666351efb5",
-        "tests/test_historical_journal.py": "f3e8efb391cc6df2fd49beebdcbdbff343d16b1442c3a6634eb7ea111a2fbfc1"
+        "tests/test_historical_journal.py": "1cbfd7817cdc129ec04e30d5dd1e845e41913eb45b9d4d2c89eca6ca0bb6f111"
       },
       "symbol": "fishhat_contracts.historical_journal:HistoricalJournalDelivery.register",
       "work": "O(B) complete original registration once; indexed O(page window) discovery and O(selected chunk bytes) reads without journal rescans"

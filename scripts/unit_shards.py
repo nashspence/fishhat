@@ -607,13 +607,17 @@ def reference(repository: str, destination: Path) -> None:
         ).stdout
 
     try:
-        runs = json.loads(
-            api(
-                f"repos/{repository}/actions/workflows/ci.yml/runs?branch=main&event=push&status=success&per_page=1"
+        runs = []
+        for event in ("push", "workflow_dispatch"):
+            runs.extend(
+                json.loads(
+                    api(
+                        f"repos/{repository}/actions/workflows/ci.yml/runs?branch=main&event={event}&status=success&per_page=1"
+                    )
+                )["workflow_runs"]
             )
-        )["workflow_runs"]
         if runs:
-            run = runs[0]
+            run = max(runs, key=lambda value: (value["created_at"], value["id"]))
             report.update(source_run=run["id"], source_commit=run["head_sha"])
             artifacts = []
             page = 1

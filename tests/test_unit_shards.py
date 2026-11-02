@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import copy
+import hashlib
+import io
 import json
 import shutil
 import subprocess
 import sys
+import zipfile
 
 import pytest
 import yaml
@@ -348,3 +351,67 @@ def test_workflow_requires_complete_aggregation_and_attempt_scoped_raw_artifacts
     assert "github.run_attempt" in upload["with"]["name"] and "always()" in upload["if"]
     assert "artifacts/unit-plan.json" in upload["with"]["path"]
     assert "make unit" in (ROOT / ".githooks/pre-commit").read_text()
+
+
+@pytest.mark.parametrize("newest", ["push", "workflow_dispatch"])
+def test_advisory_reference_uses_latest_successful_full_main_run(tmp_path, monkeypatch, newest):
+    archive = io.BytesIO()
+    with zipfile.ZipFile(archive, "w") as output:
+        output.writestr(
+            "unit-tests.xml",
+            '<testsuites><testsuite><testcase name="passed" time="3"/></testsuite></testsuites>',
+        )
+    data = archive.getvalue()
+    digest = "sha256:" + hashlib.sha256(data).hexdigest()
+    selected = 101 if newest == "push" else 102
+    contacts = []
+
+    def request(command, **kwargs):
+        assert command[:2] == ["gh", "api"]
+        assert kwargs["timeout"] > 0
+        endpoint = command[2]
+        contacts.append(endpoint)
+        if "/workflows/ci.yml/runs?" in endpoint:
+            assert "branch=main" in endpoint and "status=success" in endpoint
+            event = "workflow_dispatch" if "event=workflow_dispatch" in endpoint else "push"
+            value = {
+                "workflow_runs": [
+                    {
+                        "id": 101 if event == "push" else 102,
+                        "head_sha": "a" * 40 if event == "push" else "b" * 40,
+                        "created_at": "2026-01-02T00:00:00Z"
+                        if event == newest
+                        else "2026-01-01T00:00:00Z",
+                    }
+                ]
+            }
+            body = json.dumps(value).encode()
+        elif "/artifacts?" in endpoint:
+            assert f"/runs/{selected}/" in endpoint
+            body = json.dumps(
+                {
+                    "artifacts": [
+                        {
+                            "id": index,
+                            "name": "unit-results-" + python,
+                            "expired": False,
+                            "digest": digest,
+                        }
+                        for index, python in enumerate(("3.11", "3.12", "3.13"), 201)
+                    ]
+                }
+            ).encode()
+        else:
+            assert endpoint.endswith("/zip")
+            body = data
+        return subprocess.CompletedProcess(command, 0, stdout=body)
+
+    monkeypatch.setattr(unit_shards.subprocess, "run", request)
+    unit_shards.reference("example/project", tmp_path / "reference")
+    report = json.loads((tmp_path / "reference/reference.json").read_text())
+    assert report["advisory_only"] is True and report["status"] == "available"
+    assert report["source_run"] == selected
+    assert report["source_commit"] == ("a" * 40 if newest == "push" else "b" * 40)
+    assert set(report["files"]) == {"3.11", "3.12", "3.13"}
+    assert sum("/workflows/ci.yml/runs?" in endpoint for endpoint in contacts) == 2
+    assert all((tmp_path / "reference" / (python + ".xml")).is_file() for python in report["files"])
