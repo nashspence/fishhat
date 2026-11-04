@@ -408,62 +408,6 @@
   "format": "fishhat-check-evidence/v1",
   "pytest": [
     {
-      "node": "redacted:0636e981ad9e68712663ab0337eb5b45e6ee8f6e2b7f54a296ebc9d9e5888801",
-      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
-    },
-    {
-      "node": "redacted:0c574af7376813c2a7ef6bbb58e17a6b6e876525ac1aff1dc681b4085167f5c5",
-      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
-    },
-    {
-      "node": "redacted:13b9e65407e1a9429de77cef113917ccc6336ccf60dd90e68e7c8e1b58daa573",
-      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
-    },
-    {
-      "node": "redacted:1e3294619710d9f70ed68d6a259114a1b2ece56077aa6fcbce4f7d2bc8378128",
-      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
-    },
-    {
-      "node": "redacted:2c3900c15a57fb8d2e6b93a2b7e6e21005316c7438bb3de9edcf295e4d9c0d4b",
-      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
-    },
-    {
-      "node": "redacted:3244f5f750671e0c843681f96bb854af6ff1d32637229fd6385cdea6169160b0",
-      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
-    },
-    {
-      "node": "redacted:38e8d7ef7a046e7cdb0e619b4f599727a06ac0807c61d27b85efc84f43cfda93",
-      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
-    },
-    {
-      "node": "redacted:3e0df70438bff980c4731bb0274307894e50f78d155130d7747faea8a932616a",
-      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
-    },
-    {
-      "node": "redacted:846c3660dfc9f879165febff2b7a5257a921bee34dec808491182b07bb27f3cb",
-      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
-    },
-    {
-      "node": "redacted:a32f93ef0f7f5999d4880d3e575eb78d00accf48ea26d32bf2f7a611fb4732e3",
-      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
-    },
-    {
-      "node": "redacted:a3e334bdeedc3172cd17b47accdde8e66aad02064ca95b0a32dc4a1e5347ff8f",
-      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
-    },
-    {
-      "node": "redacted:d6e13a22614cc8d9060998abfb66caa35aade157cd523dd52d6f6ce17a866bcb",
-      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
-    },
-    {
-      "node": "redacted:ef5fcf487530d3e20b82ac17983f88ff65306ac5f53db62095e51a1fc1d097c5",
-      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
-    },
-    {
-      "node": "redacted:f176eb8f0fe12b955e38ffea6f3f0f3d9cd738a1bd87633eec43aac967900b33",
-      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
-    },
-    {
       "node": "tests/test_action_results.py::test_capture_material_rejects_incomplete_or_changed_owner_bytes[changed]",
       "purpose_sha256": "c864cebdbce3895c1f09e88b6bf2f1ea99c7288eb941270f6dbdfb98ed8acf43"
     },
@@ -5152,6 +5096,38 @@
       "purpose_sha256": "b970eaf9a01bf9790316a2c8842a97f1f203579713f73637ba5a285306ab9e78"
     },
     {
+      "node": "tests/test_contract_catalogues.py::test_catalogue_dependencies_reject_unapproved_or_ambiguous_targets[duplicate-reference]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_catalogue_dependencies_reject_unapproved_or_ambiguous_targets[duplicate-resolved-target]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_catalogue_dependencies_reject_unapproved_or_ambiguous_targets[empty-fragment]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_catalogue_dependencies_reject_unapproved_or_ambiguous_targets[fragment-target]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_catalogue_dependencies_reject_unapproved_or_ambiguous_targets[non-string-target]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_catalogue_dependencies_reject_unapproved_or_ambiguous_targets[scalar-dependencies]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_catalogue_dependencies_reject_unapproved_or_ambiguous_targets[schema-target]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_catalogue_dependencies_reject_unapproved_or_ambiguous_targets[uninstalled-catalogue]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
       "node": "tests/test_contract_catalogues.py::test_catalogue_dependencies_require_a_core_document_root",
       "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
     },
@@ -5168,19 +5144,43 @@
       "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
     },
     {
-      "node": "tests/test_contract_catalogues.py::test_normative_catalogue_changes_reidentify_their_installed_boundaries[directory-result.schema.json-directory-mcp.json-path8-False]",
+      "node": "tests/test_contract_catalogues.py::test_normative_catalogue_changes_reidentify_their_installed_boundaries[action-authority]",
       "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
     },
     {
-      "node": "tests/test_contract_catalogues.py::test_normative_catalogue_changes_reidentify_their_installed_boundaries[ssh-request.schema.json-ssh-methods.json-path4-524288]",
+      "node": "tests/test_contract_catalogues.py::test_normative_catalogue_changes_reidentify_their_installed_boundaries[adapter-effects]",
       "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
     },
     {
-      "node": "tests/test_contract_catalogues.py::test_normative_catalogue_changes_reidentify_their_installed_boundaries[ssh-response.schema.json-ssh-methods.json-path5-98304]",
+      "node": "tests/test_contract_catalogues.py::test_normative_catalogue_changes_reidentify_their_installed_boundaries[client-commands]",
       "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
     },
     {
-      "node": "tests/test_contract_catalogues.py::test_normative_catalogue_changes_reidentify_their_installed_boundaries[workflow-evidence.schema.json-states.json-path1-replacement1]",
+      "node": "tests/test_contract_catalogues.py::test_normative_catalogue_changes_reidentify_their_installed_boundaries[directory-policy]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_normative_catalogue_changes_reidentify_their_installed_boundaries[owner-cli]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_normative_catalogue_changes_reidentify_their_installed_boundaries[reporting-api]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_normative_catalogue_changes_reidentify_their_installed_boundaries[request-frame-bound]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_normative_catalogue_changes_reidentify_their_installed_boundaries[response-chunk-bound]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_normative_catalogue_changes_reidentify_their_installed_boundaries[workflow-lifecycle]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_normative_catalogue_changes_reidentify_their_installed_boundaries[workflow-phases]",
       "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
     },
     {

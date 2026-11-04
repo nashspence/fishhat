@@ -9,7 +9,7 @@ import pytest
 
 from scripts import check_evidence as evidence
 from scripts.project_policy import ROOT
-from scripts.validation import full_check_passed
+from scripts.validation import SAFE_NODE, full_check_passed
 from tests.evidence_support import reviewed_groups, sample_run
 from tests.test_validation import checkout, latest  # noqa: F401
 
@@ -45,6 +45,7 @@ def write_run(root, run):
 
 def test_maintained_entrypoints_and_real_collection_have_reviewed_dispositions():
     inv = evidence.inventory()
+    assert all(SAFE_NODE.fullmatch(node) for node in inv["pytest"])
     groups = reviewed_groups()
     assert inv["entrypoints"] == evidence.entrypoints(ROOT)
     assert {g["purpose"] for gs in groups.values() for g in gs.values()} == evidence.PURPOSES

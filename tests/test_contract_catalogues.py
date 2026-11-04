@@ -91,6 +91,16 @@ def test_catalogue_identity_has_a_complete_literal_preimage(monkeypatch):
         (["https://uninstalled.invalid/rules.json"], "not installed"),
         ([ROOT_URI], "not installed"),
     ],
+    ids=[
+        "scalar-dependencies",
+        "non-string-target",
+        "duplicate-reference",
+        "duplicate-resolved-target",
+        "empty-fragment",
+        "fragment-target",
+        "uninstalled-catalogue",
+        "schema-target",
+    ],
 )
 def test_catalogue_dependencies_reject_unapproved_or_ambiguous_targets(
     monkeypatch, dependencies, error
@@ -161,6 +171,18 @@ def test_catalogue_dependencies_require_a_core_document_root(monkeypatch):
             ("info", "description"),
             "Independent metadata-only index.",
         ),
+    ],
+    ids=[
+        "workflow-lifecycle",
+        "workflow-phases",
+        "action-authority",
+        "adapter-effects",
+        "request-frame-bound",
+        "response-chunk-bound",
+        "owner-cli",
+        "client-commands",
+        "directory-policy",
+        "reporting-api",
     ],
 )
 def test_normative_catalogue_changes_reidentify_their_installed_boundaries(
