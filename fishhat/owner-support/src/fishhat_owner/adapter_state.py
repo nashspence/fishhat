@@ -680,13 +680,9 @@ class AdapterCoordinator:
                     "RESTORE_RESULT_CUSTODY",
                 )
                 continue
-            legacy = set(evidence) == {"latest", "records", "knowledge"}
             require(
-                (
-                    legacy
-                    or set(evidence) == {"latest", "records", "knowledge", "processes_quiescent"}
-                )
-                and isinstance(evidence.get("processes_quiescent", True), bool)
+                set(evidence) == {"latest", "records", "knowledge", "processes_quiescent"}
+                and isinstance(evidence["processes_quiescent"], bool)
                 and evidence["latest"] in evidence["records"],
                 "RESTORE_RESULT_CUSTODY",
             )
@@ -707,16 +703,11 @@ class AdapterCoordinator:
                 )
             require(knowledge == evidence["knowledge"], "RESTORE_RESULT_KNOWLEDGE")
             assert knowledge is not None
-            settled = self._settlement(knowledge, evidence.get("processes_quiescent", True))
+            settled = self._settlement(knowledge, evidence["processes_quiescent"])
             require(
                 all(attempt[field] == value for field, value in settled.items()),
                 "RESTORE_RESULT_STATE",
             )
-            if legacy:
-                # Old snapshots proved only effects. Preserve them and reopen the
-                # supervision hold before checkpointing and rebuilding drain indexes.
-                evidence["processes_quiescent"] = False
-                attempt.update(self._settlement(knowledge, False))
 
     def observation_request(
         self,

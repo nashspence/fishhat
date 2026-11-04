@@ -59,6 +59,22 @@ def test_maintained_entrypoints_and_real_collection_have_reviewed_dispositions()
 
 
 @pytest.mark.parametrize(
+    "node",
+    ["redacted:" + "a" * 64, "tests/example.py::test_path[private/path]"],
+    ids=["redacted-label", "path-label"],
+)
+def test_inventory_generation_rejects_unsafe_labels_without_replacing_snapshot(tmp_path, node):
+    snapshot = tmp_path / evidence.SNAPSHOT
+    snapshot.parent.mkdir(parents=True)
+    original = b"original reviewed inventory\n"
+    snapshot.write_bytes(original)
+    groups = next(iter(reviewed_groups().values()))
+    with pytest.raises(ValueError, match="safe test parameter labels"):
+        evidence.reconcile({node: groups}, tmp_path, complete=True, generate=True)
+    assert snapshot.read_bytes() == original
+
+
+@pytest.mark.parametrize(
     "change", ["new-node", "missing-node", "parameter", "purpose", "authority"]
 )
 def test_unreviewed_collection_or_authority_is_rejected(change):

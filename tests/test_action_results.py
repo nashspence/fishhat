@@ -413,7 +413,11 @@ def test_capture_requires_git_modes_in_both_manifest_and_changes(native_mode):
         validate_source_proposal(value)
 
 
-@pytest.mark.parametrize("path", [".git/config", "settings/.git/config", "settings/.GiT"])
+@pytest.mark.parametrize(
+    "path",
+    [".git/config", "settings/.git/config", "settings/.GiT"],
+    ids=["root-admin", "nested-admin", "mixed-case-admin"],
+)
 def test_git_administrative_paths_cannot_enter_capture_or_publication(path):
     operation, value, _ = capture_pair(count=1)
     arguments = operation["subject"]["arguments"]

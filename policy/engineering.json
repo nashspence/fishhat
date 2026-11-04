@@ -1325,7 +1325,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/action_results.py": "1215a5b1f4924014be959c90b6f3d0d3ac9b41d6978c29a9e42e6fff4de4887f",
-        "tests/test_action_results.py": "ed34697f028122aaba366b5d695961a56f4543335a525219914cce331f135311"
+        "tests/test_action_results.py": "07848692eb8faddc7d02f14cc682202f34284f6f43e4f55d751c5b4953321989"
       },
       "symbol": "fishhat_contracts.action_results:validate_source_proposal",
       "work": "O(B) complete selected items, path bytes, metadata and distinct handle content bytes; indexed joins"
@@ -1347,7 +1347,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/action_results.py": "1215a5b1f4924014be959c90b6f3d0d3ac9b41d6978c29a9e42e6fff4de4887f",
-        "tests/test_action_results.py": "ed34697f028122aaba366b5d695961a56f4543335a525219914cce331f135311"
+        "tests/test_action_results.py": "07848692eb8faddc7d02f14cc682202f34284f6f43e4f55d751c5b4953321989"
       },
       "symbol": "fishhat_contracts.action_results:verify_source_proposal_material",
       "work": "O(B) complete selected items, path bytes, metadata and distinct handle content bytes; indexed joins"
@@ -1369,7 +1369,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/action_results.py": "1215a5b1f4924014be959c90b6f3d0d3ac9b41d6978c29a9e42e6fff4de4887f",
-        "tests/test_action_results.py": "ed34697f028122aaba366b5d695961a56f4543335a525219914cce331f135311"
+        "tests/test_action_results.py": "07848692eb8faddc7d02f14cc682202f34284f6f43e4f55d751c5b4953321989"
       },
       "symbol": "fishhat_contracts.action_results:validate_cleanup_result",
       "work": "O(B) complete selected items, path bytes, metadata and distinct handle content bytes; indexed joins"
@@ -3538,8 +3538,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "fishhat/owner-support/src/fishhat_owner/adapter_state.py": "b0c396022ef562bc1c94023d40ce22bb38181875aebc21d41a3f139338c96420",
-        "tests/test_adapter_commit_growth.py": "8a2e77400f8812e07fe8c9c12957146705bc1dfb369edd045c82ee4566b86ebf"
+        "fishhat/owner-support/src/fishhat_owner/adapter_state.py": "db9720a89902832bbc2a8ca7d9e23caf394dee933f1f246745ce65aca25a4f8d",
+        "tests/test_adapter_commit_growth.py": "70bc319292e5eb0f62e41dbd959ca7310c49095243fc74c3b231e0e5ebd008bb"
       },
       "symbol": "fishhat_owner.adapter_state:AdapterCoordinator._publish",
       "work": "O(B) changed records and affected scope identities per atomic delta; O(sum(B)) across complete prepare/dispatch/observation/retry histories"

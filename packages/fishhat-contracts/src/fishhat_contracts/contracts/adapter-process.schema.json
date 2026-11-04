@@ -114,7 +114,7 @@
         "response"
       ],
       "additionalProperties": false,
-      "description": "Exactly one canonical JSON line no larger than 1024 bytes including LF. response media_type is application/json. This record advertises output/response.json identity; it is not a success assertion or an alternate Response. The owner atomically retains verified effects and the independent cessation status for this attempt. Until a trusted supervisor verifies cessation of every launch and descendant for the original attempt, including reconciliation launches, pending work blocks drains and release across restart. A missing supervision record restores the hold. Replaying verified response bytes cannot establish cessation. Diagnostics belong exclusively on stderr."
+      "description": "Exactly one canonical JSON line no larger than 1024 bytes including LF. response media_type is application/json. This record advertises output/response.json identity; it is not a success assertion or an alternate Response. The owner atomically retains verified effects and the independent cessation status for this attempt. Until a trusted supervisor verifies cessation of every launch and descendant for the original attempt, including reconciliation launches, pending work blocks drains and release across restart. The checkpoint requires an explicit supervision status; incomplete supervision evidence preserves the hold across restart. Replaying verified response bytes cannot establish cessation. Diagnostics belong exclusively on stderr."
     },
     "PrivateInputUse": {
       "type": "object",

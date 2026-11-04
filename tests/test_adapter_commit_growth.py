@@ -348,8 +348,10 @@ def test_ordinary_updates_do_not_traverse_retained_collections():
     assert owner.state == store.state
 
 
-@pytest.mark.parametrize("legacy", [False, True], ids=["durable-hold", "legacy-effect-only"])
-def test_effect_settlement_waits_for_all_attempt_processes_across_recovery(legacy):
+@pytest.mark.parametrize(
+    "missing_supervision", [False, True], ids=["durable-hold", "missing-supervision"]
+)
+def test_effect_settlement_waits_for_all_attempt_processes_across_recovery(missing_supervision):
     owner, store, sources, original = fixture()
     attempt = prepare(owner, sources, original)
     key = attempt["attempt_id"]
@@ -383,9 +385,8 @@ def test_effect_settlement_waits_for_all_attempt_processes_across_recovery(legac
     assert head["processes_quiescent"] is False
     assert saved["attempts"][key]["certainty"] == "known"
     assert saved["attempts"][key]["outcome"] == "pending"
-    if legacy:
+    if missing_supervision:
         del head["processes_quiescent"]
-        saved["attempts"][key].update(state="resolved", outcome="succeeded")
     stopped = set()
     recovered = AdapterCoordinator(
         OWNER,
@@ -394,6 +395,12 @@ def test_effect_settlement_waits_for_all_attempt_processes_across_recovery(legac
         native_exclusion=native_exclusion,
         processes_quiescent=lambda original: original["attempt_id"] in stopped,
     )
+    if missing_supervision:
+        retained = store.snapshot()
+        with pytest.raises(ContractError, match="RESTORE_RESULT_CUSTODY"):
+            recovered.restore(saved)
+        assert store.snapshot() == retained
+        saved = retained
     recovered.restore(saved)
     with pytest.raises(ContractError, match="PENDING_NATIVE_WORK"):
         recovered.observation_request("demo", owner_approved=True)

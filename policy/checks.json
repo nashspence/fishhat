@@ -408,18 +408,6 @@
   "format": "fishhat-check-evidence/v1",
   "pytest": [
     {
-      "node": "redacted:613333aee395659e2202d3279f7b9ab084249cbb650b217cb41455ade31ab1ba",
-      "purpose_sha256": "c864cebdbce3895c1f09e88b6bf2f1ea99c7288eb941270f6dbdfb98ed8acf43"
-    },
-    {
-      "node": "redacted:7239ed23e2914c23fea0a6b4a691f26bf512b4d95324a4439a123b946e8f8b5c",
-      "purpose_sha256": "c864cebdbce3895c1f09e88b6bf2f1ea99c7288eb941270f6dbdfb98ed8acf43"
-    },
-    {
-      "node": "redacted:ef60e0036a00727e09969c667a616af1237b00529a60b38224be132e5ab442af",
-      "purpose_sha256": "c864cebdbce3895c1f09e88b6bf2f1ea99c7288eb941270f6dbdfb98ed8acf43"
-    },
-    {
       "node": "tests/test_action_results.py::test_capture_material_rejects_incomplete_or_changed_owner_bytes[changed]",
       "purpose_sha256": "c864cebdbce3895c1f09e88b6bf2f1ea99c7288eb941270f6dbdfb98ed8acf43"
     },
@@ -625,6 +613,18 @@
     },
     {
       "node": "tests/test_action_results.py::test_executable_only_capture_change_roundtrips_through_a_git_tree",
+      "purpose_sha256": "c864cebdbce3895c1f09e88b6bf2f1ea99c7288eb941270f6dbdfb98ed8acf43"
+    },
+    {
+      "node": "tests/test_action_results.py::test_git_administrative_paths_cannot_enter_capture_or_publication[mixed-case-admin]",
+      "purpose_sha256": "c864cebdbce3895c1f09e88b6bf2f1ea99c7288eb941270f6dbdfb98ed8acf43"
+    },
+    {
+      "node": "tests/test_action_results.py::test_git_administrative_paths_cannot_enter_capture_or_publication[nested-admin]",
+      "purpose_sha256": "c864cebdbce3895c1f09e88b6bf2f1ea99c7288eb941270f6dbdfb98ed8acf43"
+    },
+    {
+      "node": "tests/test_action_results.py::test_git_administrative_paths_cannot_enter_capture_or_publication[root-admin]",
       "purpose_sha256": "c864cebdbce3895c1f09e88b6bf2f1ea99c7288eb941270f6dbdfb98ed8acf43"
     },
     {
@@ -852,7 +852,7 @@
       "purpose_sha256": "da85331f4abdd18fc7a9a50b452567cda53f5a5e5d45ebb110a1f49b96d87a2c"
     },
     {
-      "node": "tests/test_adapter_commit_growth.py::test_effect_settlement_waits_for_all_attempt_processes_across_recovery[legacy-effect-only]",
+      "node": "tests/test_adapter_commit_growth.py::test_effect_settlement_waits_for_all_attempt_processes_across_recovery[missing-supervision]",
       "purpose_sha256": "da85331f4abdd18fc7a9a50b452567cda53f5a5e5d45ebb110a1f49b96d87a2c"
     },
     {
@@ -7097,6 +7097,14 @@
     },
     {
       "node": "tests/test_evidence.py::test_incomplete_latest_publication_blocks_prior_success[running]",
+      "purpose_sha256": "f3c23e4c74ba2207e8738a0d14dfe4b12fd4386b2949b59556fe72f30481da4a"
+    },
+    {
+      "node": "tests/test_evidence.py::test_inventory_generation_rejects_unsafe_labels_without_replacing_snapshot[path-label]",
+      "purpose_sha256": "f3c23e4c74ba2207e8738a0d14dfe4b12fd4386b2949b59556fe72f30481da4a"
+    },
+    {
+      "node": "tests/test_evidence.py::test_inventory_generation_rejects_unsafe_labels_without_replacing_snapshot[redacted-label]",
       "purpose_sha256": "f3c23e4c74ba2207e8738a0d14dfe4b12fd4386b2949b59556fe72f30481da4a"
     },
     {

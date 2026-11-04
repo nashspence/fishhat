@@ -307,7 +307,7 @@
     },
     "adapter-process.schema.json": {
       "id": "https://fishhat.invalid/contracts/adapter-process.schema.json",
-      "sha256": "c8fdcbabdb7bf0b87b38afd8029072e943b928d3b5d88dfb73126b50364d8c6e"
+      "sha256": "582e767ab86102f466ec401c3b4bb37136f1432e1e019f90e2a41fce7ccba88a"
     },
     "adapter.schema.json": {
       "id": "https://fishhat.invalid/contracts/adapter.schema.json",
