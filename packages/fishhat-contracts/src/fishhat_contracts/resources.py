@@ -297,12 +297,37 @@ def resource_bindings_digest(snapshot: dict[str, Any]) -> str:
     )
 
 
+@dataclass(frozen=True)
+class CapacityClock:
+    """Independent owner clock sample. Elapsed milliseconds include time suspended."""
+
+    boot_id: str
+    boottime_ms: int
+    wall_time: str
+
+
+def _fresh_capacity(snapshot: dict[str, Any], clock: CapacityClock, max_age_seconds: int) -> bool:
+    require(
+        type(clock.boottime_ms) is int
+        and clock.boottime_ms >= 0
+        and type(max_age_seconds) is int
+        and max_age_seconds >= 0,
+        "invalid capacity freshness measurement",
+    )
+    wall_age = (instant(clock.wall_time) - instant(snapshot["observed_at"])).total_seconds()
+    return (
+        clock.boot_id == snapshot["boot_id"]
+        and 0 <= clock.boottime_ms - snapshot["observed_boottime_ms"] <= 1000 * max_age_seconds
+        and 0 <= wall_age <= max_age_seconds
+    )
+
+
 def check_capacity(
     snapshot: dict[str, Any],
     request: dict[str, Any],
     *,
     approved_bindings_digest: str,
-    now: str,
+    clock: CapacityClock,
     max_age_seconds: int = 30,
 ) -> dict[str, Any]:
     """Join counters to independent owner-approved bindings; no native guarantee."""
@@ -323,9 +348,8 @@ def check_capacity(
         len({x["bucket"] for x in request["growth"]}) == len(request["growth"]),
         "duplicate growth bucket",
     )
-    age = (instant(now) - instant(snapshot["observed_at"])).total_seconds()
     blockers: list[str] = []
-    if not 0 <= age <= max_age_seconds:
+    if not _fresh_capacity(snapshot, clock, max_age_seconds):
         blockers.append("STALE_OR_FUTURE_ACCOUNTING")
     if not snapshot["coverage_complete"] or not snapshot["control_writable"]:
         blockers.append("ACCOUNTING_OR_CONTROL_UNAVAILABLE")
@@ -380,10 +404,77 @@ def check_capacity(
     }
 
 
+def _initial_claims(request: dict[str, Any], quotas: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    claims = {}
+    for growth in request["growth"]:
+        bucket = growth["bucket"]
+        quota = quotas[bucket]
+        claims[bucket] = {
+            "bucket": bucket,
+            "pool": quota["pool"],
+            "storage": deepcopy(quota["storage"]),
+            "remaining_bytes": growth["bytes"],
+            "remaining_inodes": growth["inodes"],
+        }
+    return claims
+
+
+def _grants_digest(claims: dict[str, dict[str, Any]]) -> str:
+    return digest([claims[bucket] for bucket in sorted(claims)])
+
+
+def validate_reservation(
+    reservation: dict[str, Any], *, request: dict[str, Any], admission_snapshot: dict[str, Any]
+) -> None:
+    """Reconstruct the original grants from retained admission evidence, without granting authority."""
+    validate("resource-records.schema.json", reservation, "CapacityReservation")
+    validate("resource-records.schema.json", request, "CapacityRequest")
+    bindings = resource_bindings_digest(admission_snapshot)
+    require(
+        reservation["owner"] == admission_snapshot["owner"]
+        and reservation["account"] == admission_snapshot["account"] == request["account"]
+        and reservation["resource_generation"]
+        == admission_snapshot["resource_generation"]
+        == request["resource_generation"]
+        and reservation["operation_id"] == request["operation_id"]
+        and reservation["request_digest"] == digest(request)
+        and reservation["snapshot_digest"] == digest(admission_snapshot)
+        and request["bindings_digest"] == bindings,
+        "reservation admission identity mismatch",
+    )
+    grants = _initial_claims(request, {q["bucket"]: q for q in admission_snapshot["quotas"]})
+    claims = {c["bucket"]: c for c in reservation["claims"]}
+    require(
+        len(grants) == len(request["growth"])
+        and len(claims) == len(reservation["claims"])
+        and claims.keys() == grants.keys()
+        and reservation["grants_digest"] == _grants_digest(grants),
+        "reservation grants mismatch",
+    )
+    for bucket, claim in claims.items():
+        grant = grants[bucket]
+        require(
+            claim["storage"] == grant["storage"]
+            and claim["pool"] == grant["pool"]
+            and all(
+                claim["remaining_" + unit] <= grant["remaining_" + unit]
+                for unit in ("bytes", "inodes")
+            ),
+            "reservation claim exceeds original grant or changed allocation",
+        )
+        if reservation["phase"] == "released":
+            require(
+                not (claim["remaining_bytes"] or claim["remaining_inodes"]),
+                "released claim remains",
+            )
+
+
 class ReservationModel:
     """In-memory transaction model, not a durable scheduler or implementation."""
 
-    def __init__(self, snapshot: dict[str, Any], *, approved_bindings_digest: str):
+    def __init__(
+        self, snapshot: dict[str, Any], *, approved_bindings_digest: str, max_age_seconds: int = 30
+    ):
         validate_snapshot(snapshot)
         require(
             resource_bindings_digest(snapshot) == approved_bindings_digest,
@@ -391,7 +482,10 @@ class ReservationModel:
         )
         self.snapshot = deepcopy(snapshot)
         self.approved_bindings_digest = approved_bindings_digest
+        self.max_age_seconds = max_age_seconds
         self.requests: dict[str, dict[str, Any]] = {}
+        # Indexed share of the aggregate held by this journal's live reservations.
+        self._held = {bucket: {"bytes": 0, "inodes": 0} for bucket in BUCKETS}
 
     @bounds(
         Bounds(
@@ -404,24 +498,34 @@ class ReservationModel:
             linear_proofs=("tests/test_resource_growth.py::test_reservation_request_linear_work",),
         )
     )
-    def reserve(self, request: dict[str, Any], *, now: str) -> dict[str, Any]:
+    def reserve(self, request: dict[str, Any], *, clock: CapacityClock) -> dict[str, Any]:
         key = request["operation_id"]
         if key in self.requests:
             require(self.requests[key]["digest"] == digest(request), "reservation replay conflict")
             return deepcopy(self.requests[key])
         decision = check_capacity(
-            self.snapshot, request, approved_bindings_digest=self.approved_bindings_digest, now=now
+            self.snapshot,
+            request,
+            approved_bindings_digest=self.approved_bindings_digest,
+            clock=clock,
+            max_age_seconds=self.max_age_seconds,
         )
         require(decision["admissible"], "capacity reservation blocked")
         quotas = {quota["bucket"]: quota for quota in self.snapshot["quotas"]}
         pools = {pool["pool"]: pool for pool in self.snapshot["pools"]}
+        self._check_held(quotas)
+        claims = _initial_claims(request, quotas)
         for g in request["growth"]:
-            q = quotas[g["bucket"]]
+            bucket = g["bucket"]
+            q = quotas[bucket]
             p = pools[q["pool"]]
             for unit in ("bytes", "inodes"):
                 q["reserved_remaining_" + unit] += g[unit]
                 p["reserved_remaining_" + unit] += g[unit]
+                self._held[bucket][unit] += g[unit]
         self.requests[key] = {
+            "grants_digest": _grants_digest(claims),
+            "claims": claims,
             "digest": digest(request),
             "request": deepcopy(request),
             "phase": "active",
@@ -434,6 +538,88 @@ class ReservationModel:
         if self.requests[key]["phase"] != "released":
             self.requests[key]["phase"] = "reconciling"
 
+    def _check_held(self, quotas: dict[str, Any]) -> None:
+        require(
+            all(
+                quotas[bucket]["reserved_remaining_" + unit] >= held[unit]
+                for bucket, held in self._held.items()
+                for unit in ("bytes", "inodes")
+            ),
+            "aggregate reservation below retained claims",
+        )
+
+    def _accounting(self, key: str, clock: CapacityClock) -> tuple[dict[str, Any], dict[str, Any]]:
+        require(
+            resource_bindings_digest(self.snapshot)
+            == self.approved_bindings_digest
+            == self.requests[key]["request"]["bindings_digest"],
+            "reservation accounting differs from approved resource bindings",
+        )
+        require(
+            self.snapshot["coverage_complete"]
+            and self.snapshot["control_writable"]
+            and _fresh_capacity(self.snapshot, clock, self.max_age_seconds),
+            "incomplete or stale reservation accounting",
+        )
+        quotas = {q["bucket"]: q for q in self.snapshot["quotas"]}
+        self._check_held(quotas)
+        return quotas, {p["pool"]: p for p in self.snapshot["pools"]}
+
+    @bounds(
+        Bounds(
+            id="resources.reservation.charge",
+            work="complete current snapshot for new attributable charge; exact duplicate compares only the retained claim",
+            extent="all current pools and the four semantic quota buckets with independent byte and inode remainders",
+            limits=(),
+            capacity=("receiving owner memory",),
+            proofs=(
+                "tests/test_resources.py::Capacity::test_release_only_unconsumed_share_after_charge_and_replay",
+            ),
+            linear_proofs=("tests/test_resource_growth.py::test_reservation_request_linear_work",),
+        )
+    )
+    def record_charge(
+        self,
+        key: str,
+        *,
+        bucket: str,
+        charged_bytes: int,
+        charged_inodes: int,
+        clock: CapacityClock,
+    ) -> None:
+        """Apply independently verified cumulative charges once, in the same accounting revision."""
+        require(key in self.requests, "unknown reservation")
+        entry = self.requests[key]
+        require(entry["phase"] in {"active", "reconciling"}, "reservation is not live")
+        require(bucket in entry["claims"], "unknown reservation bucket")
+        claim = entry["claims"][bucket]
+        grant = next(g for g in entry["request"]["growth"] if g["bucket"] == bucket)
+        deltas = {}
+        for unit, charged in (("bytes", charged_bytes), ("inodes", charged_inodes)):
+            require(type(charged) is int and 0 <= charged <= grant[unit], "charge exceeds grant")
+            delta = claim["remaining_" + unit] - (grant[unit] - charged)
+            require(delta >= 0, "cumulative charge regressed")
+            deltas[unit] = delta
+        if not any(deltas.values()):
+            return
+        quotas, pools = self._accounting(key, clock)
+        quota, pool = quotas[bucket], pools[claim["pool"]]
+        require(
+            all(
+                delta <= pool["available_" + unit]
+                and quota["used_" + unit] + delta <= 9_007_199_254_740_991
+                for unit, delta in deltas.items()
+            ),
+            "charge inconsistent with accounting",
+        )
+        for unit, delta in deltas.items():
+            quota["used_" + unit] += delta
+            pool["available_" + unit] -= delta
+            quota["reserved_remaining_" + unit] -= delta
+            pool["reserved_remaining_" + unit] -= delta
+            self._held[bucket][unit] -= delta
+            claim["remaining_" + unit] -= delta
+
     @bounds(
         Bounds(
             id="resources.reservation.release",
@@ -445,26 +631,20 @@ class ReservationModel:
             linear_proofs=("tests/test_resource_growth.py::test_reservation_request_linear_work",),
         )
     )
-    def release(self, key: str, *, writer_stopped: bool) -> None:
+    def release(self, key: str, *, writer_stopped: bool, clock: CapacityClock) -> None:
         require(key in self.requests, "unknown reservation")
         if self.requests[key]["phase"] == "released":
             return
         require(writer_stopped is True, "reservation release needs cessation evidence")
-        require(
-            resource_bindings_digest(self.snapshot)
-            == self.approved_bindings_digest
-            == self.requests[key]["request"]["bindings_digest"],
-            "reservation release differs from approved resource bindings",
-        )
-        quotas = {quota["bucket"]: quota for quota in self.snapshot["quotas"]}
-        pools = {pool["pool"]: pool for pool in self.snapshot["pools"]}
-        for g in self.requests[key]["request"]["growth"]:
-            q = quotas[g["bucket"]]
-            p = pools[q["pool"]]
+        quotas, pools = self._accounting(key, clock)
+        for bucket, claim in self.requests[key]["claims"].items():
+            q, p = quotas[bucket], pools[claim["pool"]]
             for unit in ("bytes", "inodes"):
-                q["reserved_remaining_" + unit] -= g[unit]
-                p["reserved_remaining_" + unit] -= g[unit]
-        # Production must replace the counters with fresh post-effect measurements.
+                remaining = claim["remaining_" + unit]
+                q["reserved_remaining_" + unit] -= remaining
+                p["reserved_remaining_" + unit] -= remaining
+                self._held[bucket][unit] -= remaining
+                claim["remaining_" + unit] = 0
         self.requests[key]["phase"] = "released"
 
 

@@ -12,6 +12,7 @@ import hashlib
 import os
 import stat
 import struct
+import tempfile
 import threading
 import uuid
 from collections.abc import Callable, Iterator, Mapping, MutableMapping
@@ -84,12 +85,13 @@ def validate_journal_genesis(
 class WorkflowJournal:
     """One exclusive writer with exact event replay and independently approved custody.
 
-    create and open are the only supported construction boundaries. Authorization
-    of new protocol work belongs to the gate/member; every lookup explicitly
+    Authorization of new protocol work belongs to the gate/member; every lookup
     requires current read authority. A failed append poisons that writer until a
     cold reopen verifies the entire file. An independently fsynced fixed-size HEAD
     detects deletion of complete accepted tail frames. Any uncommitted tail fails
-    closed for explicit repair; restoration never discards or adopts it. Rolling
+    closed for explicit repair. A separately authenticated checkpoint enables
+    read-only inspection of the committed prefix. Repair quarantines the exact
+    suffix and requires durable native reconciliation before reopening. Rolling
     back both file and HEAD requires an independent protected monotone checkpoint
     to detect; native anti-rollback and filesystem qualification remain separate.
     """
@@ -102,6 +104,7 @@ class WorkflowJournal:
         self._index: dict[str, tuple[dict[str, Any], bytes, bytes, bytes]] = {}
         self._genesis: dict[str, Any] = {}
         self._reader: Reader | None = None
+        self._prefix_size: int | None = None
         self._failed = False
         self._closed = False
         self._path: Path | None = None
@@ -284,21 +287,34 @@ class WorkflowJournal:
         expected_owner: dict[str, Any],
         expected_schema: dict[str, Any],
         historical_readers: Mapping[tuple[str, str], Reader] | None = None,
+        verified_prefix_head: str | None = None,
         metrics: MutableMapping[str, int] | None = None,
     ) -> WorkflowJournal:
-        """Cold-validate every frame once; an absent/empty/truncated store is an error."""
+        """Verify complete custody, or inspect an independently authenticated prefix.
+
+        Only protected owner recovery supplies verified_prefix_head, from a current
+        anti-rollback checkpoint independent of the journal and its HEAD. This
+        selects a read-only view. A partial/invalid committed frame always fails.
+        """
         validate("common.schema.json", expected_owner, "Owner")
         validate("common.schema.json", expected_schema, "SchemaIdentity")
         journal = cls(cls._descriptor(path, create=False), metrics)
         journal._path = Path(path)
         try:
             head_id, head_sequence, head_size, head_digest = journal._read_head()
+            size = os.fstat(journal._fd).st_size
+            if verified_prefix_head is not None:
+                _require(
+                    verified_prefix_head == "sha256:" + head_digest.hex(),
+                    "workflow journal independent checkpoint differs from HEAD",
+                )
+                journal._prefix_size = head_size
             _require(
-                os.fstat(journal._fd).st_size == head_size,
+                size == head_size or (journal._prefix_size is not None and size > head_size),
                 "workflow journal truncated accepted history or uncommitted tail",
             )
             _require(journal._read(len(_MAGIC)) == _MAGIC, "workflow journal format changed")
-            size = os.fstat(journal._fd).st_size
+            size = head_size
             offset, sequence = len(_MAGIC), 0
             while offset < size:
                 _require(size - offset >= 40, "workflow journal truncated frame")
@@ -333,12 +349,94 @@ class WorkflowJournal:
                 and journal._head == head_digest,
                 "workflow journal HEAD does not match complete history",
             )
-            journal._sync()
-            journal._sync_directory()
+            if journal._prefix_size is None:
+                journal._sync()
+                journal._sync_directory()
             return journal
         except BaseException:
             journal.close()
             raise
+
+    @bounds(
+        Bounds(
+            id="workflow.journal-store.repair-tail",
+            work="O(B) reads, hashes and quarantines every uncertain suffix byte once per attempt",
+            extent="The complete suffix after the authenticated, already verified prefix",
+            limits=(("io_chunk_bytes", _CHUNK),),
+            capacity=("Insufficient quarantine capacity leaves live custody and admission fenced",),
+            proofs=("tests/test_workflow_journal.py::test_uncertain_tail_repair_cost_and_custody",),
+            linear_proofs=(
+                "tests/test_workflow_journal.py::test_uncertain_tail_repair_cost_and_custody",
+            ),
+        )
+    )
+    def repair_tail(self, *, reconcile: Callable[[dict[str, Any], Path], bool]) -> None:
+        """Quarantine exact suffix bytes and require independent owner-native closure.
+
+        reconcile is a protected receiving service, never a wire field. Under current
+        repair authority it verifies this checkpoint and suffix against native custody,
+        and durably establishes that dropping the suffix from the live journal loses
+        no accepted work or outstanding obligations and permits no duplicate effect.
+        A malformed suffix or interrupted append cannot itself prove nonacceptance.
+        Unresolved effects return False. Closure is idempotent by journal, head and
+        suffix digest across a crash before truncation. This view stays read-only.
+        """
+        with self._lock:
+            _require(
+                not self._closed and self._prefix_size is not None,
+                "workflow journal repair requires an authenticated committed prefix",
+            )
+            assert self._path is not None and self._prefix_size is not None
+            checkpoint = self._read_head()
+            _require(
+                checkpoint == (self.journal_id, len(self._index), self._prefix_size, self._head),
+                "workflow journal checkpoint changed before repair",
+            )
+            tail_size = os.fstat(self._fd).st_size - self._prefix_size
+            _require(tail_size > 0, "workflow journal has no uncertain tail")
+            os.lseek(self._fd, self._prefix_size, os.SEEK_SET)
+            fd, pending = tempfile.mkstemp(
+                prefix=self._path.name + ".quarantine-pending-", dir=self._path.parent
+            )
+            hasher = hashlib.sha256()
+            try:
+                try:
+                    remaining = tail_size
+                    while remaining:
+                        part = self._read(min(remaining, _CHUNK))
+                        self._write_on(fd, part)
+                        hasher.update(part)
+                        self._count("bytes_hashed", len(part))
+                        remaining -= len(part)
+                    self._count("fsync_calls")
+                    os.fsync(fd)
+                finally:
+                    os.close(fd)
+                archive = self._path.with_name(
+                    self._path.name + ".quarantine-" + hasher.hexdigest()
+                )
+                os.replace(pending, archive)
+                self._sync_directory()
+            finally:
+                Path(pending).unlink(missing_ok=True)
+            evidence = {
+                "owner": self.owner,
+                "journal_id": self.journal_id,
+                "head": self.head,
+                "sequence": len(self._index),
+                "tail_size": tail_size,
+                "tail_digest": "sha256:" + hasher.hexdigest(),
+            }
+            _require(
+                reconcile(evidence, archive) is True, "uncertain journal tail lacks native closure"
+            )
+            _require(
+                self._read_head() == checkpoint
+                and os.fstat(self._fd).st_size == self._prefix_size + tail_size,
+                "workflow journal custody changed during repair",
+            )
+            os.ftruncate(self._fd, self._prefix_size)
+            self._sync()
 
     def _load_genesis(
         self,
@@ -421,7 +519,10 @@ class WorkflowJournal:
     @contextmanager
     def _guard(self, expected_head: str) -> Iterator[None]:
         with self._lock:
-            _require(not self._closed and not self._failed, "workflow journal writer unavailable")
+            _require(
+                not self._closed and not self._failed and self._prefix_size is None,
+                "workflow journal writer unavailable",
+            )
             _require(expected_head == self.head, "workflow journal predecessor changed")
             yield
 
@@ -477,7 +578,10 @@ class WorkflowJournal:
     ) -> dict[str, Any]:
         """Commit exact new bytes before acknowledgment; the caller owns write authority."""
         with self._lock:
-            _require(not self._closed and not self._failed, "workflow journal writer unavailable")
+            _require(
+                not self._closed and not self._failed and self._prefix_size is None,
+                "workflow journal writer unavailable",
+            )
             _require(
                 isinstance(event_id, str) and bool(event_id), "workflow journal event id required"
             )

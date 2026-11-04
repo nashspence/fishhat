@@ -57,7 +57,7 @@
         "--json"
       ],
       "use_case": "operation.get",
-      "description": "Inspect the outcome of the exact original request; absence of a reply does not prove absence of work."
+      "description": "Inspect a request decision at the current owner epoch. To reconcile an uncertain delivery use the epoch-pinned form with the original owner identity. Both forms are read-only."
     },
     {
       "name": "apply",
@@ -76,7 +76,20 @@
         "--json"
       ],
       "use_case": "operation.submit",
-      "description": "Submit the exact reviewed plan and digest using the current owner authority generation and original request identity; acknowledgement means accepted responsibility, not completed execution."
+      "description": "Submit the exact reviewed plan and digest using the current owner authority generation and original request identity; acknowledgement means accepted responsibility, not completed execution. This form selects standalone work with workflow_id and driver_term both null. It cannot infer a workflow permit."
+    },
+    {
+      "name": "workflow-apply",
+      "tokens": [
+        "{tool}",
+        "plan",
+        "apply",
+        "--workflow-request-stdin",
+        "--confirm",
+        "--json"
+      ],
+      "use_case": "operation.submit",
+      "description": "Read the closed operation.submit params object from stdin with confirmed true, an explicit workflow_id and the caller’s reviewed driver_term. Use the same guarded native admission as SSH. Never infer the current term, workflow, or principal. Exact accepted replay remains subject to current read authorization and precedes freshness checks."
     },
     {
       "name": "plan-stdin",
@@ -170,7 +183,7 @@
         "--json"
       ],
       "use_case": "operation.get",
-      "description": "Resolve the original request against the exact owner authority generation."
+      "description": "Look up an original decision in the original, explicitly pinned owner epoch with read permission on its protected resource. Return the accepted Operation or the original durable refusal and matching Problem. Missing decisions leave acceptance unknown. This lookup cannot start work or close an unused request ID. Reject a changed receiver epoch before returning any decision."
     },
     {
       "name": "list-page",

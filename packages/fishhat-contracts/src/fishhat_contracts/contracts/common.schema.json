@@ -53,7 +53,13 @@
       "type": "string",
       "minLength": 40,
       "maxLength": 64,
-      "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})(?![\\s\\S])"
+      "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})(?![\\s\\S])",
+      "not": {
+        "enum": [
+          "0000000000000000000000000000000000000000",
+          "0000000000000000000000000000000000000000000000000000000000000000"
+        ]
+      }
     },
     "Mode": {
       "type": "string",
@@ -196,10 +202,7 @@
           "additionalProperties": false
         },
         "commit": {
-          "type": "string",
-          "minLength": 40,
-          "maxLength": 64,
-          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})(?![\\s\\S])"
+          "$ref": "common.schema.json#/$defs/Commit"
         },
         "entrypoint": {
           "type": "string",

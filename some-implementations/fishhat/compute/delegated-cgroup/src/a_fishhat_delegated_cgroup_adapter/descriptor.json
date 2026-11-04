@@ -39,7 +39,7 @@
     "compute": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/compute-adapter.schema.json",
-        "digest": "sha256:9db1d5310d0ee5df2febdd660abe402f51e7ad112e74146fc2229f63062e9909"
+        "digest": "sha256:6fd05fec5c3bb66c41b133ad5558ca231f3f10f56c04aa078a511febc67ef177"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/compute-adapter.schema.json#/$defs/Response",

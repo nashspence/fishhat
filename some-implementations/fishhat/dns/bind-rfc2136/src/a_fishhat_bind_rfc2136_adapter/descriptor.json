@@ -60,7 +60,7 @@
     "dns": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/dns-adapter.schema.json",
-        "digest": "sha256:6530b3aef9ec4d9c85bed267695c65450df25ff8cc8b3fc5759da26d1cae7dd2"
+        "digest": "sha256:4c67968c54cc7b7792306340a0c5e1b6972152e87cf581249ed758396793bc2a"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/dns-adapter.schema.json#/$defs/Response",

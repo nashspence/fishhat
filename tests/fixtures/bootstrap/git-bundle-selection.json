@@ -8,7 +8,7 @@
   "adapter": {
     "implementation": "fishhat.git-bundle",
     "installation_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "descriptor_digest": "sha256:d71454f56f04b54e49cc1044c864239cb8953924f08be25f2fb8cee06dc9e850",
+    "descriptor_digest": "sha256:87cb66b9a0c87eba690977bb68b2bdd277ed23242ac64af7124b801f1d722598",
     "configuration_digest": "sha256:6a609f6a9b32d303d3df8e174e088dce83f80bc40fc0c3684481aaa0932b6863",
     "source_schema_digest": "sha256:281bb61adafe977f2a1b952d106dc888939c015ce47ade32ebae33db8de12d95"
   },
@@ -17,12 +17,17 @@
     "media_type": "application/json",
     "size_bytes": 184
   },
-  "catalogue_digest": "sha256:c4fc4148e6020d6091098b9ab47632ff0a39e3c5e0040b2c0cdedc165fa402c4",
+  "catalogue_digest": "sha256:5fb05f7d7c56c63c315ef73fd86fe1480b14ebc29183f142b45dabed70797744",
   "kit_manifest_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "recovery_root": "/recovery/staging/run-001",
   "verify_only": true,
   "force_checkout": false,
   "install_dependencies": false,
   "download_tools": false,
-  "full_service_restore_separate": true
+  "full_service_restore_separate": true,
+  "tree": {
+    "tree_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "file_count": 18,
+    "total_bytes": 32768
+  }
 }

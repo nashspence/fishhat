@@ -4,6 +4,7 @@ import copy
 
 import pytest
 from fishhat_adapters import check_request, check_response
+from fishhat_contracts.publication import require_repository_publication
 from fishhat_contracts.validation import ContractError, digest
 
 from tests.adapter_support import identifier
@@ -308,3 +309,44 @@ def test_repository_observation_keeps_exact_executor_and_ref_identity():
     reply["output"]["refs"].append(copy.deepcopy(reply["output"]["refs"][0]))
     with pytest.raises(ContractError, match="DUPLICATE_REPOSITORY_REF"):
         check_response("repository", request, reply)
+
+
+def test_existing_branch_requires_verified_fast_forward_and_literal_direct_cas():
+    _, reference = repository()
+    request = query("publish", reference)
+    for tip, symbolic, ancestry in (
+        (None, False, True),
+        (OLD, True, True),
+        (OLD, None, True),
+        (OLD, False, False),
+        (OLD, False, "unknown"),
+    ):
+        with pytest.raises(ContractError):
+            require_repository_publication(
+                request,
+                current_object_id=tip,
+                symbolic=symbolic,
+                is_ancestor=lambda *_, verified=ancestry: verified,
+            )
+    require_repository_publication(
+        request,
+        current_object_id=OLD,
+        symbolic=False,
+        is_ancestor=lambda ancestor, candidate: (ancestor, candidate) == (OLD, NEW),
+    )
+    request["input"]["expected_previous"] = {"state": "absent"}
+    require_repository_publication(
+        request, current_object_id=None, symbolic=False, is_ancestor=lambda *_: False
+    )
+    with pytest.raises(ContractError, match="symbolic"):
+        require_repository_publication(
+            request, current_object_id=None, symbolic=True, is_ancestor=lambda *_: True
+        )
+    for length in (40, 64):
+        changed = copy.deepcopy(request)
+        changed["input"]["candidate"]["commit"] = "0" * length
+        with pytest.raises(ContractError):
+            check_request("repository", changed)
+        request["input"]["expected_previous"] = {"state": "present", "object_id": "0" * length}
+        with pytest.raises(ContractError):
+            check_request("repository", request)

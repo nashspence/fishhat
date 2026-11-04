@@ -50,6 +50,9 @@
     },
     "full_service_restore_separate": {
       "const": true
+    },
+    "tree": {
+      "$ref": "bootstrap-recovery.schema.json#/$defs/Tree"
     }
   },
   "required": [
@@ -68,7 +71,8 @@
     "force_checkout",
     "install_dependencies",
     "download_tools",
-    "full_service_restore_separate"
+    "full_service_restore_separate",
+    "tree"
   ],
   "additionalProperties": false,
   "$defs": {
@@ -100,6 +104,46 @@
       ],
       "additionalProperties": false,
       "description": "Offline selection of pinned adapter records. This record grants no execution authority and does not prove artifact authenticity or native qualification. Initial dispatch and reconciliation must join every pin to the actual independently approved bootstrap executor and installed descriptor; approving another instance does not replace this selection. The request repository scope handle equals source_id."
+    },
+    "Tree": {
+      "type": "object",
+      "properties": {
+        "tree_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "file_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "total_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "tree_digest",
+        "file_count",
+        "total_bytes"
+      ],
+      "additionalProperties": false,
+      "description": "Complete selected commit tree. tree_digest is SHA-256 of the Git root tree object preimage, ASCII tree, one space, decimal body length, NUL and the exact uncompressed tree body in the selected repository object format. Verify every reachable tree and blob against its Git object ID, independent of bundle packing. file_count counts regular, executable and symbolic-link blobs by pathname, and total_bytes sums their uncompressed blob lengths with repeated paths to one blob counted separately. Gitlinks are retained as references and contribute neither files nor bytes. Never follow symbolic links, fetch submodules or run checkout filters for this verification."
+    },
+    "Bundle": {
+      "allOf": [
+        {
+          "$ref": "adapter.schema.json#/$defs/Artifact"
+        },
+        {
+          "properties": {
+            "media_type": {
+              "const": "application/x-git-bundle"
+            }
+          }
+        }
+      ],
+      "description": "One self-contained Git bundle with no prerequisites, providing the exact literal selected ref and commit and their full reachable Git object closure. The digest and byte size identify the exact bundle encoding, independently of the logical Tree commitment. Recover publishes this complete material through the fixed process artifact output and the receiving custodian retains its bytes before success. A fresh verifier receives those same immutable bytes through the fixed process input."
     }
   }
 }

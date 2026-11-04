@@ -55,7 +55,7 @@
     "software": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/software-adapter.schema.json",
-        "digest": "sha256:a6592d93e5e79b73f4faed9da9f68aa6afa7bcd203f6d91f1b556b15bc899acf"
+        "digest": "sha256:d48a4cf5e0f7154dbe64389b50d04c878405a68b00cb1d6ff30408ca9397d199"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/software-adapter.schema.json#/$defs/Response",

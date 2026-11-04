@@ -8,7 +8,7 @@
   "adapter": {
     "implementation": "fishhat.forgejo-restic",
     "installation_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "descriptor_digest": "sha256:efeaafe3dc4aa251289bf192db2a551facd63f507e8788f2dd939aa92a8d4222",
+    "descriptor_digest": "sha256:bd9a414adf97631c94fd54f0745a750823e2b9da8f9bdda178667e436df2945f",
     "configuration_digest": "sha256:0eae6fab2afd04f8c5485ed22106ec804b3f49c8d23465341ad4e293328d7d49",
     "source_schema_digest": "sha256:642e96134daa17910265b1a24acdd667d3a5b408f59b92c475e96bd9049124c3"
   },
@@ -17,12 +17,17 @@
     "media_type": "application/json",
     "size_bytes": 281
   },
-  "catalogue_digest": "sha256:023bdf3f6001fdcdcbef6dc86b1c24aa9e73557e332b00797daa198164c8dad1",
+  "catalogue_digest": "sha256:35ba8f9dfe9dcbd6ed8bd6d9fcb02dc5dc37daeff233ed1aed02a9e77acbf904",
   "kit_manifest_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "recovery_root": "/recovery/staging/run-001",
   "verify_only": true,
   "force_checkout": false,
   "install_dependencies": false,
   "download_tools": false,
-  "full_service_restore_separate": true
+  "full_service_restore_separate": true,
+  "tree": {
+    "tree_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "file_count": 18,
+    "total_bytes": 32768
+  }
 }

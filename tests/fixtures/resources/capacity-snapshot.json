@@ -10,6 +10,7 @@
   "resource_generation": 2,
   "observed_at": "2026-10-19T12:00:00Z",
   "boot_id": "00000000-0000-4000-8000-000000000001",
+  "observed_boottime_ms": 120000,
   "coverage_complete": true,
   "control_writable": true,
   "quotas": [

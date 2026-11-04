@@ -44,9 +44,34 @@ def submit_once(
     those checks are not authentication or native execution qualification.
     """
     validate("client-records.schema.json", delivery, "Delivery")
-    value = copy.deepcopy(delivery)
-    if value["state"] != "prepared":
+    if delivery["state"] != "prepared":
         raise ContractError("new submission needs prepared identity; reconcile unknown work")
+    params = {**copy.deepcopy(delivery), "state": "acceptance_unknown"}
+    return _resolve(delivery, owner_transport, params, "operation.submit")
+
+
+def reconcile_delivery(
+    delivery: dict[str, Any], owner_lookup: Callable[[dict[str, Any]], object]
+) -> dict[str, Any]:
+    """Resolve uncertain delivery through an authenticated, read-only operation.get.
+
+    The transport sends only lookup params and verifies the reply's owner and message
+    correlation. Missing decisions and unavailable reads preserve the original identity.
+    """
+    validate("client-records.schema.json", delivery, "Delivery")
+    if delivery["state"] != "acceptance_unknown":
+        raise ContractError("lookup requires an uncertain delivery")
+    params = {"owner": copy.deepcopy(delivery["owner"]), "request_id": delivery["request_id"]}
+    return _resolve(delivery, owner_lookup, params, "operation.get")
+
+
+def _resolve(
+    delivery: dict[str, Any],
+    transport: Callable[[dict[str, Any]], object],
+    params: dict[str, Any],
+    method: str,
+) -> dict[str, Any]:
+    value = copy.deepcopy(delivery)
     value["state"] = "acceptance_unknown"
     unknown = {
         "exit_code": 8,
@@ -55,13 +80,15 @@ def submit_once(
         "tracking": "not-attempted",
     }
     try:
-        receipt = owner_transport(copy.deepcopy(value))
+        receipt = transport(params)
     except (OSError, ContractError):
         # SSH I/O, authentication or response verification failed at the transport.
         return unknown
     if not isinstance(receipt, dict):
         return unknown
     if "nonacceptance" in receipt:
+        if receipt.get("method") != method:
+            return unknown
         try:
             validate("ssh-response.schema.json", receipt)
             validate_submission_refusal(receipt["nonacceptance"], receipt["problem"], value)

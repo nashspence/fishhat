@@ -15,10 +15,9 @@ from fishhat_adapters import (
 from fishhat_client.bootstrap import prepare_request
 from fishhat_contracts.validation import ContractError, digest
 
-from tests.adapter_support import D
 from tests.test_adapter_handoffs import artifact, attempt_for, response_for
 from tests.test_adapter_invocations import recovered
-from tests.test_bootstrap import PROVIDERS, fixture, records, reseal
+from tests.test_bootstrap import PROVIDERS, fixture, records, reseal, selected_receipt
 
 CHECK_PURPOSE = {
     "purpose": "public-contract",
@@ -44,7 +43,7 @@ def accepted(provider="forgejo-restic", method="recover"):
     query = prepare_request(**value)
     query["method"] = method
     if method == "verify":
-        query["input"]["output"] = artifact("a")
+        query["input"]["recovery"] = selected_receipt(value["selection"])
     return value, query
 
 
@@ -127,7 +126,7 @@ def test_exact_bootstrap_selection_survives_initial_dispatch_and_lost_reply(
         ref=selection["ref"],
         commit=selection["expected_commit"],
         destination=selection["recovery_root"] + "/source.git",
-        output_digest=D,
+        tree=copy.deepcopy(selection["tree"]),
     )
     reply = response_for(query, original["attempt"], {"receipt": receipt})
     check_response("bootstrap-source", query, reply, invocation=original)

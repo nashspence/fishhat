@@ -4,7 +4,8 @@ import json
 from copy import deepcopy
 
 import pytest
-from fishhat_contracts.validation import ContractError, digest
+from fishhat_contracts.validation import ContractError, canonical, digest
+from fishhat_owner.commands import parse_command, workflow_apply_params
 
 from tests.linear_support import assert_linear
 from tests.workflow_journal_support import (
@@ -72,7 +73,19 @@ def test_unused_permit_renews_after_refresh_or_completed_transfer(tmp_path, cont
         try:
             original = permit(run)
             if control == "transfer":
+                submission = run.native_submission(0, 0)
+                owner = submission["owner"]
+                form = parse_command(
+                    f"{owner['tool']} plan apply --workflow-request-stdin --confirm --json",
+                    owner["tool"],
+                )
+                assert form["use_case"] == "operation.submit"
+                reviewed = workflow_apply_params(canonical(submission), owner)
+                assert reviewed == submission
                 run.transfer()
+                with pytest.raises(ContractError, match="driver term changed"):
+                    run.submit_native(0, reviewed)
+                assert not run.native[0].admissions
             run.round("host-effect")
             with pytest.raises(ContractError, match=r"reservation|stale|nonexecutable"):
                 run.submit_native(0, run.native_submission(0, 0))

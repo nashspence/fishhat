@@ -473,9 +473,6 @@
         "commit": {
           "$ref": "common.schema.json#/$defs/Commit"
         },
-        "output_digest": {
-          "$ref": "common.schema.json#/$defs/Digest"
-        },
         "destination": {
           "$ref": "common.schema.json#/$defs/AbsolutePath"
         },
@@ -499,6 +496,12 @@
         },
         "ref": {
           "$ref": "common.schema.json#/$defs/GitRef"
+        },
+        "output": {
+          "$ref": "bootstrap-recovery.schema.json#/$defs/Bundle"
+        },
+        "tree": {
+          "$ref": "bootstrap-recovery.schema.json#/$defs/Tree"
         }
       },
       "required": [
@@ -507,7 +510,7 @@
         "domain_id",
         "selection_digest",
         "commit",
-        "output_digest",
+        "output",
         "destination",
         "scope",
         "policy_activated",
@@ -515,9 +518,11 @@
         "assets_restored",
         "uncommitted_work_restored",
         "source_id",
-        "ref"
+        "ref",
+        "tree"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "Inert receipt for source salvage. output identifies the complete stable transfer artifact. destination identifies the local staging result. tree is measured from the verified restored commit and equals the selected catalogue commitment. Recovery and verification require independent byte and Git-object custody before success."
     }
   }
 }

@@ -711,13 +711,29 @@ def validate_cli(
                 "CLI problem/operation identity mismatch",
             )
 
+    _validate_cli_delivery(value, operation, retained_readers)
+    if value["problem"] is not None and value["problem"]["code"] == "ACCEPTANCE_UNKNOWN":
+        _require(
+            state == "unknown" and operation is None and value["request_id"] is not None,
+            "unknown acceptance requires original request and no owner outcome",
+        )
+
+
+def _validate_cli_delivery(
+    value: dict[str, Any],
+    operation: dict[str, Any] | None,
+    retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
+) -> None:
     from .operations import operation_matches_delivery, validate_submission_refusal
 
+    result, state = value["result"], value["state"]
     delivery = value.get("delivery")
     refusal = isinstance(result, dict) and result.get("kind") == "SubmissionRefusal"
     if refusal:
-        if state != "rejected" or delivery is None or delivery["state"] != "rejected":
-            raise ContractError("submission refusal requires its rejected delivery")
+        if state != "rejected" or value["request_id"] != result["request_id"]:
+            raise ContractError("submission refusal requires its original rejected request")
+        if delivery is not None and delivery["state"] != "rejected":
+            raise ContractError("submission refusal conflicts with delivery state")
         validate_submission_refusal(
             result, value["problem"], delivery, retained_readers=retained_readers
         )
@@ -744,11 +760,6 @@ def validate_cli(
                 },
                 "CLI/delivery acceptance state mismatch",
             )
-    if value["problem"] is not None and value["problem"]["code"] == "ACCEPTANCE_UNKNOWN":
-        _require(
-            state == "unknown" and operation is None and value["request_id"] is not None,
-            "unknown acceptance requires original request and no owner outcome",
-        )
 
 
 def _material_digests(value: Any, schema: Any, base: str) -> set[str]:

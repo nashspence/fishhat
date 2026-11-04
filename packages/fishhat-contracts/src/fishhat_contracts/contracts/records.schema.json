@@ -1263,10 +1263,7 @@
                   "additionalProperties": false
                 },
                 "commit": {
-                  "type": "string",
-                  "minLength": 40,
-                  "maxLength": 64,
-                  "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})(?![\\s\\S])"
+                  "$ref": "common.schema.json#/$defs/Commit"
                 },
                 "entrypoint": {
                   "type": "string",
@@ -2708,10 +2705,7 @@
                 "additionalProperties": false
               },
               "commit": {
-                "type": "string",
-                "minLength": 40,
-                "maxLength": 64,
-                "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})(?![\\s\\S])"
+                "$ref": "common.schema.json#/$defs/Commit"
               },
               "entrypoint": {
                 "type": "string",
@@ -3092,10 +3086,7 @@
           "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
         },
         "base_commit": {
-          "type": "string",
-          "minLength": 40,
-          "maxLength": 64,
-          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})(?![\\s\\S])"
+          "$ref": "common.schema.json#/$defs/Commit"
         },
         "ref": {
           "allOf": [
@@ -3446,10 +3437,7 @@
               "additionalProperties": false
             },
             "commit": {
-              "type": "string",
-              "minLength": 40,
-              "maxLength": 64,
-              "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})(?![\\s\\S])"
+              "$ref": "common.schema.json#/$defs/Commit"
             },
             "entrypoint": {
               "type": "string",
@@ -5086,19 +5074,23 @@
             "CAPACITY_BLOCKED",
             "UNSUPPORTED_CAPABILITY"
           ]
+        },
+        "resource": {
+          "$ref": "common.schema.json#/$defs/Resource"
         }
       },
       "required": [
         "kind",
         "owner",
         "request_id",
+        "resource",
         "plan_digest",
         "subject_digest",
         "workflow_id",
         "reason"
       ],
       "additionalProperties": false,
-      "description": "An authenticated operation.submit refusal for this exact original submission. After authorizing disclosure of the request and resource, the owner serializes with native acceptance, verifies the complete retained epoch index, and durably closes this previously unaccepted request ID against all later acceptance before responding. A matching retry returns the original refusal after current read authorization. A changed immutable submission conflicts. An unavailable index, ambiguous outcome, denied disclosure, already accepted identity, or failed commit cannot issue this proof. Neither an ordinary Problem nor a not-found lookup proves nonacceptance. The accompanying Problem matches the owner, resource and reason, with retry none. The receiver authenticates the responding owner, correlates the original SSH message and matches every refusal identity to its original delivery. A copied JSON value supplies no independent authority."
+      "description": "An authenticated operation.submit refusal for this exact original submission. After authorizing disclosure of the request and resource, the owner serializes with native acceptance, verifies the complete retained epoch index, and durably closes this previously unaccepted request ID against all later acceptance before responding. A matching retry returns the original refusal after current read authorization. A changed immutable submission conflicts. An unavailable index, ambiguous outcome, denied disclosure, already accepted identity, or failed commit cannot issue this proof. Neither an ordinary Problem nor a not-found lookup proves nonacceptance. The accompanying Problem matches the owner, resource and reason, with retry none. The receiver authenticates the responding owner, correlates the original SSH message and matches every refusal identity to its original delivery. A copied JSON value supplies no independent authority. Retain this refusal and its matching Problem for the owner epoch. operation.get can return them unchanged to a currently authorized reader of the original protected resource using only the original owner and request ID. New submission permission and original client state are unnecessary. No lookup creates a decision."
     }
   },
   "x-fishhat-contract-dependencies": [

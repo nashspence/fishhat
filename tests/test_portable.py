@@ -356,13 +356,31 @@ class Portable(unittest.TestCase):
             validate_run(x)
 
     def test_recovery_set_candidate(self):
-        validate_recovery_set(load("examples/bootstrap/native-recovery-set.json"), self.bundle)
+        x = load("examples/bootstrap/native-recovery-set.json")
+        retained = x["application_closure_digests"].copy()
+        domain = x["domain_id"]
+        validate_recovery_set(
+            x, self.bundle, expected_domain_id=domain, retained_application_closures=retained
+        )
+        x["application_closure_digests"] = []
+        validate_recovery_set(
+            x, self.bundle, expected_domain_id=domain, retained_application_closures=[]
+        )
+        with self.assertRaisesRegex(ContractError, "coverage mismatch"):
+            validate_recovery_set(
+                x, self.bundle, expected_domain_id=domain, retained_application_closures=retained
+            )
 
     def test_recovery_set_no_unproven_qualification(self):
         x = load("examples/bootstrap/native-recovery-set.json")
         x["qualified"] = True
         with self.assertRaises(ContractError):
-            validate_recovery_set(x, self.bundle)
+            validate_recovery_set(
+                x,
+                self.bundle,
+                expected_domain_id=x["domain_id"],
+                retained_application_closures=x["application_closure_digests"],
+            )
 
     def test_source_receipt_cannot_claim_services(self):
         x = load("examples/bootstrap/source-receipt.json")
@@ -616,6 +634,10 @@ class DirectOwner(unittest.TestCase):
         )
         with self.assertRaises(ContractError):
             parse_command(cmd, "app-ops")
+        lookup = "app-ops op show --request-id 22222222-2222-4222-8222-222222222222"
+        self.assertEqual(parse_command(lookup + " --json", "app-ops")["form"], "show")
+        pinned = lookup + " --owner-epoch 11111111-1111-4111-8111-111111111111 --json"
+        self.assertEqual(parse_command(pinned, "app-ops")["form"], "show-epoch")
 
     def test_bounded_parser(self):
         with self.assertRaises(ContractError):

@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import contextlib
 import copy
+import hashlib
 import io
 import json
+import subprocess
 from unittest.mock import patch
 
 import pytest
@@ -13,12 +15,14 @@ from fishhat_adapter_support import main as adapter_main
 from fishhat_adapters import ROLES, Registry, check_configuration, check_request, check_response
 from fishhat_client.bootstrap import (
     prepare_request,
+    prepare_verification,
     validate_catalogue,
     validate_receipt,
     validate_selection,
 )
 from fishhat_contracts.validation import ContractError, canonical, digest
 
+from scripts.validation_timeouts import watchdog
 from tests.adapter_support import OWNER, D, descriptors, identifier
 from tests.support import FIXTURES
 
@@ -104,6 +108,7 @@ def selected_receipt(selection):
         source_id=selection["source_id"],
         ref=selection["ref"],
         commit=selection["expected_commit"],
+        tree=copy.deepcopy(selection["tree"]),
         destination=selection["recovery_root"] + "/source.git",
     )
     return receipt
@@ -475,11 +480,7 @@ def test_bootstrap_wire_requires_repository_scope_and_an_evidenced_result(method
     request = prepare_request(**value)
     request["method"] = method
     if method == "verify":
-        request["input"]["output"] = {
-            "digest": D,
-            "media_type": "application/x-git-bundle",
-            "size_bytes": 100,
-        }
+        request["input"]["recovery"] = selected_receipt(value["selection"])
     check_request("bootstrap-source", request)
     invalid = copy.deepcopy(request)
     invalid["input"]["scope"]["kind"] = "application"
@@ -533,7 +534,7 @@ def test_bootstrap_wire_requires_repository_scope_and_an_evidenced_result(method
     invocation = {"attempt": attempt, "request": copy.deepcopy(request)}
     check_response("bootstrap-source", request, response, invocation=invocation)
     if method == "verify":
-        response["output"]["receipt"]["output_digest"] = "sha256:" + "f" * 64
+        response["output"]["receipt"]["output"]["digest"] = "sha256:" + "f" * 64
         with pytest.raises(ContractError, match="SUCCESS_OUTPUT_IDENTITY"):
             check_response("bootstrap-source", request, response, invocation=invocation)
         response["output"]["receipt"] = selected_receipt(value["selection"])
@@ -557,7 +558,7 @@ def test_catalogue_extent_and_source_visits():
     for count in (1, 16, 256, 257):
         catalogue = records("git-bundle")["catalogue"]
         source = catalogue["sources"][0]
-        source["file_count"] = 1_000_001
+        source["tree"]["file_count"] = 1_000_001
         catalogue["sources"] = [
             {**copy.deepcopy(source), "source_id": f"source-{n}"} for n in range(count)
         ]
@@ -591,3 +592,96 @@ CHECK_OVERRIDES = {
         "claims": ["engineering:bootstrap.catalogue"],
     }
 }
+
+
+def test_fresh_verifier_uses_complete_retained_bundle_and_catalogue_tree(tmp_path):
+    def git(cwd, *args):
+        return subprocess.run(
+            ["git", *args], cwd=cwd, check=True, capture_output=True, timeout=watchdog(15)
+        ).stdout
+
+    source = tmp_path / "source"
+    source.mkdir()
+    git(source, "init", "--quiet", "--object-format=sha1", "-b", "main")
+    payload = b"sample file"
+    (source / "a").write_bytes(payload)
+    (source / "sub").mkdir()
+    (source / "sub" / "b").write_bytes(payload)
+    git(source, "add", "a", "sub/b")
+    git(
+        source,
+        "-c",
+        "user.name=Fixture",
+        "-c",
+        "user.email=test@example.invalid",
+        "-c",
+        "commit.gpgsign=false",
+        "commit",
+        "-qm",
+        "recovery fixture",
+    )
+    value = records("git-bundle")
+    selection = value["selection"]
+    ref = selection["ref"]
+    commit = git(source, "rev-parse", ref).decode().strip()
+    root_body = git(source, "cat-file", "tree", commit + "^{tree}")
+    tree = {
+        "tree_digest": "sha256:"
+        + hashlib.sha256(
+            b"tree " + str(len(root_body)).encode("ascii") + b"\0" + root_body
+        ).hexdigest(),
+        "file_count": 2,
+        "total_bytes": 2 * len(payload),
+    }
+    selection.update(expected_commit=commit, tree=tree)
+    value["catalogue"]["sources"][0].update(commit=commit, tree=copy.deepcopy(tree))
+    reseal(value)
+    validate_catalogue(value["catalogue"], selection=selection)
+    receipt = selected_receipt(selection)
+    outputs = set()
+    for version in ("2", "3"):
+        bundle = tmp_path / ("source-v" + version + ".bundle")
+        git(source, "bundle", "create", "--version=" + version, str(bundle), ref)
+        data = bundle.read_bytes()
+        receipt["output"] = {
+            "digest": "sha256:" + hashlib.sha256(data).hexdigest(),
+            "media_type": "application/x-git-bundle",
+            "size_bytes": len(data),
+        }
+        outputs.add(receipt["output"]["digest"])
+        with bundle.open("rb") as retained:
+            verify = prepare_verification(
+                receipt, selection, scope=value["scope"], retained_bundle=retained
+            )
+        assert verify["input"]["recovery"] == receipt
+
+        # An empty object store verifies self-containment independently of the producer.
+        receiver = tmp_path / ("receiver-" + version)
+        receiver.mkdir()
+        git(receiver, "init", "--quiet", "--bare", "--object-format=sha1")
+        git(receiver, "bundle", "verify", str(bundle))
+        git(receiver, "fetch", "--no-tags", str(bundle), ref + ":" + ref)
+        git(receiver, "fsck", "--full", "--strict")
+        assert git(receiver, "rev-parse", ref + "^{commit}").decode().strip() == commit
+        restored_body = git(receiver, "cat-file", "tree", ref + "^{tree}")
+        sizes = [
+            int(line.split(b"\t", 1)[0].split()[3])
+            for line in git(receiver, "ls-tree", "-r", "-l", ref).splitlines()
+        ]
+        assert restored_body == root_body
+        assert len(sizes) == tree["file_count"] and sum(sizes) == tree["total_bytes"]
+        assert verify["input"]["selection"]["tree"] == tree
+        for bad in (b"", data + b"x", data[::-1]):
+            with pytest.raises(ContractError):
+                prepare_verification(
+                    receipt, selection, scope=value["scope"], retained_bundle=io.BytesIO(bad)
+                )
+    assert len(outputs) == 2
+    changed = copy.deepcopy(receipt)
+    changed["tree"]["file_count"] += 1
+    with pytest.raises(ContractError, match="identity mismatch"):
+        validate_receipt(changed, selection)
+    changed = copy.deepcopy(selection)
+    changed["tree"]["total_bytes"] += 1
+    with pytest.raises(ContractError, match="not in recovery catalogue"):
+        validate_catalogue(value["catalogue"], selection=changed)

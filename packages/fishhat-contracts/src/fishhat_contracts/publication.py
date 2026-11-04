@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
 from .validation import ContractError, digest, validate
@@ -154,3 +155,48 @@ def validate_publication_result(
             )
     else:
         raise ContractError("publication result has no matching action")
+
+
+def require_repository_publication(
+    request: dict[str, Any],
+    *,
+    current_object_id: str | None,
+    symbolic: bool,
+    is_ancestor: Callable[[str, str], bool],
+    source_proposal: dict[str, Any] | None = None,
+) -> None:
+    """Check independently observed literal-ref facts under native CAS or exclusion.
+
+    The adapter reads directness and the unpeeled object without dereferencing.
+    A null current_object_id means positively verified literal absence. An
+    uncertain observation cannot supply these facts. The adapter supplies
+    verified reachability in the exact retained repository, rejecting
+    incomplete history. A source publisher also supplies the independently
+    retained reviewed proposal. The native caller must preserve these facts
+    atomically through its update; this pure check never mutates or reserves a ref.
+    """
+    validate("repository-adapter.schema.json", request)
+    _require(request["method"] == "publish", "expected repository publication")
+    inputs = request["input"]
+    candidate = inputs["candidate"]
+    _require(candidate["repository"] == inputs["repository"], "repository candidate changed")
+    _require(symbolic is False, "symbolic or unverified publication target")
+    if current_object_id is not None:
+        validate("repository-adapter.schema.json", current_object_id, "ObjectId")
+    previous = inputs["expected_previous"]
+    _require(previous.get("object_id") == current_object_id, "repository predecessor changed")
+    if source_proposal is not None:
+        from .action_results import validate_source_proposal
+
+        validate_source_proposal(source_proposal)
+        _require(
+            source_proposal["repository"] == inputs["repository"]["canonical"]
+            and source_proposal["ref"] == inputs["ref"]
+            and is_ancestor(source_proposal["base_commit"], candidate["commit"]) is True,
+            "candidate differs from reviewed source history",
+        )
+    if current_object_id is not None and inputs["ref"].startswith("refs/heads/"):
+        _require(
+            is_ancestor(current_object_id, candidate["commit"]) is True,
+            "divergent or unverified publication",
+        )

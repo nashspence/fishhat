@@ -46,11 +46,11 @@
     "repository": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/repository-adapter.schema.json",
-        "digest": "sha256:246dcd6bc4ebdfe9da665a0763ea3b9712c5f853a966c523b753e7f645d0dc9f"
+        "digest": "sha256:241d2bd887b4bd7e5e03d35bb21b62d1664468a2bc147a37795c82061cfc0082"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/repository-adapter.schema.json#/$defs/Response",
-        "digest": "sha256:0797b78bf2387c1cf06c9c38c4db7927ec9a9e5afb4fe6d85f021e4faacbdaea"
+        "digest": "sha256:a38c7a8c9be9e285603e9160bb34e7ef04be1e1bd89331df02024bed451af278"
       }
     }
   },
