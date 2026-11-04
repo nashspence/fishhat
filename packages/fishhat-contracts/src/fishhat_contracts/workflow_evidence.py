@@ -16,11 +16,25 @@ from typing import Any, Literal
 from .bounds import Bounds, bounds
 from .handoffs import PHASES
 from .operations import validate_operation_plan
-from .validation import SCHEMAS, ContractError, canonical, digest, validate
+from .validation import CATALOGUES, SCHEMAS, ContractError, canonical, digest, validate
 
 REQUIREMENTS = SCHEMAS["workflow-evidence.schema.json"]["$defs"]["InstalledProcedureRequirements"][
     "const"
 ]
+
+
+def procedure_commitment(procedure: str) -> dict[str, Any]:
+    """Bind phase order, lifecycle rules and native obligations from their owners."""
+    states = CATALOGUES["https://fishhat.invalid/contracts/states.json"]
+    return {
+        "profile": "fishhat.workflow-procedure/v1",
+        "procedure": procedure,
+        "phases": states["workflow_phases"][procedure],
+        "lifecycle": states["workflow_lifecycle"],
+        "lifecycle_meanings": states["workflow_meanings"],
+        "rules": states["rules"],
+        "requirements": REQUIREMENTS[procedure],
+    }
 
 
 def _require(condition: bool, message: str) -> None:
@@ -213,7 +227,7 @@ def _validate_phase_evidence(
             },
             "proposal_digest": workflow["proposal_digest"],
             "procedure": workflow["type"],
-            "requirements_digest": digest(REQUIREMENTS[workflow["type"]]),
+            "requirements_digest": digest(procedure_commitment(workflow["type"])),
             "from_phase": phases[position - 1],
             "to_phase": request["phase"],
         },

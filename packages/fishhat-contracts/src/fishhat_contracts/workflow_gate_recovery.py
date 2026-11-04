@@ -47,12 +47,22 @@ class GateJournalSource:
     that segment. Replaying it under today's mapping could silently change an
     already reserved successor. Every segment and expected head is covered by
     the current custodian's verified complete restoration manifest.
+
+    A historical schema additionally requires its exact protected original
+    header and an independently installed restore_event reducer. Qualified
+    readers and original signature verification precede every call. The reducer
+    reconstructs only retained indexes and original lifecycle facts; it performs
+    no native effects and cannot replace bytes or authorize current admission.
+    Its first original gate.create event initializes the complete original
+    manifest indexes and exact header under that historical profile.
     """
 
     journal: JournalStore
     schema: JSON
     head: str
     recovery: JournalRecovery
+    header: JSON | None = None
+    restore_event: Callable[[Any, JSON, JSON], None] | None = None
 
 
 @dataclass(frozen=True)
@@ -337,6 +347,7 @@ class WorkflowRecoveryGate(WorkflowGate):
     def _restore_sources(self, origin: OriginGateRecoveryContext, keys: KeyRing) -> None:
         seen: set[bytes] = set()
         previous: GateJournalSource | None = None
+        proposal_digest = digest(origin.proposal)
         for source in origin.sources:
             owner = source.journal.owner
             _require(canonical(owner) not in seen, "gate recovery repeats an epoch segment")
@@ -347,6 +358,14 @@ class WorkflowRecoveryGate(WorkflowGate):
                 "gate recovery source schema or custody changed",
             )
             found = False
+            historical = source.schema != self._installed_journal_schema
+            protected_header = copy.deepcopy(source.header) if historical else None
+            if historical:
+                _require(
+                    isinstance(protected_header, dict) and source.restore_event is not None,
+                    "historical gate source requires its exact header and qualified reducer",
+                )
+            protected_digest = digest(protected_header) if historical else None
             self.extension = source.recovery
             for event in source.journal.iter_events(read_authorized=True):
                 request, record = event["request"], event["outcome"]
@@ -365,12 +384,13 @@ class WorkflowRecoveryGate(WorkflowGate):
                             and request["payload"] == {"proposal": origin.proposal},
                             "gate recovery lacks exact original proposal initialization",
                         )
-                        self._index_manifest(
-                            origin.proposal,
-                            recovery=True,
-                            gate_owner=owner,
-                            gate_key_id=record["key_id"],
-                        )
+                        if not historical:
+                            self._index_manifest(
+                                origin.proposal,
+                                recovery=True,
+                                gate_owner=owner,
+                                gate_key_id=record["key_id"],
+                            )
                     else:
                         authority = record["body"].get("authority", {})
                         _require(
@@ -383,20 +403,53 @@ class WorkflowRecoveryGate(WorkflowGate):
                             and authority.get("header_digest") == self.header_digest,
                             "gate recovery lineage omitted or substituted an epoch segment",
                         )
-                    _require(
-                        record["body"].get("header_digest") == self.header_digest,
-                        "gate recovery changed original common header",
-                    )
-                    found = True
-                if request["action"] not in _APPROVAL_ACTIONS | {"gate.recover"}:
+                if historical:
+                    assert protected_digest is not None
+                    if not found:
+                        _require(
+                            record["body"].get("header_digest") == protected_digest,
+                            "historical gate source changed its exact original header",
+                        )
+                    self._restore_historical_event(source, request, record, protected_digest)
+                elif request["action"] not in _APPROVAL_ACTIONS | {"gate.recover"}:
                     WorkflowGate._apply_event(self, request, record)
                 else:
                     self.generation += 1
+                if not found:
+                    _require(
+                        record["body"].get("header_digest") == self.header_digest
+                        and self.header["workflow_id"] == origin.proposal["workflow_id"]
+                        and self.header["proposal_digest"] == proposal_digest,
+                        "gate recovery changed original common header",
+                    )
+                    found = True
             _require(found, "gate recovery original journal is empty")
+            if historical:
+                _require(
+                    self.header == protected_header,
+                    "historical gate reducer changed protected original header",
+                )
             previous = source
         _require(
             canonical(self.owner) not in seen,
             "gate recovery cannot reuse an earlier owner epoch",
+        )
+
+    def _restore_historical_event(
+        self, source: GateJournalSource, request: JSON, record: JSON, header_digest: str
+    ) -> None:
+        restore = source.restore_event
+        _require(restore is not None, "historical gate reducer is not independently installed")
+        assert restore is not None
+        original = canonical([request, record])
+        restore(self, request, record)
+        _require(
+            canonical([request, record]) == original,
+            "historical gate reducer rewrote original accepted bytes",
+        )
+        _require(
+            self.header_digest == header_digest and self.workflow_id == request["workflow_id"],
+            "historical gate reducer changed original workflow commitment",
         )
 
     def _source_record(self, source: GateJournalSource, record: JSON, keys: KeyRing) -> None:

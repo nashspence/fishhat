@@ -5,7 +5,8 @@ from types import SimpleNamespace
 
 import pytest
 from fishhat_contracts.handoffs import schema_identity
-from fishhat_contracts.validation import ContractError, canonical, digest
+from fishhat_contracts.validation import CATALOGUES, ContractError, canonical, digest
+from fishhat_contracts.workflow_evidence import procedure_commitment
 from fishhat_contracts.workflow_gate_recovery import (
     GateJournalSource,
     GateRecoveryEnrollment,
@@ -13,7 +14,7 @@ from fishhat_contracts.workflow_gate_recovery import (
     WorkflowRecoveryGate,
     retain_recovery_gate,
 )
-from fishhat_contracts.workflow_journal import initialize_workflow_journal
+from fishhat_contracts.workflow_journal import WorkflowGate, initialize_workflow_journal
 from fishhat_contracts.workflow_journal_recovery import (
     JournalRecovery,
     OriginRecoveryContext,
@@ -70,11 +71,27 @@ CHECK_OVERRIDES = {
 }
 
 
-def recovered_gate(run, *, predecessor=None, sources=(), label="first", restore=False):
+def recovered_gate(
+    run,
+    *,
+    predecessor=None,
+    sources=(),
+    label="first",
+    restore=False,
+    historical_header=None,
+    historical_reducer=None,
+):
     old = run.gate.target if predecessor is None else predecessor.target
     owner = {**old.owner, "epoch": uid("gate-recovery-epoch-" + label)}
     key = MeteredPrivateKey(owner, run.meter.values)
-    source = GateJournalSource(old.journal, old.journal.schema, old.journal.head, old.extension)
+    source = GateJournalSource(
+        old.journal,
+        old.journal.schema,
+        old.journal.head,
+        old.extension,
+        header=historical_header,
+        restore_event=historical_reducer,
+    )
     lineage = (*sources, source)
     custody = {
         "format": "deployment-ops/owner-history/v1",
@@ -220,6 +237,110 @@ def recover_successor(run, recovered):
     for member in run.members:
         member.call("recover.install", {"certificate": certificate})
     return successor, certificate
+
+
+def test_historical_gate_requires_original_header_readers_and_source_reducer(tmp_path, monkeypatch):
+    meter = WorkMeter()
+    run = WorkflowRun(tmp_path, LogicalWorkload(owners=1, children=1), meter)
+    restored = None
+    try:
+        run.prepare()
+        original = run.gate.target
+        original_header = deepcopy(original.header)
+        original_schema = deepcopy(original.journal.schema)
+        original_bytes = original.journal._path.read_bytes()
+        accepted = {
+            event["outcome"]["id"]: canonical(event["outcome"])
+            for event in original.journal.iter_events(read_authorized=True)
+        }
+        states_uri = "https://fishhat.invalid/contracts/states.json"
+        original_states = deepcopy(CATALOGUES[states_uri])
+        installed_states = deepcopy(original_states)
+        installed_states["rules"].append("A new installed procedure profile.")
+        monkeypatch.setitem(CATALOGUES, states_uri, installed_states)
+        run.schema = schema_identity(original_schema["uri"])
+        assert run.schema != original_schema
+        assert (
+            digest(procedure_commitment(original_header["procedure"]))
+            != original_header["requirements_digest"]
+        )
+        reductions = []
+        reads = []
+
+        def qualified_reader(record):
+            require(
+                accepted.get(record["id"]) == canonical(record),
+                "qualified historical profile changed",
+            )
+            reads.append(record["id"])
+
+        def historical_reducer(target, command, record):
+            # This installed test reducer keeps the original semantic profile;
+            # restoration must never silently substitute today's procedure.
+            with monkeypatch.context() as historical:
+                historical.setitem(CATALOGUES, states_uri, original_states)
+                if command["action"] == "gate.create":
+                    target._index_manifest(
+                        command["payload"]["proposal"],
+                        recovery=True,
+                        gate_owner=record["owner"],
+                        gate_key_id=record["key_id"],
+                    )
+                WorkflowGate._apply_event(target, command, record)
+            reductions.append(record["id"])
+
+        with pytest.raises(ContractError, match="exact header and qualified reducer"):
+            recovered_gate(run, label="missing-reducer", historical_header=original_header)
+        with pytest.raises(ContractError, match="qualified historical readers"):
+            recovered_gate(
+                run,
+                label="missing-readers",
+                historical_header=original_header,
+                historical_reducer=historical_reducer,
+            )
+        profile = (original_schema["uri"], original_schema["digest"])
+        original.extension = JournalRecovery(
+            retained_readers={profile: qualified_reader},
+            recovery_readers={profile: qualified_reader},
+        )
+        changed_header = {**original_header, "requirements_digest": digest("substituted")}
+        with pytest.raises(ContractError, match="exact original header"):
+            recovered_gate(
+                run,
+                label="changed-header",
+                historical_header=changed_header,
+                historical_reducer=historical_reducer,
+            )
+        with monkeypatch.context() as untrusted:
+            keys = dict(original.keys)
+            keys[(canonical(original.owner), KEY_ID)] = MeteredPrivateKey(
+                "untrusted-historical-signer", meter.values
+            ).public_key()
+            untrusted.setattr(original, "keys", keys)
+            with pytest.raises(ContractError, match="signature is not trusted"):
+                recovered_gate(
+                    run,
+                    label="wrong-signer",
+                    historical_header=original_header,
+                    historical_reducer=historical_reducer,
+                )
+        assert not reductions
+        restored = recovered_gate(
+            run,
+            label="historical",
+            historical_header=original_header,
+            historical_reducer=historical_reducer,
+        )
+        assert restored.target.header == original_header
+        assert restored.target.authority["source_schema"] == original_schema
+        assert len(reductions) == len(accepted) and reads
+        assert original.journal._path.read_bytes() == original_bytes
+        with pytest.raises(ContractError, match="recovery only"):
+            restored.endpoint.call("round", {"to_phase": "draining"}, fresh=True)
+    finally:
+        if restored is not None:
+            restored.endpoint.close()
+        run.close()
 
 
 def test_gate_epoch_recovery_requires_every_local_approval_and_preserves_custody(tmp_path):

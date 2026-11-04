@@ -2054,5 +2054,8 @@
       "additionalProperties": false,
       "description": "Reconcile one exact original Operation through its receiving local owner and independently installed native recovery procedure. The reviewed resource must equal the original Operation resource, including adapter, publisher, source, DNS and backend resources. Resolve the original action, retained invocation, protected inputs and effects from owner custody; do not choose a new executor or infer no effect from a timeout. Planning explicitly refuses unsupported native reconciliation. Current scoped administrator approval, positive native cessation/fencing and retained holds are required. The original Operation remains immutable; this new request has its own Plan and identity. origin is null only for a current-epoch Operation; historical work requires exact retained reference and current-authority custody."
     }
-  }
+  },
+  "x-fishhat-catalogue-dependencies": [
+    "actions.json"
+  ]
 }

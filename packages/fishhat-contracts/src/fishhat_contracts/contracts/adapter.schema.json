@@ -2563,5 +2563,8 @@
   "x-fishhat-contract-dependencies": [
     "#/$defs/Instance",
     "#/$defs/EffectKnowledge"
+  ],
+  "x-fishhat-catalogue-dependencies": [
+    "adapter-roles.json"
   ]
 }

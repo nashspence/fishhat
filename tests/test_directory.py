@@ -4,7 +4,7 @@ import json
 import unittest
 from pathlib import Path
 
-from fishhat_contracts.validation import ContractError, strict_yaml
+from fishhat_contracts.validation import CATALOGUES, ContractError, strict_yaml
 from fishhat_directory.projection import (
     NOW,
     WORKFLOWS,
@@ -206,6 +206,21 @@ class Directory(unittest.TestCase):
         x = " ".join(step for steps in WORKFLOWS.values() for step in steps)
         self.assertIn("virtual environment", x)
         self.assertNotIn("ssh domain-ops-home", x)
+        resume = " ".join(workflow("resume")["steps"])
+        base = "https://fishhat.invalid/contracts/"
+        client = next(
+            entry
+            for entry in CATALOGUES[base + "client-commands.json"]["commands"]
+            if entry["name"] == "workflow resume"
+        )
+        owner = next(
+            entry
+            for entry in CATALOGUES[base + "owner-cli.json"]["forms"]
+            if entry["use_case"] == client["use_case"]
+        )
+        self.assertIn(client["use_case"], resume)
+        self.assertIn(" ".join(owner["tokens"][1:]), resume)
+        self.assertNotIn("workflow.lifecycle", resume)
 
     def test_native_request_allowed(self):
         self.assertTrue(

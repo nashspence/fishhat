@@ -4680,6 +4680,10 @@
       "purpose_sha256": "787392b2de95e28622c57e7fc49a31e8eca3b91fa598e88769568b94d66f8923"
     },
     {
+      "node": "tests/test_component_policy.py::test_public_snapshot_detects_normative_catalogue_changes",
+      "purpose_sha256": "fbb38f110c3d8c936ca2f72f7dbf5a1a58a87db13e7f4e3d188fe880f506468f"
+    },
+    {
       "node": "tests/test_component_policy.py::test_retired_state_fixtures_and_migrations_remain_immutable[state-fixture]",
       "purpose_sha256": "fbb38f110c3d8c936ca2f72f7dbf5a1a58a87db13e7f4e3d188fe880f506468f"
     },
@@ -4690,6 +4694,174 @@
     {
       "node": "tests/test_component_policy.py::test_unknown_journal_version_refuses_reinitialization",
       "purpose_sha256": "787392b2de95e28622c57e7fc49a31e8eca3b91fa598e88769568b94d66f8923"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_launch_requires_independent_exact_allocation_approval[missing-observe]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_launch_requires_independent_exact_allocation_approval[missing-plan]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_launch_requires_independent_exact_allocation_approval[missing-reconcile]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_launch_requires_independent_exact_allocation_approval[missing-set-limits]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_launch_requires_independent_exact_allocation_approval[replacement-observe]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_launch_requires_independent_exact_allocation_approval[replacement-plan]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_launch_requires_independent_exact_allocation_approval[replacement-reconcile]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_launch_requires_independent_exact_allocation_approval[replacement-set-limits]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_missing_target_is_explicit_empty_and_never_retargeted[complete]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_missing_target_is_explicit_empty_and_never_retargeted[unknown]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_observation_cannot_supply_its_own_incarnation_approval",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_observation_rejects_replaced_incarnation_and_resumable_absence",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_reconciliation_preserves_original_target_instead_of_current_binding",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_request_requires_complete_target_and_rejects_handle_only_form[observe]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_request_requires_complete_target_and_rejects_handle_only_form[plan]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_request_requires_complete_target_and_rejects_handle_only_form[set-limits]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_result_cannot_substitute_same_handle_replacement_or_other_target[executor-direct]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_result_cannot_substitute_same_handle_replacement_or_other_target[executor-recovered]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_result_cannot_substitute_same_handle_replacement_or_other_target[handle-direct]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_result_cannot_substitute_same_handle_replacement_or_other_target[handle-recovered]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_result_cannot_substitute_same_handle_replacement_or_other_target[incarnation-direct]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_result_cannot_substitute_same_handle_replacement_or_other_target[incarnation-recovered]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_snapshot_cannot_end_with_absence_after_returning_quantities",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_snapshot_failure_does_not_turn_unavailable_identity_into_absence",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_snapshot_joins_memory_limits_across_pages_without_rescanning[memory-high]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_snapshot_joins_memory_limits_across_pages_without_rescanning[memory-max]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_success_requires_verified_nonnull_target[direct]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_success_requires_verified_nonnull_target[recovered]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_target_scope_cannot_differ_from_request_scope[observe]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_target_scope_cannot_differ_from_request_scope[plan]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_compute_target_scope_cannot_differ_from_request_scope[set-limits]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_resource_observation_sequence_linear_work[compute]",
+      "purpose_sha256": "807e6472ab2d89ad2b4ca3a39925a9fd77a3a8b26bf894d0f4492cad51cf5626"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_resource_observation_sequence_linear_work[storage]",
+      "purpose_sha256": "807e6472ab2d89ad2b4ca3a39925a9fd77a3a8b26bf894d0f4492cad51cf5626"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_resource_page_retry_cannot_replace_the_accepted_reply[compute]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_resource_page_retry_cannot_replace_the_accepted_reply[storage]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_resource_snapshot_rejects_cross_page_conflicts_without_consuming_failed_page[allocation]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_resource_snapshot_rejects_cross_page_conflicts_without_consuming_failed_page[counter]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_resource_snapshot_rejects_cross_page_conflicts_without_consuming_failed_page[limit]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_storage_observation_requires_independently_approved_observer",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_storage_snapshot_rejects_conflicting_logical_allocations_in_one_page[capacity_bytes]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_storage_snapshot_rejects_conflicting_logical_allocations_in_one_page[hard_isolation]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
+    },
+    {
+      "node": "tests/test_compute_allocation_identity.py::test_storage_snapshot_rejects_conflicting_logical_allocations_in_one_page[native_identity_digest]",
+      "purpose_sha256": "d9381a337ca882ca3584724a8d49233114064e2e0f74b02905f0f63c1bf2efbf"
     },
     {
       "node": "tests/test_confidential_host_preimages.py::test_capture_cannot_claim_a_different_live_reference",
@@ -4922,6 +5094,98 @@
     {
       "node": "tests/test_content_delivery.py::test_current_content_requires_full_digest_and_current_owner_epoch",
       "purpose_sha256": "b970eaf9a01bf9790316a2c8842a97f1f203579713f73637ba5a285306ab9e78"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_catalogue_dependencies_reject_unapproved_or_ambiguous_targets[duplicate-reference]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_catalogue_dependencies_reject_unapproved_or_ambiguous_targets[duplicate-resolved-target]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_catalogue_dependencies_reject_unapproved_or_ambiguous_targets[empty-fragment]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_catalogue_dependencies_reject_unapproved_or_ambiguous_targets[fragment-target]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_catalogue_dependencies_reject_unapproved_or_ambiguous_targets[non-string-target]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_catalogue_dependencies_reject_unapproved_or_ambiguous_targets[scalar-dependencies]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_catalogue_dependencies_reject_unapproved_or_ambiguous_targets[schema-target]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_catalogue_dependencies_reject_unapproved_or_ambiguous_targets[uninstalled-catalogue]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_catalogue_dependencies_require_a_core_document_root",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_catalogue_identity_has_a_complete_literal_preimage",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_changed_whole_boundary_requires_independent_revision_approval",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_client_resume_maps_to_the_installed_journal_protocol",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_normative_catalogue_changes_reidentify_their_installed_boundaries[action-authority]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_normative_catalogue_changes_reidentify_their_installed_boundaries[adapter-effects]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_normative_catalogue_changes_reidentify_their_installed_boundaries[client-commands]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_normative_catalogue_changes_reidentify_their_installed_boundaries[directory-policy]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_normative_catalogue_changes_reidentify_their_installed_boundaries[owner-cli]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_normative_catalogue_changes_reidentify_their_installed_boundaries[reporting-api]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_normative_catalogue_changes_reidentify_their_installed_boundaries[request-frame-bound]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_normative_catalogue_changes_reidentify_their_installed_boundaries[response-chunk-bound]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_normative_catalogue_changes_reidentify_their_installed_boundaries[workflow-lifecycle]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_normative_catalogue_changes_reidentify_their_installed_boundaries[workflow-phases]",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
+    },
+    {
+      "node": "tests/test_contract_catalogues.py::test_procedure_commitment_pins_order_lifecycle_and_obligations",
+      "purpose_sha256": "a3094a09cb6b8b5f9c4a92d369b29d7e8966d0d86dee81da6bacebf5cbc31e8b"
     },
     {
       "node": "tests/test_contract_identifiers.py::test_constrained_strings_reject_control_suffixes[cr-absolute-path]",
@@ -15232,6 +15496,10 @@
       "purpose_sha256": "4fbe39fd48e544b52c4e437517b9c57be8c1637dda93c525c182b38798fa8b94"
     },
     {
+      "node": "tests/test_workflow_gate_recovery.py::test_historical_gate_requires_original_header_readers_and_source_reducer",
+      "purpose_sha256": "4fbe39fd48e544b52c4e437517b9c57be8c1637dda93c525c182b38798fa8b94"
+    },
+    {
       "node": "tests/test_workflow_gate_recovery.py::test_member_catches_up_after_missing_intermediate_recertification",
       "purpose_sha256": "4fbe39fd48e544b52c4e437517b9c57be8c1637dda93c525c182b38798fa8b94"
     },
@@ -15584,8 +15852,28 @@
       "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
     },
     {
+      "node": "tests/test_workflow_journal.py::test_cancelled_workflow_cannot_advance_native_final_settlement[apply]",
+      "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
+    },
+    {
+      "node": "tests/test_workflow_journal.py::test_cancelled_workflow_cannot_advance_native_final_settlement[decision]",
+      "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
+    },
+    {
+      "node": "tests/test_workflow_journal.py::test_cancelled_workflow_cannot_advance_native_final_settlement[round]",
+      "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
+    },
+    {
+      "node": "tests/test_workflow_journal.py::test_cancelled_workflow_cannot_advance_native_final_settlement[vote]",
+      "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
+    },
+    {
       "node": "tests/test_workflow_journal.py::test_complete_workflow_survives_disk_restart_and_lost_replies",
       "purpose_sha256": "9ad554851a3723b91efc6dfb74824ada4f26fa3f27df98f54e60ca51067ccca1"
+    },
+    {
+      "node": "tests/test_workflow_journal.py::test_completed_workflow_final_barrier_refresh_keeps_child_admission_closed",
+      "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
     },
     {
       "node": "tests/test_workflow_journal.py::test_failed_append_preserves_tail_and_old_custody_without_reopening_writer[fsync]",
@@ -15609,6 +15897,10 @@
     },
     {
       "node": "tests/test_workflow_journal.py::test_lost_native_fence_survives_cold_restart_and_blocks_new_apply",
+      "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
+    },
+    {
+      "node": "tests/test_workflow_journal.py::test_member_rejects_signed_projection_with_different_installed_procedure",
       "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
     },
     {
@@ -15653,6 +15945,34 @@
     },
     {
       "node": "tests/test_workflow_journal.py::test_partial_driver_transfer_closes_both_old_and_new_admission",
+      "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
+    },
+    {
+      "node": "tests/test_workflow_journal.py::test_preparation_and_initial_resume_preserve_lifecycle_until_phase_progress",
+      "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
+    },
+    {
+      "node": "tests/test_workflow_journal.py::test_retained_terminal_child_cannot_be_replaced_by_a_new_signed_outcome[cancelled]",
+      "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
+    },
+    {
+      "node": "tests/test_workflow_journal.py::test_retained_terminal_child_cannot_be_replaced_by_a_new_signed_outcome[failed]",
+      "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
+    },
+    {
+      "node": "tests/test_workflow_journal.py::test_retained_terminal_child_cannot_be_replaced_by_a_new_signed_outcome[quarantined]",
+      "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
+    },
+    {
+      "node": "tests/test_workflow_journal.py::test_retained_terminal_child_cannot_be_replaced_by_a_new_signed_outcome[succeeded]",
+      "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
+    },
+    {
+      "node": "tests/test_workflow_journal.py::test_terminal_workflow_cannot_start_or_join_a_driver_transfer[cancelled]",
+      "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
+    },
+    {
+      "node": "tests/test_workflow_journal.py::test_terminal_workflow_cannot_start_or_join_a_driver_transfer[completed]",
       "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
     },
     {

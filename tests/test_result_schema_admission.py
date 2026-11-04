@@ -97,6 +97,7 @@ def test_rooted_schema_identity_has_an_explicit_graph_preimage():
             },
             LEAF: {"/$defs/Value": {"const": literal}},
         },
+        "catalogues": {},
     }
     assert handoffs.schema_identity(uri, selected) == {"uri": uri, "digest": digest(expected)}
     assert canonical(selected) == before

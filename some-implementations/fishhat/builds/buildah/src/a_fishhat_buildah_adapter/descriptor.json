@@ -53,13 +53,13 @@
     "build": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/build-adapter.schema.json",
-        "digest": "sha256:38086a623c316a94f8ca90c62eb20faa2be3a8d35c363631aab35ee0ce4b8b9b"
+        "digest": "sha256:fcbc71ed8aa6711ac295b17c727b88c7614193fd8dccf8c3e5eed7f7fd3135d8"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/build-adapter.schema.json#/$defs/Response",
-        "digest": "sha256:c8cdbcbcee62d32aeb22da0b7f214a960bc12fc6989b142a7e82152c9e465f48"
+        "digest": "sha256:5263f4ee74367fab1b1fdbb2397c5153391d4e80e662bc5afcd4227c3d15dff5"
       }
     }
   },
-  "process_schema_digest": "sha256:648420595f269a4fee9b0437550233c82999d7852d166d2d5555887cb5390863"
+  "process_schema_digest": "sha256:1655d583e6d5b93a99b4c5de6c29459751a8b1cd09dec238b686c1e8e3de1c3b"
 }

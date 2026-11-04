@@ -35,7 +35,7 @@ from fishhat_contracts.workflow_attestations import (
     assemble_phase_evidence,
     validate_attestation,
 )
-from fishhat_contracts.workflow_evidence import REQUIREMENTS
+from fishhat_contracts.workflow_evidence import procedure_commitment
 from fishhat_contracts.workflows import (
     advance_workflow_view,
     decode_workflow_audit_input,
@@ -187,7 +187,7 @@ def transition(value):
         "advance_id": uid("public-advance-" + value["owner"]["id"] + str(value["generation"])),
         "proposal_digest": value["proposal_digest"],
         "procedure": value["type"],
-        "requirements_digest": digest(REQUIREMENTS[value["type"]]),
+        "requirements_digest": digest(procedure_commitment(value["type"])),
         "expected_generation": value["generation"],
         "driver_term": value["driver_term"],
         "from_phase": value["phase"],

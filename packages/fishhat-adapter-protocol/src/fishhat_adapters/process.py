@@ -75,6 +75,7 @@ def validate_process_launch(
     expected_private_use: dict[str, Any] | None,
     expected_runtime_binding: dict[str, Any] | None = None,
     expected_publication_target: dict[str, Any] | None = None,
+    expected_compute_target: dict[str, Any] | None = None,
 ) -> None:
     """Join files to independently approved descriptor/executor before native launch.
 
@@ -82,6 +83,8 @@ def validate_process_launch(
     the owner. This pure function cannot turn a manifest into bearer authority.
     Runtime query targets must equal the separately approved runtime binding,
     including on a fresh process with no preceding mutation or shared state.
+    Every compute launch binds the independently approved allocation incarnation;
+    reconciliation preserves the exact original target from retained custody.
     """
     validate("adapter-process.schema.json", manifest)
     validate("adapter.schema.json", approved_installation, "Installation")
@@ -134,6 +137,23 @@ def validate_process_launch(
                 "process reconciliation executor changed",
             )
     _require(request["input"]["scope"] == executor["scope"], "process scope changed")
+    if role == "storage" and request["method"] == "observe":
+        _require(
+            request["input"]["binding"] == executor,
+            "process storage observer binding is not approved",
+        )
+    if role == "compute":
+        original = (
+            request["input"]["invocation"]["request"]
+            if request["method"] == "reconcile"
+            else request
+        )
+        _require(
+            expected_compute_target is not None
+            and original["input"]["target"] == expected_compute_target
+            and original["input"]["target"]["executor"] == executor,
+            "process compute allocation target is not approved",
+        )
     if role == "runtime" and request["method"] in {"resolve", "observe", "inventory"}:
         _require(
             expected_runtime_binding is not None

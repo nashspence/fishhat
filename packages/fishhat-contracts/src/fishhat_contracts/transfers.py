@@ -174,7 +174,7 @@ def validate_transfer_request(
     """Return replay or new for decoded current-capsule input; never grant execution.
 
     retained_transfer is independently selected protected custody for this exact
-    transfer identity, including an older transfer exposed by workflow.transfer.get.
+    transfer identity, including an older retained transfer selected for explicit audit.
     Native owners check that index before new admission and authorize current read
     access before replay. Request bytes cannot supply their own retained record.
     Exact accepted input is replayable after later generation or driver changes;

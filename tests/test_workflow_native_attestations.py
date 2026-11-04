@@ -20,7 +20,7 @@ from fishhat_contracts.workflow_attestations import (
     assemble_native_phase_evidence,
     assemble_phase_evidence,
 )
-from fishhat_contracts.workflow_evidence import REQUIREMENTS
+from fishhat_contracts.workflow_evidence import procedure_commitment
 from fishhat_contracts.workflow_settlement import record_native_completion_view
 from fishhat_owner.commands import parse_command
 
@@ -113,7 +113,7 @@ def target(value):
         "advance_id": uid("native-final-" + value["owner"]["id"] + str(value["generation"])),
         "proposal_digest": value["proposal_digest"],
         "procedure": value["type"],
-        "requirements_digest": digest(REQUIREMENTS[value["type"]]),
+        "requirements_digest": digest(procedure_commitment(value["type"])),
         "expected_generation": value["generation"],
         "driver_term": value["driver_term"],
         "from_phase": PHASES[value["type"]][-2],

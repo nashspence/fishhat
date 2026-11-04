@@ -4,6 +4,7 @@ from copy import deepcopy
 
 import pytest
 from fishhat_contracts.validation import ContractError, digest
+from fishhat_contracts.witness import sign
 from fishhat_owner.workflow_journal import WorkflowJournal
 
 from tests.test_contracts import uid
@@ -169,6 +170,26 @@ def test_unapproved_gate_signature_never_creates_native_reservation(journal_run)
     assert run.meter.values["native_reserve_visits"] == before
 
 
+def test_member_rejects_signed_projection_with_different_installed_procedure(
+    journal_run, monkeypatch
+):
+    from fishhat_contracts.validation import CATALOGUES
+
+    run, member = journal_run, journal_run.members[0]
+    assert run.clone_member(0).workflow_id == member.target.workflow_id
+    head = member.target.journal.head
+    uri = "https://fishhat.invalid/contracts/states.json"
+    installed = deepcopy(CATALOGUES[uri])
+    installed["workflow_phases"]["host-drain"][1:3] = ["quiescent", "draining"]
+    monkeypatch.setitem(CATALOGUES, uri, installed)
+    with pytest.raises(
+        ContractError, match="workflow requirements or independent gate grant changed"
+    ):
+        run.clone_member(0)
+    assert member.target.journal.head == head
+    assert not run.native[0].reservations
+
+
 def test_lost_native_fence_survives_cold_restart_and_blocks_new_apply(tmp_path):
     """Loss of the local effect guard closes admission and retains shared exclusion."""
     meter, workload = WorkMeter(), LogicalWorkload()
@@ -293,6 +314,164 @@ def test_unknown_accepted_operation_blocks_successor_commit(journal_run):
     assert run.native[0].operations
     with pytest.raises(ContractError, match=r"retired|frozen"):
         run.members[1].call("admit", {"child": run.workload.child(1, 0)}, fresh=True)
+
+
+@pytest.mark.parametrize("state", ["succeeded", "failed", "cancelled", "quarantined"])
+def test_retained_terminal_child_cannot_be_replaced_by_a_new_signed_outcome(journal_run, state):
+    run, member, native = journal_run, journal_run.members[0], journal_run.native[0]
+    run.prepare()
+    for phase in ("draining", "quiescent", "host-effect"):
+        run.round(phase)
+    child = run.workload.child(0, 0)
+    member.call("admit", {"child": child}, fresh=True)
+    run.submit_native(0, run.native_submission(0, 0))
+    original = native.finish(child, unknown=state == "quarantined")
+
+    def signed_state(operation, destination, generation):
+        changed = deepcopy(operation)
+        changed.update(state=destination, generation=generation, last_event=generation)
+        changed["effect_certainty"] = "unknown" if destination == "quarantined" else "known"
+        witness = {key: value for key, value in changed["witness"].items() if key != "signature"}
+        witness.update(
+            state=destination,
+            generation=generation,
+            subject_digest=digest(
+                {key: value for key, value in changed.items() if key != "witness"}
+            ),
+        )
+        changed["witness"] = sign(witness, native.key)
+        return changed
+
+    original = signed_state(original, state, original["generation"])
+    command = member.command("complete", {"operation": original})
+    retained = member.submit(command)
+    head = member.target.journal.head
+    replacement = signed_state(original, "succeeded", original["generation"] + 1)
+    with pytest.raises(ContractError, match="terminal child outcome cannot be replaced"):
+        member.call("complete", {"operation": replacement})
+    assert member.target.journal.head == head
+    assert member.submit(command) == retained
+    assert list(member.target.outcomes.values()) == [original]
+
+
+def test_preparation_and_initial_resume_preserve_lifecycle_until_phase_progress(journal_run):
+    run = journal_run
+    endpoints = [run.gate, *run.members]
+    accepted_resumes = []
+    for endpoint in endpoints:
+        assert endpoint.target.state == "prepared"
+        endpoint.call("pause", fresh=True)
+        command = endpoint.command("resume", fresh=True)
+        receipt = endpoint.submit(command)
+        assert receipt["body"]["state"] == endpoint.target.state == "prepared"
+        accepted_resumes.append((endpoint, command, receipt))
+    run.prepare()
+    assert all(endpoint.target.state == "prepared" for endpoint in endpoints)
+    run.round("draining")
+    assert all(endpoint.target.state == "active" for endpoint in endpoints)
+    for endpoint, command, receipt in accepted_resumes:
+        assert endpoint.submit(command) == receipt
+        assert endpoint.target.state == "active"
+
+
+@pytest.mark.parametrize("boundary", ["round", "vote", "decision", "apply"])
+def test_cancelled_workflow_cannot_advance_native_final_settlement(journal_run, boundary):
+    run = journal_run
+    run.prepare()
+    for phase in ("draining", "quiescent", "host-effect"):
+        run.round(phase)
+    run.children()
+    run.round("reconciling")
+    if boundary == "round":
+        endpoint, action, payload, fresh = run.gate, "settle", {"to_phase": "completed"}, True
+    else:
+        round_record = run.gate.call("settle", {"to_phase": "completed"}, fresh=True)
+        if boundary == "vote":
+            endpoint, action, payload, fresh = run.members[0], "vote", {"round": round_record}, True
+        else:
+            for member in run.members:
+                vote = member.call("vote", {"round": round_record}, fresh=True)
+                run.gate.call("vote", {"vote": vote})
+            if boundary == "decision":
+                endpoint, action, payload, fresh = run.gate, "decision", {}, False
+            else:
+                run.gate.call("decision")
+                certificate = run.gate.call(
+                    "certificate",
+                    {"owner": run.members[0].target.owner, "round_id": round_record["id"]},
+                )
+                endpoint, action, payload, fresh = (
+                    run.members[0],
+                    "apply",
+                    {"certificate": certificate},
+                    True,
+                )
+    endpoint.call("cancel", fresh=True)
+    head = endpoint.target.journal.head
+    with pytest.raises(ContractError, match="restricted workflow lifecycle"):
+        endpoint.call(action, payload, fresh=fresh)
+    assert endpoint.target.journal.head == head
+    assert endpoint.target.state == "cancelled"
+    assert endpoint.target.phase == "reconciling"
+
+
+@pytest.mark.parametrize("state", ["cancelled", "completed"])
+def test_terminal_workflow_cannot_start_or_join_a_driver_transfer(journal_run, state):
+    run = journal_run
+    run.prepare()
+    for phase in ("draining", "quiescent", "host-effect"):
+        run.round(phase)
+    run.children()
+    run.round("reconciling")
+    proposal = run.gate.call("transfer.propose", {"new_driver": NEXT_DRIVER})
+    if state == "cancelled":
+        run.gate.call("cancel", fresh=True)
+        for member in run.members:
+            member.call("cancel", fresh=True)
+    else:
+        round_record = run.gate.call("settle", {"to_phase": "completed"}, fresh=True)
+        for member in run.members:
+            vote = member.call("vote", {"round": round_record}, fresh=True)
+            run.gate.call("vote", {"vote": vote})
+        run.gate.call("decision")
+        for member in run.members:
+            certificate = run.gate.call(
+                "certificate", {"owner": member.target.owner, "round_id": round_record["id"]}
+            )
+            member.call("apply", {"certificate": certificate}, fresh=True)
+    with pytest.raises(ContractError, match="terminal workflow lifecycle cannot transfer"):
+        run.gate.call("transfer.propose", {"new_driver": NEXT_DRIVER})
+    for member in run.members:
+        with pytest.raises(ContractError, match="terminal workflow lifecycle cannot transfer"):
+            member.call("transfer.freeze", {"proposal": proposal})
+        assert member.target.state == state
+
+
+def test_completed_workflow_final_barrier_refresh_keeps_child_admission_closed(journal_run):
+    run = journal_run
+    run.prepare()
+    for phase in ("draining", "quiescent", "host-effect"):
+        run.round(phase)
+    run.children()
+    run.round("reconciling")
+    run.round("completed")
+    outcomes = [deepcopy(actor.operations) for actor in run.native]
+    round_record = run.gate.call("settle", {"to_phase": "completed"}, fresh=True)
+    for member in run.members:
+        vote = member.call("vote", {"round": round_record}, fresh=True)
+        run.gate.call("vote", {"vote": vote})
+    run.gate.call("decision")
+    for index, member in enumerate(run.members):
+        certificate = run.gate.call(
+            "certificate", {"owner": member.target.owner, "round_id": round_record["id"]}
+        )
+        member.call("apply", {"certificate": certificate}, fresh=True)
+        assert member.target.state == "completed"
+        assert member.target.phase == "completed"
+        with pytest.raises(ContractError, match="admission"):
+            member.call("admit", {"child": run.workload.child(index, 0)}, fresh=True)
+    assert run.gate.target.state == "completed"
+    assert [actor.operations for actor in run.native] == outcomes
 
 
 @pytest.mark.parametrize("control", ["pause", "transfer"])

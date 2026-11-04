@@ -398,6 +398,7 @@ class Registry:
         invocation: dict[str, Any] | None = None,
         expected_runtime_binding: dict[str, Any] | None = None,
         expected_publication_target: dict[str, Any] | None = None,
+        expected_compute_target: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Authorize a query against independently retained owner authority.
 
@@ -405,9 +406,22 @@ class Registry:
         the request's target cannot supply its own approval. Reconciliation
         likewise requires the independently retained original invocation.
         Routing queries require a separately approved complete native target.
+        Compute queries require the independently approved exact allocation
+        incarnation; reconciliation uses the independently retained original one.
         """
         check_request(role, request)
         require(not ROLES[role][request["method"]]["effect"], "EFFECT_INVOCATION_REQUIRED")
+        if role == "compute":
+            original = (
+                request["input"]["invocation"]["request"]
+                if request["method"] == "reconcile"
+                else request
+            )
+            require(
+                expected_compute_target is not None
+                and original["input"]["target"] == expected_compute_target,
+                "COMPUTE_APPROVED_TARGET",
+            )
         if role == "runtime" and request["method"] in {"resolve", "observe", "inventory"}:
             require(
                 expected_runtime_binding is not None
@@ -474,10 +488,17 @@ class Registry:
         invocation: dict[str, Any],
         *,
         owner_approved: bool,
+        expected_compute_target: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Check an owner-authored mutation closure; native dispatch remains owner-controlled."""
         check_invocation(role, invocation)
         request, attempt = invocation["request"], invocation["attempt"]
+        if role == "compute":
+            require(
+                expected_compute_target is not None
+                and request["input"]["target"] == expected_compute_target,
+                "COMPUTE_APPROVED_TARGET",
+            )
         require(
             attempt["state"] == "dispatched"
             and attempt["certainty"] == "unknown"

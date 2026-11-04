@@ -435,5 +435,8 @@
       ],
       "additionalProperties": false
     }
-  }
+  },
+  "x-fishhat-catalogue-dependencies": [
+    "directory-mcp.json"
+  ]
 }

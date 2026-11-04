@@ -8,11 +8,8 @@
         "scope": {
           "$ref": "adapter.schema.json#/$defs/Scope"
         },
-        "allocation": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 160,
-          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*(?![\\s\\S])"
+        "target": {
+          "$ref": "resources.schema.json#/$defs/ComputeIdentity"
         },
         "limits": {
           "type": "array",
@@ -25,11 +22,11 @@
       },
       "required": [
         "scope",
-        "allocation",
+        "target",
         "limits"
       ],
       "additionalProperties": false,
-      "description": "Plan the same finite limit patch as set-limits against the effective allocation envelope. Listed quantity/target pairs change; omitted pairs retain their effective values. Planning does not remove, reset or authorize a limit."
+      "description": "Plan the same finite limit patch as set-limits against the effective allocation envelope. Listed quantity/target pairs change; omitted pairs retain their effective values. Planning does not remove, reset or authorize a limit. target is the complete independently approved ComputeIdentity, including its exact executor, scope, logical handle and native incarnation. Resolve and compare that identity before effects under native exclusion or an equivalent compare-and-apply guarantee. A missing or recreated allocation cannot be adopted or changed through this request; it requires a separately reviewed binding. Reconciliation retains the original target and never retargets a replacement allocation."
     },
     "set-limits": {
       "type": "object",
@@ -37,11 +34,8 @@
         "scope": {
           "$ref": "adapter.schema.json#/$defs/Scope"
         },
-        "allocation": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 160,
-          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._/-]*(?![\\s\\S])"
+        "target": {
+          "$ref": "resources.schema.json#/$defs/ComputeIdentity"
         },
         "limits": {
           "type": "array",
@@ -54,11 +48,11 @@
       },
       "required": [
         "scope",
-        "allocation",
+        "target",
         "limits"
       ],
       "additionalProperties": false,
-      "description": "Apply a patch of the listed quantity/target pairs to this allocation. Omitted pairs retain their existing effective values; omission never removes a controlled limit. V1 admits only explicit finite quantities and has no removal, reset, inherit or unlimited sentinel. Before effects, the executor verifies that the resulting envelope, including retained limits, is supported and internally consistent; for example memory-high cannot exceed memory-max when both are controlled. Unsupported patches reject explicitly. Partial application or unverified preservation remains unresolved and cannot establish success. Successful output confirms exactly the changed pairs, while observe reports the complete effective envelope across pages."
+      "description": "Apply a patch of the listed quantity/target pairs to this allocation. Omitted pairs retain their existing effective values; omission never removes a controlled limit. V1 admits only explicit finite quantities and has no removal, reset, inherit or unlimited sentinel. Before effects, the executor verifies that the resulting envelope, including retained limits, is supported and internally consistent; for example memory-high cannot exceed memory-max when both are controlled. Unsupported patches reject explicitly. Partial application or unverified preservation remains unresolved and cannot establish success. Successful output confirms exactly the changed pairs, while observe reports the complete effective envelope across pages. target is the complete independently approved ComputeIdentity, including its exact executor, scope, logical handle and native incarnation. Resolve and compare that identity before effects under native exclusion or an equivalent compare-and-apply guarantee. A missing or recreated allocation cannot be adopted or changed through this request; it requires a separately reviewed binding. Reconciliation retains the original target and never retargets a replacement allocation."
     },
     "observe": {
       "type": "object",
@@ -80,15 +74,19 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 256
+        },
+        "target": {
+          "$ref": "resources.schema.json#/$defs/ComputeIdentity"
         }
       },
       "required": [
         "scope",
         "cursor",
-        "limit"
+        "limit",
+        "target"
       ],
       "additionalProperties": false,
-      "description": "Each newly executed null-cursor invocation starts a fresh snapshot. If its first response was not accepted, a new null-cursor invocation may restart the scan. Replay of an already accepted page reuses the receiving owner's retained exact request and response; it does not ask a fresh adapter process to regenerate the old first page. Only a retained non-null cursor continues the previously selected native snapshot. The limit bounds the sum of returned top-level collection entries in limits, counters; nested fields within one entry are not separate records. Other scalar or object output fields are fixed-shape metadata and do not count toward this limit. A continuation is an opaque receiver-issued cursor bound to the exact approved executor, scope, query and one stable native observation snapshot. The receiver verifies those bindings on every continuation. Incomplete coverage requires a non-null cursor different from the request cursor; complete coverage has no continuation. Unknown coverage is not resumable and has no continuation; an unavailable or changed snapshot is explicitly unknown and requires a new scan with cursor null. Known records may accompany unknown coverage, but cannot establish complete absence. These per-page bounds do not limit total collection extent or prove native bounded work."
+      "description": "Each newly executed null-cursor invocation starts a fresh snapshot. If its first response was not accepted, a new null-cursor invocation may restart the scan. Replay of an already accepted page reuses the receiving owner's retained exact request and response; it does not ask a fresh adapter process to regenerate the old first page. Only a retained non-null cursor continues the previously selected native snapshot. The limit bounds the sum of returned top-level collection entries in limits, counters; nested fields within one entry are not separate records. Other scalar or object output fields are fixed-shape metadata and do not count toward this limit. A continuation is an opaque receiver-issued cursor bound to the exact approved executor, scope, query and one stable native observation snapshot. The receiver verifies those bindings on every continuation. Incomplete coverage requires a non-null cursor different from the request cursor; complete coverage has no continuation. Unknown coverage is not resumable and has no continuation; an unavailable or changed snapshot is explicitly unknown and requires a new scan with cursor null. Known records may accompany unknown coverage, but cannot establish complete absence. These per-page bounds do not limit total collection extent or prove native bounded work. target selects one complete independently approved ComputeIdentity, including its exact executor and native incarnation. The observer verifies that target independently; neither an allocation handle nor request data supplies approval. Each non-null output target equals this exact identity. Logical limit keys (quantity, target) and counter keys (metric, target) occur once across the complete snapshot, not merely once per page. Repeated keys, changed allocation identity or contradictory combined memory-high/memory-max values reject before the page is accepted. Exact accepted page replay is idempotent. Receiver-local indexed identities and fixed-size quantity summaries preserve linear intake across all pages and retries. Null output target has empty quantities and is not resumable: complete coverage proves this exact incarnation absent, while unknown coverage leaves its identity or availability unresolved. A replacement incarnation is never silently selected."
     },
     "reconcile": {
       "type": "object",
@@ -118,10 +116,10 @@
           "minItems": 0,
           "uniqueItems": true
         },
-        "allocation": {
+        "target": {
           "anyOf": [
             {
-              "$ref": "adapter.schema.json#/$defs/Handle"
+              "$ref": "resources.schema.json#/$defs/ComputeIdentity"
             },
             {
               "type": "null"
@@ -138,12 +136,12 @@
         }
       },
       "required": [
-        "allocation",
+        "target",
         "limits",
         "counters"
       ],
       "additionalProperties": false,
-      "description": "Observed quantities for the exact allocation. Successful set-limits and its reconciliation confirm exactly the requested patch quantity/target/value/unit set; extra, missing or changed pairs cannot establish success. Pairs omitted from the patch retain their prior effective values and are not repeated in the successful mutation output. Observe reports all effective controlled limits across its pages, including pairs omitted from the last patch. Observation with no known allocation uses null and empty collections."
+      "description": "Observed quantities for the exact requested ComputeIdentity. Every non-null target equals the complete approved executor, scope, logical handle and incarnation from the original request. Successful set-limits and its reconciliation require that non-null target and confirm exactly the requested patch quantity/target/value/unit set; extra, missing or changed pairs cannot establish success. Pairs omitted from the patch retain their prior effective values and are not repeated in the successful mutation output. Observe reports all effective controlled limits across its pages, including pairs omitted from the last patch. A null target has empty limits and counters, no continuation, and cannot establish mutation success. For observation, complete coverage with null target means the exact requested incarnation is verified absent; unknown coverage leaves identity or availability unresolved and may close a partially observed traversal without asserting absence. Neither condition authorizes recreation or retargeting."
     },
     "Response": {
       "oneOf": [
@@ -338,11 +336,11 @@
                   },
                   "output": {
                     "properties": {
-                      "allocation": {
-                        "type": "string"
-                      },
                       "limits": {
                         "minItems": 1
+                      },
+                      "target": {
+                        "type": "object"
                       }
                     }
                   }

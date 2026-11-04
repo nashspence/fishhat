@@ -197,7 +197,7 @@ def build_map(root: Path = ROOT) -> dict[str, Any]:
             "expectation": "release.toml#/interfaces",
             "snapshot": read_toml(root / "release.toml")["interfaces"]["snapshot"],
             "tests": interface_tests,
-            "scope": "frozen signature, option and schema-byte consistency; no runtime or native qualification",
+            "scope": "frozen signature, option, schema and catalogue consistency; no runtime or native qualification",
         },
     }
 

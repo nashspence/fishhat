@@ -7,7 +7,6 @@ make record relationships testable without claiming native custody or authentica
 from __future__ import annotations
 
 import hashlib
-import json
 from collections.abc import Callable, Mapping
 from copy import deepcopy
 from datetime import datetime
@@ -33,9 +32,9 @@ from .schema_profile import (
 )
 from .validation import (
     _SCHEMA_VALIDATOR,
+    CATALOGUES,
     FORMAT_CHECKER,
     MAX_BYTES,
-    ROOT,
     SCHEMAS,
     ContractError,
     canonical,
@@ -46,9 +45,9 @@ from .validation import (
 
 ACTIONS = {
     action["name"]: action
-    for action in json.loads((ROOT / "contracts/actions.json").read_text())["actions"]
+    for action in CATALOGUES["https://fishhat.invalid/contracts/actions.json"]["actions"]
 }
-PHASES = json.loads((ROOT / "contracts/states.json").read_text())["workflow_phases"]
+PHASES = CATALOGUES["https://fishhat.invalid/contracts/states.json"]["workflow_phases"]
 
 
 def _require(condition: bool, message: str) -> None:
@@ -97,6 +96,10 @@ def _schema_documents(
                 "x-fishhat-contract-dependencies" not in value or root,
                 "contract dependencies require a document root",
             )
+            _require(
+                "x-fishhat-catalogue-dependencies" not in value or root,
+                "catalogue dependencies require a document root",
+            )
             if custom:
                 check_assertions(value)
             if root:
@@ -111,6 +114,26 @@ def _schema_documents(
                     target = urljoin(base, dependency)
                     targets.append((target, None))
                     pending.append(urldefrag(target)[0])
+                catalogues = value.get("x-fishhat-catalogue-dependencies", [])
+                _require(
+                    isinstance(catalogues, list)
+                    and all(isinstance(target, str) for target in catalogues)
+                    and len(set(catalogues)) == len(catalogues),
+                    "invalid catalogue dependencies",
+                )
+                catalogue_targets = [urljoin(base, target) for target in catalogues]
+                _require(
+                    all("#" not in target for target in catalogues),
+                    "catalogue dependency requires a complete document",
+                )
+                _require(
+                    len(set(catalogue_targets)) == len(catalogue_targets),
+                    "duplicate catalogue dependency target",
+                )
+                _require(
+                    all(target in CATALOGUES for target in catalogue_targets),
+                    "contract catalogue is not installed",
+                )
             if "$ref" in value:
                 target = urljoin(base, value["$ref"])
                 targets.append((target, position))
@@ -165,6 +188,7 @@ def _schema_closure(
     referenced targets enter the same graph without recursively expanding aliases.
     """
     nodes: dict[str, dict[str, Any]] = {}
+    catalogues: dict[str, Any] = {}
     identity, fragment = urldefrag(uri)
     complete_document = identity if document else None
     pending = [(identity, pointer_tokens(fragment, code="invalid result schema pointer escape"))]
@@ -183,6 +207,9 @@ def _schema_closure(
                 pending.append(
                     (base, pointer_tokens(fragment, code="invalid result schema pointer escape"))
                 )
+            for dependency in documents[identity].get("x-fishhat-catalogue-dependencies", []):
+                target = urljoin(identity, dependency)
+                catalogues[target] = CATALOGUES[target]
         if location in locations:
             continue
         node: Any = documents[identity]
@@ -238,13 +265,20 @@ def _schema_closure(
         "readOnly",
         "writeOnly",
         "x-fishhat-contract-dependencies",
+        "x-fishhat-catalogue-dependencies",
     )
     envelopes = {
         identity: {key: documents[identity][key] for key in metadata if key in documents[identity]}
         for identity in nodes
     }
     profile = "fishhat.schema-document-closure/v1" if document else "fishhat.schema-closure/v1"
-    return {"profile": profile, "root": uri, "documents": envelopes, "nodes": nodes}
+    return {
+        "profile": profile,
+        "root": uri,
+        "documents": envelopes,
+        "nodes": nodes,
+        "catalogues": catalogues,
+    }
 
 
 def schema_identity(uri: str, installed: dict[str, dict[str, Any]] | None = None) -> dict[str, str]:

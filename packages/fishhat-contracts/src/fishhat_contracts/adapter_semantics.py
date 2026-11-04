@@ -66,6 +66,13 @@ def check_request(role: str, value: dict[str, Any]) -> None:
         )
         return
     check_target_request(role, value)
+    if role == "compute":
+        target = inputs["target"]
+        require(
+            target["executor"]["role"] == "compute"
+            and target["executor"]["scope"] == inputs["scope"],
+            "COMPUTE_TARGET_IDENTITY",
+        )
     if role == "compute" and method in {"plan", "set-limits"}:
         _check_limits(inputs["limits"])
     if role == "dns" and method in {"plan", "publish"}:
@@ -184,6 +191,10 @@ def check_invocation(role: str, value: dict[str, Any]) -> None:
 
 def _handoff_binding(role: str, request: dict[str, Any]) -> dict[str, Any] | None:
     method, inputs = request["method"], request["input"]
+    if role == "compute" and method != "reconcile":
+        return cast(dict[str, Any], inputs["target"]["executor"])
+    if role == "storage" and method == "observe":
+        return cast(dict[str, Any], inputs["binding"])
     if role == "dns" and method in {"plan", "publish", "observe"}:
         return cast(
             dict[str, Any],
@@ -292,8 +303,8 @@ def check_response(
     _check_handoff_response(role, request, response)
     check_value_response(role, request, response, invocation)
     _check_observation_page(request, response)
-    _observation_keys(role, request, response)
     _check_observed_quantities(role, response["output"])
+    _observation_keys(role, request, response)
     if role == "dns":
         _check_dns_generation(request, response)
     check_target_response(role, request, response, invocation["attempt"] if invocation else None)
@@ -359,6 +370,15 @@ def _check_observation_page(request: dict[str, Any], response: dict[str, Any]) -
 
 def _check_handoff_response(role: str, request: dict[str, Any], response: dict[str, Any]) -> None:
     method, inputs, output = request["method"], request["input"], response["output"]
+    if role == "compute":
+        require(
+            output["target"] is None or output["target"] == inputs["target"],
+            "COMPUTE_TARGET_IDENTITY",
+        )
+        require(
+            output["target"] is not None or response["coverage"] != "incomplete",
+            "UNKNOWN_COMPUTE_TARGET_NOT_RESUMABLE",
+        )
     if role == "secret-source" and method == "resolve":
         version = output["version"]
         require(
@@ -555,8 +575,7 @@ def _check_success_output(
     checks: dict[str, Callable[[], bool]] = {
         "runtime": lambda: output["deployment"] == inputs["deployment"],
         "compute": lambda: (
-            output["allocation"] == inputs["allocation"]
-            and _same_set(output["limits"], inputs["limits"])
+            output["target"] == inputs["target"] and _same_set(output["limits"], inputs["limits"])
         ),
         "storage": lambda: (
             output["allocations"][0]["handle"] == inputs["allocation"]
@@ -642,10 +661,11 @@ def _check_counters(counters: list[dict[str, Any]], allocation: str | None) -> N
 
 def _check_observed_quantities(role: str, output: dict[str, Any]) -> None:
     if role == "compute":
+        target = output["target"]
         _check_limits(output["limits"])
-        _check_counters(output["counters"], output["allocation"])
+        _check_counters(output["counters"], None if target is None else target["handle"])
         require(
-            output["allocation"] is not None or not (output["counters"] or output["limits"]),
+            target is not None or not (output["counters"] or output["limits"]),
             "UNKNOWN_ALLOCATION_QUANTITIES",
         )
     if role == "storage" and "allocations" in output:

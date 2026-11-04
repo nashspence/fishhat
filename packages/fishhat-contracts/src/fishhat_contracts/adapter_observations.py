@@ -12,7 +12,7 @@ from typing import Any
 from .bounds import Bounds, bounds
 from .validation import ContractError, canonical, digest, validate
 
-_ROLES = {"runtime", "secret-source", "credential-issuer", "dns"}
+_ROLES = {"runtime", "secret-source", "credential-issuer", "dns", "compute", "storage"}
 
 
 def _require(condition: bool, code: str) -> None:
@@ -33,9 +33,16 @@ def _observation_keys(role: str, request: dict[str, Any], response: dict[str, An
     if role not in _ROLES or request["method"] not in {"observe", "inventory"}:
         return set()
     inputs, output = request["input"], response["output"]
+    if role == "compute":
+        return _compute_keys(output)
     binding = inputs["binding"]
     records = output[
-        {"runtime": "objects", "secret-source": "versions", "dns": "rrsets"}.get(role, "leases")
+        {
+            "runtime": "objects",
+            "secret-source": "versions",
+            "dns": "rrsets",
+            "storage": "allocations",
+        }.get(role, "leases")
     ]
     keys: set[bytes] = set()
     for record in records:
@@ -47,6 +54,8 @@ def _observation_keys(role: str, request: dict[str, Any], response: dict[str, An
         elif role == "secret-source":
             _require(record["source"] == binding["instance"], "OBSERVATION_SOURCE_IDENTITY")
             key = canonical([record["source"], record["entry"], record["version"]])
+        elif role == "storage":
+            key = canonical([record["accounting_domain"], record["handle"]])
         else:
             _require(_issuer_matches(record["issuer"], binding), "OBSERVATION_ISSUER_IDENTITY")
             key = canonical(record["lease"])
@@ -62,6 +71,17 @@ def _observation_keys(role: str, request: dict[str, Any], response: dict[str, An
     return keys
 
 
+def _compute_keys(output: dict[str, Any]) -> set[bytes]:
+    """One complete quantity observation per logical key in a stable snapshot."""
+    keys: set[bytes] = set()
+    for collection, identity in (("limits", "quantity"), ("counters", "metric")):
+        for value in output[collection]:
+            key = canonical([collection, value[identity], value["target"]])
+            _require(key not in keys, "OBSERVATION_DUPLICATE_IDENTITY")
+            keys.add(key)
+    return keys
+
+
 def _query(request: dict[str, Any]) -> bytes:
     return canonical(
         {
@@ -74,17 +94,20 @@ def _query(request: dict[str, Any]) -> bytes:
 def _sequence_bounds(name: str) -> Bounds:
     proof = "tests/test_adapter_observation_identity.py::test_observation_sequence_linear_work"
     dns_proof = "tests/test_dns_generations.py::test_dns_observation_sequence_linear_work"
+    resource_proof = (
+        "tests/test_compute_allocation_identity.py::test_resource_observation_sequence_linear_work"
+    )
     return Bounds(
         id="adapters.observation-sequence." + name,
         work=(
-            "O(B) complete initial request and independently approved issuer references once; "
+            "O(B) complete initial request, approved target and issuer references once; "
             "then O(P) each page and retry, O(B + sum(P)) for the complete traversal"
         ),
         extent="All records and pages; indexed logical identities and exact page retry commitments",
         limits=(),
         capacity=("Receiver capacity failures remain explicit; no total record or page cap",),
-        proofs=(proof, dns_proof),
-        linear_proofs=(proof, dns_proof),
+        proofs=(proof, dns_proof, resource_proof),
+        linear_proofs=(proof, dns_proof, resource_proof),
     )
 
 
@@ -92,7 +115,7 @@ class ObservationSequence:
     """Incrementally check one independently authorized adapter snapshot traversal.
 
     The owner supplies its exact approved observer binding, the separately
-    approved runtime target for runtime observations, and any independently
+    approved runtime or compute target for those observations, and any independently
     approved historical issuer-to-observer mappings. Request or response data
     cannot populate those approvals. Each page still requires native snapshot,
     current-permission and cursor checks outside this pure reference model.
@@ -111,6 +134,7 @@ class ObservationSequence:
         approved_binding: dict[str, Any],
         approved_owner: dict[str, Any] | None = None,
         approved_runtime_binding: dict[str, Any] | None = None,
+        approved_compute_target: dict[str, Any] | None = None,
         approved_issuers: Iterable[dict[str, Any]] = (),
     ) -> None:
         from .adapter_semantics import check_request
@@ -122,13 +146,23 @@ class ObservationSequence:
             and request["input"]["cursor"] is None,
             "OBSERVATION_SEQUENCE_START",
         )
-        _require(request["input"]["binding"] == approved_binding, "OBSERVATION_APPROVED_BINDING")
+        observer = (
+            request["input"]["target"]["executor"]
+            if role == "compute"
+            else request["input"]["binding"]
+        )
+        _require(observer == approved_binding, "OBSERVATION_APPROVED_BINDING")
         if role == "dns":
             _require(request["input"]["owner"] == approved_owner, "DNS_OBSERVATION_APPROVED_OWNER")
         _require(
             (role == "runtime" and request["input"]["target"] == approved_runtime_binding)
             or (role != "runtime" and approved_runtime_binding is None),
             "OBSERVATION_APPROVED_TARGET",
+        )
+        _require(
+            (role == "compute" and request["input"]["target"] == approved_compute_target)
+            or (role != "compute" and approved_compute_target is None),
+            "COMPUTE_APPROVED_TARGET",
         )
         self._role = role
         self._query = _query(request)
@@ -149,6 +183,32 @@ class ObservationSequence:
         self._dns_generation: bytes | None = None
         self._dns_cnames: set[str] = set()
         self._dns_ordinary: set[str] = set()
+        self._compute_present: bool | None = None
+        self._compute_memory: dict[str, int] = {}
+
+    def _compute_summary(self, response: dict[str, Any]) -> tuple[bool | None, dict[str, int]]:
+        """Validate new page facts with a fixed-size summary, without consuming them."""
+        if self._role != "compute":
+            return self._compute_present, self._compute_memory
+        output = response["output"]
+        if output["target"] is None and response["coverage"] == "unknown":
+            return self._compute_present, self._compute_memory
+        present = output["target"] is not None
+        _require(
+            self._compute_present is None or present == self._compute_present,
+            "COMPUTE_OBSERVATION_TARGET_CHANGED",
+        )
+        memory = dict(self._compute_memory)
+        for value in output["limits"]:
+            if value["quantity"] in {"memory-high", "memory-max"}:
+                memory[value["quantity"]] = value["value"]
+        _require(
+            "memory-high" not in memory
+            or "memory-max" not in memory
+            or memory["memory-high"] <= memory["memory-max"],
+            "INCONSISTENT_MEMORY_LIMITS",
+        )
+        return present, memory
 
     @property
     def complete(self) -> bool:
@@ -174,6 +234,7 @@ class ObservationSequence:
             "OBSERVATION_CURSOR_CYCLE",
         )
         identities = _observation_keys(self._role, request, response)
+        compute_present, compute_memory = self._compute_summary(response)
         dns_generation = None
         cnames: set[str] = set()
         ordinary: set[str] = set()
@@ -203,6 +264,7 @@ class ObservationSequence:
                 "OBSERVATION_HISTORICAL_ISSUER_UNAPPROVED",
             )
         self._identities.update(identities)
+        self._compute_present, self._compute_memory = compute_present, compute_memory
         if dns_generation is not None:
             self._dns_generation = dns_generation
         self._dns_cnames.update(cnames)
