@@ -581,6 +581,7 @@
                 "properties": {
                   "chunks": {
                     "type": "array",
+                    "description": "Ordered DNS character strings. Each chunk encodes at most 255 UTF-8 octets. Within one TXT RDATA member the sum of one length octet plus the UTF-8 size of each chunk must fit the unsigned 16-bit RDLENGTH (65535 octets).",
                     "items": {
                       "type": "string",
                       "maxLength": 255

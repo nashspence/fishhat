@@ -183,8 +183,8 @@ class NativeWorkflowContext(Protocol):
     bind/admit return independently obtained, non-effectful review context. They
     must not accept or start the native Operation. Actual operation.submit resolves
     its own exact native replay first, then requires the durable journal permit
-    and atomically rechecks current permission, generation and the same fence
-    before retaining native acceptance. Journal lifecycle/transfer protection and
+    and atomically rechecks current permission, generation, the same fence and
+    all three acceptance deadlines before retaining native acceptance. Journal lifecycle/transfer protection and
     native admission must serialize at that native boundary. Copying caller claims
     into protected review context is not an implementation.
     Review contexts contain exactly the selected request facts and Plan scopes,
@@ -300,6 +300,7 @@ def verify_journal_signature(
     validate("common.schema.json", record["workflow_id"], "UUID")
     validate("common.schema.json", record["owner"], "Owner")
     validate("common.schema.json", record["key_id"], "Id")
+    validate("common.schema.json", record["signature"], "Ed25519Signature")
     _require(
         expected_owner is None or record["owner"] == expected_owner,
         "workflow journal issuer changed",
@@ -2046,6 +2047,23 @@ class WorkflowMember(_JournalTarget):
             principal,
         )
 
+    def require_admission_deadlines(self, plan: JSON, *, reviewed_at: str | None = None) -> None:
+        """Sample all deadlines for the exact guarded Plan at one admission decision."""
+        _require(
+            self._certificate is not None and self._reservation is not None,
+            "native operation protected barrier is absent",
+        )
+        assert self._certificate is not None and self._reservation is not None
+        decision = self._certificate["body"]["decision"]["body"]
+        now = _time(self.clock())
+        _require(
+            (reviewed_at is None or _time(reviewed_at) <= now)
+            and now < _time(decision["expires_at"])
+            and now < _time(self._reservation["expires_at"])
+            and now < _time(plan["expires_at"]),
+            "native operation admission expired or review is not current",
+        )
+
     @bounds(
         _declaration(
             "operation-admission",
@@ -2125,14 +2143,8 @@ class WorkflowMember(_JournalTarget):
                 and body["reservation_generation"] == self._reservation["generation"],
                 "native operation changed the exact retained reservation",
             )
-            now = self.clock()
-            _require(
-                _time(now) < _time(decision["expires_at"])
-                and _time(now) < _time(self._reservation["expires_at"])
-                and _time(now) < _time(plan["expires_at"])
-                and not plan["blockers"],
-                "native operation admission expired or retains blockers",
-            )
+            _require(not plan["blockers"], "native operation admission retains blockers")
+            self.require_admission_deadlines(plan)
             self.native.check(self._reservation, self._round["body"])
             request = {
                 "binding": binding,
@@ -2151,10 +2163,7 @@ class WorkflowMember(_JournalTarget):
                 }
             )
             _selected_review(request, review)
-            _require(
-                _time(review["now"]) <= _time(self.clock()) < _time(plan["expires_at"]),
-                "native operation Plan is not currently valid",
-            )
+            self.require_admission_deadlines(plan, reviewed_at=review["now"])
             return copy.deepcopy(permit)
 
     @contextmanager
@@ -2162,7 +2171,9 @@ class WorkflowMember(_JournalTarget):
         """Serialize the reference native acceptance with journal admission closure.
 
         The owner retains native acceptance inside this scope, rechecking its own
-        resource generation and actual durable fence atomically. An independently
+        resource generation and actual durable fence atomically. At the durable
+        decision, after review and acquisition of native exclusion, it calls
+        require_admission_deadlines with that exact guarded Plan. An independently
         implemented owner may use its own equivalent shared transaction boundary;
         a stand-alone earlier permit check is insufficient.
         """

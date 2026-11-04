@@ -557,6 +557,7 @@ class NativeOwner:
         self.bindings = {}
         self.admissions = {}
         self.operations = {}
+        self.reservation_expires_at = LATER
         self.reservations = {}
         self.fence_generations = {}
         self.protection_holds = set()
@@ -895,6 +896,7 @@ class NativeOwner:
             ),
         )
         result["witness"] = sign(witness, self.key)
+        member.require_admission_deadlines(plan)
         self._append(
             "native-admit-" + child["request_id"],
             "admit",
@@ -1014,11 +1016,11 @@ class NativeOwner:
                     "resource_generation": self.resource_generation,
                     "operations": required,
                     "native_evidence": [handle],
-                    "expires_at": LATER,
+                    "expires_at": self.reservation_expires_at,
                 }
             ],
             "issued_at": NOW,
-            "expires_at": LATER,
+            "expires_at": self.reservation_expires_at,
         }
         self._append("native-reserve-" + round["round_id"], "reserve", result)
         return deepcopy(result)

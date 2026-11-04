@@ -560,6 +560,7 @@ class Noninterference(unittest.TestCase):
         operation = copy.deepcopy(self.operation)
         operation["request_id"] = delivery["request_id"]
         operation["state"] = state
+        operation["witness"]["workflow_id"] = delivery["workflow_id"]
         if state == "succeeded":
             operation["effect_certainty"] = "known"
         return seal_operation(operation)
@@ -572,6 +573,26 @@ class Noninterference(unittest.TestCase):
         self.assertEqual(r["tracking"], "not-attempted")
         self.assertEqual(d["state"], "prepared")
         self.assertEqual(r["delivery"]["state"], "accepted")
+
+    def test_owner_reply_must_match_original_workflow_membership(self):
+        workflow = self.template["workflow_id"]
+        other = str(uuid.uuid4())
+        cases = [(workflow, other), (workflow, None), (None, workflow), (None, None)]
+        for expected, returned in cases:
+            with self.subTest(expected=expected, returned=returned):
+                delivery = prepare_delivery({**self.template, "workflow_id": expected})
+                receipt = self.receipt(delivery)
+                receipt["witness"]["workflow_id"] = returned
+                seal_operation(receipt)
+                result = submit_once(delivery, lambda _, receipt=receipt: receipt)
+                self.assertEqual(result["delivery"]["request_id"], delivery["request_id"])
+                if expected == returned:
+                    self.assertEqual(result["delivery"]["state"], "accepted")
+                    self.assertEqual(result["exit_code"], 0)
+                else:
+                    self.assertEqual(result["delivery"]["state"], "acceptance_unknown")
+                    self.assertEqual(result["exit_code"], 8)
+                    self.assertIsNone(result["owner_receipt"])
 
     def test_no_tracking_import_dependency(self):
         tree = ast.parse(

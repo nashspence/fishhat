@@ -68,9 +68,12 @@ def run():
         catalogue = load(name + "/secrets.yaml") if app["repository_secrets"] else None
         validate_app(app, catalogue)
     actions = load("contracts/actions.json")["actions"]
-    assert {a["name"] for a in actions} == {
+    action_names = {a["name"] for a in actions}
+    assert action_names == {
         x["properties"]["action"]["const"] for x in SCHEMAS["actions.schema.json"]["oneOf"]
     }
+    delivery = SCHEMAS["client-records.schema.json"]["$defs"]["Delivery"]
+    assert action_names == set(delivery["properties"]["action"]["enum"])
     methods = {m["name"] for m in load("contracts/ssh-methods.json")["methods"]}
     assert methods == {
         x["properties"]["method"]["const"] for x in SCHEMAS["ssh-request.schema.json"]["oneOf"]

@@ -809,9 +809,7 @@
             "cursor": {
               "anyOf": [
                 {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 256
+                  "$ref": "common.schema.json#/$defs/Cursor"
                 },
                 {
                   "type": "null"

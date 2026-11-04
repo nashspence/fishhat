@@ -60,7 +60,10 @@ def result_fixture(role="credential-issuer", method="issue", *, reconcile=False)
     else:
         _, query = handoff(role, method)
         output = handoff_output(role, query)
+    if "value_destination" in query["input"]:
+        query["input"]["value_destination"]["owner"]["tool"] = "host-ops"
     invocation = copy.deepcopy(invocation_for(query))
+    invocation["attempt"]["owner"]["tool"] = "host-ops"
     response_query = recovered(invocation) if reconcile else query
     retained = {
         "invocation": invocation,

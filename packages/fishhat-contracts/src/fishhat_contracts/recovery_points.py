@@ -87,15 +87,14 @@ def assess_recovery_point(
         type(rpo_seconds) is int and 1 <= rpo_seconds <= 9007199254740991,
         "invalid recovery-point objective",
     )
-    _require(
-        set(inputs.snapshots) == set(checkpoint["datasets"]), "incomplete recovery dataset set"
-    )
+    snapshots = inputs.snapshots
+    _require(set(snapshots) == set(checkpoint["datasets"]), "incomplete recovery dataset set")
     earliest: list[datetime] = []
     latest: list[datetime] = []
     known = observed_at is not None
     snapshot_digests: dict[str, str] = {}
     closure = set(checkpoint["recovery_closure"])
-    for dataset, snapshot in inputs.snapshots.items():
+    for dataset, snapshot in snapshots.items():
         validate("adapter.schema.json", snapshot, "Snapshot")
         _require(snapshot["dataset"] == dataset, "recovery snapshot dataset changed")
         snapshot_digests[dataset] = digest(snapshot)

@@ -323,6 +323,8 @@ def adapter_result():
     handle = committed()["handle"]
     handle.update(size=len(request), digest="sha256:" + hashlib.sha256(request).hexdigest())
     op = operation()
+    op["owner"]["tool"] = "host-ops"
+    handle["owner"] = copy.deepcopy(op["owner"])
     op["subject"] = {
         "action": "adapter.execute",
         "resource": {"kind": "adapter", "id": "selected-adapter"},
@@ -423,8 +425,25 @@ def test_nonempty_and_empty_work_pages_have_identical_wire_cli_types():
 
 def test_resource_and_observation_continuations_share_cli_envelope():
     report = json.loads((FIXTURES / "resources/report.json").read_text())
-    validate("ssh-response.schema.json", wire("resources.observe", report))
-    validate_cli(cli(report))
+    first = {**report, "next_cursor": "next_1-A"}
+    last = {**report, "accounts": [], "next_cursor": None}
+    for page in (first, last):
+        validate("ssh-response.schema.json", wire("resources.observe", page))
+        validate_cli(cli(page))
+    cursor = first["next_cursor"]
+    params = {"resource": report["resource"], "cursor": cursor, "limit": 1}
+    validate("ssh-request.schema.json", request("resources.observe", params))
+    command = parse_command(f"app-ops resources demo-app --cursor {cursor} --json", "app-ops")
+    assert command["tokens"][-2] == params["cursor"]
+    assert last["next_cursor"] is None
+    with pytest.raises(ContractError):
+        validate(
+            "ssh-request.schema.json", request("resources.observe", {**params, "cursor": "page/2"})
+        )
+    with pytest.raises(ContractError):
+        validate(
+            "resource-records.schema.json", {**first, "next_cursor": "page/2"}, "ResourceReport"
+        )
     observation = {
         "resource": operation()["subject"]["resource"],
         "owner": operation()["owner"],
@@ -460,7 +479,6 @@ def test_resource_and_observation_continuations_share_cli_envelope():
         validate_cli(cli(page))
     for command in (
         "app-ops status --cursor next_1 --json",
-        "app-ops resources demo-app --cursor next_1 --json",
         "app-ops workflow list --resource-kind app --resource-id demo-app --cursor next_1 --json",
         "app-ops op list --json",
     ):
@@ -559,10 +577,12 @@ def test_valid_content_digest_cannot_substitute_a_different_result_shape():
 
 
 def test_receipt_only_action_cannot_return_an_untyped_or_adapter_payload():
-    op, _, _ = adapter_result()
-    op["subject"] = operation()["subject"]
+    adapter, _, _ = adapter_result()
+    op = operation()
+    op["result_handle"] = adapter["result_handle"]
+    op["result_handle"]["handle"]["owner"] = copy.deepcopy(op["owner"])
     seal_operation(op)
-    with pytest.raises(ContractError):
+    with pytest.raises(ContractError, match="action declares no result payload"):
         validate_operation(op)
 
 

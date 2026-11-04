@@ -115,10 +115,7 @@
           "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
         },
         "signature": {
-          "type": "string",
-          "minLength": 88,
-          "maxLength": 88,
-          "pattern": "^[A-Za-z0-9+/]{85}[AQgw]==(?![\\s\\S])"
+          "$ref": "common.schema.json#/$defs/Ed25519Signature"
         }
       },
       "required": [
@@ -548,10 +545,7 @@
               "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
             },
             "signature": {
-              "type": "string",
-              "minLength": 88,
-              "maxLength": 88,
-              "pattern": "^[A-Za-z0-9+/]{86}==(?![\\s\\S])"
+              "$ref": "common.schema.json#/$defs/Ed25519Signature"
             }
           },
           "required": [
@@ -696,7 +690,7 @@
           }
         }
       ],
-      "description": "A reviewable proposal for exact owner-authorized work. Human consequences, exact effect targets, maintenance expansion and host.apply live-change dispositions are part of its digest. Preparing, reviewing or publishing this plan does not accept or execute it."
+      "description": "A reviewable proposal for exact owner-authorized work. Human consequences, exact effect targets, maintenance expansion and host.apply live-change dispositions are part of its digest. Preparing, reviewing or publishing this plan does not accept or execute it. The issuing owner tool must be listed for the Subject action in actions.json. Effect executors are checked against their own reviewed scope."
     },
     "Operation": {
       "type": "object",
@@ -929,10 +923,7 @@
               "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
             },
             "signature": {
-              "type": "string",
-              "minLength": 88,
-              "maxLength": 88,
-              "pattern": "^[A-Za-z0-9+/]{86}==(?![\\s\\S])"
+              "$ref": "common.schema.json#/$defs/Ed25519Signature"
             }
           },
           "required": [
@@ -984,7 +975,7 @@
         "result_handle"
       ],
       "additionalProperties": false,
-      "description": "An exact request accepted by a local management program. Its execution state and effect certainty answer different questions; failed, cancelled or quarantined work can still retain effects and resource holds. Succeeded requires known effect certainty in every representation, including pages and transferred snapshots. The witness owner identity and epoch equal this owner; shared semantic validation enforces that join. Signature authentication, record-digest verification, current authority and native outcome verification remain independently required receiving boundaries. The exact retained Plan is identified by owner and plan_digest and remains readable despite admission expiry while this Operation requires accepted replay or recovery custody. The human caller can disconnect without erasing the accepted responsibility. The witness subject_digest is the digest of the complete canonical Operation object with only witness omitted; witness owner, state and generation equal the enclosing snapshot. Kind is acceptance only for accepted and effect for running, waiting and every terminal state; an effect witness may explicitly report uncertainty. These deterministic joins are required in every representation and do not authenticate the signing key or establish native truth. Schema and selected-adapter producer actions require a non-null committed result before succeeded. Native effect completion without that custody remains unresolved; terminal success is never an intermediate promise to attach output later. Independently installed recovery compatibility may admit an exact prior result schema with the same action-owned URI; complete payload verification against its pinned reader remains mandatory.",
+      "description": "An exact request accepted by a local management program. Its execution state and effect certainty answer different questions; failed, cancelled or quarantined work can still retain effects and resource holds. Succeeded requires known effect certainty in every representation, including pages and transferred snapshots. The witness owner identity and epoch equal this owner; shared semantic validation enforces that join. Signature authentication, record-digest verification, current authority and native outcome verification remain independently required receiving boundaries. The exact retained Plan is identified by owner and plan_digest and remains readable despite admission expiry while this Operation requires accepted replay or recovery custody. The human caller can disconnect without erasing the accepted responsibility. The witness subject_digest is the digest of the complete canonical Operation object with only witness omitted; witness owner, state and generation equal the enclosing snapshot. Kind is acceptance only for accepted and effect for running, waiting and every terminal state; an effect witness may explicitly report uncertainty. These deterministic joins are required in every representation and do not authenticate the signing key or establish native truth. Schema and selected-adapter producer actions require a non-null committed result before succeeded. Native effect completion without that custody remains unresolved; terminal success is never an intermediate promise to attach output later. Independently installed recovery compatibility may admit an exact prior result schema with the same action-owned URI; complete payload verification against its pinned reader remains mandatory. The issuing owner tool must be listed for the Subject action in actions.json. Effect executors are checked against their own reviewed scope.",
       "allOf": [
         {
           "if": {
@@ -1437,10 +1428,7 @@
                   "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                 },
                 "signature": {
-                  "type": "string",
-                  "minLength": 88,
-                  "maxLength": 88,
-                  "pattern": "^[A-Za-z0-9+/]{86}==(?![\\s\\S])"
+                  "$ref": "common.schema.json#/$defs/Ed25519Signature"
                 }
               },
               "required": [
@@ -1787,10 +1775,7 @@
                         "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
                       },
                       "signature": {
-                        "type": "string",
-                        "minLength": 88,
-                        "maxLength": 88,
-                        "pattern": "^[A-Za-z0-9+/]{86}==(?![\\s\\S])"
+                        "$ref": "common.schema.json#/$defs/Ed25519Signature"
                       }
                     },
                     "required": [
@@ -1969,10 +1954,7 @@
                 "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
               },
               "signature": {
-                "type": "string",
-                "minLength": 88,
-                "maxLength": 88,
-                "pattern": "^[A-Za-z0-9+/]{86}==(?![\\s\\S])"
+                "$ref": "common.schema.json#/$defs/Ed25519Signature"
               }
             },
             "required": [
@@ -2298,10 +2280,7 @@
               "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
             },
             "signature": {
-              "type": "string",
-              "minLength": 88,
-              "maxLength": 88,
-              "pattern": "^[A-Za-z0-9+/]{86}==(?![\\s\\S])"
+              "$ref": "common.schema.json#/$defs/Ed25519Signature"
             }
           },
           "required": [
@@ -2577,10 +2556,7 @@
               "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
             },
             "signature": {
-              "type": "string",
-              "minLength": 88,
-              "maxLength": 88,
-              "pattern": "^[A-Za-z0-9+/]{86}==(?![\\s\\S])"
+              "$ref": "common.schema.json#/$defs/Ed25519Signature"
             }
           },
           "required": [
@@ -3182,10 +3158,8 @@
                 ]
               },
               "mode": {
-                "type": "string",
-                "minLength": 4,
-                "maxLength": 4,
-                "pattern": "^0[0-7]{3}(?![\\s\\S])"
+                "$ref": "#/$defs/CapturedSourceMode",
+                "description": "For an add or modify, the resulting Git regular-file mode. For a delete, the Git regular-file mode in the reviewed base. A change of executable bit alone is a modify with equal content digests."
               }
             },
             "required": [
@@ -3339,10 +3313,7 @@
               "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
             },
             "signature": {
-              "type": "string",
-              "minLength": 88,
-              "maxLength": 88,
-              "pattern": "^[A-Za-z0-9+/]{86}==(?![\\s\\S])"
+              "$ref": "common.schema.json#/$defs/Ed25519Signature"
             }
           },
           "required": [
@@ -3655,10 +3626,7 @@
               "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
             },
             "signature": {
-              "type": "string",
-              "minLength": 88,
-              "maxLength": 88,
-              "pattern": "^[A-Za-z0-9+/]{86}==(?![\\s\\S])"
+              "$ref": "common.schema.json#/$defs/Ed25519Signature"
             }
           },
           "required": [
@@ -3955,10 +3923,7 @@
               "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
             },
             "signature": {
-              "type": "string",
-              "minLength": 88,
-              "maxLength": 88,
-              "pattern": "^[A-Za-z0-9+/]{86}==(?![\\s\\S])"
+              "$ref": "common.schema.json#/$defs/Ed25519Signature"
             }
           },
           "required": [
@@ -4232,10 +4197,7 @@
               "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
             },
             "signature": {
-              "type": "string",
-              "minLength": 88,
-              "maxLength": 88,
-              "pattern": "^[A-Za-z0-9+/]{86}==(?![\\s\\S])"
+              "$ref": "common.schema.json#/$defs/Ed25519Signature"
             }
           },
           "required": [
@@ -4434,10 +4396,7 @@
               "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
             },
             "signature": {
-              "type": "string",
-              "minLength": 88,
-              "maxLength": 88,
-              "pattern": "^[A-Za-z0-9+/]{86}==(?![\\s\\S])"
+              "$ref": "common.schema.json#/$defs/Ed25519Signature"
             }
           },
           "required": [
@@ -5067,6 +5026,13 @@
       "additionalProperties": false,
       "description": "The complete immutable evidence digest selection of a Problem for one exact owner epoch and resource. The owner establishes durable retrievable custody before publishing its RecordReference, without admitting an operation. Complete size, digest, installed schema and owner/resource identity must verify before the selection is used. Each snapshot read independently authorizes the current receiving principal against protected disclosure scope. A rejection need not disclose private evidence, but any advertised selection is complete and retained for its advertised traversal. Evidence extent has no transport count limit; independently approved receiver capacity may explicitly reject new custody, never silently truncate it."
     },
+    "CapturedSourceMode": {
+      "enum": [
+        "0644",
+        "0755"
+      ],
+      "description": "Git regular-file mode projected as 0644 for tree mode 100644 or 0755 for 100755. When capturing POSIX regular files, the owner execute bit selects 0755 and its absence selects 0644. Capture and publication compare this executable bit against the retained base and preserve it in the candidate tree. The host installation prescription owns native permission bits."
+    },
     "CapturedSourceFile": {
       "type": "object",
       "properties": {
@@ -5074,7 +5040,7 @@
           "$ref": "common.schema.json#/$defs/RelativePath"
         },
         "mode": {
-          "$ref": "common.schema.json#/$defs/Mode"
+          "$ref": "#/$defs/CapturedSourceMode"
         },
         "content": {
           "$ref": "common.schema.json#/$defs/Handle"

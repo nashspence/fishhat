@@ -125,9 +125,22 @@ def material(index=0, *, workflow_id=None, command_id=None, evidence=1):
     }
 
 
-def setup(materials, *, authorize=lambda principal, scope: True, readers=None):
-    custody = custody_for({"owner": materials[0]["reference"]["owner"]})
-    delivery = HistoricalJournalDelivery(custody, authorize=authorize, retained_readers=readers)
+def setup(materials, *, authorize=lambda principal, scope: True, readers=None, manifest=None):
+    selected = materials if manifest is None else manifest
+    custody = custody_for({"owner": selected[0]["reference"]["owner"]})
+    commitments = [
+        digest(
+            {
+                "reference": item["reference"],
+                "input": item["input_handle"],
+                "input_schema": item["input_schema"],
+            }
+        )
+        for item in selected
+    ]
+    delivery = HistoricalJournalDelivery(
+        custody, authorize=authorize, verified_event_digests=commitments, retained_readers=readers
+    )
     for item in materials:
         delivery.register(**item)
     return custody, delivery
@@ -214,22 +227,40 @@ def test_fresh_restored_client_discovers_journal_and_original_commands_without_s
 
 def test_historical_pages_have_no_total_event_cap_and_pin_stable_high_water():
     materials = [material(i) for i in range(129)]
-    custody, delivery = setup(materials)
+    appended = material(129)
+    custody, delivery = setup(materials, manifest=[*materials, appended])
     query = list_query(custody, limit=128)
     first = delivery.list(query, principal="reader")
     assert len(first["items"]) == 128 and first["next_cursor"] is not None
-    appended = material(129)
+    assert not first["history_complete"]
     delivery.register(**appended)
     query = {**query, "cursor": first["next_cursor"]}
     last = delivery.list(query, principal="reader")
     assert first["items"] + last["items"] == [item["reference"] for item in materials]
-    assert last["next_cursor"] is None
+    assert last["next_cursor"] is None and not last["history_complete"]
     assert delivery.list(query, principal="reader") == last
     fresh = delivery.list(list_query(custody, limit=128), principal="reader")
+    assert fresh["history_complete"]
     final = delivery.list(
         list_query(custody, limit=128, cursor=fresh["next_cursor"]), principal="reader"
     )
     assert final["items"] == [materials[-1]["reference"], appended["reference"]]
+
+
+def test_historical_index_requires_complete_manifest_membership():
+    materials = [material(0), material(1)]
+    custody, delivery = setup([], manifest=materials)
+    query = list_query(custody, limit=128)
+    for extent, item in enumerate(materials):
+        page = delivery.list(query, principal="reader")
+        assert len(page["items"]) == extent and page["next_cursor"] is None
+        assert page["history_complete"] is False
+        with pytest.raises(ContractError, match="outside verified manifest"):
+            delivery.register(**material(2))
+        delivery.register(**item)
+    page = delivery.list(query, principal="reader")
+    assert page["items"] == [item["reference"] for item in materials]
+    assert page["history_complete"] is True
 
 
 def test_historical_journal_identity_includes_workflow_when_command_ids_coincide():

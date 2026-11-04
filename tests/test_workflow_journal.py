@@ -5,6 +5,7 @@ from copy import deepcopy
 import pytest
 from fishhat_contracts.validation import ContractError, digest
 from fishhat_contracts.witness import sign
+from fishhat_contracts.workflow_journal import verify_journal_signature
 from fishhat_owner.workflow_journal import WorkflowJournal
 
 from tests.test_contracts import uid
@@ -134,6 +135,16 @@ def test_missing_or_duplicate_preparations_and_votes_cannot_complete_barrier(jou
         member.call("agreement", {"agreement": agreement})
     round_record = run.gate.call("round", {"to_phase": "draining"}, fresh=True)
     vote = run.members[0].call("vote", {"round": round_record}, fresh=True)
+    alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    signature = vote["signature"]
+    altered = {
+        **vote,
+        "signature": signature[:-3] + alphabet[alphabet.index(signature[-3]) + 1] + "==",
+    }
+    with pytest.raises(ContractError):
+        run.gate.call("vote", {"vote": altered})
+    with pytest.raises(ContractError):
+        verify_journal_signature(altered, run.gate.target.keys)
     run.gate.call("vote", {"vote": vote})
     with pytest.raises(ContractError, match="duplicated"):
         run.gate.call("vote", {"vote": vote})
@@ -472,6 +483,40 @@ def test_completed_workflow_final_barrier_refresh_keeps_child_admission_closed(j
             member.call("admit", {"child": run.workload.child(index, 0)}, fresh=True)
     assert run.gate.target.state == "completed"
     assert [actor.operations for actor in run.native] == outcomes
+
+
+@pytest.mark.parametrize("delayed", ["admit", "_accept_native"], ids=["during-review", "at-commit"])
+def test_native_acceptance_rechecks_certificate_deadline(journal_run, monkeypatch, delayed):
+    run = journal_run
+    deadline = "2026-11-01T00:30:00Z"
+    # A peer's shorter reservation determines the shared certificate expiry.
+    run.native[1].reservation_expires_at = deadline
+    run.prepare()
+    for phase in ("draining", "quiescent", "host-effect"):
+        run.round(phase)
+    for index, member in enumerate(run.members):
+        member.call("admit", {"child": run.workload.child(index, 0)}, fresh=True)
+    accepted_submission = run.native_submission(1, 0)
+    accepted = run.submit_native(1, accepted_submission)
+
+    member = run.members[0].target
+    actor = run.native[0]
+    before = "2026-11-01T00:29:59Z"
+    now = before
+    monkeypatch.setattr(member, "clock", lambda: now)
+    original = getattr(actor, delayed)
+
+    def cross_deadline(*args, **kwargs):
+        nonlocal now
+        now = deadline
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(actor, delayed, cross_deadline)
+    with pytest.raises(ContractError, match="admission expired"):
+        run.submit_native(0, run.native_submission(0, 0))
+    assert not actor.admissions
+    monkeypatch.setattr(run.members[1].target, "clock", lambda: now)
+    assert run.submit_native(1, accepted_submission) == accepted
 
 
 @pytest.mark.parametrize("control", ["pause", "transfer"])

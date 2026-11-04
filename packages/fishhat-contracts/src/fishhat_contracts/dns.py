@@ -50,10 +50,15 @@ def validate_rrsets(values: list[dict[str, Any]]) -> None:
                 address = ipaddress.ip_address(member["address"])
                 if str(address) != member["address"]:
                     raise ContractError("NONCANONICAL_ADDRESS")
-            if value["type"] == "TXT" and any(
-                len(x.encode("utf-8")) > 255 for x in member["chunks"]
-            ):
-                raise ContractError("DNS_CHARACTER_STRING_CAPACITY")
+            if value["type"] == "TXT":
+                rdlength = 0
+                for chunk in member["chunks"]:
+                    octets = len(chunk.encode("utf-8"))
+                    if octets > 255:
+                        raise ContractError("DNS_CHARACTER_STRING_CAPACITY")
+                    rdlength += 1 + octets
+                    if rdlength > 65535:
+                        raise ContractError("DNS_RDATA_CAPACITY")
             data.append(canonical(member))
         if len(data) != len(set(data)):
             raise ContractError("DUPLICATE_RDATA")

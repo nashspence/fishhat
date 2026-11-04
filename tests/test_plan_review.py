@@ -29,6 +29,15 @@ def reseal(value):
     return value
 
 
+def test_consistently_signed_plan_must_belong_to_issuing_tool():
+    value = plan()
+    owner = {**value["owner"], "tool": "host-ops"}
+    value["owner"] = value["witness"]["owner"] = owner
+    value["preconditions"][0]["owner"] = value["effects"][0]["executor"] = owner
+    with pytest.raises(ContractError, match="owner tool"):
+        validate_plan(reseal(value))
+
+
 @pytest.mark.parametrize("field", ["summary", "data_consequences", "recovery_limits"])
 def test_reviewed_consequence_cannot_change_under_the_same_plan(field):
     value = plan()

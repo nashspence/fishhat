@@ -81,7 +81,7 @@
     "runtime": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/runtime-adapter.schema.json",
-        "digest": "sha256:f1cf068b94870ae595a8af67fcf3d812ad8094df39e1e9b0ea4382a268e6db1d"
+        "digest": "sha256:8f14156b79a5af49c12f8c2fc9b5db1494d482132586118cb85b8408f875d76a"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/runtime-adapter.schema.json#/$defs/Response",

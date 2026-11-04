@@ -62,6 +62,7 @@ def submit_once(
         receipt["request_id"] == value["request_id"],
         receipt["owner"] == value["owner"],
         receipt["plan_digest"] == value["plan_digest"],
+        receipt["witness"]["workflow_id"] == value["workflow_id"],
         digest(receipt["subject"]) == value["subject_digest"],
         receipt["subject"]["action"] == value["action"],
         receipt["subject"]["resource"] == value["resource"],

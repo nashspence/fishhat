@@ -150,7 +150,7 @@ class WorkflowRecordDelivery:
         self._inputs: dict[tuple[str, str], tuple[dict[str, Any], dict[str, str], bytes]] = {}
         self._by_workflow: dict[str, list[tuple[str, str]]] = {}
         self._workflow_order: list[str] = []
-        self._cursors: dict[str, tuple[str | None, int, int]] = {}
+        self._cursors: dict[str, tuple[str, str | None, int, int]] = {}
         self._cursor_namespace = uuid4()
 
     @bounds(_bounds("retain"))
@@ -284,6 +284,27 @@ class WorkflowRecordDelivery:
         _require(identifier in self._records, "journal record missing")
         return self._records[identifier].chunk(reference, offset=offset, length=length)
 
+    def _window(
+        self, principal: str, workflow_id: str | None, cursor: str | None, size: int
+    ) -> tuple[int, int, str | None]:
+        if cursor is None:
+            offset, high_water = 0, size
+        else:
+            retained = self._cursors.get(cursor)
+            _require(
+                retained is not None and retained[:2] == (principal, workflow_id),
+                "journal cursor expired or changed scope",
+            )
+            assert retained is not None
+            _, _, offset, high_water = retained
+        end = min(offset + 64, high_water)
+        next_cursor = None
+        if end < high_water:
+            scope = canonical([principal, workflow_id, end, high_water]).decode("utf-8")
+            next_cursor = uuid5(self._cursor_namespace, scope).hex
+            self._cursors[next_cursor] = (principal, workflow_id, end, high_water)
+        return offset, end, next_cursor
+
     @bounds(_bounds("events"))
     def events(self, query: dict[str, Any], *, principal: str) -> dict[str, Any]:
         """Traverse every event through a stable high-water mark, without caller IDs.
@@ -298,23 +319,10 @@ class WorkflowRecordDelivery:
         _require(self._authorize(principal, workflow_id), "journal read denied")
         _require(workflow_id in self._by_workflow, "journal workflow is not retained")
         identifiers = self._by_workflow[workflow_id]
-        cursor = query["cursor"]
-        if cursor is None:
-            offset, high_water = 0, len(identifiers)
-        else:
-            retained = self._cursors.get(cursor)
-            _require(
-                retained is not None and retained[0] == workflow_id,
-                "journal cursor expired or changed scope",
-            )
-            assert retained is not None
-            _, offset, high_water = retained
-        end = min(offset + 64, high_water)
+        offset, end, next_cursor = self._window(
+            principal, workflow_id, query["cursor"], len(identifiers)
+        )
         items = [self._records[identifier].reference for identifier in identifiers[offset:end]]
-        next_cursor = None
-        if end < high_water:
-            next_cursor = uuid5(self._cursor_namespace, f"{workflow_id}:{end}:{high_water}").hex
-            self._cursors[next_cursor] = (workflow_id, end, high_water)
         return {
             "format": "deployment-ops/workflow-journal-page/v1",
             "kind": "WorkflowJournalPage",
@@ -335,27 +343,14 @@ class WorkflowRecordDelivery:
         """
         validate("workflow-journal.schema.json", query, "ListRequest")
         _require(query["owner"] == self.owner, "journal list owner changed")
-        cursor = query["cursor"]
-        if cursor is None:
-            offset, high_water = 0, len(self._workflow_order)
-        else:
-            retained = self._cursors.get(cursor)
-            _require(
-                retained is not None and retained[0] is None,
-                "journal cursor expired or changed scope",
-            )
-            assert retained is not None
-            _, offset, high_water = retained
-        end = min(offset + 64, high_water)
+        offset, end, next_cursor = self._window(
+            principal, None, query["cursor"], len(self._workflow_order)
+        )
         items = [
             self._records[self._by_workflow[workflow_id][0]].reference
             for workflow_id in self._workflow_order[offset:end]
             if self._authorize(principal, workflow_id)
         ]
-        next_cursor = None
-        if end < high_water:
-            next_cursor = uuid5(self._cursor_namespace, f"heads:{end}:{high_water}").hex
-            self._cursors[next_cursor] = (None, end, high_water)
         return {
             "format": "deployment-ops/workflow-journal-page/v1",
             "kind": "WorkflowJournalPage",

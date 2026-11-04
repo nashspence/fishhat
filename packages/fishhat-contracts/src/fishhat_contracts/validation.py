@@ -355,11 +355,12 @@ def _validate_host_concerns(
     catalogue: dict[str, Any] | None,
     observation_grants: dict[str, set[bytes]],
 ) -> None:
-    from .host_intent import validate_supplementary_patch
+    from .host_intent import check_destination_tree, validate_supplementary_patch
 
     services: set[str] = set()
     units: set[bytes] = set()
     destinations: set[str] = set()
+    present_destinations: list[str] = []
     packages: set[bytes] = set()
     membership_users: set[str] = set()
     for concern in host["concerns"].values():
@@ -375,6 +376,8 @@ def _validate_host_concerns(
                 target = _source_target(entry["destination"])
                 _require(target not in destinations, "destination collision")
                 destinations.add(target)
+                if entry["state"] == "present":
+                    present_destinations.append(target)
                 if entry["state"] == "retired" or kind == "artifacts":
                     continue
                 for note in entry["notify"]:
@@ -392,6 +395,7 @@ def _validate_host_concerns(
             user = membership["user"]
             _require(user not in membership_users, "duplicate group membership target")
             membership_users.add(user)
+    check_destination_tree(present_destinations)
 
 
 def _host_target_selection(
@@ -771,7 +775,10 @@ def _material_digests(value: Any, schema: Any, base: str) -> set[str]:
 
 
 def validate_plan(value: dict[str, Any]) -> None:
+    from .authorization import require_action_owner
+
     validate("records.schema.json", value, "Plan")
+    require_action_owner(value["subject"]["action"], value["owner"]["tool"])
     if value["subject"]["action"] == "publisher.publish":
         from .publication import validate_publication_intent
 

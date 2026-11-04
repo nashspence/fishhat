@@ -11,7 +11,7 @@ import hashlib
 from collections.abc import Callable, Iterable, Mapping
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
@@ -81,10 +81,18 @@ def validate_checkpoint(value: dict[str, Any]) -> None:
 class CheckpointInputs:
     """Complete sparse joins; shared backup objects appear once, without alias resolution."""
 
-    snapshots: dict[str, dict[str, Any]]
+    _snapshot_bytes: bytes
     backup_objects: dict[str, dict[str, Any]]
     dataset_backups: dict[str, str]
     checkpoint_digest: str
+
+    @property
+    def snapshots(self) -> dict[str, dict[str, Any]]:
+        """Return a private working copy of the authenticated Snapshot set."""
+        return cast(
+            dict[str, dict[str, Any]],
+            strict_json(self._snapshot_bytes, max_bytes=len(self._snapshot_bytes)),
+        )
 
 
 class _ReceiptReader:
@@ -300,6 +308,6 @@ def resolve_checkpoint(
             _artifact_index(snapshot["artifacts"], closure) <= object_artifacts[stored_id],
             "checkpoint backup omits or substitutes snapshot artifacts",
         )
-        snapshots[dataset] = deepcopy(snapshot)
+        snapshots[dataset] = snapshot
         dataset_backups[dataset] = stored_id
-    return CheckpointInputs(snapshots, objects, dataset_backups, digest(value))
+    return CheckpointInputs(canonical(snapshots), objects, dataset_backups, digest(value))

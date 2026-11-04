@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 from typing import Any
 
+from .authorization import require_action_owner
 from .handoffs import validate_staged_input
 from .validation import ContractError, canonical, strict_json, validate, validate_plan
 
@@ -37,6 +38,7 @@ def decode_plan_input(
     validate("plan-input.schema.json", payload, "PrepareRequest")
     if payload["owner"] != expected_owner or canonical(payload) != data:
         raise ContractError("plan input owner or canonical encoding mismatch")
+    require_action_owner(payload["subject"]["action"], payload["owner"]["tool"])
     return dict(payload)
 
 

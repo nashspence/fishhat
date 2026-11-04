@@ -90,8 +90,20 @@ def delivery(value):
         action=value["subject"]["action"],
         resource=copy.deepcopy(value["subject"]["resource"]),
         expected_generation=value["generation"],
+        workflow_id=value["witness"]["workflow_id"],
     )
     return prepare_delivery(template, request_id=value["request_id"])
+
+
+def test_authenticated_receipt_cannot_claim_action_of_another_owner_tool():
+    value = operation()
+    value["owner"] = {**value["owner"], "tool": "host-ops"}
+    seal_operation(value)
+    with pytest.raises(ContractError, match="owner tool"):
+        validate_operation(value)
+    assert (
+        submit_once(delivery(value), lambda _: value)["delivery"]["state"] == "acceptance_unknown"
+    )
 
 
 @pytest.mark.parametrize("certainty", ["none", "unknown"])

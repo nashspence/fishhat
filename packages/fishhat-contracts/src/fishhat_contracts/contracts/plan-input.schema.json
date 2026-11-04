@@ -21,7 +21,7 @@
         "subject"
       ],
       "additionalProperties": false,
-      "description": "Complete canonical input for one exact Plan. Every selected component, path and cleanup candidate remains in this immutable Subject; transport chunks never split it into distinct operations. The receiving owner authorizes the actual principal and exact subject resource before planning, validates installed action semantics and native prerequisites, and retains complete input custody with the resulting Plan. Preparation does not admit execution. Independently approved local capacity may reject explicitly; incomplete input cannot produce a Plan."
+      "description": "Complete canonical input for one exact Plan. Every selected component, path and cleanup candidate remains in this immutable Subject; transport chunks never split it into distinct operations. The receiving owner authorizes the actual principal and exact subject resource before planning, validates installed action semantics and native prerequisites, and retains complete input custody with the resulting Plan. Preparation does not admit execution. Independently approved local capacity may reject explicitly; incomplete input cannot produce a Plan. The issuing owner tool must be listed for the Subject action in actions.json. Effect executors are checked against their own reviewed scope."
     },
     "InputReference": {
       "type": "object",

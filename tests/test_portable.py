@@ -14,6 +14,7 @@ import unittest
 import zipfile
 from pathlib import Path
 
+from fishhat_client.submission import prepare_delivery
 from fishhat_client.workspace import (
     check_closeout,
     clean_path,
@@ -53,6 +54,21 @@ CHECK_CLASS_PURPOSE = {
         "scope": "decoded CLI and owner receipt reference data",
         "relationship": "candidate",
         "reason": "Contradictory acceptance, execution, completion and identity claims are rejected by local validation; transport authentication and native outcomes are not qualified.",
+        "claims": [],
+    }
+}
+
+CHECK_OVERRIDES = {
+    "Portable::test_generic_recovery_delivery_survives_receipt_export_and_import": {
+        "purpose": "public-contract",
+        "authority": [
+            "packages/fishhat-contracts/src/fishhat_contracts/contracts/actions.json",
+            "packages/fishhat-contracts/src/fishhat_contracts/contracts/client-records.schema.json#/$defs/Delivery",
+            "packages/fishhat-contracts/src/fishhat_contracts/contracts/client-records.schema.json#/$defs/ReceiptExport",
+        ],
+        "scope": "portable delivery and receipt exchange for generic DNS operation recovery",
+        "relationship": "candidate",
+        "reason": "A prepared recovery delivery retains its action, resource and identity across export and import.",
         "claims": [],
     }
 }
@@ -216,6 +232,32 @@ class Portable(unittest.TestCase):
         self.receipts["deliveries"][0]["state"] = "succeeded"
         with self.assertRaises(ContractError):
             validate_export(self.receipts)
+
+    def test_generic_recovery_delivery_survives_receipt_export_and_import(self):
+        template = self.receipts["deliveries"][0]
+        resource = {"kind": "dns", "id": "example-zone"}
+        subject = {
+            "action": "operation.recover",
+            "resource": resource,
+            "arguments": {
+                "operation_id": template["request_id"],
+                "disposition": "native-reconcile",
+                "origin": None,
+            },
+        }
+        validate("actions.schema.json", subject)
+        delivery = prepare_delivery(
+            {
+                **template,
+                "action": subject["action"],
+                "resource": resource,
+                "subject_digest": digest(subject),
+            }
+        )
+        imported = validate_export(
+            json.loads(json.dumps({**self.receipts, "deliveries": [delivery]}))
+        )
+        self.assertEqual(merge_exports(self.receipts, imported)["deliveries"][-1], delivery)
 
     def test_epoch_is_distinct_identity(self):
         b = copy.deepcopy(self.receipts)

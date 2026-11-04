@@ -8,15 +8,19 @@ the receiving owner's responsibility, including for scheduled work.
 
 from __future__ import annotations
 
-import json
-
-from fishhat_contracts.validation import ROOT, SCHEMAS, ContractError
+from fishhat_contracts.validation import CATALOGUES, SCHEMAS, ContractError
 
 _ACTIONS = {
     item["name"]: item
-    for item in json.loads((ROOT / "contracts/actions.json").read_text())["actions"]
+    for item in CATALOGUES["https://fishhat.invalid/contracts/actions.json"]["actions"]
 }
 _ROLE_ORDER = ("observer", "operator", "administrator")
+
+
+def require_action_owner(action: str, tool: str) -> None:
+    """Check the catalogue's issuing tool independently of the principal's grants."""
+    if tool not in _ACTIONS[action]["owners"]:
+        raise ContractError("action cannot be issued by this owner tool")
 
 
 def minimum_action_role(action: str, *, task_action: str | None = None) -> str:
