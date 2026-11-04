@@ -51,7 +51,9 @@ def schemas(role):
 def receipt(role, method, inputs, executor, output, number):
     query = {"contract": "fishhat." + role, "method": method, "input": deepcopy(inputs)}
     invocation = invocation_for(query)
+    adapter_owner = {**OWNER, "tool": "host-ops"}
     invocation["attempt"].update(
+        owner=adapter_owner,
         operation_id=identifier(number),
         effect_id=identifier(number + 100000),
         attempt_id=identifier(number + 200000),
@@ -65,7 +67,7 @@ def receipt(role, method, inputs, executor, output, number):
     input_schema, result_schema = schemas(role)
     record.update(
         id=invocation["attempt"]["operation_id"],
-        owner=deepcopy(OWNER),
+        owner=deepcopy(adapter_owner),
         state="succeeded",
         effect_certainty="known",
         subject={
@@ -75,13 +77,13 @@ def receipt(role, method, inputs, executor, output, number):
                 "adapter_id": executor["instance"],
                 "adapter_release": executor["installation_digest"],
                 "action": method,
-                "input": material_handle(OWNER, digest(query), size=len(canonical(query))),
+                "input": material_handle(adapter_owner, digest(query), size=len(canonical(query))),
                 "input_schema": deepcopy(input_schema),
                 "result_schema": deepcopy(result_schema),
             },
         },
     )
-    attach_result(record, retained, OWNER)
+    attach_result(record, retained, adapter_owner)
     return record, retained
 
 
@@ -347,7 +349,7 @@ def replace_receipt(checkpoint, context, field, change):
     )
     response["request_digest"] = digest(response_query)
     record["subject"]["arguments"]["input"].update(digest=digest(query), size=len(canonical(query)))
-    attach_result(record, retained, OWNER)
+    attach_result(record, retained, record["owner"])
     for value in (record, retained):
         context["records"][digest(value)] = canonical(value)
         checkpoint["recovery_closure"].append(digest(value))

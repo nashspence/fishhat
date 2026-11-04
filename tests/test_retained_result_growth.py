@@ -36,6 +36,7 @@ def retained_capture(count, *, duplicate=False):
         artifacts = request["input"]["snapshot"]["artifacts"]
         artifacts.append(copy.deepcopy(artifacts[0]))
     invocation = invocation_for(request)
+    invocation["attempt"]["owner"] = copy.deepcopy(record["owner"])
     response = response_for(
         request,
         invocation["attempt"],

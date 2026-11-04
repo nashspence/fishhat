@@ -25,7 +25,8 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "description": "The original submission’s exact workflow ID, or null for standalone work. An authenticated Operation establishes acceptance of this delivery only when its signed witness workflow_id matches this value, including null."
         },
         "endpoint_alias": {
           "type": "string",
@@ -86,7 +87,8 @@
             "backend.check",
             "backend.prune",
             "adapter.execute",
-            "backend.enroll"
+            "backend.enroll",
+            "operation.recover"
           ]
         },
         "resource": {

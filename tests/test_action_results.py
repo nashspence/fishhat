@@ -6,6 +6,7 @@ import copy
 import hashlib
 import io
 import json
+import subprocess
 from functools import partial
 
 import pytest
@@ -20,6 +21,7 @@ from fishhat_contracts.handoffs import schema_identity, validate_result_payload
 from fishhat_contracts.validation import ContractError, canonical, digest
 from fishhat_contracts.witness import sign
 
+from scripts.validation_timeouts import watchdog
 from tests.linear_support import assert_linear, measure
 from tests.operation_support import seal_operation
 from tests.test_contracts import uid
@@ -392,6 +394,68 @@ def test_capture_modify_delete_and_unchanged_files_have_explicit_manifest():
     verify_source_proposal_material(
         value, open_content=lambda handle: io.BytesIO(retained[handle["id"]])
     )
+
+
+@pytest.mark.parametrize("native_mode", ["0600", "0700"])
+def test_capture_requires_git_modes_in_both_manifest_and_changes(native_mode):
+    operation, value, _ = capture_pair(count=1)
+    value["files"][0]["mode"] = native_mode
+    value["changes"][0]["mode"] = native_mode
+    value["tree_digest"] = tree_digest(value["files"])
+    seal_source(value, operation)
+    with pytest.raises(ContractError):
+        validate_source_proposal(value)
+    value["files"].clear()
+    value["changes"][0].update(operation="delete", old_digest=digest("base"), new_digest=None)
+    value["tree_digest"] = tree_digest([])
+    seal_source(value, operation)
+    with pytest.raises(ContractError):
+        validate_source_proposal(value)
+
+
+def test_executable_only_capture_change_roundtrips_through_a_git_tree(tmp_path):
+    def git(*args):
+        return subprocess.run(
+            ["git", *args], cwd=tmp_path, check=True, capture_output=True, timeout=watchdog(15)
+        ).stdout
+
+    operation, value, retained = capture_pair(count=1)
+    item = value["files"][0]
+    path = tmp_path / item["path"]
+    path.parent.mkdir()
+    path.write_bytes(retained[item["content"]["id"]])
+    git("init", "--quiet")
+    git("add", "--", item["path"])
+    git("update-index", "--chmod=-x", "--", item["path"])
+    base_tree = git("write-tree").decode().strip()
+    assert git("ls-tree", base_tree, "--", item["path"]).startswith(b"100644 blob ")
+    base_commit = git(
+        "-c",
+        "user.name=Fixture",
+        "-c",
+        "user.email=fixture@example.invalid",
+        "commit-tree",
+        base_tree,
+        "-m",
+        "Base",
+    )
+    base = base_commit.decode().strip()
+    operation["subject"]["arguments"]["base"] = value["base_commit"] = base
+    old_identity = value["tree_digest"]
+    item["mode"] = "0755"
+    value["changes"][0].update(
+        operation="modify", old_digest=item["content"]["digest"], mode=item["mode"]
+    )
+    value["tree_digest"] = tree_digest(value["files"])
+    seal_source(value, operation)
+    validate_source_proposal(value, operation=operation)
+    assert value["tree_digest"] != old_identity
+    git("update-index", "--chmod=+x", "--", item["path"])
+    result_tree = git("write-tree").decode().strip()
+    assert result_tree != base_tree
+    entry = git("ls-tree", result_tree, "--", item["path"]).split()
+    assert entry[0] == b"100755"
+    assert git("cat-file", "blob", entry[2].decode()) == retained[item["content"]["id"]]
 
 
 @pytest.mark.parametrize("change", ["handle", "digest-size"])

@@ -60,11 +60,11 @@
     "dns": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/dns-adapter.schema.json",
-        "digest": "sha256:9c9a259d70d42276487d09d271c3da8fa7df7e77d975de03255e345309d00865"
+        "digest": "sha256:6fd46305148feac67cccace90befb35260123558f421cf912e8b668593b68c53"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/dns-adapter.schema.json#/$defs/Response",
-        "digest": "sha256:fe08a34e85542f3fd562b4f421c5b87deb4d535337ebdb4ed11ce288cf942720"
+        "digest": "sha256:7075ca2dba9ec1b802e485d0a4d83af39b2d36220d01da769f20cc1d251021c9"
       }
     }
   },

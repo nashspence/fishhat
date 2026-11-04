@@ -55,6 +55,18 @@ def _destination(kind: str, entry: dict[str, Any]) -> str:
     return path
 
 
+def check_destination_tree(paths: Iterable[str]) -> None:
+    """Every occupied destination denotes a file in the same lexical namespace."""
+    tree: dict[str, Any] = {}
+    for path in paths:
+        branch = tree
+        for part in path[1:].split("/"):
+            _require("" not in branch, "file destination overlaps a descendant")
+            branch = branch.setdefault(part, {})
+        _require(not branch, "file destination overlaps a descendant")
+        branch[""] = True
+
+
 @dataclass(frozen=True)
 class DestinationProjection:
     """Proposed effective claims plus the exact explicitly selected work.
@@ -128,6 +140,12 @@ def project_destinations(
                     "declaration": deepcopy(entry),
                     "source_closure_digest": source_closure_digest,
                 }
+    # A newly retired file occupies its path until removal has separately settled.
+    check_destination_tree(
+        path
+        for path, record in effective.items()
+        if record["declaration"]["state"] == "present" or path in retirements
+    )
     return DestinationProjection(effective, frozenset(selected), retirements)
 
 

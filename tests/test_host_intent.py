@@ -147,6 +147,37 @@ def test_same_target_concern_and_binding_rename_does_not_retire_or_recreate_iden
     assert reviewed.retirements == {}
 
 
+@pytest.mark.parametrize("reverse", [False, True])
+def test_file_descendant_conflict_requires_separately_settled_retirement(reverse):
+    first, second = "/etc/agent", "/etc/agent/config"
+    if reverse:
+        first, second = second, first
+    initial = source()
+    initial["concerns"]["base"]["files"]["original"] = target_entry("files", first)
+    closure = digest({"source": "review"})
+    accepted = project_destinations({}, initial, source_closure_digest=closure).effective
+    new = target_entry("artifacts", second)
+    initial["concerns"]["base"]["artifacts"]["new"] = new
+    with pytest.raises(ContractError, match="file destination overlaps"):
+        validate_host(initial)
+    proposed = source()
+    concern = proposed["concerns"]["base"]
+    concern["artifacts"]["new"] = new
+    with pytest.raises(ContractError, match="file destination overlaps"):
+        project_destinations(accepted, proposed, source_closure_digest=closure)
+    concern["files"]["retiring"] = retirement(first)
+    with pytest.raises(ContractError, match="file destination overlaps"):
+        project_destinations(accepted, proposed, source_closure_digest=closure)
+    del concern["artifacts"]["new"]
+    retired = project_destinations(accepted, proposed, source_closure_digest=closure)
+    assert set(retired.retirements) == {first}
+    # The receiver now supplies this tombstone as independently settled custody.
+    concern["artifacts"]["new"] = new
+    after = project_destinations(retired.effective, proposed, source_closure_digest=closure)
+    assert after.selected == {second}
+    assert not after.retirements
+
+
 def test_explicit_retirement_keeps_original_material_separate_from_the_proposed_tombstone():
     accepted = initial_claims().effective
     proposed = source()

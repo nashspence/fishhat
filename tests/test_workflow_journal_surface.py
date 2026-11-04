@@ -488,6 +488,21 @@ def test_journal_discovery_pages_preserve_high_water_permission_and_restart():
     )
     query = {"owner": owner, "workflow_id": workflow_id, "cursor": first["next_cursor"]}
     second = delivery.events(query, principal="reader")
+    with pytest.raises(ContractError, match="cursor"):
+        delivery.events(query, principal="other-reader")
+    heads_query = {"owner": owner, "cursor": None}
+    heads = delivery.heads(heads_query, principal="reader")
+    with pytest.raises(ContractError, match="cursor"):
+        delivery.heads({**heads_query, "cursor": heads["next_cursor"]}, principal="other-reader")
+    other = delivery.heads(heads_query, principal="other-reader")
+    assert other["next_cursor"] != heads["next_cursor"] and other["items"] == heads["items"]
+    other_items = list(other["items"])
+    while other["next_cursor"] is not None:
+        other = delivery.heads(
+            {**heads_query, "cursor": other["next_cursor"]}, principal="other-reader"
+        )
+        other_items.extend(other["items"])
+    assert len({item["record"]["resource"]["id"] for item in other_items}) == 131
     retain(1000, workflow_id)
     assert delivery.events(query, principal="reader") == second
     final = delivery.events({**query, "cursor": second["next_cursor"]}, principal="reader")

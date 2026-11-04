@@ -66,6 +66,16 @@ def check_custody(payload, staging, reference, **changes):
     validate_plan_input_custody(reference, payload, staging, **context)
 
 
+def test_staged_action_must_belong_to_issuing_tool():
+    payload, _, _, reference = plan_input()
+    owner = {**payload["owner"], "tool": "host-ops"}
+    payload["owner"] = reference["owner"] = owner
+    data = canonical(payload)
+    reference["input"].update(owner=owner, digest=digest(payload), size=len(data))
+    with pytest.raises(ContractError, match="owner tool"):
+        decode_plan_input(reference, data, expected_owner=owner)
+
+
 def test_large_exact_cleanup_selection_uses_one_staged_plan_input():
     payload, data, staging, reference = plan_input(15000)
     assert len(data) > MAX_BYTES

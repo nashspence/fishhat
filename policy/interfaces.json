@@ -355,11 +355,11 @@
     },
     "client-records.schema.json": {
       "id": "https://fishhat.invalid/contracts/client-records.schema.json",
-      "sha256": "bb868965d5d398307db690ccb04f5a2f538c0cb0193d5386488b6096d42a003a"
+      "sha256": "0f67c6cf6a55af34f9e35139bcb76826720ba505420bdce9d17d17de613e56b4"
     },
     "common.schema.json": {
       "id": "https://fishhat.invalid/contracts/common.schema.json",
-      "sha256": "ef0fbfe19d9cb26efd1e0567c3d8e22de66551a75bb3a04c8b20a975cc4d4807"
+      "sha256": "29ad01e8a6f4351b0fbaa2f824fe9015c4babcbc0c14e5111f9c7e1906e40ef1"
     },
     "compute-adapter.schema.json": {
       "id": "https://fishhat.invalid/contracts/compute-adapter.schema.json",
@@ -399,7 +399,7 @@
     },
     "dns-intent.schema.json": {
       "id": "https://fishhat.invalid/contracts/dns-intent.schema.json",
-      "sha256": "14e7b7a7973dc11c3dfb69450f619e9196084d51055321b873dc510d05f92a5a"
+      "sha256": "11c5d8406116f2a36b97f815252b943ae3cc3bcdff00935bc45c698ca8332f07"
     },
     "drill-result.schema.json": {
       "id": "https://fishhat.invalid/contracts/drill-result.schema.json",
@@ -447,11 +447,11 @@
     },
     "owner-history.schema.json": {
       "id": "https://fishhat.invalid/contracts/owner-history.schema.json",
-      "sha256": "151312fe1899086b6f3f412ef7c9e6ed301a336dc70937472392f81631c894ca"
+      "sha256": "beddab90a0785dee37118d86786c77b85e408feef7c500102a75bc03f7b2993c"
     },
     "plan-input.schema.json": {
       "id": "https://fishhat.invalid/contracts/plan-input.schema.json",
-      "sha256": "3464c1b7c158e6615ae9e9742367d013e09ced089a7d5edce459e14346aeb8fc"
+      "sha256": "c2d6f2494b2802720431d64fdb8c3d9250840c0ee246597f34b74911ceb0018b"
     },
     "publisher-receipt.schema.json": {
       "id": "https://fishhat.invalid/contracts/publisher-receipt.schema.json",
@@ -467,11 +467,11 @@
     },
     "records.schema.json": {
       "id": "https://fishhat.invalid/contracts/records.schema.json",
-      "sha256": "7f4bdbeb5b1112b9ecdf8b42d1402d52a33d6e20e1e110c81ceabbb14dcdd524"
+      "sha256": "b43a5dcd2900ba3db0d1dfb4c9bffe2f10dd1be4039109a2b09fcf2b3cf05821"
     },
     "recovery-point.schema.json": {
       "id": "https://fishhat.invalid/contracts/recovery-point.schema.json",
-      "sha256": "dfe911ec453a890c76615fc8e7935e72aef7644c389eb9cae90e3d0029d5b5fe"
+      "sha256": "d7ea761064325c75784d520aaba94c75cc837bef89b5d228168ddf6e33ff9eda"
     },
     "recovery-set.schema.json": {
       "id": "https://fishhat.invalid/contracts/recovery-set.schema.json",
@@ -487,7 +487,7 @@
     },
     "resource-records.schema.json": {
       "id": "https://fishhat.invalid/contracts/resource-records.schema.json",
-      "sha256": "1366d517e7152c3e777f1abef0ce26731974afea9e8dac7959207bdb5ad31f6c"
+      "sha256": "094f919df9693c81f11f43ff82ba666076386c1e115cd3d7d389acf70149c9a7"
     },
     "resources.schema.json": {
       "id": "https://fishhat.invalid/contracts/resources.schema.json",
@@ -515,11 +515,11 @@
     },
     "source.schema.json": {
       "id": "https://fishhat.invalid/contracts/source.schema.json",
-      "sha256": "9c67ca8faf7a2225ef749ae02275566e628f40c4207706ab7a278ed0be6c40ea"
+      "sha256": "0e0a172d6fb994490e91b1f0486a8982071fc6e4b8b12d1d304b76b8b19a3dd0"
     },
     "ssh-request.schema.json": {
       "id": "https://fishhat.invalid/contracts/ssh-request.schema.json",
-      "sha256": "96d3f06098318fdb4c07ac8c102bfefd9fc3295cfd6b8a5666b2883e2a2d5d3b"
+      "sha256": "139d0fa4010848aefed590df5d9c6d4e2569e61ca76dabaf26b3467859da9b44"
     },
     "ssh-response.schema.json": {
       "id": "https://fishhat.invalid/contracts/ssh-response.schema.json",
@@ -551,7 +551,7 @@
     },
     "workflow-journal.schema.json": {
       "id": "https://fishhat.invalid/contracts/workflow-journal.schema.json",
-      "sha256": "7b61e9741b9df05e8eada5c5488b73bdd37a998f1a90250c17cf90b206a831ee"
+      "sha256": "25f2143b0b06e129253cd3f0197630499c838b35865b877f08f0cc807eefd8a2"
     },
     "workflow-recovery.schema.json": {
       "id": "https://fishhat.invalid/contracts/workflow-recovery.schema.json",

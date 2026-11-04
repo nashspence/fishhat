@@ -524,6 +524,14 @@
       "purpose_sha256": "c864cebdbce3895c1f09e88b6bf2f1ea99c7288eb941270f6dbdfb98ed8acf43"
     },
     {
+      "node": "tests/test_action_results.py::test_capture_requires_git_modes_in_both_manifest_and_changes[0600]",
+      "purpose_sha256": "c864cebdbce3895c1f09e88b6bf2f1ea99c7288eb941270f6dbdfb98ed8acf43"
+    },
+    {
+      "node": "tests/test_action_results.py::test_capture_requires_git_modes_in_both_manifest_and_changes[0700]",
+      "purpose_sha256": "c864cebdbce3895c1f09e88b6bf2f1ea99c7288eb941270f6dbdfb98ed8acf43"
+    },
+    {
       "node": "tests/test_action_results.py::test_capture_result_linear_work",
       "purpose_sha256": "3f5de67af58c3e94077121b1a484cbb9750c967f1a33424e3f3dbf861ca99680"
     },
@@ -601,6 +609,10 @@
     },
     {
       "node": "tests/test_action_results.py::test_complete_results_survive_client_loss",
+      "purpose_sha256": "c864cebdbce3895c1f09e88b6bf2f1ea99c7288eb941270f6dbdfb98ed8acf43"
+    },
+    {
+      "node": "tests/test_action_results.py::test_executable_only_capture_change_roundtrips_through_a_git_tree",
       "purpose_sha256": "c864cebdbce3895c1f09e88b6bf2f1ea99c7288eb941270f6dbdfb98ed8acf43"
     },
     {
@@ -1373,6 +1385,10 @@
     },
     {
       "node": "tests/test_adapter_dns.py::test_txt_octet_limits_do_not_assume_python_character_count",
+      "purpose_sha256": "7b86691f78f5172c7d28d0691379b6af0f8a709495d08bfeae2a3e86c04e3da7"
+    },
+    {
+      "node": "tests/test_adapter_dns.py::test_txt_rdlength_counts_utf8_and_prefix_octets_per_member",
       "purpose_sha256": "7b86691f78f5172c7d28d0691379b6af0f8a709495d08bfeae2a3e86c04e3da7"
     },
     {
@@ -7292,6 +7308,10 @@
       "purpose_sha256": "766ca1e2e9c9761ec93240e4bf99980b629128d4cc5320963f5019ab92232f70"
     },
     {
+      "node": "tests/test_historical_journal.py::test_historical_index_requires_complete_manifest_membership",
+      "purpose_sha256": "766ca1e2e9c9761ec93240e4bf99980b629128d4cc5320963f5019ab92232f70"
+    },
+    {
       "node": "tests/test_historical_journal.py::test_historical_input_rejects_substitution_and_never_rebinds_original_bytes[digest]",
       "purpose_sha256": "766ca1e2e9c9761ec93240e4bf99980b629128d4cc5320963f5019ab92232f70"
     },
@@ -8077,6 +8097,14 @@
     },
     {
       "node": "tests/test_host_intent.py::test_explicit_retirement_keeps_original_material_separate_from_the_proposed_tombstone",
+      "purpose_sha256": "ffb58893f3f7969f975206627aafe48a24b69536f741b9a5efdef0c06d50bb3f"
+    },
+    {
+      "node": "tests/test_host_intent.py::test_file_descendant_conflict_requires_separately_settled_retirement[False]",
+      "purpose_sha256": "ffb58893f3f7969f975206627aafe48a24b69536f741b9a5efdef0c06d50bb3f"
+    },
+    {
+      "node": "tests/test_host_intent.py::test_file_descendant_conflict_requires_separately_settled_retirement[True]",
       "purpose_sha256": "ffb58893f3f7969f975206627aafe48a24b69536f741b9a5efdef0c06d50bb3f"
     },
     {
@@ -9512,6 +9540,10 @@
       "purpose_sha256": "beef330bcdf3f05653a145673f19e4459b4cd62a9a25ce6f3b513245fcaa06f6"
     },
     {
+      "node": "tests/test_operation_semantics.py::test_authenticated_receipt_cannot_claim_action_of_another_owner_tool",
+      "purpose_sha256": "beef330bcdf3f05653a145673f19e4459b4cd62a9a25ce6f3b513245fcaa06f6"
+    },
+    {
       "node": "tests/test_operation_semantics.py::test_plan_lookup_cannot_substitute_original_accepted_review[digest]",
       "purpose_sha256": "beef330bcdf3f05653a145673f19e4459b4cd62a9a25ce6f3b513245fcaa06f6"
     },
@@ -9920,6 +9952,10 @@
       "purpose_sha256": "8f2f779bfa0481466bb7b3c3418230bb55e71ebec8214b46c4143e2fbc8fcc7c"
     },
     {
+      "node": "tests/test_owner_transport_extents.py::test_staged_action_must_belong_to_issuing_tool",
+      "purpose_sha256": "8f2f779bfa0481466bb7b3c3418230bb55e71ebec8214b46c4143e2fbc8fcc7c"
+    },
+    {
       "node": "tests/test_performance_measurement.py::test_failed_stats_publication_retains_complete_history[chmod]",
       "purpose_sha256": "fbd8de233dd674c1fb789dfc15d14fe15bfc64a8977868868b52d2686039e652"
     },
@@ -9973,6 +10009,10 @@
     },
     {
       "node": "tests/test_plan_review.py::test_conflicting_preconditions_do_not_create_an_ambiguous_review",
+      "purpose_sha256": "91ed2dbf6ee0032b14c38f918c3474f20edce5d78a4651d5578079e95faa482f"
+    },
+    {
+      "node": "tests/test_plan_review.py::test_consistently_signed_plan_must_belong_to_issuing_tool",
       "purpose_sha256": "91ed2dbf6ee0032b14c38f918c3474f20edce5d78a4651d5578079e95faa482f"
     },
     {
@@ -10158,6 +10198,10 @@
     {
       "node": "tests/test_portable.py::Portable::test_exports_no_keys",
       "purpose_sha256": "45c39bca4ce7c7165b08bbbbd0fa07a59aaff8103327277042325475b0b86cd7"
+    },
+    {
+      "node": "tests/test_portable.py::Portable::test_generic_recovery_delivery_survives_receipt_export_and_import",
+      "purpose_sha256": "22cb726c05ded727753d80c85c6818eb0209764fea829367aebfe8242d8c61e6"
     },
     {
       "node": "tests/test_portable.py::Portable::test_import_cannot_mix_execution_outcome_into_delivery",
@@ -14136,6 +14180,10 @@
       "purpose_sha256": "c60ec56d8275da17b210b859bfca1b2a4a087102d4056f98543fe610c624182e"
     },
     {
+      "node": "tests/test_tracking.py::Noninterference::test_owner_reply_must_match_original_workflow_membership",
+      "purpose_sha256": "c60ec56d8275da17b210b859bfca1b2a4a087102d4056f98543fe610c624182e"
+    },
+    {
       "node": "tests/test_tracking.py::Noninterference::test_reports_cannot_execute",
       "purpose_sha256": "c60ec56d8275da17b210b859bfca1b2a4a087102d4056f98543fe610c624182e"
     },
@@ -15925,6 +15973,14 @@
     },
     {
       "node": "tests/test_workflow_journal.py::test_missing_or_duplicate_preparations_and_votes_cannot_complete_barrier",
+      "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
+    },
+    {
+      "node": "tests/test_workflow_journal.py::test_native_acceptance_rechecks_certificate_deadline[at-commit]",
+      "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
+    },
+    {
+      "node": "tests/test_workflow_journal.py::test_native_acceptance_rechecks_certificate_deadline[during-review]",
       "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
     },
     {

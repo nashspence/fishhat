@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from copy import deepcopy
 from typing import Any
 from uuid import uuid4
@@ -22,7 +22,7 @@ from .history import (
     validate_owner_custody,
 )
 from .record_delivery import RecordSnapshot, validate_record_payload
-from .validation import ContractError, canonical, strict_json, validate
+from .validation import ContractError, canonical, digest, strict_json, validate
 
 Readers = Mapping[tuple[str, str], Callable[[dict[str, Any]], None]]
 Authorize = Callable[[str, str | None], bool]
@@ -111,8 +111,11 @@ class HistoricalJournalDelivery:
     owner verifies its restoration closure. No method registers request-provided
     trust, custody or readers. Current authorization is checked on every page,
     lookup and chunk; cursors are principal/custody/filter/high-water bound and
-    expire with this model instance. Epoch changes require a new independently
-    approved custody descriptor and index, preserving the original references.
+    expire with this model instance. verified_event_digests comes from the same
+    independently verified restoration manifest, including its complete event set.
+    Each entry commits the original reference, accepted input handle and input schema.
+    Epoch changes require a new approved custody descriptor and index, preserving
+    the original references.
     """
 
     def __init__(
@@ -120,18 +123,22 @@ class HistoricalJournalDelivery:
         verified_custody: dict[str, Any],
         *,
         authorize: Authorize,
+        verified_event_digests: Iterable[str],
         retained_readers: Readers | None = None,
     ) -> None:
         validate_owner_custody(verified_custody)
         self._custody = deepcopy(verified_custody)
         self._authorize = authorize
         self._readers = retained_readers
+        self._missing = set(verified_event_digests)
+        for commitment in self._missing:
+            validate("common.schema.json", commitment, "Digest")
         self._records: dict[JournalIdentity, RecordSnapshot] = {}
         self._inputs: dict[JournalIdentity, tuple[dict[str, Any], dict[str, Any], bytes]] = {}
         self._handles: dict[str, JournalIdentity] = {}
         self._order: list[JournalIdentity] = []
         self._by_workflow: dict[str, list[JournalIdentity]] = {}
-        self._cursors: dict[str, tuple[str, bytes, int, int, int]] = {}
+        self._cursors: dict[str, tuple[str, bytes, int, int, int, bool]] = {}
 
     def _request(self, reference: dict[str, Any]) -> dict[str, Any]:
         return {
@@ -197,6 +204,10 @@ class HistoricalJournalDelivery:
                 "historical journal identity conflict",
             )
             return
+        commitment = digest(
+            {"reference": reference, "input": input_handle, "input_schema": input_schema}
+        )
+        _require(commitment in self._missing, "historical event outside verified manifest")
         _require(input_handle["id"] not in self._handles, "historical input handle reused")
         snapshot = RecordSnapshot.restore(
             reference,
@@ -213,6 +224,7 @@ class HistoricalJournalDelivery:
         self._handles[input_handle["id"]] = identifier
         self._order.append(identifier)
         self._by_workflow.setdefault(workflow_id, []).append(identifier)
+        self._missing.remove(commitment)
 
     @bounds(_bounds("list"))
     def list(self, request: dict[str, Any], *, principal: str) -> dict[str, Any]:
@@ -233,6 +245,9 @@ class HistoricalJournalDelivery:
         )
         cursor, limit = request["cursor"], request["limit"]
         if cursor is None:
+            # Completeness is monotone for one immutable manifest. Sample it before
+            # the high water so a concurrently finishing build cannot upgrade a prefix.
+            complete = not self._missing
             offset, high_water = 0, len(identities)
         else:
             selected = self._cursors.get(cursor)
@@ -241,7 +256,7 @@ class HistoricalJournalDelivery:
                 "historical journal cursor expired or changed scope",
             )
             assert selected is not None
-            _, _, _, offset, high_water = selected
+            _, _, _, offset, high_water, complete = selected
         end = min(offset + limit, high_water)
         items = [
             self._records[identifier].reference
@@ -251,13 +266,13 @@ class HistoricalJournalDelivery:
         next_cursor = None
         if end < high_water:
             next_cursor = uuid4().hex
-            self._cursors[next_cursor] = (principal, scope, limit, end, high_water)
+            self._cursors[next_cursor] = (principal, scope, limit, end, high_water, complete)
         return self._result(
             "HistoricalRecordPage",
             request,
             items=items,
             next_cursor=next_cursor,
-            history_complete=True,
+            history_complete=complete,
         )
 
     def _selected(self, method: str, request: dict[str, Any], principal: str) -> JournalIdentity:

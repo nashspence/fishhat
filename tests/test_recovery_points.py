@@ -139,9 +139,14 @@ def test_clock_and_fractional_rounding_are_conservative():
 
 def test_assessment_cannot_omit_an_old_dataset_or_relabel_checkpoint():
     checkpoint, inputs, _ = resolved([FRESH, OLD])
-    del inputs.snapshots["dataset-0001"]
-    with pytest.raises(ContractError, match="incomplete recovery"):
-        assess_recovery_point(checkpoint, inputs, observed_at=NOW, rpo_seconds=3600)
+    candidate = inputs.snapshots
+    candidate["dataset-0001"]["recovery_point"] = candidate["dataset-0000"]["recovery_point"]
+    del candidate["dataset-0000"]
+    result = assess_recovery_point(checkpoint, inputs, observed_at=NOW, rpo_seconds=3600)
+    assert result["state"] == "exceeded"
+    assert result["age_lower_seconds"] == 86400
+    assert inputs.snapshots["dataset-0001"]["recovery_point"] == OLD
+    assert set(result["snapshot_digests"]) == set(checkpoint["datasets"])
     other, _, _ = resolved([FRESH])
     with pytest.raises(ContractError, match="checkpoint changed"):
         assess_recovery_point(other, inputs, observed_at=NOW, rpo_seconds=3600)

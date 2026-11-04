@@ -11,6 +11,7 @@ from collections.abc import Callable, Mapping
 from typing import Any
 from urllib.parse import urljoin
 
+from .authorization import require_action_owner
 from .validation import CATALOGUES, SCHEMAS, ContractError, digest, validate, validate_plan
 
 _OWNER_STATES = CATALOGUES["https://fishhat.invalid/contracts/states.json"]["owner"]
@@ -32,6 +33,7 @@ def validate_operation(
     from .handoffs import ACTIONS, schema_identity
 
     validate("records.schema.json", operation, "Operation")
+    require_action_owner(operation["subject"]["action"], operation["owner"]["tool"])
     witness = operation["witness"]
     if witness["owner"] != operation["owner"]:
         raise ContractError("operation witness owner epoch mismatch")

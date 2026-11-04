@@ -94,7 +94,7 @@
     "bootstrap-source": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/bootstrap-source-adapter.schema.json",
-        "digest": "sha256:ae016172d07c0aaf655e0bc6943bcbad51bcf77d048f438e91c8b2b8a8f3f262"
+        "digest": "sha256:d8b38a8afcacb6696af78214de9908e6290fa64d173c2819628d5b237fc55ac0"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/bootstrap-source-adapter.schema.json#/$defs/Response",

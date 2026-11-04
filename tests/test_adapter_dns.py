@@ -150,3 +150,19 @@ def test_txt_octet_limits_do_not_assume_python_character_count():
     }
     with pytest.raises(ContractError, match="DNS_CHARACTER_STRING_CAPACITY"):
         validate_rrsets([value])
+
+
+def test_txt_rdlength_counts_utf8_and_prefix_octets_per_member():
+    chunk = "é" * 127 + "x"  # 255 UTF-8 octets per chunk
+    chunks = [chunk] * 255 + ["a" * 254]
+    value = {
+        "name": "txt.example.test.",
+        "class": "IN",
+        "type": "TXT",
+        "ttl": {"mode": "exact", "seconds": 0},
+        "rdata": [{"chunks": chunks}, {"chunks": ["another member"]}],
+    }
+    validate_rrsets([value])  # 65535 octets in the first member
+    chunks.append("")  # Even an empty string needs one length octet.
+    with pytest.raises(ContractError, match="DNS_RDATA_CAPACITY"):
+        validate_rrsets([value])
