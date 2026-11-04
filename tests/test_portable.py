@@ -125,6 +125,29 @@ class Portable(unittest.TestCase):
         with self.assertRaises(ContractError):
             validate_session(self.session)
 
+    def test_checkout_environment_and_evidence_paths_are_disjoint_in_both_directions(self):
+        for first, second in (
+            ("domain_dir", "tool_env"),
+            ("domain_dir", "test_env"),
+            ("tool_env", "test_env"),
+            ("tools_dir", "domain_dir"),
+            ("tools_dir", "tool_env"),
+            ("tools_dir", "test_env"),
+            ("tools_dir", "evidence_dir"),
+        ):
+            for suffix_left, suffix_right in (("", ""), ("/nested", ""), ("", "/nested")):
+                with self.subTest(first=first, second=second, nesting=(suffix_left, suffix_right)):
+                    session = copy.deepcopy(self.session)
+                    root = session["root"] + "/base"
+                    if second == "evidence_dir":
+                        root = "/external/directory"
+                    session[first], session[second] = root + suffix_left, root + suffix_right
+                    with self.assertRaises(ContractError):
+                        validate_session(session)
+        with self.assertRaises(ContractError):
+            validate_session({**self.session, "tool_env": self.session["root"]})
+        validate_session({**self.session, "tool_env": self.session["domain_dir"] + "-venv"})
+
     def test_candidate_not_production_qualified(self):
         validate_bundle(self.bundle)
         with self.assertRaises(ContractError):
@@ -207,6 +230,23 @@ class Portable(unittest.TestCase):
 
     def test_merge_deduplicates(self):
         self.assertEqual(len(merge_exports(self.receipts, self.receipts)["deliveries"]), 1)
+
+    def test_merge_preserves_complete_participant_evidence(self):
+        first, second = ("sha256:" + character * 64 for character in "ab")
+        a = {**self.receipts, "participant_evidence": [first]}
+        b = {**self.receipts, "participant_evidence": [second, first]}
+        for left, right in ((a, b), (b, a)):
+            merged = merge_exports(left, right)
+            self.assertCountEqual(merged["participant_evidence"], [first, second])
+            self.assertEqual(merge_exports(merged, right), merged)
+
+    def test_merge_keys_requests_by_complete_owner(self):
+        a = copy.deepcopy(self.receipts)
+        a["deliveries"][0]["action"] = "operation.recover"
+        b = copy.deepcopy(a)
+        b["deliveries"][0]["owner"]["tool"] = "host-ops"
+        self.assertEqual(len(merge_exports(a, b)["deliveries"]), 2)
+        validate_export(merge_exports(a, b))
 
     def test_merge_conflict(self):
         b = copy.deepcopy(self.receipts)
@@ -357,6 +397,7 @@ class CliOutcomes(unittest.TestCase):
         operation = value["result"]
         delivery.update(
             request_id=value["request_id"],
+            workflow_id=operation["witness"]["workflow_id"],
             owner=copy.deepcopy(operation["owner"]),
             plan_digest=operation["plan_digest"],
             subject_digest=digest(operation["subject"]),
@@ -385,6 +426,44 @@ class CliOutcomes(unittest.TestCase):
                     self.assertTrue(value["complete"])
                     self.assertFalse(value["ok"])
                     self.assertTrue(value["result"]["holds"])
+
+    def test_submit_workflow_and_driver_term_are_paired(self):
+        operation = self.result("accepted")["result"]
+        request = {
+            "format": "deployment-ops/owner/v1",
+            "message_id": operation["id"],
+            "method": "operation.submit",
+            "params": {
+                "owner": operation["owner"],
+                "request_id": operation["request_id"],
+                "plan_id": operation["id"],
+                "plan_digest": operation["plan_digest"],
+                "subject_digest": digest(operation["subject"]),
+                "confirmed": True,
+                "claimed_actor": None,
+            },
+        }
+        for workflow in (None, operation["id"]):
+            for term in (None, 1):
+                request["params"].update(workflow_id=workflow, driver_term=term)
+                with self.subTest(workflow=workflow, term=term):
+                    if (workflow is None) == (term is None):
+                        validate("ssh-request.schema.json", request)
+                    else:
+                        with self.assertRaises(ContractError):
+                            validate("ssh-request.schema.json", request)
+
+    def test_cli_requires_exact_nullable_delivery_workflow(self):
+        workflow = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+        for actual, claimed in ((None, workflow), (workflow, None)):
+            with self.subTest(actual=actual, claimed=claimed):
+                value = self.result("accepted")
+                value["result"]["witness"]["workflow_id"] = actual
+                seal_operation(value["result"])
+                value["delivery"] = self.delivery(value)
+                value["delivery"]["workflow_id"] = claimed
+                with self.assertRaises(ContractError):
+                    validate_cli(value)
 
     def test_acknowledged_work_cannot_claim_completion(self):
         for state in ("accepted", "running", "waiting"):

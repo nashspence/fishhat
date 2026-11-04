@@ -18,7 +18,7 @@ from fishhat_contracts.action_results import (
     verify_source_proposal_material,
 )
 from fishhat_contracts.handoffs import schema_identity, validate_result_payload
-from fishhat_contracts.validation import ContractError, canonical, digest
+from fishhat_contracts.validation import ContractError, canonical, digest, validate
 from fishhat_contracts.witness import sign
 
 from scripts.validation_timeouts import watchdog
@@ -411,6 +411,29 @@ def test_capture_requires_git_modes_in_both_manifest_and_changes(native_mode):
     seal_source(value, operation)
     with pytest.raises(ContractError):
         validate_source_proposal(value)
+
+
+@pytest.mark.parametrize(
+    "path",
+    [".git/config", "settings/.git/config", "settings/.GiT"],
+    ids=["root-admin", "nested-admin", "mixed-case-admin"],
+)
+def test_git_administrative_paths_cannot_enter_capture_or_publication(path):
+    operation, value, _ = capture_pair(count=1)
+    arguments = operation["subject"]["arguments"]
+    arguments["paths"] = [path]
+    with pytest.raises(ContractError, match="schema"):
+        validate("actions.schema.json", arguments, "host.capture-changes")
+    arguments["paths"] = [".gitignore"]
+    validate("actions.schema.json", arguments, "host.capture-changes")
+    for field in ("paths", "changes", "files"):
+        changed = copy.deepcopy(value)
+        if field == "paths":
+            changed[field] = [path]
+        else:
+            changed[field][0]["path"] = path
+        with pytest.raises(ContractError, match="schema"):
+            validate_source_proposal(changed)
 
 
 def test_executable_only_capture_change_roundtrips_through_a_git_tree(tmp_path):

@@ -201,6 +201,41 @@ def test_member_rejects_signed_projection_with_different_installed_procedure(
     assert not run.native[0].reservations
 
 
+def test_vote_once_per_common_round_survives_cold_restart(tmp_path):
+    meter, workload = WorkMeter(), LogicalWorkload()
+    with meter.account():
+        run = WorkflowRun(tmp_path, workload, meter)
+        try:
+            run.prepare()
+            original, votes, _, certificates = run.round("draining", apply=False)
+            member = run.members[0]
+            reference = member.inputs[votes[0]["id"]][0]
+            count = meter.values["native_reserve_visits"]
+            with pytest.raises(ContractError, match="already voted"):
+                member.call("vote", {"round": original}, fresh=True)
+            assert meter.values["native_reserve_visits"] == count
+        finally:
+            run.close()
+        restored = WorkflowRun(tmp_path, workload, meter, restore=True)
+        try:
+            member = restored.members[0]
+            assert member.retry(reference) == votes[0]
+            with pytest.raises(ContractError, match="already voted"):
+                member.call("vote", {"round": original}, fresh=True)
+            assert meter.values["native_reserve_visits"] == count
+            for endpoint, certificate in zip(restored.members, certificates, strict=True):
+                endpoint.call("apply", {"certificate": certificate}, fresh=True)
+            refreshed, _, _, _ = restored.round("draining")
+            assert refreshed["id"] != original["id"]
+            count = meter.values["native_reserve_visits"]
+            with pytest.raises(ContractError, match="already voted"):
+                member.call("vote", {"round": original}, fresh=True)
+            assert member.retry(reference) == votes[0]
+            assert meter.values["native_reserve_visits"] == count
+        finally:
+            restored.close()
+
+
 def test_lost_native_fence_survives_cold_restart_and_blocks_new_apply(tmp_path):
     """Loss of the local effect guard closes admission and retains shared exclusion."""
     meter, workload = WorkMeter(), LogicalWorkload()
@@ -676,3 +711,155 @@ def test_failed_append_preserves_tail_and_old_custody_without_reopening_writer(
     with pytest.raises(ContractError):
         WorkflowJournal.open(path, expected_owner=owner, expected_schema=schema)
     assert path.read_bytes() == tail
+
+
+def test_successor_gate_and_phase_proof_use_installed_publisher_reader(journal_run, monkeypatch):
+    from types import SimpleNamespace
+
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    from fishhat_contracts.handoffs import PHASES
+    from fishhat_contracts.validation import canonical
+    from fishhat_contracts.workflow_journal import WorkflowGate, _reservation
+    from fishhat_contracts.workflow_journal_recovery import JournalRecovery, RecoveryContext
+
+    from tests.test_workflow_continuations import adoption_stage
+    from tests.test_workflow_inputs import material_handle
+    from tests.test_workflow_recovery import scenario
+    from tests.test_workflow_recovery_compatibility import editorial_change, installed_readers
+    from tests.workflow_journal_support import NOW
+
+    original, adoption = adoption_stage()
+    issued = original["bindings"][0]["request"]["predecessors"][0]
+    published = adoption["predecessors"][0]
+    proposal, _ = scenario(
+        original=original,
+        historical=True,
+        kinds=["completed", "completed", "unaccepted"],
+        outcomes={op["request_id"]: op for op in (issued, published)},
+    )
+    successor = proposal["successor"]
+    retained, qualified = installed_readers(proposal)
+    editorial_change(monkeypatch)
+    schema = published["result_handle"]["schema"]
+    missing = qualified.copy()
+    del missing[(schema["uri"], schema["digest"])]
+    old = journal_run.gate.target
+    certificate = old._sign(
+        {
+            "type": "recovery-certificate",
+            "header_digest": old.header_digest,
+            "command_digest": digest([]),
+            "recovery": {
+                "id": uid("historical-recovery"),
+                "origin_workflow_id": old.workflow_id,
+                "origin_proposal_digest": old.header["proposal_digest"],
+                "successor_workflow_id": successor["workflow_id"],
+                "successor_proposal_digest": digest(successor),
+                "successor_driver": successor["initial_driver"]["principal"],
+                "mapping_digest": digest(proposal["children"]),
+            },
+            "owner_count": len({canonical(p["owner"]) for p in successor["participants"]}),
+            "disposition_closure_digest": digest([]),
+            "supersedes": None,
+        },
+        uid("historical-certificate"),
+    )
+    context = RecoveryContext(old.owner, old.key_id, old.private_key.public_key(), certificate)
+    publisher_key = Ed25519PrivateKey.from_private_bytes(b"\x17" * 32).public_key()
+    keys = {(canonical(published["owner"]), published["witness"]["key_id"]): publisher_key}
+    journal = journal_run.store(journal_run.root / "historical.journal", old.owner, restore=False)
+
+    def initialize(readers):
+        return WorkflowGate(
+            successor,
+            owner=old.owner,
+            key_id=old.key_id,
+            private_key=old.private_key,
+            member_keys=keys,
+            authorize=old.authorize,
+            check_reservation=old.check_reservation,
+            journal=journal,
+            principal=DRIVER,
+            extension=JournalRecovery(retained_readers=retained, recovery_readers=readers),
+            recovery_context=context,
+        )
+
+    try:
+        with pytest.raises(ContractError, match="action result schema substitution"):
+            initialize(missing)
+        gate = initialize(qualified)
+        issuer = successor["participants"][1]
+        binding = issuer["requests"][0]
+        assert binding["completed"]["operation"] == published
+        phases = PHASES[gate.header["procedure"]]
+        round_id = uid("historical-phase")
+        barrier = {"round_id": round_id, "to_phase": phases[phases.index(binding["phase"]) + 1]}
+        expires = "2026-11-02T00:00:00Z"
+        child = {"owner": issuer["owner"], "request_id": binding["request_id"]}
+        reservation = {
+            "id": uid("historical-reservation"),
+            "round_id": round_id,
+            "owner": issuer["owner"],
+            "generation": 1,
+            "protection": "durable-until-verified-release",
+            "issued_at": NOW,
+            "expires_at": expires,
+            "participants": [
+                {
+                    "owner": issuer["owner"],
+                    "resource": issuer["resource"],
+                    "resource_generation": issuer["expected_generation"],
+                    "operations": [{"child": child, "operation": published}],
+                    "native_evidence": [material_handle(issuer["owner"], digest([]))],
+                    "expires_at": expires,
+                }
+            ],
+        }
+
+        def check_proof(readers):
+            _reservation(
+                reservation,
+                owner=issuer["owner"],
+                round=barrier,
+                participants=[issuer],
+                children=gate.children,
+                ready=gate.ready,
+                outcomes=None,
+                header=gate.header,
+                keys=keys,
+                now=NOW,
+                recovery_readers=readers,
+            )
+
+        check_proof(qualified)
+        with pytest.raises(ContractError, match="action result schema substitution"):
+            check_proof(missing)
+
+        receipt = canonical(adoption["materials"][0]["publication_receipt"])
+        native = SimpleNamespace(result_payload=lambda operation: receipt)
+        member = SimpleNamespace(
+            children=gate.children,
+            ready=gate.ready,
+            keys=keys,
+            outcomes={},
+            native=native,
+            workflow_id=gate.workflow_id,
+        )
+        fact = {
+            "origin": child,
+            "kind": "completed",
+            "operation": published,
+            "operation_reference": proposal["children"][1]["operation"]["reference"],
+            "recovery": None,
+            "native_stopped": True,
+        }
+        gate.extension._fact(
+            member, {"origin_owner": issuer["owner"]}, fact, issuer, binding, native=True
+        )
+        native.result_payload = lambda operation: b"{}"
+        with pytest.raises(ContractError, match="result content identity mismatch"):
+            gate.extension._fact(
+                member, {"origin_owner": issuer["owner"]}, fact, issuer, binding, native=True
+            )
+    finally:
+        journal.close()

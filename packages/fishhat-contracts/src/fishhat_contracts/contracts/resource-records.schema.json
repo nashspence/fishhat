@@ -295,7 +295,7 @@
         "control_pool"
       ],
       "additionalProperties": false,
-      "description": "Accounting by one receiving authority for the exact accepted resource generation and verified adapter bindings. Each quota must join the observed pool identity exactly; canonical capacity domains and allocation handles cannot be counted twice. qualified/enforced are observations whose native evidence the owner must verify, never assertions a source may grant. Admission must independently compare the snapshot to current accepted bindings and freshness before reserving capacity."
+      "description": "Accounting by one receiving authority for the exact accepted resource generation and verified adapter bindings. The owner reads pool and quota reservations from one consistent accounting revision. The reserved remaining bytes and inodes of each pool must each cover the sum of its visible quota claims. Additional claims from other accounts can increase either pool total. Each quota must join the observed pool identity exactly; canonical capacity domains and allocation handles cannot be counted twice. qualified/enforced are observations whose native evidence the owner must verify, never assertions a source may grant. Admission must independently compare the snapshot to current accepted bindings and freshness before reserving capacity."
     },
     "CapacityRequest": {
       "type": "object",

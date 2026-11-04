@@ -111,7 +111,9 @@ def test_restoration_and_reconciliation_preserve_original_private_values(selecte
     prepared = prepare_private(owner, role)
     attempt_id = prepared["attempt_id"]
     invocation = owner.dispatch("demo", attempt_id)
-    recovered = AdapterCoordinator(OWNER, owner.registry, lambda value: None)
+    recovered = AdapterCoordinator(
+        OWNER, owner.registry, lambda value: None, processes_quiescent=lambda _: True
+    )
     recovered.restore(owner.snapshot())
     assert recovered.snapshot()["attempts"][attempt_id] == invocation["attempt"]
     assert prepare_private(recovered, role) == invocation["attempt"]

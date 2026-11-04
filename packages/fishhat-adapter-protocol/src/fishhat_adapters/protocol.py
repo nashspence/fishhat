@@ -9,6 +9,7 @@ from fishhat_contracts.adapter_semantics import (
     ROLES,
     _attempt_identity,
     _handoff_binding,
+    _is_released_attempt,
     check_invocation,
     check_request,
 )
@@ -499,12 +500,7 @@ class Registry:
                 and request["input"]["target"] == expected_compute_target,
                 "COMPUTE_APPROVED_TARGET",
             )
-        require(
-            attempt["state"] == "dispatched"
-            and attempt["certainty"] == "unknown"
-            and attempt["outcome"] == "pending",
-            "INVOCATION_NOT_DISPATCHABLE",
-        )
+        require(_is_released_attempt(attempt), "INVOCATION_NOT_DISPATCHABLE")
         instance = self.authorize(
             attempt["executor"]["instance"],
             role,

@@ -279,12 +279,17 @@ def test_retained_terminal_result_cannot_replace_or_forget_known_native_task(
     response = retained["response"]
     response["request_digest"] = digest(query)
     response["effect"]["native_task"] = "task:original"
-    assert read_result(record, retained) == retained
+    if reconcile:
+        assert read_result(record, retained) == retained
+    else:
+        with pytest.raises(ContractError, match="RETAINED_INVOCATION_NOT_RELEASED"):
+            read_result(record, retained)
 
     response["effect"]["native_task"] = native_task
     with pytest.raises(ContractError, match=code):
         check_response("credential-issuer", query, response, invocation=invocation)
-    with pytest.raises(ContractError, match=code):
+    retained_code = code if reconcile else "RETAINED_INVOCATION_NOT_RELEASED"
+    with pytest.raises(ContractError, match=retained_code):
         read_result(record, retained)
 
 
@@ -303,7 +308,8 @@ def test_retained_adapter_result_cannot_erase_known_effect_certainty(reconcile):
     # cannot become a committed summary that erases previously known effects.
     check_response("credential-issuer", query, response, invocation=invocation)
     record.update(state="failed", effect_certainty="none")
-    with pytest.raises(ContractError, match="RETAINED_RESULT_EFFECT_CERTAINTY"):
+    code = "RETAINED_RESULT_EFFECT_CERTAINTY" if reconcile else "RETAINED_INVOCATION_NOT_RELEASED"
+    with pytest.raises(ContractError, match=code):
         read_result(record, retained)
 
 
@@ -415,4 +421,30 @@ def test_adapter_execution_requires_complete_input_schema_identity():
     arguments = record["subject"]["arguments"]
     arguments["input_schema_digest"] = arguments.pop("input_schema")["digest"]
     with pytest.raises(ContractError):
+        read_result(record, retained)
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        {"state": "prepared", "certainty": "none"},
+        {"state": "resolved", "outcome": "cancelled", "certainty": "none"},
+        {"state": "reconciling", "certainty": "known"},
+        {"native_task": "task:never-released"},
+    ],
+)
+def test_direct_retention_requires_exact_released_invocation(change):
+    record, retained = result_fixture()
+    retained["invocation"]["attempt"].update(change)
+    with pytest.raises(ContractError, match="RETAINED_INVOCATION_NOT_RELEASED"):
+        read_result(record, retained)
+
+
+@pytest.mark.parametrize("state,outcome", [("prepared", "pending"), ("resolved", "cancelled")])
+def test_reconciliation_cannot_create_evidence_for_an_undispatched_attempt(state, outcome):
+    record, retained = result_fixture(reconcile=True)
+    invocation = retained["invocation"]
+    invocation["attempt"].update(state=state, outcome=outcome, certainty="none")
+    retained["response"]["request_digest"] = digest(recovered(invocation))
+    with pytest.raises(ContractError, match="RECONCILIATION_NEVER_DISPATCHED"):
         read_result(record, retained)

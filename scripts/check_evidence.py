@@ -226,6 +226,13 @@ def reconcile(
 ) -> str:
     if not collected:
         raise ValueError("check collection is empty")
+    if generate:
+        from scripts.validation import SAFE_NODE
+
+        if not complete:
+            raise ValueError("reviewed inventory generation requires complete collection")
+        if not all(SAFE_NODE.fullmatch(node) for node in collected):
+            raise ValueError("reviewed inventory requires safe test parameter labels")
     for groups in collected.values():
         validate_groups(groups, root)
     if complete and (root / "policy/components.toml").exists():
@@ -236,8 +243,6 @@ def reconcile(
         "entrypoints": entrypoints(root),
     }
     if generate:
-        if not complete:
-            raise ValueError("reviewed inventory generation requires complete collection")
         (root / SNAPSHOT).write_text(
             json.dumps(encode_inventory(current), indent=2, sort_keys=True) + "\n"
         )

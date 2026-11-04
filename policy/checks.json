@@ -616,6 +616,18 @@
       "purpose_sha256": "c864cebdbce3895c1f09e88b6bf2f1ea99c7288eb941270f6dbdfb98ed8acf43"
     },
     {
+      "node": "tests/test_action_results.py::test_git_administrative_paths_cannot_enter_capture_or_publication[mixed-case-admin]",
+      "purpose_sha256": "c864cebdbce3895c1f09e88b6bf2f1ea99c7288eb941270f6dbdfb98ed8acf43"
+    },
+    {
+      "node": "tests/test_action_results.py::test_git_administrative_paths_cannot_enter_capture_or_publication[nested-admin]",
+      "purpose_sha256": "c864cebdbce3895c1f09e88b6bf2f1ea99c7288eb941270f6dbdfb98ed8acf43"
+    },
+    {
+      "node": "tests/test_action_results.py::test_git_administrative_paths_cannot_enter_capture_or_publication[root-admin]",
+      "purpose_sha256": "c864cebdbce3895c1f09e88b6bf2f1ea99c7288eb941270f6dbdfb98ed8acf43"
+    },
+    {
       "node": "tests/test_action_results.py::test_multiple_paths_can_share_one_exact_immutable_content_handle",
       "purpose_sha256": "c864cebdbce3895c1f09e88b6bf2f1ea99c7288eb941270f6dbdfb98ed8acf43"
     },
@@ -833,6 +845,14 @@
     },
     {
       "node": "tests/test_adapter_commit_growth.py::test_delta_receiver_reconstructs_exact_custody_before_dispatch_and_after_settlement",
+      "purpose_sha256": "da85331f4abdd18fc7a9a50b452567cda53f5a5e5d45ebb110a1f49b96d87a2c"
+    },
+    {
+      "node": "tests/test_adapter_commit_growth.py::test_effect_settlement_waits_for_all_attempt_processes_across_recovery[durable-hold]",
+      "purpose_sha256": "da85331f4abdd18fc7a9a50b452567cda53f5a5e5d45ebb110a1f49b96d87a2c"
+    },
+    {
+      "node": "tests/test_adapter_commit_growth.py::test_effect_settlement_waits_for_all_attempt_processes_across_recovery[missing-supervision]",
       "purpose_sha256": "da85331f4abdd18fc7a9a50b452567cda53f5a5e5d45ebb110a1f49b96d87a2c"
     },
     {
@@ -1685,6 +1705,10 @@
     },
     {
       "node": "tests/test_adapter_invocations.py::test_reconciliation_request_cannot_authorize_its_own_original_context",
+      "purpose_sha256": "d5d341fbf5ac9e2cd3489c40e20d1edef378221cd200ffbfd81d57fecfece0c0"
+    },
+    {
+      "node": "tests/test_adapter_invocations.py::test_retained_non_dispatchable_attempt_is_not_new_execution_authority[native-task]",
       "purpose_sha256": "d5d341fbf5ac9e2cd3489c40e20d1edef378221cd200ffbfd81d57fecfece0c0"
     },
     {
@@ -3392,6 +3416,22 @@
       "purpose_sha256": "5fe9a7ef3f2941ca6e7b597beb1dbd2ef03937ed46a424f7ae2de88c82b32aac"
     },
     {
+      "node": "tests/test_adapter_retained_results.py::test_direct_retention_requires_exact_released_invocation[change0]",
+      "purpose_sha256": "5fe9a7ef3f2941ca6e7b597beb1dbd2ef03937ed46a424f7ae2de88c82b32aac"
+    },
+    {
+      "node": "tests/test_adapter_retained_results.py::test_direct_retention_requires_exact_released_invocation[change1]",
+      "purpose_sha256": "5fe9a7ef3f2941ca6e7b597beb1dbd2ef03937ed46a424f7ae2de88c82b32aac"
+    },
+    {
+      "node": "tests/test_adapter_retained_results.py::test_direct_retention_requires_exact_released_invocation[change2]",
+      "purpose_sha256": "5fe9a7ef3f2941ca6e7b597beb1dbd2ef03937ed46a424f7ae2de88c82b32aac"
+    },
+    {
+      "node": "tests/test_adapter_retained_results.py::test_direct_retention_requires_exact_released_invocation[change3]",
+      "purpose_sha256": "5fe9a7ef3f2941ca6e7b597beb1dbd2ef03937ed46a424f7ae2de88c82b32aac"
+    },
+    {
       "node": "tests/test_adapter_retained_results.py::test_durable_capture_cannot_lose_snapshot_identity_or_verified_output[restore-different-snapshot-direct]",
       "purpose_sha256": "5fe9a7ef3f2941ca6e7b597beb1dbd2ef03937ed46a424f7ae2de88c82b32aac"
     },
@@ -3473,6 +3513,14 @@
     },
     {
       "node": "tests/test_adapter_retained_results.py::test_pending_adapter_evidence_cannot_support_a_successful_operation",
+      "purpose_sha256": "5fe9a7ef3f2941ca6e7b597beb1dbd2ef03937ed46a424f7ae2de88c82b32aac"
+    },
+    {
+      "node": "tests/test_adapter_retained_results.py::test_reconciliation_cannot_create_evidence_for_an_undispatched_attempt[prepared-pending]",
+      "purpose_sha256": "5fe9a7ef3f2941ca6e7b597beb1dbd2ef03937ed46a424f7ae2de88c82b32aac"
+    },
+    {
+      "node": "tests/test_adapter_retained_results.py::test_reconciliation_cannot_create_evidence_for_an_undispatched_attempt[resolved-cancelled]",
       "purpose_sha256": "5fe9a7ef3f2941ca6e7b597beb1dbd2ef03937ed46a424f7ae2de88c82b32aac"
     },
     {
@@ -7052,6 +7100,14 @@
       "purpose_sha256": "f3c23e4c74ba2207e8738a0d14dfe4b12fd4386b2949b59556fe72f30481da4a"
     },
     {
+      "node": "tests/test_evidence.py::test_inventory_generation_rejects_unsafe_labels_without_replacing_snapshot[path-label]",
+      "purpose_sha256": "f3c23e4c74ba2207e8738a0d14dfe4b12fd4386b2949b59556fe72f30481da4a"
+    },
+    {
+      "node": "tests/test_evidence.py::test_inventory_generation_rejects_unsafe_labels_without_replacing_snapshot[redacted-label]",
+      "purpose_sha256": "f3c23e4c74ba2207e8738a0d14dfe4b12fd4386b2949b59556fe72f30481da4a"
+    },
+    {
       "node": "tests/test_evidence.py::test_large_current_receipt_requires_complete_passing_evidence",
       "purpose_sha256": "f3c23e4c74ba2207e8738a0d14dfe4b12fd4386b2949b59556fe72f30481da4a"
     },
@@ -10060,6 +10116,10 @@
       "purpose_sha256": "d1154e5fd0d3a50bce41e310df70bf040db2a45811ac573feb324d91c324f336"
     },
     {
+      "node": "tests/test_portable.py::CliOutcomes::test_cli_requires_exact_nullable_delivery_workflow",
+      "purpose_sha256": "d1154e5fd0d3a50bce41e310df70bf040db2a45811ac573feb324d91c324f336"
+    },
+    {
       "node": "tests/test_portable.py::CliOutcomes::test_delivery_cannot_replace_owner_epoch_request_or_reviewed_plan",
       "purpose_sha256": "d1154e5fd0d3a50bce41e310df70bf040db2a45811ac573feb324d91c324f336"
     },
@@ -10085,6 +10145,10 @@
     },
     {
       "node": "tests/test_portable.py::CliOutcomes::test_read_and_plan_results_have_their_own_completed_response",
+      "purpose_sha256": "d1154e5fd0d3a50bce41e310df70bf040db2a45811ac573feb324d91c324f336"
+    },
+    {
+      "node": "tests/test_portable.py::CliOutcomes::test_submit_workflow_and_driver_term_are_paired",
       "purpose_sha256": "d1154e5fd0d3a50bce41e310df70bf040db2a45811ac573feb324d91c324f336"
     },
     {
@@ -10141,6 +10205,10 @@
     },
     {
       "node": "tests/test_portable.py::Portable::test_candidate_not_production_qualified",
+      "purpose_sha256": "45c39bca4ce7c7165b08bbbbd0fa07a59aaff8103327277042325475b0b86cd7"
+    },
+    {
+      "node": "tests/test_portable.py::Portable::test_checkout_environment_and_evidence_paths_are_disjoint_in_both_directions",
       "purpose_sha256": "45c39bca4ce7c7165b08bbbbd0fa07a59aaff8103327277042325475b0b86cd7"
     },
     {
@@ -10225,6 +10293,14 @@
     },
     {
       "node": "tests/test_portable.py::Portable::test_merge_domain_conflict",
+      "purpose_sha256": "45c39bca4ce7c7165b08bbbbd0fa07a59aaff8103327277042325475b0b86cd7"
+    },
+    {
+      "node": "tests/test_portable.py::Portable::test_merge_keys_requests_by_complete_owner",
+      "purpose_sha256": "45c39bca4ce7c7165b08bbbbd0fa07a59aaff8103327277042325475b0b86cd7"
+    },
+    {
+      "node": "tests/test_portable.py::Portable::test_merge_preserves_complete_participant_evidence",
       "purpose_sha256": "45c39bca4ce7c7165b08bbbbd0fa07a59aaff8103327277042325475b0b86cd7"
     },
     {
@@ -11680,6 +11756,10 @@
       "purpose_sha256": "fc1e1c5dca367768268be899632c6acc9eba00f425568f3a1fe407d6df4d849b"
     },
     {
+      "node": "tests/test_resources.py::Capacity::test_pool_covers_sum_of_visible_quota_claims",
+      "purpose_sha256": "fc1e1c5dca367768268be899632c6acc9eba00f425568f3a1fe407d6df4d849b"
+    },
+    {
       "node": "tests/test_resources.py::Capacity::test_pool_inode_reserve",
       "purpose_sha256": "fc1e1c5dca367768268be899632c6acc9eba00f425568f3a1fe407d6df4d849b"
     },
@@ -12904,6 +12984,42 @@
       "purpose_sha256": "0ff2b5efa64237ffc95e3d8db783a2dd9fa25c5983984971ce343c644b5cd428"
     },
     {
+      "node": "tests/test_schema_identity_cache.py::test_core_digest_reuse_does_not_admit_a_custom_core_replacement",
+      "purpose_sha256": "44d4c6bd348aafa9156bd0f7a5b4dab502d71463e0362cf251015b04c98cf39b"
+    },
+    {
+      "node": "tests/test_schema_identity_cache.py::test_core_identity_rechecks_catalogue_sources[changed-catalogue]",
+      "purpose_sha256": "44d4c6bd348aafa9156bd0f7a5b4dab502d71463e0362cf251015b04c98cf39b"
+    },
+    {
+      "node": "tests/test_schema_identity_cache.py::test_core_identity_rechecks_catalogue_sources[missing-catalogue]",
+      "purpose_sha256": "44d4c6bd348aafa9156bd0f7a5b4dab502d71463e0362cf251015b04c98cf39b"
+    },
+    {
+      "node": "tests/test_schema_identity_cache.py::test_core_identity_rechecks_complete_document_sources[annotation]",
+      "purpose_sha256": "44d4c6bd348aafa9156bd0f7a5b4dab502d71463e0362cf251015b04c98cf39b"
+    },
+    {
+      "node": "tests/test_schema_identity_cache.py::test_core_identity_rechecks_complete_document_sources[boolean-number]",
+      "purpose_sha256": "44d4c6bd348aafa9156bd0f7a5b4dab502d71463e0362cf251015b04c98cf39b"
+    },
+    {
+      "node": "tests/test_schema_identity_cache.py::test_core_identity_rechecks_complete_document_sources[missing-document]",
+      "purpose_sha256": "44d4c6bd348aafa9156bd0f7a5b4dab502d71463e0362cf251015b04c98cf39b"
+    },
+    {
+      "node": "tests/test_schema_identity_cache.py::test_core_identity_rechecks_complete_document_sources[unreachable-reference]",
+      "purpose_sha256": "44d4c6bd348aafa9156bd0f7a5b4dab502d71463e0362cf251015b04c98cf39b"
+    },
+    {
+      "node": "tests/test_schema_identity_cache.py::test_core_identity_rechecks_complete_document_sources[unsafe-integer]",
+      "purpose_sha256": "44d4c6bd348aafa9156bd0f7a5b4dab502d71463e0362cf251015b04c98cf39b"
+    },
+    {
+      "node": "tests/test_schema_identity_cache.py::test_identity_result_mutation_cannot_change_a_later_commitment",
+      "purpose_sha256": "44d4c6bd348aafa9156bd0f7a5b4dab502d71463e0362cf251015b04c98cf39b"
+    },
+    {
       "node": "tests/test_schema_regex_profile.py::test_eight_paths_remain_accepted_with_exact_matching[eight-branches]",
       "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
     },
@@ -13560,6 +13676,14 @@
       "purpose_sha256": "c36a6c44a0c93ecdeb0378ed2a0f5a6e84bb16337bba78f9af6c1a4ab48a100b"
     },
     {
+      "node": "tests/test_source_authority.py::test_secret_file_cannot_be_a_directory_in_its_component[False]",
+      "purpose_sha256": "c36a6c44a0c93ecdeb0378ed2a0f5a6e84bb16337bba78f9af6c1a4ab48a100b"
+    },
+    {
+      "node": "tests/test_source_authority.py::test_secret_file_cannot_be_a_directory_in_its_component[True]",
+      "purpose_sha256": "c36a6c44a0c93ecdeb0378ed2a0f5a6e84bb16337bba78f9af6c1a4ab48a100b"
+    },
+    {
       "node": "tests/test_source_authority.py::test_secret_targets_preserve_component_namespaces_and_distinct_paths[component]",
       "purpose_sha256": "c36a6c44a0c93ecdeb0378ed2a0f5a6e84bb16337bba78f9af6c1a4ab48a100b"
     },
@@ -14181,6 +14305,10 @@
     },
     {
       "node": "tests/test_tracking.py::Noninterference::test_owner_reply_must_match_original_workflow_membership",
+      "purpose_sha256": "c60ec56d8275da17b210b859bfca1b2a4a087102d4056f98543fe610c624182e"
+    },
+    {
+      "node": "tests/test_tracking.py::Noninterference::test_positive_nonacceptance_is_bound_to_the_exact_submission",
       "purpose_sha256": "c60ec56d8275da17b210b859bfca1b2a4a087102d4056f98543fe610c624182e"
     },
     {
@@ -16024,6 +16152,10 @@
       "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
     },
     {
+      "node": "tests/test_workflow_journal.py::test_successor_gate_and_phase_proof_use_installed_publisher_reader",
+      "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
+    },
+    {
       "node": "tests/test_workflow_journal.py::test_terminal_workflow_cannot_start_or_join_a_driver_transfer[cancelled]",
       "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
     },
@@ -16037,6 +16169,10 @@
     },
     {
       "node": "tests/test_workflow_journal.py::test_unknown_accepted_operation_blocks_successor_commit",
+      "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
+    },
+    {
+      "node": "tests/test_workflow_journal.py::test_vote_once_per_common_round_survives_cold_restart",
       "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
     },
     {

@@ -20,6 +20,7 @@ from fishhat_adapters import (
     instance_reference,
     runtime_binding_digest,
 )
+from fishhat_adapters.process import ProcessReceipt
 from fishhat_contracts.adapter_semantics import accumulate_result
 from fishhat_contracts.bounds import Bounds, bounds
 from fishhat_contracts.validation import ContractError, canonical, digest, validate
@@ -38,12 +39,12 @@ class AdapterCoordinator:
     (delta), owner, expected_revision, revision and updates. Updates contain only
     changed entries in bindings, admission, quiescent, attempts, requests and
     results, keyed by subject or attempt ID as in the checkpoint. A result update
-    contains latest, knowledge and records, with only newly appended digest-keyed
-    request/response records. The receiver atomically checks its exact owner and
+    contains latest, knowledge, processes_quiescent and digest-keyed request/response
+    records. The receiver atomically checks its exact owner and
     expected revision, appends new requests and result records, updates only the
     selected binding/admission/attempt/result heads, and advances revision before
     acknowledging. Existing request and result bytes are immutable; result records
-    merge by their digest, while latest and knowledge replace their selected head.
+    merge by their digest, while the other three fields replace their selected head.
     Updates omit unchanged entries and never mean deletion. Native receivers must
     enforce these preconditions in the same durable transaction as the writes.
 
@@ -62,6 +63,7 @@ class AdapterCoordinator:
         registry: Registry,
         commit_delta: Callable[[dict[str, Any]], None],
         *,
+        processes_quiescent: Callable[[dict[str, Any]], bool] | None = None,
         native_exclusion: Callable[[dict[str, Any]], str | None] | None = None,
     ) -> None:
         validate("common.schema.json", owner, "Owner")
@@ -71,6 +73,7 @@ class AdapterCoordinator:
         # identity covers one continuously held exclusion of all native writers;
         # releasing and reacquiring that exclusion must return a new identity.
         self.native_exclusion = native_exclusion
+        self.processes_quiescent = processes_quiescent
         self._poisoned = False
         self._observation_barriers: dict[str, dict[str, Any]] = {}
         self._quiescence_proofs: dict[str, dict[str, Any]] = {}
@@ -154,6 +157,7 @@ class AdapterCoordinator:
             for attempt_id, added in records.items():
                 evidence = self.state["results"].setdefault(attempt_id, {"records": {}})
                 evidence["records"].update(added["records"])
+                evidence["processes_quiescent"] = added["processes_quiescent"]
                 evidence["latest"] = added["latest"]
                 evidence["knowledge"] = added["knowledge"]
 
@@ -571,12 +575,25 @@ class AdapterCoordinator:
         require(digest(request) == attempt["input_digest"], "DELEGATED_INPUT_IDENTITY")
         return cast(dict[str, Any], control)
 
-    def settle(self, attempt_id: str, request: dict[str, Any], response: dict[str, Any]) -> None:
-        """Retain complete typed response custody before resolving the original attempt."""
+    def settle(
+        self, attempt_id: str, request: dict[str, Any], response: dict[str, Any] | ProcessReceipt
+    ) -> None:
+        """Retain verified effects even when supervision cannot certify complete cessation.
+
+        The trusted supervisor checks the exact original attempt and all its launches,
+        including reconciliation and descendants, under continuous owner exclusion.
+        Exact evidence may be submitted again after independently verified cessation.
+        """
         require(not self._poisoned, "OWNER_COMMIT_UNCERTAIN")
         attempt = self.state["attempts"].get(attempt_id)
         require(attempt is not None, "UNKNOWN_ATTEMPT")
         assert attempt is not None
+        transport_complete = True
+        if isinstance(response, ProcessReceipt):
+            transport_complete = response.complete
+            require(response.response is not None, "UNVERIFIED_PROCESS_RESPONSE")
+            assert response.response is not None
+            response = response.response
         check_response(
             attempt["executor"]["role"],
             request,
@@ -589,17 +606,37 @@ class AdapterCoordinator:
         }
         identity = digest(retained)
         previous = self.state["results"].get(attempt_id)
-        if previous is not None and identity in previous["records"]:
+        replay = previous is not None and identity in previous["records"]
+        if replay:
             require(previous["records"][identity] == retained, "RESULT_IDENTITY_CONFLICT")
+            if attempt["state"] == "resolved":
+                return
+        processes_quiescent = False
+        if transport_complete and self.processes_quiescent is not None:
+            try:
+                processes_quiescent = self.processes_quiescent(copy.deepcopy(attempt)) is True
+            except Exception:
+                # Supervisor unavailability cannot discard already verified effects.
+                processes_quiescent = False
+        if replay and processes_quiescent == previous["processes_quiescent"]:
             return
         require(attempt["state"] in {"dispatched", "reconciling"}, "INVALID_SETTLEMENT")
-        knowledge = accumulate_result(
-            attempt,
-            response["effect"],
-            previous=None if previous is None else previous["knowledge"],
+        knowledge = (
+            previous["knowledge"]
+            if replay
+            else accumulate_result(
+                attempt,
+                response["effect"],
+                previous=None if previous is None else previous["knowledge"],
+            )
         )
-        changed = {**attempt, **self._settlement(knowledge)}
-        evidence = {"latest": identity, "records": {identity: retained}, "knowledge": knowledge}
+        changed = {**attempt, **self._settlement(knowledge, processes_quiescent)}
+        evidence = {
+            "latest": identity,
+            "records": {identity: retained},
+            "knowledge": knowledge,
+            "processes_quiescent": processes_quiescent,
+        }
         subject = self._scope_subjects[canonical(attempt["scope"])]
         self._publish(
             {"attempts": {attempt_id: changed}, "results": {attempt_id: evidence}},
@@ -607,11 +644,12 @@ class AdapterCoordinator:
         )
 
     @staticmethod
-    def _settlement(knowledge: dict[str, Any]) -> dict[str, Any]:
+    def _settlement(knowledge: dict[str, Any], processes_quiescent: bool) -> dict[str, Any]:
         completion = knowledge["completion"]
         outcome = "pending"
         if (
-            completion is not None
+            processes_quiescent
+            and completion is not None
             and completion["effect_certainty"] == knowledge["effect_certainty"]
         ):
             outcome = "succeeded" if completion["postcondition"] == "satisfied" else "failed"
@@ -643,7 +681,8 @@ class AdapterCoordinator:
                 )
                 continue
             require(
-                set(evidence) == {"latest", "records", "knowledge"}
+                set(evidence) == {"latest", "records", "knowledge", "processes_quiescent"}
+                and isinstance(evidence["processes_quiescent"], bool)
                 and evidence["latest"] in evidence["records"],
                 "RESTORE_RESULT_CUSTODY",
             )
@@ -664,10 +703,9 @@ class AdapterCoordinator:
                 )
             require(knowledge == evidence["knowledge"], "RESTORE_RESULT_KNOWLEDGE")
             assert knowledge is not None
+            settled = self._settlement(knowledge, evidence["processes_quiescent"])
             require(
-                all(
-                    attempt[field] == value for field, value in self._settlement(knowledge).items()
-                ),
+                all(attempt[field] == value for field, value in settled.items()),
                 "RESTORE_RESULT_STATE",
             )
 
@@ -818,8 +856,8 @@ class AdapterCoordinator:
                 attempt["executor"]["role"],
                 {"attempt": attempt, "request": snapshot["requests"][key]},
             )
-        self._check_retained_results(snapshot)
         candidate = copy.deepcopy(snapshot)
+        self._check_retained_results(candidate)
         candidate["admission"] = {subject: False for subject in candidate["bindings"]}
         candidate["quiescent"] = {subject: False for subject in candidate["bindings"]}
         for binding in candidate["bindings"].values():

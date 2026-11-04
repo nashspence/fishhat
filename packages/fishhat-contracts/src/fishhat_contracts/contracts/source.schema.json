@@ -1178,7 +1178,7 @@
         },
         "secret_bindings": {
           "type": "object",
-          "description": "Each component and canonical absolute target pair has one secret-delivery declaration, regardless of binding name, secret entry or delivery mode. Different component namespaces may use the same target spelling. Native admission must verify that their actual destinations remain independently scoped.",
+          "description": "Each component and canonical absolute target pair has one secret-delivery declaration, regardless of binding name, secret entry or delivery mode. Within each component these file targets must also be disjoint: a file cannot be an ancestor of another target. Different component namespaces may use the same target spelling. Native admission must verify that their actual destinations remain independently scoped.",
           "minProperties": 0,
           "propertyNames": {
             "pattern": "^[a-z][a-z0-9-]{0,63}(?![\\s\\S])"

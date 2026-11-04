@@ -666,6 +666,9 @@
         },
         "problem": {
           "$ref": "records.schema.json#/$defs/Problem"
+        },
+        "nonacceptance": {
+          "$ref": "records.schema.json#/$defs/SubmissionRefusal"
         }
       },
       "required": [
@@ -675,7 +678,35 @@
         "ok",
         "problem"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "if": {
+        "required": [
+          "nonacceptance"
+        ]
+      },
+      "then": {
+        "properties": {
+          "method": {
+            "const": "operation.submit"
+          },
+          "problem": {
+            "properties": {
+              "code": {
+                "$ref": "records.schema.json#/$defs/SubmissionRefusal/properties/reason"
+              },
+              "retry": {
+                "const": "none"
+              },
+              "owner": {
+                "$ref": "common.schema.json#/$defs/Owner"
+              },
+              "resource": {
+                "$ref": "common.schema.json#/$defs/Resource"
+              }
+            }
+          }
+        }
+      }
     },
     {
       "type": "object",

@@ -111,7 +111,7 @@
     "runtime": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/runtime-adapter.schema.json",
-        "digest": "sha256:8f14156b79a5af49c12f8c2fc9b5db1494d482132586118cb85b8408f875d76a"
+        "digest": "sha256:5ee1141a064e48964442a7419bd5b2992da1e8d967a8402010090b9b6d9178a0"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/runtime-adapter.schema.json#/$defs/Response",
@@ -119,5 +119,5 @@
       }
     }
   },
-  "process_schema_digest": "sha256:1655d583e6d5b93a99b4c5de6c29459751a8b1cd09dec238b686c1e8e3de1c3b"
+  "process_schema_digest": "sha256:88cd09368b7f1099611f64ed1ac2b35d90aa30894580e9052c23a75bf3cb65e2"
 }

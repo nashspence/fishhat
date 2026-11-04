@@ -258,7 +258,8 @@
             "$ref": "common.schema.json#/$defs/Digest"
           },
           "minItems": 0,
-          "uniqueItems": true
+          "uniqueItems": true,
+          "description": "Unverified independent evidence digests. Same-domain import retains their complete set union idempotently. Import does not authenticate evidence or upgrade acceptance knowledge."
         },
         "credential_material": {
           "const": false

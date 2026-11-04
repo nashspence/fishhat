@@ -303,15 +303,15 @@
   "schemas": {
     "actions.schema.json": {
       "id": "https://fishhat.invalid/contracts/actions.schema.json",
-      "sha256": "87eebadacd8ac11a16e66b337fa92b18a568e7121be1dc451b3eefb97b52019b"
+      "sha256": "da0067dbf53a015fd6773445255b458732a3a644aa6751988ec2d5e026c57491"
     },
     "adapter-process.schema.json": {
       "id": "https://fishhat.invalid/contracts/adapter-process.schema.json",
-      "sha256": "e46c105c8225568d92071558fba7c46c06b86fbec2a911955379fd01ebe6c00a"
+      "sha256": "582e767ab86102f466ec401c3b4bb37136f1432e1e019f90e2a41fce7ccba88a"
     },
     "adapter.schema.json": {
       "id": "https://fishhat.invalid/contracts/adapter.schema.json",
-      "sha256": "4f5cff9eda85d51c10770a7e116561cf9f96ac3a5807924a2548d83282947b70"
+      "sha256": "79f65324f3a173aa294a2f3e2c6b59957b7fefe09378a6ed4e60122f7b59195b"
     },
     "backup-adapter.schema.json": {
       "id": "https://fishhat.invalid/contracts/backup-adapter.schema.json",
@@ -351,15 +351,15 @@
     },
     "cli-output.schema.json": {
       "id": "https://fishhat.invalid/contracts/cli-output.schema.json",
-      "sha256": "db7cbdcbe30b36f400159556fe0715e1c293ceb119a308d08f424a433a160ce2"
+      "sha256": "927b916350e4ecac39900f367dac720c3d44044dd81805fb08597c8d4b04b8dd"
     },
     "client-records.schema.json": {
       "id": "https://fishhat.invalid/contracts/client-records.schema.json",
-      "sha256": "0f67c6cf6a55af34f9e35139bcb76826720ba505420bdce9d17d17de613e56b4"
+      "sha256": "154c25626dd242e276109bd56041c89bd7d2584ca04abead80f1aa3497e0c0c4"
     },
     "common.schema.json": {
       "id": "https://fishhat.invalid/contracts/common.schema.json",
-      "sha256": "29ad01e8a6f4351b0fbaa2f824fe9015c4babcbc0c14e5111f9c7e1906e40ef1"
+      "sha256": "c27cc1bad54a260158437481867fb95c1135bad351f6a3fde78010b116d8e8ac"
     },
     "compute-adapter.schema.json": {
       "id": "https://fishhat.invalid/contracts/compute-adapter.schema.json",
@@ -467,7 +467,7 @@
     },
     "records.schema.json": {
       "id": "https://fishhat.invalid/contracts/records.schema.json",
-      "sha256": "b43a5dcd2900ba3db0d1dfb4c9bffe2f10dd1be4039109a2b09fcf2b3cf05821"
+      "sha256": "edeebb7841d24bd6cbf6e592a93bdeeccfff18939a33272a92abb95f13db17e2"
     },
     "recovery-point.schema.json": {
       "id": "https://fishhat.invalid/contracts/recovery-point.schema.json",
@@ -487,7 +487,7 @@
     },
     "resource-records.schema.json": {
       "id": "https://fishhat.invalid/contracts/resource-records.schema.json",
-      "sha256": "094f919df9693c81f11f43ff82ba666076386c1e115cd3d7d389acf70149c9a7"
+      "sha256": "fa31b4ad1c11668a60650ef84b3b831dbadac96f33b783a611ccbb3b422a3e38"
     },
     "resources.schema.json": {
       "id": "https://fishhat.invalid/contracts/resources.schema.json",
@@ -515,15 +515,15 @@
     },
     "source.schema.json": {
       "id": "https://fishhat.invalid/contracts/source.schema.json",
-      "sha256": "0e0a172d6fb994490e91b1f0486a8982071fc6e4b8b12d1d304b76b8b19a3dd0"
+      "sha256": "9bc119eee840cade6c4f0c5905f24b6d1d9cf95d840035beda432173ae5eff43"
     },
     "ssh-request.schema.json": {
       "id": "https://fishhat.invalid/contracts/ssh-request.schema.json",
-      "sha256": "139d0fa4010848aefed590df5d9c6d4e2569e61ca76dabaf26b3467859da9b44"
+      "sha256": "e9e5f478c4b2ccf0906f8beee9eb765a97953921d2f90f842a42cc2de9e576e9"
     },
     "ssh-response.schema.json": {
       "id": "https://fishhat.invalid/contracts/ssh-response.schema.json",
-      "sha256": "66a647128d7f5b5a20bd092d40ac88bbc64030270504646f9463c37d7e8a5014"
+      "sha256": "7d7e4bf7bdf113c6a71609908676dabfd7bf5e1f1a65e385e3e4b3a4680c4c8d"
     },
     "storage-adapter.schema.json": {
       "id": "https://fishhat.invalid/contracts/storage-adapter.schema.json",
@@ -567,7 +567,7 @@
     },
     "workspace.schema.json": {
       "id": "https://fishhat.invalid/contracts/workspace.schema.json",
-      "sha256": "05b7841eeb87dd680275e428ba156e9b4c0fb4774a4f523082d0f6ef03362701"
+      "sha256": "f42c626ac540b09e8ea8e73e0e65d901ec977ed938094806ac184232705418c0"
     }
   }
 }

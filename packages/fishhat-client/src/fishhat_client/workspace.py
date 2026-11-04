@@ -7,6 +7,7 @@ Path checks are lexical; actual no-follow/mount/ownership checks need native cod
 from __future__ import annotations
 
 import re
+from itertools import chain, combinations
 from pathlib import PurePosixPath
 from typing import Any, cast
 
@@ -46,25 +47,22 @@ def within(path: str, root: str) -> bool:
 
 def validate_session(value: dict[str, Any]) -> dict[str, Any]:
     validate("workspace.schema.json", value)
-    paths = [value[k] for k in ("root", "domain_dir", "tool_env", "test_env")]
+    clean_path(value["root"])
+    directories = [value["domain_dir"], value["tool_env"], value["test_env"]]
     if value["tools_dir"] is not None:
-        paths.append(value["tools_dir"])
-    for p in paths:
-        clean_path(p)
-    if not within(value["domain_dir"], value["root"]) or value["domain_dir"] == value["root"]:
-        raise ContractError("domain outside registered root")
+        directories.append(value["tools_dir"])
     evidence = value.get("evidence_dir")
     if evidence is not None:
-        clean_path(evidence)
-        if within(evidence, value["root"]) or within(value["root"], evidence):
-            raise ContractError("optional external evidence path overlaps disposable root")
-    for env in (value["tool_env"], value["test_env"]):
-        if within(env, value["domain_dir"]):
-            raise ContractError("environment/source overlap")
-        if evidence and (within(evidence, env) or within(env, evidence)):
-            raise ContractError("optional evidence/environment overlap")
-    if value["tool_env"] == value["test_env"]:
-        raise ContractError("tool/test environments must differ")
+        directories.append(evidence)
+    for path in directories:
+        clean_path(path)
+    if not within(value["domain_dir"], value["root"]) or value["domain_dir"] == value["root"]:
+        raise ContractError("domain outside registered root")
+    if evidence and (within(evidence, value["root"]) or within(value["root"], evidence)):
+        raise ContractError("optional external evidence path overlaps disposable root")
+    for left, right in combinations(directories, 2):
+        if within(left, right) or within(right, left):
+            raise ContractError("session checkout, environment or evidence directories overlap")
     return value
 
 
@@ -137,13 +135,18 @@ def check_closeout(value: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _delivery_key(delivery: dict[str, Any]) -> tuple[str, str, str, str]:
+    owner = delivery["owner"]
+    return owner["tool"], owner["id"], owner["epoch"], delivery["request_id"]
+
+
 def validate_export(value: dict[str, Any]) -> dict[str, Any]:
     validate("client-records.schema.json", value, "ReceiptExport")
     keys = set()
     for d in value["deliveries"]:
         if d["domain_id"] != value["domain_id"]:
             raise ContractError("receipt domain binding mismatch")
-        k = (d["owner"]["id"], d["owner"]["epoch"], d["request_id"])
+        k = _delivery_key(d)
         if k in keys:
             raise ContractError("duplicate owner request identity")
         keys.add(k)
@@ -158,9 +161,12 @@ def merge_exports(a: dict[str, Any], b: dict[str, Any]) -> dict[str, Any]:
     if a["domain_id"] != b["domain_id"]:
         raise ContractError("wrong domain evidence")
     result = copy.deepcopy(a)
-    known = {(d["owner"]["id"], d["owner"]["epoch"], d["request_id"]): d for d in a["deliveries"]}
+    result["participant_evidence"] = list(
+        dict.fromkeys(chain(a["participant_evidence"], b["participant_evidence"]))
+    )
+    known = {_delivery_key(d): d for d in a["deliveries"]}
     for d in b["deliveries"]:
-        k = (d["owner"]["id"], d["owner"]["epoch"], d["request_id"])
+        k = _delivery_key(d)
         if k in known:
             for f in (
                 "domain_id",

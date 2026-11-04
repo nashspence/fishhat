@@ -69,7 +69,7 @@ class CommitStore:
             previous = self.state["requests"].get(attempt_id)
             assert previous is None or previous == request
         for attempt_id, evidence in updates.get("results", {}).items():
-            assert set(evidence) == {"latest", "records", "knowledge"}
+            assert set(evidence) == {"latest", "records", "knowledge", "processes_quiescent"}
             previous = self.state["results"].get(attempt_id, {"records": {}})
             assert evidence["latest"] in evidence["records"]
             for identity, record in evidence["records"].items():
@@ -87,6 +87,7 @@ class CommitStore:
             for attempt_id, evidence in rows.items():
                 previous = self.state["results"].setdefault(attempt_id, {"records": {}})
                 previous["records"].update(evidence["records"])
+                previous["processes_quiescent"] = evidence["processes_quiescent"]
                 previous["latest"] = evidence["latest"]
                 previous["knowledge"] = evidence["knowledge"]
 
