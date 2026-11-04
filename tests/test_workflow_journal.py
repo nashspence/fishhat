@@ -31,6 +31,18 @@ CHECK_PURPOSE = {
 }
 
 CHECK_OVERRIDES = {
+    "test_uncertain_tail_repair_cost_and_custody": {
+        **CHECK_PURPOSE,
+        "purpose": "implementation",
+        "relationship": "scoped-witness",
+        "authority": [
+            "packages/fishhat-contracts/src/fishhat_contracts/contracts/workflow-journal.schema.json",
+            "fishhat/owner-support/src/fishhat_owner/workflow_journal.py#WorkflowJournal.repair_tail",
+        ],
+        "scope": "Reference repair and measured I/O and hash extent for increasing torn suffixes",
+        "reason": "Checks exact quarantine, refusal and positive closure against real store bytes.",
+        "claims": ["engineering:workflow.journal-store.repair-tail"],
+    },
     "test_complete_workflow_survives_disk_restart_and_lost_replies": {
         **CHECK_PURPOSE,
         "purpose": "implementation",
@@ -86,7 +98,7 @@ CHECK_OVERRIDES = {
             "engineering:workflow.journal-store.iter_events",
             "engineering:workflow.journal-store.close",
         ],
-    }
+    },
 }
 
 
@@ -685,6 +697,7 @@ def test_failed_append_preserves_tail_and_old_custody_without_reopening_writer(
     original = journal.append(
         "original", {"request": "accepted"}, {"outcome": "retained"}, expected_head=journal.head
     )
+    checkpoint = original["receipt"]["digest"]
     accepted_bytes = path.read_bytes()
 
     def fail(*args):
@@ -711,6 +724,94 @@ def test_failed_append_preserves_tail_and_old_custody_without_reopening_writer(
     with pytest.raises(ContractError):
         WorkflowJournal.open(path, expected_owner=owner, expected_schema=schema)
     assert path.read_bytes() == tail
+    options = {"expected_owner": owner, "expected_schema": schema}
+    with pytest.raises(ContractError, match="independent checkpoint"):
+        WorkflowJournal.open(path, **options, verified_prefix_head=digest("stale checkpoint"))
+    prefix = WorkflowJournal.open(path, **options, verified_prefix_head=checkpoint)
+    try:
+        with pytest.raises(ContractError, match="permission"):
+            prefix.lookup("original", read_authorized=False)
+        assert prefix.lookup("original", read_authorized=True) == original
+        assert prefix.lookup("uncertain", read_authorized=True) is None
+        with pytest.raises(ContractError, match="writer unavailable"), prefix.guard(checkpoint):
+            pytest.fail("prefix inspection opened native admission")
+        with pytest.raises(ContractError, match="writer unavailable"):
+            prefix.append("later", {}, {}, expected_head=checkpoint)
+        with pytest.raises(ContractError, match="lacks native closure"):
+            prefix.repair_tail(reconcile=lambda evidence, archive: False)
+        assert path.read_bytes() == tail
+
+        def reconcile(evidence, archive):
+            from hashlib import sha256
+
+            uncertain = tail[len(accepted_bytes) :]
+            assert archive.read_bytes() == uncertain
+            assert evidence == {
+                "owner": owner,
+                "journal_id": original["receipt"]["journal_id"],
+                "head": checkpoint,
+                "sequence": 1,
+                "tail_size": len(uncertain),
+                "tail_digest": "sha256:" + sha256(uncertain).hexdigest(),
+            }
+            return True
+
+        prefix.repair_tail(reconcile=reconcile)
+        assert path.read_bytes() == accepted_bytes
+        with pytest.raises(ContractError, match="writer unavailable"):
+            prefix.append("later", {}, {}, expected_head=checkpoint)
+    finally:
+        prefix.close()
+    assert [p.read_bytes() for p in tmp_path.glob("*.quarantine-*")] == [
+        tail[len(accepted_bytes) :]
+    ]
+    reopened = WorkflowJournal.open(path, **options)
+    try:
+        assert reopened.lookup("original", read_authorized=True) == original
+        assert reopened.lookup("uncertain", read_authorized=True) is None
+        assert (
+            reopened.append(
+                "original", original["request"], original["outcome"], expected_head=checkpoint
+            )
+            == original
+        )
+        reopened.append("later", {}, {}, expected_head=checkpoint)
+    finally:
+        reopened.close()
+
+
+def test_uncertain_tail_repair_cost_and_custody(tmp_path):
+    owner, schema = LogicalWorkload().owner(0), store_identity()
+    overhead = None
+    for extent in (1000, 66000, 265000):
+        path = tmp_path / f"journal-{extent}"
+        journal = WorkflowJournal.create(path, owner=owner, schema=schema)
+        checkpoint = journal.head
+        journal.close()
+        torn = b"!" * extent
+        with path.open("ab") as stream:
+            stream.write(torn)
+        prefix = WorkflowJournal.open(
+            path, expected_owner=owner, expected_schema=schema, verified_prefix_head=checkpoint
+        )
+        try:
+
+            def approve(evidence, archive, *, checkpoint=checkpoint, extent=extent, torn=torn):
+                assert evidence["head"] == checkpoint and evidence["tail_size"] == extent
+                assert archive.read_bytes() == torn
+                return True
+
+            measured = prefix.metrics
+            measured.clear()
+            prefix.repair_tail(reconcile=approve)
+            assert measured["bytes_written"] == extent
+            fixed = (measured["bytes_read"] - extent, measured["bytes_hashed"] - extent)
+            assert all(0 < value < 1024 for value in fixed)
+            if overhead is None:
+                overhead = fixed
+            assert fixed == overhead
+        finally:
+            prefix.close()
 
 
 def test_successor_gate_and_phase_proof_use_installed_publisher_reader(journal_run, monkeypatch):

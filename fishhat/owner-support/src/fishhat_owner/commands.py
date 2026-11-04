@@ -5,7 +5,7 @@ import re
 import shlex
 from typing import Any
 
-from fishhat_contracts.validation import ROOT, ContractError
+from fishhat_contracts.validation import ROOT, ContractError, strict_json, validate
 
 FORMS = json.loads((ROOT / "contracts/owner-cli.json").read_text())["forms"]
 PATTERNS = {
@@ -43,3 +43,22 @@ def parse_command(command: str, receiver: str) -> dict[str, Any]:
         ):
             return {"form": form["name"], "use_case": form["use_case"], "tokens": tokens}
     raise ContractError("unsupported owner CLI form")
+
+
+def workflow_apply_params(data: bytes, expected_owner: dict[str, Any]) -> dict[str, Any]:
+    """Decode workflow-apply stdin for the ordinary receiving admission guard."""
+    params = strict_json(data)
+    if not isinstance(params, dict) or params.get("owner") != expected_owner:
+        raise ContractError("workflow submission requires the exact local owner epoch")
+    validate(
+        "ssh-request.schema.json",
+        {
+            "format": "deployment-ops/owner/v1",
+            "message_id": params.get("request_id"),
+            "method": "operation.submit",
+            "params": params,
+        },
+    )
+    if params["workflow_id"] is None:
+        raise ContractError("workflow submission requires explicit membership and driver term")
+    return params

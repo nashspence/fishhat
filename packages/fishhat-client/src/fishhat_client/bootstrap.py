@@ -9,9 +9,10 @@ permissions, native verification and effect reconciliation need native evidence.
 from __future__ import annotations
 
 import copy
-from typing import Any
+from typing import Any, BinaryIO
 
 from fishhat_adapters import check_configuration, check_descriptor, check_request
+from fishhat_contracts.artifact_custody import verify_artifact_stream
 from fishhat_contracts.bounds import Bounds, bounds
 from fishhat_contracts.validation import MAX_BYTES, ContractError, canonical, digest, validate
 
@@ -84,6 +85,7 @@ def validate_catalogue(
                 ("commit", "expected_commit"),
                 ("adapter", "adapter"),
                 ("capture", "capture"),
+                ("tree", "tree"),
             )
         ):
             raise ContractError("selected source not in recovery catalogue")
@@ -169,6 +171,7 @@ def validate_receipt(receipt: dict[str, Any], selection: dict[str, Any]) -> dict
             ("source_id", "source_id"),
             ("ref", "ref"),
             ("commit", "expected_commit"),
+            ("tree", "tree"),
         )
     ):
         raise ContractError("source recovery receipt identity mismatch")
@@ -177,3 +180,31 @@ def validate_receipt(receipt: dict[str, Any], selection: dict[str, Any]) -> dict
     if destination == root or not within(destination, root):
         raise ContractError("source recovery output outside staging")
     return receipt
+
+
+def prepare_verification(
+    receipt: dict[str, Any],
+    selection: dict[str, Any],
+    *,
+    scope: dict[str, Any],
+    retained_bundle: BinaryIO,
+) -> dict[str, Any]:
+    """Join an authenticated original recovery receipt to independently retained bytes.
+
+    The caller supplies an independently trusted selection and scope, verifies
+    original receiver provenance and opens immutable bundle custody at byte zero.
+    Git ref, object graph and tree verification belongs to the receiving adapter.
+    """
+    validate_receipt(receipt, selection)
+    verify_artifact_stream(receipt["output"], retained_bundle)
+    request = {
+        "contract": "fishhat.bootstrap-source",
+        "method": "verify",
+        "input": {
+            "scope": copy.deepcopy(scope),
+            "selection": copy.deepcopy(selection),
+            "recovery": copy.deepcopy(receipt),
+        },
+    }
+    check_request("bootstrap-source", request)
+    return request

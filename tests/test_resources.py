@@ -3,10 +3,12 @@
 import json
 import unittest
 from copy import deepcopy
+from dataclasses import replace
 
 from a_fishhat_podman_quadlet_runtime.commands import podman_delete_argv
 from a_fishhat_systemd_cgroup_adapter.commands import systemd_compute_settings
 from fishhat_contracts.resources import (
+    CapacityClock,
     ReservationModel,
     check_capacity,
     plan_cleanup,
@@ -15,6 +17,7 @@ from fishhat_contracts.resources import (
     revalidate_cleanup,
     validate_host_resources,
     validate_requirements,
+    validate_reservation,
 )
 from fishhat_contracts.validation import ContractError, digest, strict_yaml, validate, validate_host
 
@@ -40,6 +43,10 @@ CHECK_OVERRIDES = {
     }
     for name, (identity, symbol) in {
         "HostEnvelopes::test_complete_host": ("resources.host", "validate_host_resources"),
+        "Capacity::test_release_only_unconsumed_share_after_charge_and_replay": (
+            "resources.reservation.charge",
+            "ReservationModel.record_charge",
+        ),
         "Cleanup::test_missing_graph_node_blocks": ("resources.inventory", "validate_inventory"),
         "Cleanup::test_expected_candidates": ("resources.cleanup-plan", "plan_cleanup"),
     }.items()
@@ -52,6 +59,7 @@ def load(name):
 
 
 NOW = "2026-10-19T12:00:00Z"
+CAPACITY_CLOCK = CapacityClock("00000000-0000-4000-8000-000000000001", 120000, NOW)
 
 
 class HostEnvelopes(unittest.TestCase):
@@ -191,7 +199,7 @@ class Capacity(unittest.TestCase):
 
     def run_check(self):
         return check_capacity(
-            self.s, self.r, approved_bindings_digest=self.r["bindings_digest"], now=NOW
+            self.s, self.r, approved_bindings_digest=self.r["bindings_digest"], clock=CAPACITY_CLOCK
         )
 
     def test_valid_growth(self):
@@ -238,6 +246,19 @@ class Capacity(unittest.TestCase):
     def test_future_snapshot(self):
         self.s["observed_at"] = "2026-10-20T12:00:00Z"
         self.assertFalse(self.run_check()["admissible"])
+
+    def test_freshness_requires_current_boot_and_both_clocks(self):
+        for clock in (
+            replace(CAPACITY_CLOCK, boot_id="00000000-0000-4000-8000-000000000002"),
+            replace(CAPACITY_CLOCK, boottime_ms=150001),  # wall clock returned to its old value
+            replace(CAPACITY_CLOCK, boottime_ms=119999),
+        ):
+            with self.subTest(clock=clock):
+                book = ReservationModel(self.s, approved_bindings_digest=self.r["bindings_digest"])
+                with self.assertRaisesRegex(ContractError, "capacity reservation blocked"):
+                    book.reserve(self.r, clock=clock)
+                self.assertEqual(book.snapshot, self.s)
+                self.assertFalse(book.requests)
 
     def test_unknown_growth(self):
         self.r["estimate"] = "unknown"
@@ -287,29 +308,29 @@ class Capacity(unittest.TestCase):
     def test_concurrent_reservation(self):
         self.s["pools"][0]["available_bytes"] = 20 << 30
         book = ReservationModel(self.s, approved_bindings_digest=self.r["bindings_digest"])
-        book.reserve(self.r, now=NOW)
+        book.reserve(self.r, clock=CAPACITY_CLOCK)
         other = deepcopy(self.r)
         other["operation_id"] = "00000000-0000-4000-8000-000000000009"
         with self.assertRaises(ContractError):
-            book.reserve(other, now=NOW)
+            book.reserve(other, clock=CAPACITY_CLOCK)
 
     def test_reservation_idempotent(self):
         book = ReservationModel(self.s, approved_bindings_digest=self.r["bindings_digest"])
-        one = book.reserve(self.r, now=NOW)
+        one = book.reserve(self.r, clock=CAPACITY_CLOCK)
         snap = deepcopy(book.snapshot)
-        self.assertEqual(book.reserve(self.r, now=NOW), one)
+        self.assertEqual(book.reserve(self.r, clock=CAPACITY_CLOCK), one)
         self.assertEqual(book.snapshot, snap)
 
     def test_reservation_identity_conflict(self):
         book = ReservationModel(self.s, approved_bindings_digest=self.r["bindings_digest"])
-        book.reserve(self.r, now=NOW)
+        book.reserve(self.r, clock=CAPACITY_CLOCK)
         self.r["growth"][0]["bytes"] += 1
         with self.assertRaises(ContractError):
-            book.reserve(self.r, now=NOW)
+            book.reserve(self.r, clock=CAPACITY_CLOCK)
 
     def test_expiry_preserves_claim(self):
         book = ReservationModel(self.s, approved_bindings_digest=self.r["bindings_digest"])
-        book.reserve(self.r, now=NOW)
+        book.reserve(self.r, clock=CAPACITY_CLOCK)
         snap = deepcopy(book.snapshot)
         book.timeout(self.r["operation_id"])
         self.assertEqual(book.snapshot, snap)
@@ -317,16 +338,78 @@ class Capacity(unittest.TestCase):
 
     def test_release_requires_cessation(self):
         book = ReservationModel(self.s, approved_bindings_digest=self.r["bindings_digest"])
-        book.reserve(self.r, now=NOW)
+        book.reserve(self.r, clock=CAPACITY_CLOCK)
         with self.assertRaises(ContractError):
-            book.release(self.r["operation_id"], writer_stopped=False)
+            book.release(self.r["operation_id"], writer_stopped=False, clock=CAPACITY_CLOCK)
 
     def test_released_claim_not_subtracted_twice(self):
         book = ReservationModel(self.s, approved_bindings_digest=self.r["bindings_digest"])
-        book.reserve(self.r, now=NOW)
-        book.release(self.r["operation_id"], writer_stopped=True)
-        book.release(self.r["operation_id"], writer_stopped=True)
+        book.reserve(self.r, clock=CAPACITY_CLOCK)
+        book.release(self.r["operation_id"], writer_stopped=True, clock=CAPACITY_CLOCK)
+        book.release(self.r["operation_id"], writer_stopped=True, clock=CAPACITY_CLOCK)
         self.assertEqual(book.snapshot, self.s)
+
+    def test_release_only_unconsumed_share_after_charge_and_replay(self):
+        self.r["growth"] = [{"bucket": "runtime", "bytes": 100, "inodes": 10}]
+        book = ReservationModel(self.s, approved_bindings_digest=self.r["bindings_digest"])
+        original = book.reserve(self.r, clock=CAPACITY_CLOCK)
+        other = deepcopy(self.r)
+        other["operation_id"] = "00000000-0000-4000-8000-000000000009"
+        other["growth"][0].update(bytes=80, inodes=5)
+        book.reserve(other, clock=CAPACITY_CLOCK)
+        key = self.r["operation_id"]
+        for _ in range(2):
+            book.record_charge(
+                key, bucket="runtime", charged_bytes=60, charged_inodes=3, clock=CAPACITY_CLOCK
+            )
+        q = next(q for q in book.snapshot["quotas"] if q["bucket"] == "runtime")
+        p = next(p for p in book.snapshot["pools"] if p["pool"] == q["pool"])
+        self.assertEqual((q["reserved_remaining_bytes"], q["reserved_remaining_inodes"]), (120, 12))
+        self.assertEqual(q["used_bytes"], self.s["quotas"][0]["used_bytes"] + 60)
+        self.assertEqual(p["available_bytes"], self.s["pools"][0]["available_bytes"] - 60)
+        retained = book.reserve(self.r, clock=CAPACITY_CLOCK)
+        self.assertEqual(retained["grants_digest"], original["grants_digest"])
+        self.assertEqual(retained["claims"]["runtime"]["remaining_bytes"], 40)
+        book.timeout(key)
+        before = deepcopy(book.snapshot)
+        with self.assertRaisesRegex(ContractError, "regressed"):
+            book.record_charge(
+                key, bucket="runtime", charged_bytes=65, charged_inodes=2, clock=CAPACITY_CLOCK
+            )
+        with self.assertRaisesRegex(ContractError, "stale"):
+            book.release(
+                key, writer_stopped=True, clock=replace(CAPACITY_CLOCK, boottime_ms=150001)
+            )
+        self.assertEqual(book.snapshot, before)
+        for _ in range(2):
+            book.release(key, writer_stopped=True, clock=CAPACITY_CLOCK)
+        for record in (q, p):
+            self.assertEqual(
+                (record["reserved_remaining_bytes"], record["reserved_remaining_inodes"]), (80, 5)
+            )
+        self.assertEqual(
+            book.requests[other["operation_id"]]["claims"]["runtime"]["remaining_bytes"], 80
+        )
+        self.assertEqual(book.requests[key]["claims"]["runtime"]["remaining_bytes"], 0)
+
+    def test_recovered_reservation_reconstructs_original_grants(self):
+        record = load("examples/resources/reservation.json")
+        validate_reservation(record, request=self.r, admission_snapshot=self.s)
+        record["claims"].reverse()
+        record["phase"] = "reconciling"
+        record["claims"][0]["remaining_bytes"] //= 2
+        validate_reservation(record, request=self.r, admission_snapshot=self.s)
+        wrong = deepcopy(record)
+        wrong["grants_digest"] = digest(wrong["claims"])
+        with self.assertRaisesRegex(ContractError, "grants mismatch"):
+            validate_reservation(wrong, request=self.r, admission_snapshot=self.s)
+        wrong = deepcopy(record)
+        wrong["claims"][0]["storage"]["incarnation"] = "other"
+        with self.assertRaisesRegex(ContractError, "changed allocation"):
+            validate_reservation(wrong, request=self.r, admission_snapshot=self.s)
+        record["phase"] = "released"
+        with self.assertRaisesRegex(ContractError, "released claim"):
+            validate_reservation(record, request=self.r, admission_snapshot=self.s)
 
 
 class Cleanup(unittest.TestCase):

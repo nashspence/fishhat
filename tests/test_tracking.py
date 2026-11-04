@@ -10,7 +10,7 @@ import uuid
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from fishhat_client.submission import prepare_delivery, submit_once
+from fishhat_client.submission import prepare_delivery, reconcile_delivery, submit_once
 from fishhat_client.workspace import check_closeout, validate_session
 from fishhat_contracts.record_delivery import RecordSnapshot
 from fishhat_contracts.validation import ContractError, canonical, digest, validate, validate_cli
@@ -717,7 +717,7 @@ class Noninterference(unittest.TestCase):
 
     def test_positive_nonacceptance_is_bound_to_the_exact_submission(self):
         d = prepare_delivery(self.template)
-        fields = ("owner", "request_id", "plan_digest", "subject_digest", "workflow_id")
+        fields = ("owner", "resource", "request_id", "plan_digest", "subject_digest", "workflow_id")
         refusal = {key: d[key] for key in fields}
         refusal.update(kind="SubmissionRefusal", reason="PLAN_EXPIRED")
         problem = {
@@ -752,6 +752,24 @@ class Noninterference(unittest.TestCase):
             "delivery": rejected["delivery"],
         }
         validate_cli(cli)
+        validate_cli({**cli, "delivery": None})
+        with self.assertRaises(ContractError):
+            validate_cli({**cli, "delivery": None, "request_id": str(uuid.uuid4())})
+        # Both a lost request and a lost decision reply leave the same client state.
+        # The only message sent while investigating is a read of the original ID.
+        unknown = submit_once(d, Mock(side_effect=TimeoutError()))["delivery"]
+        lookup = Mock(return_value={**reply, "method": "operation.get"})
+        resolved = reconcile_delivery(unknown, lookup)
+        lookup.assert_called_once_with({"owner": d["owner"], "request_id": d["request_id"]})
+        self.assertEqual(resolved, rejected)
+        self.assertEqual(unknown["state"], "acceptance_unknown")
+        for missing in (None, {"ok": False, "problem": {"code": "NOT_FOUND"}}, reply):
+            lookup.reset_mock()
+            lookup.return_value = missing
+            self.assertEqual(reconcile_delivery(unknown, lookup)["delivery"], unknown)
+            lookup.assert_called_once_with({"owner": d["owner"], "request_id": d["request_id"]})
+        lookup.return_value = self.receipt(d)
+        self.assertEqual(reconcile_delivery(unknown, lookup)["delivery"]["state"], "accepted")
         with self.assertRaises(ContractError):
             validate_cli({**cli, "result": None})
         changed = {**refusal, "request_id": "11111111-1111-4111-8111-111111111111"}

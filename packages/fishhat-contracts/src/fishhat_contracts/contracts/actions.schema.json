@@ -1281,7 +1281,9 @@
           "$ref": "backup-result.schema.json#/$defs/BackupSelection"
         }
       },
-      "required": ["selection"],
+      "required": [
+        "selection"
+      ],
       "additionalProperties": false,
       "description": "Capture and publish an application recovery checkpoint using its declared data procedures. The receiving owner independently resolves and pins selection from protected accepted application state before Plan review: exact production instance, accepted release, complete preserve dataset set and secret generations. The exact release, dataset inventory and secret material roots belong in Plan.input_digests. Revalidate this same resource-to-instance mapping and accepted selection under current native exclusion before new admission and capture; a caller or source cannot self-approve another selection. Reject before admission when the accepted application release declares no application-owned dataset with preserve recovery policy; a stateless, rebuild-only or externally owned dataset set cannot produce an empty or fabricated checkpoint. Success returns BackupResult bound to this exact owner, Operation, request, reviewed Plan, resource and selection, wrapping the unchanged Checkpoint recovery object. It requires the exact signed capture, backup.store and backup.verify receipt closure for every preserved dataset and the historical backup executor, as defined by Checkpoint. Native owners verify that this accepted producer actually created the selected checkpoint and retain complete result and immutable artifact bytes under independent custody before success. An unrelated old result from the same owner is insufficient. Reconstruction does not consult mutable backend aliases. A successful capture and backup verification remain distinct from evidence that restoration has been tested."
     },
@@ -1573,10 +1575,7 @@
               "additionalProperties": false
             },
             "commit": {
-              "type": "string",
-              "minLength": 40,
-              "maxLength": 64,
-              "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})(?![\\s\\S])"
+              "$ref": "common.schema.json#/$defs/Commit"
             },
             "entrypoint": {
               "type": "string",
@@ -1664,10 +1663,7 @@
       "type": "object",
       "properties": {
         "base": {
-          "type": "string",
-          "minLength": 40,
-          "maxLength": 64,
-          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})(?![\\s\\S])"
+          "$ref": "common.schema.json#/$defs/Commit"
         },
         "paths": {
           "type": "array",
@@ -1703,10 +1699,7 @@
           "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
         },
         "commit": {
-          "type": "string",
-          "minLength": 40,
-          "maxLength": 64,
-          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})(?![\\s\\S])"
+          "$ref": "common.schema.json#/$defs/Commit"
         }
       },
       "required": [
@@ -1809,10 +1802,7 @@
           "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
         },
         "base": {
-          "type": "string",
-          "minLength": 40,
-          "maxLength": 64,
-          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})(?![\\s\\S])"
+          "$ref": "common.schema.json#/$defs/Commit"
         },
         "proposal": {
           "$ref": "common.schema.json#/$defs/Handle"
@@ -1824,7 +1814,7 @@
         "proposal"
       ],
       "additionalProperties": false,
-      "description": "Publish the exact reviewed source proposal against its named base through the authorized repository publisher. Publication changes source history; it does not activate that source on any host or application. The proposal handle selects the exact canonical records.schema SourceProposal, including its complete captured-file manifest and retained content handles. Before admission the receiving publisher verifies its source_id and base against this request, independently approves the repository mapping, acquires complete immutable custody of every referenced file and the exact base repository snapshot, and pins that closure in its Plan. It verifies old digests and differences against that base before publication. Original producer handles remain intact; approved receiving copies do not rewrite the proposal or require the original client. A mutable ref is never a substitute for the base commit or captured bytes."
+      "description": "Publish the exact reviewed source proposal against its named base through the authorized repository publisher. Publication changes source history; it does not activate that source on any host or application. The proposal handle selects the exact canonical records.schema SourceProposal, including its complete captured-file manifest and retained content handles. Before admission the receiving publisher verifies its source_id and base against this request, independently approves the repository mapping, acquires complete immutable custody of every referenced file and the exact base repository snapshot, and pins that closure in its Plan. It verifies old digests and differences against that base before publication. Original producer handles remain intact; approved receiving copies do not rewrite the proposal or require the original client. A mutable ref is never a substitute for the base commit or captured bytes. Produce a candidate commit derived from the exact reviewed base. For an existing direct branch, require its exact current tip to be an ancestor of, or equal to, the candidate. A divergent branch requires a new proposal and review. Creation requires verified literal absence. Symbolic destinations and force replacement are forbidden."
     },
     "dns.reconcile": {
       "type": "object",

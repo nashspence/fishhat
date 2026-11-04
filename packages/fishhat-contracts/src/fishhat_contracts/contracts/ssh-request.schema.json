@@ -424,7 +424,8 @@
             "owner",
             "request_id"
           ],
-          "additionalProperties": false
+          "additionalProperties": false,
+          "description": "Read the retained decision for this exact owner epoch and request ID under current permission for its protected resource. Return the accepted Operation (or its RecordReference), or the original durable SubmissionRefusal and matching Problem with ok false. Missing, unavailable or undisclosable decisions cannot establish nonacceptance. Lookup never admits work, creates a refusal, reserves a request ID, or requires submission permission."
         }
       },
       "required": [

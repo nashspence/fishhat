@@ -25,7 +25,7 @@
         "rejected",
         "unknown"
       ],
-      "description": "Accepted, running, waiting, succeeded, failed, cancelled and quarantined require an Operation result and exactly match its owner-reported execution state. Observed reports a completed read or non-Operation result without asserting execution success. Planned requires a completed Plan response. Paused describes an interrupted client workflow. Unknown describes uncertainty, never a proved rejection or failure. A rejected Delivery requires the authenticated owner’s exact SubmissionRefusal as result and its matching Problem. An ordinary error or denied read cannot establish nonacceptance."
+      "description": "Accepted, running, waiting, succeeded, failed, cancelled and quarantined require an Operation result and exactly match its owner-reported execution state. Observed reports a completed read or non-Operation result without asserting execution success. Planned requires a completed Plan response. Paused describes an interrupted client workflow. Unknown describes uncertainty, never a proved rejection or failure. A rejected Delivery requires the authenticated owner’s exact SubmissionRefusal as result and its matching Problem. An ordinary error or denied read cannot establish nonacceptance. A direct owner lookup may report the retained refusal with state rejected, the original request_id and matching Problem without a client Delivery."
     },
     "complete": {
       "type": "boolean",

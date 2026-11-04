@@ -20,7 +20,7 @@ from fishhat_contracts.resources import (
 from fishhat_contracts.validation import ContractError, digest
 
 from tests.linear_support import assert_linear, measure
-from tests.test_resources import load
+from tests.test_resources import CAPACITY_CLOCK, load
 from tests.test_retention_authority import NOW, inputs
 
 CHECK_PURPOSE = {
@@ -256,12 +256,20 @@ def test_reservation_request_linear_work():
 
         def complete(snapshot=snapshot, request=request, approved=approved):
             book = ReservationModel(snapshot, approved_bindings_digest=approved)
-            first = book.reserve(request, now=NOW)
-            assert book.reserve(request, now=NOW) == first
+            first = book.reserve(request, clock=CAPACITY_CLOCK)
+            assert book.reserve(request, clock=CAPACITY_CLOCK) == first
+            for _ in range(2):
+                book.record_charge(
+                    request["operation_id"],
+                    bucket="runtime",
+                    charged_bytes=512,
+                    charged_inodes=1,
+                    clock=CAPACITY_CLOCK,
+                )
             reserved = deepcopy(book.snapshot)
             book.timeout(request["operation_id"])
             with pytest.raises(ContractError, match="cessation evidence"):
-                book.release(request["operation_id"], writer_stopped=False)
+                book.release(request["operation_id"], writer_stopped=False, clock=CAPACITY_CLOCK)
             assert book.snapshot == reserved
             # A refreshed snapshot with unchanged bindings must be read anew;
             # an index retained from reserve would mutate this detached object.
@@ -269,14 +277,19 @@ def test_reservation_request_linear_work():
             book.snapshot = deepcopy(detached)
             book.snapshot["pools"].reverse()
             book.snapshot["quotas"].reverse()
-            book.release(request["operation_id"], writer_stopped=True)
-            book.release(request["operation_id"], writer_stopped=True)
-            assert book.reserve(request, now=NOW)["phase"] == "released"
+            book.release(request["operation_id"], writer_stopped=True, clock=CAPACITY_CLOCK)
+            book.release(request["operation_id"], writer_stopped=True, clock=CAPACITY_CLOCK)
+            assert book.reserve(request, clock=CAPACITY_CLOCK)["phase"] == "released"
             return book.snapshot, detached, reserved
 
         (released, detached, reserved), work = measure(complete, modules=(resources,))
         assert detached == reserved
         expected = deepcopy(snapshot)
+        quota = next(q for q in expected["quotas"] if q["bucket"] == "runtime")
+        pool = next(p for p in expected["pools"] if p["pool"] == quota["pool"])
+        for unit, charged in (("bytes", 512), ("inodes", 1)):
+            quota["used_" + unit] += charged
+            pool["available_" + unit] -= charged
         expected["pools"].reverse()
         expected["quotas"].reverse()
         assert released == expected
@@ -333,8 +346,16 @@ CHECK_OVERRIDES = {
         "test_retention_linear_work": (["resources.retention"], ["retained_runtime_handles"]),
         "test_host_resources_linear_work": (["resources.host"], ["validate_host_resources"]),
         "test_reservation_request_linear_work": (
-            ["resources.reservation.reserve", "resources.reservation.release"],
-            ["ReservationModel.reserve", "ReservationModel.release"],
+            [
+                "resources.reservation.reserve",
+                "resources.reservation.charge",
+                "resources.reservation.release",
+            ],
+            [
+                "ReservationModel.reserve",
+                "ReservationModel.record_charge",
+                "ReservationModel.release",
+            ],
         ),
     }.items()
 }

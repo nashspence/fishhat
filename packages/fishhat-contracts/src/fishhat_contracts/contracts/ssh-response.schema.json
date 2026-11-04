@@ -687,7 +687,10 @@
       "then": {
         "properties": {
           "method": {
-            "const": "operation.submit"
+            "enum": [
+              "operation.submit",
+              "operation.get"
+            ]
           },
           "problem": {
             "properties": {

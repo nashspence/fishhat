@@ -55,7 +55,7 @@
     "service": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/service-adapter.schema.json",
-        "digest": "sha256:213a5b53b68ab47e14703c7c970dc4f28badb038274175ff9cc0058b9e084f59"
+        "digest": "sha256:153c8ca25d4ca6f3a3a684cef4a83c26d77776b85bb25fa41a8e83e9b213229d"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/service-adapter.schema.json#/$defs/Response",

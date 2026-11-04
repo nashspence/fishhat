@@ -47,8 +47,9 @@
       "items": {
         "$ref": "common.schema.json#/$defs/Digest"
       },
-      "minItems": 1,
-      "uniqueItems": true
+      "minItems": 0,
+      "uniqueItems": true,
+      "description": "Complete unique closure digests for every independently retained application recovery obligation in the selected domain, including residual obligations for removed applications. Empty is valid exactly when that inventory is empty. Qualification requires independent complete inventory comparison."
     },
     "independent_custody": {
       "type": "boolean"

@@ -7,6 +7,7 @@ Path checks are lexical; actual no-follow/mount/ownership checks need native cod
 from __future__ import annotations
 
 import re
+from collections.abc import Collection
 from itertools import chain, combinations
 from pathlib import PurePosixPath
 from typing import Any, cast
@@ -233,9 +234,20 @@ def validate_run(value: dict[str, Any]) -> dict[str, Any]:
     return value
 
 
-def validate_recovery_set(value: dict[str, Any], bundle: dict[str, Any]) -> dict[str, Any]:
+def validate_recovery_set(
+    value: dict[str, Any],
+    bundle: dict[str, Any],
+    *,
+    expected_domain_id: str,
+    retained_application_closures: Collection[str],
+) -> dict[str, Any]:
+    """Check complete application obligations from independent same-domain custody."""
     validate("recovery-set.schema.json", value)
     validate_bundle(bundle)
+    if value["domain_id"] != expected_domain_id or set(value["application_closure_digests"]) != set(
+        retained_application_closures
+    ):
+        raise ContractError("recovery application closure coverage mismatch")
     if value["installation_bundle_digest"] != digest(bundle):
         raise ContractError("recovery install bundle mismatch")
     clean_path(value["installation_bundle_path"])

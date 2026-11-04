@@ -3848,6 +3848,10 @@
       "purpose_sha256": "48e8d8f838417bf16d96e6f80af42f910eddf2b88bbfa74f55245d1f4f6cfdc5"
     },
     {
+      "node": "tests/test_bootstrap.py::test_fresh_verifier_uses_complete_retained_bundle_and_catalogue_tree",
+      "purpose_sha256": "48e8d8f838417bf16d96e6f80af42f910eddf2b88bbfa74f55245d1f4f6cfdc5"
+    },
+    {
       "node": "tests/test_bootstrap.py::test_independent_pins_are_not_discovered_from_supplied_metadata[trusted_catalogue_digest-forgejo-restic]",
       "purpose_sha256": "48e8d8f838417bf16d96e6f80af42f910eddf2b88bbfa74f55245d1f4f6cfdc5"
     },
@@ -11336,6 +11340,10 @@
       "purpose_sha256": "294e6f74b8d6c09118481035e54378262fd48883cb253dba40382170b7e393d9"
     },
     {
+      "node": "tests/test_repository_contracts.py::test_existing_branch_requires_verified_fast_forward_and_literal_direct_cas",
+      "purpose_sha256": "294e6f74b8d6c09118481035e54378262fd48883cb253dba40382170b7e393d9"
+    },
+    {
       "node": "tests/test_repository_contracts.py::test_publication_and_reconciliation_keep_the_original_cas_and_candidate[artifact-direct]",
       "purpose_sha256": "294e6f74b8d6c09118481035e54378262fd48883cb253dba40382170b7e393d9"
     },
@@ -11661,7 +11669,7 @@
     },
     {
       "node": "tests/test_resource_growth.py::test_reservation_request_linear_work",
-      "purpose_sha256": "6be876a493f3afd0511bbc306f0c5da3e43bb64da636a3dd73e85b1ab1c828a9"
+      "purpose_sha256": "8769d3d8fe23a88a665aa63a00bf35b315a9ac46698d6ebe559b2827de7095ee"
     },
     {
       "node": "tests/test_resource_growth.py::test_retention_linear_work",
@@ -11736,6 +11744,10 @@
       "purpose_sha256": "fc1e1c5dca367768268be899632c6acc9eba00f425568f3a1fe407d6df4d849b"
     },
     {
+      "node": "tests/test_resources.py::Capacity::test_freshness_requires_current_boot_and_both_clocks",
+      "purpose_sha256": "fc1e1c5dca367768268be899632c6acc9eba00f425568f3a1fe407d6df4d849b"
+    },
+    {
       "node": "tests/test_resources.py::Capacity::test_future_snapshot",
       "purpose_sha256": "fc1e1c5dca367768268be899632c6acc9eba00f425568f3a1fe407d6df4d849b"
     },
@@ -11774,6 +11786,14 @@
     {
       "node": "tests/test_resources.py::Capacity::test_quota_inodes",
       "purpose_sha256": "fc1e1c5dca367768268be899632c6acc9eba00f425568f3a1fe407d6df4d849b"
+    },
+    {
+      "node": "tests/test_resources.py::Capacity::test_recovered_reservation_reconstructs_original_grants",
+      "purpose_sha256": "fc1e1c5dca367768268be899632c6acc9eba00f425568f3a1fe407d6df4d849b"
+    },
+    {
+      "node": "tests/test_resources.py::Capacity::test_release_only_unconsumed_share_after_charge_and_replay",
+      "purpose_sha256": "fd9c19a867dd4896d7a3cce5044429c42612f6b2d86318db49918bf264bd6858"
     },
     {
       "node": "tests/test_resources.py::Capacity::test_release_requires_cessation",
@@ -16166,6 +16186,10 @@
     {
       "node": "tests/test_workflow_journal.py::test_unapproved_gate_signature_never_creates_native_reservation",
       "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
+    },
+    {
+      "node": "tests/test_workflow_journal.py::test_uncertain_tail_repair_cost_and_custody",
+      "purpose_sha256": "fe04b731eeb270ccc16f16762a39cdf7f5b36c2f332937cf31d508067db58777"
     },
     {
       "node": "tests/test_workflow_journal.py::test_unknown_accepted_operation_blocks_successor_commit",

@@ -18,7 +18,7 @@
         "selection"
       ],
       "additionalProperties": false,
-      "description": "The repository scope handle equals selection.source_id. The executable Invocation pins the same installation and configuration as selection.adapter. Before initial dispatch or reconciliation, the receiving owner joins the selected implementation, installation artifact, descriptor, configuration and source-schema digests to its independently approved executor and installed descriptor. A different approved instance cannot substitute for those selected pins. Client preparation alone is not the receiver check; accepted recovery retains the original selection and executor."
+      "description": "The repository scope handle equals selection.source_id. The executable Invocation pins the same installation and configuration as selection.adapter. Before initial dispatch or reconciliation, the receiving owner joins the selected implementation, installation artifact, descriptor, configuration and source-schema digests to its independently approved executor and installed descriptor. A different approved instance cannot substitute for those selected pins. Client preparation alone is not the receiver check; accepted recovery retains the original selection and executor. Return and locally transfer the complete self-contained bundle named in the receipt. Independently verify the selected commit, complete object closure and logical tree, then retain the original output bytes before settling success. Reconciliation preserves the original artifact identity; a new packing of the same tree cannot replace a previously accepted output."
     },
     "verify": {
       "type": "object",
@@ -29,17 +29,17 @@
         "selection": {
           "$ref": "bootstrap-recovery.schema.json"
         },
-        "output": {
-          "$ref": "adapter.schema.json#/$defs/Artifact"
+        "recovery": {
+          "$ref": "client-records.schema.json#/$defs/SourceRecovery"
         }
       },
       "required": [
         "scope",
         "selection",
-        "output"
+        "recovery"
       ],
       "additionalProperties": false,
-      "description": "The repository scope handle equals selection.source_id. The executable Invocation pins the same installation and configuration as selection.adapter. Before initial dispatch or reconciliation, the receiving owner joins the selected implementation, installation artifact, descriptor, configuration and source-schema digests to its independently approved executor and installed descriptor. A different approved instance cannot substitute for those selected pins. Client preparation alone is not the receiver check; accepted recovery retains the original selection and executor."
+      "description": "The repository scope handle equals selection.source_id. The executable Invocation pins the same installation and configuration as selection.adapter. Before initial dispatch or reconciliation, the receiving owner joins the selected implementation, installation artifact, descriptor, configuration and source-schema digests to its independently approved executor and installed descriptor. A different approved instance cannot substitute for those selected pins. Client preparation alone is not the receiver check; accepted recovery retains the original selection and executor. Redeem the exact retained recover receipt's output from owner custody and pass its complete digest, media type and size unchanged. Independently verify the full artifact, literal ref, peeled commit, self-contained reachable objects and selected logical tree; its destination path alone cannot locate or authenticate accepted bytes. recovery is the unchanged original recovery receipt. Before initial verification or reconciliation the executor authenticates it against independently retained producer provenance and binds selection, tree, artifact and staging destination. A caller-supplied receipt alone cannot select another bundle."
     },
     "reconcile": {
       "type": "object",

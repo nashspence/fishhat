@@ -155,6 +155,11 @@ def check_request(role: str, value: dict[str, Any]) -> None:
             inputs["scope"]["handle"] == inputs["selection"]["source_id"],
             "BOOTSTRAP_SCOPE_IDENTITY",
         )
+        if method == "verify":
+            require(
+                _bootstrap_receipt_matches(inputs["recovery"], inputs["selection"]),
+                "BOOTSTRAP_RECOVERY_IDENTITY",
+            )
     check_value_request(role, value)
 
 
@@ -625,22 +630,24 @@ def _check_success_output(
         ),
         "bootstrap-source": lambda: (
             output["receipt"] is not None
-            and output["receipt"]["selection_digest"] == digest(inputs["selection"])
-            and output["receipt"]["domain_id"] == inputs["selection"]["domain_id"]
-            and output["receipt"]["source_id"] == inputs["selection"]["source_id"]
-            and output["receipt"]["ref"] == inputs["selection"]["ref"]
-            and output["receipt"]["commit"] == inputs["selection"]["expected_commit"]
-            and output["receipt"]["destination"].startswith(
-                inputs["selection"]["recovery_root"].rstrip("/") + "/"
-            )
+            and _bootstrap_receipt_matches(output["receipt"], inputs["selection"])
             and (
                 request["method"] != "verify"
-                or output["receipt"]["output_digest"] == inputs["output"]["digest"]
+                or output["receipt"]["output"] == inputs["recovery"]["output"]
             )
         ),
     }
     check = checks.get(role)
     require(check is None or check(), "SUCCESS_OUTPUT_IDENTITY")
+
+
+def _bootstrap_receipt_matches(receipt: dict[str, Any], selection: dict[str, Any]) -> bool:
+    return (
+        receipt["selection_digest"] == digest(selection)
+        and all(receipt[key] == selection[key] for key in ("domain_id", "source_id", "ref", "tree"))
+        and receipt["commit"] == selection["expected_commit"]
+        and bool(receipt["destination"].startswith(selection["recovery_root"] + "/"))
+    )
 
 
 def _check_limits(limits: list[dict[str, Any]]) -> None:

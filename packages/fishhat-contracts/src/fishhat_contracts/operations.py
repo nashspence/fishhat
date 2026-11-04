@@ -94,23 +94,24 @@ def operation_matches_delivery(operation: dict[str, Any], delivery: dict[str, An
 def validate_submission_refusal(
     refusal: dict[str, Any],
     problem: dict[str, Any],
-    delivery: dict[str, Any],
+    delivery: dict[str, Any] | None = None,
     *,
     retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> None:
-    """Join a decoded refusal to its exact delivery. Authentication belongs to the transport."""
+    """Check the retained decision and Problem, and an original Delivery when available."""
     from .record_delivery import validate_problem
 
     validate("records.schema.json", refusal, "SubmissionRefusal")
     validate_problem(problem, retained_readers=retained_readers)
-    identity = ("owner", "request_id", "plan_digest", "subject_digest", "workflow_id")
     if not (
-        all(refusal[key] == delivery[key] for key in identity)
-        and problem["owner"] == delivery["owner"]
-        and problem["resource"] == delivery["resource"]
+        problem["owner"] == refusal["owner"]
+        and problem["resource"] == refusal["resource"]
         and problem["code"] == refusal["reason"]
         and problem["retry"] == "none"
     ):
+        raise ContractError("submission refusal does not match its retained Problem")
+    identity = ("owner", "resource", "request_id", "plan_digest", "subject_digest", "workflow_id")
+    if delivery is not None and any(refusal[key] != delivery[key] for key in identity):
         raise ContractError("submission refusal does not match the original delivery and reason")
 
 

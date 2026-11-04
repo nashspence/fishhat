@@ -14,6 +14,7 @@ from fishhat_contracts.resources import (
 from fishhat_contracts.validation import ContractError, strict_yaml, validate
 
 from tests.support import fixture_path
+from tests.test_resources import CAPACITY_CLOCK
 
 CHECK_PURPOSE = {
     "purpose": "implementation",
@@ -39,8 +40,6 @@ CHECK_OVERRIDES = {
         "claims": [],
     },
 }
-
-NOW = "2026-10-19T12:00:00Z"
 
 
 def snapshot():
@@ -141,7 +140,10 @@ def test_internally_consistent_replacement_cannot_reuse_approved_capacity_reques
     validate_snapshot(observed)
     with pytest.raises(ContractError, match="approved resource bindings"):
         check_capacity(
-            observed, approved, approved_bindings_digest=approved["bindings_digest"], now=NOW
+            observed,
+            approved,
+            approved_bindings_digest=approved["bindings_digest"],
+            clock=CAPACITY_CLOCK,
         )
 
 
@@ -152,7 +154,9 @@ def test_caller_cannot_recompute_the_expected_owner_approval():
     observed["quotas"][0]["storage"]["incarnation"] = "replacement-allocation"
     proposed["bindings_digest"] = resource_bindings_digest(observed)
     with pytest.raises(ContractError, match="approved resource bindings"):
-        check_capacity(observed, proposed, approved_bindings_digest=approved_digest, now=NOW)
+        check_capacity(
+            observed, proposed, approved_bindings_digest=approved_digest, clock=CAPACITY_CLOCK
+        )
 
 
 @pytest.mark.parametrize("field", ["max_bytes", "headroom_bytes", "reserve_bytes", "root"])
@@ -168,19 +172,22 @@ def test_accounting_cannot_rewrite_approved_capacity_policy(field):
         observed["quotas"][0][field] *= 2
     with pytest.raises(ContractError, match="approved resource bindings"):
         check_capacity(
-            observed, proposed, approved_bindings_digest=proposed["bindings_digest"], now=NOW
+            observed,
+            proposed,
+            approved_bindings_digest=proposed["bindings_digest"],
+            clock=CAPACITY_CLOCK,
         )
 
 
 def test_writer_cessation_cannot_release_a_claim_on_a_replacement_allocation():
     proposed = request()
     book = ReservationModel(snapshot(), approved_bindings_digest=proposed["bindings_digest"])
-    book.reserve(proposed, now=NOW)
+    book.reserve(proposed, clock=CAPACITY_CLOCK)
     book.timeout(proposed["operation_id"])
     book.snapshot["quotas"][0]["storage"]["incarnation"] = "replacement-allocation"
     before = deepcopy(book.snapshot)
     with pytest.raises(ContractError, match="approved resource bindings"):
-        book.release(proposed["operation_id"], writer_stopped=True)
+        book.release(proposed["operation_id"], writer_stopped=True, clock=CAPACITY_CLOCK)
     assert book.snapshot == before
     assert book.requests[proposed["operation_id"]]["phase"] == "reconciling"
 
@@ -216,7 +223,7 @@ def test_reordered_capacity_buckets_reserve_and_release_the_same_allocations():
     observed["quotas"].reverse()
     before = {quota["bucket"]: deepcopy(quota) for quota in observed["quotas"]}
     book = ReservationModel(observed, approved_bindings_digest=proposed["bindings_digest"])
-    book.reserve(proposed, now=NOW)
+    book.reserve(proposed, clock=CAPACITY_CLOCK)
     growth = {item["bucket"]: item for item in proposed["growth"]}
     for quota in book.snapshot["quotas"]:
         for unit in ("bytes", "inodes"):
@@ -224,7 +231,7 @@ def test_reordered_capacity_buckets_reserve_and_release_the_same_allocations():
                 before[quota["bucket"]]["reserved_remaining_" + unit]
                 + growth.get(quota["bucket"], {}).get(unit, 0)
             )
-    book.release(proposed["operation_id"], writer_stopped=True)
+    book.release(proposed["operation_id"], writer_stopped=True, clock=CAPACITY_CLOCK)
     assert {quota["bucket"]: quota for quota in book.snapshot["quotas"]} == before
 
 

@@ -12,10 +12,7 @@
       "maxLength": 64
     },
     "source_commit": {
-      "type": "string",
-      "minLength": 40,
-      "maxLength": 64,
-      "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})(?![\\s\\S])"
+      "$ref": "common.schema.json#/$defs/Commit"
     },
     "artifacts": {
       "type": "object",

@@ -2,9 +2,8 @@
   "format": "deployment-ops/source-recovery/v1",
   "id": "11111111-1111-4111-8111-111111111111",
   "domain_id": "a6606aee-cb29-5360-a578-3502f7b0a12a",
-  "selection_digest": "sha256:41bc138943a3faf42c48ce2b581d3dc10a1fb217fb47afaddbf868e19b535058",
+  "selection_digest": "sha256:14e7a9c01a3e2ae91f4054e612c86af2d738d11e3ab77560d7bd7ebb9324127d",
   "commit": "1111111111111111111111111111111111111111",
-  "output_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "destination": "/recovery/staging/run-001/source.git",
   "scope": "git-source-only",
   "policy_activated": false,
@@ -12,5 +11,15 @@
   "assets_restored": false,
   "uncommitted_work_restored": false,
   "source_id": "domain",
-  "ref": "refs/heads/main"
+  "ref": "refs/heads/main",
+  "tree": {
+    "tree_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "file_count": 18,
+    "total_bytes": 32768
+  },
+  "output": {
+    "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "media_type": "application/x-git-bundle",
+    "size_bytes": 100
+  }
 }
