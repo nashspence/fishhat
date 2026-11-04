@@ -11,6 +11,7 @@ from typing import Any, BinaryIO, cast
 from fishhat_contracts.adapter_semantics import (
     ROLES,
     _attempt_identity,
+    _is_released_attempt,
     check_invocation,
     check_request,
     check_response,
@@ -118,10 +119,7 @@ def validate_process_launch(
         check_invocation(role, payload)
         attempt = payload["attempt"]
         _require(
-            attempt["executor"] == executor
-            and attempt["state"] == "dispatched"
-            and attempt["certainty"] == "unknown"
-            and attempt["outcome"] == "pending",
+            attempt["executor"] == executor and _is_released_attempt(attempt),
             "process mutation lacks released invocation",
         )
         request = payload["request"]

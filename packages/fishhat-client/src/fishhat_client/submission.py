@@ -11,8 +11,12 @@ import uuid
 from collections.abc import Callable
 from typing import Any
 
-from fishhat_contracts.operations import validate_operation
-from fishhat_contracts.validation import ContractError, digest, validate
+from fishhat_contracts.operations import (
+    operation_matches_delivery,
+    validate_operation,
+    validate_submission_refusal,
+)
+from fishhat_contracts.validation import ContractError, validate
 
 
 def prepare_delivery(template: dict[str, Any], request_id: str | None = None) -> dict[str, Any]:
@@ -30,10 +34,12 @@ def submit_once(
 
     Exit 0 means the owner accepted the request or reported success, not that
     accepted/running/waiting work is complete. Exit 1 reports failed, cancelled
-    or quarantined work; retained effects and holds still belong to the owner.
+    or quarantined work, or verified nonacceptance of the exact request.
     Exit 8 means acceptance is unknown, never rejected or safe to submit anew.
 
-    The injected transport must authenticate the owner and verify its evidence.
+    The injected transport must authenticate the owner, correlate the SSH reply to
+    its exact submitted message and verify its evidence. An authenticated refusal
+    proves the owner closed this unaccepted identity. All other errors are ambiguous.
     This model checks the decoded Operation's shape and exact delivery bindings;
     those checks are not authentication or native execution qualification.
     """
@@ -50,24 +56,31 @@ def submit_once(
     }
     try:
         receipt = owner_transport(copy.deepcopy(value))
-    except (TimeoutError, ConnectionError):
+    except (OSError, ContractError):
+        # SSH I/O, authentication or response verification failed at the transport.
         return unknown
     if not isinstance(receipt, dict):
         return unknown
+    if "nonacceptance" in receipt:
+        try:
+            validate("ssh-response.schema.json", receipt)
+            validate_submission_refusal(receipt["nonacceptance"], receipt["problem"], value)
+        except ContractError:
+            return unknown
+        value["state"] = "rejected"
+        return {
+            "exit_code": 1,
+            "delivery": value,
+            "owner_receipt": None,
+            "refusal": copy.deepcopy(receipt["nonacceptance"]),
+            "problem": copy.deepcopy(receipt["problem"]),
+            "tracking": "not-attempted",
+        }
     try:
         validate_operation(receipt)
     except ContractError:
         return unknown
-    bindings = (
-        receipt["request_id"] == value["request_id"],
-        receipt["owner"] == value["owner"],
-        receipt["plan_digest"] == value["plan_digest"],
-        receipt["witness"]["workflow_id"] == value["workflow_id"],
-        digest(receipt["subject"]) == value["subject_digest"],
-        receipt["subject"]["action"] == value["action"],
-        receipt["subject"]["resource"] == value["resource"],
-    )
-    if not all(bindings):
+    if not operation_matches_delivery(receipt, value):
         return unknown
     value["state"] = "accepted"
     return {

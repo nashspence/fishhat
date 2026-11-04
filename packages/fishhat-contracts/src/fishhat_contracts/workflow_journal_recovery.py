@@ -1449,7 +1449,9 @@ class JournalRecovery:
                     isinstance(data, bytes),
                     "completed recovery result lacks retained local custody",
                 )
-                validate_result_payload(operation, data, max_bytes=len(data))
+                validate_result_payload(
+                    operation, data, max_bytes=len(data), recovery_readers=self.recovery_readers
+                )
         elif fact["kind"] == "recovered":
             _require(
                 fact["native_stopped"]
@@ -1477,7 +1479,12 @@ class JournalRecovery:
             if native and recovered["operation"]["result_handle"] is not None:
                 data = target.native.result_payload(recovered["operation"])
                 _require(isinstance(data, bytes), "native recovery result lacks retained custody")
-                validate_result_payload(recovered["operation"], data, max_bytes=len(data))
+                validate_result_payload(
+                    recovered["operation"],
+                    data,
+                    max_bytes=len(data),
+                    recovery_readers=self.recovery_readers,
+                )
         else:
             _require(
                 "completed" not in replacement and fact["recovery"] is None,

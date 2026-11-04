@@ -215,7 +215,21 @@ class Capacity(unittest.TestCase):
 
     def test_outstanding_claims(self):
         self.s["quotas"][0]["reserved_remaining_bytes"] = 5 << 30
+        self.s["pools"][0]["reserved_remaining_bytes"] = 5 << 30
         self.assertFalse(self.run_check()["admissible"])
+
+    def test_pool_covers_sum_of_visible_quota_claims(self):
+        for unit in ("bytes", "inodes"):
+            with self.subTest(unit=unit):
+                field = "reserved_remaining_" + unit
+                pool = self.s["pools"][0]
+                quotas = [quota for quota in self.s["quotas"] if quota["pool"] == pool["pool"]]
+                quotas[0][field], quotas[1][field] = 2, 3
+                pool[field] = 4
+                with self.assertRaisesRegex(ContractError, "pool reservations omit"):
+                    self.run_check()
+                pool[field] = 6
+                self.assertTrue(self.run_check()["admissible"])
 
     def test_stale_snapshot(self):
         self.s["observed_at"] = "2026-10-18T12:00:00Z"

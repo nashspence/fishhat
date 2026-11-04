@@ -3119,10 +3119,7 @@
             "type": "object",
             "properties": {
               "path": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 240,
-                "pattern": "^(?!(?:\\.|\\.\\.)(?:/|(?![\\s\\S])))[^/\\\\\\u0000-\\u001f]+(?:/(?!(?:\\.|\\.\\.)(?:/|(?![\\s\\S])))[^/\\\\\\u0000-\\u001f]+)*(?![\\s\\S])"
+                "$ref": "common.schema.json#/$defs/GitTreePath"
               },
               "operation": {
                 "enum": [
@@ -3339,7 +3336,7 @@
         "paths": {
           "type": "array",
           "items": {
-            "$ref": "common.schema.json#/$defs/RelativePath"
+            "$ref": "common.schema.json#/$defs/GitTreePath"
           },
           "minItems": 0,
           "uniqueItems": true
@@ -5037,7 +5034,7 @@
       "type": "object",
       "properties": {
         "path": {
-          "$ref": "common.schema.json#/$defs/RelativePath"
+          "$ref": "common.schema.json#/$defs/GitTreePath"
         },
         "mode": {
           "$ref": "#/$defs/CapturedSourceMode"
@@ -5053,6 +5050,55 @@
       ],
       "additionalProperties": false,
       "description": "One regular file in a complete captured source scope. content identifies retrievable immutable bytes and retains original producer ownership; its digest is SHA-256 of the exact file bytes. Filesystem confinement and source mapping are independently verified by the native owner. Multiple paths may share the same exact content handle. Reusing an owner/id with different handle fields, or a digest with a different byte size, rejects."
+    },
+    "SubmissionRefusal": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "SubmissionRefusal"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "request_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "plan_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "subject_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "workflow_id": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "enum": [
+            "PLAN_EXPIRED",
+            "PRECONDITION_FAILED",
+            "CAPACITY_BLOCKED",
+            "UNSUPPORTED_CAPABILITY"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "owner",
+        "request_id",
+        "plan_digest",
+        "subject_digest",
+        "workflow_id",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "description": "An authenticated operation.submit refusal for this exact original submission. After authorizing disclosure of the request and resource, the owner serializes with native acceptance, verifies the complete retained epoch index, and durably closes this previously unaccepted request ID against all later acceptance before responding. A matching retry returns the original refusal after current read authorization. A changed immutable submission conflicts. An unavailable index, ambiguous outcome, denied disclosure, already accepted identity, or failed commit cannot issue this proof. Neither an ordinary Problem nor a not-found lookup proves nonacceptance. The accompanying Problem matches the owner, resource and reason, with retry none. The receiver authenticates the responding owner, correlates the original SSH message and matches every refusal identity to its original delivery. A copied JSON value supplies no independent authority."
     }
   },
   "x-fishhat-contract-dependencies": [

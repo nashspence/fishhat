@@ -522,6 +522,23 @@ def _validate_datasets(app: dict[str, Any]) -> None:
             )
 
 
+def _validate_app_secret_targets(app: dict[str, Any], catalogue: dict[str, Any] | None) -> None:
+    from .host_intent import check_destination_tree
+
+    paths_by_component: dict[str, set[str]] = {}
+    for binding in app["secret_bindings"].values():
+        if app["repository_secrets"] is None or catalogue is None:
+            raise ContractError("missing secret catalogue")
+        _require(binding["entry"] in catalogue["entries"], "unknown secret entry")
+        _require(binding["component"] in app["components"], "unknown secret consumer")
+        target = _source_target(binding["target"])
+        secret_targets = paths_by_component.setdefault(binding["component"], set())
+        _require(target not in secret_targets, "secret delivery target collision")
+        secret_targets.add(target)
+    for paths in paths_by_component.values():
+        check_destination_tree(paths)
+
+
 @bounds(_source_bounds("app"))
 def validate_app(app: dict[str, Any], catalogue: dict[str, Any] | None = None) -> None:
     validate("source.schema.json", app)
@@ -547,15 +564,7 @@ def validate_app(app: dict[str, Any], catalogue: dict[str, Any] | None = None) -
             "unknown dependency consumer",
         )
     _validate_datasets(app)
-    secret_targets: set[tuple[str, str]] = set()
-    for binding in app["secret_bindings"].values():
-        if app["repository_secrets"] is None or catalogue is None:
-            raise ContractError("missing secret catalogue")
-        _require(binding["entry"] in catalogue["entries"], "unknown secret entry")
-        _require(binding["component"] in components, "unknown secret consumer")
-        target = binding["component"], _source_target(binding["target"])
-        _require(target not in secret_targets, "secret delivery target collision")
-        secret_targets.add(target)
+    _validate_app_secret_targets(app, catalogue)
     for hook in hooks.values():
         _require(hook["component"] in components, "unknown hook executor")
         _require(all(dataset in datasets for dataset in hook["datasets"]), "unknown hook dataset")
@@ -702,7 +711,16 @@ def validate_cli(
                 "CLI problem/operation identity mismatch",
             )
 
+    from .operations import operation_matches_delivery, validate_submission_refusal
+
     delivery = value.get("delivery")
+    refusal = isinstance(result, dict) and result.get("kind") == "SubmissionRefusal"
+    if refusal:
+        if state != "rejected" or delivery is None or delivery["state"] != "rejected":
+            raise ContractError("submission refusal requires its rejected delivery")
+        validate_submission_refusal(
+            result, value["problem"], delivery, retained_readers=retained_readers
+        )
     if delivery is not None:
         _require(value["request_id"] == delivery["request_id"], "CLI/delivery request mismatch")
         if value["problem"] is not None:
@@ -713,22 +731,16 @@ def validate_cli(
             )
         if operation is not None:
             _require(
-                delivery["state"] == "accepted"
-                and delivery["owner"] == operation["owner"]
-                and delivery["plan_digest"] == operation["plan_digest"]
-                and delivery["subject_digest"] == digest(operation["subject"])
-                and delivery["action"] == operation["subject"]["action"]
-                and delivery["resource"] == operation["subject"]["resource"],
+                delivery["state"] == "accepted" and operation_matches_delivery(operation, delivery),
                 "CLI/delivery acceptance binding mismatch",
             )
-        else:
+        elif not refusal:
             _require(
                 (delivery["state"], state)
                 in {
                     ("prepared", "planned"),
                     ("prepared", "paused"),
                     ("acceptance_unknown", "unknown"),
-                    ("rejected", "rejected"),
                 },
                 "CLI/delivery acceptance state mismatch",
             )

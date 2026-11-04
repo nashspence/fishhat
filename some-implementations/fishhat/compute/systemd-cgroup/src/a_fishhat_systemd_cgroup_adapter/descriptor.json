@@ -39,7 +39,7 @@
     "compute": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/compute-adapter.schema.json",
-        "digest": "sha256:a7ff864a566b6c802a159d3ff90b0cc4ee8b540ae8b79bbb82c8d6d4f727ca9e"
+        "digest": "sha256:9db1d5310d0ee5df2febdd660abe402f51e7ad112e74146fc2229f63062e9909"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/compute-adapter.schema.json#/$defs/Response",
@@ -47,5 +47,5 @@
       }
     }
   },
-  "process_schema_digest": "sha256:1655d583e6d5b93a99b4c5de6c29459751a8b1cd09dec238b686c1e8e3de1c3b"
+  "process_schema_digest": "sha256:fd4dd9a89c4213f4f768b26159cd7955a2e210f3a606bc98a79816c99a47bea1"
 }

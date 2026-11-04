@@ -58,6 +58,10 @@ def check_request(role: str, value: dict[str, Any]) -> None:
         check_invocation(role, invocation)
         original = invocation["attempt"]
         require(
+            original["state"] != "prepared" and original["outcome"] != "cancelled",
+            "RECONCILIATION_NEVER_DISPATCHED",
+        )
+        require(
             original["contract"] == value["contract"]
             and original["scope"] == inputs["scope"]
             and original["method"] in ROLES[role]
@@ -231,6 +235,15 @@ def _handoff_binding(role: str, request: dict[str, Any]) -> dict[str, Any] | Non
         if method == "observe":
             return cast(dict[str, Any], inputs["binding"])
     return None
+
+
+def _is_released_attempt(attempt: dict[str, Any]) -> bool:
+    return bool(
+        attempt["state"] == "dispatched"
+        and attempt["certainty"] == "unknown"
+        and attempt["outcome"] == "pending"
+        and attempt["native_task"] is None
+    )
 
 
 def _attempt_identity(attempt: dict[str, Any]) -> dict[str, Any]:
@@ -844,6 +857,8 @@ def check_retained_result(role: str, value: dict[str, Any], *, operation: dict[s
             "method": "reconcile",
             "input": {"scope": request["input"]["scope"], "invocation": invocation},
         }
+    else:
+        require(_is_released_attempt(attempt), "RETAINED_INVOCATION_NOT_RELEASED")
     check_response(role, checked_request, response, invocation=invocation)
     arguments, executor = operation["subject"]["arguments"], attempt["executor"]
     require(

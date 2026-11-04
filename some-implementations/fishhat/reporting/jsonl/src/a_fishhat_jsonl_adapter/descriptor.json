@@ -46,7 +46,7 @@
     "report": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/report-adapter.schema.json",
-        "digest": "sha256:6d61fd3b565559f82e9d956e66ed64c3b46ad810f41913f864707b131c9c3024"
+        "digest": "sha256:b465f2aaa71dcd2609298d03e8475d31c2595fb86129a9683ee5c36359a6b1d4"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/report-adapter.schema.json#/$defs/Response",
@@ -54,5 +54,5 @@
       }
     }
   },
-  "process_schema_digest": "sha256:1655d583e6d5b93a99b4c5de6c29459751a8b1cd09dec238b686c1e8e3de1c3b"
+  "process_schema_digest": "sha256:fd4dd9a89c4213f4f768b26159cd7955a2e210f3a606bc98a79816c99a47bea1"
 }

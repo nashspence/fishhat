@@ -41,6 +41,7 @@ from .workflows import (
 
 JSON = dict[str, Any]
 KeyRing = Mapping[tuple[bytes, str], Ed25519PublicKey]
+RecoveryReaders = Mapping[tuple[str, str], Callable[[JSON], None]]
 PREFIX = b"fishhat/workflow-journal/v1\x00"
 
 if TYPE_CHECKING:
@@ -247,6 +248,8 @@ class NativeWorkflowContext(Protocol):
 
 
 class JournalExtension(Protocol):
+    recovery_readers: RecoveryReaders | None
+
     def outcome(self, target: Any, command: JSON, principal: str) -> JSON: ...
 
     def apply(self, target: Any, command: JSON, outcome: JSON) -> None: ...
@@ -322,8 +325,15 @@ def verify_journal_signature(
         raise ContractError("workflow journal signature is not trusted") from exc
 
 
-def _verify_operation(operation: JSON, plan: JSON, keys: KeyRing, workflow_id: str) -> None:
-    validate_operation_plan(operation, plan)
+def _verify_operation(
+    operation: JSON,
+    plan: JSON,
+    keys: KeyRing,
+    workflow_id: str,
+    *,
+    recovery_readers: RecoveryReaders | None,
+) -> None:
+    validate_operation_plan(operation, plan, recovery_readers=recovery_readers)
     witness = operation["witness"]
     key = keys.get((canonical(operation["owner"]), witness["key_id"]))
     _require(key is not None, "workflow child signing key is not independently enrolled")
@@ -441,6 +451,10 @@ class _JournalTarget:
         self._failed = False
         self.state = "prepared"
         self._cancelled = False
+
+    @property
+    def _recovery_readers(self) -> RecoveryReaders | None:
+        return self.extension.recovery_readers if self.extension is not None else None
 
     def _authorize(self, principal: str, action: str) -> None:
         raise NotImplementedError
@@ -735,6 +749,7 @@ def _reservation(
     outcomes: Mapping[bytes, JSON] | None,
     header: JSON,
     keys: KeyRing,
+    recovery_readers: RecoveryReaders | None,
     now: str,
 ) -> None:
     """Validate one issuer's complete phase proof; never inspect peer history."""
@@ -825,7 +840,7 @@ def _reservation(
                 binding,
                 {"id": header["workflow_id"], "type": header["procedure"]},
                 completion_required=completion,
-                recovery_readers=None,
+                recovery_readers=recovery_readers,
             )
             _verify_operation(
                 result["operation"],
@@ -834,6 +849,7 @@ def _reservation(
                 header["workflow_id"]
                 if "completed" not in binding
                 else result["operation"]["witness"]["workflow_id"],
+                recovery_readers=recovery_readers,
             )
             if outcomes is not None:
                 _require(
@@ -936,7 +952,11 @@ class WorkflowGate(_JournalTarget):
         gate_key_id: str | None = None,
     ) -> None:
         """Index one exact manifest once; restored custody keeps its original header."""
-        validate_workflow_proposal(proposal, recovery=recovery)
+        validate_workflow_proposal(
+            proposal,
+            recovery=recovery,
+            recovery_readers=self._recovery_readers if recovery else None,
+        )
         self.proposal = copy.deepcopy(proposal)
         proposal = self.proposal
         self.workflow_id = proposal["workflow_id"]
@@ -1158,6 +1178,7 @@ class WorkflowGate(_JournalTarget):
                 outcomes=None,
                 header=self.header,
                 keys=self.keys,
+                recovery_readers=self._recovery_readers,
                 now=self.clock(),
             )
             self.check_reservation(record["owner"], body["reservation"], round)
@@ -1265,7 +1286,7 @@ class WorkflowGate(_JournalTarget):
                 children=self.children,
                 generations=self.generations,
                 phase_windows=self.phase_windows,
-                recovery_readers=None,
+                recovery_readers=self._recovery_readers,
             )
             _verify_plan(request["binding"]["plan"], self.keys)
             for operation in request["predecessors"]:
@@ -1279,6 +1300,7 @@ class WorkflowGate(_JournalTarget):
                     self.workflow_id
                     if "completed" not in self.ready[key]
                     else operation["witness"]["workflow_id"],
+                    recovery_readers=self._recovery_readers,
                 )
                 _known_outcome(self._known_outcomes.get(key), operation)
             return self._outcome(
@@ -1560,6 +1582,7 @@ class WorkflowMember(_JournalTarget):
                     self._binding_content[key] = list(selected.values())
         self._preparation: JSON | None = None
         self._agreement: JSON | None = None
+        self._voted_rounds: set[str] = set()
         self._vote: JSON | None = None
         self._round: JSON | None = None
         self._certificate: JSON | None = None
@@ -1698,6 +1721,8 @@ class WorkflowMember(_JournalTarget):
                 and (round["authority"] != "native-owner" or destination == len(phases) - 1),
                 "workflow native authority cannot start intermediate work",
             )
+            round_digest = digest(payload["round"])
+            _require(round_digest not in self._voted_rounds, "member already voted on this round")
             reservation = self.native.reserve(round, self.projection["participants"], self.outcomes)
             _reservation(
                 reservation,
@@ -1709,6 +1734,7 @@ class WorkflowMember(_JournalTarget):
                 outcomes=self.outcomes,
                 header=self.header,
                 keys=self.keys,
+                recovery_readers=self._recovery_readers,
                 now=self.clock(),
             )
             self.native.check(reservation, round)
@@ -1718,7 +1744,7 @@ class WorkflowMember(_JournalTarget):
                     "type": "vote",
                     "header_digest": self.header_digest,
                     "projection_digest": self.projection_digest,
-                    "round_digest": digest(payload["round"]),
+                    "round_digest": round_digest,
                     "member_generation": self.generation + 1,
                     "reservation": reservation,
                 },
@@ -1954,7 +1980,13 @@ class WorkflowMember(_JournalTarget):
                 "workflow child was not locally admitted",
             )
             binding, admission = self.ready[key], self._admissions[key]
-            _verify_operation(operation, bound_plan(binding), self.keys, self.workflow_id)
+            _verify_operation(
+                operation,
+                bound_plan(binding),
+                self.keys,
+                self.workflow_id,
+                recovery_readers=self._recovery_readers,
+            )
             _require(
                 _child_identity_matches(operation, child, binding, self.workflow_id)
                 and operation["plan_digest"] == admission["body"]["plan_digest"]
@@ -1980,7 +2012,9 @@ class WorkflowMember(_JournalTarget):
                     "workflow result payload lacks independently retained custody",
                 )
                 assert isinstance(data, bytes)
-                validate_result_payload(operation, data, max_bytes=len(data))
+                validate_result_payload(
+                    operation, data, max_bytes=len(data), recovery_readers=self._recovery_readers
+                )
             return self._outcome(
                 command,
                 {
@@ -2008,6 +2042,7 @@ class WorkflowMember(_JournalTarget):
         elif action == "agreement":
             self._agreement = payload["agreement"]
         elif action == "vote":
+            self._voted_rounds.add(outcome["body"]["round_digest"])
             self._vote, self._round = outcome, payload["round"]
             self._reservation = outcome["body"]["reservation"]
         elif action == "apply":

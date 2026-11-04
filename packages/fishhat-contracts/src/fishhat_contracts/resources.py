@@ -236,6 +236,7 @@ def validate_snapshot(snapshot: dict[str, Any]) -> None:
         "control and workload capacity domain overlap",
     )
     allocations: set[tuple[str, str]] = set()
+    visible_claims = {pool: {"bytes": 0, "inodes": 0} for pool in pools}
     for q in snapshot["quotas"]:
         require(q["pool"] in pools, "quota observation missing pool")
         p = pools[q["pool"]]
@@ -247,6 +248,14 @@ def validate_snapshot(snapshot: dict[str, Any]) -> None:
         require(key not in allocations, "duplicate allocation identity")
         allocations.add(key)
         normal_root(q["root"])
+        for unit in ("bytes", "inodes"):
+            visible_claims[q["pool"]][unit] += q["reserved_remaining_" + unit]
+    for pool, claims in visible_claims.items():
+        for unit, total in claims.items():
+            require(
+                pools[pool]["reserved_remaining_" + unit] >= total,
+                "pool reservations omit visible quota claims",
+            )
 
 
 def resource_bindings_digest(snapshot: dict[str, Any]) -> str:

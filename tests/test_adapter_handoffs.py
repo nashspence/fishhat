@@ -288,6 +288,7 @@ def test_lost_activation_reply_is_settled_without_a_second_dispatch():
         OWNER,
         registry,
         lambda value: commits.append(copy.deepcopy(value)),
+        processes_quiescent=lambda _: True,
         native_exclusion=native_exclusion,
     )
     owner.bind(binding(), **runtime_sources(registry), owner_approved=True)

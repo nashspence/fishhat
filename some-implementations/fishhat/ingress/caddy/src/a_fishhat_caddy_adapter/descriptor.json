@@ -46,7 +46,7 @@
     "ingress": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/ingress-adapter.schema.json",
-        "digest": "sha256:1a5d900b6e9aa2cec3d6319493de338223bb2a90871d818d7872f49ee53975cf"
+        "digest": "sha256:75f091b14c860d2663b6c7737818f011177a1f47c91e13ef8c7911ee85c76ce1"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/ingress-adapter.schema.json#/$defs/Response",
@@ -54,5 +54,5 @@
       }
     }
   },
-  "process_schema_digest": "sha256:1655d583e6d5b93a99b4c5de6c29459751a8b1cd09dec238b686c1e8e3de1c3b"
+  "process_schema_digest": "sha256:fd4dd9a89c4213f4f768b26159cd7955a2e210f3a606bc98a79816c99a47bea1"
 }

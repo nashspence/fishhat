@@ -74,5 +74,6 @@
     "install_bundle_digest",
     "status"
   ],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "description": "The domain checkout is a proper descendant of the workspace root. The domain checkout, optional tools checkout, tool environment, test environment and optional external evidence directory are pairwise disjoint: neither may equal or be an ancestor of another. External evidence must also be disjoint from the entire workspace root. Compare path segments, not raw prefixes. Before opening or changing them, the native client independently verifies the resolved directory identities and ancestry under its ownership, mount and no-follow policy; symlink and bind-mount aliases cannot bypass these boundaries."
 }

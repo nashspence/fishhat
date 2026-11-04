@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import copy
+from io import BytesIO
 
 import pytest
-from fishhat_contracts.validation import ContractError, digest, strict_json
+from fishhat_adapters.process import receive_process_result
+from fishhat_contracts.validation import ContractError, canonical, digest, strict_json
 from fishhat_owner import adapter_state
 from fishhat_owner.adapter_state import AdapterCoordinator
 
@@ -22,6 +24,8 @@ from tests.adapter_support import (
     runtime_sources,
 )
 from tests.linear_support import assert_linear, measure
+from tests.test_adapter_effects import result
+from tests.test_adapter_process import identity as artifact_identity
 
 CHECK_PURPOSE = {
     "purpose": "implementation",
@@ -50,7 +54,13 @@ CHECK_OVERRIDES = {
 def fixture():
     registry, _, _ = runtime_registry()
     store = CommitStore(OWNER)
-    owner = AdapterCoordinator(OWNER, registry, store, native_exclusion=native_exclusion)
+    owner = AdapterCoordinator(
+        OWNER,
+        registry,
+        store,
+        processes_quiescent=lambda _: True,
+        native_exclusion=native_exclusion,
+    )
     sources = runtime_sources(registry)
     owner.bind(binding(), **sources, owner_approved=True)
     owner.prove_quiescent("demo", fresh_observation(owner), owner_approved=True)
@@ -157,7 +167,13 @@ def test_failed_delta_acknowledgment_preserves_recoverable_exact_work(committed)
         owner.dispatch("demo", identity)
     assert store.state["requests"] == before["requests"]
     assert store.state["attempts"][identity]["state"] == ("dispatched" if committed else "prepared")
-    recovered = AdapterCoordinator(OWNER, owner.registry, store, native_exclusion=native_exclusion)
+    recovered = AdapterCoordinator(
+        OWNER,
+        owner.registry,
+        store,
+        processes_quiescent=lambda _: True,
+        native_exclusion=native_exclusion,
+    )
     recovered.restore(store.snapshot())
     assert store.state == recovered.snapshot()
     assert store.state["admission"]["demo"] is False
@@ -207,7 +223,13 @@ def test_interrupted_delta_acknowledgment_also_poisons_dispatch():
 def test_restored_indexes_preserve_effect_retry_and_pending_scope_rules():
     owner, store, sources, original = fixture()
     attempt = prepare(owner, sources, original)
-    recovered = AdapterCoordinator(OWNER, owner.registry, store, native_exclusion=native_exclusion)
+    recovered = AdapterCoordinator(
+        OWNER,
+        owner.registry,
+        store,
+        processes_quiescent=lambda _: True,
+        native_exclusion=native_exclusion,
+    )
     recovered.restore(store.snapshot())
     arguments = {
         "operation_id": attempt["operation_id"],
@@ -324,3 +346,65 @@ def test_ordinary_updates_do_not_traverse_retained_collections():
     owner.prove_quiescent("demo", fresh_observation(owner), owner_approved=True)
     owner.open_admission("demo", owner_approved=True)
     assert owner.state == store.state
+
+
+@pytest.mark.parametrize("legacy", [False, True], ids=["durable-hold", "legacy-effect-only"])
+def test_effect_settlement_waits_for_all_attempt_processes_across_recovery(legacy):
+    owner, store, sources, original = fixture()
+    attempt = prepare(owner, sources, original)
+    key = attempt["attempt_id"]
+    invocation = owner.dispatch("demo", key)
+    query, response = result(owner, attempt, native_task="task:" + key)
+    encoded = canonical(response)
+    marker = {"format": "fishhat.adapter-process-result/v1", "response": artifact_identity(encoded)}
+    receipt = receive_process_result(
+        "runtime",
+        query,
+        stdout=canonical(marker) + b"\n",
+        response_stream=BytesIO(encoded),
+        retained_response=BytesIO(),
+        exit_code=0,
+        timed_out=False,
+        children_quiescent=False,
+        invocation=invocation,
+    )
+    assert not receipt.complete and receipt.response == response
+
+    def lose_ack(envelope):
+        store(envelope)
+        raise OSError("commit acknowledged after disconnect")
+
+    owner.commit_delta = lose_ack
+    with pytest.raises(OSError):
+        owner.settle(key, query, receipt)
+    saved = store.snapshot()
+    head = saved["results"][key]
+    assert head["records"][head["latest"]]["response"] == response
+    assert head["processes_quiescent"] is False
+    assert saved["attempts"][key]["certainty"] == "known"
+    assert saved["attempts"][key]["outcome"] == "pending"
+    if legacy:
+        del head["processes_quiescent"]
+        saved["attempts"][key].update(state="resolved", outcome="succeeded")
+    stopped = set()
+    recovered = AdapterCoordinator(
+        OWNER,
+        owner.registry,
+        store,
+        native_exclusion=native_exclusion,
+        processes_quiescent=lambda original: original["attempt_id"] in stopped,
+    )
+    recovered.restore(saved)
+    with pytest.raises(ContractError, match="PENDING_NATIVE_WORK"):
+        recovered.observation_request("demo", owner_approved=True)
+    # A later clean reconciliation cannot certify cessation of the first launch.
+    reconcile, observed = reply(invocation)
+    recovered.settle(key, reconcile, observed)
+    recovered.settle(key, query, response)
+    assert recovered.snapshot()["attempts"][key]["outcome"] == "pending"
+    with pytest.raises(ContractError):
+        recovered.dispatch("demo", key)
+    stopped.add(key)
+    recovered.settle(key, reconcile, observed)
+    assert store.snapshot()["attempts"][key]["outcome"] == "succeeded"
+    recovered.observation_request("demo", owner_approved=True)

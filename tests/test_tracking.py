@@ -8,11 +8,12 @@ import tempfile
 import unittest
 import uuid
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from fishhat_client.submission import prepare_delivery, submit_once
 from fishhat_client.workspace import check_closeout, validate_session
-from fishhat_contracts.validation import ContractError, canonical, digest, validate
+from fishhat_contracts.record_delivery import RecordSnapshot
+from fishhat_contracts.validation import ContractError, canonical, digest, validate, validate_cli
 from fishhat_owner.journal import Journal
 from fishhat_reporting.reports import (
     comment_match,
@@ -714,18 +715,90 @@ class Noninterference(unittest.TestCase):
             with self.subTest(state=state), self.assertRaises(ContractError):
                 validate("client-records.schema.json", d, "Delivery")
 
+    def test_positive_nonacceptance_is_bound_to_the_exact_submission(self):
+        d = prepare_delivery(self.template)
+        fields = ("owner", "request_id", "plan_digest", "subject_digest", "workflow_id")
+        refusal = {key: d[key] for key in fields}
+        refusal.update(kind="SubmissionRefusal", reason="PLAN_EXPIRED")
+        problem = {
+            "owner": d["owner"],
+            "resource": d["resource"],
+            "code": "PLAN_EXPIRED",
+            "summary": "The reviewed Plan expired.",
+            "retry": "none",
+            "evidence": [],
+        }
+        reply = {
+            "format": "deployment-ops/owner/v1",
+            "method": "operation.submit",
+            "message_id": d["request_id"],
+            "ok": False,
+            "problem": problem,
+            "nonacceptance": refusal,
+        }
+        rejected = submit_once(d, lambda _: reply)
+        self.assertEqual(rejected["delivery"]["state"], "rejected")
+        self.assertEqual(rejected["refusal"], refusal)
+        self.assertEqual(rejected["exit_code"], 1)
+        cli = {
+            "format": "deployment-ops/cli/v1",
+            "state": "rejected",
+            "ok": False,
+            "complete": True,
+            "request_id": d["request_id"],
+            "location": "caller-session",
+            "result": refusal,
+            "problem": problem,
+            "delivery": rejected["delivery"],
+        }
+        validate_cli(cli)
+        with self.assertRaises(ContractError):
+            validate_cli({**cli, "result": None})
+        changed = {**refusal, "request_id": "11111111-1111-4111-8111-111111111111"}
+        denied = {**problem, "code": "PERMISSION_DENIED"}
+        other_owner = {**d["owner"], "epoch": str(uuid.uuid4())}
+        for invalid in (
+            {k: v for k, v in reply.items() if k != "nonacceptance"},
+            {**reply, "nonacceptance": changed},
+            {**reply, "method": "operation.get"},
+            {**reply, "nonacceptance": {**refusal, "owner": other_owner}},
+            {**reply, "problem": {**problem, "owner": other_owner}},
+            {**reply, "nonacceptance": {**refusal, "workflow_id": str(uuid.uuid4())}},
+            {**reply, "problem": {**problem, "retry": "same-request-after-reconcile"}},
+            {**reply, "problem": denied},
+            {**reply, "problem": denied, "nonacceptance": {**refusal, "reason": denied["code"]}},
+        ):
+            with self.subTest(invalid=invalid):
+                result = submit_once(d, lambda _, reply=invalid: reply)
+                self.assertEqual(result["delivery"]["state"], "acceptance_unknown")
+
+        evidence = RecordSnapshot(
+            {
+                "format": "deployment-ops/problem-evidence/v1",
+                "kind": "ProblemEvidence",
+                "owner": d["owner"],
+                "resource": d["resource"],
+                "evidence": [],
+            },
+            str(uuid.uuid4()),
+        ).reference
+        evidence["schema"]["digest"] = "sha256:" + "f" * 64
+        cli["problem"] = {**problem, "evidence": evidence}
+        with self.assertRaises(ContractError):
+            validate_cli(cli)
+        key = (evidence["schema"]["uri"], evidence["schema"]["digest"])
+        validate_cli(cli, retained_readers={key: lambda _: None})
+
     def test_timeout_same_id_no_retry(self):
         d = prepare_delivery(self.template)
-        seen = []
-
-        def timeout(x):
-            seen.append(x["request_id"])
-            raise TimeoutError()
-
-        r = submit_once(d, timeout)
-        self.assertEqual(seen, [d["request_id"]])
-        self.assertEqual(r["delivery"]["request_id"], d["request_id"])
-        self.assertEqual(r["exit_code"], 8)
+        for error in (TimeoutError(), PermissionError(), ContractError("unverified reply")):
+            with self.subTest(error=type(error).__name__):
+                unavailable = Mock(side_effect=error)
+                r = submit_once(d, unavailable)
+                unavailable.assert_called_once()
+                self.assertEqual(unavailable.call_args.args[0]["request_id"], d["request_id"])
+                self.assertEqual(r["delivery"]["request_id"], d["request_id"])
+                self.assertEqual(r["exit_code"], 8)
 
     def test_unknown_cannot_be_reclassified_new_in_same_model(self):
         d = prepare_delivery(self.template)

@@ -78,6 +78,42 @@ def validate_operation(
         raise ContractError("action result schema substitution")
 
 
+def operation_matches_delivery(operation: dict[str, Any], delivery: dict[str, Any]) -> bool:
+    """Join an independently authenticated, decoded Operation to the original delivery."""
+    return bool(
+        operation["request_id"] == delivery["request_id"]
+        and operation["owner"] == delivery["owner"]
+        and operation["plan_digest"] == delivery["plan_digest"]
+        and operation["witness"]["workflow_id"] == delivery["workflow_id"]
+        and digest(operation["subject"]) == delivery["subject_digest"]
+        and operation["subject"]["action"] == delivery["action"]
+        and operation["subject"]["resource"] == delivery["resource"]
+    )
+
+
+def validate_submission_refusal(
+    refusal: dict[str, Any],
+    problem: dict[str, Any],
+    delivery: dict[str, Any],
+    *,
+    retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
+) -> None:
+    """Join a decoded refusal to its exact delivery. Authentication belongs to the transport."""
+    from .record_delivery import validate_problem
+
+    validate("records.schema.json", refusal, "SubmissionRefusal")
+    validate_problem(problem, retained_readers=retained_readers)
+    identity = ("owner", "request_id", "plan_digest", "subject_digest", "workflow_id")
+    if not (
+        all(refusal[key] == delivery[key] for key in identity)
+        and problem["owner"] == delivery["owner"]
+        and problem["resource"] == delivery["resource"]
+        and problem["code"] == refusal["reason"]
+        and problem["retry"] == "none"
+    ):
+        raise ContractError("submission refusal does not match the original delivery and reason")
+
+
 def operation_plan_request(
     operation: dict[str, Any],
     *,

@@ -36,6 +36,7 @@ def coordinator(commit=None):
         OWNER,
         registry,
         commit or (lambda value: commits.append(copy.deepcopy(value))),
+        processes_quiescent=lambda _: True,
         native_exclusion=native_exclusion,
     )
     c.bind(binding(), **runtime_sources(registry), owner_approved=True)

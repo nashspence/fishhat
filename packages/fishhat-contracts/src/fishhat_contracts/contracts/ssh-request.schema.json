@@ -338,7 +338,28 @@
             "workflow_id",
             "driver_term"
           ],
-          "additionalProperties": false
+          "additionalProperties": false,
+          "if": {
+            "properties": {
+              "workflow_id": {
+                "type": "null"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "driver_term": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "driver_term": {
+                "type": "integer"
+              }
+            }
+          }
         }
       },
       "required": [

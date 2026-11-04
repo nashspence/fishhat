@@ -210,6 +210,21 @@ def test_secret_binding_names_cannot_compete_for_a_component_target(delivery, an
         validate_app(app, catalogue)
 
 
+@pytest.mark.parametrize("reverse", [False, True])
+def test_secret_file_cannot_be_a_directory_in_its_component(reverse):
+    app, catalogue = app_source()
+    bindings = app["secret_bindings"]
+    first = bindings["database-password"]
+    second = {**first, "target": first["target"] + "/token", "delivery": "environment-file"}
+    bindings["child"] = second
+    if reverse:
+        app["secret_bindings"] = dict(reversed(bindings.items()))
+    with pytest.raises(ContractError, match="file destination overlaps"):
+        validate_app(app, catalogue)
+    second["component"] = "web"
+    validate_app(app, catalogue)
+
+
 @pytest.mark.parametrize(
     "path",
     ["/run//secrets/key", "/run/./secrets/key", "/run/secrets/key/"],

@@ -125,11 +125,20 @@ def test_invocation_cannot_substitute_its_retained_identity(field):
         check_invocation("capture", invocation)
 
 
-@pytest.mark.parametrize("state", ["prepared", "resolved", "reconciling"])
-def test_retained_non_dispatchable_attempt_is_not_new_execution_authority(state):
+@pytest.mark.parametrize(
+    "change",
+    [
+        {"state": "prepared"},
+        {"state": "resolved"},
+        {"state": "reconciling"},
+        {"native_task": "task:already-running"},
+    ],
+    ids=["prepared", "resolved", "reconciling", "native-task"],
+)
+def test_retained_non_dispatchable_attempt_is_not_new_execution_authority(change):
     registry, request = handoff("capture", "restore")
     invocation = invocation_for(request)
-    invocation["attempt"]["state"] = state
+    invocation["attempt"].update(change)
     with pytest.raises(ContractError, match="INVOCATION_NOT_DISPATCHABLE"):
         registry.authorize_invocation("capture", invocation, owner_approved=True)
 
