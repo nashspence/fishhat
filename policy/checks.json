@@ -12984,6 +12984,42 @@
       "purpose_sha256": "0ff2b5efa64237ffc95e3d8db783a2dd9fa25c5983984971ce343c644b5cd428"
     },
     {
+      "node": "tests/test_schema_identity_cache.py::test_core_digest_reuse_does_not_admit_a_custom_core_replacement",
+      "purpose_sha256": "44d4c6bd348aafa9156bd0f7a5b4dab502d71463e0362cf251015b04c98cf39b"
+    },
+    {
+      "node": "tests/test_schema_identity_cache.py::test_core_identity_rechecks_catalogue_sources[changed-catalogue]",
+      "purpose_sha256": "44d4c6bd348aafa9156bd0f7a5b4dab502d71463e0362cf251015b04c98cf39b"
+    },
+    {
+      "node": "tests/test_schema_identity_cache.py::test_core_identity_rechecks_catalogue_sources[missing-catalogue]",
+      "purpose_sha256": "44d4c6bd348aafa9156bd0f7a5b4dab502d71463e0362cf251015b04c98cf39b"
+    },
+    {
+      "node": "tests/test_schema_identity_cache.py::test_core_identity_rechecks_complete_document_sources[annotation]",
+      "purpose_sha256": "44d4c6bd348aafa9156bd0f7a5b4dab502d71463e0362cf251015b04c98cf39b"
+    },
+    {
+      "node": "tests/test_schema_identity_cache.py::test_core_identity_rechecks_complete_document_sources[boolean-number]",
+      "purpose_sha256": "44d4c6bd348aafa9156bd0f7a5b4dab502d71463e0362cf251015b04c98cf39b"
+    },
+    {
+      "node": "tests/test_schema_identity_cache.py::test_core_identity_rechecks_complete_document_sources[missing-document]",
+      "purpose_sha256": "44d4c6bd348aafa9156bd0f7a5b4dab502d71463e0362cf251015b04c98cf39b"
+    },
+    {
+      "node": "tests/test_schema_identity_cache.py::test_core_identity_rechecks_complete_document_sources[unreachable-reference]",
+      "purpose_sha256": "44d4c6bd348aafa9156bd0f7a5b4dab502d71463e0362cf251015b04c98cf39b"
+    },
+    {
+      "node": "tests/test_schema_identity_cache.py::test_core_identity_rechecks_complete_document_sources[unsafe-integer]",
+      "purpose_sha256": "44d4c6bd348aafa9156bd0f7a5b4dab502d71463e0362cf251015b04c98cf39b"
+    },
+    {
+      "node": "tests/test_schema_identity_cache.py::test_identity_result_mutation_cannot_change_a_later_commitment",
+      "purpose_sha256": "44d4c6bd348aafa9156bd0f7a5b4dab502d71463e0362cf251015b04c98cf39b"
+    },
+    {
       "node": "tests/test_schema_regex_profile.py::test_eight_paths_remain_accepted_with_exact_matching[eight-branches]",
       "purpose_sha256": "4c28a183b4bf4b46e02a679c1c7aa3a16f8c7ed21d1c7a37860a684d68dd4061"
     },

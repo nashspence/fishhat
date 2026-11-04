@@ -2756,7 +2756,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/handoffs.py": "6aeb7ef3e3f49f51d1523d9f6a48d4be5105e6ccb0cf0943c020029978aff7ef",
+        "packages/fishhat-contracts/src/fishhat_contracts/handoffs.py": "06e6fa620607778a260dd7851d58f0b4b3a5e8bd7c902b132cce8c5cb1ec44f2",
         "tests/test_result_schema_admission.py": "a9dda15195f6a875d0f1ee1fafcb6a6d524b735aac558f2fb07867d1267cbf5f",
         "tests/test_retained_result_growth.py": "05e644216c56e1c0cdcd16b67ff03dc08a82975995d2b9b4db0b31995b842802"
       },

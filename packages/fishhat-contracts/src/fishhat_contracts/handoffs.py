@@ -281,8 +281,65 @@ def _schema_closure(
     }
 
 
+_CORE_DIGEST_CACHE: dict[
+    tuple[str, bool], tuple[dict[str, dict[str, Any]], dict[str, Any], str]
+] = {}
+
+
+def _same_json_source(current: Any, retained: Any) -> bool:
+    """Compare every source member, preserving admission-relevant Python types."""
+    if type(current) is not type(retained):
+        return False
+    if isinstance(current, dict):
+        return len(current) == len(retained) and all(
+            key in current and _same_json_source(current[key], value)
+            for key, value in retained.items()
+        )
+    if isinstance(current, list):
+        return len(current) == len(retained) and all(
+            _same_json_source(left, right) for left, right in zip(current, retained, strict=True)
+        )
+    return bool(current == retained)
+
+
+def _core_schema_digest(uri: str, *, document: bool = False) -> str:
+    """Reuse a verified digest only after checking its complete current sources.
+
+    Snapshots include every admitted document, even unused definitions, and its
+    catalogue dependencies. Fresh source indexing detects replacements and missing
+    dependencies; typed comparisons cannot confuse booleans, floats and integers.
+    Cache eviction changes only recomputation, never admitted collection extent.
+    """
+    available = {schema["$id"]: schema for schema in SCHEMAS.values()}
+    key = (uri, document)
+    retained = _CORE_DIGEST_CACHE.get(key)
+    if retained is not None:
+        sources, catalogues, identity = retained
+        if all(
+            name in available and _same_json_source(available[name], schema)
+            for name, schema in sources.items()
+        ) and all(
+            name in CATALOGUES and _same_json_source(CATALOGUES[name], value)
+            for name, value in catalogues.items()
+        ):
+            return identity
+    documents = _schema_documents(uri)
+    identity = digest(_schema_closure(uri, documents, document=document))
+    catalogues = {
+        urljoin(name, dependency): CATALOGUES[urljoin(name, dependency)]
+        for name, schema in documents.items()
+        for dependency in schema.get("x-fishhat-catalogue-dependencies", [])
+    }
+    if len(_CORE_DIGEST_CACHE) >= 32:
+        _CORE_DIGEST_CACHE.pop(next(iter(_CORE_DIGEST_CACHE)))
+    _CORE_DIGEST_CACHE[key] = (deepcopy(documents), deepcopy(catalogues), identity)
+    return identity
+
+
 def schema_identity(uri: str, installed: dict[str, dict[str, Any]] | None = None) -> dict[str, str]:
     """Pin the rooted installed schema closure; URI resolution never uses a network."""
+    if installed is None:
+        return {"uri": uri, "digest": _core_schema_digest(uri)}
     documents = _schema_documents(uri, installed)
     return {"uri": uri, "digest": digest(_schema_closure(uri, documents))}
 
@@ -290,8 +347,7 @@ def schema_identity(uri: str, installed: dict[str, dict[str, Any]] | None = None
 def schema_document_digest(uri: str) -> str:
     """Pin one complete core protocol document plus its rooted reference dependencies."""
     _require(not urldefrag(uri)[1], "protocol document digest requires a document root")
-    documents = _schema_documents(uri)
-    return digest(_schema_closure(uri, documents, document=True))
+    return _core_schema_digest(uri, document=True)
 
 
 def validate_workflow(
