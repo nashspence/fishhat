@@ -53,7 +53,7 @@
     "repository": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/repository-adapter.schema.json",
-        "digest": "sha256:d454277fdd10dbc25fe84845326437d22267151c1d35c481099b4e6e907ad9ac"
+        "digest": "sha256:5f867f2e8b52a6c7f946b307731e79b11404322c60c50293d3e8790a73602cbd"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/repository-adapter.schema.json#/$defs/Response",
@@ -61,5 +61,5 @@
       }
     }
   },
-  "process_schema_digest": "sha256:1bdd99e643a3d37e31e7854ea447d07915097bfd07c9737fce9b039e72e7e847"
+  "process_schema_digest": "sha256:e89c2c904d65da186fe24f5b16b9b8c7b1978c1d00c4a5853d04d3597f8f3167"
 }

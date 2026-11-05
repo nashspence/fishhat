@@ -13,16 +13,16 @@
       "sha256": "7207391ed3bffcd9cfb16410f46b9a962d7c04fcb0c885e0ed5358f0d546e234"
     },
     "https://fishhat.invalid/contracts/owner-cli.json": {
-      "sha256": "5e2ae525b63430b167cf68a69113e051e966fd4232fa18fb13c70bc6960477c0"
+      "sha256": "63cb5703435e1bb6071b04c7691a1385a529bca3fb1161705321936654eafd84"
     },
     "https://fishhat.invalid/contracts/receipts-api.openapi.json": {
       "sha256": "d27e18f3f6b21f4c7dd2abe85bf1f776d5fde0ead927b73a44517c9d9192ee92"
     },
     "https://fishhat.invalid/contracts/ssh-methods.json": {
-      "sha256": "3b6905963bfba708336547528b545b4855a76a9ea884efec716db7a7d7945dc6"
+      "sha256": "76cd7937260d83567ba184b19c9861b6745c1fcb3a67841b2575dcd490f9ed57"
     },
     "https://fishhat.invalid/contracts/states.json": {
-      "sha256": "f6a01fab7ee9d39ff4522107507f81ca34e12b7d5ef19e6236eddff4d63ab3ae"
+      "sha256": "bd84ec42cd9e97f73f615bd4cd2d4891e3485926b88154d6cd2b147a673fc79b"
     }
   },
   "cli": {
@@ -216,8 +216,8 @@
         "methods": {
           "__init__": "(self) -> 'None'",
           "authorize": "(self, instance_id: 'str', role: 'str', method: 'str', scope: 'dict[str, Any]', *, owner_approved: 'bool') -> 'dict[str, Any]'",
-          "authorize_invocation": "(self, role: 'str', invocation: 'dict[str, Any]', *, owner_approved: 'bool', expected_compute_target: 'dict[str, Any] | None' = None) -> 'dict[str, Any]'",
-          "authorize_request": "(self, instance_id: 'str', role: 'str', request: 'dict[str, Any]', *, owner_approved: 'bool', invocation: 'dict[str, Any] | None' = None, expected_runtime_binding: 'dict[str, Any] | None' = None, expected_publication_target: 'dict[str, Any] | None' = None, expected_compute_target: 'dict[str, Any] | None' = None) -> 'dict[str, Any]'",
+          "authorize_invocation": "(self, role: 'str', invocation: 'dict[str, Any]', *, owner_approved: 'bool', expected_compute_target: 'dict[str, Any] | None' = None, approved_bootstrap_request_digest: 'str | None' = None, expected_capture_identity: 'dict[str, Any] | None' = None, expected_prune_target: 'dict[str, Any] | None' = None) -> 'dict[str, Any]'",
+          "authorize_request": "(self, instance_id: 'str', role: 'str', request: 'dict[str, Any]', *, owner_approved: 'bool', invocation: 'dict[str, Any] | None' = None, expected_runtime_binding: 'dict[str, Any] | None' = None, approved_release: 'dict[str, Any] | None' = None, expected_publication_target: 'dict[str, Any] | None' = None, expected_compute_target: 'dict[str, Any] | None' = None, approved_bootstrap_request_digest: 'str | None' = None, expected_capture_identity: 'dict[str, Any] | None' = None, expected_prune_target: 'dict[str, Any] | None' = None) -> 'dict[str, Any]'",
           "enroll": "(self, instance: 'dict[str, Any]', *, owner_approved: 'bool') -> 'None'",
           "enroll_repository": "(self, reference: 'dict[str, Any]', *, owner_approved: 'bool') -> 'None'",
           "enroll_source_target": "(self, target: 'dict[str, Any]', *, owner_approved: 'bool') -> 'None'",
@@ -304,35 +304,35 @@
   "schemas": {
     "actions.schema.json": {
       "id": "https://fishhat.invalid/contracts/actions.schema.json",
-      "sha256": "eb8554c1972b36d764ac94b60eb10320d02878a45c768d89ea883cd84a7d5aff"
+      "sha256": "b2d51a45b2713a839f14ad2c6d4d9ded988b130ed73d3967928cbb6257ee0e55"
     },
     "adapter-process.schema.json": {
       "id": "https://fishhat.invalid/contracts/adapter-process.schema.json",
-      "sha256": "582e767ab86102f466ec401c3b4bb37136f1432e1e019f90e2a41fce7ccba88a"
+      "sha256": "87401fe767bdb90be2b54c0c1b2c6e68e12f85e96bfc31cb245fef2620cedc9d"
     },
     "adapter.schema.json": {
       "id": "https://fishhat.invalid/contracts/adapter.schema.json",
-      "sha256": "85045205b9cd41120d64d78fc873ff13ffebddf9e6f9d959cf237676288b64e0"
+      "sha256": "9e79009e596b70db1724de57667c02820de9908ffdae934c4b6454f45594e243"
     },
     "backup-adapter.schema.json": {
       "id": "https://fishhat.invalid/contracts/backup-adapter.schema.json",
-      "sha256": "da8ddd2cdaf6397138fbd6c7e3f9431f5f973315abea0c161138d6f4f0e72548"
+      "sha256": "fe5a6dd81602e6319cbac512f84c18355ab450c4ad4e1054ab5db84dcb47ceec"
     },
     "backup-result.schema.json": {
       "id": "https://fishhat.invalid/contracts/backup-result.schema.json",
-      "sha256": "e3491cd02d4cc01ebf1b89ecdab8ef3253859bd7f6bc07d83fdf6e8cb60226ed"
+      "sha256": "40cdf7f8ee24d575bea587ddf5cf3b47cce3f39997f92665bf5f5a44a4bb6f80"
     },
     "bootstrap-catalogue.schema.json": {
       "id": "https://fishhat.invalid/contracts/bootstrap-catalogue.schema.json",
-      "sha256": "dd42578134b4a6e3608d8f11d2ba7409fbcb71b4b9ff8e93895def35e2cedfdd"
+      "sha256": "e3de05ca8c975621a7402b4aea767d999208507b35d2cf3285d10913e96485d4"
     },
     "bootstrap-recovery.schema.json": {
       "id": "https://fishhat.invalid/contracts/bootstrap-recovery.schema.json",
-      "sha256": "0a5075d8a36762a407aa1c6581d7a9ff20930fe516c4bfefc4ab7e0e1827ba10"
+      "sha256": "4b605a52568bd7c848f9edfc304764d4cddd73db61daf5dda86171deaf7a7a87"
     },
     "bootstrap-source-adapter.schema.json": {
       "id": "https://fishhat.invalid/contracts/bootstrap-source-adapter.schema.json",
-      "sha256": "fb7b1367cb01c3644c48b405b45b298e4229b8c2012f55b6b3d8f80e3248cd31"
+      "sha256": "9ed08d95ea464f0471092d82681b9281b68518b44a9e382592ecf508c14fa08a"
     },
     "build-adapter.schema.json": {
       "id": "https://fishhat.invalid/contracts/build-adapter.schema.json",
@@ -348,7 +348,7 @@
     },
     "capture-adapter.schema.json": {
       "id": "https://fishhat.invalid/contracts/capture-adapter.schema.json",
-      "sha256": "40534ecc855da4c001d92a40ece2b4d6e42ea3701a47b786d09df23b56d795a1"
+      "sha256": "ba552a9bef36a6427c2c3649a6c6d98ad58e7254b9ce9c18898d24a047f21018"
     },
     "cli-output.schema.json": {
       "id": "https://fishhat.invalid/contracts/cli-output.schema.json",
@@ -356,7 +356,7 @@
     },
     "client-records.schema.json": {
       "id": "https://fishhat.invalid/contracts/client-records.schema.json",
-      "sha256": "49ff288b580cc1b56458ae6b18826d818e5d0ba411ffc32e1de8c32943c684f8"
+      "sha256": "3462eb2832568199f154ae09b8f8bcd2a1a00a88888a8fa1d6c152c2131302b7"
     },
     "common.schema.json": {
       "id": "https://fishhat.invalid/contracts/common.schema.json",
@@ -372,7 +372,7 @@
     },
     "dataset-obligations.schema.json": {
       "id": "https://fishhat.invalid/contracts/dataset-obligations.schema.json",
-      "sha256": "e36a35b5aa8e93a331693b6fc6c2f2c26347ea36c5f1a4b803c8ce772089f98c"
+      "sha256": "39ea7c6c69539728a509f81be7894c4769a223bb61936d76356bf5d74e175fe8"
     },
     "directory-release.schema.json": {
       "id": "https://fishhat.invalid/contracts/directory-release.schema.json",
@@ -428,7 +428,7 @@
     },
     "lifecycle-evidence.schema.json": {
       "id": "https://fishhat.invalid/contracts/lifecycle-evidence.schema.json",
-      "sha256": "f37bfcb2b5ddd069dd35c29a3f07c7ff9bf29423d6020196ef20c914ec406251"
+      "sha256": "dc9f949d0eeea90c254a1e99495b32f7f38f8ddd739484b4bde27874845710a0"
     },
     "maintenance.schema.json": {
       "id": "https://fishhat.invalid/contracts/maintenance.schema.json",
@@ -468,7 +468,7 @@
     },
     "records.schema.json": {
       "id": "https://fishhat.invalid/contracts/records.schema.json",
-      "sha256": "65b3e444ab2f3618058e2bee3037fbda9e3933b4bcbe1c886fbff359de6712e8"
+      "sha256": "70e9e5cd70306152bd4787e4d14ed43ce3c9e16514c874722ab133232e287257"
     },
     "recovery-point.schema.json": {
       "id": "https://fishhat.invalid/contracts/recovery-point.schema.json",
@@ -484,7 +484,7 @@
     },
     "repository-adapter.schema.json": {
       "id": "https://fishhat.invalid/contracts/repository-adapter.schema.json",
-      "sha256": "efcc3ed83d8b0ba698416e7ebaee97978a5e14b55f006b411191502b91996dca"
+      "sha256": "83556b049f7364ce4e801e22c2acf2d1f84959594fe0c298ee3b320508f1fa45"
     },
     "resource-records.schema.json": {
       "id": "https://fishhat.invalid/contracts/resource-records.schema.json",
@@ -500,7 +500,7 @@
     },
     "runtime-adapter.schema.json": {
       "id": "https://fishhat.invalid/contracts/runtime-adapter.schema.json",
-      "sha256": "09759924b492daa8ea1247bf6916e831797c3a70a1421db7b2ea8e65f345a040"
+      "sha256": "d74f178b82f57f347d7c82bd163b10ff9feeb2efeb5dbd6cf10ca9082062da84"
     },
     "secret-source-adapter.schema.json": {
       "id": "https://fishhat.invalid/contracts/secret-source-adapter.schema.json",
@@ -524,11 +524,11 @@
     },
     "ssh-request.schema.json": {
       "id": "https://fishhat.invalid/contracts/ssh-request.schema.json",
-      "sha256": "380fefb21ff801139cc794e87c4d4ef22ac4849ccf6a3be3fb9797fb3e621d98"
+      "sha256": "ce0dc9e8718a9842e12896f4ac0c8262d00708dcb3656f225751d814976ec08e"
     },
     "ssh-response.schema.json": {
       "id": "https://fishhat.invalid/contracts/ssh-response.schema.json",
-      "sha256": "0428f71b87faf0e2bc4b411088bf7736bab1cea7092e0a94ec5796db990e3323"
+      "sha256": "895292e6dc1bebe6d79d987a767399977cce2b2631c373fe2829f7e246b595eb"
     },
     "storage-adapter.schema.json": {
       "id": "https://fishhat.invalid/contracts/storage-adapter.schema.json",

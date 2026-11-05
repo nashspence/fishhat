@@ -519,6 +519,10 @@
         },
         "tree": {
           "$ref": "bootstrap-recovery.schema.json#/$defs/Tree"
+        },
+        "ref_object_id": {
+          "$ref": "repository-adapter.schema.json#/$defs/ObjectId",
+          "description": "The independently captured unpeeled object ID of the literal direct ref in this repository object format. A branch names its commit directly. A tag may name a tag object that peels to the selected commit."
         }
       },
       "required": [
@@ -536,7 +540,8 @@
         "uncommitted_work_restored",
         "source_id",
         "ref",
-        "tree"
+        "tree",
+        "ref_object_id"
       ],
       "additionalProperties": false,
       "description": "Inert receipt for source salvage. output identifies the complete stable transfer artifact. destination identifies the local staging result. tree is measured from the verified restored commit and equals the selected catalogue commitment. Recovery and verification require independent byte and Git-object custody before success."

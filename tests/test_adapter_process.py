@@ -527,6 +527,7 @@ def growth_case(count):
                     "handle": "object:synthetic",
                     "repository": executor["scope"]["handle"],
                     "artifacts": artifacts,
+                    "incarnation": identity(b"original")["digest"],
                     "completeness": "sealed",
                     "retrieval": "available",
                 }

@@ -782,6 +782,19 @@
       ],
       "use_case": "resources.observe",
       "description": "Read a closed resources.observe SSH envelope. Preserve the complete host or app resource, opaque continuation and caller-selected page limit. Recheck current receiving scope for the exact selection."
+    },
+    {
+      "name": "close-if-unaccepted",
+      "tokens": [
+        "{tool}",
+        "op",
+        "close-if-unaccepted",
+        "--request-stdin",
+        "--confirm",
+        "--json"
+      ],
+      "use_case": "operation.close",
+      "description": "Read the closed operation.close request envelope from stdin and require the exact local owner epoch. Explicitly withdraw an uncertain standalone submission with the same atomic decision and authorization as SSH. A race that already accepted returns the original Operation; this command cannot start or stop execution."
     }
   ],
   "parser": "bounded tokens; no shell evaluation",

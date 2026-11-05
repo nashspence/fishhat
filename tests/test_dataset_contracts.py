@@ -237,6 +237,7 @@ def test_multi_dataset_checkpoint_declares_its_consistency_claim(scope, evidence
         "app_instance": "prod:" + "a" * 64,
         "owner": OWNER,
         "release_digest": d,
+        "dataset_inventory_digest": d,
         "datasets": {"database": dataset, "files": copy.deepcopy(dataset)},
         "secret_generations": [],
         "backup_executor": {

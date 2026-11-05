@@ -15,10 +15,43 @@ from fishhat_contracts.adapter_semantics import (
 )
 from fishhat_contracts.bounds import Bounds, bounds
 from fishhat_contracts.handoffs import schema_document_digest, schema_identity
+from fishhat_contracts.release_identity import validate_release
 from fishhat_contracts.validation import ContractError, canonical, digest, validate
 from referencing.exceptions import Unresolvable
 
 from .schemas import check_closed_schema, validate_configuration
+
+
+def _require_recovery_target(
+    role: str,
+    request: dict[str, Any],
+    capture_identity: dict[str, Any] | None,
+    prune_target: dict[str, Any] | None,
+    executor: dict[str, Any] | None,
+) -> None:
+    """Check the independently accepted target, including the original on reconciliation."""
+    if request["method"] == "reconcile":
+        request = request["input"]["invocation"]["request"]
+    inputs = request["input"]
+    if role == "capture":
+        require(capture_identity == inputs["dataset_identity"], "CAPTURE_APPROVED_DATASET")
+    if role == "backup" and request["method"] == "delete":
+        require(prune_target is not None, "PRUNING_APPROVED_TARGET")
+        assert prune_target is not None
+        validate("lifecycle-evidence.schema.json", prune_target, "PruningDispatch")
+        require(prune_target["executor"] == executor, "PRUNING_APPROVED_EXECUTOR")
+        target = prune_target["target"]
+        obj = target["object"]
+        require(
+            target["native_identity"]["scope"] == inputs["scope"]
+            and target["native_identity"]["incarnation"] == inputs["incarnation"]
+            and obj["incarnation"] == inputs["incarnation"]
+            and obj["repository"] == inputs["repository"]
+            and obj["handle"] == inputs["object"]
+            and {canonical(a) for a in obj["artifacts"]}
+            == {canonical(a) for a in inputs["artifacts"]},
+            "PRUNING_APPROVED_TARGET",
+        )
 
 
 def _api_bounds(name: str, *, registry: bool = False) -> Bounds:
@@ -48,6 +81,35 @@ def runtime_binding_digest(binding: dict[str, Any]) -> str:
     """Identify an accepted runtime binding independently of its current admission fence."""
     validate("adapter.schema.json", binding, "RuntimeBinding")
     return digest({key: value for key, value in binding.items() if key != "admission_generation"})
+
+
+def _require_runtime_release(inputs: dict[str, Any], release: dict[str, Any] | None) -> None:
+    if release is None:
+        raise ContractError("runtime resolution requires an independently approved release")
+    validate_release(release, expected_digest=inputs["release_digest"])
+    selected = release["runtime"]
+    require(
+        inputs["source"] == release["artifacts"][selected["source_artifact"]]
+        and set(inputs["components"]) == set(selected["components"])
+        and runtime_binding_digest(inputs["target"]) == selected["binding_digest"],
+        "runtime resolution differs from approved release selection",
+    )
+
+
+def _require_bootstrap_approval(
+    request: dict[str, Any], descriptor: dict[str, Any], expected_digest: str | None
+) -> None:
+    selected = request["input"]["selection"]["adapter"]
+    require(
+        descriptor["id"] == selected["implementation"]
+        and digest(descriptor) == selected["descriptor_digest"]
+        and digest(descriptor["source_schema"]) == selected["source_schema_digest"],
+        "BOOTSTRAP_BINDING_IDENTITY",
+    )
+    require(
+        expected_digest == digest(request),
+        "BOOTSTRAP_REQUEST_NOT_APPROVED",
+    )
 
 
 @bounds(_api_bounds("check_schema"))
@@ -206,23 +268,6 @@ class Registry:
         require(
             self._repositories.get(self._repository_key(reference)) == reference,
             "UNAPPROVED_REPOSITORY_MAPPING",
-        )
-
-    def _check_bootstrap_binding(
-        self, role: str, request: dict[str, Any], instance: dict[str, Any]
-    ) -> None:
-        """Join pinned recovery selection to independently loaded installation records."""
-        if role != "bootstrap-source":
-            return
-        selected = request["input"]["selection"]["adapter"]
-        installation, descriptor = self._installations[instance["installation_digest"]]
-        require(
-            descriptor["id"] == selected["implementation"]
-            and installation["artifact"]["digest"] == selected["installation_digest"]
-            and installation["descriptor_digest"] == selected["descriptor_digest"]
-            and digest(instance["configuration"]) == selected["configuration_digest"]
-            and digest(descriptor["source_schema"]) == selected["source_schema_digest"],
-            "BOOTSTRAP_BINDING_IDENTITY",
         )
 
     @staticmethod
@@ -402,8 +447,12 @@ class Registry:
         owner_approved: bool,
         invocation: dict[str, Any] | None = None,
         expected_runtime_binding: dict[str, Any] | None = None,
+        approved_release: dict[str, Any] | None = None,
         expected_publication_target: dict[str, Any] | None = None,
         expected_compute_target: dict[str, Any] | None = None,
+        approved_bootstrap_request_digest: str | None = None,
+        expected_capture_identity: dict[str, Any] | None = None,
+        expected_prune_target: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Authorize a query against independently retained owner authority.
 
@@ -435,6 +484,8 @@ class Registry:
                 if request["method"] == "resolve"
                 else "OBSERVATION_APPROVED_TARGET",
             )
+        if role == "runtime" and request["method"] == "resolve":
+            _require_runtime_release(request["input"], approved_release)
         if role in {"ingress", "network"} and request["method"] in {"plan", "observe"}:
             require(
                 expected_publication_target is not None
@@ -454,8 +505,9 @@ class Registry:
             check_invocation(role, invocation)
             original = request["input"]["invocation"]
             require(
-                _attempt_identity(original["attempt"]) == _attempt_identity(invocation["attempt"])
-                and original["request"] == invocation["request"],
+                canonical(_attempt_identity(original["attempt"]))
+                == canonical(_attempt_identity(invocation["attempt"]))
+                and canonical(original["request"]) == canonical(invocation["request"]),
                 "RECONCILIATION_IDENTITY",
             )
             require(
@@ -483,7 +535,16 @@ class Registry:
             else request
         )
         self._check_source_target_mapping(role, original)
-        self._check_bootstrap_binding(role, original, instance)
+        _require_recovery_target(
+            role,
+            original,
+            expected_capture_identity,
+            expected_prune_target,
+            invocation["attempt"]["executor"] if invocation is not None else None,
+        )
+        if role == "bootstrap-source":
+            _, descriptor = self._installations[instance["installation_digest"]]
+            _require_bootstrap_approval(original, descriptor, approved_bootstrap_request_digest)
         return instance
 
     @bounds(_api_bounds("Registry.authorize_invocation", registry=True))
@@ -494,6 +555,9 @@ class Registry:
         *,
         owner_approved: bool,
         expected_compute_target: dict[str, Any] | None = None,
+        approved_bootstrap_request_digest: str | None = None,
+        expected_capture_identity: dict[str, Any] | None = None,
+        expected_prune_target: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Check an owner-authored mutation closure; native dispatch remains owner-controlled."""
         check_invocation(role, invocation)
@@ -527,7 +591,12 @@ class Registry:
                 "PUBLICATION_NAMESPACE_NOT_GRANTED",
             )
         self._check_source_target_mapping(role, request)
-        self._check_bootstrap_binding(role, request, instance)
+        _require_recovery_target(
+            role, request, expected_capture_identity, expected_prune_target, attempt["executor"]
+        )
+        if role == "bootstrap-source":
+            _, descriptor = self._installations[instance["installation_digest"]]
+            _require_bootstrap_approval(request, descriptor, approved_bootstrap_request_digest)
         return instance
 
     @bounds(_api_bounds("Registry.authorize", registry=True))

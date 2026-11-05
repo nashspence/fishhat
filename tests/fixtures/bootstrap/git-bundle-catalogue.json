@@ -11,7 +11,7 @@
       "adapter": {
         "implementation": "fishhat.git-bundle",
         "installation_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-        "descriptor_digest": "sha256:3709aded97d3292d1bb291d8d72657dd2cc4c58983618a268eff21def8cfcafe",
+        "descriptor_digest": "sha256:3759dd7401f4049c8f6a84d61a507ac6a388ee75c2bd59946cde5a50b0bd1bf6",
         "configuration_digest": "sha256:6a609f6a9b32d303d3df8e174e088dce83f80bc40fc0c3684481aaa0932b6863",
         "source_schema_digest": "sha256:281bb61adafe977f2a1b952d106dc888939c015ce47ade32ebae33db8de12d95"
       },
@@ -24,7 +24,8 @@
         "tree_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         "file_count": 18,
         "total_bytes": 32768
-      }
+      },
+      "ref_object_id": "1111111111111111111111111111111111111111"
     }
   ],
   "publication_state": "independently-verified"

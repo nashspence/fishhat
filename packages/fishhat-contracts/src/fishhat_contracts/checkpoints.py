@@ -67,6 +67,7 @@ def validate_checkpoint(value: dict[str, Any]) -> None:
     closure = set(value["recovery_closure"])
     required = {
         value["release_digest"],
+        value["dataset_inventory_digest"],
         *value["secret_generations"],
         *(value["backup_executor"][key] for key in ENROLLMENT_IDENTITIES),
     }
@@ -236,6 +237,23 @@ def resolve_checkpoint(
     closure = set(value["recovery_closure"])
     reader = _ReceiptReader(closure, records, trusted_keys, recovery_readers)
     reader.authenticate(value)
+    from .datasets import validate_dataset_inventory
+
+    _, inventory = reader.load(value["dataset_inventory_digest"])
+    validate_dataset_inventory(inventory)
+    preserved = {
+        entry["dataset"]: entry["obligation"]
+        for entry in inventory["entries"]
+        if entry["discharge"] is None
+        and entry["obligation"]["declaration"]["recovery"] == "preserve"
+    }
+    _require(
+        inventory["owner"] == expected_owner
+        and inventory["app_instance"] == expected_app_instance
+        and inventory["accepted_release_digest"] == expected_release_digest
+        and preserved.keys() == value["datasets"].keys(),
+        "checkpoint differs from retained accepted dataset inventory",
+    )
     snapshots: dict[str, dict[str, Any]] = {}
     objects: dict[str, dict[str, Any]] = {}
     dataset_backups: dict[str, str] = {}
@@ -246,6 +264,16 @@ def resolve_checkpoint(
         captured = reader.result(selected["capture_digest"], "capture", "capture")
         output = captured["response"]["output"]
         snapshot = output["snapshots"][0]
+        obligation = preserved[dataset]
+        _require(
+            snapshot.get("dataset_identity")
+            == {
+                "obligation_id": obligation["id"],
+                "obligation_digest": digest(obligation),
+                "native_identity": obligation["native_identity"],
+            },
+            "checkpoint capture differs from accepted dataset obligation or incarnation",
+        )
         from .recovery_points import validate_recovery_point
 
         validate_recovery_point(snapshot["recovery_point"])
@@ -291,7 +319,10 @@ def resolve_checkpoint(
             stored_object = stored["response"]["output"]["objects"][0]
             verified_object = verified["response"]["output"]["objects"][0]
             _require(
-                all(
+                stored_object.get("incarnation") is not None
+                and stored_object["incarnation"] == verified_input.get("incarnation")
+                and stored_object["incarnation"] == verified_object.get("incarnation")
+                and all(
                     stored_object[key] == verified_object[key]
                     for key in ("handle", "repository", "completeness")
                 )

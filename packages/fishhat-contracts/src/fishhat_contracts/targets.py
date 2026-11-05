@@ -67,7 +67,7 @@ def check_target_response(
     inputs, output, method = request["input"], response["output"], request["method"]
     if role == "software" and method == "resolve":
         _require(
-            output["target"] == inputs["target"]
+            canonical(output["target"]) == canonical(inputs["target"])
             and output["requested_held"] == inputs["held"]
             and output["requested_version"] == inputs["version"],
             "SOFTWARE_RESOLUTION_IDENTITY",
@@ -88,7 +88,7 @@ def check_target_response(
             and target["executor"]["scope"] == inputs["scope"]
             and target["selection"]["instance"] == target["executor"]["instance"]
             and target["namespace"]["facet"] == ("lifecycle" if role == "service" else "software")
-            and ("target" not in inputs or target == inputs["target"])
+            and ("target" not in inputs or canonical(target) == canonical(inputs["target"]))
             and ("binding" not in inputs or target["executor"] == inputs["binding"]),
             "TARGET_OBSERVATION_IDENTITY",
         )
@@ -210,7 +210,7 @@ def _check_service_transition(
     _require(
         attempt is not None
         and receipt["attempt_id"] == attempt["attempt_id"]
-        and receipt["target"] == inputs["target"]
+        and canonical(receipt["target"]) == canonical(inputs["target"])
         and receipt["transition"] == action,
         "SERVICE_EVENT_IDENTITY",
     )

@@ -17,6 +17,7 @@ from fishhat_contracts.validation import ContractError, canonical, digest, stric
 
 from tests.adapter_support import observation_target
 from tests.linear_support import assert_linear, measure
+from tests.support import FIXTURES
 from tests.test_adapter_handoffs import installed
 from tests.test_adapter_process import identity
 
@@ -38,13 +39,17 @@ def resolution():
     target = observation_target(executor)
     source_bytes = b"reviewed immutable native source"
     projection_bytes = b"complete resolved runtime projection"
+    release = strict_json((FIXTURES / "release-identity/release.json").read_bytes())
+    release["artifacts"]["native"] = identity(source_bytes, "application/octet-stream")
+    release["runtime"]["binding_digest"] = runtime_binding_digest(target)
+    release["digest"] = digest({key: value for key, value in release.items() if key != "digest"})
     query = {
         "contract": "fishhat.runtime",
         "method": "resolve",
         "input": {
             "scope": copy.deepcopy(executor["scope"]),
             "source": identity(source_bytes, "application/octet-stream"),
-            "release_digest": digest("independently accepted release"),
+            "release_digest": release["digest"],
             "components": ["web", "worker"],
             "binding": executor,
             "target": target,
@@ -73,7 +78,7 @@ def resolution():
             "objects": [],
         },
     }
-    return registry, query, reply, source_bytes, projection_bytes
+    return registry, query, reply, source_bytes, projection_bytes, release
 
 
 def launch_case(registry, query):
@@ -95,11 +100,16 @@ def launch_case(registry, query):
 
 
 def test_resolution_supplies_complete_context_before_any_mutation():
-    registry, query, reply, _, _ = resolution()
+    registry, query, reply, _, _, release = resolution()
     wire = strict_json(canonical(query))
     target = copy.deepcopy(query["input"]["target"])
     registry.authorize_request(
-        "selected", "runtime", wire, owner_approved=True, expected_runtime_binding=target
+        "selected",
+        "runtime",
+        wire,
+        owner_approved=True,
+        expected_runtime_binding=target,
+        approved_release=release,
     )
     check_response("runtime", wire, reply)
     manifest, configuration, installation, descriptor = launch_case(registry, wire)
@@ -112,14 +122,47 @@ def test_resolution_supplies_complete_context_before_any_mutation():
         expected_executor=wire["input"]["binding"],
         expected_private_use=None,
         expected_runtime_binding=target,
+        approved_release=release,
     )
+    # A valid target and self-consistent request cannot replace independent Release review.
+    for field, substitute in (
+        ("release_digest", digest("another release")),
+        ("source", {**wire["input"]["source"], "media_type": "text/plain"}),
+        ("components", ["web"]),
+        ("target", {**target, "generation": target["generation"] + 1}),
+    ):
+        changed = copy.deepcopy(wire)
+        changed["input"][field] = substitute
+        approved_target = changed["input"]["target"] if field == "target" else target
+        with pytest.raises(ContractError, match="release"):
+            registry.authorize_request(
+                "selected",
+                "runtime",
+                changed,
+                owner_approved=True,
+                expected_runtime_binding=approved_target,
+                approved_release=release,
+            )
+        changed_manifest, *_ = launch_case(registry, changed)
+        with pytest.raises(ContractError, match="release"):
+            validate_process_launch(
+                changed_manifest,
+                changed,
+                configuration,
+                descriptor=descriptor,
+                approved_installation=installation,
+                expected_executor=wire["input"]["binding"],
+                expected_private_use=None,
+                expected_runtime_binding=approved_target,
+                approved_release=release,
+            )
     assert wire["input"]["target"] is not target
     assert reply["output"]["deployment"]["components"] != wire["input"]["components"]
 
 
 @pytest.mark.parametrize("field", ["binding", "target"])
 def test_resolution_cannot_omit_executor_or_owner_context(field):
-    _, query, _, _, _ = resolution()
+    _, query, _, _, _, _ = resolution()
     del query["input"][field]
     with pytest.raises(ContractError):
         check_request("runtime", query)
@@ -129,7 +172,7 @@ def test_resolution_cannot_omit_executor_or_owner_context(field):
     "field", ["subject", "scope", "instance", "instance_generation", "instance_digest"]
 )
 def test_resolution_target_cannot_substitute_scope_or_enrollment(field):
-    _, query, _, _, _ = resolution()
+    _, query, _, _, _, _ = resolution()
     target = query["input"]["target"]
     if field == "scope":
         target[field]["handle"] = "another-app"
@@ -145,7 +188,7 @@ def test_resolution_target_cannot_substitute_scope_or_enrollment(field):
 
 @pytest.mark.parametrize("changed", [False, True], ids=["missing", "substituted"])
 def test_resolution_cannot_approve_its_own_target(changed):
-    registry, query, _, _, _ = resolution()
+    registry, query, _, _, _, _ = resolution()
     target = copy.deepcopy(query["input"]["target"]) if changed else None
     if target is not None:
         target["generation"] += 1
@@ -172,7 +215,7 @@ def test_resolution_cannot_approve_its_own_target(changed):
     ["release_digest", "source_digest", "binding_digest", "projection_digest", "components"],
 )
 def test_resolution_result_cannot_change_accepted_lineage(field):
-    _, query, reply, _, _ = resolution()
+    _, query, reply, _, _, _ = resolution()
     deployment = reply["output"]["deployment"]
     deployment[field] = ["web"] if field == "components" else digest("substituted output")
     with pytest.raises(ContractError, match="RUNTIME_RESOLUTION_IDENTITY"):
@@ -180,7 +223,7 @@ def test_resolution_result_cannot_change_accepted_lineage(field):
 
 
 def test_resolution_unknown_has_no_usable_deployment_or_projection():
-    _, query, reply, _, _ = resolution()
+    _, query, reply, _, _, _ = resolution()
     reply["coverage"] = "unknown"
     with pytest.raises(ContractError, match="RUNTIME_RESOLUTION_COVERAGE"):
         check_response("runtime", query, reply)
@@ -193,7 +236,7 @@ def test_resolution_unknown_has_no_usable_deployment_or_projection():
 
 
 def test_resolution_requires_exact_source_and_projection_byte_custody():
-    _, query, reply, source_bytes, projection_bytes = resolution()
+    _, query, reply, source_bytes, projection_bytes, _ = resolution()
     source = query["input"]["source"]
     path = "inputs/" + source["digest"].removeprefix("sha256:")
     rows = canonical({"artifact": source, "path": path}) + b"\n"
@@ -223,7 +266,7 @@ def test_runtime_resolution_linear_work():
     for name in ("check_request", "check_response"):
         samples = []
         for count in (16, 64, 256):
-            _, request, reply, _, _ = resolution()
+            _, request, reply, _, _, _ = resolution()
             request["input"]["components"] = [f"component-{index:04d}" for index in range(count)]
             reply["request_digest"] = digest(request)
             reply["output"]["deployment"]["components"] = list(

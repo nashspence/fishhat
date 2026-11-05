@@ -1128,6 +1128,9 @@
         },
         "producer": {
           "$ref": "adapter.schema.json#/$defs/InstanceReference"
+        },
+        "dataset_identity": {
+          "$ref": "dataset-obligations.schema.json#/$defs/CaptureIdentity"
         }
       },
       "required": [
@@ -1138,10 +1141,11 @@
         "recovery_point",
         "artifacts",
         "restore_requirements",
-        "producer"
+        "producer",
+        "dataset_identity"
       ],
       "additionalProperties": false,
-      "description": "Exact captured dataset and complete immutable artifact closure, bound to the capture adapter Instance that produced it. The producer role is capture. A destination or procedure digest cannot substitute for this input identity. Cross-owner restore may use a different target binding only through independently authorized custody and destination mapping."
+      "description": "Exact captured dataset and complete immutable artifact closure, bound to the capture adapter Instance that produced it. The producer role is capture. A destination or procedure digest cannot substitute for this input identity. Cross-owner restore may use a different target binding only through independently authorized custody and destination mapping. dataset_identity commits the historical source obligation and native incarnation verified at capture."
     },
     "Counter": {
       "description": "One observed usage quantity for an opaque approved allocation, never a limit or spare-capacity grant. Memory, swap, task, storage and inode values are instantaneous at observed_at. CPU time and I/O bytes are accumulated over [interval_start, observed_at]; complete evidence requires a nonempty positive interval and a value. I/O target is an approved logical device/domain handle, not a native path. Incomplete coverage cannot prove a hard bound; unsupported or unknown evidence cannot carry a numeric value. Counters in one response are unique by allocation, metric and target.",
@@ -1991,6 +1995,9 @@
             "missing",
             "unknown"
           ]
+        },
+        "incarnation": {
+          "$ref": "common.schema.json#/$defs/Digest"
         }
       },
       "required": [
@@ -1998,9 +2005,11 @@
         "repository",
         "artifacts",
         "completeness",
-        "retrieval"
+        "retrieval",
+        "incarnation"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "incarnation is the exact native object version commitment in the approved repository; matching handles or artifact bytes cannot substitute a later incarnation. A delete result echoes the selected historical incarnation, including verified absence."
     },
     "CredentialLease": {
       "type": "object",
@@ -2260,7 +2269,7 @@
         "namespace"
       ],
       "additionalProperties": false,
-      "description": "Receiving-owner-approved mapping of a host service or software source selector to its exact enrolled executor and canonical native mutation target. The executor role is service or software; its scope and the selected instance must agree, and its change grant must contain the namespace. The owner independently resolves native aliases and verifies the mapping before enrolling it. Source bytes cannot create, replace or authorize this mapping. Different selector spellings or instances that resolve to one namespace remain one target; a host may prescribe that target only once. Native side effects remain confined to the complete accepted mutation grant."
+      "description": "Receiving-owner-approved mapping of a host service or software source selector to its exact enrolled executor and canonical native mutation target. The executor role is service or software; its scope and the selected instance must agree, and its change grant must contain the namespace. The owner independently resolves native aliases and verifies the mapping before enrolling it. Source bytes cannot create, replace or authorize this mapping. Different selector spellings or instances that resolve to one namespace remain one target; a host may prescribe that target only once. Source target and retained invocation comparisons use complete canonical JSON values at enrollment, dispatch, direct response and reconciliation. A boolean in a provider selector cannot stand for a numeric value. Native side effects remain confined to the complete accepted mutation grant."
     },
     "ProtectedValueDestination": {
       "type": "object",

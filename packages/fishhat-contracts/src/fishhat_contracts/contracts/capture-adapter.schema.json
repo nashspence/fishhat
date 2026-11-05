@@ -22,6 +22,9 @@
         },
         "binding": {
           "$ref": "adapter.schema.json#/$defs/InstanceReference"
+        },
+        "dataset_identity": {
+          "$ref": "dataset-obligations.schema.json#/$defs/CaptureIdentity"
         }
       },
       "required": [
@@ -29,10 +32,11 @@
         "dataset",
         "destination",
         "procedure_digest",
-        "binding"
+        "binding",
+        "dataset_identity"
       ],
       "additionalProperties": false,
-      "description": "The binding identifies the independently approved capture executor for this scope. procedure_digest pins the reviewed procedure, not the data snapshot. Destination handles must resolve only within the approved target scope and retained operation custody."
+      "description": "The binding identifies the independently approved capture executor for this scope. procedure_digest pins the reviewed procedure, not the data snapshot. Destination handles must resolve only within the approved target scope and retained operation custody. dataset_identity selects the independently admitted native target obligation. Compare it under exclusion before native access. Capture and assess echo it on their snapshots. Restore and verify preserve the separately authenticated source snapshot identity, including across authorized destinations."
     },
     "capture": {
       "type": "object",
@@ -54,6 +58,9 @@
         },
         "binding": {
           "$ref": "adapter.schema.json#/$defs/InstanceReference"
+        },
+        "dataset_identity": {
+          "$ref": "dataset-obligations.schema.json#/$defs/CaptureIdentity"
         }
       },
       "required": [
@@ -61,10 +68,11 @@
         "dataset",
         "destination",
         "procedure_digest",
-        "binding"
+        "binding",
+        "dataset_identity"
       ],
       "additionalProperties": false,
-      "description": "The binding identifies the independently approved capture executor for this scope. procedure_digest pins the reviewed procedure, not the data snapshot. Destination handles must resolve only within the approved target scope and retained operation custody."
+      "description": "The binding identifies the independently approved capture executor for this scope. procedure_digest pins the reviewed procedure, not the data snapshot. Destination handles must resolve only within the approved target scope and retained operation custody. dataset_identity selects the independently admitted native target obligation. Compare it under exclusion before native access. Capture and assess echo it on their snapshots. Restore and verify preserve the separately authenticated source snapshot identity, including across authorized destinations."
     },
     "restore": {
       "type": "object",
@@ -89,6 +97,9 @@
         },
         "snapshot": {
           "$ref": "adapter.schema.json#/$defs/Snapshot"
+        },
+        "dataset_identity": {
+          "$ref": "dataset-obligations.schema.json#/$defs/CaptureIdentity"
         }
       },
       "required": [
@@ -97,10 +108,11 @@
         "destination",
         "procedure_digest",
         "binding",
-        "snapshot"
+        "snapshot",
+        "dataset_identity"
       ],
       "additionalProperties": false,
-      "description": "The binding identifies the independently approved capture executor for this scope. procedure_digest pins the reviewed procedure, not the data snapshot. Destination handles must resolve only within the approved target scope and retained operation custody. snapshot is the exact selected input, including its producer and immutable artifact closure; dataset must match snapshot.dataset. Replacing that input changes the request identity and requires a newly reviewed request."
+      "description": "The binding identifies the independently approved capture executor for this scope. procedure_digest pins the reviewed procedure, not the data snapshot. Destination handles must resolve only within the approved target scope and retained operation custody. snapshot is the exact selected input, including its producer and immutable artifact closure; dataset must match snapshot.dataset. Replacing that input changes the request identity and requires a newly reviewed request. dataset_identity selects the independently admitted native target obligation. Compare it under exclusion before native access. Capture and assess echo it on their snapshots. Restore and verify preserve the separately authenticated source snapshot identity, including across authorized destinations."
     },
     "verify": {
       "type": "object",
@@ -125,6 +137,9 @@
         },
         "snapshot": {
           "$ref": "adapter.schema.json#/$defs/Snapshot"
+        },
+        "dataset_identity": {
+          "$ref": "dataset-obligations.schema.json#/$defs/CaptureIdentity"
         }
       },
       "required": [
@@ -133,10 +148,11 @@
         "destination",
         "procedure_digest",
         "binding",
-        "snapshot"
+        "snapshot",
+        "dataset_identity"
       ],
       "additionalProperties": false,
-      "description": "The binding identifies the independently approved capture executor for this scope. procedure_digest pins the reviewed procedure, not the data snapshot. Destination handles must resolve only within the approved target scope and retained operation custody. snapshot is the exact selected input, including its producer and immutable artifact closure; dataset must match snapshot.dataset. Replacing that input changes the request identity and requires a newly reviewed request."
+      "description": "The binding identifies the independently approved capture executor for this scope. procedure_digest pins the reviewed procedure, not the data snapshot. Destination handles must resolve only within the approved target scope and retained operation custody. snapshot is the exact selected input, including its producer and immutable artifact closure; dataset must match snapshot.dataset. Replacing that input changes the request identity and requires a newly reviewed request. dataset_identity selects the independently admitted native target obligation. Compare it under exclusion before native access. Capture and assess echo it on their snapshots. Restore and verify preserve the separately authenticated source snapshot identity, including across authorized destinations."
     },
     "reconcile": {
       "type": "object",

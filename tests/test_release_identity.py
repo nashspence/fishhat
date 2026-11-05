@@ -90,7 +90,7 @@ def test_pinned_git_source_and_release_identity(tmp_path):
         with pytest.raises(ContractError):
             validate_source_closure(source, changed)
     changed_release = deepcopy(release)
-    changed_release["native_input_digest"] = release["profile_digest"]
+    changed_release["runtime"]["binding_digest"] = release["profile_digest"]
     with pytest.raises(ContractError):
         validate_release(changed_release, expected_digest=release["digest"])
     changed_release["hook_closure"].reverse()

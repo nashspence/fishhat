@@ -14,6 +14,7 @@ from typing import Any, BinaryIO
 from fishhat_adapters import check_configuration, check_descriptor, check_request
 from fishhat_contracts.artifact_custody import verify_artifact_stream
 from fishhat_contracts.bounds import Bounds, bounds
+from fishhat_contracts.publication import require_bootstrap_ref_target
 from fishhat_contracts.validation import MAX_BYTES, ContractError, canonical, digest, validate
 
 from fishhat_client.workspace import clean_path, within
@@ -22,10 +23,6 @@ from fishhat_client.workspace import clean_path, within
 def _bounded(value: dict[str, Any]) -> None:
     if len(canonical(value)) > MAX_BYTES:
         raise ContractError("bootstrap record capacity")
-
-
-def _ref(value: str) -> None:
-    validate("common.schema.json", value, "GitRef")
 
 
 def validate_selection(selection: dict[str, Any]) -> dict[str, Any]:
@@ -37,7 +34,9 @@ def validate_selection(selection: dict[str, Any]) -> dict[str, Any]:
         or len(root.split("/")) < 4
     ):
         raise ContractError("dedicated fresh staging root required")
-    _ref(selection["ref"])
+    require_bootstrap_ref_target(
+        selection["ref"], selection["ref_object_id"], selection["expected_commit"]
+    )
     return selection
 
 
@@ -66,7 +65,7 @@ def validate_catalogue(
     ids = set()
     matched = None
     for item in catalogue["sources"]:
-        _ref(item["ref"])
+        require_bootstrap_ref_target(item["ref"], item["ref_object_id"], item["commit"])
         if item["source_id"] in ids:
             raise ContractError("ambiguous recovery source")
         ids.add(item["source_id"])
@@ -82,6 +81,7 @@ def validate_catalogue(
             matched[a] != selection[b]
             for a, b in (
                 ("ref", "ref"),
+                ("ref_object_id", "ref_object_id"),
                 ("commit", "expected_commit"),
                 ("adapter", "adapter"),
                 ("capture", "capture"),
@@ -170,6 +170,7 @@ def validate_receipt(receipt: dict[str, Any], selection: dict[str, Any]) -> dict
             ("domain_id", "domain_id"),
             ("source_id", "source_id"),
             ("ref", "ref"),
+            ("ref_object_id", "ref_object_id"),
             ("commit", "expected_commit"),
             ("tree", "tree"),
         )

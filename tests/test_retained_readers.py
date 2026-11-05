@@ -6,6 +6,7 @@ import hashlib
 import io
 
 import pytest
+from fishhat_client.submission import ReferencedOperation, reconcile_delivery
 from fishhat_client.wire import frame, read_frame
 from fishhat_contracts.handoffs import validate_cli_result
 from fishhat_contracts.operations import validate_operation
@@ -127,7 +128,9 @@ def test_historical_reader_cannot_override_independent_snapshot_identity(field):
 
 
 def test_envelope_cannot_supply_a_reader_registry_or_authorize_inline_history():
-    value, reference, _ = retained_record()
+    from tests.test_operation_semantics import delivery
+
+    value, reference, data = retained_record()
     readers = {(reference["schema"]["uri"], reference["schema"]["digest"]): lambda record: None}
     injected = cli(reference)
     injected["retained_readers"] = {reference["schema"]["digest"]: "caller-selected"}
@@ -137,6 +140,26 @@ def test_envelope_cannot_supply_a_reader_registry_or_authorize_inline_history():
         validate_cli(cli(value), retained_readers=readers)
     with pytest.raises(ContractError):
         validate_cli({**cli(reference), "state": "succeeded"}, retained_readers=readers)
+    restored = RecordSnapshot.restore(
+        reference, data, expected_owner=value["owner"], retained_readers=readers
+    )
+    assert restored.delivery(max_inline_bytes=1_048_576) == reference
+    uncertain = {**delivery(value), "state": "acceptance_unknown"}
+    transferred = ReferencedOperation(reference, data)
+    resolved = reconcile_delivery(uncertain, lambda _: transferred, retained_readers=readers)
+    assert resolved["delivery"]["state"] == "accepted"
+    assert resolved["owner_receipt"] == reference
+    assert reconcile_delivery(uncertain, lambda _: transferred)["exit_code"] == 8
+    inline = reconcile_delivery(uncertain, lambda _: value, retained_readers=readers)
+    assert inline["exit_code"] == 8
+    assert (
+        reconcile_delivery(
+            {**uncertain, "claimed_actor": "another"},
+            lambda _: transferred,
+            retained_readers=readers,
+        )["exit_code"]
+        == 8
+    )
 
 
 def test_historical_reader_registry_binds_kind_uri_as_well_as_closure_digest():

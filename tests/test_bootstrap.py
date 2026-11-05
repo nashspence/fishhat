@@ -108,6 +108,7 @@ def selected_receipt(selection):
         source_id=selection["source_id"],
         ref=selection["ref"],
         commit=selection["expected_commit"],
+        ref_object_id=selection["ref_object_id"],
         tree=copy.deepcopy(selection["tree"]),
         destination=selection["recovery_root"] + "/source.git",
     )
@@ -337,6 +338,8 @@ def test_candidate_catalogue_is_not_publication_evidence():
 def test_catalogue_binds_the_exact_source_ref_and_commit(member, replacement):
     value = records("git-bundle")
     value["selection"][member] = replacement
+    if member == "expected_commit":
+        value["selection"]["ref_object_id"] = replacement
     with pytest.raises(ContractError, match="selected source not in recovery catalogue"):
         prepare_request(**value)
 
@@ -538,7 +541,11 @@ def test_bootstrap_wire_requires_repository_scope_and_an_evidenced_result(method
         with pytest.raises(ContractError, match="SUCCESS_OUTPUT_IDENTITY"):
             check_response("bootstrap-source", request, response, invocation=invocation)
         response["output"]["receipt"] = selected_receipt(value["selection"])
-    for changed_field, replacement in (("commit", "f" * 40), ("source_id", "other")):
+    for changed_field, replacement in (
+        ("commit", "f" * 40),
+        ("ref_object_id", "e" * 40),
+        ("source_id", "other"),
+    ):
         response["output"]["receipt"][changed_field] = replacement
         with pytest.raises(ContractError, match="SUCCESS_OUTPUT_IDENTITY"):
             check_response("bootstrap-source", request, response, invocation=invocation)
@@ -562,7 +569,9 @@ def test_catalogue_extent_and_source_visits():
         catalogue["sources"] = [
             {**copy.deepcopy(source), "source_id": f"source-{n}"} for n in range(count)
         ]
-        with patch.object(bootstrap, "_ref", wraps=bootstrap._ref) as counted:
+        with patch.object(
+            bootstrap, "require_bootstrap_ref_target", wraps=bootstrap.require_bootstrap_ref_target
+        ) as counted:
             validate_catalogue(catalogue)
         assert counted.call_count == count
         assert len(catalogue["sources"]) == count
@@ -574,7 +583,9 @@ def test_catalogue_extent_and_source_visits():
     catalogue["sources"] = [
         {**copy.deepcopy(source), "source_id": f"source-{n}"} for n in range(257)
     ]
-    with patch.object(bootstrap, "_ref", wraps=bootstrap._ref) as counted:
+    with patch.object(
+        bootstrap, "require_bootstrap_ref_target", wraps=bootstrap.require_bootstrap_ref_target
+    ) as counted:
         validate_catalogue(catalogue)
     assert counted.call_count == 257
     catalogue["sources"][-1]["ref"] = "refs/heads/invalid..ref"
@@ -622,8 +633,28 @@ def test_fresh_verifier_uses_complete_retained_bundle_and_catalogue_tree(tmp_pat
     )
     value = records("git-bundle")
     selection = value["selection"]
-    ref = selection["ref"]
-    commit = git(source, "rev-parse", ref).decode().strip()
+    ref = "refs/tags/reviewed"
+
+    def annotate(message):
+        git(
+            source,
+            "-c",
+            "user.name=Fixture",
+            "-c",
+            "user.email=test@example.invalid",
+            "tag",
+            "--no-sign",
+            "-f",
+            "-a",
+            "reviewed",
+            "-m",
+            message,
+        )
+        return git(source, "rev-parse", ref).decode().strip()
+
+    object_id = annotate("original annotation")
+    commit = git(source, "rev-parse", ref + "^{commit}").decode().strip()
+    assert object_id != commit
     root_body = git(source, "cat-file", "tree", commit + "^{tree}")
     tree = {
         "tree_digest": "sha256:"
@@ -633,8 +664,10 @@ def test_fresh_verifier_uses_complete_retained_bundle_and_catalogue_tree(tmp_pat
         "file_count": 2,
         "total_bytes": 2 * len(payload),
     }
-    selection.update(expected_commit=commit, tree=tree)
-    value["catalogue"]["sources"][0].update(commit=commit, tree=copy.deepcopy(tree))
+    selection.update(ref=ref, ref_object_id=object_id, expected_commit=commit, tree=tree)
+    value["catalogue"]["sources"][0].update(
+        ref=ref, ref_object_id=object_id, commit=commit, tree=copy.deepcopy(tree)
+    )
     reseal(value)
     validate_catalogue(value["catalogue"], selection=selection)
     receipt = selected_receipt(selection)
@@ -662,6 +695,7 @@ def test_fresh_verifier_uses_complete_retained_bundle_and_catalogue_tree(tmp_pat
         git(receiver, "bundle", "verify", str(bundle))
         git(receiver, "fetch", "--no-tags", str(bundle), ref + ":" + ref)
         git(receiver, "fsck", "--full", "--strict")
+        assert git(receiver, "rev-parse", ref).decode().strip() == selection["ref_object_id"]
         assert git(receiver, "rev-parse", ref + "^{commit}").decode().strip() == commit
         restored_body = git(receiver, "cat-file", "tree", ref + "^{tree}")
         sizes = [
@@ -677,6 +711,11 @@ def test_fresh_verifier_uses_complete_retained_bundle_and_catalogue_tree(tmp_pat
                     receipt, selection, scope=value["scope"], retained_bundle=io.BytesIO(bad)
                 )
     assert len(outputs) == 2
+    replacement = annotate("different annotation")
+    assert replacement != object_id
+    assert git(source, "rev-parse", ref + "^{commit}").decode().strip() == commit
+    with pytest.raises(ContractError, match="identity mismatch"):
+        validate_receipt({**receipt, "ref_object_id": replacement}, selection)
     changed = copy.deepcopy(receipt)
     changed["tree"]["file_count"] += 1
     with pytest.raises(ContractError, match="identity mismatch"):

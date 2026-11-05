@@ -73,7 +73,7 @@
         "retained_obligations"
       ],
       "additionalProperties": false,
-      "description": "Commit the exact complete DatasetInventory, including omitted source names and discharged tombstones, and every immutable obligation ID. Authenticate and retrieve the full inventory independently; its source declaration, native incarnation and complete recovery closure cannot be inferred from a current source name."
+      "description": "Commit the exact complete DatasetInventory, including omitted source names and discharged tombstones, and every immutable obligation ID. Authenticate and retrieve the full inventory independently; its source declaration, native incarnation and complete recovery closure cannot be inferred from a current source name. For every discharged obligation retain the exact typed RetirementEvidence bytes at discharge.evidence_digest with retrievable authenticated closure as required material of that owner and resource."
     },
     "RetirementSelection": {
       "type": "object",
@@ -122,7 +122,7 @@
         "object"
       ],
       "additionalProperties": false,
-      "description": "Exact repository object, complete artifact identity and native incarnation. Native identity scope is the approved backup executor scope; object.repository and that scope handle equal the selected repository. Object handles cannot be rebound to a later incarnation."
+      "description": "Exact repository object, complete artifact identity and native incarnation. Native identity scope is the approved backup executor scope; object.repository and that scope handle equal the selected repository. Object handles cannot be rebound to a later incarnation. object.incarnation equals native_identity.incarnation throughout preparation, dispatch, deletion and reconciliation."
     },
     "PruningSelection": {
       "type": "object",
@@ -738,6 +738,23 @@
       ],
       "additionalProperties": false,
       "description": "Positive custody of the complete current data for one exact immutable DatasetInventory obligation, separate from its source/procedure recovery metadata. The authenticated current custodian verifies the source native incarnation and complete current data under the required fence at verified_at; native retention keeps that exact incarnation, while a completed handoff or sealed available backup binds the original incarnation to its verified surviving location and complete native-restorable closure. A source manifest, metadata bytes, empty snapshot or mere recovery procedure cannot satisfy this binding."
+    },
+    "PruningDispatch": {
+      "type": "object",
+      "properties": {
+        "executor": {
+          "$ref": "adapter.schema.json#/$defs/InstanceReference"
+        },
+        "target": {
+          "$ref": "#/$defs/BackupTarget"
+        }
+      },
+      "required": [
+        "executor",
+        "target"
+      ],
+      "additionalProperties": false,
+      "description": "Protected owner projection of the exact PruningSelection.executor and one selected object after validating complete current pruning evidence. Index the validated selection once for individual effects. The receiver checks the entire enrollment and target against dispatch and reconciliation; an invocation, adapter output or caller-supplied selection cannot establish this approval."
     }
   },
   "x-fishhat-contract-dependencies": [

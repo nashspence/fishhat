@@ -15,7 +15,7 @@ from .adapter_observations import _observation_keys
 from .bounds import Bounds, bounds
 from .dns import _rrset_identity, validate_changes, validate_generation, validate_rrsets
 from .protected_values import check_value_request, check_value_response, require_value_custody
-from .publication import validate_publication_intent
+from .publication import require_bootstrap_ref_target, validate_publication_intent
 from .targets import check_target_request, check_target_response
 from .validation import ROOT, ContractError, canonical, digest, validate
 
@@ -153,6 +153,10 @@ def check_request(role: str, value: dict[str, Any]) -> None:
                 "OBSERVATION_BARRIER_TARGET",
             )
     if role == "bootstrap-source" and method in {"recover", "verify"}:
+        selection = inputs["selection"]
+        require_bootstrap_ref_target(
+            selection["ref"], selection["ref_object_id"], selection["expected_commit"]
+        )
         require(
             inputs["scope"]["handle"] == inputs["selection"]["source_id"],
             "BOOTSTRAP_SCOPE_IDENTITY",
@@ -292,8 +296,9 @@ def check_response(
         check_invocation(role, invocation)
         original = request["input"]["invocation"]
         require(
-            _attempt_identity(invocation["attempt"]) == _attempt_identity(original["attempt"])
-            and invocation["request"] == original["request"],
+            canonical(_attempt_identity(invocation["attempt"]))
+            == canonical(_attempt_identity(original["attempt"]))
+            and canonical(invocation["request"]) == canonical(original["request"]),
             "RECONCILIATION_IDENTITY",
         )
         check_result(invocation["attempt"], response["effect"])
@@ -316,7 +321,7 @@ def check_response(
         assert invocation is not None
         check_invocation(role, invocation)
         require(
-            invocation["request"] == request,
+            canonical(invocation["request"]) == canonical(request),
             "RESPONSE_EFFECT_IDENTITY",
         )
         check_result(invocation["attempt"], response["effect"])
@@ -404,6 +409,11 @@ def _check_handoff_response(role: str, request: dict[str, Any], response: dict[s
             all(obj["repository"] == inputs["scope"]["handle"] for obj in output["objects"]),
             "BACKUP_REPOSITORY_SCOPE",
         )
+        if method in {"retrieve", "verify", "delete"}:
+            require(
+                all(obj["incarnation"] == inputs["incarnation"] for obj in output["objects"]),
+                "BACKUP_OBJECT_INCARNATION",
+            )
     if role == "secret-source" and method == "resolve":
         version = output["version"]
         require(
@@ -429,7 +439,11 @@ def _check_handoff_response(role: str, request: dict[str, Any], response: dict[s
             if method in {"restore", "verify"}:
                 require(snapshot == inputs["snapshot"], "SNAPSHOT_OUTPUT_IDENTITY")
             else:
-                require(snapshot["producer"] == inputs["binding"], "SNAPSHOT_OUTPUT_IDENTITY")
+                require(
+                    snapshot["producer"] == inputs["binding"]
+                    and snapshot["dataset_identity"] == inputs["dataset_identity"],
+                    "SNAPSHOT_OUTPUT_IDENTITY",
+                )
     if role == "credential-issuer" and method in {"issue", "renew", "revoke"}:
         target = inputs if method == "issue" else inputs["lease"]
         for lease in output["leases"]:
@@ -638,10 +652,7 @@ def _check_success_output(
         "bootstrap-source": lambda: (
             output["receipt"] is not None
             and _bootstrap_receipt_matches(output["receipt"], inputs["selection"])
-            and (
-                request["method"] != "verify"
-                or output["receipt"]["output"] == inputs["recovery"]["output"]
-            )
+            and (request["method"] != "verify" or output["receipt"] == inputs["recovery"])
         ),
     }
     check = checks.get(role)
@@ -651,7 +662,10 @@ def _check_success_output(
 def _bootstrap_receipt_matches(receipt: dict[str, Any], selection: dict[str, Any]) -> bool:
     return (
         receipt["selection_digest"] == digest(selection)
-        and all(receipt[key] == selection[key] for key in ("domain_id", "source_id", "ref", "tree"))
+        and all(
+            receipt[key] == selection[key]
+            for key in ("domain_id", "source_id", "ref", "ref_object_id", "tree")
+        )
         and receipt["commit"] == selection["expected_commit"]
         and bool(receipt["destination"].startswith(selection["recovery_root"] + "/"))
     )

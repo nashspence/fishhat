@@ -132,6 +132,17 @@ def installed(role, *, observe_only=False, endpoint="protected-target", generati
     return registry, reference
 
 
+def capture_identity(scope):
+    return {
+        "obligation_id": identifier(88),
+        "obligation_digest": digest("accepted dataset obligation"),
+        "native_identity": {
+            "scope": copy.deepcopy(scope),
+            "incarnation": digest("accepted dataset"),
+        },
+    }
+
+
 def handoff(role, method):
     registry, reference = installed(role)
     inputs = {"scope": copy.deepcopy(reference["scope"])}
@@ -140,11 +151,13 @@ def handoff(role, method):
             {
                 "binding": reference,
                 "dataset": "data",
+                "dataset_identity": capture_identity(reference["scope"]),
                 "destination": "target:data",
                 "procedure_digest": artifact("b")["digest"],
                 "snapshot": {
                     "handle": "snapshot:old",
                     "dataset": "data",
+                    "dataset_identity": capture_identity(reference["scope"]),
                     "format": "independent.snapshot",
                     "consistency": "quiesced",
                     "recovery_point": None,
@@ -378,7 +391,12 @@ def test_observational_reconciliation_does_not_require_mutation_authority():
 @pytest.mark.parametrize("method", ["restore", "verify"])
 def test_capture_handoff_distinguishes_old_and_new_snapshot(method):
     registry, query = handoff("capture", method)
-    registry.authorize_invocation("capture", invocation_for(query), owner_approved=True)
+    registry.authorize_invocation(
+        "capture",
+        invocation_for(query),
+        owner_approved=True,
+        expected_capture_identity=capture_identity(query["input"]["scope"]),
+    )
     original = attempt_for(query)
     selected = query["input"]["snapshot"]
     response = response_for(
@@ -400,7 +418,21 @@ def test_capture_handoff_distinguishes_old_and_new_snapshot(method):
 def test_cross_owner_restore_keeps_source_identity_separate_from_target_authority():
     registry, query = handoff("capture", "restore")
     query["input"]["snapshot"]["producer"]["scope"]["authority"] = identifier(55)
-    registry.authorize_invocation("capture", invocation_for(query), owner_approved=True)
+    registry.authorize_invocation(
+        "capture",
+        invocation_for(query),
+        owner_approved=True,
+        expected_capture_identity=capture_identity(query["input"]["scope"]),
+    )
+    replacement = capture_identity(query["input"]["scope"])
+    replacement["native_identity"]["incarnation"] = digest("same name, replacement target")
+    with pytest.raises(ContractError, match="CAPTURE_APPROVED_DATASET"):
+        registry.authorize_invocation(
+            "capture",
+            invocation_for(query),
+            owner_approved=True,
+            expected_capture_identity=replacement,
+        )
     query["input"]["snapshot"]["dataset"] = "different-data"
     with pytest.raises(ContractError, match="SNAPSHOT_INPUT_IDENTITY"):
         check_request("capture", query)

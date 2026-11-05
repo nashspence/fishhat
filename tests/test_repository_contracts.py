@@ -392,6 +392,14 @@ def test_reviewed_source_publication_preserves_intervening_edits(tmp_path):
     request = query("publish", reference)
     request["input"]["ref"] = proposal["ref"]
 
+    def parents(oid):
+        header = git("--no-replace-objects", "cat-file", "commit", oid).split("\n\n", 1)[0]
+        return tuple(
+            line.removeprefix("parent ")
+            for line in header.splitlines()
+            if line.startswith("parent ")
+        )
+
     def check(tip, candidate):
         request["input"]["candidate"]["commit"] = candidate
         request["input"]["expected_previous"] = {"state": "present", "object_id": tip}
@@ -401,12 +409,18 @@ def test_reviewed_source_publication_preserves_intervening_edits(tmp_path):
             symbolic=False,
             is_ancestor=lambda a, b: git("merge-base", "--is-ancestor", a, b) == "",
             source_proposal=proposal,
+            read_commit_parents=parents,
             verify_proposal_tree=lambda selected, oid: (
                 selected == proposal and git("rev-parse", f"{oid}^{{tree}}") == reviewed_tree
             ),
         )
 
     check(base, reviewed)
+    with pytest.raises(ContractError, match="source history"):
+        check(base, would_erase_edit)
+    merged = git("commit-tree", reviewed_tree, "-p", base, "-p", advanced, "-m", "merged")
+    with pytest.raises(ContractError, match="source history"):
+        check(base, merged)
     with pytest.raises(ContractError, match="candidate tree"):
         check(base, advanced)
     git("merge-base", "--is-ancestor", advanced, would_erase_edit)

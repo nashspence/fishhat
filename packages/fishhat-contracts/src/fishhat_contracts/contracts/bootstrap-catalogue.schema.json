@@ -38,6 +38,10 @@
           },
           "tree": {
             "$ref": "bootstrap-recovery.schema.json#/$defs/Tree"
+          },
+          "ref_object_id": {
+            "$ref": "repository-adapter.schema.json#/$defs/ObjectId",
+            "description": "The independently captured unpeeled object ID of the literal direct ref in this repository object format. A branch names its commit directly. A tag may name a tag object that peels to the selected commit."
           }
         },
         "required": [
@@ -46,7 +50,8 @@
           "commit",
           "adapter",
           "capture",
-          "tree"
+          "tree",
+          "ref_object_id"
         ],
         "additionalProperties": false
       }

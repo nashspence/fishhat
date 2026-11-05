@@ -176,6 +176,7 @@ def test_backup_limit_bounds_each_page_without_limiting_total_collection_extent(
             "handle": "object:" + str(number),
             "repository": "repository:demo",
             "artifacts": [artifact("a"), artifact("b")],
+            "incarnation": artifact("c")["digest"],
             "completeness": "sealed",
             "retrieval": "available",
         }
@@ -208,6 +209,7 @@ def test_backup_observation_rejects_foreign_repository_objects(coverage):
             "handle": "object:one",
             "repository": "another-repository",
             "artifacts": [],
+            "incarnation": artifact("c")["digest"],
             "completeness": "sealed",
             "retrieval": "available",
         }

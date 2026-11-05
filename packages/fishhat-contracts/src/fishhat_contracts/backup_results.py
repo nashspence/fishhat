@@ -89,6 +89,7 @@ def validate_backup_result(
         checkpoint["owner"] == value["owner"]
         and checkpoint["app_instance"] == selection["app_instance"]
         and checkpoint["release_digest"] == selection["release_digest"]
+        and checkpoint["dataset_inventory_digest"] == selection["dataset_inventory_digest"]
         and set(checkpoint["datasets"]) == set(selection["preserved_datasets"])
         and set(checkpoint["secret_generations"]) == set(selection["secret_generations"]),
         "backup checkpoint differs from accepted application selection",

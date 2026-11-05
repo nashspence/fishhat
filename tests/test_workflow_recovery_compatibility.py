@@ -176,6 +176,10 @@ def test_reader_rejection_and_wire_claim_cannot_grant_recovery_compatibility(mon
 
 
 def test_historical_publisher_output_remains_usable_through_successor_lifecycle(monkeypatch):
+    from fishhat_client.submission import reconcile_delivery
+
+    from tests.test_operation_semantics import delivery
+
     original, adoption = adoption_stage()
     issued = original["bindings"][0]["request"]["predecessors"][0]
     published = adoption["predecessors"][0]
@@ -192,6 +196,11 @@ def test_historical_publisher_output_remains_usable_through_successor_lifecycle(
     editorial_change(monkeypatch)
     result_schema = original_result["schema"]
     assert result_schema != schema_identity(result_schema["uri"])
+    uncertain = {**delivery(published), "state": "acceptance_unknown"}
+    assert reconcile_delivery(uncertain, lambda _: published)["exit_code"] == 8
+    resolved = reconcile_delivery(uncertain, lambda _: published, recovery_readers=qualified)
+    assert resolved["delivery"]["state"] == "accepted"
+    assert resolved["owner_receipt"] == published
     missing_result_reader = dict(qualified)
     missing_result_reader.pop((result_schema["uri"], result_schema["digest"]))
     with pytest.raises(ContractError, match="action result schema substitution"):
