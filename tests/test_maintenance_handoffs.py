@@ -146,6 +146,7 @@ def reviewed(parent, selection, *, definition=None, release=None):
     value["effects"][0]["input_digest"] = digest(value["maintenance"])
     value["input_digests"] = sorted(maintenance_material_digests(value["maintenance"]))
     reseal(value)
+    parent["plan_id"] = value["id"]
     parent["plan_digest"] = value["digest"]
     return value
 

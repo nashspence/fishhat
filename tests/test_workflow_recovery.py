@@ -92,6 +92,7 @@ def child_operation(binding, owner, *, state="succeeded", workflow_id=None):
         request_id=binding["request_id"],
         owner=copy.deepcopy(owner),
         subject=copy.deepcopy(plan["subject"]),
+        plan_id=plan["id"],
         plan_digest=plan["digest"],
         state=state,
         effect_certainty="known" if state == "succeeded" else "unknown",

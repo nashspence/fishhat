@@ -107,6 +107,7 @@ def successful(reference, binding, generation=1, *, workflow_id=None):
         owner=copy.deepcopy(reference["owner"]),
         request_id=reference["request_id"],
         subject=copy.deepcopy(binding["plan"]["subject"]),
+        plan_id=binding["plan"]["id"],
         plan_digest=binding["plan"]["digest"],
         state="succeeded",
         effect_certainty="known",

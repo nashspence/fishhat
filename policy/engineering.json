@@ -590,6 +590,13 @@
         "native_qualified": false,
         "status": "unimplemented"
       },
+      "owner-form:history-refusal": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
       "owner-form:info": {
         "growth_proofs": [],
         "growth_requirement": "linear",
@@ -717,6 +724,13 @@
         "status": "unimplemented"
       },
       "owner-form:resources-page": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "owner-form:resources-request": {
         "growth_proofs": [],
         "growth_requirement": "linear",
         "implementation": null,
@@ -948,6 +962,13 @@
         "status": "unimplemented"
       },
       "rpc:history.read": {
+        "growth_proofs": [],
+        "growth_requirement": "linear",
+        "implementation": null,
+        "native_qualified": false,
+        "status": "unimplemented"
+      },
+      "rpc:history.refusal": {
         "growth_proofs": [],
         "growth_requirement": "linear",
         "implementation": null,
@@ -1697,7 +1718,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py": "19d1b8ff3f5d68972f8178a7d635bdea1113cb42268df80e27d493f1982177d5",
+        "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py": "5ed01e3d5ddb324667c0212f8eb8f9186b8588ebb0772fcee383e568fd04e7b7",
         "tests/test_adapter_cumulative_results.py": "e5fe96da3de096c29e9327657c244f6c61de20dbcfa78cea615e342c8db99980"
       },
       "symbol": "fishhat_contracts.adapter_semantics:accumulate_result",
@@ -1765,7 +1786,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py": "19d1b8ff3f5d68972f8178a7d635bdea1113cb42268df80e27d493f1982177d5",
+        "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py": "5ed01e3d5ddb324667c0212f8eb8f9186b8588ebb0772fcee383e568fd04e7b7",
         "tests/test_export_growth.py": "681f2152ed6abc7c478059f76339cdcb31ce5540c379f9e0ac3d3a649cacf6dd",
         "tests/test_routing_publication.py": "ed66f40c8340ee4cad7c2bffbdea20e7193bda5ca68005d9b69de28fc97c8aff"
       },
@@ -1792,7 +1813,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py": "19d1b8ff3f5d68972f8178a7d635bdea1113cb42268df80e27d493f1982177d5",
+        "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py": "5ed01e3d5ddb324667c0212f8eb8f9186b8588ebb0772fcee383e568fd04e7b7",
         "tests/test_export_growth.py": "681f2152ed6abc7c478059f76339cdcb31ce5540c379f9e0ac3d3a649cacf6dd",
         "tests/test_routing_publication.py": "ed66f40c8340ee4cad7c2bffbdea20e7193bda5ca68005d9b69de28fc97c8aff",
         "tests/test_runtime_resolution.py": "40c143d937d20a77e0b91ba0db4558aa1a4daa4dd232ba7b245398b292debcee"
@@ -1820,7 +1841,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py": "19d1b8ff3f5d68972f8178a7d635bdea1113cb42268df80e27d493f1982177d5",
+        "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py": "5ed01e3d5ddb324667c0212f8eb8f9186b8588ebb0772fcee383e568fd04e7b7",
         "tests/test_export_growth.py": "681f2152ed6abc7c478059f76339cdcb31ce5540c379f9e0ac3d3a649cacf6dd",
         "tests/test_routing_publication.py": "ed66f40c8340ee4cad7c2bffbdea20e7193bda5ca68005d9b69de28fc97c8aff",
         "tests/test_runtime_resolution.py": "40c143d937d20a77e0b91ba0db4558aa1a4daa4dd232ba7b245398b292debcee"
@@ -1844,7 +1865,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py": "19d1b8ff3f5d68972f8178a7d635bdea1113cb42268df80e27d493f1982177d5",
+        "packages/fishhat-contracts/src/fishhat_contracts/adapter_semantics.py": "5ed01e3d5ddb324667c0212f8eb8f9186b8588ebb0772fcee383e568fd04e7b7",
         "tests/test_export_growth.py": "681f2152ed6abc7c478059f76339cdcb31ce5540c379f9e0ac3d3a649cacf6dd"
       },
       "symbol": "fishhat_contracts.adapter_semantics:check_result",
@@ -2003,7 +2024,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-adapter-protocol/src/fishhat_adapters/process.py": "6839d0858ec7bee11632e964746e1c69c11779d0b2cc7d882c91ecaa50c7d6c0",
-        "tests/test_adapter_process.py": "475ad8c260a5e0898912cd43e670efaa6064fb42b2d2f409254a570f3fa87824"
+        "tests/test_adapter_process.py": "04996381e9ca5776e698a92390119608d875f2b8183d931eca513655a7d3fba0"
       },
       "symbol": "fishhat_adapters.process:receive_process_result",
       "work": "O(B) complete manifests, typed request/response and every selected artifact byte"
@@ -2057,7 +2078,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-adapter-protocol/src/fishhat_adapters/process.py": "6839d0858ec7bee11632e964746e1c69c11779d0b2cc7d882c91ecaa50c7d6c0",
-        "tests/test_adapter_process.py": "475ad8c260a5e0898912cd43e670efaa6064fb42b2d2f409254a570f3fa87824"
+        "tests/test_adapter_process.py": "04996381e9ca5776e698a92390119608d875f2b8183d931eca513655a7d3fba0"
       },
       "symbol": "fishhat_adapters.process:validate_process_launch",
       "work": "O(B) complete manifests, typed request/response and every selected artifact byte"
@@ -2084,7 +2105,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-adapter-protocol/src/fishhat_adapters/process.py": "6839d0858ec7bee11632e964746e1c69c11779d0b2cc7d882c91ecaa50c7d6c0",
-        "tests/test_adapter_process.py": "475ad8c260a5e0898912cd43e670efaa6064fb42b2d2f409254a570f3fa87824"
+        "tests/test_adapter_process.py": "04996381e9ca5776e698a92390119608d875f2b8183d931eca513655a7d3fba0"
       },
       "symbol": "fishhat_adapters.process:verify_process_inputs",
       "work": "O(B) complete manifests, typed request/response and every selected artifact byte"
@@ -2111,7 +2132,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-adapter-protocol/src/fishhat_adapters/process.py": "6839d0858ec7bee11632e964746e1c69c11779d0b2cc7d882c91ecaa50c7d6c0",
-        "tests/test_adapter_process.py": "475ad8c260a5e0898912cd43e670efaa6064fb42b2d2f409254a570f3fa87824"
+        "tests/test_adapter_process.py": "04996381e9ca5776e698a92390119608d875f2b8183d931eca513655a7d3fba0"
       },
       "symbol": "fishhat_adapters.process:verify_process_outputs",
       "work": "O(B) complete manifests, typed request/response and every selected artifact byte"
@@ -2471,7 +2492,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/checkpoints.py": "6840955218fe93d2989eeeb8bff8872d7a2c482e3e5cf1b708fbc8a1567c2eb0",
-        "tests/test_checkpoint_resolution.py": "ac34a515494f5a33f4736e6c8437e716a2d4d7a23750e428ba048c1a48345deb"
+        "tests/test_checkpoint_resolution.py": "e3071adce4d93e3c47c39e59b7a010707e8a2e5cfdb24e0997ff34370a7d572c"
       },
       "symbol": "fishhat_contracts.checkpoints:resolve_checkpoint",
       "work": "Current-core O(S + B + E): per-resolution installed schema closure setup, complete checkpoint and distinct receipt/result bytes, and dataset-artifact incidences; each shared receipt and object indexed once. Historical pins use complete result validation under its fixed admitted schema profile and qualified reader bounds"
@@ -2494,7 +2515,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/checkpoints.py": "6840955218fe93d2989eeeb8bff8872d7a2c482e3e5cf1b708fbc8a1567c2eb0",
-        "tests/test_checkpoint_resolution.py": "ac34a515494f5a33f4736e6c8437e716a2d4d7a23750e428ba048c1a48345deb"
+        "tests/test_checkpoint_resolution.py": "e3071adce4d93e3c47c39e59b7a010707e8a2e5cfdb24e0997ff34370a7d572c"
       },
       "symbol": "fishhat_contracts.checkpoints:validate_checkpoint",
       "work": "O(B + E) complete checkpoint bytes and dataset/closure identities"
@@ -2542,7 +2563,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "7f42c5346426e60bfe5ec80c5d4201ae76b0eb87494dc817138fbb053cd1f8e3",
+        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "bdf99d0a8030a423c6a91cd4314110891baedb433108c8c84d01ca8084422f18",
         "tests/test_export_growth.py": "681f2152ed6abc7c478059f76339cdcb31ce5540c379f9e0ac3d3a649cacf6dd"
       },
       "symbol": "fishhat_contracts.validation:canonical",
@@ -2564,7 +2585,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "7f42c5346426e60bfe5ec80c5d4201ae76b0eb87494dc817138fbb053cd1f8e3",
+        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "bdf99d0a8030a423c6a91cd4314110891baedb433108c8c84d01ca8084422f18",
         "tests/test_export_growth.py": "681f2152ed6abc7c478059f76339cdcb31ce5540c379f9e0ac3d3a649cacf6dd"
       },
       "symbol": "fishhat_contracts.validation:digest",
@@ -2586,7 +2607,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "7f42c5346426e60bfe5ec80c5d4201ae76b0eb87494dc817138fbb053cd1f8e3",
+        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "bdf99d0a8030a423c6a91cd4314110891baedb433108c8c84d01ca8084422f18",
         "tests/test_export_growth.py": "681f2152ed6abc7c478059f76339cdcb31ce5540c379f9e0ac3d3a649cacf6dd"
       },
       "symbol": "fishhat_contracts.validation:strict_json",
@@ -2608,7 +2629,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "7f42c5346426e60bfe5ec80c5d4201ae76b0eb87494dc817138fbb053cd1f8e3",
+        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "bdf99d0a8030a423c6a91cd4314110891baedb433108c8c84d01ca8084422f18",
         "tests/test_export_growth.py": "681f2152ed6abc7c478059f76339cdcb31ce5540c379f9e0ac3d3a649cacf6dd"
       },
       "symbol": "fishhat_contracts.validation:strict_yaml",
@@ -2630,7 +2651,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "7f42c5346426e60bfe5ec80c5d4201ae76b0eb87494dc817138fbb053cd1f8e3",
+        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "bdf99d0a8030a423c6a91cd4314110891baedb433108c8c84d01ca8084422f18",
         "tests/test_export_growth.py": "681f2152ed6abc7c478059f76339cdcb31ce5540c379f9e0ac3d3a649cacf6dd"
       },
       "symbol": "fishhat_contracts.validation:validate",
@@ -2751,7 +2772,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/drill_results.py": "bebfe8cc7ec34bd0f111bd15d916dccdccb0dabf3bc8e1acd20f4b80b5692cc7",
-        "tests/test_drill_results.py": "9517588218a9576a3a8e4224d338631fad536f368a75b5a38450b07effec9295"
+        "tests/test_drill_results.py": "586d651c01eedfe40c9ebb91388837baffb12a96c69aa5c69176f96eccea7aba"
       },
       "symbol": "fishhat_contracts.drill_results:validate_drill_result",
       "work": "O(B + D + E) complete result bytes with indexed dataset, hook and evidence joins"
@@ -2777,7 +2798,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/handoffs.py": "06e6fa620607778a260dd7851d58f0b4b3a5e8bd7c902b132cce8c5cb1ec44f2",
+        "packages/fishhat-contracts/src/fishhat_contracts/handoffs.py": "ad3eee6e338919fa580defbe52fe0a6ebafb9f4f380cc7b51a4e8991d911d915",
         "tests/test_result_schema_admission.py": "a9dda15195f6a875d0f1ee1fafcb6a6d524b735aac558f2fb07867d1267cbf5f",
         "tests/test_retained_result_growth.py": "05e644216c56e1c0cdcd16b67ff03dc08a82975995d2b9b4db0b31995b842802"
       },
@@ -3365,7 +3386,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/maintenance.py": "d4e5c38031ceb119ff3b1868c54a421e1a3e8c228bbf0683fce56fa3f8327ac5",
-        "tests/test_maintenance_handoffs.py": "464a232efb80faa1348894729a67898740c1d426076a6837f576249ce54bf850"
+        "tests/test_maintenance_handoffs.py": "8da0fde31d3b34384834ce3283f10580fabfb298583bf778e8df5216eb369ad4"
       },
       "symbol": "fishhat_contracts.maintenance:select_maintenance_checkpoint",
       "work": "O(B) complete task, selection, Plan, child result and distinct immutable content-handle bytes; no recursive maintenance expansion"
@@ -3389,7 +3410,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/maintenance.py": "d4e5c38031ceb119ff3b1868c54a421e1a3e8c228bbf0683fce56fa3f8327ac5",
-        "tests/test_maintenance_handoffs.py": "464a232efb80faa1348894729a67898740c1d426076a6837f576249ce54bf850"
+        "tests/test_maintenance_handoffs.py": "8da0fde31d3b34384834ce3283f10580fabfb298583bf778e8df5216eb369ad4"
       },
       "symbol": "fishhat_contracts.maintenance:validate_maintenance_execution",
       "work": "O(B) complete task, selection, Plan, child result and distinct immutable content-handle bytes; no recursive maintenance expansion"
@@ -3413,7 +3434,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/maintenance.py": "d4e5c38031ceb119ff3b1868c54a421e1a3e8c228bbf0683fce56fa3f8327ac5",
-        "tests/test_maintenance_handoffs.py": "464a232efb80faa1348894729a67898740c1d426076a6837f576249ce54bf850"
+        "tests/test_maintenance_handoffs.py": "8da0fde31d3b34384834ce3283f10580fabfb298583bf778e8df5216eb369ad4"
       },
       "symbol": "fishhat_contracts.maintenance:validate_maintenance_result",
       "work": "O(B) complete task, selection, Plan, child result and distinct immutable content-handle bytes; no recursive maintenance expansion"
@@ -3437,7 +3458,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/maintenance.py": "d4e5c38031ceb119ff3b1868c54a421e1a3e8c228bbf0683fce56fa3f8327ac5",
-        "tests/test_maintenance_handoffs.py": "464a232efb80faa1348894729a67898740c1d426076a6837f576249ce54bf850"
+        "tests/test_maintenance_handoffs.py": "8da0fde31d3b34384834ce3283f10580fabfb298583bf778e8df5216eb369ad4"
       },
       "symbol": "fishhat_contracts.maintenance:require_maintenance_result_custody",
       "work": "O(B) complete task, selection, Plan, child result and distinct immutable content-handle bytes; no recursive maintenance expansion"
@@ -3922,8 +3943,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "7f42c5346426e60bfe5ec80c5d4201ae76b0eb87494dc817138fbb053cd1f8e3",
-        "tests/test_source_growth.py": "67bd3327e4943aebfff2fe4db3757daf57c3a5c5cf9af55f7865f93ee14e1302"
+        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "bdf99d0a8030a423c6a91cd4314110891baedb433108c8c84d01ca8084422f18",
+        "tests/test_source_growth.py": "9713d3263b92ef6d3e1f7154f6d4407a9b704db82695b5a137dfd00428fce968"
       },
       "symbol": "fishhat_contracts.validation:validate_app",
       "work": "O(B + E) complete source bytes and declared reference edges; shared memberships indexed once"
@@ -3945,8 +3966,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "7f42c5346426e60bfe5ec80c5d4201ae76b0eb87494dc817138fbb053cd1f8e3",
-        "tests/test_source_growth.py": "67bd3327e4943aebfff2fe4db3757daf57c3a5c5cf9af55f7865f93ee14e1302"
+        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "bdf99d0a8030a423c6a91cd4314110891baedb433108c8c84d01ca8084422f18",
+        "tests/test_source_growth.py": "9713d3263b92ef6d3e1f7154f6d4407a9b704db82695b5a137dfd00428fce968"
       },
       "symbol": "fishhat_contracts.validation:require_acyclic",
       "work": "O(V + E) declared nodes and edges with an explicit depth-first stack"
@@ -3967,8 +3988,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "7f42c5346426e60bfe5ec80c5d4201ae76b0eb87494dc817138fbb053cd1f8e3",
-        "tests/test_source_growth.py": "67bd3327e4943aebfff2fe4db3757daf57c3a5c5cf9af55f7865f93ee14e1302"
+        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "bdf99d0a8030a423c6a91cd4314110891baedb433108c8c84d01ca8084422f18",
+        "tests/test_source_growth.py": "9713d3263b92ef6d3e1f7154f6d4407a9b704db82695b5a137dfd00428fce968"
       },
       "symbol": "fishhat_contracts.validation:validate_domain",
       "work": "O(B + E) complete source bytes and declared reference edges; shared memberships indexed once"
@@ -3989,8 +4010,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "7f42c5346426e60bfe5ec80c5d4201ae76b0eb87494dc817138fbb053cd1f8e3",
-        "tests/test_source_growth.py": "67bd3327e4943aebfff2fe4db3757daf57c3a5c5cf9af55f7865f93ee14e1302"
+        "packages/fishhat-contracts/src/fishhat_contracts/validation.py": "bdf99d0a8030a423c6a91cd4314110891baedb433108c8c84d01ca8084422f18",
+        "tests/test_source_growth.py": "9713d3263b92ef6d3e1f7154f6d4407a9b704db82695b5a137dfd00428fce968"
       },
       "symbol": "fishhat_contracts.validation:validate_host",
       "work": "O(B + E) complete source bytes and declared reference edges; shared memberships indexed once"
@@ -4227,7 +4248,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/workflow_bindings.py": "fa2984707df87bee2abfc3e16bff227bdf491335c1edb876e9ee2ef3ebc75f0d",
-        "tests/test_workflow_continuations.py": "aa7227b67d05bc538e57952de9acdd56a86dc1360874e345271de3ba4d492eed",
+        "tests/test_workflow_continuations.py": "7cd617cdc8bffeed6d5ff696ef535a4989282272544a3183e6c4b60e83e88d75",
         "tests/test_workflow_initial_review.py": "aaa824b852176e78ca4c9d02ff038b36c2e0398a33577f253211954035551e60",
         "tests/test_workflow_initial_review_growth.py": "77452983d4831ed4c3e70ecb0710b3315481713e04a81b4b7d929126e0bc927d",
         "tests/test_workflow_validation_growth.py": "789e9b8b22d11804bb3c9b050c8a09483da9f2cae1a7bdd341a45b8b259eaaf2"
@@ -4459,8 +4480,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "cc34ab29b8052966c5e8e79e764607937c25653a846bc7b6928440e301153ee9",
-        "tests/test_workflow_journal.py": "76f763ba0543ce5cebe42c20f5989005aad5e98ffd0e5bce9b93b0a0eb464c52",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "83e947911bc570462917bf360cb0283e2c429cc16dea9eb0089c5832ac3c77dd",
+        "tests/test_workflow_journal.py": "82b86ac8d95042fefe91c75fc44c6bccba49e8908e21313e956d396cd14eaf7d",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
       "symbol": "fishhat_contracts.workflow_journal_recovery:JournalRecovery.apply",
@@ -4483,8 +4504,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "cc34ab29b8052966c5e8e79e764607937c25653a846bc7b6928440e301153ee9",
-        "tests/test_workflow_journal.py": "76f763ba0543ce5cebe42c20f5989005aad5e98ffd0e5bce9b93b0a0eb464c52",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "83e947911bc570462917bf360cb0283e2c429cc16dea9eb0089c5832ac3c77dd",
+        "tests/test_workflow_journal.py": "82b86ac8d95042fefe91c75fc44c6bccba49e8908e21313e956d396cd14eaf7d",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
       "symbol": "fishhat_contracts.workflow_journal_recovery:JournalRecovery.blocks_work",
@@ -4507,8 +4528,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "cc34ab29b8052966c5e8e79e764607937c25653a846bc7b6928440e301153ee9",
-        "tests/test_workflow_journal.py": "76f763ba0543ce5cebe42c20f5989005aad5e98ffd0e5bce9b93b0a0eb464c52",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "83e947911bc570462917bf360cb0283e2c429cc16dea9eb0089c5832ac3c77dd",
+        "tests/test_workflow_journal.py": "82b86ac8d95042fefe91c75fc44c6bccba49e8908e21313e956d396cd14eaf7d",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
       "symbol": "fishhat_contracts.workflow_journal_recovery:JournalRecovery.context",
@@ -4531,8 +4552,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "cc34ab29b8052966c5e8e79e764607937c25653a846bc7b6928440e301153ee9",
-        "tests/test_workflow_journal.py": "76f763ba0543ce5cebe42c20f5989005aad5e98ffd0e5bce9b93b0a0eb464c52",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "83e947911bc570462917bf360cb0283e2c429cc16dea9eb0089c5832ac3c77dd",
+        "tests/test_workflow_journal.py": "82b86ac8d95042fefe91c75fc44c6bccba49e8908e21313e956d396cd14eaf7d",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
       "symbol": "fishhat_contracts.workflow_journal_recovery:JournalRecovery.initialize_gate",
@@ -4555,8 +4576,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "cc34ab29b8052966c5e8e79e764607937c25653a846bc7b6928440e301153ee9",
-        "tests/test_workflow_journal.py": "76f763ba0543ce5cebe42c20f5989005aad5e98ffd0e5bce9b93b0a0eb464c52",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "83e947911bc570462917bf360cb0283e2c429cc16dea9eb0089c5832ac3c77dd",
+        "tests/test_workflow_journal.py": "82b86ac8d95042fefe91c75fc44c6bccba49e8908e21313e956d396cd14eaf7d",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
       "symbol": "fishhat_contracts.workflow_journal_recovery:JournalRecovery.initialize_member",
@@ -4579,8 +4600,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "cc34ab29b8052966c5e8e79e764607937c25653a846bc7b6928440e301153ee9",
-        "tests/test_workflow_journal_epoch.py": "edd2e568f32991d38b54f76ebc3fa508860487709d7ca8c2953bd61f2fcde06e"
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "83e947911bc570462917bf360cb0283e2c429cc16dea9eb0089c5832ac3c77dd",
+        "tests/test_workflow_journal_epoch.py": "24ee63f20765c8ca0950d5b572e2c77c8a511bbec630787558fbdd9b9d23ef53"
       },
       "symbol": "fishhat_contracts.workflow_journal_recovery:WorkflowRecoveryMember.__init__",
       "work": "O(L + H) one original owner-local projection and one verified replay of each original and current retained event"
@@ -4602,8 +4623,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "cc34ab29b8052966c5e8e79e764607937c25653a846bc7b6928440e301153ee9",
-        "tests/test_workflow_journal.py": "76f763ba0543ce5cebe42c20f5989005aad5e98ffd0e5bce9b93b0a0eb464c52",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "83e947911bc570462917bf360cb0283e2c429cc16dea9eb0089c5832ac3c77dd",
+        "tests/test_workflow_journal.py": "82b86ac8d95042fefe91c75fc44c6bccba49e8908e21313e956d396cd14eaf7d",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
       "symbol": "fishhat_contracts.workflow_journal_recovery:JournalRecovery.outcome",
@@ -4632,7 +4653,7 @@
       "qualification": "reference-model",
       "sources": {
         "fishhat/owner-support/src/fishhat_owner/workflow_journal.py": "6976b778b26beb789a8469d71b9071f7d8be10163e311961683b42f1239bbafe",
-        "tests/test_workflow_journal.py": "76f763ba0543ce5cebe42c20f5989005aad5e98ffd0e5bce9b93b0a0eb464c52",
+        "tests/test_workflow_journal.py": "82b86ac8d95042fefe91c75fc44c6bccba49e8908e21313e956d396cd14eaf7d",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
       "symbol": "fishhat_owner.workflow_journal:WorkflowJournal.append",
@@ -4661,7 +4682,7 @@
       "qualification": "reference-model",
       "sources": {
         "fishhat/owner-support/src/fishhat_owner/workflow_journal.py": "6976b778b26beb789a8469d71b9071f7d8be10163e311961683b42f1239bbafe",
-        "tests/test_workflow_journal.py": "76f763ba0543ce5cebe42c20f5989005aad5e98ffd0e5bce9b93b0a0eb464c52",
+        "tests/test_workflow_journal.py": "82b86ac8d95042fefe91c75fc44c6bccba49e8908e21313e956d396cd14eaf7d",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
       "symbol": "fishhat_owner.workflow_journal:WorkflowJournal.close",
@@ -4690,7 +4711,7 @@
       "qualification": "reference-model",
       "sources": {
         "fishhat/owner-support/src/fishhat_owner/workflow_journal.py": "6976b778b26beb789a8469d71b9071f7d8be10163e311961683b42f1239bbafe",
-        "tests/test_workflow_journal.py": "76f763ba0543ce5cebe42c20f5989005aad5e98ffd0e5bce9b93b0a0eb464c52",
+        "tests/test_workflow_journal.py": "82b86ac8d95042fefe91c75fc44c6bccba49e8908e21313e956d396cd14eaf7d",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
       "symbol": "fishhat_owner.workflow_journal:WorkflowJournal.command_bytes",
@@ -4719,7 +4740,7 @@
       "qualification": "reference-model",
       "sources": {
         "fishhat/owner-support/src/fishhat_owner/workflow_journal.py": "6976b778b26beb789a8469d71b9071f7d8be10163e311961683b42f1239bbafe",
-        "tests/test_workflow_journal.py": "76f763ba0543ce5cebe42c20f5989005aad5e98ffd0e5bce9b93b0a0eb464c52",
+        "tests/test_workflow_journal.py": "82b86ac8d95042fefe91c75fc44c6bccba49e8908e21313e956d396cd14eaf7d",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
       "symbol": "fishhat_owner.workflow_journal:WorkflowJournal.create",
@@ -4748,7 +4769,7 @@
       "qualification": "reference-model",
       "sources": {
         "fishhat/owner-support/src/fishhat_owner/workflow_journal.py": "6976b778b26beb789a8469d71b9071f7d8be10163e311961683b42f1239bbafe",
-        "tests/test_workflow_journal.py": "76f763ba0543ce5cebe42c20f5989005aad5e98ffd0e5bce9b93b0a0eb464c52",
+        "tests/test_workflow_journal.py": "82b86ac8d95042fefe91c75fc44c6bccba49e8908e21313e956d396cd14eaf7d",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
       "symbol": "fishhat_owner.workflow_journal:validate_journal_genesis",
@@ -4777,7 +4798,7 @@
       "qualification": "reference-model",
       "sources": {
         "fishhat/owner-support/src/fishhat_owner/workflow_journal.py": "6976b778b26beb789a8469d71b9071f7d8be10163e311961683b42f1239bbafe",
-        "tests/test_workflow_journal.py": "76f763ba0543ce5cebe42c20f5989005aad5e98ffd0e5bce9b93b0a0eb464c52",
+        "tests/test_workflow_journal.py": "82b86ac8d95042fefe91c75fc44c6bccba49e8908e21313e956d396cd14eaf7d",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
       "symbol": "fishhat_owner.workflow_journal:WorkflowJournal.guard",
@@ -4806,7 +4827,7 @@
       "qualification": "reference-model",
       "sources": {
         "fishhat/owner-support/src/fishhat_owner/workflow_journal.py": "6976b778b26beb789a8469d71b9071f7d8be10163e311961683b42f1239bbafe",
-        "tests/test_workflow_journal.py": "76f763ba0543ce5cebe42c20f5989005aad5e98ffd0e5bce9b93b0a0eb464c52",
+        "tests/test_workflow_journal.py": "82b86ac8d95042fefe91c75fc44c6bccba49e8908e21313e956d396cd14eaf7d",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
       "symbol": "fishhat_owner.workflow_journal:WorkflowJournal.iter_events",
@@ -4835,7 +4856,7 @@
       "qualification": "reference-model",
       "sources": {
         "fishhat/owner-support/src/fishhat_owner/workflow_journal.py": "6976b778b26beb789a8469d71b9071f7d8be10163e311961683b42f1239bbafe",
-        "tests/test_workflow_journal.py": "76f763ba0543ce5cebe42c20f5989005aad5e98ffd0e5bce9b93b0a0eb464c52",
+        "tests/test_workflow_journal.py": "82b86ac8d95042fefe91c75fc44c6bccba49e8908e21313e956d396cd14eaf7d",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
       "symbol": "fishhat_owner.workflow_journal:WorkflowJournal.lookup",
@@ -4864,7 +4885,7 @@
       "qualification": "reference-model",
       "sources": {
         "fishhat/owner-support/src/fishhat_owner/workflow_journal.py": "6976b778b26beb789a8469d71b9071f7d8be10163e311961683b42f1239bbafe",
-        "tests/test_workflow_journal.py": "76f763ba0543ce5cebe42c20f5989005aad5e98ffd0e5bce9b93b0a0eb464c52",
+        "tests/test_workflow_journal.py": "82b86ac8d95042fefe91c75fc44c6bccba49e8908e21313e956d396cd14eaf7d",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
       "symbol": "fishhat_owner.workflow_journal:WorkflowJournal.open",
@@ -4893,7 +4914,7 @@
       "qualification": "reference-model",
       "sources": {
         "fishhat/owner-support/src/fishhat_owner/workflow_journal.py": "6976b778b26beb789a8469d71b9071f7d8be10163e311961683b42f1239bbafe",
-        "tests/test_workflow_journal.py": "76f763ba0543ce5cebe42c20f5989005aad5e98ffd0e5bce9b93b0a0eb464c52",
+        "tests/test_workflow_journal.py": "82b86ac8d95042fefe91c75fc44c6bccba49e8908e21313e956d396cd14eaf7d",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
       "symbol": "fishhat_owner.workflow_journal:WorkflowJournal.outcome_bytes",
@@ -4921,7 +4942,7 @@
       "qualification": "reference-model",
       "sources": {
         "fishhat/owner-support/src/fishhat_owner/workflow_journal.py": "6976b778b26beb789a8469d71b9071f7d8be10163e311961683b42f1239bbafe",
-        "tests/test_workflow_journal.py": "76f763ba0543ce5cebe42c20f5989005aad5e98ffd0e5bce9b93b0a0eb464c52"
+        "tests/test_workflow_journal.py": "82b86ac8d95042fefe91c75fc44c6bccba49e8908e21313e956d396cd14eaf7d"
       },
       "symbol": "fishhat_owner.workflow_journal:WorkflowJournal.repair_tail",
       "work": "O(B) reads, hashes and quarantines every uncertain suffix byte once per attempt"
@@ -4943,8 +4964,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "9766ec794477e26d54af4fc5f3cb276463523111c81d531a406683f7837ffaa5",
-        "tests/test_workflow_journal.py": "76f763ba0543ce5cebe42c20f5989005aad5e98ffd0e5bce9b93b0a0eb464c52",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "790d626e3c2406f16ff85ea354b5be5dcc55bfdabbe7083bd5e598ff5acc7bf5",
+        "tests/test_workflow_journal.py": "82b86ac8d95042fefe91c75fc44c6bccba49e8908e21313e956d396cd14eaf7d",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
       "symbol": "fishhat_contracts.workflow_journal:WorkflowGate.__init__",
@@ -4990,8 +5011,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "9766ec794477e26d54af4fc5f3cb276463523111c81d531a406683f7837ffaa5",
-        "tests/test_workflow_journal.py": "76f763ba0543ce5cebe42c20f5989005aad5e98ffd0e5bce9b93b0a0eb464c52",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "790d626e3c2406f16ff85ea354b5be5dcc55bfdabbe7083bd5e598ff5acc7bf5",
+        "tests/test_workflow_journal.py": "82b86ac8d95042fefe91c75fc44c6bccba49e8908e21313e956d396cd14eaf7d",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
       "symbol": "fishhat_contracts.workflow_journal:_JournalTarget.record",
@@ -5014,8 +5035,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "9766ec794477e26d54af4fc5f3cb276463523111c81d531a406683f7837ffaa5",
-        "tests/test_workflow_journal.py": "76f763ba0543ce5cebe42c20f5989005aad5e98ffd0e5bce9b93b0a0eb464c52",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "790d626e3c2406f16ff85ea354b5be5dcc55bfdabbe7083bd5e598ff5acc7bf5",
+        "tests/test_workflow_journal.py": "82b86ac8d95042fefe91c75fc44c6bccba49e8908e21313e956d396cd14eaf7d",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
       "symbol": "fishhat_contracts.workflow_journal:initialize_workflow_journal",
@@ -5038,8 +5059,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "9766ec794477e26d54af4fc5f3cb276463523111c81d531a406683f7837ffaa5",
-        "tests/test_workflow_journal.py": "76f763ba0543ce5cebe42c20f5989005aad5e98ffd0e5bce9b93b0a0eb464c52",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "790d626e3c2406f16ff85ea354b5be5dcc55bfdabbe7083bd5e598ff5acc7bf5",
+        "tests/test_workflow_journal.py": "82b86ac8d95042fefe91c75fc44c6bccba49e8908e21313e956d396cd14eaf7d",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
       "symbol": "fishhat_contracts.workflow_journal:WorkflowMember.__init__",
@@ -5062,8 +5083,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "9766ec794477e26d54af4fc5f3cb276463523111c81d531a406683f7837ffaa5",
-        "tests/test_workflow_journal.py": "76f763ba0543ce5cebe42c20f5989005aad5e98ffd0e5bce9b93b0a0eb464c52",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "790d626e3c2406f16ff85ea354b5be5dcc55bfdabbe7083bd5e598ff5acc7bf5",
+        "tests/test_workflow_journal.py": "82b86ac8d95042fefe91c75fc44c6bccba49e8908e21313e956d396cd14eaf7d",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
       "symbol": "fishhat_contracts.workflow_journal:WorkflowMember.require_operation_admission",
@@ -5086,8 +5107,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "9766ec794477e26d54af4fc5f3cb276463523111c81d531a406683f7837ffaa5",
-        "tests/test_workflow_journal.py": "76f763ba0543ce5cebe42c20f5989005aad5e98ffd0e5bce9b93b0a0eb464c52",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "790d626e3c2406f16ff85ea354b5be5dcc55bfdabbe7083bd5e598ff5acc7bf5",
+        "tests/test_workflow_journal.py": "82b86ac8d95042fefe91c75fc44c6bccba49e8908e21313e956d396cd14eaf7d",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
       "symbol": "fishhat_contracts.workflow_journal:_JournalTarget.replay_reference",
@@ -5112,9 +5133,9 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "9766ec794477e26d54af4fc5f3cb276463523111c81d531a406683f7837ffaa5",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py": "790d626e3c2406f16ff85ea354b5be5dcc55bfdabbe7083bd5e598ff5acc7bf5",
         "tests/test_workflow_admission_renewal.py": "a3799dc44e9b198f6026922dfa10481863624c0fb83613703e2d51c131ff2f65",
-        "tests/test_workflow_journal.py": "76f763ba0543ce5cebe42c20f5989005aad5e98ffd0e5bce9b93b0a0eb464c52",
+        "tests/test_workflow_journal.py": "82b86ac8d95042fefe91c75fc44c6bccba49e8908e21313e956d396cd14eaf7d",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
       "symbol": "fishhat_contracts.workflow_journal:dispatch_journal_command",

@@ -28,7 +28,11 @@ def prepare_delivery(template: dict[str, Any], request_id: str | None = None) ->
 
 
 def submit_once(
-    delivery: dict[str, Any], owner_transport: Callable[[dict[str, Any]], object]
+    delivery: dict[str, Any],
+    owner_transport: Callable[[dict[str, Any]], object],
+    *,
+    confirmed: bool,
+    driver_term: int | None = None,
 ) -> dict[str, Any]:
     """Submit once and keep acceptance separate from the owner's execution result.
 
@@ -46,7 +50,28 @@ def submit_once(
     validate("client-records.schema.json", delivery, "Delivery")
     if delivery["state"] != "prepared":
         raise ContractError("new submission needs prepared identity; reconcile unknown work")
-    params = {**copy.deepcopy(delivery), "state": "acceptance_unknown"}
+    params = {
+        key: copy.deepcopy(delivery[key])
+        for key in (
+            "owner",
+            "request_id",
+            "plan_id",
+            "plan_digest",
+            "subject_digest",
+            "claimed_actor",
+            "workflow_id",
+        )
+    }
+    params.update(confirmed=confirmed, driver_term=driver_term)
+    validate(
+        "ssh-request.schema.json",
+        {
+            "format": "deployment-ops/owner/v1",
+            "message_id": delivery["request_id"],
+            "method": "operation.submit",
+            "params": params,
+        },
+    )
     return _resolve(delivery, owner_transport, params, "operation.submit")
 
 

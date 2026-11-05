@@ -31,6 +31,7 @@ def synthetic_operation(workflow, participant, binding, *, state="succeeded"):
         request_id=binding["request_id"],
         owner=copy.deepcopy(participant["owner"]),
         subject=copy.deepcopy(plan["subject"]),
+        plan_id=plan["id"],
         plan_digest=plan["digest"],
         state=state,
         effect_certainty="known",

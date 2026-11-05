@@ -70,6 +70,8 @@ def check_request(role: str, value: dict[str, Any]) -> None:
         )
         return
     check_target_request(role, value)
+    if role == "backup" and method != "observe":
+        require(inputs["repository"] == inputs["scope"]["handle"], "BACKUP_REPOSITORY_SCOPE")
     if role == "compute":
         target = inputs["target"]
         require(
@@ -396,6 +398,11 @@ def _check_handoff_response(role: str, request: dict[str, Any], response: dict[s
         require(
             output["target"] is not None or response["coverage"] != "incomplete",
             "UNKNOWN_COMPUTE_TARGET_NOT_RESUMABLE",
+        )
+    if role == "backup":
+        require(
+            all(obj["repository"] == inputs["scope"]["handle"] for obj in output["objects"]),
+            "BACKUP_REPOSITORY_SCOPE",
         )
     if role == "secret-source" and method == "resolve":
         version = output["version"]

@@ -162,6 +162,23 @@ def test_unselected_recovery_hook_cannot_bypass_dataset_policy(recovery):
         check(value)
 
 
+@pytest.mark.parametrize("mode", ["read", "write"])
+def test_hook_component_must_have_the_selected_dataset_access(mode):
+    app = application()
+    dataset = app["datasets"]["state"]
+    hook = copy.deepcopy(app["hooks"]["health" if mode == "read" else "restore"])
+    hook.update(component="web", datasets=["state"])
+    app["hooks"]["extra"] = hook
+    with pytest.raises(ContractError, match="hook executor lacks declared dataset access"):
+        check(app)
+    dataset["readers"].append("web")
+    if mode == "write":
+        with pytest.raises(ContractError, match="hook executor lacks declared dataset access"):
+            check(app)
+        dataset["writers"].append("web")
+    check(app)
+
+
 def test_preserved_local_data_cannot_claim_stateless_checkpoints():
     value = application()
     value["lifecycle"]["checkpoint_policy"] = "stateless"

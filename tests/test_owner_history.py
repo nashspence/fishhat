@@ -10,10 +10,12 @@ import pytest
 from fishhat_contracts.handoffs import schema_identity
 from fishhat_contracts.history import (
     authorize_history_request,
+    read_historical_refusal,
     validate_historical_recovery,
     validate_history_result,
     validate_owner_custody,
 )
+from fishhat_contracts.operations import validate_submission_refusal
 from fishhat_contracts.record_delivery import RecordSnapshot, validate_record_payload
 from fishhat_contracts.validation import ContractError, canonical, digest, validate, validate_cli
 from fishhat_owner.commands import parse_command
@@ -600,6 +602,7 @@ def test_historical_reads_cannot_bypass_new_recovery_admission(change):
         "history.read",
         "history.input",
         "history.content",
+        "history.refusal",
         "workflow.journal.submit",
     ],
 )
@@ -609,3 +612,79 @@ def test_direct_owner_history_and_binding_commands_use_closed_stdin(method):
     assert parse_command(command, "app-ops")["use_case"] == method
     with pytest.raises(ContractError):
         parse_command(command + " --execute", "app-ops")
+
+
+def test_historical_refusal_requires_current_scoped_custody_and_preserves_original_pair():
+    original = operation()
+    custody = custody_for(original)
+    resource = original["subject"]["resource"]
+    query = query_for(
+        custody, origin=original["owner"], request_id=uid("refused"), resource=resource
+    )
+    refusal = {
+        "kind": "SubmissionRefusal",
+        "owner": original["owner"],
+        "request_id": query["request_id"],
+        "resource": resource,
+        "plan_id": original["plan_id"],
+        "plan_digest": original["plan_digest"],
+        "subject_digest": digest(original["subject"]),
+        "workflow_id": None,
+        "claimed_actor": None,
+        "reason": "PLAN_EXPIRED",
+    }
+    problem = {
+        "owner": original["owner"],
+        "resource": resource,
+        "code": "PLAN_EXPIRED",
+        "summary": "Original closed refusal.",
+        "retry": "none",
+        "evidence": [],
+    }
+    pair = {"nonacceptance": refusal, "problem": problem}
+    key = (custody["digest"], query["request_id"], canonical(resource))
+    context = {
+        "current_owner": custody["custodian"],
+        "verified_custody": custody,
+        "read_authorized": True,
+        "verified_pairs": {key: canonical(pair)},
+    }
+    result = read_historical_refusal(query, **context)
+    assert {name: result[name] for name in pair} == pair
+    # A client with the original uncertain delivery verifies both independent joins.
+    from tests.test_operation_semantics import delivery
+
+    uncertain = {
+        **delivery(original),
+        "request_id": query["request_id"],
+        "state": "acceptance_unknown",
+    }
+    validate_history_result(result, expected_request=query, verified_custody=custody)
+    validate_submission_refusal(result["nonacceptance"], result["problem"], uncertain)
+    with pytest.raises(ContractError, match="original delivery"):
+        validate_submission_refusal(
+            result["nonacceptance"], result["problem"], {**uncertain, "claimed_actor": "other"}
+        )
+    validate("ssh-request.schema.json", request("history.refusal", query))
+    validate("ssh-response.schema.json", wire("history.refusal", result))
+    validate_cli(cli(result))
+    with pytest.raises(ContractError, match="RETENTION_GAP"):
+        read_historical_refusal(query, **{**context, "verified_pairs": {}})
+    with pytest.raises(ContractError, match="permission"):
+        read_historical_refusal(query, **{**context, "read_authorized": False})
+    for change in [
+        {"custody_id": uid("unknown")},
+        {"origin": custody["custodian"]},
+        {"request_id": uid("another")},
+        {"resource": {"kind": "app", "id": "another"}},
+    ]:
+        with pytest.raises(ContractError):
+            read_historical_refusal({**query, **change}, **context)
+    for changed in [
+        {**pair, "nonacceptance": {**refusal, "request_id": uid("another")}},
+        {**pair, "problem": {**problem, "code": "UNAVAILABLE"}},
+    ]:
+        with pytest.raises(ContractError):
+            read_historical_refusal(
+                query, **{**context, "verified_pairs": {key: canonical(changed)}}
+            )

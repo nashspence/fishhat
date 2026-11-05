@@ -40,6 +40,7 @@ datasets:
     native_format: sqlite-receipts-v1
     writers:
     - server
+    - maintenance
     readers:
     - maintenance
     grant: receipts-state

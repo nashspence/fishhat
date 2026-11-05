@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fishhat.invalid/contracts/source-closure.schema.json",
+  "$ref": "#/$defs/Manifest",
+  "$defs": {
+    "Commitment": {
+      "$ref": "common.schema.json#/$defs/MaterialDigest",
+      "description": "SHA-256 of the exact RFC 8785 JCS Manifest for this Source. The manifest entrypoint equals Source.entrypoint. Repository identity and commit are bound by the enclosing Source. Retain the manifest and complete selected blob bytes."
+    },
+    "Manifest": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "fishhat.source-closure/v1"
+        },
+        "entrypoint": {
+          "$ref": "common.schema.json#/$defs/GitTreePath"
+        },
+        "files": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "$ref": "common.schema.json#/$defs/GitTreePath"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "mode": {
+                "enum": [
+                  "100644",
+                  "100755"
+                ]
+              },
+              "digest": {
+                "$ref": "common.schema.json#/$defs/Digest"
+              }
+            },
+            "required": [
+              "mode",
+              "digest"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "format",
+        "entrypoint",
+        "files"
+      ],
+      "additionalProperties": false,
+      "description": "Resolve the entrypoint and every transitive file input of this source from its exact pinned Git commit, including its declared secret catalogue and provider-selected native inputs. For a selected directory include all descendant regular blobs. The receiving owner independently establishes membership from the admitted source grammar and selected provider and rejects missing or extra paths. Each literal repository-relative UTF-8 path occurs once. The entrypoint must be present. Reject nonrepresentable paths, symlinks, gitlinks and file/descendant conflicts within the selection. Never resolve through a worktree. Hash the exact blob payload without a Git header, filtering, newline conversion or Unicode normalization. Preserve its Git mode. The files object uses JCS object-key order. Unselected paths and external repositories are outside this manifest. A release binds each contributing repository and entrypoint through its own Source."
+    }
+  },
+  "x-fishhat-contract-dependencies": [
+    "#/$defs/Manifest"
+  ]
+}

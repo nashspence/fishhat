@@ -12,12 +12,13 @@ import binascii
 from collections.abc import Callable, Mapping
 from typing import Any
 
+from .operations import validate_submission_refusal
 from .record_delivery import (
     validate_record_chunk,
     validate_record_payload,
     validate_record_reference,
 )
-from .validation import ContractError, canonical, digest, validate, validate_plan
+from .validation import ContractError, canonical, digest, strict_json, validate, validate_plan
 
 REQUESTS = {
     "owner.history": "HistoryRequest",
@@ -25,6 +26,7 @@ REQUESTS = {
     "history.read": "ReadRequest",
     "history.input": "InputRequest",
     "history.content": "ContentRequest",
+    "history.refusal": "RefusalRequest",
 }
 RESULTS = {
     "OwnerHistoryPage": "owner.history",
@@ -32,6 +34,7 @@ RESULTS = {
     "HistoricalRecordChunk": "history.read",
     "HistoricalJournalInputReference": "history.input",
     "HistoricalContentChunk": "history.content",
+    "HistoricalSubmissionRefusal": "history.refusal",
 }
 
 
@@ -91,6 +94,10 @@ def authorize_history_request(
     assert verified_custody is not None
     validate_owner_custody(verified_custody, expected_custodian=current_owner)
     _require(request["custody_id"] == verified_custody["id"], "historical custody substitution")
+    if method == "history.refusal":
+        _require(
+            request["origin"] == verified_custody["origin"], "historical refusal origin changed"
+        )
     if method in ("history.read", "history.input", "history.content"):
         material = request["handle"] if method == "history.content" else request["reference"]
         _require(
@@ -201,6 +208,17 @@ def validate_history_result(
                 or (identity["uri"], identity["digest"]) in (retained_readers or {}),
                 "historical journal input reader is not installed",
             )
+        elif kind == "HistoricalSubmissionRefusal":
+            refusal = result["nonacceptance"]
+            _require(
+                request["origin"] == result["origin"] == refusal["owner"]
+                and request["request_id"] == refusal["request_id"]
+                and request["resource"] == refusal["resource"],
+                "historical refusal identity substitution",
+            )
+            validate_submission_refusal(
+                refusal, result["problem"], retained_readers=retained_readers
+            )
         elif kind == "HistoricalRecordChunk":
             reference = request["reference"]
             validate_record_reference(
@@ -234,6 +252,55 @@ def validate_history_result(
             result["next_cursor"] is None or result["next_cursor"] != request["cursor"],
             "historical continuation made no progress",
         )
+
+
+def read_historical_refusal(
+    request: dict[str, Any],
+    *,
+    current_owner: dict[str, Any],
+    read_authorized: bool,
+    verified_custody: dict[str, Any],
+    verified_pairs: Mapping[tuple[str, str, bytes], bytes],
+    retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
+) -> dict[str, Any]:
+    """Read the original pair from an independently verified restoration index.
+
+    The custodian builds this index from its verified manifest, keyed by custody
+    descriptor digest, original request ID and canonical protected resource.
+    Missing entries can reflect the backup cut and never create a decision.
+    """
+    authorize_history_request(
+        "history.refusal",
+        request,
+        current_owner=current_owner,
+        read_authorized=read_authorized,
+        verified_custody=verified_custody,
+    )
+    key = (verified_custody["digest"], request["request_id"], canonical(request["resource"]))
+    data = verified_pairs.get(key)
+    if data is None:
+        raise ContractError("RETENTION_GAP")
+    pair = strict_json(data)
+    _require(
+        isinstance(pair, dict)
+        and set(pair) == {"nonacceptance", "problem"}
+        and canonical(pair) == data,
+        "invalid historical refusal custody bytes",
+    )
+    result = {
+        "format": "deployment-ops/owner-history/v1",
+        "kind": "HistoricalSubmissionRefusal",
+        "request": request,
+        "origin": verified_custody["origin"],
+        **pair,
+    }
+    validate_history_result(
+        result,
+        expected_request=request,
+        verified_custody=verified_custody,
+        retained_readers=retained_readers,
+    )
+    return result
 
 
 def validate_recovery_plan_origin(plan: dict[str, Any]) -> None:

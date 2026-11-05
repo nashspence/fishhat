@@ -736,6 +736,7 @@ def test_unknown_disposition_advances_only_with_exact_successful_native_recovery
                 id=uid("positive-native-recovery-operation"),
                 request_id=uid("positive-native-recovery-request"),
                 subject=plan["subject"],
+                plan_id=plan["id"],
                 plan_digest=plan["digest"],
                 state="succeeded",
                 effect_certainty="known",

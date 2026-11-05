@@ -34,7 +34,9 @@
         "kind": "app",
         "id": "demo-app"
       },
-      "expected_generation": 1
+      "expected_generation": 1,
+      "plan_id": "2d9eb8fe-ad81-579e-a6fa-bc2840660a56",
+      "claimed_actor": null
     }
   ],
   "receipt_export_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",

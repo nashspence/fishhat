@@ -35,7 +35,7 @@
             "digest"
           ],
           "additionalProperties": false,
-          "description": "Exact independently verified restoration manifest; its installed schema and content identify the complete retained record, input, hold, witness-key and reader closure. It is not a bearer capability."
+          "description": "Exact independently verified restoration manifest; its installed schema and content identify the complete retained record, immutable submission refusal and original Problem, input, hold, witness-key and reader closure. It is not a bearer capability."
         },
         "created_at": {
           "$ref": "common.schema.json#/$defs/Time"
@@ -560,6 +560,68 @@
       ],
       "additionalProperties": false,
       "description": "Immutable original command custody selected solely from the verified restoration index, never reconstructed from a new command or current schema. The reference owner and input owner equal origin; the input purpose is workflow-input and its workflow-journal binding has exactly the event command ID and workflow resource ID. Its digest equals the original signed acceptance body.command_digest. input_schema is the exact originally retained command schema closure and has an independently installed qualified reader; URI equality alone cannot select current semantics. Read full unchanged bytes through history.content using this same custody_id, verify digest, size, canonical encoding and original command/workflow identities, and validate under that exact installed schema before interpretation. Current permission and custody membership apply to lookup and every content chunk. This record grants only inspection, never execution, re-admission or old-epoch authority."
+    },
+    "RefusalRequest": {
+      "type": "object",
+      "properties": {
+        "custodian": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "custody_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "origin": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "resource": {
+          "$ref": "common.schema.json#/$defs/Resource"
+        },
+        "request_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        }
+      },
+      "required": [
+        "custodian",
+        "custody_id",
+        "origin",
+        "resource",
+        "request_id"
+      ],
+      "additionalProperties": false,
+      "description": "Look up the original durable submission refusal and its original Problem for one exact prior owner epoch, request and protected resource. The receiving custodian verifies restoration closure membership and current disclosure permission before every read. Absence, a backup predating the decision, or incomplete custody yields no nonacceptance proof: retain acceptance_unknown. This read never creates, replays or consumes an admission decision."
+    },
+    "HistoricalSubmissionRefusal": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner-history/v1"
+        },
+        "kind": {
+          "const": "HistoricalSubmissionRefusal"
+        },
+        "request": {
+          "$ref": "owner-history.schema.json#/$defs/RefusalRequest"
+        },
+        "origin": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "nonacceptance": {
+          "$ref": "records.schema.json#/$defs/SubmissionRefusal"
+        },
+        "problem": {
+          "$ref": "records.schema.json#/$defs/Problem"
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "request",
+        "origin",
+        "nonacceptance",
+        "problem"
+      ],
+      "additionalProperties": false,
+      "description": "Observed historical bytes from the verified restoration closure. Retain the exact original refusal and Problem, including original immutable submission fields and origin epoch. Only a matching original decision is evidence of nonacceptance in that epoch. Current execution and resubmission require independent admission."
     }
   }
 }

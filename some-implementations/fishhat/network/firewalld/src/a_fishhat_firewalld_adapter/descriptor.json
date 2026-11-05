@@ -46,7 +46,7 @@
     "network": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/network-adapter.schema.json",
-        "digest": "sha256:32600774cbd66f285cca3ffbed6541b59bc87aca9c9ca4ff7e417fc485d3a5dd"
+        "digest": "sha256:1ea7c6d4b8d3a4854db447ab2a5adb0ffbbb3ee6eb409f2fc029caeb3608a79e"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/network-adapter.schema.json#/$defs/Response",

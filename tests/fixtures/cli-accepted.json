@@ -47,7 +47,7 @@
         "epoch": "37de5c4a-33ee-55a5-adff-564fd3748ac8"
       },
       "kind": "acceptance",
-      "subject_digest": "sha256:49cd88a34bf890ae4fb6296c7d2a8406f3271d5955576b6994d39f0df91b8f39",
+      "subject_digest": "sha256:c6493807e66e693a8a61ec358a31a1471ce6e14fd66b3b9962f6110123894b0f",
       "workflow_id": null,
       "generation": 0,
       "state": "accepted",
@@ -55,8 +55,9 @@
       "evidence_digests": [],
       "created_at": "2026-10-17T00:00:00Z",
       "key_id": "test-owner",
-      "signature": "a3mF9dIuhxamrN5pZC1796KtI6wv+Yw63hxo88Yk2n4YoosbNEKYKFiuv0l7m3p+5C6e4EU0jcwjnMTQBDCdAQ=="
-    }
+      "signature": "uJoJ/kRKATGp7vGpF8LQ1km+3bau3AkEG3BVKGtEoc8nOzo1lUteot/yltj8LSEwOjzfZlHuavuQWRw+VJqZDg=="
+    },
+    "plan_id": "2d9eb8fe-ad81-579e-a6fa-bc2840660a56"
   },
   "problem": null
 }

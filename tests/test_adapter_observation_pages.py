@@ -199,6 +199,23 @@ def test_backup_limit_bounds_each_page_without_limiting_total_collection_extent(
     assert seen == objects
 
 
+@pytest.mark.parametrize("coverage", ["complete", "unknown"])
+def test_backup_observation_rejects_foreign_repository_objects(coverage):
+    query, reply = page("backup")
+    reply.update(coverage=coverage)
+    reply["output"]["objects"] = [
+        {
+            "handle": "object:one",
+            "repository": "another-repository",
+            "artifacts": [],
+            "completeness": "sealed",
+            "retrieval": "available",
+        }
+    ]
+    with pytest.raises(ContractError, match="BACKUP_REPOSITORY_SCOPE"):
+        check_response("backup", query, reply)
+
+
 def test_compute_limit_counts_all_top_level_collections_together():
     query, reply = page("compute")
     reply["output"] = {

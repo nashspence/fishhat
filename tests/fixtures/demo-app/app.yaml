@@ -47,6 +47,7 @@ datasets:
     native_format: synthetic-sql-and-files-v1
     writers:
     - database
+    - maintenance
     readers:
     - maintenance
     grant: demo-app-data

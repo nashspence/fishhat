@@ -23,7 +23,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey,
 
 from .bounds import Bounds, bounds
 from .handoffs import PHASES, validate_result_payload
-from .operations import _TERMINAL_STATES, validate_operation_plan
+from .operations import _OWNER_STATES, _TERMINAL_STATES, validate_operation_plan
 from .validation import ContractError, canonical, digest, validate, validate_plan
 from .witness import verify as verify_witness
 from .workflow_bindings import _binding_shape, _key, _predecessor, _verify_binding_custody
@@ -355,17 +355,42 @@ def _verify_plan(plan: JSON, keys: KeyRing) -> None:
     verify_witness(plan["witness"], key, plan["owner"], plan["digest"])
 
 
-def _known_outcome(previous: JSON | None, operation: JSON) -> None:
-    if previous is None or previous == operation:
+def _known_outcome(previous: JSON | None, operation: JSON, *, allow_repeat: bool = True) -> None:
+    """Check potentially nonadjacent observations against the installed owner state graph."""
+    if previous is None or (allow_repeat and previous == operation):
         return
     _require(
-        operation["id"] == previous["id"] and operation["generation"] > previous["generation"],
+        all(
+            operation[field] == previous[field]
+            for field in (
+                "id",
+                "owner",
+                "request_id",
+                "plan_id",
+                "plan_digest",
+                "subject",
+                "authenticated_principal",
+                "claimed_actor",
+                "created_at",
+            )
+        )
+        and operation["witness"]["workflow_id"] == previous["witness"]["workflow_id"]
+        and operation["generation"] > previous["generation"]
+        and operation["last_event"] >= previous["last_event"],
         "workflow evidence replaced or regressed a retained native Operation",
     )
-    _require(
-        previous["state"] not in _TERMINAL_STATES,
-        "workflow evidence replaced a retained terminal outcome",
-    )
+    state = previous["state"]
+    _require(state not in _TERMINAL_STATES, "workflow terminal child outcome cannot be replaced")
+    # The same state may have a later snapshot. Otherwise some number of legal
+    # transitions must connect the two observations, even after missed replies.
+    reachable = {state}
+    pending = [state]
+    while pending:
+        for successor in _OWNER_STATES[pending.pop()]:
+            if successor not in reachable:
+                reachable.add(successor)
+                pending.append(successor)
+    _require(operation["state"] in reachable, "workflow native Operation state regressed")
 
 
 def _selected_review(request: JSON, review: JSON) -> None:
@@ -1997,17 +2022,7 @@ class WorkflowMember(_JournalTarget):
                 == admission["body"]["authenticated_principal"],
                 "workflow child admission identity changed",
             )
-            previous = self.outcomes.get(key)
-            if previous is not None:
-                _require(
-                    operation["id"] == previous["id"]
-                    and operation["generation"] > previous["generation"],
-                    "workflow child observation did not advance exact operation",
-                )
-                _require(
-                    previous["state"] not in _TERMINAL_STATES,
-                    "workflow terminal child outcome cannot be replaced",
-                )
+            _known_outcome(self.outcomes.get(key), operation, allow_repeat=False)
             if operation["result_handle"] is not None:
                 data = self.native.result_payload(operation)
                 _require(

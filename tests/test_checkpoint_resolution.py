@@ -158,7 +158,7 @@ def fixture(count=2, *, shared=True, recovery_points=None):
         artifacts = [a for dataset in group for a in snapshots[dataset]["artifacts"]]
         inputs = {
             "scope": deepcopy(backup["scope"]),
-            "repository": "repository:original",
+            "repository": backup["scope"]["handle"],
             "object": f"backup:object-{index:04d}",
             "artifacts": artifacts,
         }
@@ -224,7 +224,8 @@ def test_fresh_owner_resolves_exact_historical_inputs():
     assert len(recovered.backup_objects) == 1
     assert set(recovered.dataset_backups) == set(snapshots)
     assert set(recovered.dataset_backups.values()) == set(recovered.backup_objects)
-    assert next(iter(recovered.backup_objects.values()))["repository"] == "repository:original"
+    repository = original["backup_executor"]["scope"]["handle"]
+    assert next(iter(recovered.backup_objects.values()))["repository"] == repository
     assert checkpoint == original
     # A second reader receives independently decoded records, without client state or alias lookup.
     restored = strict_json(canonical(checkpoint))
@@ -232,6 +233,22 @@ def test_fresh_owner_resolves_exact_historical_inputs():
         resolve_checkpoint(restored, **{**context, "records": dict(context["records"])})
         == recovered
     )
+
+
+def test_resolved_backup_object_joins_lifecycle_repository_scope():
+    from tests.test_lifecycle_evidence import decode, prepare, prepared_inputs
+
+    checkpoint, context, _ = fixture()
+    resolved = resolve_checkpoint(checkpoint, **context)
+    obj = next(iter(resolved.backup_objects.values()))
+    executor = checkpoint["backup_executor"]
+    lifecycle = prepared_inputs("backend.prune", count=1)
+    selection = lifecycle["current"]["selection"]
+    selection.update(executor=executor, repository=obj["repository"])
+    target = selection["objects"][0]
+    target["object"] = obj
+    target["native_identity"]["scope"] = executor["scope"]
+    assert decode(prepare(lifecycle))["context"]["selection"] == selection
 
 
 @pytest.mark.parametrize("field", ["capture_digest", "backup_digest", "verification_digest"])

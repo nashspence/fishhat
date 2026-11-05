@@ -11,6 +11,21 @@
         "request_id": {
           "$ref": "common.schema.json#/$defs/UUID"
         },
+        "plan_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "claimed_actor": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "plan_digest": {
           "$ref": "common.schema.json#/$defs/Digest"
         },
@@ -103,6 +118,8 @@
       "required": [
         "owner",
         "request_id",
+        "plan_id",
+        "claimed_actor",
         "plan_digest",
         "subject_digest",
         "workflow_id",
@@ -116,7 +133,7 @@
         "expected_generation"
       ],
       "additionalProperties": false,
-      "description": "In-memory/client-supplied request delivery reference. Persistence is optional. Acceptance knowledge is separate from owner execution state, and imported client data is not owner acceptance evidence."
+      "description": "In-memory/client-supplied request delivery reference. Persistence is optional. Acceptance knowledge is separate from owner execution state, and imported client data is not owner acceptance evidence. Store the exact reviewed plan_id and caller-supplied claimed_actor (including null) for submission and decision matching. Confirm explicitly when submitting. The current driver term is supplied only for admission."
     },
     "Closeout": {
       "type": "object",

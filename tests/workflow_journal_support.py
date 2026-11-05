@@ -890,9 +890,11 @@ class NativeOwner:
         result = operation()
         result.update(
             id=uid("native-operation-" + child["request_id"]),
+            claimed_actor=submission["claimed_actor"],
             request_id=child["request_id"],
             owner=deepcopy(self.owner),
             subject=deepcopy(plan["subject"]),
+            plan_id=plan["id"],
             plan_digest=plan["digest"],
             generation=0,
             state="accepted",
@@ -943,6 +945,7 @@ class NativeOwner:
             request_id=child["request_id"],
             owner=deepcopy(self.owner),
             subject=deepcopy(plan["subject"]),
+            plan_id=plan["id"],
             plan_digest=plan["digest"],
             generation=1,
             state="quarantined" if unknown else "succeeded",

@@ -741,6 +741,9 @@
         "subject": {
           "$ref": "actions.schema.json"
         },
+        "plan_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
         "plan_digest": {
           "type": "string",
           "minLength": 71,
@@ -961,6 +964,7 @@
         "request_id",
         "owner",
         "subject",
+        "plan_id",
         "plan_digest",
         "generation",
         "state",
@@ -975,7 +979,7 @@
         "result_handle"
       ],
       "additionalProperties": false,
-      "description": "An exact request accepted by a local management program. Its execution state and effect certainty answer different questions; failed, cancelled or quarantined work can still retain effects and resource holds. Succeeded requires known effect certainty in every representation, including pages and transferred snapshots. The witness owner identity and epoch equal this owner; shared semantic validation enforces that join. Signature authentication, record-digest verification, current authority and native outcome verification remain independently required receiving boundaries. The exact retained Plan is identified by owner and plan_digest and remains readable despite admission expiry while this Operation requires accepted replay or recovery custody. The human caller can disconnect without erasing the accepted responsibility. The witness subject_digest is the digest of the complete canonical Operation object with only witness omitted; witness owner, state and generation equal the enclosing snapshot. Kind is acceptance only for accepted and effect for running, waiting and every terminal state; an effect witness may explicitly report uncertainty. These deterministic joins are required in every representation and do not authenticate the signing key or establish native truth. Schema and selected-adapter producer actions require a non-null committed result before succeeded. Native effect completion without that custody remains unresolved; terminal success is never an intermediate promise to attach output later. Independently installed recovery compatibility may admit an exact prior result schema with the same action-owned URI; complete payload verification against its pinned reader remains mandatory. The issuing owner tool must be listed for the Subject action in actions.json. Effect executors are checked against their own reviewed scope.",
+      "description": "An exact request accepted by a local management program. Its execution state and effect certainty answer different questions; failed, cancelled or quarantined work can still retain effects and resource holds. Succeeded requires known effect certainty in every representation, including pages and transferred snapshots. The witness owner identity and epoch equal this owner; shared semantic validation enforces that join. Signature authentication, record-digest verification, current authority and native outcome verification remain independently required receiving boundaries. The exact retained Plan is identified by owner and plan_digest and remains readable despite admission expiry while this Operation requires accepted replay or recovery custody. The human caller can disconnect without erasing the accepted responsibility. The witness subject_digest is the digest of the complete canonical Operation object with only witness omitted; witness owner, state and generation equal the enclosing snapshot. Kind is acceptance only for accepted and effect for running, waiting and every terminal state; an effect witness may explicitly report uncertainty. These deterministic joins are required in every representation and do not authenticate the signing key or establish native truth. Schema and selected-adapter producer actions require a non-null committed result before succeeded. Native effect completion without that custody remains unresolved; terminal success is never an intermediate promise to attach output later. Independently installed recovery compatibility may admit an exact prior result schema with the same action-owned URI; complete payload verification against its pinned reader remains mandatory. The issuing owner tool must be listed for the Subject action in actions.json. Effect executors are checked against their own reviewed scope. Preserve the original submitted plan_id and claimed_actor unchanged, including null. Receivers match both when resolving a Delivery.",
       "allOf": [
         {
           "if": {
@@ -1227,62 +1231,7 @@
         "source": {
           "anyOf": [
             {
-              "type": "object",
-              "properties": {
-                "source_id": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 24,
-                  "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
-                },
-                "repository": {
-                  "type": "object",
-                  "properties": {
-                    "instance": {
-                      "type": "string",
-                      "format": "uuid",
-                      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-                    },
-                    "repository_id": {
-                      "type": "integer",
-                      "minimum": 1,
-                      "maximum": 9007199254740991
-                    },
-                    "name": {
-                      "type": "string",
-                      "minLength": 3,
-                      "maxLength": 160,
-                      "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?![\\s\\S])"
-                    }
-                  },
-                  "required": [
-                    "instance",
-                    "repository_id",
-                    "name"
-                  ],
-                  "additionalProperties": false
-                },
-                "commit": {
-                  "$ref": "common.schema.json#/$defs/Commit"
-                },
-                "entrypoint": {
-                  "$ref": "common.schema.json#/$defs/GitTreePath"
-                },
-                "closure_digest": {
-                  "type": "string",
-                  "minLength": 71,
-                  "maxLength": 71,
-                  "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
-                }
-              },
-              "required": [
-                "source_id",
-                "repository",
-                "commit",
-                "entrypoint",
-                "closure_digest"
-              ],
-              "additionalProperties": false
+              "$ref": "common.schema.json#/$defs/Source"
             },
             {
               "type": "null"
@@ -2652,10 +2601,8 @@
           "const": "Release"
         },
         "digest": {
-          "type": "string",
-          "minLength": 71,
-          "maxLength": 71,
-          "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
+          "$ref": "common.schema.json#/$defs/Digest",
+          "description": "SHA-256 of the RFC 8785 JCS bytes of this complete application Release after omitting only its top-level digest. Every source and artifact field and every array participates. Verify this digest against the independently reviewed release identity before use."
         },
         "app_instance": {
           "type": "string",
@@ -2666,64 +2613,10 @@
         "sources": {
           "type": "array",
           "items": {
-            "type": "object",
-            "properties": {
-              "source_id": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 24,
-                "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
-              },
-              "repository": {
-                "type": "object",
-                "properties": {
-                  "instance": {
-                    "type": "string",
-                    "format": "uuid",
-                    "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-                  },
-                  "repository_id": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "maximum": 9007199254740991
-                  },
-                  "name": {
-                    "type": "string",
-                    "minLength": 3,
-                    "maxLength": 160,
-                    "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?![\\s\\S])"
-                  }
-                },
-                "required": [
-                  "instance",
-                  "repository_id",
-                  "name"
-                ],
-                "additionalProperties": false
-              },
-              "commit": {
-                "$ref": "common.schema.json#/$defs/Commit"
-              },
-              "entrypoint": {
-                "$ref": "common.schema.json#/$defs/GitTreePath"
-              },
-              "closure_digest": {
-                "type": "string",
-                "minLength": 71,
-                "maxLength": 71,
-                "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
-              }
-            },
-            "required": [
-              "source_id",
-              "repository",
-              "commit",
-              "entrypoint",
-              "closure_digest"
-            ],
-            "additionalProperties": false
+            "$ref": "common.schema.json#/$defs/Source"
           },
-          "minItems": 1
+          "minItems": 1,
+          "description": "Strictly increasing unsigned byte order of the complete JCS Source objects. Duplicate entries are invalid. Each source closure must be verified from its own pinned Git tree and complete approved selection before admission."
         },
         "profile_digest": {
           "type": "string",
@@ -2752,7 +2645,8 @@
             "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
           },
           "minItems": 0,
-          "uniqueItems": true
+          "uniqueItems": true,
+          "description": "Strictly increasing ASCII digest order. Producers order this set before computing the release digest. Readers reject duplicate or out-of-order entries."
         },
         "hook_closure": {
           "type": "array",
@@ -2763,7 +2657,8 @@
             "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
           },
           "minItems": 0,
-          "uniqueItems": true
+          "uniqueItems": true,
+          "description": "Strictly increasing ASCII digest order. Producers order this set before computing the release digest. Readers reject duplicate or out-of-order entries."
         },
         "recovery_closure": {
           "type": "array",
@@ -2774,7 +2669,8 @@
             "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
           },
           "minItems": 0,
-          "uniqueItems": true
+          "uniqueItems": true,
+          "description": "Strictly increasing ASCII digest order. Producers order this set before computing the release digest. Readers reject duplicate or out-of-order entries."
         },
         "artifacts": {
           "type": "object",
@@ -3395,62 +3291,7 @@
           "additionalProperties": false
         },
         "host_source": {
-          "type": "object",
-          "properties": {
-            "source_id": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 24,
-              "pattern": "^[a-z](?:[a-z0-9-]{0,22}[a-z0-9])?(?![\\s\\S])"
-            },
-            "repository": {
-              "type": "object",
-              "properties": {
-                "instance": {
-                  "type": "string",
-                  "format": "uuid",
-                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-                },
-                "repository_id": {
-                  "type": "integer",
-                  "minimum": 1,
-                  "maximum": 9007199254740991
-                },
-                "name": {
-                  "type": "string",
-                  "minLength": 3,
-                  "maxLength": 160,
-                  "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?![\\s\\S])"
-                }
-              },
-              "required": [
-                "instance",
-                "repository_id",
-                "name"
-              ],
-              "additionalProperties": false
-            },
-            "commit": {
-              "$ref": "common.schema.json#/$defs/Commit"
-            },
-            "entrypoint": {
-              "$ref": "common.schema.json#/$defs/GitTreePath"
-            },
-            "closure_digest": {
-              "type": "string",
-              "minLength": 71,
-              "maxLength": 71,
-              "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
-            }
-          },
-          "required": [
-            "source_id",
-            "repository",
-            "commit",
-            "entrypoint",
-            "closure_digest"
-          ],
-          "additionalProperties": false
+          "$ref": "common.schema.json#/$defs/Source"
         },
         "app_id": {
           "type": "string",
@@ -5042,6 +4883,21 @@
         "request_id": {
           "$ref": "common.schema.json#/$defs/UUID"
         },
+        "plan_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "claimed_actor": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "plan_digest": {
           "$ref": "common.schema.json#/$defs/Digest"
         },
@@ -5075,13 +4931,15 @@
         "owner",
         "request_id",
         "resource",
+        "plan_id",
+        "claimed_actor",
         "plan_digest",
         "subject_digest",
         "workflow_id",
         "reason"
       ],
       "additionalProperties": false,
-      "description": "An authenticated operation.submit refusal for this exact original submission. After authorizing disclosure of the request and resource, the owner serializes with native acceptance, verifies the complete retained epoch index, and durably closes this previously unaccepted request ID against all later acceptance before responding. A matching retry returns the original refusal after current read authorization. Compare all canonical operation.submit params except driver_term, which governs only a fresh decision. A stale term alone cannot close an unused request ID or issue a durable refusal. A changed immutable submission conflicts. An unavailable index, ambiguous outcome, denied disclosure, already accepted identity, or failed commit cannot issue this proof. Neither an ordinary Problem nor a not-found lookup proves nonacceptance. The accompanying Problem matches the owner, resource and reason, with retry none. The receiver authenticates the responding owner, correlates the original SSH message and matches every refusal identity to its original delivery. A copied JSON value supplies no independent authority. Retain this refusal and its matching Problem for the owner epoch. operation.get can return them unchanged to a currently authorized reader of the original protected resource using only the original owner and request ID. New submission permission and original client state are unnecessary. No lookup creates a decision."
+      "description": "An authenticated operation.submit refusal for this exact original submission. After authorizing disclosure of the request and resource, the owner serializes with native acceptance, verifies the complete retained epoch index, and durably closes this previously unaccepted request ID against all later acceptance before responding. A matching retry returns the original refusal after current read authorization. Compare all canonical operation.submit params except driver_term, which governs only a fresh decision. A stale term alone cannot close an unused request ID or issue a durable refusal. A changed immutable submission conflicts. An unavailable index, ambiguous outcome, denied disclosure, already accepted identity, or failed commit cannot issue this proof. Neither an ordinary Problem nor a not-found lookup proves nonacceptance. The accompanying Problem matches the owner, resource and reason, with retry none. The receiver authenticates the responding owner, correlates the original SSH message and matches every refusal identity to its original delivery. A copied JSON value supplies no independent authority. Retain this refusal and its matching Problem for the owner epoch. operation.get can return them unchanged to a currently authorized reader of the original protected resource using only the original owner and request ID. New submission permission and original client state are unnecessary. No lookup creates a decision. Preserve the original submitted plan_id and claimed_actor unchanged, including null. Receivers match both when resolving a Delivery."
     }
   },
   "x-fishhat-contract-dependencies": [

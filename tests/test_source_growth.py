@@ -42,7 +42,7 @@ def app_source(count, *, shared):
     for index in range(count):
         name = f"entry-{index:05d}"
         app["components"][name] = {**component, "native": {"unit": name + ".container"}}
-        app["datasets"][name] = {**deepcopy(template), "writers": [name]}
+        app["datasets"][name] = {**deepcopy(template), "writers": [name, "maintenance"]}
         app["secret_bindings"][name] = {
             **app["secret_bindings"]["database-password"],
             "component": name,

@@ -91,6 +91,8 @@ def delivery(value):
         resource=copy.deepcopy(value["subject"]["resource"]),
         expected_generation=value["generation"],
         workflow_id=value["witness"]["workflow_id"],
+        plan_id=value["plan_id"],
+        claimed_actor=value["claimed_actor"],
     )
     return prepare_delivery(template, request_id=value["request_id"])
 
@@ -102,7 +104,8 @@ def test_authenticated_receipt_cannot_claim_action_of_another_owner_tool():
     with pytest.raises(ContractError, match="owner tool"):
         validate_operation(value)
     assert (
-        submit_once(delivery(value), lambda _: value)["delivery"]["state"] == "acceptance_unknown"
+        submit_once(delivery(value), lambda _: value, confirmed=True)["delivery"]["state"]
+        == "acceptance_unknown"
     )
 
 
@@ -182,7 +185,7 @@ def test_all_current_operation_paths_reject_the_same_invalid_record(change):
     reference.update(size=len(data), digest="sha256:" + hashlib.sha256(data).hexdigest())
     with pytest.raises(ContractError):
         validate_record_payload(reference, data, expected_owner=original["owner"])
-    submission = submit_once(delivery(original), lambda _: value)
+    submission = submit_once(delivery(original), lambda _: value, confirmed=True)
     assert submission["exit_code"] == 8
     assert submission["delivery"]["state"] == "acceptance_unknown"
     assert submission["owner_receipt"] is None
@@ -196,7 +199,7 @@ def test_valid_known_success_preserves_exact_operation_across_all_read_forms():
     validate_cli(envelope(value))
     validate_cli_result(work_page("OperationPage", [value]))
     assert complete_record(RecordSnapshot(value, U)) == value
-    assert submit_once(delivery(value), lambda _: value)["owner_receipt"] == value
+    assert submit_once(delivery(value), lambda _: value, confirmed=True)["owner_receipt"] == value
 
 
 def producer(action):

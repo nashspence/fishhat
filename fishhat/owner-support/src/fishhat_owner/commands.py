@@ -66,13 +66,25 @@ def workflow_apply_params(data: bytes, expected_owner: dict[str, Any]) -> dict[s
 
 def work_list_params(data: bytes, method: str, expected_owner: dict[str, Any]) -> dict[str, Any]:
     """Decode a direct list request using the same closed selector as the SSH method."""
-    request = strict_json(data)
-    if method not in ("operation.list", "workflow.list") or not isinstance(request, dict):
+    if method not in ("operation.list", "workflow.list"):
         raise ContractError("expected an operation or workflow list request")
-    if request.get("method") != method:
-        raise ContractError("list request method mismatch")
-    validate("ssh-request.schema.json", request)
-    params: dict[str, Any] = request["params"]
+    params = _read_envelope(data, method)
     if params["owner"] != expected_owner:
         raise ContractError("list request requires the exact local owner epoch")
+    return params
+
+
+def resource_observation_params(data: bytes) -> dict[str, Any]:
+    """Preserve the same exact selection as the resources.observe SSH request."""
+    return _read_envelope(data, "resources.observe")
+
+
+def _read_envelope(data: bytes, method: str) -> dict[str, Any]:
+    request = strict_json(data)
+    if not isinstance(request, dict):
+        raise ContractError("expected request envelope")
+    if request.get("method") != method:
+        raise ContractError("request method mismatch")
+    validate("ssh-request.schema.json", request)
+    params: dict[str, Any] = request["params"]
     return params

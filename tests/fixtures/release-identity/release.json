@@ -1,0 +1,37 @@
+{
+  "format": "deployment-ops/record/v1",
+  "kind": "Release",
+  "app_instance": "prod:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "sources": [
+    {
+      "source_id": "app",
+      "repository": {
+        "instance": "00000000-0000-4000-8000-000000000001",
+        "repository_id": 1,
+        "name": "example/app"
+      },
+      "commit": "7748c7b4c0892d818aa63ff5f8e34bac8ab83fc4",
+      "entrypoint": "app.yaml",
+      "closure_digest": "sha256:e3ea7a715d1275888dd65e2669fff5398a7f6a6811668d6b8a1cbf5916055087"
+    }
+  ],
+  "profile_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "boundary_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "bindings_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "secret_receipts": [],
+  "hook_closure": [
+    "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+  ],
+  "recovery_closure": [],
+  "artifacts": {
+    "native": {
+      "digest": "sha256:306c6ca7407560340797866e077e053627ad409277d1b9da58106fce4cf717cb",
+      "media_type": "application/octet-stream",
+      "size_bytes": 17
+    }
+  },
+  "native_input_digest": "sha256:306c6ca7407560340797866e077e053627ad409277d1b9da58106fce4cf717cb",
+  "adapter_artifact_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "digest": "sha256:a7599b86ef3ba8ae61a05c47c90ce0d70602753f08eece09c6f92316d7512b24"
+}
