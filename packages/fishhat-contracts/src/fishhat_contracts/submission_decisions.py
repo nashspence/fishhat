@@ -95,6 +95,7 @@ class StandaloneDecisions:
                 and (not closing or resource == params["resource"])
             ):
                 raise ContractError("original protected Plan identity changed")
+            result: JSON
             if closing:
                 refusal = {
                     k: v for k, v in submission.items() if k not in ("driver_term", "confirmed")

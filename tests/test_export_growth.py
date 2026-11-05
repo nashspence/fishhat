@@ -27,7 +27,7 @@ from scripts.project_policy import ROOT
 from tests.adapter_support import INCARNATION, OWNER, D, contract_versions, identifier
 from tests.linear_support import assert_linear, measure
 from tests.source_target_support import host_target
-from tests.test_adapter_handoffs import handoff, invocation_for, response_for
+from tests.test_adapter_handoffs import capture_identity, handoff, invocation_for, response_for
 from tests.test_bootstrap import records
 
 CHECK_PURPOSE = {
@@ -371,9 +371,13 @@ def registry_call(name, count):
         ), lambda result: result == instance
     if name in {"authorize_request", "authorize_invocation"}:
         registry, request, invocation, _ = capture(count)
+        approved_capture = capture_identity(scope)
         if name == "authorize_invocation":
             return lambda: registry.authorize_invocation(
-                "capture", invocation, owner_approved=True
+                "capture",
+                invocation,
+                owner_approved=True,
+                expected_capture_identity=approved_capture,
             ), lambda result: result["id"] == "selected"
         query = {
             "contract": request["contract"],
@@ -381,7 +385,12 @@ def registry_call(name, count):
             "input": {"scope": scope, "invocation": invocation},
         }
         return lambda: registry.authorize_request(
-            "selected", "capture", query, owner_approved=True, invocation=invocation
+            "selected",
+            "capture",
+            query,
+            owner_approved=True,
+            invocation=invocation,
+            expected_capture_identity=approved_capture,
         ), lambda result: result["id"] == "selected"
     if name == "authorize":
         return lambda: registry.authorize(
