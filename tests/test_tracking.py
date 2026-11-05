@@ -593,16 +593,24 @@ class Noninterference(unittest.TestCase):
         for workflow_id, term in ((None, None), (str(uuid.uuid4()), 5)):
             delivery = prepare_delivery({**self.template, "workflow_id": workflow_id})
             expected = {
-                key: delivery[key] for key in (
-                    "owner", "request_id", "plan_id", "plan_digest", "subject_digest",
-                    "claimed_actor", "workflow_id",
+                key: delivery[key]
+                for key in (
+                    "owner",
+                    "request_id",
+                    "plan_id",
+                    "plan_digest",
+                    "subject_digest",
+                    "claimed_actor",
+                    "workflow_id",
                 )
             }
             transport = Mock(return_value=None)
             with self.assertRaises(ContractError):
                 submit_once(delivery, transport, confirmed=False, driver_term=term)
             with self.assertRaises(ContractError):
-                submit_once(delivery, transport, confirmed=True, driver_term=1 if term is None else None)
+                submit_once(
+                    delivery, transport, confirmed=True, driver_term=1 if term is None else None
+                )
             transport.assert_not_called()
             submit_once(delivery, transport, confirmed=True, driver_term=term)
             transport.assert_called_once_with({**expected, "confirmed": True, "driver_term": term})
@@ -760,7 +768,16 @@ class Noninterference(unittest.TestCase):
 
     def test_positive_nonacceptance_is_bound_to_the_exact_submission(self):
         d = prepare_delivery(self.template)
-        fields = ("owner", "resource", "request_id", "plan_id", "plan_digest", "subject_digest", "workflow_id", "claimed_actor")
+        fields = (
+            "owner",
+            "resource",
+            "request_id",
+            "plan_id",
+            "plan_digest",
+            "subject_digest",
+            "workflow_id",
+            "claimed_actor",
+        )
         refusal = {key: d[key] for key in fields}
         refusal.update(kind="SubmissionRefusal", reason="PLAN_EXPIRED")
         problem = {

@@ -654,7 +654,11 @@ def test_historical_refusal_requires_current_scoped_custody_and_preserves_origin
     # A client with the original uncertain delivery verifies both independent joins.
     from tests.test_operation_semantics import delivery
 
-    uncertain = {**delivery(original), "request_id": query["request_id"], "state": "acceptance_unknown"}
+    uncertain = {
+        **delivery(original),
+        "request_id": query["request_id"],
+        "state": "acceptance_unknown",
+    }
     validate_history_result(result, expected_request=query, verified_custody=custody)
     validate_submission_refusal(result["nonacceptance"], result["problem"], uncertain)
     with pytest.raises(ContractError, match="original delivery"):

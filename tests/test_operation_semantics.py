@@ -104,7 +104,8 @@ def test_authenticated_receipt_cannot_claim_action_of_another_owner_tool():
     with pytest.raises(ContractError, match="owner tool"):
         validate_operation(value)
     assert (
-        submit_once(delivery(value), lambda _: value, confirmed=True)["delivery"]["state"] == "acceptance_unknown"
+        submit_once(delivery(value), lambda _: value, confirmed=True)["delivery"]["state"]
+        == "acceptance_unknown"
     )
 
 

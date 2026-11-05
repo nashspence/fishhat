@@ -392,7 +392,8 @@ def test_retained_terminal_child_cannot_be_replaced_by_a_new_signed_outcome(jour
     def signed_state(operation, destination, generation, last_event=None):
         changed = deepcopy(operation)
         changed.update(
-            state=destination, generation=generation,
+            state=destination,
+            generation=generation,
             last_event=generation if last_event is None else last_event,
         )
         changed["effect_certainty"] = "unknown" if destination == "quarantined" else "known"

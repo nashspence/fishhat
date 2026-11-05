@@ -46,15 +46,24 @@ def test_pinned_git_source_and_release_identity(tmp_path):
         blobs.append(mode + b" blob " + oid + b"\t" + path + b"\n")
     tree = git("mktree", data=b"".join(blobs)).strip()
     actor = b"Fixture <fixture@example.invalid> 1000000000 +0000"
-    commit = git(
-        "hash-object",
-        "-w",
-        "-t",
-        "commit",
-        "--stdin",
-        data=b"tree " + tree + b"\nauthor " + actor + b"\ncommitter " + actor
-        + b"\n\nsource identity vector\n",
-    ).decode().strip()
+    commit = (
+        git(
+            "hash-object",
+            "-w",
+            "-t",
+            "commit",
+            "--stdin",
+            data=b"tree "
+            + tree
+            + b"\nauthor "
+            + actor
+            + b"\ncommitter "
+            + actor
+            + b"\n\nsource identity vector\n",
+        )
+        .decode()
+        .strip()
+    )
     release = json.loads((FIXTURES / "release-identity/release.json").read_bytes())
     source = release["sources"][0]
     assert commit == source["commit"]
