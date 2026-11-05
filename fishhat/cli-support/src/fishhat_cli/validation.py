@@ -8,8 +8,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from fishhat_contracts.readiness import validate_readiness
 from fishhat_contracts.validation import (
-    MAX_BYTES,
     SCHEMAS,
     ContractError,
     strict_json,
@@ -34,7 +34,12 @@ def build_parser(tool: str) -> argparse.ArgumentParser:
     check = commands.add_parser("validate", help="Validate local source data without side effects")
     check.add_argument("path", type=Path)
     check.add_argument("--schema", choices=sorted(SCHEMAS), default="source.schema.json")
-    check.add_argument("--definition")
+    check.add_argument("--definition", help="Required for collections of named record types")
+    check.add_argument(
+        "--capacity-bytes",
+        type=int,
+        help="Reject a complete input larger than this local byte capacity",
+    )
     check.add_argument("--catalogue", type=Path)
     check.add_argument("--json", action="store_true")
     return parser
@@ -55,19 +60,33 @@ def main(tool: str, argv: list[str] | None = None) -> int:
         try:
 
             def load(path: Path) -> Any:
+                capacity = args.capacity_bytes
+                if capacity is not None and capacity < 1:
+                    raise ContractError("invalid input capacity")
                 with path.open("rb") as stream:
-                    data = stream.read(MAX_BYTES + 1)
-                if len(data) > MAX_BYTES:
-                    raise ContractError("input size limit")
+                    if capacity is None:
+                        data = stream.read()
+                    else:
+                        buffer = bytearray()
+                        while chunk := stream.read(min(65536, capacity + 1 - len(buffer))):
+                            buffer.extend(chunk)
+                            if len(buffer) > capacity:
+                                raise ContractError("input capacity exceeded")
+                        data = bytes(buffer)
                 return (
                     strict_yaml(data.decode("utf-8"))
                     if path.suffix in (".yaml", ".yml")
-                    else strict_json(data)
+                    else strict_json(data, max_bytes=len(data))
                 )
 
             data = load(args.path)
-            validate(args.schema, data, args.definition)
-            if args.schema == "source.schema.json" and args.definition is None:
+            if args.schema == "readiness.schema.json" and args.definition is None:
+                validate_readiness(data)
+            else:
+                validate(args.schema, data, args.definition)
+            if args.schema == "source.schema.json" and (
+                args.definition is None or args.definition in {"Domain", "Host", "App"}
+            ):
                 cat = load(args.catalogue) if args.catalogue else None
                 if data.get("kind") == "Domain":
                     validate_domain(data)

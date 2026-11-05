@@ -12,6 +12,7 @@ from collections.abc import Callable
 from threading import Lock
 from typing import Any
 
+from .discovery import admission_contract, owner_contract_schemas, require_admission_contract
 from .operations import (
     operation_matches_delivery,
     submission_replay_identity,
@@ -27,6 +28,7 @@ class StandaloneDecisions:
     def __init__(self, owner: JSON) -> None:
         validate("common.schema.json", owner, "Owner")
         self._owner = copy.deepcopy(owner)
+        self._installed_contract = admission_contract(owner_contract_schemas())
         self._decisions: dict[str, tuple[bytes, JSON, JSON, str]] = {}
         self._lock = Lock()
 
@@ -40,6 +42,7 @@ class StandaloneDecisions:
         can_close: Callable[[str, JSON], bool],
         reviewed_plan: Callable[[], JSON],
         admit: Callable[[], JSON],
+        admission_pin: str | None = None,
     ) -> JSON:
         """Select exact replay, fresh native admission, or closure under shared exclusion.
 
@@ -87,6 +90,7 @@ class StandaloneDecisions:
                 raise ContractError("current scoped read permission required")
             if closing and can_close(principal, copy.deepcopy(resource)) is not True:
                 raise ContractError("current scoped cancellation permission required")
+            require_admission_contract(admission_pin, self._installed_contract)
             if not (
                 plan["owner"] == self._owner
                 and plan["id"] == params["plan_id"]

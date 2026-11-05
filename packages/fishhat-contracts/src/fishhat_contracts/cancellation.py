@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from .bounds import Bounds, bounds
+from .discovery import admission_contract, owner_contract_schemas, require_admission_contract
 from .operations import _TERMINAL_STATES
 from .validation import ContractError, digest, validate
 
@@ -158,6 +159,7 @@ class CancellationJournal:
     ) -> None:
         validate("common.schema.json", owner, "Owner")
         self._owner = copy.deepcopy(owner)
+        self._installed_contract = admission_contract(owner_contract_schemas())
         self._custodian = copy.deepcopy(owner if custodian is None else custodian)
         validate("common.schema.json", self._custodian, "Owner")
         self._custody = copy.deepcopy(verified_custody)
@@ -246,6 +248,7 @@ class CancellationJournal:
         cancel_authorized: bool,
         target: dict[str, Any] | None,
         now: str,
+        admission_pin: str | None = None,
         cancellation_supported: bool = True,
     ) -> dict[str, Any]:
         """Record an independently authorized decision, or replay its exact original.
@@ -266,6 +269,7 @@ class CancellationJournal:
         if previous is not None:
             _require(_request(previous) == request, "CONFLICT")
             return copy.deepcopy(previous)
+        require_admission_contract(admission_pin, self._installed_contract)
         _require(cancel_authorized is True, "PERMISSION_DENIED")
         _require(target is not None, "NOT_FOUND")
         assert target is not None

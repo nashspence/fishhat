@@ -234,6 +234,19 @@ def fixture(count=2, *, shared=True, recovery_points=None):
     return checkpoint, context, snapshots
 
 
+@pytest.mark.parametrize("name", ["a" * 25, "data-"])
+def test_checkpoint_dataset_keys_match_source_and_capture_names(name):
+    checkpoint, _, _ = fixture(1)
+    selection = next(iter(checkpoint["datasets"].values()))
+    checkpoint["datasets"] = {"a" * 24: selection}
+    seal(checkpoint)
+    validate_checkpoint(checkpoint)
+    checkpoint["datasets"] = {name: selection}
+    seal(checkpoint)
+    with pytest.raises(ContractError):
+        validate_checkpoint(checkpoint)
+
+
 def test_fresh_owner_resolves_exact_historical_inputs():
     checkpoint, context, snapshots = fixture()
     original = deepcopy(checkpoint)

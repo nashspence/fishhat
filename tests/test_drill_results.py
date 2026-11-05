@@ -81,6 +81,7 @@ def test_drill_retains_original_checkpoint_and_exact_evidence():
         accepted_procedures=procedures,
         expected_production_binding=value["production_binding"],
         expected_target_binding=value["target_binding"],
+        expected_dataset_targets=deepcopy(value["dataset_targets"]),
     )
     assert validate_result_payload(deepcopy(record), data) == value
     assert canonical(value["checkpoint"]) == original
@@ -166,6 +167,51 @@ def test_drill_rejects_incomplete_or_substituted_evidence(change):
         validate_drill_result(
             value, operation=record, checkpoint_inputs=inputs, accepted_procedures=procedures
         )
+
+
+@pytest.mark.parametrize(
+    "second_path",
+    ["/demo/data", "/demo/data/nested", "/demo"],
+    ids=["same", "descendant", "ancestor"],
+)
+def test_separate_drill_hooks_cannot_overlap_dataset_roots(second_path):
+    record, value, inputs, procedures = pair(2)
+    for name, target in value["dataset_targets"].items():
+        target["path"] = "/demo/data" if name == "dataset-0000" else second_path
+    for entry in value["restorations"] + value["verifications"]:
+        for name, handle in entry["request"]["dataset_handles"].items():
+            handle["path"] = value["dataset_targets"][name]["path"]
+    refresh_evidence(value)
+    with pytest.raises(ContractError, match="overlap"):
+        validate_drill_result(
+            value, operation=record, checkpoint_inputs=inputs, accepted_procedures=procedures
+        )
+
+
+def test_drill_hook_cannot_write_into_another_invocations_dataset():
+    record, value, _, _ = pair(2)
+    other = value["dataset_targets"]["dataset-0001"]["path"]
+    value["verifications"][0]["request"]["output_directory"] = other + "/results"
+    refresh_evidence(value)
+    with pytest.raises(ContractError, match="overlaps a dataset target"):
+        validate_drill_result(value, operation=record)
+
+
+def test_distinct_drill_paths_cannot_alias_native_datasets_or_change_custody():
+    record, value, inputs, _ = pair(2)
+    expected = deepcopy(value["dataset_targets"])
+    first, second = value["dataset_targets"].values()
+    second["native_identity"] = deepcopy(first["native_identity"])
+    with pytest.raises(ContractError, match="share a native target"):
+        validate_drill_result(value, operation=record)
+    second["native_identity"] = next(iter(inputs.snapshots.values()))["dataset_identity"][
+        "native_identity"
+    ]
+    with pytest.raises(ContractError, match="captured dataset"):
+        validate_drill_result(value, operation=record)
+    second["native_identity"]["incarnation"] = digest("different target")
+    with pytest.raises(ContractError, match="differ from custody"):
+        validate_drill_result(value, operation=record, expected_dataset_targets=expected)
 
 
 def test_drill_cannot_replace_both_restored_and_verified_snapshot():

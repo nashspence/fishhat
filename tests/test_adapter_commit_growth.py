@@ -63,7 +63,7 @@ def fixture():
     )
     sources = runtime_sources(registry)
     owner.bind(binding(), **sources, owner_approved=True)
-    owner.prove_quiescent("demo", fresh_observation(owner), owner_approved=True)
+    owner.prove_quiescent("demo", *fresh_observation(owner), owner_approved=True)
     owner.open_admission("demo", owner_approved=True)
     return owner, store, sources, request()
 
@@ -242,7 +242,7 @@ def test_restored_indexes_preserve_effect_retry_and_pending_scope_rules():
     recovered.cancel_prepared(attempt["attempt_id"], owner_approved=True)
     with pytest.raises(ContractError, match="EFFECT_RETRY_REQUIRES_NEW_PLAN"):
         recovered.prepare("demo", original, **sources, **arguments)
-    recovered.prove_quiescent("demo", fresh_observation(recovered), owner_approved=True)
+    recovered.prove_quiescent("demo", *fresh_observation(recovered), owner_approved=True)
     recovered.open_admission("demo", owner_approved=True)
     assert store.state == recovered.snapshot()
 
@@ -276,7 +276,7 @@ def history_case(count, history):
             identity = invocation["attempt"]["attempt_id"]
             owner.settle(identity, *complete)
             owner.settle(identity, *complete)
-        owner.prove_quiescent("demo", fresh_observation(owner), owner_approved=True)
+        owner.prove_quiescent("demo", *fresh_observation(owner), owner_approved=True)
         owner.open_admission("demo", owner_approved=True)
         assert owner.snapshot() == store.state
         return store.written_bytes - baseline[0], store.written_rows - baseline[1]
@@ -343,7 +343,7 @@ def test_ordinary_updates_do_not_traverse_retained_collections():
     owner.settle(first["attempt_id"], *reply(invocation))
     owner.settle(second["attempt_id"], *reply(next_invocation))
     owner.close_admission("demo")
-    owner.prove_quiescent("demo", fresh_observation(owner), owner_approved=True)
+    owner.prove_quiescent("demo", *fresh_observation(owner), owner_approved=True)
     owner.open_admission("demo", owner_approved=True)
     assert owner.state == store.state
 

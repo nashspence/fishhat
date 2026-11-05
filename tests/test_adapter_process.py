@@ -622,3 +622,23 @@ CHECK_OVERRIDES = {
         ],
     },
 }
+
+
+@pytest.mark.parametrize(
+    "role", ["credential-issuer", "secret-source", "repository", "software", "service", "dns"]
+)
+def test_query_cannot_label_process_output_with_another_executor(role):
+    from tests.test_adapter_observation_pages import page
+    from tests.test_compute_allocation_identity import process_case
+
+    registry, executor = installed(role)
+    query, _ = page(role)
+    query["input"]["cursor"] = None
+    manifest, configuration, kwargs = process_case(registry, executor, query)
+    validate_process_launch(manifest, query, configuration, **kwargs)
+    query["input"]["binding"]["instance"] = "other"
+    with pytest.raises(ContractError, match="HANDOFF_INSTANCE_IDENTITY"):
+        registry.authorize_request(executor["instance"], role, query, owner_approved=True)
+    manifest, configuration, kwargs = process_case(registry, executor, query)
+    with pytest.raises(ContractError, match="process query binding is not approved"):
+        validate_process_launch(manifest, query, configuration, **kwargs)

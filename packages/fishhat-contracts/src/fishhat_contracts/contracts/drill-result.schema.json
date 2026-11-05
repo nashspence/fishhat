@@ -124,6 +124,30 @@
           "items": {
             "$ref": "common.schema.json#/$defs/Digest"
           }
+        },
+        "dataset_targets": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": {
+            "$ref": "common.schema.json#/$defs/Id"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "$ref": "common.schema.json#/$defs/AbsolutePath"
+              },
+              "native_identity": {
+                "$ref": "dataset-obligations.schema.json#/$defs/NativeIdentity"
+              }
+            },
+            "required": [
+              "path",
+              "native_identity"
+            ],
+            "additionalProperties": false
+          },
+          "description": "One complete receiving-owner-verified target map for the isolated runtime. Keys are the exact checkpoint datasets. Every target root is distinct and disjoint (including ancestors) in the same target namespace across all restore and verification hooks. Each path remains bound to one independently observed native dataset incarnation throughout both stages. No target aliases another target or a production dataset. Every hook output directory, secret path and read-only snapshot materialization is disjoint from all target roots, including targets restored by other invocations. The owner verifies actual mounts, aliases and protected mapping under exclusion before the first restore and through verification, and retains the evidence at isolation_evidence. Path strings and copied identities alone cannot establish that native fact."
         }
       },
       "required": [
@@ -137,6 +161,7 @@
         "checkpoint",
         "production_binding",
         "target_binding",
+        "dataset_targets",
         "isolation_evidence",
         "restorations",
         "verifications",

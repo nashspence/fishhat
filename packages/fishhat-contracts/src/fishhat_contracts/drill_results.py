@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from itertools import chain
+from pathlib import PurePosixPath
 from typing import Any
 
 from .bounds import Bounds, bounds
 from .checkpoints import CheckpointInputs, validate_checkpoint
-from .hooks import validate_hook_result
-from .validation import ContractError, digest, validate
+from .hooks import _PathIndex, validate_hook_result
+from .validation import ContractError, canonical, digest, validate
 
 
 def _require(condition: bool, message: str) -> None:
@@ -28,6 +30,7 @@ def _hook_evidence(
     request_ids: set[str],
     accepted_procedures: Mapping[str, dict[str, Any]] | None,
     checkpoint_digest: str,
+    dataset_paths: _PathIndex,
 ) -> dict[str, tuple[str, str]]:
     snapshots: dict[str, tuple[str, str]] = {}
     for entry in entries:
@@ -70,6 +73,19 @@ def _hook_evidence(
             ),
             "drill hook selects another application or dataset",
         )
+        auxiliary_paths = chain(
+            (request["output_directory"],),
+            request["secret_paths"].values(),
+            (
+                entry["path"]
+                for item in selected["datasets"].values()
+                for entry in item["materializations"]
+            ),
+        )
+        _require(
+            all(not dataset_paths.overlaps(PurePosixPath(path)) for path in auxiliary_paths),
+            "drill hook output or input overlaps a dataset target",
+        )
         for dataset, item in selected["datasets"].items():
             _require(dataset not in snapshots, "drill stage repeats a selected dataset")
             snapshots[dataset] = (
@@ -104,12 +120,13 @@ def validate_drill_result(
     accepted_procedures: Mapping[str, dict[str, Any]] | None = None,
     expected_production_binding: dict[str, Any] | None = None,
     expected_target_binding: dict[str, Any] | None = None,
+    expected_dataset_targets: Mapping[str, dict[str, Any]] | None = None,
 ) -> None:
     """Check exact retained joins, with optional independently accepted owner context.
 
     Before admitting drill success the receiving owner supplies its original Plan,
-    bindings and accepted procedures plus authenticated ``resolve_checkpoint``
-    inputs. It also independently verifies native isolation, complete result and
+    bindings, independently verified dataset targets, accepted procedures and
+    authenticated ``resolve_checkpoint`` inputs. It verifies native isolation, complete result and
     artifact custody and any cleanup assertion. The context-free CLI/result
     boundary checks immutable structure and correlation only; it never converts
     copied evidence or embedded procedure bytes into native authority.
@@ -130,6 +147,20 @@ def validate_drill_result(
     ):
         if expected is not None:
             _require(actual == expected, "drill runtime differs from accepted binding")
+    targets = value["dataset_targets"]
+    _require(targets.keys() == checkpoint["datasets"].keys(), "incomplete drill dataset targets")
+    dataset_paths = _PathIndex()
+    native_scopes: set[bytes] = set()
+    for item in targets.values():
+        path = PurePosixPath(item["path"])
+        _require(not dataset_paths.overlaps(path), "drill dataset paths overlap")
+        dataset_paths.add(path)
+        scope = canonical(item["native_identity"]["scope"])
+        _require(scope not in native_scopes, "drill datasets share a native target scope")
+        native_scopes.add(scope)
+    native_ids = {canonical(item["native_identity"]) for item in targets.values()}
+    if expected_dataset_targets is not None:
+        _require(targets == expected_dataset_targets, "drill dataset targets differ from custody")
     required = {
         checkpoint_digest,
         *checkpoint["recovery_closure"],
@@ -147,6 +178,7 @@ def validate_drill_result(
         request_ids,
         accepted_procedures,
         checkpoint_digest,
+        dataset_paths,
     )
     verified = _hook_evidence(
         value,
@@ -156,11 +188,22 @@ def validate_drill_result(
         request_ids,
         accepted_procedures,
         checkpoint_digest,
+        dataset_paths,
     )
     _require(
         set(restored) == set(checkpoint["datasets"]) and restored == verified,
         "drill evidence omits or substitutes a selected dataset snapshot",
     )
+    _require(
+        all(path == targets[name]["path"] for name, (_, path) in restored.items()),
+        "drill hook target differs from retained dataset map",
+    )
+    production_ids = {
+        canonical(item["snapshot"]["dataset_identity"]["native_identity"])
+        for entry in value["restorations"]
+        for item in entry["request"]["restore_input"]["datasets"].values()
+    }
+    _require(native_ids.isdisjoint(production_ids), "drill target overlaps a captured dataset")
     if checkpoint_inputs is not None:
         _require(
             checkpoint_inputs.checkpoint_digest == checkpoint_digest

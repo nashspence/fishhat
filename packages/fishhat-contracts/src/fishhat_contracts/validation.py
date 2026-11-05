@@ -278,8 +278,17 @@ _SCHEMA_VALIDATOR = cast(Any, validators.extend)(
 @bounds(_data_bounds("validate"))
 def validate(schema: str, value: Any, definition: str | None = None) -> None:
     value_check(value)
-    base = SCHEMAS[schema]
-    target = base if definition is None else {"$ref": base["$id"] + "#/$defs/" + definition}
+    base = SCHEMAS.get(schema)
+    if base is None:
+        raise ContractError("unknown installed schema")
+    if definition is None:
+        if not ({"type", "$ref", "oneOf", "anyOf", "allOf"} & base.keys()):
+            raise ContractError("schema collection requires a named definition")
+        target = base
+    else:
+        if definition not in base.get("$defs", {}):
+            raise ContractError("unknown schema definition")
+        target = {"$ref": base["$id"] + "#/$defs/" + definition}
     errors = list(
         _SCHEMA_VALIDATOR(target, registry=REGISTRY, format_checker=FORMAT_CHECKER).iter_errors(
             value

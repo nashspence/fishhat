@@ -167,7 +167,10 @@
       "type": "object",
       "minProperties": 0,
       "propertyNames": {
-        "pattern": "^[A-Za-z0-9-]+(?![\\s\\S])"
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*(?![\\s\\S])",
+        "minLength": 1,
+        "maxLength": 96
       },
       "additionalProperties": {
         "type": "object",
@@ -211,7 +214,44 @@
           "evidence",
           "reason"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "enum": [
+                    "passed",
+                    "not_applicable"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "evidence": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "not_applicable"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "reason": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ]
       }
     },
     "state": {
@@ -243,5 +283,62 @@
     "case_evidence",
     "state"
   ],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "description": "A resource-specific migration assessment. Discovery, blocked and recovery-required records can be incomplete. For ready, cutting-over and accepted, the receiving owner independently selects the exact required cases for this resource, profile and stage. Each required case must occur in case_evidence and be passed with verified evidence, or not_applicable with verified evidence, a reason and a separately approved case-specific exemption. A packet cannot remove requirements or approve its own exemptions. The named previous and new owners must differ. For a passed case the independently verified per-case evidence digest must match, and its applicability comes from the current profile. The complete set of checkpoint, independent-restore, credential-custody and fencing fields present must match the receiver’s independently selected and verified material, including every exact fence evidence digest. The receiver verifies the underlying material, source pins, ownership, tolerances and retention, checks freshness and authenticates independent approval of the exact JCS packet digest for the intended resource and state under current exclusion before acting. owner_approval identifies the approving decision and is not a self-authenticating grant. A ready record cannot authorize cutting-over or accepted. A later state requires a freshly approved packet. Checkpoint, restore evidence and credential custody requirements apply according to the independently selected profile; the owner binds their presence, identities and applicability in its approval. Fencing evidence for a cutting-over or accepted packet proves the previous writer is excluded or records a receiver-authenticated proof that no previous writer exists.",
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "enum": [
+              "ready",
+              "cutting-over",
+              "accepted"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "owner_approval": {
+            "type": "string"
+          },
+          "source_refs": {
+            "minItems": 1
+          },
+          "retention_disposition": {
+            "type": "string"
+          },
+          "max_downtime_seconds": {
+            "type": "integer"
+          },
+          "max_data_loss_seconds": {
+            "type": "integer"
+          },
+          "required_cases": {
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "enum": [
+              "cutting-over",
+              "accepted"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "fence_evidence": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ]
 }

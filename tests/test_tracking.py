@@ -359,9 +359,16 @@ class OptionalIndex(unittest.TestCase):
         self.assertEqual(code, 200)
 
     def test_different_reporter_duplicate_preserves_original(self):
-        self.s.put(self.e, **self.auth)
-        _, r = self.s.put(self.e, principal="another-reporter", scopes={"append"})
-        self.assertEqual(r["reporter"], "reporter-one")
+        created, ack = self.s.put(self.e, principal="reporter-one", scopes={"append"})
+        duplicate, again = self.s.put(self.e, principal="another-reporter", scopes={"append"})
+        self.assertEqual((created, duplicate), (201, 200))
+        self.assertEqual(again, ack)
+        validate("tracking-records.schema.json", ack, "AppendAcknowledgment")
+        self.assertEqual(ack["content_digest"], digest(self.e))
+        self.assertEqual(ack["workflow_id"], self.e["workflow_id"])
+        self.assertEqual(ack["event_id"], self.e["id"])
+        _, stored = self.s.put(self.e, principal="another-reporter", scopes={"append", "read"})
+        self.assertEqual(stored["reporter"], "reporter-one")
 
     def test_conflicting_content_retains_original(self):
         self.s.put(self.e, **self.auth)

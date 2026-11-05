@@ -8,7 +8,7 @@
   "adapter": {
     "implementation": "fishhat.forgejo-restic",
     "installation_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "descriptor_digest": "sha256:f3d88c240d3771b04eb659f1fef9fbb3c63e9cb8343161ea2a804cfe82800833",
+    "descriptor_digest": "sha256:60c6d0ef09f0c9fe21c7d1cce022a6bf2e54c89fc207e131039741246a813d82",
     "configuration_digest": "sha256:0eae6fab2afd04f8c5485ed22106ec804b3f49c8d23465341ad4e293328d7d49",
     "source_schema_digest": "sha256:642e96134daa17910265b1a24acdd667d3a5b408f59b92c475e96bd9049124c3"
   },
@@ -17,7 +17,7 @@
     "media_type": "application/json",
     "size_bytes": 281
   },
-  "catalogue_digest": "sha256:562cb8f3cc7dbc8dc10f101a5cac04967147c6a38f132d15855d07c7846b95c4",
+  "catalogue_digest": "sha256:87aa261c1801d10d41629c50d4740b9ccfc52734b68350f4322b3c759d18f5ec",
   "kit_manifest_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "recovery_root": "/recovery/staging/run-001",
   "verify_only": true,

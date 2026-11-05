@@ -40,7 +40,7 @@ def coordinator(commit=None):
         native_exclusion=native_exclusion,
     )
     c.bind(binding(), **runtime_sources(registry), owner_approved=True)
-    c.prove_quiescent("demo", fresh_observation(c), owner_approved=True)
+    c.prove_quiescent("demo", *fresh_observation(c), owner_approved=True)
     c.open_admission("demo", owner_approved=True)
     return c, commits
 
@@ -130,7 +130,7 @@ def test_close_racing_dispatched_start_is_not_quiescence():
         c.observation_request("demo", owner_approved=True)
     c.settle(attempt["attempt_id"], *result(c, attempt))
     # Only a separate complete native cessation observation can now establish quiescence.
-    c.prove_quiescent("demo", fresh_observation(c), owner_approved=True)
+    c.prove_quiescent("demo", *fresh_observation(c), owner_approved=True)
     assert c.snapshot()["quiescent"]["demo"] is True
 
 
@@ -191,9 +191,10 @@ def test_wrong_result_identity_is_rejected():
 def test_incomplete_or_stale_observation_never_proves_cessation(field, value):
     c, _ = coordinator()
     c.close_admission("demo")
-    value = {**fresh_observation(c), field: value}
+    evidence = fresh_observation(c)
+    evidence[1]["output"]["observation"][field] = value
     with pytest.raises(ContractError):
-        c.prove_quiescent("demo", value, owner_approved=True)
+        c.prove_quiescent("demo", *evidence, owner_approved=True)
 
 
 def test_retained_state_preserves_uncertainty_and_restores_under_hold(tmp_path):
@@ -247,7 +248,7 @@ def test_prepared_start_can_be_cancelled_but_dispatched_start_cannot():
     c.close_admission("demo")
     c.cancel_prepared(attempt["attempt_id"], owner_approved=True)
     assert c.snapshot()["attempts"][attempt["attempt_id"]]["certainty"] == "none"
-    c.prove_quiescent("demo", fresh_observation(c), owner_approved=True)
+    c.prove_quiescent("demo", *fresh_observation(c), owner_approved=True)
     c.open_admission("demo", owner_approved=True)
     next_attempt = c.prepare(
         "demo",
@@ -276,9 +277,9 @@ def test_observation_from_previous_admission_generation_cannot_release_hold():
     c, _ = coordinator()
     c.close_admission("demo")
     old = fresh_observation(c)
-    old["admission_generation"] = 0
-    with pytest.raises(ContractError, match="OBSERVATION_IDENTITY"):
-        c.prove_quiescent("demo", old, owner_approved=True)
+    old[1]["output"]["observation"]["admission_generation"] = 0
+    with pytest.raises(ContractError, match="OBSERVATION_BARRIER_GENERATION"):
+        c.prove_quiescent("demo", *old, owner_approved=True)
 
 
 @pytest.mark.parametrize(

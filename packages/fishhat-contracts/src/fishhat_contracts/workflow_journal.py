@@ -22,6 +22,7 @@ from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey, Ed25519PublicKey
 
 from .bounds import Bounds, bounds
+from .discovery import admission_contract, owner_contract_schemas, require_admission_contract
 from .handoffs import PHASES, validate_result_payload
 from .operations import _OWNER_STATES, _TERMINAL_STATES, validate_operation_plan
 from .validation import ContractError, canonical, digest, validate, validate_plan
@@ -466,6 +467,7 @@ class _JournalTarget:
         self.owner, self.key_id = copy.deepcopy(owner), key_id
         self.private_key, self.keys, self.journal = private_key, keys, journal
         self.clock, self.extension = clock, extension
+        self._installed_contract = admission_contract(owner_contract_schemas())
         self.generation = 0
         self._recovery_state: JSON = {}
         self._lock = threading.RLock()
@@ -616,7 +618,9 @@ class _JournalTarget:
         else:
             self._new_work_allowed()
 
-    def _run(self, command: JSON, principal: str) -> JSON:
+    def _run(
+        self, command: JSON, principal: str, *, check_revision: Callable[[], None] | None = None
+    ) -> JSON:
         _fields(command, {"id", "workflow_id", "action", "payload"})
         validate("common.schema.json", command["id"], "UUID")
         _require(command["workflow_id"] == self.workflow_id, "workflow command identity changed")
@@ -634,6 +638,8 @@ class _JournalTarget:
             with self.journal.guard(self._journal_head):
                 validate("workflow-journal.schema.json", command, "Command")
                 self._authorize(principal, command["action"])
+                if check_revision is not None:
+                    check_revision()
                 outcome = self._accept(command, principal)
                 return self._commit(command, outcome)
 
@@ -2123,7 +2129,9 @@ class WorkflowMember(_JournalTarget):
             "O(B + E) exact retained local Plan, selected child permit and independently acquired native admission context; no peer or history traversal",
         )
     )
-    def require_operation_admission(self, submission: JSON, *, principal: str) -> JSON:
+    def require_operation_admission(
+        self, submission: JSON, *, principal: str, admission_pin: str | None = None
+    ) -> JSON:
         """Require the retained local permit at the normal operation.submit boundary.
 
         This performs no native acceptance. The owner resolves its accepted native
@@ -2144,6 +2152,7 @@ class WorkflowMember(_JournalTarget):
             _require(not self._failed, "workflow admission requires verified journal custody")
             self._authorize(principal, "read")
             self._authorize(principal, "operation.submit")
+            require_admission_contract(admission_pin, self._installed_contract)
             self._fresh(
                 {"expected_generation": self.generation, "driver_term": submission["driver_term"]},
                 principal,
@@ -2220,7 +2229,9 @@ class WorkflowMember(_JournalTarget):
             return copy.deepcopy(permit)
 
     @contextmanager
-    def operation_admission_guard(self, submission: JSON, *, principal: str) -> Iterator[JSON]:
+    def operation_admission_guard(
+        self, submission: JSON, *, principal: str, admission_pin: str | None = None
+    ) -> Iterator[JSON]:
         """Serialize the reference native acceptance with journal admission closure.
 
         The owner retains native acceptance inside this scope, rechecking its own
@@ -2231,7 +2242,9 @@ class WorkflowMember(_JournalTarget):
         a stand-alone earlier permit check is insufficient.
         """
         with self._lock, self.journal.guard(self._journal_head):
-            yield self.require_operation_admission(submission, principal=principal)
+            yield self.require_operation_admission(
+                submission, principal=principal, admission_pin=admission_pin
+            )
 
     def accept_agreement(self, event_id: str, agreement: JSON, *, principal: str) -> JSON:
         return self._run(self._command("agreement", event_id, {"agreement": agreement}), principal)
@@ -2321,9 +2334,17 @@ class WorkflowMember(_JournalTarget):
         "O(B + E) new command and its exact affected local dependencies; preparation and each fixed phase visit each owner once; replay reads only the indexed original command/outcome",
     )
 )
-def dispatch_journal_command(target: _JournalTarget, command: JSON, *, principal: str) -> JSON:
+def dispatch_journal_command(
+    target: _JournalTarget, command: JSON, *, principal: str, admission_pin: str | None = None
+) -> JSON:
     """Canonical live submit path after staged bytes and receiver scope validation."""
-    return target._run(command, principal)
+    return target._run(
+        command,
+        principal,
+        check_revision=lambda: require_admission_contract(
+            admission_pin, target._installed_contract
+        ),
+    )
 
 
 @bounds(
@@ -2336,6 +2357,7 @@ def initialize_workflow_journal(
     command: JSON,
     *,
     principal: str,
+    admission_pin: str | None = None,
     context: Mapping[str, Any],
 ) -> _JournalTarget:
     """Create or restore a target from a staged command and protected configuration.
@@ -2353,6 +2375,10 @@ def initialize_workflow_journal(
     validate("workflow-journal.schema.json", command, "Command")
     validate("common.schema.json", command["id"], "UUID")
     validate("common.schema.json", command["workflow_id"], "UUID")
+    # Creating or restoring a writable target can invoke native callbacks. It
+    # requires the approved active dispatcher revision, even for a previously
+    # initialized journal. Immutable historical reads use the separate get path.
+    require_admission_contract(admission_pin, admission_contract(owner_contract_schemas()))
     _require(
         "command" not in context and "principal" not in context,
         "workflow installed context cannot replace caller attribution",

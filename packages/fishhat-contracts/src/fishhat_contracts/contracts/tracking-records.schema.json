@@ -489,6 +489,31 @@
         "execution_affected"
       ],
       "additionalProperties": false
+    },
+    "AppendAcknowledgment": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/index-append-ack/v1"
+        },
+        "workflow_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "event_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "content_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        }
+      },
+      "required": [
+        "format",
+        "workflow_id",
+        "event_id",
+        "content_digest"
+      ],
+      "additionalProperties": false,
+      "description": "Acknowledges only the exact event supplied by this append caller. The immutable receipt and original attribution remain available through authorized reads."
     }
   },
   "x-fishhat-catalogue-dependencies": [

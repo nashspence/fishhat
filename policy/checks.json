@@ -1804,6 +1804,14 @@
       "purpose_sha256": "443f7e904227794d7b08bd413107564099c6fd9a724ba38a47061c5251e4a2d5"
     },
     {
+      "node": "tests/test_adapter_observation_barriers.py::test_only_the_completed_protected_traversal_can_reopen_admission[inventory]",
+      "purpose_sha256": "443f7e904227794d7b08bd413107564099c6fd9a724ba38a47061c5251e4a2d5"
+    },
+    {
+      "node": "tests/test_adapter_observation_barriers.py::test_only_the_completed_protected_traversal_can_reopen_admission[observe]",
+      "purpose_sha256": "443f7e904227794d7b08bd413107564099c6fd9a724ba38a47061c5251e4a2d5"
+    },
+    {
       "node": "tests/test_adapter_observation_barriers.py::test_outstanding_work_cannot_receive_a_post_drain_challenge[dispatched]",
       "purpose_sha256": "443f7e904227794d7b08bd413107564099c6fd9a724ba38a47061c5251e4a2d5"
     },
@@ -1877,6 +1885,10 @@
     },
     {
       "node": "tests/test_adapter_observation_barriers.py::test_restore_preserves_work_but_cannot_restore_a_challenge_or_clearance",
+      "purpose_sha256": "443f7e904227794d7b08bd413107564099c6fd9a724ba38a47061c5251e4a2d5"
+    },
+    {
+      "node": "tests/test_adapter_observation_barriers.py::test_unknown_protected_scan_requires_a_fresh_challenge",
       "purpose_sha256": "443f7e904227794d7b08bd413107564099c6fd9a724ba38a47061c5251e4a2d5"
     },
     {
@@ -2565,6 +2577,30 @@
     },
     {
       "node": "tests/test_adapter_process.py::test_protected_input_closure_is_exact_and_complete[truncated-manifest]",
+      "purpose_sha256": "4889ca9bbfdc75f3dcfbd62730fe65f44cb7b2377d65cea845b086eb131bc2f2"
+    },
+    {
+      "node": "tests/test_adapter_process.py::test_query_cannot_label_process_output_with_another_executor[credential-issuer]",
+      "purpose_sha256": "4889ca9bbfdc75f3dcfbd62730fe65f44cb7b2377d65cea845b086eb131bc2f2"
+    },
+    {
+      "node": "tests/test_adapter_process.py::test_query_cannot_label_process_output_with_another_executor[dns]",
+      "purpose_sha256": "4889ca9bbfdc75f3dcfbd62730fe65f44cb7b2377d65cea845b086eb131bc2f2"
+    },
+    {
+      "node": "tests/test_adapter_process.py::test_query_cannot_label_process_output_with_another_executor[repository]",
+      "purpose_sha256": "4889ca9bbfdc75f3dcfbd62730fe65f44cb7b2377d65cea845b086eb131bc2f2"
+    },
+    {
+      "node": "tests/test_adapter_process.py::test_query_cannot_label_process_output_with_another_executor[secret-source]",
+      "purpose_sha256": "4889ca9bbfdc75f3dcfbd62730fe65f44cb7b2377d65cea845b086eb131bc2f2"
+    },
+    {
+      "node": "tests/test_adapter_process.py::test_query_cannot_label_process_output_with_another_executor[service]",
+      "purpose_sha256": "4889ca9bbfdc75f3dcfbd62730fe65f44cb7b2377d65cea845b086eb131bc2f2"
+    },
+    {
+      "node": "tests/test_adapter_process.py::test_query_cannot_label_process_output_with_another_executor[software]",
       "purpose_sha256": "4889ca9bbfdc75f3dcfbd62730fe65f44cb7b2377d65cea845b086eb131bc2f2"
     },
     {
@@ -4357,6 +4393,14 @@
     },
     {
       "node": "tests/test_checkpoint_resolution.py::test_backup_receipt_artifact_order_does_not_change_identity",
+      "purpose_sha256": "cb565620d79b88cd44dd9f2c5f2dcf5067bd22c27f8ed6262dc619a4d6374931"
+    },
+    {
+      "node": "tests/test_checkpoint_resolution.py::test_checkpoint_dataset_keys_match_source_and_capture_names[aaaaaaaaaaaaaaaaaaaaaaaaa]",
+      "purpose_sha256": "cb565620d79b88cd44dd9f2c5f2dcf5067bd22c27f8ed6262dc619a4d6374931"
+    },
+    {
+      "node": "tests/test_checkpoint_resolution.py::test_checkpoint_dataset_keys_match_source_and_capture_names[data-]",
       "purpose_sha256": "cb565620d79b88cd44dd9f2c5f2dcf5067bd22c27f8ed6262dc619a4d6374931"
     },
     {
@@ -6296,6 +6340,18 @@
       "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
     },
     {
+      "node": "tests/test_cutover_contracts.py::test_boundary_projection_vector_and_review_stability",
+      "purpose_sha256": "2dd1b589ffffb869b4b1c083f7bed676c4f16112ec2cb4b94bcd44a090198d85"
+    },
+    {
+      "node": "tests/test_cutover_contracts.py::test_boundary_requires_independent_approval_and_same_source",
+      "purpose_sha256": "2dd1b589ffffb869b4b1c083f7bed676c4f16112ec2cb4b94bcd44a090198d85"
+    },
+    {
+      "node": "tests/test_cutover_contracts.py::test_readiness_binds_state_cases_exemptions_and_required_material",
+      "purpose_sha256": "2dd1b589ffffb869b4b1c083f7bed676c4f16112ec2cb4b94bcd44a090198d85"
+    },
+    {
       "node": "tests/test_dataset_contracts.py::test_ambiguous_dataset_fields_are_rejected[kind-owned]",
       "purpose_sha256": "ca8446e164090f11e4ea32dad59c0e725d6a2b9d041cee222471d562a4319e6f"
     },
@@ -6928,6 +6984,10 @@
       "purpose_sha256": "fe9f40fc6bdb9af840b29729bf3e10fd2f5ce1442eced0e3e4db2be13aaa60de"
     },
     {
+      "node": "tests/test_drill_results.py::test_distinct_drill_paths_cannot_alias_native_datasets_or_change_custody",
+      "purpose_sha256": "d41a7fcbbb670fb8065784d423a2ab1836b3c3cefa07f41d73eda8761643403c"
+    },
+    {
       "node": "tests/test_drill_results.py::test_drill_cannot_replace_both_restored_and_verified_snapshot",
       "purpose_sha256": "d41a7fcbbb670fb8065784d423a2ab1836b3c3cefa07f41d73eda8761643403c"
     },
@@ -6953,6 +7013,10 @@
     },
     {
       "node": "tests/test_drill_results.py::test_drill_hard_cut_requires_result_and_rejects_mutable_checkpoint_annotation",
+      "purpose_sha256": "d41a7fcbbb670fb8065784d423a2ab1836b3c3cefa07f41d73eda8761643403c"
+    },
+    {
+      "node": "tests/test_drill_results.py::test_drill_hook_cannot_write_into_another_invocations_dataset",
       "purpose_sha256": "d41a7fcbbb670fb8065784d423a2ab1836b3c3cefa07f41d73eda8761643403c"
     },
     {
@@ -7006,6 +7070,18 @@
     {
       "node": "tests/test_drill_results.py::test_drill_retains_original_checkpoint_and_exact_evidence",
       "purpose_sha256": "fe9f40fc6bdb9af840b29729bf3e10fd2f5ce1442eced0e3e4db2be13aaa60de"
+    },
+    {
+      "node": "tests/test_drill_results.py::test_separate_drill_hooks_cannot_overlap_dataset_roots[ancestor]",
+      "purpose_sha256": "d41a7fcbbb670fb8065784d423a2ab1836b3c3cefa07f41d73eda8761643403c"
+    },
+    {
+      "node": "tests/test_drill_results.py::test_separate_drill_hooks_cannot_overlap_dataset_roots[descendant]",
+      "purpose_sha256": "d41a7fcbbb670fb8065784d423a2ab1836b3c3cefa07f41d73eda8761643403c"
+    },
+    {
+      "node": "tests/test_drill_results.py::test_separate_drill_hooks_cannot_overlap_dataset_roots[same]",
+      "purpose_sha256": "d41a7fcbbb670fb8065784d423a2ab1836b3c3cefa07f41d73eda8761643403c"
     },
     {
       "node": "tests/test_engineering.py::test_directory_capacity_is_rejection_not_silent_truncation",
@@ -9768,6 +9844,10 @@
       "purpose_sha256": "a9b1d896c1bffdf4e79390324b8ef2244b8eef20d5ac3093157e3f8424786a9c"
     },
     {
+      "node": "tests/test_owner_discovery.py::test_upgrade_between_discovery_and_stop_intent_preserves_only_original_replay",
+      "purpose_sha256": "a9b1d896c1bffdf4e79390324b8ef2244b8eef20d5ac3093157e3f8424786a9c"
+    },
+    {
       "node": "tests/test_owner_handoffs.py::test_committed_inputs_reject_epoch_principal_resource_and_purpose_substitution",
       "purpose_sha256": "1b27229e83e1f19dba46c975999e03c6bda493010e05a68c69bdacf5dd1d5bb5"
     },
@@ -10449,11 +10529,11 @@
     },
     {
       "node": "tests/test_portable.py::Portable::test_recovery_set_candidate",
-      "purpose_sha256": "45c39bca4ce7c7165b08bbbbd0fa07a59aaff8103327277042325475b0b86cd7"
+      "purpose_sha256": "42e604187c1bdf40a0cb2694bac5f95777424a7d29d73a27203842574a2ac79c"
     },
     {
       "node": "tests/test_portable.py::Portable::test_recovery_set_no_unproven_qualification",
-      "purpose_sha256": "45c39bca4ce7c7165b08bbbbd0fa07a59aaff8103327277042325475b0b86cd7"
+      "purpose_sha256": "42e604187c1bdf40a0cb2694bac5f95777424a7d29d73a27203842574a2ac79c"
     },
     {
       "node": "tests/test_portable.py::Portable::test_source_receipt_cannot_claim_services",
@@ -13113,6 +13193,14 @@
     },
     {
       "node": "tests/test_scaffold.py::Scaffold::test_unknown_mutations_refused",
+      "purpose_sha256": "0ff2b5efa64237ffc95e3d8db783a2dd9fa25c5983984971ce343c644b5cd428"
+    },
+    {
+      "node": "tests/test_scaffold.py::test_validate_file_capacity_is_independent_of_ssh_frames",
+      "purpose_sha256": "0ff2b5efa64237ffc95e3d8db783a2dd9fa25c5983984971ce343c644b5cd428"
+    },
+    {
+      "node": "tests/test_scaffold.py::test_validate_refuses_unspecified_or_invented_collection_definitions",
       "purpose_sha256": "0ff2b5efa64237ffc95e3d8db783a2dd9fa25c5983984971ce343c644b5cd428"
     },
     {

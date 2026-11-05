@@ -192,11 +192,7 @@
                 "description": "Expected placement generation used to detect stale placement decisions. Editing source does not advance an owner's accepted generation."
               },
               "boundary_digest": {
-                "type": "string",
-                "minLength": 71,
-                "maxLength": 71,
-                "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])",
-                "description": "Digest of the exact declared application boundary to be reviewed and checked during admission."
+                "$ref": "#/$defs/ApplicationBoundaryDigest"
               },
               "security_control": {
                 "type": "boolean"
@@ -2093,6 +2089,10 @@
           }
         }
       ]
+    },
+    "ApplicationBoundaryDigest": {
+      "$ref": "common.schema.json#/$defs/Digest",
+      "description": "SHA-256 of the JCS object below, constructed from independently resolved and admitted Domain, Host, App and bound RepoSecrets source. The receiving owner independently selects the exact application instance and resolves the domain placement source ID to a complete Source at the accepted commit. The Release must include exactly that Source, with no other record for that source ID or repository/entrypoint. Verify its exact manifest and the raw Git blob hashes of the App entrypoint and every declared RepoSecrets catalogue before decoding the projection inputs. On new release admission recompute and require equality to both the independently approved domain placement and the exact reviewed Release. The App cannot approve itself. Recheck the same sources, effective host grants, accepted runtime binding and current permission under the owner's admission exclusion. An historical read uses its retained projection. Source comparison alone never proves actual grants or native behavior. Top-level fields are exactly format (fishhat.application-boundary/v1), domain_id, host_id, app_id (the respective source IDs), repository (only instance and repository_id from the domain-selected app source), entrypoint (that source's path), security_control (that app placement), platform_profile (Host), account, grants, components, interfaces, dependencies, datasets, hooks, secret_bindings and secret_catalogue. Require placement.host == Host.id and Host.app_accounts[App.id].runtime_instance == App.runtime.instance. account copies resource_account, runtime_instance and device_groups from that account. grants retains only Host.grants whose app is App.id; copy type, profile and resources for each. All following maps retain their exact App member keys and are present even when empty. components copies role and profile. interfaces copies component, protocol, port, authentication, readiness_hook and compatibility. dependencies copies provider_kind, provider, interface, consumers, compatibility and phases. datasets copies custody, recovery, native_format, grant, owner, capture, restore, verify_restore, rebuild, verify_rebuild, readers and writers. hooks copies component, role, mode, network, datasets and secrets. secret_bindings copies the complete App.secret_bindings map. For nonempty bindings require the resolved catalogue to match the selected repository instance and repository_id. secret_catalogue is an object with path (App.repository_secrets), source (the complete RepoSecrets.source selection) and entries (exact RepoSecrets.entries records for the distinct bound entry names). For empty bindings secret_catalogue is null. Preserve all selected field names, scalar types, explicit nulls and empty maps. Sort device_groups, grant resources, interface compatibility, dependency consumers/compatibility/phases, dataset readers/writers and hook datasets/secrets by increasing Unicode scalar value. All other selected values are copied without reordering arrays or normalizing strings. Include no additional fields. Individual release material, image versions, hook argv, runtime configuration, schedules, ciphertext and resolved private values do not participate. Owners separately review and retain exact executable inputs, scopes, enrollment and release identity."
     }
   }
 }

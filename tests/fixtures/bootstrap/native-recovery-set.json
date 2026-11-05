@@ -2,7 +2,7 @@
   "format": "deployment-ops/native-recovery-set/v1",
   "id": "11111111-1111-4111-8111-111111111111",
   "domain_id": "a6606aee-cb29-5360-a578-3502f7b0a12a",
-  "catalogue_digest": "sha256:562cb8f3cc7dbc8dc10f101a5cac04967147c6a38f132d15855d07c7846b95c4",
+  "catalogue_digest": "sha256:87aa261c1801d10d41629c50d4740b9ccfc52734b68350f4322b3c759d18f5ec",
   "native_kit_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "installation_bundle_digest": "sha256:1615f27079c4be75b74f0e2aaa5e0259063edc13eba0ad5bbdf77a801179a23f",
   "platform": "linux-amd64",
@@ -16,5 +16,7 @@
   "independent_custody": false,
   "qualified": false,
   "evidence": [],
-  "installation_bundle_path": "/recovery/native/install-bundle"
+  "installation_bundle_path": "/recovery/native/install-bundle",
+  "encrypted_secret_generation_digests": [],
+  "service_checkpoint_digests": []
 }

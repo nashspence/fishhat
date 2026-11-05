@@ -130,20 +130,28 @@ def test_pre_settlement_observation_cannot_be_replayed_after_activation_settles(
     attempt = prepare(owner)
     owner.dispatch("demo", attempt["attempt_id"])
     owner.close_admission("demo")
-    premature = observation(1)
+    other, _ = coordinator()
+    other.close_admission("demo")
+    premature = fresh_observation(other)
     with pytest.raises(ContractError, match="PENDING_NATIVE_WORK"):
         owner.observation_request("demo", owner_approved=True)
     with pytest.raises(ContractError, match="PENDING_NATIVE_WORK"):
-        owner.prove_quiescent("demo", premature, owner_approved=True)
+        owner.prove_quiescent("demo", *premature, owner_approved=True)
 
     owner.settle(attempt["attempt_id"], *result(owner, attempt))
     current = fresh_observation(owner)
-    assert current["observed_at"] == premature["observed_at"]
-    assert current["admission_generation"] == premature["admission_generation"]
-    with pytest.raises(ContractError, match="STALE_OBSERVATION_BARRIER"):
-        owner.prove_quiescent("demo", premature, owner_approved=True)
+    assert (
+        current[1]["output"]["observation"]["observed_at"]
+        == premature[1]["output"]["observation"]["observed_at"]
+    )
+    assert (
+        current[1]["output"]["observation"]["admission_generation"]
+        == premature[1]["output"]["observation"]["admission_generation"]
+    )
+    with pytest.raises(ContractError, match="OBSERVATION_SEQUENCE_QUERY"):
+        owner.prove_quiescent("demo", *premature, owner_approved=True)
     assert owner.snapshot()["quiescent"]["demo"] is False
-    owner.prove_quiescent("demo", current, owner_approved=True)
+    owner.prove_quiescent("demo", *current, owner_approved=True)
     owner.open_admission("demo", owner_approved=True)
 
 
@@ -180,13 +188,16 @@ def test_new_containment_work_invalidates_a_scan_even_with_the_same_admission_ge
     owner.dispatch("demo", attempt["attempt_id"])
     owner.settle(attempt["attempt_id"], *result(owner, attempt))
     with pytest.raises(ContractError, match="OBSERVATION_BARRIER_REQUIRED"):
-        owner.prove_quiescent("demo", previous, owner_approved=True)
+        owner.prove_quiescent("demo", *previous, owner_approved=True)
     current = fresh_observation(owner)
-    assert current["admission_generation"] == previous["admission_generation"]
-    assert current["barrier"]["id"] != previous["barrier"]["id"]
-    with pytest.raises(ContractError, match="STALE_OBSERVATION_BARRIER"):
-        owner.prove_quiescent("demo", previous, owner_approved=True)
-    owner.prove_quiescent("demo", current, owner_approved=True)
+    assert (
+        current[1]["output"]["observation"]["admission_generation"]
+        == previous[1]["output"]["observation"]["admission_generation"]
+    )
+    assert current[0]["input"]["barrier"]["id"] != previous[0]["input"]["barrier"]["id"]
+    with pytest.raises(ContractError, match="OBSERVATION_SEQUENCE_QUERY"):
+        owner.prove_quiescent("demo", *previous, owner_approved=True)
+    owner.prove_quiescent("demo", *current, owner_approved=True)
 
 
 @pytest.mark.parametrize("executor", ["runtime", "service"])
@@ -195,7 +206,7 @@ def test_new_accepted_work_invalidates_a_proved_clearance(executor):
     if executor == "service":
         delegated(owner)
     owner.close_admission("demo")
-    owner.prove_quiescent("demo", fresh_observation(owner), owner_approved=True)
+    owner.prove_quiescent("demo", *fresh_observation(owner), owner_approved=True)
     assert owner.snapshot()["quiescent"]["demo"] is True
     attempt = containment(owner) if executor == "runtime" else prepare_service(owner, "stopped")
     assert owner.snapshot()["quiescent"]["demo"] is False
@@ -204,7 +215,7 @@ def test_new_accepted_work_invalidates_a_proved_clearance(executor):
     owner.cancel_prepared(attempt["attempt_id"], owner_approved=True)
     with pytest.raises(ContractError, match="QUIESCENCE_REQUIRED"):
         owner.open_admission("demo", owner_approved=True)
-    owner.prove_quiescent("demo", fresh_observation(owner), owner_approved=True)
+    owner.prove_quiescent("demo", *fresh_observation(owner), owner_approved=True)
     owner.open_admission("demo", owner_approved=True)
 
 
@@ -213,11 +224,11 @@ def test_challenges_are_replaced_and_consumed_once():
     owner.close_admission("demo")
     first = fresh_observation(owner)
     second = fresh_observation(owner, method="inventory")
-    with pytest.raises(ContractError, match="STALE_OBSERVATION_BARRIER"):
-        owner.prove_quiescent("demo", first, owner_approved=True)
-    owner.prove_quiescent("demo", second, owner_approved=True)
+    with pytest.raises(ContractError, match="OBSERVATION_SEQUENCE_QUERY"):
+        owner.prove_quiescent("demo", *first, owner_approved=True)
+    owner.prove_quiescent("demo", *second, owner_approved=True)
     with pytest.raises(ContractError, match="OBSERVATION_BARRIER_REQUIRED"):
-        owner.prove_quiescent("demo", second, owner_approved=True)
+        owner.prove_quiescent("demo", *second, owner_approved=True)
 
 
 @pytest.mark.parametrize("phase", ["issue", "result", "consume"])
@@ -229,13 +240,13 @@ def test_native_exclusion_is_required_at_each_authority_boundary(phase):
     if phase != "issue":
         current = fresh_observation(owner)
     if phase == "consume":
-        owner.prove_quiescent("demo", current, owner_approved=True)
+        owner.prove_quiescent("demo", *current, owner_approved=True)
     acquisition["id"] = None
     with pytest.raises(ContractError, match="NATIVE_EXCLUSION_REQUIRED"):
         if phase == "issue":
             owner.observation_request("demo", owner_approved=True)
         elif phase == "result":
-            owner.prove_quiescent("demo", current, owner_approved=True)
+            owner.prove_quiescent("demo", *current, owner_approved=True)
         else:
             owner.open_admission("demo", owner_approved=True)
     assert owner.snapshot()["admission"]["demo"] is False
@@ -249,17 +260,20 @@ def test_reacquired_native_exclusion_requires_a_new_scan(phase):
     owner.close_admission("demo")
     previous = fresh_observation(owner)
     if phase == "consume":
-        owner.prove_quiescent("demo", previous, owner_approved=True)
+        owner.prove_quiescent("demo", *previous, owner_approved=True)
     acquisition["id"] = identifier(91)
     expected = "STALE_OBSERVATION_BARRIER" if phase == "result" else "STALE_QUIESCENCE_PROOF"
     with pytest.raises(ContractError, match=expected):
         if phase == "result":
-            owner.prove_quiescent("demo", previous, owner_approved=True)
+            owner.prove_quiescent("demo", *previous, owner_approved=True)
         else:
             owner.open_admission("demo", owner_approved=True)
     current = fresh_observation(owner)
-    assert current["barrier"]["exclusion_id"] != previous["barrier"]["exclusion_id"]
-    owner.prove_quiescent("demo", current, owner_approved=True)
+    assert (
+        current[0]["input"]["barrier"]["exclusion_id"]
+        != previous[0]["input"]["barrier"]["exclusion_id"]
+    )
+    owner.prove_quiescent("demo", *current, owner_approved=True)
     owner.open_admission("demo", owner_approved=True)
 
 
@@ -273,7 +287,7 @@ def test_request_data_cannot_replace_current_owner_permission(phase):
         if phase == "issue":
             owner.observation_request("demo", owner_approved=False)
         else:
-            owner.prove_quiescent("demo", current, owner_approved=False)
+            owner.prove_quiescent("demo", *current, owner_approved=False)
     query = owner.observation_request("demo", owner_approved=True)
     query["input"]["native_exclusion"] = True
     with pytest.raises(ContractError):
@@ -300,7 +314,7 @@ def test_changed_executor_permission_cannot_consume_an_outstanding_scan():
     replacement.enroll(instance, owner_approved=True)
     owner.registry = replacement
     with pytest.raises(ContractError, match="RUNTIME_MUTATION_AUTHORITY"):
-        owner.prove_quiescent("demo", current, owner_approved=True)
+        owner.prove_quiescent("demo", *current, owner_approved=True)
     assert owner.snapshot()["quiescent"]["demo"] is False
 
 
@@ -311,7 +325,7 @@ def test_restore_preserves_work_but_cannot_restore_a_challenge_or_clearance():
     owner.settle(attempt["attempt_id"], *result(owner, attempt))
     owner.close_admission("demo")
     previous = fresh_observation(owner)
-    owner.prove_quiescent("demo", previous, owner_approved=True)
+    owner.prove_quiescent("demo", *previous, owner_approved=True)
     saved = owner.snapshot()
     restored = AdapterCoordinator(
         OWNER, owner.registry, lambda value: None, native_exclusion=native_exclusion
@@ -323,7 +337,48 @@ def test_restore_preserves_work_but_cannot_restore_a_challenge_or_clearance():
     assert restored.snapshot()["quiescent"]["demo"] is False
     with pytest.raises(ContractError, match="QUIESCENCE_REQUIRED"):
         restored.open_admission("demo", owner_approved=True)
-    with pytest.raises(ContractError, match="OBSERVATION_IDENTITY"):
-        restored.prove_quiescent("demo", previous, owner_approved=True)
-    restored.prove_quiescent("demo", fresh_observation(restored), owner_approved=True)
+    with pytest.raises(ContractError, match="OBSERVATION_BARRIER_REQUIRED"):
+        restored.prove_quiescent("demo", *previous, owner_approved=True)
+    restored.prove_quiescent("demo", *fresh_observation(restored), owner_approved=True)
     restored.open_admission("demo", owner_approved=True)
+
+
+@pytest.mark.parametrize("method", ["observe", "inventory"])
+def test_only_the_completed_protected_traversal_can_reopen_admission(method):
+    owner, _ = coordinator()
+    owner.close_admission("demo")
+    query, final = fresh_observation(owner, method=method)
+    partial = copy.deepcopy(final)
+    partial.update(coverage="incomplete", continuation="page:next")
+    with pytest.raises(ContractError):
+        owner.prove_quiescent("demo", query, partial, owner_approved=True)
+    partial["output"]["observation"] = None
+    next_query = copy.deepcopy(query)
+    next_query["input"]["cursor"] = "page:next"
+    final["request_digest"] = digest(next_query)
+    with pytest.raises(ContractError, match="OBSERVATION_SEQUENCE_CURSOR"):
+        owner.prove_quiescent("demo", next_query, final, owner_approved=True)
+    assert not owner.prove_quiescent("demo", query, partial, owner_approved=True)
+    assert not owner.prove_quiescent("demo", query, partial, owner_approved=True)
+    with pytest.raises(ContractError, match="QUIESCENCE_REQUIRED"):
+        owner.open_admission("demo", owner_approved=True)
+    assert owner.prove_quiescent("demo", next_query, final, owner_approved=True)
+    owner.open_admission("demo", owner_approved=True)
+
+
+def test_unknown_protected_scan_requires_a_fresh_challenge():
+    owner, _ = coordinator()
+    owner.close_admission("demo")
+    query, complete = fresh_observation(owner)
+    unknown = copy.deepcopy(complete)
+    unknown["coverage"] = "unknown"
+    with pytest.raises(ContractError):
+        owner.prove_quiescent("demo", query, unknown, owner_approved=True)
+    unknown["output"]["observation"] = None
+    with pytest.raises(ContractError, match="INCOMPLETE_QUIESCENCE"):
+        owner.prove_quiescent("demo", query, unknown, owner_approved=True)
+    with pytest.raises(ContractError, match="OBSERVATION_PAGE_REPLAY_CHANGED"):
+        owner.prove_quiescent("demo", query, complete, owner_approved=True)
+    with pytest.raises(ContractError, match="QUIESCENCE_REQUIRED"):
+        owner.open_admission("demo", owner_approved=True)
+    assert owner.prove_quiescent("demo", *fresh_observation(owner), owner_approved=True)

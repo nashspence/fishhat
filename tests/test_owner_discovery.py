@@ -75,3 +75,66 @@ def test_legacy_discovery_without_exact_identities_is_rejected():
     del advertised["contract_schemas"]
     with pytest.raises(ContractError):
         validate("records.schema.json", advertised, "Info")
+
+
+def test_upgrade_between_discovery_and_stop_intent_preserves_only_original_replay(monkeypatch):
+    import io
+
+    from fishhat_client.wire import frame, read_frame
+    from fishhat_contracts.cancellation import CancellationJournal
+    from fishhat_contracts.discovery import FRESH_ADMISSION_METHODS, admission_contract
+    from fishhat_contracts.validation import SCHEMAS
+    from fishhat_owner.commands import direct_admission_contract, parse_command
+
+    from tests.test_cancellation import OWNER, context, request, wire
+
+    guarded = {
+        b["properties"]["method"]["const"]
+        for b in SCHEMAS["ssh-request.schema.json"]["oneOf"]
+        if "admission_contract" in b["properties"]
+    }
+    assert (
+        guarded
+        == FRESH_ADMISSION_METHODS
+        == {
+            "operation.submit",
+            "operation.close",
+            "operation.cancel",
+            "plan.prepare",
+            "content.begin",
+            "content.chunk",
+            "content.commit",
+            "workflow.journal.submit",
+            "lifecycle.evidence.prepare",
+        }
+    )
+    approved = owner_contract_schemas()
+    old_pin = admission_contract(approved)
+    before = CancellationJournal(OWNER)
+    old = request(0)
+    retained = before.cancel(old, **context(admission_pin=old_pin))
+
+    # Upgrade an installed normative description without changing owner epoch or wire shape.
+    changed = copy.deepcopy(SCHEMAS["cancellation.schema.json"])
+    changed["$defs"]["Request"]["description"] += " Require additional protected approval."
+    monkeypatch.setitem(SCHEMAS, "cancellation.schema.json", changed)
+    current_pin = admission_contract(owner_contract_schemas())
+    assert old_pin != current_pin
+    after = CancellationJournal(OWNER, retained=[retained])
+    assert after.cancel(old, **context(admission_pin=old_pin, target=None)) == retained
+    fresh = request(1)
+    message = wire("operation.cancel", fresh)
+    received = read_frame(io.BytesIO(frame(message, admission_contract=old_pin)))
+    native_argv = (
+        f"app-ops --admission-contract {old_pin} op cancel {fresh['request_id']}"
+        f" --request-id {fresh['cancellation_id']} --confirm --owner-epoch {OWNER['epoch']} --json"
+    )
+    parsed = parse_command(native_argv, "app-ops")
+    assert direct_admission_contract(parsed, message) == received["admission_contract"] == old_pin
+    with pytest.raises(ContractError, match="conflicting"):
+        direct_admission_contract(parsed, {**message, "admission_contract": current_pin})
+    for supplied in (None, received["admission_contract"]):
+        with pytest.raises(ContractError, match="CONFLICT"):
+            after.cancel(received["params"], **context(admission_pin=supplied))
+    assert after.snapshot() == [retained]
+    assert after.cancel(fresh, **context(admission_pin=current_pin))["decision"] == "stop-requested"

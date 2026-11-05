@@ -34,6 +34,12 @@ def parse_command(command: str, receiver: str) -> dict[str, Any]:
         raise ContractError("invalid command quoting") from e
     if not tokens or tokens[0] != receiver:
         raise ContractError("wrong receiver")
+    supplied = None
+    if len(tokens) >= 3 and tokens[1] == "--admission-contract":
+        supplied = tokens[2]
+        if not re.fullmatch(PATTERNS["{digest}"], supplied):
+            raise ContractError("invalid admission contract digest")
+        tokens = [tokens[0], *tokens[3:]]
     for form in FORMS:
         if len(tokens) != len(form["tokens"]):
             continue
@@ -41,7 +47,10 @@ def parse_command(command: str, receiver: str) -> dict[str, Any]:
             re.fullmatch(PATTERNS[t], a) if t in PATTERNS else a == t
             for a, t in zip(tokens, form["tokens"], strict=True)
         ):
-            return {"form": form["name"], "use_case": form["use_case"], "tokens": tokens}
+            parsed = {"form": form["name"], "use_case": form["use_case"], "tokens": tokens}
+            if supplied is not None:
+                parsed["admission_contract"] = supplied
+            return parsed
     raise ContractError("unsupported owner CLI form")
 
 
@@ -96,3 +105,14 @@ def _read_envelope(data: bytes, method: str) -> dict[str, Any]:
     validate("ssh-request.schema.json", request)
     params: dict[str, Any] = request["params"]
     return params
+
+
+def direct_admission_contract(command: dict[str, Any], envelope: dict[str, Any]) -> str | None:
+    """Carry the independently supplied pin into the same guarded admission as framed RPC."""
+    validate("ssh-request.schema.json", envelope)
+    if command["use_case"] != envelope["method"]:
+        raise ContractError("request method mismatch")
+    outer, inner = command.get("admission_contract"), envelope.get("admission_contract")
+    if outer is not None and inner is not None and outer != inner:
+        raise ContractError("conflicting admission contract digests")
+    return outer if outer is not None else inner

@@ -1,0 +1,139 @@
+{
+  "account": {
+    "device_groups": [],
+    "resource_account": "app-demo-app",
+    "runtime_instance": "quadlet"
+  },
+  "app_id": "demo-app",
+  "components": {
+    "database": {
+      "profile": "ordinary-v1",
+      "role": "internal"
+    },
+    "maintenance": {
+      "profile": "maintenance-v1",
+      "role": "maintenance"
+    },
+    "web": {
+      "profile": "ordinary-v1",
+      "role": "primary"
+    }
+  },
+  "datasets": {
+    "state": {
+      "capture": "capture",
+      "custody": "app",
+      "grant": "demo-app-data",
+      "native_format": "synthetic-sql-and-files-v1",
+      "owner": null,
+      "readers": [
+        "maintenance"
+      ],
+      "rebuild": null,
+      "recovery": "preserve",
+      "restore": "restore",
+      "verify_rebuild": null,
+      "verify_restore": "verify-restore",
+      "writers": [
+        "database",
+        "maintenance"
+      ]
+    }
+  },
+  "dependencies": {},
+  "domain_id": "a6606aee-cb29-5360-a578-3502f7b0a12a",
+  "entrypoint": "app.yaml",
+  "format": "fishhat.application-boundary/v1",
+  "grants": {
+    "demo-app-data": {
+      "profile": "local-data",
+      "resources": [
+        "dataset:demo-app-state"
+      ],
+      "type": "storage"
+    }
+  },
+  "hooks": {
+    "capture": {
+      "component": "maintenance",
+      "datasets": [
+        "state"
+      ],
+      "mode": "read",
+      "network": "none",
+      "role": "capture",
+      "secrets": []
+    },
+    "health": {
+      "component": "web",
+      "datasets": [],
+      "mode": "read",
+      "network": "none",
+      "role": "health",
+      "secrets": []
+    },
+    "restore": {
+      "component": "maintenance",
+      "datasets": [
+        "state"
+      ],
+      "mode": "write",
+      "network": "none",
+      "role": "restore",
+      "secrets": []
+    },
+    "verify-restore": {
+      "component": "maintenance",
+      "datasets": [
+        "state"
+      ],
+      "mode": "read",
+      "network": "none",
+      "role": "verify-restore",
+      "secrets": []
+    }
+  },
+  "host_id": "node-a",
+  "interfaces": {
+    "http": {
+      "authentication": "public",
+      "compatibility": [
+        "http-v1"
+      ],
+      "component": "web",
+      "port": 8080,
+      "protocol": "http",
+      "readiness_hook": "health"
+    }
+  },
+  "platform_profile": "qualified-linux",
+  "repository": {
+    "instance": "3f781d0c-3e1a-5432-b81d-d1cd214e9958",
+    "repository_id": 21
+  },
+  "secret_bindings": {
+    "database-password": {
+      "component": "database",
+      "delivery": "file",
+      "entry": "db-password",
+      "gid": 999,
+      "mode": "0400",
+      "target": "/run/secrets/db-password",
+      "uid": 999
+    }
+  },
+  "secret_catalogue": {
+    "entries": {
+      "db-password": {
+        "value_policy": "replaceable"
+      }
+    },
+    "path": "secrets.yaml",
+    "source": {
+      "instance": "demo-secrets",
+      "source": {},
+      "source_schema_digest": "sha256:d746974fa9afd5e951f76f9af38954b0ad7f436f2120dc974da65e5ee39f856f"
+    }
+  },
+  "security_control": false
+}

@@ -60,6 +60,19 @@ CHECK_CLASS_PURPOSE = {
 }
 
 CHECK_OVERRIDES = {
+    **{
+        "Portable::" + name: {
+            "purpose": "public-contract",
+            "authority": [
+                "packages/fishhat-contracts/src/fishhat_contracts/contracts/recovery-set.schema.json"
+            ],
+            "scope": "complete independently selected recovery inventories and exact successful qualification subject",
+            "relationship": "candidate",
+            "reason": "Synthetic inventories and independently selected report maps challenge missing or substituted dependencies. Native recovery and authentication require separate qualification.",
+            "claims": [],
+        }
+        for name in ("test_recovery_set_candidate", "test_recovery_set_no_unproven_qualification")
+    },
     "Portable::test_generic_recovery_delivery_survives_receipt_export_and_import": {
         "purpose": "public-contract",
         "authority": [
@@ -71,7 +84,7 @@ CHECK_OVERRIDES = {
         "relationship": "candidate",
         "reason": "A prepared recovery delivery retains its action, resource and identity across export and import.",
         "claims": [],
-    }
+    },
 }
 
 
@@ -442,30 +455,95 @@ class Portable(unittest.TestCase):
             validate_run(x)
 
     def test_recovery_set_candidate(self):
-        x = load("examples/bootstrap/native-recovery-set.json")
-        retained = x["application_closure_digests"].copy()
-        domain = x["domain_id"]
+        value = load("examples/bootstrap/native-recovery-set.json")
+        context = self.recovery_context(value)
+        validate_recovery_set(value, self.bundle, **context)
+        for field, key in (
+            ("application_closure_digests", "retained_application_closures"),
+            ("owner_rescue_digests", "retained_owner_rescues"),
+            ("service_checkpoint_digests", "retained_service_checkpoints"),
+            ("encrypted_secret_generation_digests", "retained_encrypted_secret_generations"),
+        ):
+            with self.subTest(field=field), self.assertRaisesRegex(ContractError, "coverage"):
+                validate_recovery_set(value, self.bundle, **{**context, key: [digest(field)]})
+        value["application_closure_digests"] = []
         validate_recovery_set(
-            x, self.bundle, expected_domain_id=domain, retained_application_closures=retained
+            value, self.bundle, **{**context, "retained_application_closures": []}
         )
-        x["application_closure_digests"] = []
-        validate_recovery_set(
-            x, self.bundle, expected_domain_id=domain, retained_application_closures=[]
-        )
-        with self.assertRaisesRegex(ContractError, "coverage mismatch"):
-            validate_recovery_set(
-                x, self.bundle, expected_domain_id=domain, retained_application_closures=retained
-            )
+        with self.assertRaisesRegex(ContractError, "unqualified"):
+            validate_recovery_set(value, self.bundle, require_qualified=True, **context)
+
+    @staticmethod
+    def recovery_context(value):
+        return {
+            "expected_domain_id": value["domain_id"],
+            "expected_native_kit_digest": value["native_kit_digest"],
+            "expected_catalogue_digest": value["catalogue_digest"],
+            "retained_owner_rescues": value["owner_rescue_digests"].copy(),
+            "retained_application_closures": value["application_closure_digests"].copy(),
+            "retained_encrypted_secret_generations": value[
+                "encrypted_secret_generation_digests"
+            ].copy(),
+            "retained_service_checkpoints": value["service_checkpoint_digests"].copy(),
+        }
 
     def test_recovery_set_no_unproven_qualification(self):
-        x = load("examples/bootstrap/native-recovery-set.json")
-        x["qualified"] = True
-        with self.assertRaises(ContractError):
+        value = load("examples/bootstrap/native-recovery-set.json")
+        bundle = self.bundle
+        install = {
+            "format": "fishhat.native-offline-install-evidence/v1",
+            "subject_digest": digest(
+                {k: v for k, v in bundle.items() if k not in {"qualification", "evidence"}}
+            ),
+            "platform": bundle["platform"],
+            "python": bundle["python"],
+            "verifier": "native-runner",
+            "result": "passed",
+        }
+        bundle.update(qualification="qualified", evidence=[digest(install)])
+        value.update(
+            qualified=True, independent_custody=True, installation_bundle_digest=digest(bundle)
+        )
+        recovery = {
+            "format": "fishhat.native-recovery-set-evidence/v1",
+            "subject_digest": digest(
+                {k: v for k, v in value.items() if k not in {"qualified", "evidence"}}
+            ),
+            "verifier": "native-runner",
+            "result": "passed",
+        }
+        value["evidence"] = [digest(recovery)]
+        reports = {digest(proof): proof for proof in (install, recovery)}
+        context = dict(
+            self.recovery_context(value),
+            authenticated_evidence=reports,
+            trusted_verifier="native-runner",
+            require_qualified=True,
+        )
+        validate_recovery_set(value, bundle, **context)
+        for field, replacement in (
+            ("evidence", [digest(install)]),
+            ("evidence", [digest("unavailable")]),
+            ("evidence", []),
+            ("independent_custody", False),
+            ("start_record_hint", "Substituted location"),
+            ("installation_bundle_path", "/elsewhere/bundle"),
+            ("native_kit_digest", digest("another kit")),
+            ("catalogue_digest", digest("another catalogue")),
+        ):
+            with self.subTest(field=field), self.assertRaises(ContractError):
+                validate_recovery_set({**value, field: replacement}, bundle, **context)
+        altered = {**recovery, "verifier": "another-runner"}
+        reports[digest(altered)] = altered
+        with self.assertRaisesRegex(ContractError, "verifier mismatch"):
+            validate_recovery_set({**value, "evidence": [digest(altered)]}, bundle, **context)
+        # Even an independently updated inventory cannot carry an older set's proof.
+        rescues = [digest("replacement owner rescue")]
+        with self.assertRaisesRegex(ContractError, "qualification subject"):
             validate_recovery_set(
-                x,
-                self.bundle,
-                expected_domain_id=x["domain_id"],
-                retained_application_closures=x["application_closure_digests"],
+                {**value, "owner_rescue_digests": rescues},
+                bundle,
+                **{**context, "retained_owner_rescues": rescues},
             )
 
     def test_source_receipt_cannot_claim_services(self):

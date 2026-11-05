@@ -277,7 +277,7 @@ def test_storage_observation_requires_independently_approved_observer():
     with pytest.raises(ContractError, match="OBSERVATION_APPROVED_BINDING"):
         ObservationSequence("storage", query, approved_binding=observer)
     manifest, configuration, kwargs = process_case(registry, observer, query)
-    with pytest.raises(ContractError, match="process storage observer binding is not approved"):
+    with pytest.raises(ContractError, match="process query binding is not approved"):
         validate_process_launch(manifest, query, configuration, **kwargs)
     del query["input"]["binding"]
     with pytest.raises(ContractError):
