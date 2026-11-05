@@ -21,7 +21,7 @@ from fishhat_contracts.operations import validate_operation
 from fishhat_contracts.validation import ContractError, canonical, digest, validate, validate_cli
 from fishhat_contracts.witness import sign
 from fishhat_contracts.workflows import decode_workflow_audit_input
-from fishhat_owner.commands import parse_command
+from fishhat_owner.commands import parse_command, work_list_params
 
 from tests.operation_support import seal_operation
 from tests.test_contracts import uid
@@ -421,6 +421,43 @@ def test_nonempty_and_empty_work_pages_have_identical_wire_cli_types():
             validate_cli_result(page)
     with pytest.raises(ContractError):
         validate_cli(cli({"items": [], "next_cursor": None}))
+
+
+@pytest.mark.parametrize("kind", ["host", "app", "domain", "dns"])
+def test_resource_observation_scope_matches_request_and_delivered_report(kind):
+    report = json.loads((FIXTURES / "resources/report.json").read_text())
+    report["resource"]["kind"] = kind
+    params = {"resource": report["resource"], "cursor": None, "limit": 1}
+    for schema, envelope in (
+        ("ssh-request.schema.json", request("resources.observe", params)),
+        ("ssh-response.schema.json", wire("resources.observe", report)),
+    ):
+        if kind in ("host", "app"):
+            validate(schema, envelope)
+        else:
+            with pytest.raises(ContractError):
+                validate(schema, envelope)
+
+
+@pytest.mark.parametrize("verb,method", [("op", "operation.list"), ("workflow", "workflow.list")])
+def test_direct_work_list_preserves_exact_ssh_filter_and_epoch(verb, method):
+    owner = operation()["owner"]
+    form = parse_command(f"{owner['tool']} {verb} list --request-stdin --json", owner["tool"])
+    params = {
+        "owner": owner,
+        "resource": {"kind": "component", "id": "blue green/雪;$"},
+        "active_only": True,
+        "cursor": "page_2",
+        "limit": 1,
+    }
+    envelope = request(method, params)
+    validate("ssh-request.schema.json", envelope)
+    assert work_list_params(canonical(envelope), form["use_case"], owner) == params
+    with pytest.raises(ContractError):
+        work_list_params(canonical(envelope), form["use_case"], {**owner, "epoch": V})
+    other = "operation.list" if method == "workflow.list" else "workflow.list"
+    with pytest.raises(ContractError):
+        work_list_params(canonical(request(other, params)), form["use_case"], owner)
 
 
 def test_resource_and_observation_continuations_share_cli_envelope():

@@ -55,13 +55,13 @@
     "software": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/software-adapter.schema.json",
-        "digest": "sha256:d48a4cf5e0f7154dbe64389b50d04c878405a68b00cb1d6ff30408ca9397d199"
+        "digest": "sha256:0e1b331ce3b11059106577d8f0c6b4a62d7c8dd0e7623abf3e5517376a273be2"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/software-adapter.schema.json#/$defs/Response",
-        "digest": "sha256:a7e99e40fdc4e24f0cb548bd3fb2b4505728cf2bb03e6f2d9a14927c31d5f1ee"
+        "digest": "sha256:d42000326711f053d685c6c885e9e82b795471a3fd120d5bb1f177832322b303"
       }
     }
   },
-  "process_schema_digest": "sha256:88cd09368b7f1099611f64ed1ac2b35d90aa30894580e9052c23a75bf3cb65e2"
+  "process_schema_digest": "sha256:1bdd99e643a3d37e31e7854ea447d07915097bfd07c9737fce9b039e72e7e847"
 }

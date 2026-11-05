@@ -30,6 +30,7 @@ def test_journal_without_posix_locking_refuses_custody_before_touching_files(tmp
         import importlib.abc
         import json
         import sys
+        from contextlib import contextmanager
         from pathlib import Path
 
         class MissingPosixLocking(importlib.abc.MetaPathFinder):
@@ -49,6 +50,12 @@ def test_journal_without_posix_locking_refuses_custody_before_touching_files(tmp
             "expected_owner": identity["owner"],
             "expected_schema": identity["schema"],
         }
+        @contextmanager
+        def unexpected_writer_lease():
+            raise AssertionError("unsupported custody attempted to acquire writer authority")
+            yield
+
+        arguments["writer_lease"] = unexpected_writer_lease()
         try:
             getattr(WorkflowJournal, action)(path, **arguments)
         except ContractError as error:

@@ -23,6 +23,21 @@ CHECK_PURPOSE = {
 }
 
 
+def test_repository_source_paths_exclude_git_administrative_entries():
+    domain = load("examples/domain/domain.yaml")
+    host = load("examples/host-node-a/host.yaml")
+    app = load("examples/demo-app/app.yaml")
+    for path in (".git/config", "subtree/.GiT/HEAD"):
+        domain["sources"]["host-node-a"]["entrypoint"] = path
+        for value in (host, app):
+            value["repository_secrets"] = path
+        for value in (domain, host, app):
+            with pytest.raises(ContractError):
+                validate("source.schema.json", value)
+    domain["sources"]["host-node-a"]["entrypoint"] = ".github/host.yaml"
+    validate_domain(domain)
+
+
 @pytest.mark.parametrize(
     "definition,value",
     [

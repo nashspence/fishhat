@@ -1,5 +1,6 @@
 """Partitioned workflow custody, exact replay and independently protected native gates."""
 
+from contextlib import contextmanager
 from copy import deepcopy
 
 import pytest
@@ -295,6 +296,9 @@ def test_accepted_request_rejects_changed_input_and_replay_requires_current_perm
     another_transport = Endpoint(member.target, run.root / "changed-input", run.meter)
     with pytest.raises(ContractError, match=r"changed accepted|retained journal command changed"):
         another_transport.submit(changed)
+    changed["payload"]["driver_term"] = True
+    with pytest.raises(ContractError, match="changed accepted input"):
+        member.target._run(changed, DRIVER)
     reference = member.inputs[command["id"]][0]
     changed_size = deepcopy(reference)
     changed_size["input"]["size"] += 1
@@ -610,13 +614,16 @@ def store_identity():
 
 
 @pytest.mark.parametrize(
-    "damage", ["missing", "empty", "partial-frame", "whole-frame", "changed-byte"]
+    "damage",
+    ["missing", "empty", "partial-frame", "whole-frame", "changed-byte", "consistent-rollback"],
 )
 def test_missing_or_corrupt_accepted_journal_never_becomes_empty_custody(tmp_path, damage):
     path = tmp_path / "accepted.journal"
     owner, schema, meter = LogicalWorkload().owner(0), store_identity(), WorkMeter()
-    journal = WorkflowJournal.create(path, owner=owner, schema=schema, metrics=meter.values)
+    journal = meter.store(path, owner, schema)
     prior_size = path.stat().st_size
+    head_path = path.with_name(path.name + ".head")
+    old_head_file = head_path.read_bytes()
     journal.append(
         "accepted-command",
         {"native": "original"},
@@ -631,27 +638,32 @@ def test_missing_or_corrupt_accepted_journal_never_becomes_empty_custody(tmp_pat
         path.write_bytes(b"")
     elif damage == "partial-frame":
         path.write_bytes(original[:-7])
-    elif damage == "whole-frame":
+    elif damage in {"whole-frame", "consistent-rollback"}:
         path.write_bytes(original[:prior_size])
+        if damage == "consistent-rollback":
+            head_path.write_bytes(old_head_file)
+            with pytest.raises(ContractError, match="independent checkpoint"):
+                WorkflowJournal.open(path, expected_owner=owner, expected_schema=schema)
     else:
         changed = bytearray(original)
         changed[-1] ^= 1
         path.write_bytes(changed)
     with pytest.raises((ContractError, OSError)):
-        WorkflowJournal.open(path, expected_owner=owner, expected_schema=schema)
+        meter.store(path, owner, schema, restore=True)
 
 
 def test_journal_replay_preserves_original_bytes_and_requires_current_read_permission(tmp_path):
     path = tmp_path / "accepted.journal"
     owner, schema = LogicalWorkload().owner(0), store_identity()
-    journal = WorkflowJournal.create(path, owner=owner, schema=schema)
+    meter = WorkMeter()
+    journal = meter.store(path, owner, schema)
     first = journal.append(
         "first", {"request": "one"}, {"outcome": "one"}, expected_head=journal.head
     )
     old_head = journal.head
     journal.append("later", {"request": "two"}, {"outcome": "two"}, expected_head=old_head)
     journal.close()
-    restored = WorkflowJournal.open(path, expected_owner=owner, expected_schema=schema)
+    restored = meter.store(path, owner, schema, restore=True)
     try:
         assert (
             restored.append("first", {"request": "one"}, {"outcome": "one"}, expected_head=old_head)
@@ -669,23 +681,64 @@ def test_journal_replay_preserves_original_bytes_and_requires_current_read_permi
     finally:
         restored.close()
     with pytest.raises(ContractError, match="owner"):
-        WorkflowJournal.open(path, expected_owner=changed, expected_schema=schema)
+        meter.store(path, changed, schema, restore=True)
 
 
 def test_journal_requires_one_writer_and_explicit_new_custody(tmp_path):
     path = tmp_path / "accepted.journal"
     owner, schema = LogicalWorkload().owner(0), store_identity()
-    journal = WorkflowJournal.create(path, owner=owner, schema=schema)
+    meter = WorkMeter()
+    journal = meter.store(path, owner, schema)
     try:
         with pytest.raises((ContractError, OSError)):
-            WorkflowJournal.create(path, owner=owner, schema=schema)
+            meter.store(path, owner, schema)
         with pytest.raises((ContractError, OSError)):
-            WorkflowJournal.open(path, expected_owner=owner, expected_schema=schema)
+            meter.store(path, owner, schema, restore=True)
+        # Separate inodes can pass flock and authenticate the same checkpoint.
+        clone = tmp_path / "cloned.journal"
+        clone.write_bytes(path.read_bytes())
+        clone.with_name(clone.name + ".head").write_bytes(
+            path.with_name(path.name + ".head").read_bytes()
+        )
+        with (
+            journal.guard(journal.head),
+            pytest.raises(ContractError, match="writer already active"),
+        ):
+            WorkflowJournal.open(
+                clone,
+                expected_owner=owner,
+                expected_schema=schema,
+                writer_lease=meter.writer_lease(path),
+            )
     finally:
         journal.close()
 
+    @contextmanager
+    def unavailable():
+        with meter.writer_lease(path) as retain_head:
 
-@pytest.mark.parametrize("failure", ["fsync", "head-replace"])
+            def fail_advance(previous, current):
+                if previous != current:
+                    raise OSError("independent checkpoint unavailable")
+                retain_head(previous, current)
+
+            yield fail_advance
+
+    writer = WorkflowJournal.open(
+        path, expected_owner=owner, expected_schema=schema, writer_lease=unavailable()
+    )
+    try:
+        with pytest.raises(OSError, match="independent checkpoint unavailable"):
+            writer.append("uncertain", {}, {}, expected_head=writer.head)
+        with pytest.raises(ContractError, match="writer unavailable"), writer.guard(writer.head):
+            pytest.fail("unacknowledged checkpoint publication reopened admission")
+    finally:
+        writer.close()
+    with pytest.raises(ContractError, match="independent checkpoint"):
+        meter.store(path, owner, schema, restore=True)
+
+
+@pytest.mark.parametrize("failure", ["fsync", "head-replace", "independent-checkpoint"])
 def test_failed_append_preserves_tail_and_old_custody_without_reopening_writer(
     tmp_path, monkeypatch, failure
 ):
@@ -693,19 +746,25 @@ def test_failed_append_preserves_tail_and_old_custody_without_reopening_writer(
 
     path = tmp_path / "accepted.journal"
     owner, schema = LogicalWorkload().owner(0), store_identity()
-    journal = WorkflowJournal.create(path, owner=owner, schema=schema)
+    meter = WorkMeter()
+    journal = meter.store(path, owner, schema)
     original = journal.append(
         "original", {"request": "accepted"}, {"outcome": "retained"}, expected_head=journal.head
     )
     checkpoint = original["receipt"]["digest"]
     accepted_bytes = path.read_bytes()
+    local_head_path = path.with_name(path.name + ".head")
+    accepted_head_bytes = local_head_path.read_bytes()
 
     def fail(*args):
         raise OSError("injected durable publication failure")
 
     try:
         with monkeypatch.context() as fault:
-            fault.setattr(store_module.os, "fsync" if failure == "fsync" else "replace", fail)
+            if failure == "independent-checkpoint":
+                fault.setattr(journal, "_retain_head", fail)
+            else:
+                fault.setattr(store_module.os, "fsync" if failure == "fsync" else "replace", fail)
             with pytest.raises(OSError, match="durable publication failure"):
                 journal.append(
                     "uncertain",
@@ -714,6 +773,11 @@ def test_failed_append_preserves_tail_and_old_custody_without_reopening_writer(
                     expected_head=journal.head,
                 )
         tail = path.read_bytes()
+        local_head_before_repair = local_head_path.read_bytes()
+        assert (local_head_before_repair != accepted_head_bytes) == (
+            failure == "independent-checkpoint"
+        )
+        assert meter.checkpoints[path] == checkpoint
         assert tail.startswith(accepted_bytes) and len(tail) > len(accepted_bytes)
         assert journal.lookup("original", read_authorized=True) == original
         assert journal.lookup("uncertain", read_authorized=True) is None
@@ -722,7 +786,7 @@ def test_failed_append_preserves_tail_and_old_custody_without_reopening_writer(
     finally:
         journal.close()
     with pytest.raises(ContractError):
-        WorkflowJournal.open(path, expected_owner=owner, expected_schema=schema)
+        meter.store(path, owner, schema, restore=True)
     assert path.read_bytes() == tail
     options = {"expected_owner": owner, "expected_schema": schema}
     with pytest.raises(ContractError, match="independent checkpoint"):
@@ -738,8 +802,11 @@ def test_failed_append_preserves_tail_and_old_custody_without_reopening_writer(
         with pytest.raises(ContractError, match="writer unavailable"):
             prefix.append("later", {}, {}, expected_head=checkpoint)
         with pytest.raises(ContractError, match="lacks native closure"):
-            prefix.repair_tail(reconcile=lambda evidence, archive: False)
+            prefix.repair_tail(
+                writer_lease=meter.writer_lease(path), reconcile=lambda evidence, archive: False
+            )
         assert path.read_bytes() == tail
+        assert local_head_path.read_bytes() == local_head_before_repair
 
         def reconcile(evidence, archive):
             from hashlib import sha256
@@ -756,8 +823,9 @@ def test_failed_append_preserves_tail_and_old_custody_without_reopening_writer(
             }
             return True
 
-        prefix.repair_tail(reconcile=reconcile)
+        prefix.repair_tail(writer_lease=meter.writer_lease(path), reconcile=reconcile)
         assert path.read_bytes() == accepted_bytes
+        assert local_head_path.read_bytes() == accepted_head_bytes
         with pytest.raises(ContractError, match="writer unavailable"):
             prefix.append("later", {}, {}, expected_head=checkpoint)
     finally:
@@ -765,7 +833,7 @@ def test_failed_append_preserves_tail_and_old_custody_without_reopening_writer(
     assert [p.read_bytes() for p in tmp_path.glob("*.quarantine-*")] == [
         tail[len(accepted_bytes) :]
     ]
-    reopened = WorkflowJournal.open(path, **options)
+    reopened = meter.store(path, owner, schema, restore=True)
     try:
         assert reopened.lookup("original", read_authorized=True) == original
         assert reopened.lookup("uncertain", read_authorized=True) is None
@@ -785,7 +853,8 @@ def test_uncertain_tail_repair_cost_and_custody(tmp_path):
     overhead = None
     for extent in (1000, 66000, 265000):
         path = tmp_path / f"journal-{extent}"
-        journal = WorkflowJournal.create(path, owner=owner, schema=schema)
+        meter = WorkMeter()
+        journal = meter.store(path, owner, schema)
         checkpoint = journal.head
         journal.close()
         torn = b"!" * extent
@@ -803,7 +872,7 @@ def test_uncertain_tail_repair_cost_and_custody(tmp_path):
 
             measured = prefix.metrics
             measured.clear()
-            prefix.repair_tail(reconcile=approve)
+            prefix.repair_tail(writer_lease=meter.writer_lease(path), reconcile=approve)
             assert measured["bytes_written"] == extent
             fixed = (measured["bytes_read"] - extent, measured["bytes_hashed"] - extent)
             assert all(0 < value < 1024 for value in fixed)

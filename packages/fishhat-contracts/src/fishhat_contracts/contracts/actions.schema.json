@@ -1578,10 +1578,7 @@
               "$ref": "common.schema.json#/$defs/Commit"
             },
             "entrypoint": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 240,
-              "pattern": "^(?!(?:\\.|\\.\\.)(?:/|(?![\\s\\S])))[^/\\\\\\u0000-\\u001f]+(?:/(?!(?:\\.|\\.\\.)(?:/|(?![\\s\\S])))[^/\\\\\\u0000-\\u001f]+)*(?![\\s\\S])"
+              "$ref": "common.schema.json#/$defs/GitTreePath"
             },
             "closure_digest": {
               "$ref": "common.schema.json#/$defs/MaterialDigest"
@@ -1814,7 +1811,7 @@
         "proposal"
       ],
       "additionalProperties": false,
-      "description": "Publish the exact reviewed source proposal against its named base through the authorized repository publisher. Publication changes source history; it does not activate that source on any host or application. The proposal handle selects the exact canonical records.schema SourceProposal, including its complete captured-file manifest and retained content handles. Before admission the receiving publisher verifies its source_id and base against this request, independently approves the repository mapping, acquires complete immutable custody of every referenced file and the exact base repository snapshot, and pins that closure in its Plan. It verifies old digests and differences against that base before publication. Original producer handles remain intact; approved receiving copies do not rewrite the proposal or require the original client. A mutable ref is never a substitute for the base commit or captured bytes. Produce a candidate commit derived from the exact reviewed base. For an existing direct branch, require its exact current tip to be an ancestor of, or equal to, the candidate. A divergent branch requires a new proposal and review. Creation requires verified literal absence. Symbolic destinations and force replacement are forbidden."
+      "description": "Publish the exact reviewed source proposal against its named base through the authorized repository publisher. Publication changes source history; it does not activate that source on any host or application. The proposal handle selects the exact canonical records.schema SourceProposal, including its complete captured-file manifest and retained content handles. Before admission the receiving publisher verifies its source_id and base against this request, independently approves the repository mapping, acquires complete immutable custody of every referenced file and the exact base repository snapshot, and pins that closure in its Plan. It verifies old digests and differences against that base before publication. Original producer handles remain intact; approved receiving copies do not rewrite the proposal or require the original client. A mutable ref is never a substitute for the base commit or captured bytes. Produce a candidate commit derived from the exact reviewed base. For an existing direct branch, atomically require its tip to equal the reviewed base. Any intervening change requires a new proposal and review, including a fast-forward. Independently verify that the candidate root Git tree equals the complete tree obtained by applying the verified proposal to that base, preserving every unselected path, object and mode. Apply the same tree check to creation and tag publication. Creation requires verified literal absence. Symbolic destinations and force replacement are forbidden."
     },
     "dns.reconcile": {
       "type": "object",

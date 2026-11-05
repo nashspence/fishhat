@@ -550,7 +550,7 @@
         "claims"
       ],
       "additionalProperties": false,
-      "description": "Owner-held capacity claims retain the exact verified allocation and pool identities, including native incarnations. Reconciliation after restore or re-enrollment cannot transfer a live claim to a replacement binding by name. Timeout or uncertain writer cessation does not release claims. The receiving owner commits per-operation remaining bytes and inodes and the corresponding quota/pool totals in one accounting transaction. Deduct newly verified operation-attributable charges once from its own remaining claim as they become current usage. Exact retries cannot debit again. Unattributed growth, stale measurements, loss of accounting continuity, or aggregates below the outstanding claims block credit until reconciliation. After verified cessation and fresh counters, release subtracts only this operation’s current remainder and atomically zeros its claims. A replay of released custody changes no counters. After restart, recover the original grants, per-operation remainders and phase from the same committed accounting revision before changing aggregates; aggregate free space cannot reconstruct an individual operation’s share."
+      "description": "Owner-held capacity claims retain the exact verified allocation and pool identities, including native incarnations. Reconciliation after restore or re-enrollment cannot transfer a live claim to a replacement binding by name. Timeout or uncertain writer cessation does not release claims. The receiving owner commits per-operation remaining bytes and inodes and the corresponding quota/pool totals in one accounting transaction. Deduct newly verified operation-attributable charges once from its own remaining claim as they become current usage. Exact retries cannot debit again. Unattributed growth, stale measurements, loss of accounting continuity, or aggregates below the outstanding claims block credit until reconciliation. After verified cessation and fresh counters, release subtracts only this operation\u2019s current remainder and atomically zeros its claims. A replay of released custody changes no counters. After restart, recover the original grants, per-operation remainders and phase from the same committed accounting revision before changing aggregates; aggregate free space cannot reconstruct an individual operation\u2019s share."
     },
     "CleanupInventory": {
       "type": "object",
@@ -1132,35 +1132,7 @@
           "additionalProperties": false
         },
         "resource": {
-          "type": "object",
-          "properties": {
-            "kind": {
-              "enum": [
-                "domain",
-                "host",
-                "app",
-                "source",
-                "dns",
-                "recovery",
-                "publisher",
-                "backend",
-                "adapter",
-                "interface",
-                "dataset",
-                "component"
-              ]
-            },
-            "id": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 160
-            }
-          },
-          "required": [
-            "kind",
-            "id"
-          ],
-          "additionalProperties": false
+          "$ref": "#/$defs/ObservationResource"
         },
         "observed_at": {
           "$ref": "common.schema.json#/$defs/Time"
@@ -1774,6 +1746,23 @@
       ],
       "additionalProperties": false,
       "description": "Owner-authenticated authorization to demote the named local recovery closure under the exact accepted policy, archive evidence and protection generation. It never overrides keep-local or any hold. Native owners authenticate its provenance before supplying it to the reference decision model; matching digest fields alone do not authenticate a receipt."
+    },
+    "ObservationResource": {
+      "allOf": [
+        {
+          "$ref": "common.schema.json#/$defs/Resource"
+        },
+        {
+          "properties": {
+            "kind": {
+              "enum": [
+                "host",
+                "app"
+              ]
+            }
+          }
+        }
+      ]
     }
   }
 }

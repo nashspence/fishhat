@@ -492,7 +492,10 @@ class _JournalTarget:
         old = self.journal.lookup(command["id"], read_authorized=True)
         if old is None:
             return None
-        _require(old["request"] == command, "workflow journal request ID changed accepted input")
+        _require(
+            old["outcome"]["body"]["command_digest"] == digest(command),
+            "workflow journal request ID changed accepted input",
+        )
         return cast(JSON, copy.deepcopy(old["outcome"]))
 
     def _commit(self, command: JSON, outcome: JSON) -> JSON:

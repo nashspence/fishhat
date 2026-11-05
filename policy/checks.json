@@ -692,6 +692,14 @@
       "purpose_sha256": "8a7ee0ee2bda925ffc5e2d1c957cf9be26b01bcbc270fdeb95e59041d2c5af52"
     },
     {
+      "node": "tests/test_adapter_authority.py::test_enrollment_and_host_source_compare_exact_json_identity[False-0]",
+      "purpose_sha256": "8a7ee0ee2bda925ffc5e2d1c957cf9be26b01bcbc270fdeb95e59041d2c5af52"
+    },
+    {
+      "node": "tests/test_adapter_authority.py::test_enrollment_and_host_source_compare_exact_json_identity[True-1]",
+      "purpose_sha256": "8a7ee0ee2bda925ffc5e2d1c957cf9be26b01bcbc270fdeb95e59041d2c5af52"
+    },
+    {
       "node": "tests/test_adapter_authority.py::test_every_stable_binding_field_changes_deployment_identity[configuration-digest]",
       "purpose_sha256": "8a7ee0ee2bda925ffc5e2d1c957cf9be26b01bcbc270fdeb95e59041d2c5af52"
     },
@@ -5376,6 +5384,10 @@
       "purpose_sha256": "6b98130aba139c220a85e88bf09f30b812b9aa6cbb18d451797ae1728e769bbc"
     },
     {
+      "node": "tests/test_contract_identifiers.py::test_repository_source_paths_exclude_git_administrative_entries",
+      "purpose_sha256": "6b98130aba139c220a85e88bf09f30b812b9aa6cbb18d451797ae1728e769bbc"
+    },
+    {
       "node": "tests/test_contract_identifiers.py::test_schema_and_ssh_consumers_preserve_valid_aliases_and_reject_newlines[maximum]",
       "purpose_sha256": "6b98130aba139c220a85e88bf09f30b812b9aa6cbb18d451797ae1728e769bbc"
     },
@@ -7832,6 +7844,10 @@
       "purpose_sha256": "bfcb986d0d35b5bba2eca3a779b4bb53e8764179a3582e2a208de4969289fcea"
     },
     {
+      "node": "tests/test_hook_handoffs.py::test_hook_input_bindings_require_pairwise_disjoint_paths",
+      "purpose_sha256": "bfcb986d0d35b5bba2eca3a779b4bb53e8764179a3582e2a208de4969289fcea"
+    },
+    {
       "node": "tests/test_hook_handoffs.py::test_hook_source_does_not_give_the_caller_an_extra_input_channel",
       "purpose_sha256": "bfcb986d0d35b5bba2eca3a779b4bb53e8764179a3582e2a208de4969289fcea"
     },
@@ -9716,6 +9732,14 @@
       "purpose_sha256": "1b27229e83e1f19dba46c975999e03c6bda493010e05a68c69bdacf5dd1d5bb5"
     },
     {
+      "node": "tests/test_owner_handoffs.py::test_direct_work_list_preserves_exact_ssh_filter_and_epoch[op-operation.list]",
+      "purpose_sha256": "1b27229e83e1f19dba46c975999e03c6bda493010e05a68c69bdacf5dd1d5bb5"
+    },
+    {
+      "node": "tests/test_owner_handoffs.py::test_direct_work_list_preserves_exact_ssh_filter_and_epoch[workflow-workflow.list]",
+      "purpose_sha256": "1b27229e83e1f19dba46c975999e03c6bda493010e05a68c69bdacf5dd1d5bb5"
+    },
+    {
       "node": "tests/test_owner_handoffs.py::test_input_expiry_blocks_new_plans_without_releasing_accepted_custody",
       "purpose_sha256": "1b27229e83e1f19dba46c975999e03c6bda493010e05a68c69bdacf5dd1d5bb5"
     },
@@ -9741,6 +9765,22 @@
     },
     {
       "node": "tests/test_owner_handoffs.py::test_resource_and_observation_continuations_share_cli_envelope",
+      "purpose_sha256": "1b27229e83e1f19dba46c975999e03c6bda493010e05a68c69bdacf5dd1d5bb5"
+    },
+    {
+      "node": "tests/test_owner_handoffs.py::test_resource_observation_scope_matches_request_and_delivered_report[app]",
+      "purpose_sha256": "1b27229e83e1f19dba46c975999e03c6bda493010e05a68c69bdacf5dd1d5bb5"
+    },
+    {
+      "node": "tests/test_owner_handoffs.py::test_resource_observation_scope_matches_request_and_delivered_report[dns]",
+      "purpose_sha256": "1b27229e83e1f19dba46c975999e03c6bda493010e05a68c69bdacf5dd1d5bb5"
+    },
+    {
+      "node": "tests/test_owner_handoffs.py::test_resource_observation_scope_matches_request_and_delivered_report[domain]",
+      "purpose_sha256": "1b27229e83e1f19dba46c975999e03c6bda493010e05a68c69bdacf5dd1d5bb5"
+    },
+    {
+      "node": "tests/test_owner_handoffs.py::test_resource_observation_scope_matches_request_and_delivered_report[host]",
       "purpose_sha256": "1b27229e83e1f19dba46c975999e03c6bda493010e05a68c69bdacf5dd1d5bb5"
     },
     {
@@ -10208,6 +10248,10 @@
       "purpose_sha256": "45c39bca4ce7c7165b08bbbbd0fa07a59aaff8103327277042325475b0b86cd7"
     },
     {
+      "node": "tests/test_portable.py::Portable::test_bundle_qualification_binds_exact_manifest_and_verified_profile",
+      "purpose_sha256": "45c39bca4ce7c7165b08bbbbd0fa07a59aaff8103327277042325475b0b86cd7"
+    },
+    {
       "node": "tests/test_portable.py::Portable::test_candidate_not_production_qualified",
       "purpose_sha256": "45c39bca4ce7c7165b08bbbbd0fa07a59aaff8103327277042325475b0b86cd7"
     },
@@ -10357,6 +10401,10 @@
     },
     {
       "node": "tests/test_portable.py::Portable::test_source_receipt_cannot_claim_services",
+      "purpose_sha256": "45c39bca4ce7c7165b08bbbbd0fa07a59aaff8103327277042325475b0b86cd7"
+    },
+    {
+      "node": "tests/test_portable.py::Portable::test_tool_release_requires_authenticated_evidence_for_published_pair",
       "purpose_sha256": "45c39bca4ce7c7165b08bbbbd0fa07a59aaff8103327277042325475b0b86cd7"
     },
     {
@@ -11441,6 +11489,10 @@
     },
     {
       "node": "tests/test_repository_contracts.py::test_resolve_does_not_require_an_invented_current_commit[unknown]",
+      "purpose_sha256": "294e6f74b8d6c09118481035e54378262fd48883cb253dba40382170b7e393d9"
+    },
+    {
+      "node": "tests/test_repository_contracts.py::test_reviewed_source_publication_preserves_intervening_edits",
       "purpose_sha256": "294e6f74b8d6c09118481035e54378262fd48883cb253dba40382170b7e393d9"
     },
     {
@@ -16080,6 +16132,10 @@
       "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
     },
     {
+      "node": "tests/test_workflow_journal.py::test_failed_append_preserves_tail_and_old_custody_without_reopening_writer[independent-checkpoint]",
+      "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
+    },
+    {
       "node": "tests/test_workflow_journal.py::test_issuer_cannot_revoke_shared_protection_while_dependents_remain_open",
       "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
     },
@@ -16101,6 +16157,10 @@
     },
     {
       "node": "tests/test_workflow_journal.py::test_missing_or_corrupt_accepted_journal_never_becomes_empty_custody[changed-byte]",
+      "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
+    },
+    {
+      "node": "tests/test_workflow_journal.py::test_missing_or_corrupt_accepted_journal_never_becomes_empty_custody[consistent-rollback]",
       "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
     },
     {

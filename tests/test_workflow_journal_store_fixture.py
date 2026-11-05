@@ -5,7 +5,8 @@ from pathlib import Path
 
 import pytest
 from fishhat_contracts.validation import ContractError, strict_json
-from fishhat_owner.workflow_journal import WorkflowJournal
+
+from tests.workflow_journal_support import WorkMeter
 
 CHECK_PURPOSE = {
     "purpose": "implementation",
@@ -29,9 +30,9 @@ def test_original_workflow_journal_fixture_preserves_exact_input_and_outcome(tmp
     head = path.with_name("journal.head")
     head.write_bytes(bytes.fromhex(fixture["head_hex"]))
     original_bytes = path.read_bytes(), head.read_bytes()
-    journal = WorkflowJournal.open(
-        path, expected_owner=fixture["owner"], expected_schema=fixture["schema"]
-    )
+    meter = WorkMeter()
+    meter.checkpoints[path] = fixture["receipt"]["digest"]
+    journal = meter.store(path, fixture["owner"], fixture["schema"], restore=True)
     try:
         command = journal.command_bytes(fixture["event_id"], read_authorized=True)
         outcome = journal.outcome_bytes(fixture["event_id"], read_authorized=True)

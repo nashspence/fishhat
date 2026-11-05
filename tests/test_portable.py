@@ -26,6 +26,7 @@ from fishhat_client.workspace import (
     validate_run,
     validate_session,
     validate_suite,
+    validate_tool_release,
 )
 from fishhat_contracts.validation import ContractError, digest, strict_yaml, validate, validate_cli
 from fishhat_owner.commands import FORMS, parse_command
@@ -152,6 +153,91 @@ class Portable(unittest.TestCase):
         validate_bundle(self.bundle)
         with self.assertRaises(ContractError):
             validate_bundle(self.bundle, require_qualified=True)
+
+    def test_bundle_qualification_binds_exact_manifest_and_verified_profile(self):
+        bundle = self.bundle
+        proof = {
+            "format": "fishhat.native-offline-install-evidence/v1",
+            "subject_digest": digest(
+                {k: v for k, v in bundle.items() if k not in {"qualification", "evidence"}}
+            ),
+            "platform": bundle["platform"],
+            "python": bundle["python"],
+            "verifier": "offline-runner",
+            "result": "passed",
+        }
+        evidence_id = digest(proof)
+        bundle.update(qualification="qualified", evidence=[evidence_id])
+        context = {
+            "authenticated_evidence": {evidence_id: proof},
+            "trusted_verifier": "offline-runner",
+        }
+        validate_bundle(bundle, require_qualified=True, **context)
+        with self.assertRaises(ContractError):
+            validate_bundle(bundle)
+        with self.assertRaises(ContractError):
+            validate_bundle(bundle, **{**context, "trusted_verifier": "other-runner"})
+        for field, replacement in (
+            ("lock", {**bundle["lock"], "sha256": "sha256:" + "b" * 64}),
+            ("platform", "macos-arm64"),
+            ("python", "cpython-3.13"),
+        ):
+            with self.subTest(field=field), self.assertRaisesRegex(ContractError, "subject"):
+                validate_bundle({**bundle, field: replacement}, **context)
+        for field, replacement in (("platform", "macos-arm64"), ("python", "cpython-3.13")):
+            altered = {**proof, field: replacement}
+            identity = digest(altered)
+            with self.subTest(field=field), self.assertRaisesRegex(ContractError, "profile"):
+                validate_bundle(
+                    {**bundle, "evidence": [identity]},
+                    authenticated_evidence={identity: altered},
+                    trusted_verifier="offline-runner",
+                )
+
+    def test_tool_release_requires_authenticated_evidence_for_published_pair(self):
+        client, owner = ("sha256:" + c * 64 for c in "ab")
+        release = {
+            "format": "deployment-ops/tool-release/v1",
+            "source_commit": self.bundle["source_commit"],
+            "version": "1",
+            "artifacts": {
+                "host": {
+                    "tool": "host-ops",
+                    "platform": "linux-amd64",
+                    "digest": owner,
+                    "rescue_digest": "sha256:" + "c" * 64,
+                    "wire_versions": ["v1"],
+                    "source_versions": ["v1"],
+                    "storage_version": 1,
+                    "uri": "file:/release",
+                }
+            },
+        }
+        pair = {"client_digest": client, "owner_digest": owner, "wire_version": "v1"}
+        proof = {
+            "format": "fishhat.release-pair-evidence/v1",
+            "release_digest": digest(release),
+            "result": "passed",
+            "verifier": "offline-runner",
+            **pair,
+        }
+        identity = digest(proof)
+        context = {
+            "authenticated_evidence": {identity: proof},
+            "trusted_verifier": "offline-runner",
+        }
+        release.update(qualified=True, tested_pairs=[{**pair, "evidence_digest": identity}])
+        validate_tool_release(release, required_pair=(client, owner, "v1"), **context)
+        with self.assertRaisesRegex(ContractError, "selected pairing"):
+            validate_tool_release(release, required_pair=(owner, client, "v1"), **context)
+        for change in ({"version": "2"}, {"tested_pairs": []}):
+            with self.assertRaises(ContractError):
+                validate_tool_release({**release, **change}, **context)
+        with self.assertRaises(ContractError):
+            validate_tool_release(release)
+        release["tested_pairs"][0]["client_digest"] = "sha256:" + "d" * 64
+        with self.assertRaisesRegex(ContractError, "pairing"):
+            validate_tool_release(release, **context)
 
     def test_wrong_platform(self):
         with self.assertRaises(ContractError):

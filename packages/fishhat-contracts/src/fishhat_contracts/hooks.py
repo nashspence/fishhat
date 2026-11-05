@@ -75,14 +75,14 @@ def _output_targets(value: dict[str, Any]) -> _PathIndex:
     output = _path(value["output_directory"])
     datasets = [_path(target["path"]) for target in value["dataset_handles"].values()]
     inputs = datasets + [_path(path) for path in value["secret_paths"].values()]
-    output_index = _PathIndex()
-    output_index.add(output)
+    index = _PathIndex()
+    index.add(output)
     _require(
-        all(not output_index.overlaps(path) for path in inputs),
+        all(not index.overlaps(path) for path in inputs),
         "hook output overlaps dataset target or secret",
     )
-    index = _PathIndex()
-    for target in [output, *inputs]:
+    for target in inputs:
+        _require(not index.overlaps(target), "hook dataset and secret paths overlap")
         index.add(target)
     return index
 

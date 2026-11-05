@@ -122,6 +122,16 @@ def test_renewal_never_reexecutes_an_accepted_native_operation(tmp_path, reporte
             with pytest.raises(ContractError, match=r"accepted|unaccepted proof"):
                 run.members[0].submit(renewal(run, original))
             assert run.submit_native(0, submission) == accepted
+            run.transfer()
+            current = run.native_submission(0, 0)
+            assert current["driver_term"] != submission["driver_term"]
+            assert run.submit_native(0, current) == run.submit_native(0, submission) == accepted
+            assert accepted["authenticated_principal"] == DRIVER
+            with pytest.raises(ContractError, match="changed accepted input"):
+                run.submit_native(0, {**current, "subject_digest": digest("different")})
+            run.native[0].denied_principals.add(run.principal)
+            with pytest.raises(ContractError, match="permission denied"):
+                run.submit_native(0, current)
             assert len(run.native[0].admissions) == 1
             assert not run.native[0].retired_permits
         finally:

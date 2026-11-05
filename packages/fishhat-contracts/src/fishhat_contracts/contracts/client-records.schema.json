@@ -26,7 +26,7 @@
               "type": "null"
             }
           ],
-          "description": "The original submission’s exact workflow ID, or null for standalone work. An authenticated Operation establishes acceptance of this delivery only when its signed witness workflow_id matches this value, including null."
+          "description": "The original submission’s exact workflow ID, or null for standalone work. The wire driver_term is an admission precondition rather than a Delivery identity field. A transfer cannot alter an already retained acceptance or refusal. An authenticated Operation establishes acceptance of this delivery only when its signed witness workflow_id matches this value, including null."
         },
         "endpoint_alias": {
           "type": "string",

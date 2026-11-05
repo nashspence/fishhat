@@ -3,7 +3,7 @@ from __future__ import annotations
 import copy
 
 import pytest
-from fishhat_adapters import Registry, check_request, runtime_binding_digest
+from fishhat_adapters import Registry, check_request, instance_reference, runtime_binding_digest
 from fishhat_contracts.validation import ContractError, digest
 from fishhat_owner.adapter_state import AdapterCoordinator
 
@@ -16,6 +16,7 @@ from tests.adapter_support import (
     contract_versions,
     fresh_observation,
     identifier,
+    observation_target,
     request,
     runtime_registry,
     runtime_sources,
@@ -544,3 +545,36 @@ def test_delegated_record_without_runtime_control_cannot_gain_dispatch_authority
     del state["attempts"][attempt["attempt_id"]]["runtime_control"]
     with pytest.raises(ContractError, match="RUNTIME_CONTROL_REQUIRED"):
         c.restore(state)
+
+
+@pytest.mark.parametrize("original,replacement", [(True, 1), (False, 0)])
+def test_enrollment_and_host_source_compare_exact_json_identity(original, replacement):
+    _, descriptor, instance = runtime_registry()
+    registry = Registry()
+    schema = descriptor["configuration_schema"]
+    schema["properties"]["mode"] = {"enum": [True, False, 1, 0]}
+    instance["schema_digest"] = digest(schema)
+    instance["configuration"]["mode"] = original
+    registry.install(
+        {
+            "implementation": descriptor["id"],
+            "artifact": {"digest": D, "media_type": "application/zip", "size_bytes": 100},
+            "descriptor_digest": digest(descriptor),
+            "enabled": True,
+        },
+        descriptor,
+        owner_approved=True,
+    )
+    registry.enroll(instance, owner_approved=True)
+    registry.enroll(copy.deepcopy(instance), owner_approved=True)
+    changed = copy.deepcopy(instance)
+    changed["configuration"]["mode"] = replacement
+    with pytest.raises(ContractError, match="EXPLICIT_REBIND_REQUIRED"):
+        registry.enroll(changed, owner_approved=True)
+    assert digest(registry.inspect_instance(instance["id"])) == digest(instance)
+    sources = runtime_sources(registry)
+    sources["host"]["adapter_instances"][instance["id"]] = changed
+    coordinator = AdapterCoordinator(OWNER, registry, lambda commit: None)
+    target = observation_target(instance_reference(instance, SCOPE))
+    with pytest.raises(ContractError, match="SOURCE_INSTANCE_REBIND_REQUIRED"):
+        coordinator.bind(target, **sources, owner_approved=True)

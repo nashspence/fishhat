@@ -290,9 +290,11 @@ class EventStore:
             or not 0 <= after <= 9007199254740991
             or not 1 <= limit <= 100
         ):
-            raise ContractError("bounded integer pagination required")
-        if (after and epoch is None) or (epoch is not None and epoch != self.epoch):
-            raise ContractError("index pagination epoch changed/missing")
+            raise ContractError("INVALID_INPUT")
+        if after and epoch is None:
+            raise ContractError("INVALID_INPUT")
+        if epoch is not None and epoch != self.epoch:
+            raise ContractError("EPOCH_CHANGED")
 
     def restore_epoch(self) -> None:
         """Explicit offline recovery mechanic only; never run as an API endpoint."""

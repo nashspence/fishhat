@@ -433,8 +433,25 @@ class OptionalIndex(unittest.TestCase):
         )
 
     def test_page_requires_epoch_after_first(self):
-        with self.assertRaises(ContractError):
-            self.s.events(self.e["workflow_id"], after=1, **self.auth)
+        self.s.put(self.e, **self.auth)
+        for same_workflow in (True, False):
+            extra = copy.deepcopy(self.e)
+            extra["id"] = str(uuid.uuid4())
+            if not same_workflow:
+                extra["workflow_id"] = str(uuid.uuid4())
+            self.s.put(extra, **self.auth)
+        for page, args in ((self.s.events, (self.e["workflow_id"],)), (self.s.workflows, ())):
+            first = page(*args, limit=1, **self.auth)
+            after, epoch = first["next_after"], first["store_epoch"]
+            self.assertIsNotNone(after)
+            with self.assertRaisesRegex(ContractError, "^INVALID_INPUT$"):
+                page(*args, after=after, **self.auth)
+            second = page(*args, after=after, expected_store_epoch=epoch, **self.auth)
+            self.assertTrue(second["items"])
+            self.s.restore_epoch()
+            with self.assertRaisesRegex(ContractError, "^EPOCH_CHANGED$"):
+                page(*args, after=after, expected_store_epoch=epoch, **self.auth)
+            self.assertEqual(page(*args, **self.auth)["store_epoch"], self.s.epoch)
 
     def test_bool_limit_rejected(self):
         with self.assertRaises(ContractError):

@@ -165,7 +165,10 @@ class Registry:
         scopes = [digest(x["scope"]) for x in instance["grants"]]
         require(len(scopes) == len(set(scopes)), "DUPLICATE_SCOPE")
         previous = self._instances.get(instance["id"])
-        require(previous is None or previous == instance, "EXPLICIT_REBIND_REQUIRED")
+        require(
+            previous is None or canonical(previous) == canonical(instance),
+            "EXPLICIT_REBIND_REQUIRED",
+        )
         self._check_mutation_authority(instance)
         self._instances[instance["id"]] = copy.deepcopy(instance)
 
@@ -280,7 +283,8 @@ class Registry:
                     selection, scope = declaration["adapter"], declaration["scope"]
                     instance = self.resolve_source(selection, role, scope)
                     require(
-                        host["adapter_instances"].get(instance["id"]) == instance,
+                        canonical(host["adapter_instances"].get(instance["id"]))
+                        == canonical(instance),
                         "SOURCE_INSTANCE_REBIND_REQUIRED",
                     )
                     key = self._source_target_key(selection, role, scope)
