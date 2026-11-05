@@ -8,7 +8,7 @@
   "adapter": {
     "implementation": "fishhat.git-bundle",
     "installation_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "descriptor_digest": "sha256:87cb66b9a0c87eba690977bb68b2bdd277ed23242ac64af7124b801f1d722598",
+    "descriptor_digest": "sha256:d9cc40617bf234381f06db1cb00faedef61a26879aa554a409e299b547c061f4",
     "configuration_digest": "sha256:6a609f6a9b32d303d3df8e174e088dce83f80bc40fc0c3684481aaa0932b6863",
     "source_schema_digest": "sha256:281bb61adafe977f2a1b952d106dc888939c015ce47ade32ebae33db8de12d95"
   },
@@ -17,7 +17,7 @@
     "media_type": "application/json",
     "size_bytes": 184
   },
-  "catalogue_digest": "sha256:5fb05f7d7c56c63c315ef73fd86fe1480b14ebc29183f142b45dabed70797744",
+  "catalogue_digest": "sha256:b155c3ca843568079fdd00b48d46d7ee754b0081b7c8aba26fb56c2ad21988f8",
   "kit_manifest_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   "recovery_root": "/recovery/staging/run-001",
   "verify_only": true,

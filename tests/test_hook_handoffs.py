@@ -274,6 +274,23 @@ def test_disjoint_hook_paths_with_common_string_prefix_remain_valid(role):
     validate_hook_request(value)
 
 
+def test_hook_input_bindings_require_pairwise_disjoint_paths():
+    for path in ("/data", "/data/state", "/data/state/key"):
+        for left, right in (
+            ("dataset_handles", "dataset_handles"),
+            ("dataset_handles", "secret_paths"),
+            ("secret_paths", "secret_paths"),
+        ):
+            value = request("capture")
+            value["dataset_handles"].clear()
+            for field, key, target in ((left, "first", "/data/state"), (right, "second", path)):
+                value[field][key] = (
+                    {"path": target, "mode": "read"} if field == "dataset_handles" else target
+                )
+            with pytest.raises(ContractError, match="dataset and secret paths overlap"):
+                validate_hook_request(value)
+
+
 @pytest.mark.parametrize("field", ["output", "dataset", "secret"])
 @pytest.mark.parametrize(
     "path",

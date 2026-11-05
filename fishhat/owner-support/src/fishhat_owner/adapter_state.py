@@ -258,7 +258,7 @@ class AdapterCoordinator:
         )
         instance = self.registry.resolve(app["runtime"], app["components"])
         require(
-            host["adapter_instances"].get(binding["instance"]) == instance,
+            canonical(host["adapter_instances"].get(binding["instance"])) == canonical(instance),
             "SOURCE_INSTANCE_REBIND_REQUIRED",
         )
 

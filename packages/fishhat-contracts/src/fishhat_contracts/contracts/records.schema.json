@@ -1266,10 +1266,7 @@
                   "$ref": "common.schema.json#/$defs/Commit"
                 },
                 "entrypoint": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 240,
-                  "pattern": "^(?!(?:\\.|\\.\\.)(?:/|(?![\\s\\S])))[^/\\\\\\u0000-\\u001f]+(?:/(?!(?:\\.|\\.\\.)(?:/|(?![\\s\\S])))[^/\\\\\\u0000-\\u001f]+)*(?![\\s\\S])"
+                  "$ref": "common.schema.json#/$defs/GitTreePath"
                 },
                 "closure_digest": {
                   "type": "string",
@@ -2708,10 +2705,7 @@
                 "$ref": "common.schema.json#/$defs/Commit"
               },
               "entrypoint": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 240,
-                "pattern": "^(?!(?:\\.|\\.\\.)(?:/|(?![\\s\\S])))[^/\\\\\\u0000-\\u001f]+(?:/(?!(?:\\.|\\.\\.)(?:/|(?![\\s\\S])))[^/\\\\\\u0000-\\u001f]+)*(?![\\s\\S])"
+                "$ref": "common.schema.json#/$defs/GitTreePath"
               },
               "closure_digest": {
                 "type": "string",
@@ -3440,10 +3434,7 @@
               "$ref": "common.schema.json#/$defs/Commit"
             },
             "entrypoint": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 240,
-              "pattern": "^(?!(?:\\.|\\.\\.)(?:/|(?![\\s\\S])))[^/\\\\\\u0000-\\u001f]+(?:/(?!(?:\\.|\\.\\.)(?:/|(?![\\s\\S])))[^/\\\\\\u0000-\\u001f]+)*(?![\\s\\S])"
+              "$ref": "common.schema.json#/$defs/GitTreePath"
             },
             "closure_digest": {
               "type": "string",
@@ -5090,7 +5081,7 @@
         "reason"
       ],
       "additionalProperties": false,
-      "description": "An authenticated operation.submit refusal for this exact original submission. After authorizing disclosure of the request and resource, the owner serializes with native acceptance, verifies the complete retained epoch index, and durably closes this previously unaccepted request ID against all later acceptance before responding. A matching retry returns the original refusal after current read authorization. A changed immutable submission conflicts. An unavailable index, ambiguous outcome, denied disclosure, already accepted identity, or failed commit cannot issue this proof. Neither an ordinary Problem nor a not-found lookup proves nonacceptance. The accompanying Problem matches the owner, resource and reason, with retry none. The receiver authenticates the responding owner, correlates the original SSH message and matches every refusal identity to its original delivery. A copied JSON value supplies no independent authority. Retain this refusal and its matching Problem for the owner epoch. operation.get can return them unchanged to a currently authorized reader of the original protected resource using only the original owner and request ID. New submission permission and original client state are unnecessary. No lookup creates a decision."
+      "description": "An authenticated operation.submit refusal for this exact original submission. After authorizing disclosure of the request and resource, the owner serializes with native acceptance, verifies the complete retained epoch index, and durably closes this previously unaccepted request ID against all later acceptance before responding. A matching retry returns the original refusal after current read authorization. Compare all canonical operation.submit params except driver_term, which governs only a fresh decision. A stale term alone cannot close an unused request ID or issue a durable refusal. A changed immutable submission conflicts. An unavailable index, ambiguous outcome, denied disclosure, already accepted identity, or failed commit cannot issue this proof. Neither an ordinary Problem nor a not-found lookup proves nonacceptance. The accompanying Problem matches the owner, resource and reason, with retry none. The receiver authenticates the responding owner, correlates the original SSH message and matches every refusal identity to its original delivery. A copied JSON value supplies no independent authority. Retain this refusal and its matching Problem for the owner epoch. operation.get can return them unchanged to a currently authorized reader of the original protected resource using only the original owner and request ID. New submission permission and original client state are unnecessary. No lookup creates a decision."
     }
   },
   "x-fishhat-contract-dependencies": [

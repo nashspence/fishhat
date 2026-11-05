@@ -12,7 +12,15 @@ from typing import Any
 from urllib.parse import urljoin
 
 from .authorization import require_action_owner
-from .validation import CATALOGUES, SCHEMAS, ContractError, digest, validate, validate_plan
+from .validation import (
+    CATALOGUES,
+    SCHEMAS,
+    ContractError,
+    canonical,
+    digest,
+    validate,
+    validate_plan,
+)
 
 _OWNER_STATES = CATALOGUES["https://fishhat.invalid/contracts/states.json"]["owner"]
 _TERMINAL_STATES = frozenset(state for state, successors in _OWNER_STATES.items() if not successors)
@@ -76,6 +84,15 @@ def validate_operation(
         expected = operation["subject"]["arguments"][spec["subject_field"]]
     if result["schema"] != expected:
         raise ContractError("action result schema substitution")
+
+
+def submission_replay_identity(submission: dict[str, Any]) -> bytes:
+    """Commit all validated operation.submit params except the admission-only driver term.
+
+    This identity compares retries after current read authorization. A new decision
+    still requires current admission authority, including the reviewed driver term.
+    """
+    return canonical({key: value for key, value in submission.items() if key != "driver_term"})
 
 
 def operation_matches_delivery(operation: dict[str, Any], delivery: dict[str, Any]) -> bool:

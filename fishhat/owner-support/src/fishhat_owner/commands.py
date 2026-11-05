@@ -62,3 +62,17 @@ def workflow_apply_params(data: bytes, expected_owner: dict[str, Any]) -> dict[s
     if params["workflow_id"] is None:
         raise ContractError("workflow submission requires explicit membership and driver term")
     return params
+
+
+def work_list_params(data: bytes, method: str, expected_owner: dict[str, Any]) -> dict[str, Any]:
+    """Decode a direct list request using the same closed selector as the SSH method."""
+    request = strict_json(data)
+    if method not in ("operation.list", "workflow.list") or not isinstance(request, dict):
+        raise ContractError("expected an operation or workflow list request")
+    if request.get("method") != method:
+        raise ContractError("list request method mismatch")
+    validate("ssh-request.schema.json", request)
+    params: dict[str, Any] = request["params"]
+    if params["owner"] != expected_owner:
+        raise ContractError("list request requires the exact local owner epoch")
+    return params

@@ -164,6 +164,7 @@ def require_repository_publication(
     symbolic: bool,
     is_ancestor: Callable[[str, str], bool],
     source_proposal: dict[str, Any] | None = None,
+    verify_proposal_tree: Callable[[dict[str, Any], str], bool] | None = None,
 ) -> None:
     """Check independently observed literal-ref facts under native CAS or exclusion.
 
@@ -172,7 +173,10 @@ def require_repository_publication(
     uncertain observation cannot supply these facts. The adapter supplies
     verified reachability in the exact retained repository, rejecting
     incomplete history. A source publisher also supplies the independently
-    retained reviewed proposal. The native caller must preserve these facts
+    retained reviewed proposal. Its verifier compares the candidate commit's
+    complete Git root tree with the tree independently derived by applying the
+    verified proposal to its pinned base, preserving every unselected entry.
+    The native caller must preserve these facts
     atomically through its update; this pure check never mutates or reserves a ref.
     """
     validate("repository-adapter.schema.json", request)
@@ -189,13 +193,21 @@ def require_repository_publication(
         from .action_results import validate_source_proposal
 
         validate_source_proposal(source_proposal)
+        base = source_proposal["base_commit"]
+        if current_object_id is not None and inputs["ref"].startswith("refs/heads/"):
+            _require(current_object_id == base, "branch advanced beyond reviewed base")
         _require(
             source_proposal["repository"] == inputs["repository"]["canonical"]
             and source_proposal["ref"] == inputs["ref"]
-            and is_ancestor(source_proposal["base_commit"], candidate["commit"]) is True,
+            and is_ancestor(base, candidate["commit"]) is True,
             "candidate differs from reviewed source history",
         )
-    if current_object_id is not None and inputs["ref"].startswith("refs/heads/"):
+        _require(
+            verify_proposal_tree is not None
+            and verify_proposal_tree(source_proposal, candidate["commit"]) is True,
+            "candidate tree differs from reviewed proposal",
+        )
+    elif current_object_id is not None and inputs["ref"].startswith("refs/heads/"):
         _require(
             is_ancestor(current_object_id, candidate["commit"]) is True,
             "divergent or unverified publication",

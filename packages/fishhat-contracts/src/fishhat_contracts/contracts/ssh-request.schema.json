@@ -312,7 +312,7 @@
                   "type": "null"
                 }
               ],
-              "description": "For workflow work, the receiving owner resolves this exact local journal and its retained admission permit by the submitted request_id and Plan digest. A workflow ID or caller-supplied certificate alone grants no admission. Before native acceptance it checks current principal, active local lifecycle, fully activated driver term, exact local Plan/subject and the same durable native reservation protected through effects. The journal permit is durably committed before native acceptance; a later pause, freeze, expiry or retirement closes new submission. An already accepted native Operation remains replayable by its own original exact request identity without reexecuting or requiring a fresh permit. A null workflow_id requires null driver_term and no implicit workflow membership."
+              "description": "For workflow work, the receiving owner resolves this exact local journal and its retained admission permit by the submitted request_id and Plan digest. A workflow ID or caller-supplied certificate alone grants no admission. Before native acceptance it checks current principal, active local lifecycle, fully activated driver term, exact local Plan/subject and the same durable native reservation protected through effects. The journal permit is durably committed before native acceptance; a later pause, freeze, expiry or retirement closes new submission. After validating the wire shape and checking current protected read permission, consult the retained acceptance or durable refusal by owner epoch and request ID. Compare every original canonical submission parameter except driver_term. An otherwise identical submission with the original or a different valid term returns the original decision and attribution without a fresh permit; changed immutable params conflict. With no retained decision, independently require the submitted current term, activated driver, current scoped permission and all admission checks. A stale term alone yields an ordinary precondition failure and cannot durably refuse or consume an unused identity. A null workflow_id requires null driver_term and no implicit workflow membership."
             },
             "driver_term": {
               "anyOf": [
@@ -798,35 +798,7 @@
           "type": "object",
           "properties": {
             "resource": {
-              "type": "object",
-              "properties": {
-                "kind": {
-                  "enum": [
-                    "domain",
-                    "host",
-                    "app",
-                    "source",
-                    "dns",
-                    "recovery",
-                    "publisher",
-                    "backend",
-                    "adapter",
-                    "interface",
-                    "dataset",
-                    "component"
-                  ]
-                },
-                "id": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 160
-                }
-              },
-              "required": [
-                "kind",
-                "id"
-              ],
-              "additionalProperties": false
+              "$ref": "resource-records.schema.json#/$defs/ObservationResource"
             },
             "cursor": {
               "anyOf": [

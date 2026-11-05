@@ -7,7 +7,7 @@ Path checks are lexical; actual no-follow/mount/ownership checks need native cod
 from __future__ import annotations
 
 import re
-from collections.abc import Collection
+from collections.abc import Collection, Mapping
 from itertools import chain, combinations
 from pathlib import PurePosixPath
 from typing import Any, cast
@@ -67,19 +67,43 @@ def validate_session(value: dict[str, Any]) -> dict[str, Any]:
     return value
 
 
+def _authenticated_report(
+    identity: str,
+    reports: Mapping[str, dict[str, Any]] | None,
+    verifier: str | None,
+    schema: str,
+    definition: str,
+) -> dict[str, Any]:
+    """Reports must already be authenticated against the receiver's independent policy."""
+    proof = reports.get(identity) if reports is not None else None
+    if proof is None or digest(proof) != identity:
+        raise ContractError("qualification evidence missing or changed")
+    validate(schema, proof, definition)
+    if verifier is None or proof["verifier"] != verifier:
+        raise ContractError("qualification verifier mismatch")
+    return proof
+
+
 def validate_bundle(
     value: dict[str, Any],
     *,
     platform: str | None = None,
     python: str | None = None,
     require_qualified: bool = False,
+    authenticated_evidence: Mapping[str, dict[str, Any]] | None = None,
+    trusted_verifier: str | None = None,
 ) -> dict[str, Any]:
+    """Authenticate reports before supplying them here, under independent verifier policy.
+
+    The receiver provides the trusted identity and independently authenticated records.
+    This reference only checks their content commitments and qualification subject.
+    """
     validate("install-bundle.schema.json", value)
     if platform is not None and platform != value["platform"]:
         raise ContractError("wrong install platform")
     if python is not None and python != value["python"]:
         raise ContractError("wrong interpreter ABI")
-    if require_qualified and (value["qualification"] != "qualified" or not value["evidence"]):
+    if require_qualified and value["qualification"] != "qualified":
         raise ContractError("unqualified install bundle")
     paths = set()
     for x in [value["lock"]] + value["wheels"] + value["build_inputs"]:
@@ -87,12 +111,69 @@ def validate_bundle(
         if x["path"] in paths:
             raise ContractError("duplicate artifact path")
         paths.add(x["path"])
-    if value["qualification"] == "qualified" and not value["evidence"]:
-        raise ContractError("qualification needs evidence")
+    if value["qualification"] == "qualified":
+        subject = digest({k: v for k, v in value.items() if k not in {"qualification", "evidence"}})
+        for identity in value["evidence"]:
+            proof = _authenticated_report(
+                identity,
+                authenticated_evidence,
+                trusted_verifier,
+                "install-bundle.schema.json",
+                "QualificationEvidence",
+            )
+            if (
+                proof["subject_digest"] != subject
+                or proof["platform"] != value["platform"]
+                or proof["python"] != value["python"]
+            ):
+                raise ContractError("install qualification subject or profile mismatch")
     if not all(
         x["path"].startswith("wheels/") and x["path"].endswith(".whl") for x in value["wheels"]
     ):
         raise ContractError("runtime bundle must contain wheels")
+    return value
+
+
+def validate_tool_release(
+    value: dict[str, Any],
+    *,
+    authenticated_evidence: Mapping[str, dict[str, Any]] | None = None,
+    trusted_verifier: str | None = None,
+    required_pair: tuple[str, str, str] | None = None,
+) -> dict[str, Any]:
+    """Verify compatibility reports and, for use, the selected client, owner and wire version."""
+    validate("tool-release.schema.json", value)
+    if not value["qualified"]:
+        if required_pair is not None:
+            raise ContractError("unqualified tool release")
+        return value
+    release = digest({k: v for k, v in value.items() if k not in {"qualified", "tested_pairs"}})
+    versions: dict[str, set[str]] = {}
+    for item in value["artifacts"].values():
+        supported = set(item["wire_versions"])
+        if item["digest"] in versions and versions[item["digest"]] != supported:
+            raise ContractError("inconsistent wire versions for release artifact")
+        versions[item["digest"]] = supported
+    matched = required_pair is None
+    for pair in value["tested_pairs"]:
+        proof = _authenticated_report(
+            pair["evidence_digest"],
+            authenticated_evidence,
+            trusted_verifier,
+            "tool-release.schema.json",
+            "PairEvidence",
+        )
+        if proof["release_digest"] != release or any(
+            proof[k] != pair[k] for k in ("client_digest", "owner_digest", "wire_version")
+        ):
+            raise ContractError("release qualification subject or pairing mismatch")
+        members = [d for d in (pair["client_digest"], pair["owner_digest"]) if d in versions]
+        if not members or any(pair["wire_version"] not in versions[d] for d in members):
+            raise ContractError("tested pairing does not match published artifacts")
+        if required_pair == (pair["client_digest"], pair["owner_digest"], pair["wire_version"]):
+            matched = True
+    if not matched:
+        raise ContractError("selected pairing has no qualifying evidence")
     return value
 
 
@@ -240,10 +321,17 @@ def validate_recovery_set(
     *,
     expected_domain_id: str,
     retained_application_closures: Collection[str],
+    authenticated_evidence: Mapping[str, dict[str, Any]] | None = None,
+    trusted_verifier: str | None = None,
 ) -> dict[str, Any]:
     """Check complete application obligations from independent same-domain custody."""
     validate("recovery-set.schema.json", value)
-    validate_bundle(bundle)
+    validate_bundle(
+        bundle,
+        require_qualified=value["qualified"],
+        authenticated_evidence=authenticated_evidence,
+        trusted_verifier=trusted_verifier,
+    )
     if value["domain_id"] != expected_domain_id or set(value["application_closure_digests"]) != set(
         retained_application_closures
     ):

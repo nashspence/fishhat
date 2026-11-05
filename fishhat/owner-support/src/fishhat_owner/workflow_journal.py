@@ -16,7 +16,7 @@ import tempfile
 import threading
 import uuid
 from collections.abc import Callable, Iterator, Mapping, MutableMapping
-from contextlib import AbstractContextManager, contextmanager
+from contextlib import AbstractContextManager, ExitStack, contextmanager
 from pathlib import Path
 from typing import Any
 
@@ -30,6 +30,8 @@ _CHUNK = 65536
 _HEAD_MAGIC = b"fishhat.workflow-journal-head/v1\n"
 _HEAD_DOMAIN = b"fishhat.workflow-journal-head-checksum/v1\x00"
 Reader = Callable[[dict[str, Any]], None]
+Checkpoint = Callable[[str | None, str], None]
+WriterLease = AbstractContextManager[Checkpoint]
 
 
 def _bounds(name: str) -> Bounds:
@@ -105,9 +107,17 @@ class WorkflowJournal:
         self._genesis: dict[str, Any] = {}
         self._reader: Reader | None = None
         self._prefix_size: int | None = None
+        self._prefix_local_head: tuple[str, int, int, bytes] | None = None
+        self._writer = ExitStack()
+        self._retain_head: Checkpoint | None = None
         self._failed = False
         self._closed = False
         self._path: Path | None = None
+
+    def _acquire_writer(self, lease: WriterLease) -> None:
+        checkpoint = self._writer.enter_context(lease)
+        _require(callable(checkpoint), "independent writer lease lacks checkpoint authority")
+        self._retain_head = checkpoint
 
     def _count(self, name: str, amount: int = 1) -> None:
         self.metrics[name] = self.metrics.get(name, 0) + amount
@@ -165,11 +175,16 @@ class WorkflowJournal:
         return hashlib.sha256(_HEAD_DOMAIN + data).digest()
 
     def _publish_head(self, checksum: bytes, sequence: int) -> None:
+        self._write_local_head(checksum, sequence, os.fstat(self._fd).st_size)
+        assert self._retain_head is not None
+        self._retain_head(None if sequence == 0 else self.head, "sha256:" + checksum.hex())
+
+    def _write_local_head(self, checksum: bytes, sequence: int, size: int) -> None:
         assert self._path is not None
         body = (
             _HEAD_MAGIC
             + uuid.UUID(self.journal_id).bytes
-            + struct.pack(">QQ", sequence, os.fstat(self._fd).st_size)
+            + struct.pack(">QQ", sequence, size)
             + checksum
         )
         data = body + self._head_checksum(body)
@@ -246,6 +261,7 @@ class WorkflowJournal:
         *,
         owner: dict[str, Any],
         schema: dict[str, Any],
+        writer_lease: WriterLease,
         metrics: MutableMapping[str, int] | None = None,
     ) -> WorkflowJournal:
         """Explicitly create new owner custody and fsync both file and directory."""
@@ -254,6 +270,7 @@ class WorkflowJournal:
         journal = cls(cls._descriptor(path, create=True), metrics)
         journal._path = Path(path)
         try:
+            journal._acquire_writer(writer_lease)
             genesis = {
                 "format": "fishhat.workflow-journal-store/v1",
                 "kind": "genesis",
@@ -288,29 +305,41 @@ class WorkflowJournal:
         expected_schema: dict[str, Any],
         historical_readers: Mapping[tuple[str, str], Reader] | None = None,
         verified_prefix_head: str | None = None,
+        writer_lease: WriterLease | None = None,
         metrics: MutableMapping[str, int] | None = None,
     ) -> WorkflowJournal:
         """Verify complete custody, or inspect an independently authenticated prefix.
 
+        Writable access holds an independently commissioned exclusive lease through
+        close, including guard, native acceptance and checkpoint publication. The same
+        lease excludes every other copy of this logical journal and epoch. Its
+        checkpoint compare-and-swap is backed by custody outside the rollback domain
+        of the journal and HEAD. It verifies expected == current and durably sets
+        the new head or raises. None means genesis requires absent custody. Reopen
+        compares the verified local head to the independently retained current head
+        without advancing it. Publication failures prevent acknowledgement.
         Only protected owner recovery supplies verified_prefix_head, from a current
         anti-rollback checkpoint independent of the journal and its HEAD. This
-        selects a read-only view. A partial/invalid committed frame always fails.
+        selects a read-only view ending at that exact frame, even when the local
+        HEAD was published ahead of independent custody. Only the checked prefix
+        enters the index. A partial/invalid committed frame always fails.
         """
         validate("common.schema.json", expected_owner, "Owner")
         validate("common.schema.json", expected_schema, "SchemaIdentity")
         journal = cls(cls._descriptor(path, create=False), metrics)
         journal._path = Path(path)
         try:
-            head_id, head_sequence, head_size, head_digest = journal._read_head()
+            local_head = journal._read_head()
+            head_id, head_sequence, head_size, head_digest = local_head
             size = os.fstat(journal._fd).st_size
-            if verified_prefix_head is not None:
-                _require(
-                    verified_prefix_head == "sha256:" + head_digest.hex(),
-                    "workflow journal independent checkpoint differs from HEAD",
-                )
-                journal._prefix_size = head_size
             _require(
-                size == head_size or (journal._prefix_size is not None and size > head_size),
+                (writer_lease is None) != (verified_prefix_head is None),
+                "workflow journal requires one independent checkpoint for writable or prefix open",
+            )
+            if writer_lease is not None:
+                journal._acquire_writer(writer_lease)
+            _require(
+                size == head_size or (verified_prefix_head is not None and size > head_size),
                 "workflow journal truncated accepted history or uncommitted tail",
             )
             _require(journal._read(len(_MAGIC)) == _MAGIC, "workflow journal format changed")
@@ -342,14 +371,33 @@ class WorkflowJournal:
                 journal._count("frames_read")
                 offset += 40 + count
                 sequence += 1
+                if verified_prefix_head is not None and journal.head == verified_prefix_head:
+                    journal._prefix_size = offset
+                    journal._prefix_local_head = local_head
+                    break
+            if verified_prefix_head is not None:
+                _require(
+                    journal._prefix_size is not None, "independent checkpoint absent from journal"
+                )
             _require(sequence > 0, "workflow journal missing genesis")
             _require(
                 journal.journal_id == head_id
-                and sequence == head_sequence + 1
-                and journal._head == head_digest,
+                and (
+                    (
+                        offset == head_size
+                        and sequence == head_sequence + 1
+                        and journal._head == head_digest
+                    )
+                    or (
+                        offset < head_size
+                        and sequence <= head_sequence
+                        and journal._prefix_size == offset
+                    )
+                ),
                 "workflow journal HEAD does not match complete history",
             )
-            if journal._prefix_size is None:
+            if journal._retain_head is not None:
+                journal._retain_head(journal.head, journal.head)
                 journal._sync()
                 journal._sync_directory()
             return journal
@@ -370,7 +418,9 @@ class WorkflowJournal:
             ),
         )
     )
-    def repair_tail(self, *, reconcile: Callable[[dict[str, Any], Path], bool]) -> None:
+    def repair_tail(
+        self, *, writer_lease: WriterLease, reconcile: Callable[[dict[str, Any], Path], bool]
+    ) -> None:
         """Quarantine exact suffix bytes and require independent owner-native closure.
 
         reconcile is a protected receiving service, never a wire field. Under current
@@ -381,15 +431,16 @@ class WorkflowJournal:
         Unresolved effects return False. Closure is idempotent by journal, head and
         suffix digest across a crash before truncation. This view stays read-only.
         """
-        with self._lock:
+        with self._lock, writer_lease as retain_head:
             _require(
                 not self._closed and self._prefix_size is not None,
                 "workflow journal repair requires an authenticated committed prefix",
             )
             assert self._path is not None and self._prefix_size is not None
+            retain_head(self.head, self.head)
             checkpoint = self._read_head()
             _require(
-                checkpoint == (self.journal_id, len(self._index), self._prefix_size, self._head),
+                checkpoint == self._prefix_local_head,
                 "workflow journal checkpoint changed before repair",
             )
             tail_size = os.fstat(self._fd).st_size - self._prefix_size
@@ -435,6 +486,10 @@ class WorkflowJournal:
                 and os.fstat(self._fd).st_size == self._prefix_size + tail_size,
                 "workflow journal custody changed during repair",
             )
+            if checkpoint[2] != self._prefix_size:
+                # Publish the authenticated prefix before truncating: an interruption
+                # leaves the already supported old-HEAD-with-uncertain-tail shape.
+                self._write_local_head(self._head, len(self._index), self._prefix_size)
             os.ftruncate(self._fd, self._prefix_size)
             self._sync()
 
@@ -643,5 +698,8 @@ class WorkflowJournal:
     def close(self) -> None:
         with self._lock:
             if not self._closed:
-                os.close(self._fd)
-                self._closed = True
+                try:
+                    os.close(self._fd)
+                finally:
+                    self._closed = True
+                    self._writer.close()

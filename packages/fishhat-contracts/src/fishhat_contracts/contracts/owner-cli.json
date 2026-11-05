@@ -89,7 +89,7 @@
         "--json"
       ],
       "use_case": "operation.submit",
-      "description": "Read the closed operation.submit params object from stdin with confirmed true, an explicit workflow_id and the caller’s reviewed driver_term. Use the same guarded native admission as SSH. Never infer the current term, workflow, or principal. Exact accepted replay remains subject to current read authorization and precedes freshness checks."
+      "description": "Read the closed operation.submit params object from stdin with confirmed true, an explicit workflow_id and the caller’s reviewed driver_term. Use the same guarded native admission as SSH. Never infer the current term, workflow, or principal. The reviewed driver_term controls new decisions only. After current protected read authorization, replay a retained acceptance or refusal for the same canonical params except driver_term, preserving its original attribution; a different term cannot create or replace a decision."
     },
     {
       "name": "plan-stdin",
@@ -735,6 +735,30 @@
       ],
       "use_case": "workflow.journal.input",
       "description": "Retrieve immutable original accepted input custody by outcome ID; bounded content reads reauthorize exact owner and workflow scope."
+    },
+    {
+      "name": "op-list-request",
+      "tokens": [
+        "{tool}",
+        "op",
+        "list",
+        "--request-stdin",
+        "--json"
+      ],
+      "use_case": "operation.list",
+      "description": "Read one bounded operation.list SSH request envelope from stdin, including its exact owner epoch, resource filter, active selection, limit and continuation cursor. Apply the same receiving authorization as the corresponding RPC."
+    },
+    {
+      "name": "workflow-list-request",
+      "tokens": [
+        "{tool}",
+        "workflow",
+        "list",
+        "--request-stdin",
+        "--json"
+      ],
+      "use_case": "workflow.list",
+      "description": "Read one bounded workflow.list SSH request envelope from stdin, including its exact owner epoch, resource filter, active selection, limit and continuation cursor. Apply the same receiving authorization as the corresponding RPC."
     }
   ],
   "parser": "bounded tokens; no shell evaluation",

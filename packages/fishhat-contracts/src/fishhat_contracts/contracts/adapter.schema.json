@@ -354,6 +354,7 @@
       "additionalProperties": false
     },
     "Instance": {
+      "description": "Repeated enrollment and source-to-enrollment checks compare the complete canonical JSON instance. Object member order is insignificant; JSON booleans are distinct from numbers, including true versus 1 and false versus 0. Any difference requires explicit rebind.",
       "type": "object",
       "properties": {
         "id": {

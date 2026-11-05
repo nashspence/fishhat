@@ -82,10 +82,7 @@
                 "$ref": "common.schema.json#/$defs/GitRef"
               },
               "entrypoint": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 240,
-                "pattern": "^(?!(?:\\.|\\.\\.)(?:/|(?![\\s\\S])))[^/\\\\\\u0000-\\u001f]+(?:/(?!(?:\\.|\\.\\.)(?:/|(?![\\s\\S])))[^/\\\\\\u0000-\\u001f]+)*(?![\\s\\S])",
+                "$ref": "common.schema.json#/$defs/GitTreePath",
                 "description": "Path identifying this resource definition within its repository. A branch or tag selects a revision without creating another host identity."
               }
             },
@@ -351,10 +348,7 @@
         "repository_secrets": {
           "anyOf": [
             {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 240,
-              "pattern": "^(?!(?:\\.|\\.\\.)(?:/|(?![\\s\\S])))[^/\\\\\\u0000-\\u001f]+(?:/(?!(?:\\.|\\.\\.)(?:/|(?![\\s\\S])))[^/\\\\\\u0000-\\u001f]+)*(?![\\s\\S])"
+              "$ref": "common.schema.json#/$defs/GitTreePath"
             },
             {
               "type": "null"
@@ -834,10 +828,7 @@
         "repository_secrets": {
           "anyOf": [
             {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 240,
-              "pattern": "^(?!(?:\\.|\\.\\.)(?:/|(?![\\s\\S])))[^/\\\\\\u0000-\\u001f]+(?:/(?!(?:\\.|\\.\\.)(?:/|(?![\\s\\S])))[^/\\\\\\u0000-\\u001f]+)*(?![\\s\\S])"
+              "$ref": "common.schema.json#/$defs/GitTreePath"
             },
             {
               "type": "null"

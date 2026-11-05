@@ -101,10 +101,7 @@
             "$ref": "common.schema.json#/$defs/Commit"
           },
           "entrypoint": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240,
-            "pattern": "^(?!(?:\\.|\\.\\.)(?:/|(?![\\s\\S])))[^/\\\\\\u0000-\\u001f]+(?:/(?!(?:\\.|\\.\\.)(?:/|(?![\\s\\S])))[^/\\\\\\u0000-\\u001f]+)*(?![\\s\\S])"
+            "$ref": "common.schema.json#/$defs/GitTreePath"
           },
           "closure_digest": {
             "type": "string",

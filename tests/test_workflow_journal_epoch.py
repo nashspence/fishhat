@@ -14,7 +14,6 @@ from fishhat_contracts.workflow_journal_recovery import (
     OriginRecoveryContext,
     WorkflowRecoveryMember,
 )
-from fishhat_owner.workflow_journal import WorkflowJournal
 
 from tests.test_contracts import uid
 from tests.test_owner_history import seal_custody
@@ -71,15 +70,7 @@ class CurrentNative:
         self.original, self.owner, self.custody = original, owner, custody
         self.source_head, self.source_schema = source.head, source.schema
         self.meter = meter
-        self.store = (
-            WorkflowJournal.open(
-                path, expected_owner=owner, expected_schema=source.schema, metrics=meter.values
-            )
-            if restore
-            else WorkflowJournal.create(
-                path, owner=owner, schema=source.schema, metrics=meter.values
-            )
-        )
+        self.store = meter.store(path, owner, source.schema, restore=restore)
         self.successor = None
         self.facts = {}
         self.abandonments = {}
@@ -319,20 +310,8 @@ class EpochRun:
                 {(canonical(origin), KEY_ID): self.original.keys[index].public_key()},
             )
             self.contexts.append(context)
-            store = (
-                WorkflowJournal.open(
-                    root / f"current-{index}.journal",
-                    expected_owner=current,
-                    expected_schema=self.original.schema,
-                    metrics=meter.values,
-                )
-                if restore
-                else WorkflowJournal.create(
-                    root / f"current-{index}.journal",
-                    owner=current,
-                    schema=self.original.schema,
-                    metrics=meter.values,
-                )
+            store = meter.store(
+                root / f"current-{index}.journal", current, self.original.schema, restore=restore
             )
             target = WorkflowRecoveryMember(
                 context,
@@ -375,11 +354,8 @@ class EpochRun:
         certificate = gate.call("recover.commit")
         for member in self.members:
             member.call("recover.install", {"certificate": certificate})
-        gate_store = WorkflowJournal.create(
-            self.root / "epoch-successor-gate.journal",
-            owner=gate.target.owner,
-            schema=self.original.schema,
-            metrics=self.meter.values,
+        gate_store = self.meter.store(
+            self.root / "epoch-successor-gate.journal", gate.target.owner, self.original.schema
         )
         successor_gate = WorkflowGate(
             proposal,
@@ -409,11 +385,10 @@ class EpochRun:
                 digest(body),
                 uid("new-epoch-grant-" + str(index)),
             )
-            store = WorkflowJournal.create(
+            store = self.meter.store(
                 self.root / f"epoch-successor-member-{index}.journal",
-                owner=member.target.owner,
-                schema=self.original.schema,
-                metrics=self.meter.values,
+                member.target.owner,
+                self.original.schema,
             )
             target = WorkflowMember(
                 signed,
@@ -483,9 +458,7 @@ def test_restored_epoch_requires_exact_custody_and_preserves_original_bytes(tmp_
         wrong = deepcopy(context.custody)
         wrong["manifest"]["digest"] = digest("unapproved-restoration")
         seal_custody(wrong)
-        store = WorkflowJournal.create(
-            root / "unapproved.journal", owner=member.owner, schema=run.original.schema
-        )
+        store = meter.store(root / "unapproved.journal", member.owner, run.original.schema)
         try:
             with pytest.raises(ContractError, match="approved"):
                 WorkflowRecoveryMember(
@@ -502,9 +475,7 @@ def test_restored_epoch_requires_exact_custody_and_preserves_original_bytes(tmp_
         finally:
             store.close()
         old_schema = {**run.original.schema, "digest": digest("exact-approved-historical-profile")}
-        historical = WorkflowJournal.create(
-            root / "historical.journal", owner=context.source.owner, schema=old_schema
-        )
+        historical = meter.store(root / "historical.journal", context.source.owner, old_schema)
         historical_projection = run.original.gate.target._sign(
             {**context.signed_projection["body"], "historical_note": "exact-old-v1"},
             context.signed_projection["id"],
@@ -535,9 +506,7 @@ def test_restored_epoch_requires_exact_custody_and_preserves_original_bytes(tmp_
                 body = {**outcome["body"], "historical_note": "exact-old-v1"}
                 outcome = run.original.members[0].target._sign(body, outcome["id"])
             historical.append(event["event_id"], request, outcome, expected_head=historical.head)
-        store = WorkflowJournal.create(
-            root / "missing-reader.journal", owner=member.owner, schema=run.original.schema
-        )
+        store = meter.store(root / "missing-reader.journal", member.owner, run.original.schema)
         try:
             with pytest.raises(ContractError, match="qualified recovery reader"):
                 WorkflowRecoveryMember(
@@ -583,9 +552,7 @@ def test_restored_epoch_requires_exact_custody_and_preserves_original_bytes(tmp_
             root / "qualified-native.journal",
             meter,
         )
-        store = WorkflowJournal.create(
-            root / "qualified-current.journal", owner=member.owner, schema=run.original.schema
-        )
+        store = meter.store(root / "qualified-current.journal", member.owner, run.original.schema)
         historical_bytes = historical._path.read_bytes()
         try:
             protected = {

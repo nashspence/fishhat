@@ -26,6 +26,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from fishhat_client.wire import frame, read_frame
 from fishhat_contracts import validation
 from fishhat_contracts.handoffs import PHASES, schema_identity
+from fishhat_contracts.operations import submission_replay_identity
 from fishhat_contracts.record_delivery import (
     InstalledRecordSchema,
     RecordSnapshot,
@@ -150,6 +151,30 @@ class WorkMeter:
     def __init__(self):
         self.values = Counter()
         self.messages = []
+        self.checkpoints = {}
+        self.writers = set()
+
+    @contextmanager
+    def writer_lease(self, path):
+        # This authority survives the simulated owner restart outside its files.
+        def retain_head(previous, current):
+            require(self.checkpoints.get(path) == previous, "independent checkpoint changed")
+            self.checkpoints[path] = current
+
+        require(path not in self.writers, "independent writer already active")
+        self.writers.add(path)
+        try:
+            yield retain_head
+        finally:
+            self.writers.remove(path)
+
+    def store(self, path, owner, schema, *, restore=False):
+        options = {"writer_lease": self.writer_lease(path), "metrics": self.values}
+        if restore:
+            return WorkflowJournal.open(
+                path, expected_owner=owner, expected_schema=schema, **options
+            )
+        return WorkflowJournal.create(path, owner=owner, schema=schema, **options)
 
     @contextmanager
     def account(self):
@@ -540,18 +565,7 @@ class NativeOwner:
             "digest": digest("independently-installed-synthetic-native-facts/v1"),
         }
         self.path = self.root / "native.journal"
-        self.store = (
-            WorkflowJournal.open(
-                self.path,
-                expected_owner=self.owner,
-                expected_schema=self.schema,
-                metrics=meter.values,
-            )
-            if restore
-            else WorkflowJournal.create(
-                self.path, owner=self.owner, schema=self.schema, metrics=meter.values
-            )
-        )
+        self.store = meter.store(self.path, self.owner, self.schema, restore=restore)
         self.resource_generation = 9
         self.prepared = None
         self.bindings = {}
@@ -833,7 +847,11 @@ class NativeOwner:
         accepted = self.admissions.get(key)
         self.meter.values["native_index_visits"] += 1
         if accepted is not None:
-            require(accepted["submission"] == submission, "native request changed accepted input")
+            require(
+                submission_replay_identity(accepted["submission"])
+                == submission_replay_identity(submission),
+                "native request changed accepted input",
+            )
             self.meter.values["native_exact_replays"] += 1
             return deepcopy(accepted["operation"])
         with member.operation_admission_guard(submission, principal=principal) as permit:
@@ -843,7 +861,11 @@ class NativeOwner:
     def _accept_native(self, submission, member, principal, child, key, permit):
         accepted = self.admissions.get(key)
         if accepted is not None:
-            require(accepted["submission"] == submission, "native request changed accepted input")
+            require(
+                submission_replay_identity(accepted["submission"])
+                == submission_replay_identity(submission),
+                "native request changed accepted input",
+            )
             self.meter.values["native_exact_replays"] += 1
             return deepcopy(accepted["operation"])
         require(
@@ -1588,12 +1610,7 @@ class WorkflowRun:
     def store(self, path, owner, *, restore):
         if restore:
             self.meter.values["cold_restores"] += 1
-            return WorkflowJournal.open(
-                path, expected_owner=owner, expected_schema=self.schema, metrics=self.meter.values
-            )
-        return WorkflowJournal.create(
-            path, owner=owner, schema=self.schema, metrics=self.meter.values
-        )
+        return self.meter.store(path, owner, self.schema, restore=restore)
 
     def authorize_gate(self, principal, action, context):
         self.meter.values["gate_authorization_visits"] += 1

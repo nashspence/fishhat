@@ -117,13 +117,7 @@ def recovered_gate(
     }
     origin = OriginGateRecoveryContext(run.manifest, lineage, custody, source_keys)
     path = run.root / ("gate-recovered-" + label + ".journal")
-    store = (
-        WorkflowJournal.open(
-            path, expected_owner=owner, expected_schema=run.schema, metrics=run.meter.values
-        )
-        if restore
-        else WorkflowJournal.create(path, owner=owner, schema=run.schema, metrics=run.meter.values)
-    )
+    store = run.meter.store(path, owner, run.schema, restore=restore)
     native_fence = {"retired": True, "head": old.journal.head, "custody": custody}
 
     def authorize(principal, action, context):
@@ -784,11 +778,10 @@ def test_member_epoch_restore_preserves_a_prior_gate_reapproval(tmp_path):
                 meter,
             )
             key = MeteredPrivateKey(current, meter.values)
-            current_journal = WorkflowJournal.create(
+            current_journal = meter.store(
                 tmp_path / "current-member-after-reapproval.journal",
-                owner=current,
-                schema=run.schema,
-                metrics=meter.values,
+                current,
+                run.schema,
             )
             extension = JournalRecovery(
                 current_owners={canonical(original.owner): current},
@@ -884,6 +877,7 @@ def test_gate_recovery_cold_reopen_preserves_current_epoch_outcomes(tmp_path):
             context = dict(recovered.context)
             reopened = WorkflowJournal.open(
                 tmp_path / "gate-recovered-first.journal",
+                writer_lease=meter.writer_lease(tmp_path / "gate-recovered-first.journal"),
                 expected_owner=recovered.target.owner,
                 expected_schema=run.schema,
                 metrics=meter.values,

@@ -132,7 +132,8 @@
       "minItems": 0
     },
     "qualified": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "Publisher claim of client/owner compatibility. A qualified release requires at least one tested pairing. Each claimed pairing must be checked against independently authenticated passing evidence for its exact peer digests and wire version. For an actual connection the consumer requires a verified pair matching its selected client digest, owner digest and wire version exactly. Another verified pair in the same manifest cannot qualify that connection."
     }
   },
   "required": [
@@ -143,5 +144,62 @@
     "tested_pairs",
     "qualified"
   ],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "qualified": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "tested_pairs": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "PairEvidence": {
+      "type": "object",
+      "description": "Successful compatibility result from an independently authenticated verifier. release_digest covers the canonical release manifest excluding qualified and tested_pairs; exact artifact, supported versions, platform and rescue identities are part of that commitment. Peer artifacts may come from independent releases. At least one tested peer must belong to this release and each matching artifact must advertise the selected wire version.",
+      "properties": {
+        "format": {
+          "const": "fishhat.release-pair-evidence/v1"
+        },
+        "verifier": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "release_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "client_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "owner_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "wire_version": {
+          "$ref": "#/properties/tested_pairs/items/properties/wire_version"
+        },
+        "result": {
+          "const": "passed"
+        }
+      },
+      "required": [
+        "format",
+        "verifier",
+        "release_digest",
+        "client_digest",
+        "owner_digest",
+        "wire_version",
+        "result"
+      ],
+      "additionalProperties": false
+    }
+  }
 }

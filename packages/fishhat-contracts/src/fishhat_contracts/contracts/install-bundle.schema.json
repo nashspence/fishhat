@@ -127,7 +127,8 @@
         "$ref": "common.schema.json#/$defs/Digest"
       },
       "minItems": 0,
-      "uniqueItems": true
+      "uniqueItems": true,
+      "description": "Digests of canonical QualificationEvidence records authenticated under the receiver's independently selected verifier policy. An evidence identifier or producer qualification label alone does not establish native eligibility."
     }
   },
   "required": [
@@ -144,5 +145,58 @@
     "qualification",
     "evidence"
   ],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "qualification": {
+            "const": "qualified"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "evidence": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "QualificationEvidence": {
+      "type": "object",
+      "description": "A verifier's successful native offline-install qualification. subject_digest covers canonical JSON of this entire bundle manifest excluding only qualification and evidence, including every wheel, lock and build-input identity. The receiver authenticates the verifier and report independently, verifies its content digest, and joins its subject, platform and interpreter. This unsigned data shape cannot authenticate itself.",
+      "properties": {
+        "format": {
+          "const": "fishhat.native-offline-install-evidence/v1"
+        },
+        "subject_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "platform": {
+          "$ref": "#/properties/platform"
+        },
+        "python": {
+          "$ref": "#/properties/python"
+        },
+        "verifier": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "result": {
+          "const": "passed"
+        }
+      },
+      "required": [
+        "format",
+        "subject_digest",
+        "platform",
+        "python",
+        "verifier",
+        "result"
+      ],
+      "additionalProperties": false
+    }
+  }
 }

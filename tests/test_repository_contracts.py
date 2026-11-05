@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import copy
+import subprocess
 
 import pytest
 from fishhat_adapters import check_request, check_response
 from fishhat_contracts.publication import require_repository_publication
 from fishhat_contracts.validation import ContractError, digest
 
+from scripts.validation_timeouts import watchdog
 from tests.adapter_support import identifier
+from tests.test_action_results import capture_pair, seal_source
 from tests.test_adapter_handoffs import artifact, installed, invocation_for, response_for
 
 CHECK_PURPOSE = {
@@ -350,3 +353,62 @@ def test_existing_branch_requires_verified_fast_forward_and_literal_direct_cas()
         request["input"]["expected_previous"] = {"state": "present", "object_id": "0" * length}
         with pytest.raises(ContractError):
             check_request("repository", request)
+
+
+def test_reviewed_source_publication_preserves_intervening_edits(tmp_path):
+    def git(*args):
+        return (
+            subprocess.run(
+                ["git", "-c", "user.name=Fixture", "-c", "user.email=f@example.invalid", *args],
+                cwd=tmp_path,
+                capture_output=True,
+                check=True,
+                timeout=watchdog(15),
+            )
+            .stdout.decode()
+            .strip()
+        )
+
+    git("init", "--quiet")
+    base = git("commit-tree", git("write-tree"), "-m", "base")
+    operation, proposal, retained = capture_pair(count=1)
+    proposal["base_commit"] = base
+    seal_source(proposal, operation)
+    item = proposal["files"][0]
+    path = tmp_path / item["path"]
+    path.parent.mkdir()
+    path.write_bytes(retained[item["content"]["id"]])
+    git("add", "--", item["path"])
+    reviewed_tree = git("write-tree")
+    reviewed = git("commit-tree", reviewed_tree, "-p", base, "-m", "reviewed")
+    git("read-tree", base)
+    (tmp_path / "operator.txt").write_bytes(b"preserve")
+    git("add", "--", "operator.txt")
+    advanced = git("commit-tree", git("write-tree"), "-p", base, "-m", "operator edit")
+    would_erase_edit = git("commit-tree", reviewed_tree, "-p", advanced, "-m", "candidate")
+
+    _, reference = repository()
+    reference["canonical"] = proposal["repository"]
+    request = query("publish", reference)
+    request["input"]["ref"] = proposal["ref"]
+
+    def check(tip, candidate):
+        request["input"]["candidate"]["commit"] = candidate
+        request["input"]["expected_previous"] = {"state": "present", "object_id": tip}
+        require_repository_publication(
+            request,
+            current_object_id=tip,
+            symbolic=False,
+            is_ancestor=lambda a, b: git("merge-base", "--is-ancestor", a, b) == "",
+            source_proposal=proposal,
+            verify_proposal_tree=lambda selected, oid: (
+                selected == proposal and git("rev-parse", f"{oid}^{{tree}}") == reviewed_tree
+            ),
+        )
+
+    check(base, reviewed)
+    with pytest.raises(ContractError, match="candidate tree"):
+        check(base, advanced)
+    git("merge-base", "--is-ancestor", advanced, would_erase_edit)
+    with pytest.raises(ContractError, match="reviewed base"):
+        check(advanced, would_erase_edit)
