@@ -352,6 +352,25 @@ def test_backup_success_has_method_specific_custody_and_noop_deletion_identity(m
         check_response("backup", query, reply, invocation=invocation)
 
 
+@pytest.mark.parametrize("method", ["store", "retrieve", "verify", "delete"])
+def test_backup_admission_rejects_repository_outside_executor_scope(method):
+    _, executor = installed("backup")
+    inputs = {
+        "scope": executor["scope"],
+        "repository": "another-repository",
+        "object": "object:one",
+        "artifacts": [artifact("c")],
+    }
+    query = {"contract": "fishhat.backup", "method": method, "input": inputs}
+    with pytest.raises(ContractError, match="BACKUP_REPOSITORY_SCOPE"):
+        check_request("backup", query)
+    inputs["repository"] = inputs["scope"]["handle"]
+    check_request("backup", query)
+    inputs["scope"] = {**inputs["scope"], "kind": "dataset"}
+    with pytest.raises(ContractError):
+        check_request("backup", query)
+
+
 def test_dns_change_scope_and_success_result_cover_exact_affected_rrsets():
     registry, executor = installed("dns")
     changes = change(after=rrset())

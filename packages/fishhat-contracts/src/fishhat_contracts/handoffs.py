@@ -846,6 +846,7 @@ def validate_cli_result(
         "HistoricalRecordChunk",
         "HistoricalJournalInputReference",
         "HistoricalContentChunk",
+        "HistoricalSubmissionRefusal",
     ):
         from .history import validate_history_result
 

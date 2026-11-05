@@ -21,7 +21,7 @@ from fishhat_contracts.operations import validate_operation
 from fishhat_contracts.validation import ContractError, canonical, digest, validate, validate_cli
 from fishhat_contracts.witness import sign
 from fishhat_contracts.workflows import decode_workflow_audit_input
-from fishhat_owner.commands import parse_command, work_list_params
+from fishhat_owner.commands import parse_command, resource_observation_params, work_list_params
 
 from tests.operation_support import seal_operation
 from tests.test_contracts import uid
@@ -458,6 +458,23 @@ def test_direct_work_list_preserves_exact_ssh_filter_and_epoch(verb, method):
     other = "operation.list" if method == "workflow.list" else "workflow.list"
     with pytest.raises(ContractError):
         work_list_params(canonical(request(other, params)), form["use_case"], owner)
+
+
+@pytest.mark.parametrize("kind", ["host", "app"])
+def test_direct_resource_observation_preserves_complete_wire_request(kind):
+    command = f"{kind}-ops resources --request-stdin --json"
+    assert parse_command(command, f"{kind}-ops")["use_case"] == "resources.observe"
+    resource = {"kind": kind, "id": "blue.green/雪 $"}
+    for cursor, limit in [(None, 1), ("next_1-A", 64)]:
+        params = {"resource": resource, "cursor": cursor, "limit": limit}
+        envelope = request("resources.observe", params)
+        assert resource_observation_params(canonical(envelope)) == params
+        for malformed in [
+            request("observe", params),
+            request("resources.observe", {**params, "limit": 65}),
+        ]:
+            with pytest.raises(ContractError):
+                resource_observation_params(canonical(malformed))
 
 
 def test_resource_and_observation_continuations_share_cli_envelope():

@@ -46,11 +46,11 @@
     "backup": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/backup-adapter.schema.json",
-        "digest": "sha256:99260465f410e2c1c844f1f54cdb5b64adc29d0b8eba72677d55f0099b337d40"
+        "digest": "sha256:2cd067d73985e2318445ed0a0d48fa7ccc22af8d5df2cfde0b88e1bcbac101d4"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/backup-adapter.schema.json#/$defs/Response",
-        "digest": "sha256:9c252a8c866bea84e84355536fbb08b7dcd1591361934e7282f3d5b21e9ff49c"
+        "digest": "sha256:f9318b9988edcdd369fe0ef3e1cc4579d6ec204c087f5855abc9ef51bb19fee5"
       }
     }
   },

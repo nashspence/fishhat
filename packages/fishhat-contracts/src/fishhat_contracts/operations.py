@@ -100,6 +100,8 @@ def operation_matches_delivery(operation: dict[str, Any], delivery: dict[str, An
     return bool(
         operation["request_id"] == delivery["request_id"]
         and operation["owner"] == delivery["owner"]
+        and operation["plan_id"] == delivery["plan_id"]
+        and operation["claimed_actor"] == delivery["claimed_actor"]
         and operation["plan_digest"] == delivery["plan_digest"]
         and operation["witness"]["workflow_id"] == delivery["workflow_id"]
         and digest(operation["subject"]) == delivery["subject_digest"]
@@ -127,7 +129,16 @@ def validate_submission_refusal(
         and problem["retry"] == "none"
     ):
         raise ContractError("submission refusal does not match its retained Problem")
-    identity = ("owner", "resource", "request_id", "plan_digest", "subject_digest", "workflow_id")
+    identity = (
+        "owner",
+        "resource",
+        "request_id",
+        "plan_id",
+        "plan_digest",
+        "subject_digest",
+        "workflow_id",
+        "claimed_actor",
+    )
     if delivery is not None and any(refusal[key] != delivery[key] for key in identity):
         raise ContractError("submission refusal does not match the original delivery and reason")
 
@@ -156,6 +167,7 @@ def validate_operation_plan(
     validate_plan(plan)
     if not (
         plan["owner"] == operation["owner"]
+        and plan["id"] == operation["plan_id"]
         and plan["digest"] == operation["plan_digest"]
         and plan["subject"] == operation["subject"]
     ):

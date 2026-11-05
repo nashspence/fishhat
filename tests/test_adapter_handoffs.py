@@ -58,7 +58,7 @@ def installed(role, *, observe_only=False, endpoint="protected-target", generati
     elif role in {"compute", "storage"}:
         scope["kind"] = "allocation"
     elif role == "backup":
-        scope["kind"] = "backup-repository"
+        scope.update(kind="backup-repository", handle="repository:demo")
     elif role == "repository":
         scope["kind"] = "repository"
     elif role == "build":

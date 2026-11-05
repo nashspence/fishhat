@@ -759,6 +759,29 @@
       ],
       "use_case": "workflow.list",
       "description": "Read one bounded workflow.list SSH request envelope from stdin, including its exact owner epoch, resource filter, active selection, limit and continuation cursor. Apply the same receiving authorization as the corresponding RPC."
+    },
+    {
+      "name": "history-refusal",
+      "tokens": [
+        "{tool}",
+        "history",
+        "refusal",
+        "--request-stdin",
+        "--json"
+      ],
+      "use_case": "history.refusal",
+      "description": "Look up the original durable submission refusal and its original Problem for one exact prior owner epoch, request and protected resource. The receiving custodian verifies restoration closure membership and current disclosure permission before every read. Absence, a backup predating the decision, or incomplete custody yields no nonacceptance proof: retain acceptance_unknown. This read never creates, replays or consumes an admission decision."
+    },
+    {
+      "name": "resources-request",
+      "tokens": [
+        "{tool}",
+        "resources",
+        "--request-stdin",
+        "--json"
+      ],
+      "use_case": "resources.observe",
+      "description": "Read a closed resources.observe SSH envelope. Preserve the complete host or app resource, opaque continuation and caller-selected page limit. Recheck current receiving scope for the exact selection."
     }
   ],
   "parser": "bounded tokens; no shell evaluation",

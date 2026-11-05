@@ -2,11 +2,20 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://fishhat.invalid/contracts/backup-adapter.schema.json",
   "$defs": {
+    "RepositoryScope": {
+      "$ref": "adapter.schema.json#/$defs/Scope",
+      "properties": {
+        "kind": {
+          "const": "backup-repository"
+        }
+      },
+      "description": "The scope handle is the exact repository on every mutation and on every returned object, including partial observations and reconciled outputs. A different repository requires a separately approved scope."
+    },
     "store": {
       "type": "object",
       "properties": {
         "scope": {
-          "$ref": "adapter.schema.json#/$defs/Scope"
+          "$ref": "#/$defs/RepositoryScope"
         },
         "repository": {
           "type": "string",
@@ -41,7 +50,7 @@
       "type": "object",
       "properties": {
         "scope": {
-          "$ref": "adapter.schema.json#/$defs/Scope"
+          "$ref": "#/$defs/RepositoryScope"
         },
         "repository": {
           "type": "string",
@@ -76,7 +85,7 @@
       "type": "object",
       "properties": {
         "scope": {
-          "$ref": "adapter.schema.json#/$defs/Scope"
+          "$ref": "#/$defs/RepositoryScope"
         },
         "repository": {
           "type": "string",
@@ -111,7 +120,7 @@
       "type": "object",
       "properties": {
         "scope": {
-          "$ref": "adapter.schema.json#/$defs/Scope"
+          "$ref": "#/$defs/RepositoryScope"
         },
         "repository": {
           "type": "string",
@@ -146,7 +155,7 @@
       "type": "object",
       "properties": {
         "scope": {
-          "$ref": "adapter.schema.json#/$defs/Scope"
+          "$ref": "#/$defs/RepositoryScope"
         },
         "cursor": {
           "anyOf": [
@@ -176,7 +185,7 @@
       "type": "object",
       "properties": {
         "scope": {
-          "$ref": "adapter.schema.json#/$defs/Scope"
+          "$ref": "#/$defs/RepositoryScope"
         },
         "invocation": {
           "$ref": "adapter.schema.json#/$defs/Invocation"
@@ -222,7 +231,7 @@
               "$ref": "common.schema.json#/$defs/Digest"
             },
             "scope": {
-              "$ref": "adapter.schema.json#/$defs/Scope"
+              "$ref": "#/$defs/RepositoryScope"
             },
             "coverage": {
               "enum": [
@@ -368,7 +377,7 @@
               "$ref": "common.schema.json#/$defs/Digest"
             },
             "scope": {
-              "$ref": "adapter.schema.json#/$defs/Scope"
+              "$ref": "#/$defs/RepositoryScope"
             },
             "coverage": {
               "enum": [
@@ -511,7 +520,7 @@
               "$ref": "common.schema.json#/$defs/Digest"
             },
             "scope": {
-              "$ref": "adapter.schema.json#/$defs/Scope"
+              "$ref": "#/$defs/RepositoryScope"
             },
             "coverage": {
               "enum": [
@@ -654,7 +663,7 @@
               "$ref": "common.schema.json#/$defs/Digest"
             },
             "scope": {
-              "$ref": "adapter.schema.json#/$defs/Scope"
+              "$ref": "#/$defs/RepositoryScope"
             },
             "coverage": {
               "enum": [
@@ -794,7 +803,7 @@
               "$ref": "common.schema.json#/$defs/Digest"
             },
             "scope": {
-              "$ref": "adapter.schema.json#/$defs/Scope"
+              "$ref": "#/$defs/RepositoryScope"
             },
             "coverage": {
               "enum": [
@@ -893,7 +902,7 @@
               "$ref": "common.schema.json#/$defs/Digest"
             },
             "scope": {
-              "$ref": "adapter.schema.json#/$defs/Scope"
+              "$ref": "#/$defs/RepositoryScope"
             },
             "coverage": {
               "enum": [

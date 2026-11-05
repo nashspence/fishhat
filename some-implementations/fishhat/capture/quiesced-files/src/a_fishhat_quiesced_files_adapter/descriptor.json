@@ -46,7 +46,7 @@
     "capture": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/capture-adapter.schema.json",
-        "digest": "sha256:d60455c8673d212b13d1af615da426392a353378789daa0d628e16aed36851c3"
+        "digest": "sha256:510e3bbbfb3c662724e8752705c0f4de54590661ffa650ef459d56afec0ace5a"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/capture-adapter.schema.json#/$defs/Response",

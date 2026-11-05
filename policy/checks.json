@@ -1616,6 +1616,22 @@
       "purpose_sha256": "8ed52ef7fdd7210f418a2873c621a467e42f04c6fa609010c5e6627567ccd869"
     },
     {
+      "node": "tests/test_adapter_invocations.py::test_backup_admission_rejects_repository_outside_executor_scope[delete]",
+      "purpose_sha256": "d5d341fbf5ac9e2cd3489c40e20d1edef378221cd200ffbfd81d57fecfece0c0"
+    },
+    {
+      "node": "tests/test_adapter_invocations.py::test_backup_admission_rejects_repository_outside_executor_scope[retrieve]",
+      "purpose_sha256": "d5d341fbf5ac9e2cd3489c40e20d1edef378221cd200ffbfd81d57fecfece0c0"
+    },
+    {
+      "node": "tests/test_adapter_invocations.py::test_backup_admission_rejects_repository_outside_executor_scope[store]",
+      "purpose_sha256": "d5d341fbf5ac9e2cd3489c40e20d1edef378221cd200ffbfd81d57fecfece0c0"
+    },
+    {
+      "node": "tests/test_adapter_invocations.py::test_backup_admission_rejects_repository_outside_executor_scope[verify]",
+      "purpose_sha256": "d5d341fbf5ac9e2cd3489c40e20d1edef378221cd200ffbfd81d57fecfece0c0"
+    },
+    {
       "node": "tests/test_adapter_invocations.py::test_backup_success_has_method_specific_custody_and_noop_deletion_identity[delete]",
       "purpose_sha256": "d5d341fbf5ac9e2cd3489c40e20d1edef378221cd200ffbfd81d57fecfece0c0"
     },
@@ -2013,6 +2029,14 @@
     },
     {
       "node": "tests/test_adapter_observation_pages.py::test_backup_limit_bounds_each_page_without_limiting_total_collection_extent",
+      "purpose_sha256": "51cab096a1bd0ad9bc4639a80ca38a1648cc8e5a44cbb1b59302b2404f5fe8fe"
+    },
+    {
+      "node": "tests/test_adapter_observation_pages.py::test_backup_observation_rejects_foreign_repository_objects[complete]",
+      "purpose_sha256": "51cab096a1bd0ad9bc4639a80ca38a1648cc8e5a44cbb1b59302b2404f5fe8fe"
+    },
+    {
+      "node": "tests/test_adapter_observation_pages.py::test_backup_observation_rejects_foreign_repository_objects[unknown]",
       "purpose_sha256": "51cab096a1bd0ad9bc4639a80ca38a1648cc8e5a44cbb1b59302b2404f5fe8fe"
     },
     {
@@ -4492,6 +4516,10 @@
       "purpose_sha256": "cb565620d79b88cd44dd9f2c5f2dcf5067bd22c27f8ed6262dc619a4d6374931"
     },
     {
+      "node": "tests/test_checkpoint_resolution.py::test_resolved_backup_object_joins_lifecycle_repository_scope",
+      "purpose_sha256": "cb565620d79b88cd44dd9f2c5f2dcf5067bd22c27f8ed6262dc619a4d6374931"
+    },
+    {
       "node": "tests/test_checkpoint_resolution.py::test_signed_but_incomplete_receipts_cannot_complete_checkpoint[failed-operation]",
       "purpose_sha256": "cb565620d79b88cd44dd9f2c5f2dcf5067bd22c27f8ed6262dc619a4d6374931"
     },
@@ -6301,6 +6329,14 @@
     },
     {
       "node": "tests/test_dataset_contracts.py::test_explicit_custody_and_recovery_pairs_are_valid[rebuild]",
+      "purpose_sha256": "ca8446e164090f11e4ea32dad59c0e725d6a2b9d041cee222471d562a4319e6f"
+    },
+    {
+      "node": "tests/test_dataset_contracts.py::test_hook_component_must_have_the_selected_dataset_access[read]",
+      "purpose_sha256": "ca8446e164090f11e4ea32dad59c0e725d6a2b9d041cee222471d562a4319e6f"
+    },
+    {
+      "node": "tests/test_dataset_contracts.py::test_hook_component_must_have_the_selected_dataset_access[write]",
       "purpose_sha256": "ca8446e164090f11e4ea32dad59c0e725d6a2b9d041cee222471d562a4319e6f"
     },
     {
@@ -9732,6 +9768,14 @@
       "purpose_sha256": "1b27229e83e1f19dba46c975999e03c6bda493010e05a68c69bdacf5dd1d5bb5"
     },
     {
+      "node": "tests/test_owner_handoffs.py::test_direct_resource_observation_preserves_complete_wire_request[app]",
+      "purpose_sha256": "1b27229e83e1f19dba46c975999e03c6bda493010e05a68c69bdacf5dd1d5bb5"
+    },
+    {
+      "node": "tests/test_owner_handoffs.py::test_direct_resource_observation_preserves_complete_wire_request[host]",
+      "purpose_sha256": "1b27229e83e1f19dba46c975999e03c6bda493010e05a68c69bdacf5dd1d5bb5"
+    },
+    {
       "node": "tests/test_owner_handoffs.py::test_direct_work_list_preserves_exact_ssh_filter_and_epoch[op-operation.list]",
       "purpose_sha256": "1b27229e83e1f19dba46c975999e03c6bda493010e05a68c69bdacf5dd1d5bb5"
     },
@@ -9836,6 +9880,10 @@
       "purpose_sha256": "7c53fb0b00b07f505c1a2e3f844d34b2930ff12963a05bcdc3caf54c95bc2e39"
     },
     {
+      "node": "tests/test_owner_history.py::test_direct_owner_history_and_binding_commands_use_closed_stdin[history.refusal]",
+      "purpose_sha256": "7c53fb0b00b07f505c1a2e3f844d34b2930ff12963a05bcdc3caf54c95bc2e39"
+    },
+    {
       "node": "tests/test_owner_history.py::test_direct_owner_history_and_binding_commands_use_closed_stdin[owner.history]",
       "purpose_sha256": "7c53fb0b00b07f505c1a2e3f844d34b2930ff12963a05bcdc3caf54c95bc2e39"
     },
@@ -9901,6 +9949,10 @@
     },
     {
       "node": "tests/test_owner_history.py::test_historical_recovery_is_a_new_current_plan_with_exact_original_material[operation.recover]",
+      "purpose_sha256": "7c53fb0b00b07f505c1a2e3f844d34b2930ff12963a05bcdc3caf54c95bc2e39"
+    },
+    {
+      "node": "tests/test_owner_history.py::test_historical_refusal_requires_current_scoped_custody_and_preserves_original_pair",
       "purpose_sha256": "7c53fb0b00b07f505c1a2e3f844d34b2930ff12963a05bcdc3caf54c95bc2e39"
     },
     {
@@ -11230,6 +11282,10 @@
     {
       "node": "tests/test_recovery_points.py::test_unestablished_data_or_clock_order_is_unknown[points3-clock3]",
       "purpose_sha256": "e9c432c8464511e8e7245baf9133a0e1c8d520f2e8112507e710399714532b59"
+    },
+    {
+      "node": "tests/test_release_identity.py::test_pinned_git_source_and_release_identity",
+      "purpose_sha256": "6aa2caaa550178b0e6c62e5d684dd7027201358d0e73d697ef64fa2270d55da2"
     },
     {
       "node": "tests/test_relocation_contracts.py::test_preserved_app_relocation_uses_an_explicit_checkpoint",
@@ -14417,6 +14473,10 @@
     },
     {
       "node": "tests/test_tracking.py::Noninterference::test_tracking_unavailable_cannot_be_called_by_submission",
+      "purpose_sha256": "c60ec56d8275da17b210b859bfca1b2a4a087102d4056f98543fe610c624182e"
+    },
+    {
+      "node": "tests/test_tracking.py::Noninterference::test_transmit_exact_confirmed_submission",
       "purpose_sha256": "c60ec56d8275da17b210b859bfca1b2a4a087102d4056f98543fe610c624182e"
     },
     {

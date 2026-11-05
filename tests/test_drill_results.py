@@ -217,6 +217,7 @@ def test_drill_plan_pins_inputs_without_predicting_execution_evidence():
         *procedures,
     ]
     reseal(plan)
+    record["plan_id"] = plan["id"]
     record["plan_digest"] = value["plan_digest"] = plan["digest"]
     attach_drill(record, value)
     assert value["isolation_evidence"] not in plan["input_digests"]

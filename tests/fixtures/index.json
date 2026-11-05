@@ -53,6 +53,7 @@
     "secret-source-adapter.schema.json",
     "service-adapter.schema.json",
     "software-adapter.schema.json",
+    "source-closure.schema.json",
     "source.schema.json",
     "ssh-request.schema.json",
     "ssh-response.schema.json",
@@ -362,6 +363,11 @@
       "path": "workflow/relocation-proposal.json",
       "schema": "workflow.schema.json",
       "definition": "WorkflowProposal"
+    },
+    {
+      "path": "release-identity/release.json",
+      "schema": "records.schema.json",
+      "definition": "Release"
     }
   ],
   "semantic_entrypoints": [

@@ -658,7 +658,8 @@
             "workflow.journal.get",
             "workflow.journal.list",
             "workflow.journal.events",
-            "workflow.journal.input"
+            "workflow.journal.input",
+            "history.refusal"
           ]
         },
         "ok": {
@@ -1226,6 +1227,36 @@
         },
         "result": {
           "$ref": "workflow-journal.schema.json#/$defs/AcceptedInput"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "ok",
+        "result"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "history.refusal"
+        },
+        "ok": {
+          "const": true
+        },
+        "result": {
+          "$ref": "owner-history.schema.json#/$defs/HistoricalSubmissionRefusal"
         }
       },
       "required": [

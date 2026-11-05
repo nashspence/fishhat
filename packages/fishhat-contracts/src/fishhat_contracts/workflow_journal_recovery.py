@@ -18,7 +18,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey,
 from .bounds import Bounds, bounds
 from .handoffs import schema_identity, validate_result_payload
 from .history import validate_owner_custody
-from .operations import _TERMINAL_STATES, validate_operation_plan
+from .operations import validate_operation_plan
 from .validation import ContractError, canonical, digest, validate
 from .witness import verify as verify_witness
 from .workflow_bindings import _key
@@ -1351,25 +1351,6 @@ class JournalRecovery:
                 fact["kind"] != "unaccepted" and isinstance(operation, dict),
                 "native disposition contradicts retained accepted work",
             )
-            _require(
-                all(
-                    operation[name] == known[name]
-                    for name in (
-                        "id",
-                        "owner",
-                        "request_id",
-                        "plan_digest",
-                        "subject",
-                        "authenticated_principal",
-                        "claimed_actor",
-                    )
-                ),
-                "native disposition changed retained original Operation",
-            )
-            if known["state"] in _TERMINAL_STATES:
-                _require(
-                    operation == known, "native disposition replaced a terminal retained Operation"
-                )
             if known["state"] == "succeeded":
                 _require(
                     fact["kind"] == "completed", "native disposition changed known successful work"
@@ -1410,6 +1391,7 @@ class JournalRecovery:
             if "completed" not in original
             else operation["witness"]["workflow_id"],
         )
+        _known_outcome(known, operation)
         _require(
             operation["owner"] == bound_plan(original)["owner"]
             and (

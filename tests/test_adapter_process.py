@@ -499,7 +499,7 @@ def growth_case(count):
         "method": "store",
         "input": {
             "scope": executor["scope"],
-            "repository": "repository:synthetic",
+            "repository": executor["scope"]["handle"],
             "object": "object:synthetic",
             "artifacts": artifacts,
         },
@@ -525,7 +525,7 @@ def growth_case(count):
             "objects": [
                 {
                     "handle": "object:synthetic",
-                    "repository": "repository:synthetic",
+                    "repository": executor["scope"]["handle"],
                     "artifacts": artifacts,
                     "completeness": "sealed",
                     "retrieval": "available",

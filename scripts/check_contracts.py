@@ -4,6 +4,7 @@ import json
 from urllib.parse import urldefrag, urljoin
 
 from fishhat_contracts.operations import validate_operation
+from fishhat_contracts.release_identity import validate_release
 from fishhat_contracts.schema_profile import pointer_tokens
 from fishhat_contracts.validation import (
     SCHEMAS,
@@ -61,6 +62,8 @@ def run():
             validate_plan(value)
         if item.get("definition") == "Operation":
             validate_operation(value)
+        if item.get("definition") == "Release":
+            validate_release(value, expected_digest=value["digest"])
     validate_domain(load("domain/domain.yaml"))
     validate_host(load("host-node-a/host.yaml"), load("host-node-a/secrets.yaml"))
     for name in ["demo-app", "stateless", "receipts-app"]:

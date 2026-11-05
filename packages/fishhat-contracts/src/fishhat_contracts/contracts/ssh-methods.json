@@ -96,6 +96,9 @@
     },
     {
       "name": "workflow.journal.input"
+    },
+    {
+      "name": "history.refusal"
     }
   ],
   "max_frame_bytes": 1048576,

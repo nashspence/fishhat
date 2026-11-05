@@ -572,21 +572,45 @@ class Noninterference(unittest.TestCase):
             expected_generation=self.operation["generation"],
         )
 
+    def submit_confirmed(self, delivery, transport):
+        term = 1 if delivery["workflow_id"] is not None else None
+        return submit_once(delivery, transport, confirmed=True, driver_term=term)
+
     def receipt(self, delivery, state="accepted"):
         # The injected transport represents authentication; the signed synthetic
         # snapshot preserves the independent decoded-record integrity boundary.
         operation = copy.deepcopy(self.operation)
         operation["request_id"] = delivery["request_id"]
+        operation["claimed_actor"] = delivery["claimed_actor"]
+        operation["plan_id"] = delivery["plan_id"]
         operation["state"] = state
         operation["witness"]["workflow_id"] = delivery["workflow_id"]
         if state == "succeeded":
             operation["effect_certainty"] = "known"
         return seal_operation(operation)
 
+    def test_transmit_exact_confirmed_submission(self):
+        for workflow_id, term in ((None, None), (str(uuid.uuid4()), 5)):
+            delivery = prepare_delivery({**self.template, "workflow_id": workflow_id})
+            expected = {
+                key: delivery[key] for key in (
+                    "owner", "request_id", "plan_id", "plan_digest", "subject_digest",
+                    "claimed_actor", "workflow_id",
+                )
+            }
+            transport = Mock(return_value=None)
+            with self.assertRaises(ContractError):
+                submit_once(delivery, transport, confirmed=False, driver_term=term)
+            with self.assertRaises(ContractError):
+                submit_once(delivery, transport, confirmed=True, driver_term=1 if term is None else None)
+            transport.assert_not_called()
+            submit_once(delivery, transport, confirmed=True, driver_term=term)
+            transport.assert_called_once_with({**expected, "confirmed": True, "driver_term": term})
+
     def test_no_files_required(self):
         with patch("pathlib.Path.open", side_effect=OSError("read-only client home")):
             d = prepare_delivery(self.template)
-            r = submit_once(d, self.receipt)
+            r = self.submit_confirmed(d, self.receipt)
         self.assertEqual(r["exit_code"], 0)
         self.assertEqual(r["tracking"], "not-attempted")
         self.assertEqual(d["state"], "prepared")
@@ -602,7 +626,7 @@ class Noninterference(unittest.TestCase):
                 receipt = self.receipt(delivery)
                 receipt["witness"]["workflow_id"] = returned
                 seal_operation(receipt)
-                result = submit_once(delivery, lambda _, receipt=receipt: receipt)
+                result = self.submit_confirmed(delivery, lambda _, receipt=receipt: receipt)
                 self.assertEqual(result["delivery"]["request_id"], delivery["request_id"])
                 if expected == returned:
                     self.assertEqual(result["delivery"]["state"], "accepted")
@@ -629,14 +653,14 @@ class Noninterference(unittest.TestCase):
     def test_tracking_unavailable_cannot_be_called_by_submission(self):
         with patch("fishhat_reporting.reports.report", side_effect=AssertionError("must not run")):
             d = prepare_delivery(self.template)
-            r = submit_once(d, self.receipt)
+            r = self.submit_confirmed(d, self.receipt)
         self.assertEqual(r["exit_code"], 0)
 
     def test_running_and_waiting_are_execution_not_delivery_states(self):
         for state in ("running", "waiting"):
             with self.subTest(state=state):
                 d = prepare_delivery(self.template)
-                r = submit_once(d, lambda x, state=state: self.receipt(x, state))
+                r = self.submit_confirmed(d, lambda x, state=state: self.receipt(x, state))
                 self.assertEqual(r["delivery"]["state"], "accepted")
                 self.assertEqual(r["owner_receipt"]["state"], state)
                 self.assertEqual(r["exit_code"], 0)
@@ -650,7 +674,7 @@ class Noninterference(unittest.TestCase):
                 receipt["effect_certainty"] = "unknown"
                 receipt["holds"] = [str(uuid.uuid4())]
                 seal_operation(receipt)
-                r = submit_once(d, lambda _, receipt=receipt: receipt)
+                r = self.submit_confirmed(d, lambda _, receipt=receipt: receipt)
                 self.assertEqual(r["exit_code"], 1)
                 self.assertEqual(r["delivery"]["state"], "accepted")
                 self.assertEqual(r["owner_receipt"], receipt)
@@ -658,7 +682,7 @@ class Noninterference(unittest.TestCase):
 
     def test_successful_execution_stays_in_owner_receipt(self):
         d = prepare_delivery(self.template)
-        r = submit_once(d, lambda x: self.receipt(x, "succeeded"))
+        r = self.submit_confirmed(d, lambda x: self.receipt(x, "succeeded"))
         self.assertEqual(r["exit_code"], 0)
         self.assertEqual(r["delivery"]["state"], "accepted")
         self.assertEqual(r["owner_receipt"]["state"], "succeeded")
@@ -673,7 +697,7 @@ class Noninterference(unittest.TestCase):
                     "empty": {},
                     "partial": {"request_id": d["request_id"], "state": "accepted"},
                 }[form]
-                r = submit_once(d, lambda _, receipt=receipt: receipt)
+                r = self.submit_confirmed(d, lambda _, receipt=receipt: receipt)
                 self.assertEqual(r["exit_code"], 8)
                 self.assertEqual(r["delivery"]["state"], "acceptance_unknown")
                 self.assertEqual(r["delivery"]["request_id"], d["request_id"])
@@ -682,6 +706,8 @@ class Noninterference(unittest.TestCase):
     def test_owner_reply_cannot_substitute_the_request_or_reviewed_inputs(self):
         changes = (
             (("request_id",), str(uuid.uuid4())),
+            (("plan_id",), str(uuid.uuid4())),
+            (("claimed_actor",), "other-actor"),
             (("owner", "id"), str(uuid.uuid4())),
             (("owner", "epoch"), str(uuid.uuid4())),
             (("plan_digest",), "sha256:" + "f" * 64),
@@ -699,7 +725,7 @@ class Noninterference(unittest.TestCase):
                 target[path[-1]] = replacement
                 if path[0] != "witness":
                     seal_operation(receipt)
-                r = submit_once(d, lambda _, receipt=receipt: receipt)
+                r = self.submit_confirmed(d, lambda _, receipt=receipt: receipt)
                 self.assertEqual(r["exit_code"], 8)
                 self.assertEqual(r["delivery"]["state"], "acceptance_unknown")
                 self.assertEqual(r["delivery"]["request_id"], d["request_id"])
@@ -710,7 +736,7 @@ class Noninterference(unittest.TestCase):
         receipt = self.receipt(d, "succeeded")
         receipt["effect_certainty"] = "unknown"
         seal_operation(receipt)
-        r = submit_once(d, lambda _: receipt)
+        r = self.submit_confirmed(d, lambda _: receipt)
         self.assertEqual(r["exit_code"], 8)
         self.assertEqual(r["delivery"]["state"], "acceptance_unknown")
         self.assertIsNone(r["owner_receipt"])
@@ -734,7 +760,7 @@ class Noninterference(unittest.TestCase):
 
     def test_positive_nonacceptance_is_bound_to_the_exact_submission(self):
         d = prepare_delivery(self.template)
-        fields = ("owner", "resource", "request_id", "plan_digest", "subject_digest", "workflow_id")
+        fields = ("owner", "resource", "request_id", "plan_id", "plan_digest", "subject_digest", "workflow_id", "claimed_actor")
         refusal = {key: d[key] for key in fields}
         refusal.update(kind="SubmissionRefusal", reason="PLAN_EXPIRED")
         problem = {
@@ -753,7 +779,7 @@ class Noninterference(unittest.TestCase):
             "problem": problem,
             "nonacceptance": refusal,
         }
-        rejected = submit_once(d, lambda _: reply)
+        rejected = self.submit_confirmed(d, lambda _: reply)
         self.assertEqual(rejected["delivery"]["state"], "rejected")
         self.assertEqual(rejected["refusal"], refusal)
         self.assertEqual(rejected["exit_code"], 1)
@@ -774,7 +800,7 @@ class Noninterference(unittest.TestCase):
             validate_cli({**cli, "delivery": None, "request_id": str(uuid.uuid4())})
         # Both a lost request and a lost decision reply leave the same client state.
         # The only message sent while investigating is a read of the original ID.
-        unknown = submit_once(d, Mock(side_effect=TimeoutError()))["delivery"]
+        unknown = self.submit_confirmed(d, Mock(side_effect=TimeoutError()))["delivery"]
         lookup = Mock(return_value={**reply, "method": "operation.get"})
         resolved = reconcile_delivery(unknown, lookup)
         lookup.assert_called_once_with({"owner": d["owner"], "request_id": d["request_id"]})
@@ -785,6 +811,11 @@ class Noninterference(unittest.TestCase):
             lookup.return_value = missing
             self.assertEqual(reconcile_delivery(unknown, lookup)["delivery"], unknown)
             lookup.assert_called_once_with({"owner": d["owner"], "request_id": d["request_id"]})
+        for field, changed in (("claimed_actor", "other-actor"), ("plan_id", str(uuid.uuid4()))):
+            changed_delivery = {**unknown, field: changed}
+            for retained in (self.receipt(d), {**reply, "method": "operation.get"}):
+                resolved = reconcile_delivery(changed_delivery, Mock(return_value=retained))
+                self.assertEqual(resolved["delivery"]["state"], "acceptance_unknown")
         lookup.return_value = self.receipt(d)
         self.assertEqual(reconcile_delivery(unknown, lookup)["delivery"]["state"], "accepted")
         with self.assertRaises(ContractError):
@@ -804,7 +835,7 @@ class Noninterference(unittest.TestCase):
             {**reply, "problem": denied, "nonacceptance": {**refusal, "reason": denied["code"]}},
         ):
             with self.subTest(invalid=invalid):
-                result = submit_once(d, lambda _, reply=invalid: reply)
+                result = self.submit_confirmed(d, lambda _, reply=invalid: reply)
                 self.assertEqual(result["delivery"]["state"], "acceptance_unknown")
 
         evidence = RecordSnapshot(
@@ -829,7 +860,7 @@ class Noninterference(unittest.TestCase):
         for error in (TimeoutError(), PermissionError(), ContractError("unverified reply")):
             with self.subTest(error=type(error).__name__):
                 unavailable = Mock(side_effect=error)
-                r = submit_once(d, unavailable)
+                r = self.submit_confirmed(d, unavailable)
                 unavailable.assert_called_once()
                 self.assertEqual(unavailable.call_args.args[0]["request_id"], d["request_id"])
                 self.assertEqual(r["delivery"]["request_id"], d["request_id"])
@@ -839,7 +870,7 @@ class Noninterference(unittest.TestCase):
         d = prepare_delivery(self.template)
         d["state"] = "acceptance_unknown"
         with self.assertRaises(ContractError):
-            submit_once(d, lambda _: None)
+            self.submit_confirmed(d, lambda _: None)
 
     def test_owner_acceptance_survives_client_and_trackers(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -861,7 +892,7 @@ class Noninterference(unittest.TestCase):
                 )
                 raise TimeoutError()
 
-            result = submit_once(d, lost)
+            result = self.submit_confirmed(d, lost)
             self.assertEqual(result["exit_code"], 8)
             request = d["request_id"]
             plan = d["plan_digest"]

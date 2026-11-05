@@ -389,13 +389,17 @@ def test_retained_terminal_child_cannot_be_replaced_by_a_new_signed_outcome(jour
     run.submit_native(0, run.native_submission(0, 0))
     original = native.finish(child, unknown=state == "quarantined")
 
-    def signed_state(operation, destination, generation):
+    def signed_state(operation, destination, generation, last_event=None):
         changed = deepcopy(operation)
-        changed.update(state=destination, generation=generation, last_event=generation)
+        changed.update(
+            state=destination, generation=generation,
+            last_event=generation if last_event is None else last_event,
+        )
         changed["effect_certainty"] = "unknown" if destination == "quarantined" else "known"
         witness = {key: value for key, value in changed["witness"].items() if key != "signature"}
         witness.update(
             state=destination,
+            kind="acceptance" if destination == "accepted" else "effect",
             generation=generation,
             subject_digest=digest(
                 {key: value for key, value in changed.items() if key != "witness"}
@@ -404,7 +408,17 @@ def test_retained_terminal_child_cannot_be_replaced_by_a_new_signed_outcome(jour
         changed["witness"] = sign(witness, native.key)
         return changed
 
-    original = signed_state(original, state, original["generation"])
+    generation = original["generation"]
+    running = signed_state(original, "running", generation)
+    member.call("complete", {"operation": running})
+    regressed = signed_state(running, "accepted", generation + 1)
+    with pytest.raises(ContractError, match="state regressed"):
+        member.call("complete", {"operation": regressed})
+    lost_event = signed_state(running, "waiting", generation + 1, last_event=0)
+    with pytest.raises(ContractError, match="regressed"):
+        member.call("complete", {"operation": lost_event})
+    # Missing an intermediate observation still permits a reachable terminal state.
+    original = signed_state(original, state, generation + 2)
     command = member.command("complete", {"operation": original})
     retained = member.submit(command)
     head = member.target.journal.head

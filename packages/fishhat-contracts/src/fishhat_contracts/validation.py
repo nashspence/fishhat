@@ -477,8 +477,11 @@ def _validate_datasets(app: dict[str, Any]) -> None:
             ("verify_rebuild", "verify-rebuild", "read"),
         ),
     }
+    dataset_access: dict[str, dict[str, set[str]]] = {}
     preserved = False
     for dataset_id, dataset in datasets.items():
+        writers = set(dataset["writers"])
+        dataset_access[dataset_id] = {"write": writers, "read": writers.union(dataset["readers"])}
         _require(
             all(component in components for component in dataset["writers"])
             and all(component in components for component in dataset["readers"]),
@@ -510,15 +513,19 @@ def _validate_datasets(app: dict[str, Any]) -> None:
         role: policy for policy, entries in procedures.items() for _, role, _ in entries
     }
     for hook in hooks.values():
-        if hook["role"] not in recovery_roles:
-            continue
         for dataset_id in hook["datasets"]:
             dataset = datasets.get(dataset_id)
             _require(dataset is not None, "unknown hook dataset")
             assert dataset is not None
+            if hook["role"] in recovery_roles:
+                _require(
+                    dataset["custody"] == "app"
+                    and dataset["recovery"] == recovery_roles[hook["role"]],
+                    "recovery hook crosses dataset custody or recovery policy",
+                )
             _require(
-                dataset["custody"] == "app" and dataset["recovery"] == recovery_roles[hook["role"]],
-                "recovery hook crosses dataset custody or recovery policy",
+                hook["component"] in dataset_access[dataset_id][hook["mode"]],
+                "hook executor lacks declared dataset access",
             )
 
 
@@ -545,7 +552,7 @@ def validate_app(app: dict[str, Any], catalogue: dict[str, Any] | None = None) -
     _require(app["kind"] == "App", "expected app")
     if catalogue is not None:
         _validate_secret_catalogue(catalogue)
-    components, hooks, datasets = app["components"], app["hooks"], app["datasets"]
+    components, hooks = app["components"], app["hooks"]
     _require(any(x["role"] == "primary" for x in components.values()), "primary component required")
     units = [canonical(x["native"]) for x in components.values()]
     _require(len(set(units)) == len(units), "duplicate native component selector")
@@ -567,7 +574,6 @@ def validate_app(app: dict[str, Any], catalogue: dict[str, Any] | None = None) -
     _validate_app_secret_targets(app, catalogue)
     for hook in hooks.values():
         _require(hook["component"] in components, "unknown hook executor")
-        _require(all(dataset in datasets for dataset in hook["datasets"]), "unknown hook dataset")
         _require(
             all(binding in app["secret_bindings"] for binding in hook["secrets"]),
             "unknown hook secret binding",
