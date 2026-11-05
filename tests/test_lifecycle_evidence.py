@@ -228,6 +228,7 @@ def prepared_inputs(action="app.retire", count=2):
                             "size_bytes": 12,
                         }
                     ],
+                    "incarnation": digest({"object": index}),
                     "completeness": "sealed",
                     "retrieval": "available",
                 },
@@ -736,6 +737,13 @@ def test_retirement_keeps_discharged_obligation_tombstones_and_original_closure(
         if item["obligation"] is not None:
             item["obligation"]["inventory_digest"] = digest(inventory)
             seal(item)
+    with pytest.raises(ContractError, match="closure omitted"):
+        prepare(context)
+    evidence_digest = entry["discharge"]["evidence_digest"]
+    context["current"]["required_materials"].append(evidence_digest)
+    with pytest.raises(ContractError, match="surviving recovery custody"):
+        prepare(context)
+    context["custody"].append(retained(inventory["owner"], inventory["resource"], evidence_digest))
     snapshot = prepare(context)
     value = validate_lifecycle_admission(review(snapshot), snapshot.data, **context)
     assert (

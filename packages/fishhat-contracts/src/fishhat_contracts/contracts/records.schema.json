@@ -2536,6 +2536,9 @@
             }
           ],
           "description": "Exact durable independent owner evidence establishing one common write-quiescence interval and capture generation across all preserved datasets, or null when no application-wide consistency is claimed. A digest is not itself proof of native fencing."
+        },
+        "dataset_inventory_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
         }
       },
       "required": [
@@ -2552,10 +2555,11 @@
         "verified_at",
         "witness",
         "consistency_scope",
-        "quiescence_evidence"
+        "quiescence_evidence",
+        "dataset_inventory_digest"
       ],
       "additionalProperties": false,
-      "description": "A complete checkpoint binds exactly every preserved application-owned dataset selected by the accepted release, its secret generations, signed capture/store/verify Operation receipts and exact historical backup executor. Resolve each receipt through its immutable result_handle to the existing typed RetainedResult, reapply original invocation/output joins and authenticate the signed Operation with independently trusted owner keys. Capture must return one consistently captured Snapshot for the named dataset; backup verification must cover the same sealed object and all snapshot artifacts. Its checkpoint-kind, verified-state witness subject covers the entire canonical body excluding witness. Application-quiesced requires one verifiable writer fence and capture cohort and quiesced snapshots; independent-datasets is not an application-atomic recovery point. A fresh owner reconstructs these same snapshots and objects before independently authorizing current retrieval/restore and verifying actual bytes. No missing dataset, closure member or inconsistent archive may be omitted. This record is immutable after verification. Later drills retain separate DrillResult evidence selecting this original digest and never annotate or rewrite the checkpoint. verified_at is verification completion only, not recoverable-data time; RPO uses immutable per-Snapshot recovery_point bounds and an independently current assessment.",
+      "description": "A complete checkpoint binds exactly every preserved application-owned dataset selected by the accepted release, its secret generations, signed capture/store/verify Operation receipts and exact historical backup executor. Resolve each receipt through its immutable result_handle to the existing typed RetainedResult, reapply original invocation/output joins and authenticate the signed Operation with independently trusted owner keys. Capture must return one consistently captured Snapshot for the named dataset; backup verification must cover the same sealed object and all snapshot artifacts. Its checkpoint-kind, verified-state witness subject covers the entire canonical body excluding witness. Application-quiesced requires one verifiable writer fence and capture cohort and quiesced snapshots; independent-datasets is not an application-atomic recovery point. A fresh owner reconstructs these same snapshots and objects before independently authorizing current retrieval/restore and verifying actual bytes. No missing dataset, closure member or inconsistent archive may be omitted. This record is immutable after verification. Later drills retain separate DrillResult evidence selecting this original digest and never annotate or rewrite the checkpoint. verified_at is verification completion only, not recoverable-data time; RPO uses immutable per-Snapshot recovery_point bounds and an independently current assessment. Retain canonical accepted DatasetInventory bytes in recovery_closure at dataset_inventory_digest. Its owner, release, instance and all active preserve obligations must match this checkpoint. Resolve each capture Snapshot against the original active obligation UUID, digest and native incarnation from that inventory.",
       "allOf": [
         {
           "if": {
@@ -2679,11 +2683,38 @@
             "$ref": "adapter.schema.json#/$defs/Artifact"
           }
         },
-        "native_input_digest": {
-          "$ref": "common.schema.json#/$defs/Digest"
-        },
         "adapter_artifact_digest": {
           "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "runtime": {
+          "type": "object",
+          "properties": {
+            "source_artifact": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Key of the exact native input in this Release's artifacts map. Match its digest, media type and size."
+            },
+            "binding_digest": {
+              "$ref": "common.schema.json#/$defs/Digest",
+              "description": "Stable digest of the independently approved RuntimeBinding with only admission_generation omitted."
+            },
+            "components": {
+              "type": "array",
+              "items": {
+                "$ref": "common.schema.json#/$defs/Id"
+              },
+              "minItems": 1,
+              "uniqueItems": true,
+              "description": "The complete selected component IDs in strictly increasing ASCII order."
+            }
+          },
+          "required": [
+            "source_artifact",
+            "binding_digest",
+            "components"
+          ],
+          "additionalProperties": false,
+          "description": "Exact runtime resolution selection for this application Release. Rebinding the runtime target or selecting a different native input or component set requires review of a new Release."
         }
       },
       "required": [
@@ -2699,7 +2730,7 @@
         "hook_closure",
         "recovery_closure",
         "artifacts",
-        "native_input_digest",
+        "runtime",
         "adapter_artifact_digest"
       ],
       "additionalProperties": false,
@@ -4919,7 +4950,8 @@
             "PLAN_EXPIRED",
             "PRECONDITION_FAILED",
             "CAPACITY_BLOCKED",
-            "UNSUPPORTED_CAPABILITY"
+            "UNSUPPORTED_CAPABILITY",
+            "CANCELLED"
           ]
         },
         "resource": {
@@ -4939,7 +4971,66 @@
         "reason"
       ],
       "additionalProperties": false,
-      "description": "An authenticated operation.submit refusal for this exact original submission. After authorizing disclosure of the request and resource, the owner serializes with native acceptance, verifies the complete retained epoch index, and durably closes this previously unaccepted request ID against all later acceptance before responding. A matching retry returns the original refusal after current read authorization. Compare all canonical operation.submit params except driver_term, which governs only a fresh decision. A stale term alone cannot close an unused request ID or issue a durable refusal. A changed immutable submission conflicts. An unavailable index, ambiguous outcome, denied disclosure, already accepted identity, or failed commit cannot issue this proof. Neither an ordinary Problem nor a not-found lookup proves nonacceptance. The accompanying Problem matches the owner, resource and reason, with retry none. The receiver authenticates the responding owner, correlates the original SSH message and matches every refusal identity to its original delivery. A copied JSON value supplies no independent authority. Retain this refusal and its matching Problem for the owner epoch. operation.get can return them unchanged to a currently authorized reader of the original protected resource using only the original owner and request ID. New submission permission and original client state are unnecessary. No lookup creates a decision. Preserve the original submitted plan_id and claimed_actor unchanged, including null. Receivers match both when resolving a Delivery."
+      "description": "An authenticated operation.submit refusal for this exact original submission. After authorizing disclosure of the request and resource, the owner serializes with native acceptance, verifies the complete retained epoch index, and durably closes this previously unaccepted request ID against all later acceptance before responding. A matching retry returns the original refusal after current read authorization. Compare all canonical operation.submit params except driver_term, which governs only a fresh decision. A stale term alone cannot close an unused request ID or issue a durable refusal. A changed immutable submission conflicts. An unavailable index, ambiguous outcome, denied disclosure, already accepted identity, or failed commit cannot issue this proof. Neither an ordinary Problem nor a not-found lookup proves nonacceptance. The accompanying Problem matches the owner, resource and reason, with retry none. The receiver authenticates the responding owner, correlates the original SSH message and matches every refusal identity to its original delivery. A copied JSON value supplies no independent authority. Retain this refusal and its matching Problem for the owner epoch. operation.get can return them unchanged to a currently authorized reader of the original protected resource using only the original owner and request ID. New submission permission and original client state are unnecessary. No lookup creates a decision. Preserve the original submitted plan_id and claimed_actor unchanged, including null. Receivers match both when resolving a Delivery. An explicitly confirmed operation.close can create reason CANCELLED for an unaccepted standalone submission. This proves withdrawal before acceptance and never describes a cancelled Operation. A fresh operation.submit cannot create a CANCELLED refusal; it can only replay one retained by operation.close.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "reason": {
+                "const": "CANCELLED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "workflow_id": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "SubmissionClose": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "#/$defs/SubmissionRefusal/properties/owner"
+        },
+        "request_id": {
+          "$ref": "#/$defs/SubmissionRefusal/properties/request_id"
+        },
+        "plan_id": {
+          "$ref": "#/$defs/SubmissionRefusal/properties/plan_id"
+        },
+        "plan_digest": {
+          "$ref": "#/$defs/SubmissionRefusal/properties/plan_digest"
+        },
+        "subject_digest": {
+          "$ref": "#/$defs/SubmissionRefusal/properties/subject_digest"
+        },
+        "claimed_actor": {
+          "$ref": "#/$defs/SubmissionRefusal/properties/claimed_actor"
+        },
+        "resource": {
+          "$ref": "#/$defs/SubmissionRefusal/properties/resource"
+        },
+        "confirm_close": {
+          "const": true
+        }
+      },
+      "required": [
+        "owner",
+        "request_id",
+        "plan_id",
+        "plan_digest",
+        "subject_digest",
+        "claimed_actor",
+        "resource",
+        "confirm_close"
+      ],
+      "additionalProperties": false,
+      "description": "Explicitly withdraw one standalone submission in the original owner epoch. Reconstruct the original immutable operation.submit identity from these fields with confirmed true, workflow_id null and driver_term null. Resolve protected resource from authoritative retained custody. Require exact Plan, subject, resource and current scoped read permission before disclosure. Serialize with native submission in the same durable owner epoch request index. If an identical decision exists, return its original Operation or refusal and Problem under current read permission; a changed identity conflicts. Only a new closure requires current scoped cancellation permission. Verify complete authoritative absence, original Plan custody and current epoch under exclusion, then atomically commit SubmissionRefusal with reason CANCELLED and retry none before acknowledging closure. Retain the protected closing principal and original submission identity. Plan expiry does not prevent withdrawal. An incomplete index, failed commit or unavailable custody must leave acceptance unknown. Never start work or stop an accepted Operation. A delayed original submission receives the retained refusal. On a lost close reply, operation.get is read-only and another identical explicitly authorized close can settle the same race."
     }
   },
   "x-fishhat-contract-dependencies": [

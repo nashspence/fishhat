@@ -79,6 +79,14 @@ def resource_observation_params(data: bytes) -> dict[str, Any]:
     return _read_envelope(data, "resources.observe")
 
 
+def close_request_params(data: bytes, expected_owner: dict[str, Any]) -> dict[str, Any]:
+    """Decode explicit standalone withdrawal for the pinned local owner epoch."""
+    params = _read_envelope(data, "operation.close")
+    if params["owner"] != expected_owner:
+        raise ContractError("submission closure requires the exact local owner epoch")
+    return params
+
+
 def _read_envelope(data: bytes, method: str) -> dict[str, Any]:
     request = strict_json(data)
     if not isinstance(request, dict):

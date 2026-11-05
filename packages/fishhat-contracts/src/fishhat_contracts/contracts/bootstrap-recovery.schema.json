@@ -53,6 +53,10 @@
     },
     "tree": {
       "$ref": "bootstrap-recovery.schema.json#/$defs/Tree"
+    },
+    "ref_object_id": {
+      "$ref": "repository-adapter.schema.json#/$defs/ObjectId",
+      "description": "The independently captured unpeeled object ID of the literal direct ref in this repository object format. A branch names its commit directly. A tag may name a tag object that peels to the selected commit."
     }
   },
   "required": [
@@ -72,7 +76,8 @@
     "install_dependencies",
     "download_tools",
     "full_service_restore_separate",
-    "tree"
+    "tree",
+    "ref_object_id"
   ],
   "additionalProperties": false,
   "$defs": {
@@ -143,7 +148,7 @@
           }
         }
       ],
-      "description": "One self-contained Git bundle with no prerequisites, providing the exact literal selected ref and commit and their full reachable Git object closure. The digest and byte size identify the exact bundle encoding, independently of the logical Tree commitment. Recover publishes this complete material through the fixed process artifact output and the receiving custodian retains its bytes before success. A fresh verifier receives those same immutable bytes through the fixed process input."
+      "description": "One self-contained Git bundle with no prerequisites, providing the exact literal selected direct ref, its pinned raw object ID, peeled commit and their full reachable Git object closure. The digest and byte size identify the exact bundle encoding, independently of the logical Tree commitment. Recover publishes this complete material through the fixed process artifact output and the receiving custodian retains its bytes before success. A fresh verifier receives those same immutable bytes through the fixed process input."
     }
   }
 }

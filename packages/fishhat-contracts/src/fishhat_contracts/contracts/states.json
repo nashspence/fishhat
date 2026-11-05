@@ -144,7 +144,7 @@
   },
   "client_meanings": {
     "prepared": "A local request identity is ready to send. No owner acceptance, reservation or durable client storage is implied.",
-    "acceptance_unknown": "The request may have been accepted. Use the read-only operation.get with the original owner epoch and request ID. An authenticated retained Operation or exact durable refusal resolves the decision. A missing or undisclosable decision leaves acceptance unknown.",
+    "acceptance_unknown": "The request may have been accepted. Use the read-only operation.get with the original owner epoch and request ID. An authenticated retained Operation or exact durable refusal resolves the decision. A missing or undisclosable decision leaves acceptance unknown. To withdraw uncertain standalone work, an operator may explicitly issue operation.close with the original immutable submission identity. A lost close reply preserves uncertainty until a verified decision is obtained.",
     "accepted": "Owner evidence establishes acceptance. Consult the separate Operation receipt for progress and outcome.",
     "rejected": "An authenticated owner response explicitly refused acceptance. A timeout or unreadable response is not rejection."
   },

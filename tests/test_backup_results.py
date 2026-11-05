@@ -137,9 +137,14 @@ def test_backup_result_rejects_old_or_foreign_checkpoint_selection(field):
 def test_backup_result_cannot_change_the_reviewed_selection_with_its_checkpoint():
     record, result, _ = pair()
     result["checkpoint"]["release_digest"] = digest("another release")
-    result["checkpoint"]["recovery_closure"].append(result["checkpoint"]["release_digest"])
-    seal(result["checkpoint"])
     result["selection"] = backup_selection(result["checkpoint"])
+    result["checkpoint"]["dataset_inventory_digest"] = result["selection"][
+        "dataset_inventory_digest"
+    ]
+    result["checkpoint"]["recovery_closure"].extend(
+        [result["checkpoint"]["release_digest"], result["checkpoint"]["dataset_inventory_digest"]]
+    )
+    seal(result["checkpoint"])
     with pytest.raises(ContractError, match="producing operation or reviewed selection"):
         validate_result_payload(record, attach(record, result))
 

@@ -871,6 +871,11 @@ class Noninterference(unittest.TestCase):
             validate_cli(cli)
         key = (evidence["schema"]["uri"], evidence["schema"]["digest"])
         validate_cli(cli, retained_readers={key: lambda _: None})
+        lookup.return_value = {**reply, "method": "operation.get", "problem": cli["problem"]}
+        self.assertEqual(reconcile_delivery(unknown, lookup)["exit_code"], 8)
+        recovered = reconcile_delivery(unknown, lookup, retained_readers={key: lambda _: None})
+        self.assertEqual(recovered["delivery"]["state"], "rejected")
+        self.assertEqual(recovered["problem"], cli["problem"])
 
     def test_timeout_same_id_no_retry(self):
         d = prepare_delivery(self.template)

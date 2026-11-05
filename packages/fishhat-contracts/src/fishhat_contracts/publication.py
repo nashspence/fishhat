@@ -13,6 +13,15 @@ def _require(condition: bool, message: str) -> None:
         raise ContractError(message)
 
 
+def require_bootstrap_ref_target(ref: str, object_id: str, commit: str) -> None:
+    """Check relationships after schema validation, before native Git verification."""
+    _require(
+        len(object_id) == len(commit)
+        and (not ref.startswith("refs/heads/") or object_id == commit),
+        "bootstrap ref object differs from selected repository format or branch commit",
+    )
+
+
 def validate_publication_intent(
     *,
     source: dict[str, Any],
@@ -164,6 +173,7 @@ def require_repository_publication(
     symbolic: bool,
     is_ancestor: Callable[[str, str], bool],
     source_proposal: dict[str, Any] | None = None,
+    read_commit_parents: Callable[[str], tuple[str, ...]] | None = None,
     verify_proposal_tree: Callable[[dict[str, Any], str], bool] | None = None,
 ) -> None:
     """Check independently observed literal-ref facts under native CAS or exclusion.
@@ -173,7 +183,8 @@ def require_repository_publication(
     uncertain observation cannot supply these facts. The adapter supplies
     verified reachability in the exact retained repository, rejecting
     incomplete history. A source publisher also supplies the independently
-    retained reviewed proposal. Its verifier compares the candidate commit's
+    retained reviewed proposal and the entire parent list from the raw candidate
+    commit, without grafts or replace refs. Its verifier compares the candidate commit's
     complete Git root tree with the tree independently derived by applying the
     verified proposal to its pinned base, preserving every unselected entry.
     The native caller must preserve these facts
@@ -199,7 +210,8 @@ def require_repository_publication(
         _require(
             source_proposal["repository"] == inputs["repository"]["canonical"]
             and source_proposal["ref"] == inputs["ref"]
-            and is_ancestor(base, candidate["commit"]) is True,
+            and read_commit_parents is not None
+            and read_commit_parents(candidate["commit"]) == (base,),
             "candidate differs from reviewed source history",
         )
         _require(

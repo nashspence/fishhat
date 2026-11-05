@@ -8,7 +8,8 @@ from __future__ import annotations
 
 import copy
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from typing import Any
 
 from fishhat_contracts.operations import (
@@ -16,7 +17,18 @@ from fishhat_contracts.operations import (
     validate_operation,
     validate_submission_refusal,
 )
+from fishhat_contracts.record_delivery import validate_record_payload
 from fishhat_contracts.validation import ContractError, validate
+
+Readers = Mapping[tuple[str, str], Callable[[dict[str, Any]], None]]
+
+
+@dataclass(frozen=True)
+class ReferencedOperation:
+    """Exact authenticated reference and complete bytes supplied by the owner transport."""
+
+    reference: dict[str, Any]
+    data: bytes
 
 
 def prepare_delivery(template: dict[str, Any], request_id: str | None = None) -> dict[str, Any]:
@@ -33,6 +45,8 @@ def submit_once(
     *,
     confirmed: bool,
     driver_term: int | None = None,
+    retained_readers: Readers | None = None,
+    recovery_readers: Readers | None = None,
 ) -> dict[str, Any]:
     """Submit once and keep acceptance separate from the owner's execution result.
 
@@ -72,11 +86,17 @@ def submit_once(
             "params": params,
         },
     )
-    return _resolve(delivery, owner_transport, params, "operation.submit")
+    return _resolve(
+        delivery, owner_transport, params, "operation.submit", retained_readers, recovery_readers
+    )
 
 
 def reconcile_delivery(
-    delivery: dict[str, Any], owner_lookup: Callable[[dict[str, Any]], object]
+    delivery: dict[str, Any],
+    owner_lookup: Callable[[dict[str, Any]], object],
+    *,
+    retained_readers: Readers | None = None,
+    recovery_readers: Readers | None = None,
 ) -> dict[str, Any]:
     """Resolve uncertain delivery through an authenticated, read-only operation.get.
 
@@ -87,7 +107,38 @@ def reconcile_delivery(
     if delivery["state"] != "acceptance_unknown":
         raise ContractError("lookup requires an uncertain delivery")
     params = {"owner": copy.deepcopy(delivery["owner"]), "request_id": delivery["request_id"]}
-    return _resolve(delivery, owner_lookup, params, "operation.get")
+    return _resolve(
+        delivery, owner_lookup, params, "operation.get", retained_readers, recovery_readers
+    )
+
+
+def close_if_unaccepted(
+    delivery: dict[str, Any],
+    owner_close: Callable[[dict[str, Any]], object],
+    *,
+    confirmed: bool,
+    retained_readers: Readers | None = None,
+    recovery_readers: Readers | None = None,
+) -> dict[str, Any]:
+    """Explicitly withdraw uncertain standalone work, preserving a racing acceptance."""
+    validate("client-records.schema.json", delivery, "Delivery")
+    if delivery["state"] != "acceptance_unknown" or delivery["workflow_id"] is not None:
+        raise ContractError("withdrawal requires an uncertain standalone delivery")
+    fields = (
+        "owner",
+        "request_id",
+        "plan_id",
+        "plan_digest",
+        "subject_digest",
+        "claimed_actor",
+        "resource",
+    )
+    params = {key: copy.deepcopy(delivery[key]) for key in fields}
+    params["confirm_close"] = confirmed
+    validate("records.schema.json", params, "SubmissionClose")
+    return _resolve(
+        delivery, owner_close, params, "operation.close", retained_readers, recovery_readers
+    )
 
 
 def _resolve(
@@ -95,6 +146,8 @@ def _resolve(
     transport: Callable[[dict[str, Any]], object],
     params: dict[str, Any],
     method: str,
+    retained_readers: Readers | None,
+    recovery_readers: Readers | None,
 ) -> dict[str, Any]:
     value = copy.deepcopy(delivery)
     value["state"] = "acceptance_unknown"
@@ -109,14 +162,17 @@ def _resolve(
     except (OSError, ContractError):
         # SSH I/O, authentication or response verification failed at the transport.
         return unknown
-    if not isinstance(receipt, dict):
-        return unknown
-    if "nonacceptance" in receipt:
+    if isinstance(receipt, dict) and "nonacceptance" in receipt:
         if receipt.get("method") != method:
             return unknown
         try:
             validate("ssh-response.schema.json", receipt)
-            validate_submission_refusal(receipt["nonacceptance"], receipt["problem"], value)
+            validate_submission_refusal(
+                receipt["nonacceptance"],
+                receipt["problem"],
+                value,
+                retained_readers=retained_readers,
+            )
         except ContractError:
             return unknown
         value["state"] = "rejected"
@@ -129,15 +185,42 @@ def _resolve(
             "tracking": "not-attempted",
         }
     try:
-        validate_operation(receipt)
-    except ContractError:
-        return unknown
-    if not operation_matches_delivery(receipt, value):
+        if isinstance(receipt, ReferencedOperation):
+            reference = receipt.reference
+            if reference["record"]["kind"] != "Operation":
+                return unknown
+            operation = validate_record_payload(
+                reference,
+                receipt.data,
+                expected_owner=value["owner"],
+                retained_readers=retained_readers,
+                recovery_readers=recovery_readers,
+            )
+        elif isinstance(receipt, dict):
+            reference = None
+            operation = receipt
+            validate_operation(operation, recovery_readers=recovery_readers)
+        else:
+            return unknown
+        if not operation_matches_delivery(operation, value):
+            return unknown
+        state = operation["state"]
+        if state not in (
+            "accepted",
+            "running",
+            "waiting",
+            "succeeded",
+            "failed",
+            "cancelled",
+            "quarantined",
+        ):
+            return unknown
+    except (ContractError, KeyError, TypeError):
         return unknown
     value["state"] = "accepted"
     return {
-        "exit_code": 1 if receipt["state"] in ("failed", "cancelled", "quarantined") else 0,
+        "exit_code": 1 if state in ("failed", "cancelled", "quarantined") else 0,
         "delivery": value,
-        "owner_receipt": copy.deepcopy(receipt),
+        "owner_receipt": copy.deepcopy(reference if reference is not None else operation),
         "tracking": "not-attempted",
     }

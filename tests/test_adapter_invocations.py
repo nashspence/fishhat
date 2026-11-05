@@ -11,6 +11,7 @@ from tests.test_adapter_dns import change, generation, rrset
 from tests.test_adapter_effects import coordinator, prepare, result
 from tests.test_adapter_handoffs import (
     artifact,
+    capture_identity,
     handoff,
     installed,
     invocation_for,
@@ -81,7 +82,12 @@ def test_bare_mutation_payload_is_not_an_executable_invocation():
     registry, request = handoff("capture", "restore")
     invocation = invocation_for(request)
     check_invocation("capture", invocation)
-    registry.authorize_invocation("capture", invocation, owner_approved=True)
+    registry.authorize_invocation(
+        "capture",
+        invocation,
+        owner_approved=True,
+        expected_capture_identity=capture_identity(request["input"]["scope"]),
+    )
     with pytest.raises(ContractError, match="EFFECT_INVOCATION_REQUIRED"):
         registry.authorize_request("selected", "capture", request, owner_approved=True)
     response = response_for(request, invocation["attempt"], handoff_output("capture", request))
@@ -140,7 +146,12 @@ def test_retained_non_dispatchable_attempt_is_not_new_execution_authority(change
     invocation = invocation_for(request)
     invocation["attempt"].update(change)
     with pytest.raises(ContractError, match="INVOCATION_NOT_DISPATCHABLE"):
-        registry.authorize_invocation("capture", invocation, owner_approved=True)
+        registry.authorize_invocation(
+            "capture",
+            invocation,
+            owner_approved=True,
+            expected_capture_identity=capture_identity(request["input"]["scope"]),
+        )
 
 
 @pytest.mark.parametrize(
@@ -151,7 +162,16 @@ def test_lost_reply_preserves_original_typed_output_identity(role, method):
     registry, request = handoff(role, method)
     invocation = invocation_for(request)
     query = recovered(invocation)
-    registry.authorize_request("selected", role, query, invocation=invocation, owner_approved=True)
+    registry.authorize_request(
+        "selected",
+        role,
+        query,
+        invocation=invocation,
+        owner_approved=True,
+        expected_capture_identity=capture_identity(request["input"]["scope"])
+        if role == "capture"
+        else None,
+    )
     output = handoff_output(role, request)
     reply = response_for(query, invocation["attempt"], output)
     check_response(role, query, reply, invocation=invocation)
@@ -174,7 +194,12 @@ def test_reconciliation_cannot_retarget_to_current_enrollment(change):
     )
     registry, _ = installed("capture", **replacements)
     with pytest.raises(ContractError, match="HANDOFF_INSTANCE_IDENTITY"):
-        registry.authorize_invocation("capture", invocation, owner_approved=True)
+        registry.authorize_invocation(
+            "capture",
+            invocation,
+            owner_approved=True,
+            expected_capture_identity=capture_identity(request["input"]["scope"]),
+        )
     with pytest.raises(ContractError, match="RECONCILIATION_INSTANCE_IDENTITY"):
         registry.authorize_request(
             "selected", "capture", recovered(invocation), invocation=invocation, owner_approved=True
@@ -247,6 +272,7 @@ def test_creation_success_requires_recoverable_produced_identity(role):
         inputs.update(
             binding=executor,
             dataset="data",
+            dataset_identity=capture_identity(executor["scope"]),
             destination="target:data",
             procedure_digest=artifact("b")["digest"],
         )
@@ -330,12 +356,15 @@ def test_backup_success_has_method_specific_custody_and_noop_deletion_identity(m
         "object": "object:data",
         "artifacts": [artifact("c")],
     }
+    if method != "store":
+        inputs["incarnation"] = digest("selected object incarnation")
     query = {"contract": "fishhat.backup", "method": method, "input": inputs}
     invocation = invocation_for(query)
     obj = {
         "handle": inputs["object"],
         "repository": inputs["repository"],
         "artifacts": copy.deepcopy(inputs["artifacts"]),
+        "incarnation": digest("selected object incarnation"),
         "completeness": "sealed",
         "retrieval": "missing" if method == "delete" else "available",
     }
@@ -345,6 +374,85 @@ def test_backup_success_has_method_specific_custody_and_noop_deletion_identity(m
         obj["retrieval"] = "deferred"
         check_response("backup", query, reply, invocation=invocation)
     if method == "delete":
+        registry, _ = installed("backup")
+        target = {
+            "native_identity": {"scope": inputs["scope"], "incarnation": inputs["incarnation"]},
+            "object": {**obj, "retrieval": "available"},
+        }
+        approved = {"executor": executor, "target": target}
+        registry.authorize_invocation(
+            "backup", invocation, owner_approved=True, expected_prune_target=approved
+        )
+        alternate_registry, alternate_executor = installed("backup", endpoint="different-endpoint")
+        alternate = copy.deepcopy(invocation)
+        alternate["attempt"]["executor"] = alternate_executor
+        with pytest.raises(ContractError, match="PRUNING_APPROVED_EXECUTOR"):
+            alternate_registry.authorize_invocation(
+                "backup", alternate, owner_approved=True, expected_prune_target=approved
+            )
+        with pytest.raises(ContractError, match="PRUNING_APPROVED_EXECUTOR"):
+            alternate_registry.authorize_request(
+                alternate_executor["instance"],
+                "backup",
+                recovered(alternate),
+                invocation=alternate,
+                owner_approved=True,
+                expected_prune_target=approved,
+            )
+        replacement = copy.deepcopy(target)
+        replacement["native_identity"]["incarnation"] = replacement["object"]["incarnation"] = (
+            digest("new native incarnation with identical contents")
+        )
+        with pytest.raises(ContractError, match="PRUNING_APPROVED_TARGET"):
+            registry.authorize_invocation(
+                "backup",
+                invocation,
+                owner_approved=True,
+                expected_prune_target={"executor": executor, "target": replacement},
+            )
+        from fishhat_adapters.process import validate_process_launch
+
+        from tests.test_adapter_process import launch
+
+        installation, descriptor = registry._installations[executor["installation_digest"]]
+        for mode in ("mutation", "query"):
+            manifest, payload = launch(invocation, {"endpoint": "protected-target"}, mode)
+            options = {
+                "descriptor": descriptor,
+                "approved_installation": installation,
+                "expected_executor": executor,
+                "expected_private_use": None,
+            }
+            validate_process_launch(
+                manifest,
+                payload,
+                {"endpoint": "protected-target"},
+                expected_prune_target=approved,
+                **options,
+            )
+            alternate_manifest, alternate_payload = launch(
+                alternate, {"endpoint": "different-endpoint"}, mode
+            )
+            with pytest.raises(ContractError, match="PRUNING_APPROVED_EXECUTOR"):
+                validate_process_launch(
+                    alternate_manifest,
+                    alternate_payload,
+                    {"endpoint": "different-endpoint"},
+                    expected_prune_target=approved,
+                    **{**options, "expected_executor": alternate_executor},
+                )
+            with pytest.raises(ContractError, match="PRUNING_APPROVED_TARGET"):
+                validate_process_launch(
+                    manifest,
+                    payload,
+                    {"endpoint": "protected-target"},
+                    expected_prune_target={"executor": executor, "target": replacement},
+                    **options,
+                )
+        obj["incarnation"] = replacement["object"]["incarnation"]
+        with pytest.raises(ContractError, match="BACKUP_OBJECT_INCARNATION"):
+            check_response("backup", query, reply, invocation=invocation)
+        obj["incarnation"] = inputs["incarnation"]
         obj["retrieval"] = "available"
     else:
         obj.update(completeness="incomplete", retrieval="missing")
@@ -361,6 +469,8 @@ def test_backup_admission_rejects_repository_outside_executor_scope(method):
         "object": "object:one",
         "artifacts": [artifact("c")],
     }
+    if method != "store":
+        inputs["incarnation"] = digest("selected object incarnation")
     query = {"contract": "fishhat.backup", "method": method, "input": inputs}
     with pytest.raises(ContractError, match="BACKUP_REPOSITORY_SCOPE"):
         check_request("backup", query)

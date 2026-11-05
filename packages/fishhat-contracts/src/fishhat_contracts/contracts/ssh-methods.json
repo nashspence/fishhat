@@ -99,6 +99,9 @@
     },
     {
       "name": "history.refusal"
+    },
+    {
+      "name": "operation.close"
     }
   ],
   "max_frame_bytes": 1048576,

@@ -38,7 +38,7 @@
         },
         "release_digest": {
           "$ref": "common.schema.json#/$defs/Digest",
-          "description": "Exact independently reviewed Release identity. The receiving owner loads the retained release and verifies that its native_input_digest and selected artifacts name source, the complete selected components and the accepted runtime target. A request-selected digest alone cannot establish that authority."
+          "description": "Exact independently reviewed Release identity. At authorization and before launch, the receiving owner independently loads the approved Release, recomputes its digest, and compares this request to its runtime selection: source equals the complete Artifact at runtime.source_artifact, components equals the selected set, and the stable target digest equals runtime.binding_digest. A request-selected digest alone cannot establish that authority."
         }
       },
       "required": [

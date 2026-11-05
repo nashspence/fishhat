@@ -71,15 +71,20 @@
           },
           "minItems": 0,
           "uniqueItems": true
+        },
+        "incarnation": {
+          "$ref": "common.schema.json#/$defs/Digest"
         }
       },
       "required": [
         "scope",
         "repository",
         "object",
-        "artifacts"
+        "artifacts",
+        "incarnation"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "Match the specified immutable native object incarnation and artifact set under native exclusion or a provider version precondition. A replacement under the same key is a conflict, even with identical bytes. Reconciliation preserves this original selection."
     },
     "verify": {
       "type": "object",
@@ -106,15 +111,20 @@
           },
           "minItems": 0,
           "uniqueItems": true
+        },
+        "incarnation": {
+          "$ref": "common.schema.json#/$defs/Digest"
         }
       },
       "required": [
         "scope",
         "repository",
         "object",
-        "artifacts"
+        "artifacts",
+        "incarnation"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "Match the specified immutable native object incarnation and artifact set under native exclusion or a provider version precondition. A replacement under the same key is a conflict, even with identical bytes. Reconciliation preserves this original selection."
     },
     "delete": {
       "type": "object",
@@ -141,15 +151,20 @@
           },
           "minItems": 0,
           "uniqueItems": true
+        },
+        "incarnation": {
+          "$ref": "common.schema.json#/$defs/Digest"
         }
       },
       "required": [
         "scope",
         "repository",
         "object",
-        "artifacts"
+        "artifacts",
+        "incarnation"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "Match the specified immutable native object incarnation and artifact set under native exclusion or a provider version precondition. A replacement under the same key is a conflict, even with identical bytes. Reconciliation preserves this original selection. Delete only the exact object selected by the current authorized PruningEvidence. A positive absence receipt identifies that incarnation. Names alone cannot establish prior absence after replacement."
     },
     "observe": {
       "type": "object",

@@ -21,7 +21,13 @@ from fishhat_contracts.bounds import Bounds, bounds
 from fishhat_contracts.protected_values import require_value_custody
 from fishhat_contracts.validation import ContractError, canonical, digest, strict_json, validate
 
-from .protocol import check_configuration, check_descriptor
+from .protocol import (
+    _require_bootstrap_approval,
+    _require_recovery_target,
+    _require_runtime_release,
+    check_configuration,
+    check_descriptor,
+)
 
 PROCESS_PROTOCOL = "fishhat.adapter-process/v1"
 PROCESS_ARGUMENTS = ("invoke",)
@@ -75,8 +81,12 @@ def validate_process_launch(
     expected_executor: dict[str, Any],
     expected_private_use: dict[str, Any] | None,
     expected_runtime_binding: dict[str, Any] | None = None,
+    approved_release: dict[str, Any] | None = None,
+    approved_bootstrap_request_digest: str | None = None,
     expected_publication_target: dict[str, Any] | None = None,
     expected_compute_target: dict[str, Any] | None = None,
+    expected_capture_identity: dict[str, Any] | None = None,
+    expected_prune_target: dict[str, Any] | None = None,
 ) -> None:
     """Join files to independently approved descriptor/executor before native launch.
 
@@ -161,6 +171,15 @@ def validate_process_launch(
             if request["method"] == "resolve"
             else "process runtime observation target is not approved",
         )
+    if role == "bootstrap-source":
+        original = (
+            request["input"]["invocation"]["request"]
+            if request["method"] == "reconcile"
+            else request
+        )
+        _require_bootstrap_approval(original, descriptor, approved_bootstrap_request_digest)
+    if role == "runtime" and request["method"] == "resolve":
+        _require_runtime_release(request["input"], approved_release)
     if role in {"ingress", "network"} and request["method"] in {"plan", "observe"}:
         _require(
             expected_publication_target is not None
@@ -171,6 +190,9 @@ def validate_process_launch(
     _require(
         role + "." + request["method"] in descriptor["implemented"],
         "process method is not implemented",
+    )
+    _require_recovery_target(
+        role, request, expected_capture_identity, expected_prune_target, executor
     )
     _check_private_use(manifest, payload, expected_private_use)
 

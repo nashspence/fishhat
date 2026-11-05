@@ -12,11 +12,13 @@ from fishhat_adapters import (
     check_response,
     instance_reference,
 )
+from fishhat_adapters.process import validate_process_launch
 from fishhat_client.bootstrap import prepare_request
 from fishhat_contracts.validation import ContractError, digest
 
 from tests.test_adapter_handoffs import artifact, attempt_for, response_for
 from tests.test_adapter_invocations import recovered
+from tests.test_adapter_process import launch
 from tests.test_bootstrap import PROVIDERS, fixture, records, reseal, selected_receipt
 
 CHECK_PURPOSE = {
@@ -90,7 +92,7 @@ def invocation(query, executor):
     return {"attempt": attempt, "request": copy.deepcopy(query)}
 
 
-def authorize(registry, original, reconciliation):
+def authorize(registry, original, reconciliation, *, approved_digest):
     if reconciliation:
         query = recovered(original)
         registry.authorize_request(
@@ -99,10 +101,16 @@ def authorize(registry, original, reconciliation):
             query,
             owner_approved=True,
             invocation=original,
+            approved_bootstrap_request_digest=approved_digest,
         )
     else:
         query = original["request"]
-        registry.authorize_invocation("bootstrap-source", original, owner_approved=True)
+        registry.authorize_invocation(
+            "bootstrap-source",
+            original,
+            owner_approved=True,
+            approved_bootstrap_request_digest=approved_digest,
+        )
     return query
 
 
@@ -116,7 +124,7 @@ def test_exact_bootstrap_selection_survives_initial_dispatch_and_lost_reply(
     registry, executor = receiver(value)
     original = invocation(request, executor)
     before = copy.deepcopy(original)
-    query = authorize(registry, original, reconciliation)
+    query = authorize(registry, original, reconciliation, approved_digest=digest(request))
     receipt = fixture("source-receipt")
     selection = request["input"]["selection"]
     receipt.update(
@@ -125,12 +133,43 @@ def test_exact_bootstrap_selection_survives_initial_dispatch_and_lost_reply(
         source_id=selection["source_id"],
         ref=selection["ref"],
         commit=selection["expected_commit"],
+        ref_object_id=selection["ref_object_id"],
         destination=selection["recovery_root"] + "/source.git",
         tree=copy.deepcopy(selection["tree"]),
     )
     reply = response_for(query, original["attempt"], {"receipt": receipt})
     check_response("bootstrap-source", query, reply, invocation=original)
     assert original == before
+    changed = copy.deepcopy(request)
+    if method == "verify":
+        changed["input"]["recovery"]["destination"] += "-substituted"
+        changed_reply = copy.deepcopy(reply)
+        changed_reply["output"]["receipt"]["destination"] += "-substituted"
+        with pytest.raises(ContractError, match="SUCCESS_OUTPUT_IDENTITY"):
+            check_response("bootstrap-source", query, changed_reply, invocation=original)
+    else:
+        changed["input"]["selection"]["recovery_root"] += "-substituted"
+    substituted = invocation(changed, executor)
+    with pytest.raises(ContractError, match="BOOTSTRAP_REQUEST_NOT_APPROVED"):
+        authorize(registry, substituted, reconciliation, approved_digest=digest(request))
+
+    def check_launch(call):
+        mode = "query" if reconciliation else "mutation"
+        manifest, payload = launch(call, value["configuration"], mode)
+        validate_process_launch(
+            manifest,
+            payload,
+            value["configuration"],
+            descriptor=value["descriptor"],
+            approved_installation=value["installation"],
+            expected_executor=executor,
+            expected_private_use=None,
+            approved_bootstrap_request_digest=digest(request),
+        )
+
+    check_launch(original)
+    with pytest.raises(ContractError, match="BOOTSTRAP_REQUEST_NOT_APPROVED"):
+        check_launch(substituted)
 
 
 @pytest.mark.parametrize("replacement", ["installation", "configuration"])
@@ -144,7 +183,7 @@ def test_another_approved_bootstrap_executor_cannot_satisfy_the_selected_pins(
     with pytest.raises(ContractError, match="BOOTSTRAP_EXECUTOR_IDENTITY"):
         check_invocation("bootstrap-source", original)
     with pytest.raises(ContractError, match="BOOTSTRAP_EXECUTOR_IDENTITY"):
-        authorize(registry, original, reconciliation)
+        authorize(registry, original, reconciliation, approved_digest=digest(request))
 
 
 @pytest.mark.parametrize("pin", ["implementation", "descriptor_digest", "source_schema_digest"])
@@ -160,7 +199,7 @@ def test_receiver_independently_joins_descriptor_pins_not_only_executor_artifact
     original = invocation(request, executor)
     check_invocation("bootstrap-source", original)
     with pytest.raises(ContractError, match="BOOTSTRAP_BINDING_IDENTITY"):
-        authorize(registry, original, reconciliation)
+        authorize(registry, original, reconciliation, approved_digest=digest(request))
 
 
 @pytest.mark.parametrize("reconciliation", [False, True], ids=["dispatch", "reconcile"])
@@ -175,16 +214,16 @@ def test_receiver_rejects_a_source_selection_under_another_approved_repository_s
     with pytest.raises(ContractError, match="BOOTSTRAP_SCOPE_IDENTITY"):
         check_request("bootstrap-source", request)
     with pytest.raises(ContractError, match="BOOTSTRAP_SCOPE_IDENTITY"):
-        authorize(registry, original, reconciliation)
+        authorize(registry, original, reconciliation, approved_digest=digest(request))
 
 
 def test_reconciliation_cannot_retarget_a_retained_bootstrap_invocation_after_replacement():
     value, request = accepted()
     registry, executor = receiver(value)
     original = invocation(request, executor)
-    authorize(registry, original, False)
+    authorize(registry, original, False, approved_digest=digest(original["request"]))
     retained = copy.deepcopy(original)
     replacement, _ = receiver(value, replacement="configuration")
     with pytest.raises(ContractError, match="RECONCILIATION_INSTANCE_IDENTITY"):
-        authorize(replacement, original, True)
+        authorize(replacement, original, True, approved_digest=digest(original["request"]))
     assert original == retained

@@ -17,7 +17,7 @@ from fishhat_contracts.validation import ContractError, canonical, digest, stric
 from fishhat_contracts.witness import sign
 
 from tests.adapter_support import OWNER, identifier
-from tests.backup_support import backup_result, backup_selection
+from tests.backup_support import backup_inventory, backup_result, backup_selection
 from tests.linear_support import assert_linear, measure
 from tests.operation_support import seal_operation
 from tests.test_adapter_handoffs import installed, invocation_for, response_for
@@ -113,8 +113,26 @@ def fixture(count=2, *, shared=True, recovery_points=None):
         keys[(owner["tool"], owner["id"], owner["epoch"], witness["key_id"])] = KEY.public_key()
         return digest(record)
 
-    for index in range(count):
-        dataset = f"dataset-{index:04d}"
+    release = digest({"accepted": "release"})
+    app_instance = "prod:" + "a" * 64
+    inventory = backup_inventory(
+        {
+            "datasets": [f"dataset-{index:04d}" for index in range(count)],
+            "owner": OWNER,
+            "release_digest": release,
+            "app_instance": app_instance,
+        }
+    )
+    records[digest(inventory)] = canonical(inventory)
+    closure.add(digest(inventory))
+    for index, entry in enumerate(inventory["entries"]):
+        dataset = entry["dataset"]
+        obligation = entry["obligation"]
+        dataset_identity = {
+            "obligation_id": obligation["id"],
+            "obligation_digest": digest(obligation),
+            "native_identity": deepcopy(obligation["native_identity"]),
+        }
         artifact = {
             "digest": digest({"captured": dataset}),
             "media_type": "application/octet-stream",
@@ -124,6 +142,7 @@ def fixture(count=2, *, shared=True, recovery_points=None):
         snapshot = {
             "handle": "snapshot:" + dataset,
             "dataset": dataset,
+            "dataset_identity": deepcopy(dataset_identity),
             "format": "independent.snapshot",
             "consistency": "quiesced",
             "recovery_point": deepcopy((recovery_points or {}).get(dataset)),
@@ -137,6 +156,7 @@ def fixture(count=2, *, shared=True, recovery_points=None):
         inputs = {
             "scope": deepcopy(capture["scope"]),
             "dataset": dataset,
+            "dataset_identity": deepcopy(dataset_identity),
             "destination": "protected:" + dataset,
             "procedure_digest": digest({"capture": dataset}),
             "binding": deepcopy(capture),
@@ -168,23 +188,25 @@ def fixture(count=2, *, shared=True, recovery_points=None):
                     "handle": inputs["object"],
                     "repository": inputs["repository"],
                     "artifacts": deepcopy(artifacts),
+                    "incarnation": digest({"stored object": index}),
                     "completeness": "sealed",
                     "retrieval": "available",
                 }
             ]
         }
         store = put(*receipt("backup", "store", inputs, backup, output, 10000 + index))
+        inputs = {**inputs, "incarnation": output["objects"][0]["incarnation"]}
         verified = put(*receipt("backup", "verify", inputs, backup, output, 20000 + index))
         for dataset in group:
             selected[dataset].update(backup_digest=store, verification_digest=verified)
-    release = digest({"accepted": "release"})
     secrets = [digest({"secret-generation": "accepted"})]
     closure.update([release, *secrets])
     checkpoint = {
         "format": "deployment-ops/record/v1",
         "kind": "Checkpoint",
         "id": identifier(900000),
-        "app_instance": "prod:" + "a" * 64,
+        "app_instance": app_instance,
+        "dataset_inventory_digest": digest(inventory),
         "owner": deepcopy(OWNER),
         "release_digest": release,
         "datasets": selected,
@@ -247,7 +269,7 @@ def test_resolved_backup_object_joins_lifecycle_repository_scope():
     selection.update(executor=executor, repository=obj["repository"])
     target = selection["objects"][0]
     target["object"] = obj
-    target["native_identity"]["scope"] = executor["scope"]
+    target["native_identity"].update(scope=executor["scope"], incarnation=obj["incarnation"])
     assert decode(prepare(lifecycle))["context"]["selection"] == selection
 
 
@@ -335,6 +357,23 @@ def test_checkpoint_substitution_cannot_change_selected_recovery_input(change):
         digest(checkpoint) if change != "selected-checkpoint" else digest("another checkpoint")
     )
     with pytest.raises(ContractError):
+        resolve_checkpoint(checkpoint, **context)
+
+
+def test_same_name_replaced_dataset_rejects_an_old_signed_capture():
+    checkpoint, context, _ = fixture(1)
+    previous = checkpoint["dataset_inventory_digest"]
+    inventory = strict_json(context["records"][previous])
+    obligation = inventory["entries"][0]["obligation"]
+    obligation["id"] = identifier(995)
+    obligation["native_identity"]["incarnation"] = digest("replacement under the same native key")
+    replacement = digest(inventory)
+    context["records"][replacement] = canonical(inventory)
+    checkpoint["dataset_inventory_digest"] = replacement
+    checkpoint["recovery_closure"].append(replacement)
+    seal(checkpoint)
+    context["expected_checkpoint_digest"] = digest(checkpoint)
+    with pytest.raises(ContractError, match="accepted dataset obligation or incarnation"):
         resolve_checkpoint(checkpoint, **context)
 
 

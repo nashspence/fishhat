@@ -193,7 +193,8 @@ def _backup_target(target: dict[str, Any], executor: dict[str, Any], repository:
         and executor["scope"]["kind"] == "backup-repository"
         and executor["scope"]["handle"] == repository
         and target["object"]["repository"] == repository
-        and target["native_identity"]["scope"] == executor["scope"],
+        and target["native_identity"]["scope"] == executor["scope"]
+        and target["native_identity"]["incarnation"] == target["object"]["incarnation"],
         "lifecycle backup repository or native scope mismatch",
     )
     return canonical(target["native_identity"])
@@ -319,6 +320,8 @@ def _dataset_requirements(
         for entry in inventory["entries"]:
             obligation = entry["obligation"]
             required.update((owner, material) for material in obligation["recovery_closure"])
+            if entry["discharge"] is not None:
+                required.add((owner, entry["discharge"]["evidence_digest"]))
             obligations[(owner, obligation["id"])] = {
                 "inventory_digest": commitment,
                 "obligation_id": obligation["id"],

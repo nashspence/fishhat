@@ -4520,6 +4520,10 @@
       "purpose_sha256": "cb565620d79b88cd44dd9f2c5f2dcf5067bd22c27f8ed6262dc619a4d6374931"
     },
     {
+      "node": "tests/test_checkpoint_resolution.py::test_same_name_replaced_dataset_rejects_an_old_signed_capture",
+      "purpose_sha256": "cb565620d79b88cd44dd9f2c5f2dcf5067bd22c27f8ed6262dc619a4d6374931"
+    },
+    {
       "node": "tests/test_checkpoint_resolution.py::test_signed_but_incomplete_receipts_cannot_complete_checkpoint[failed-operation]",
       "purpose_sha256": "cb565620d79b88cd44dd9f2c5f2dcf5067bd22c27f8ed6262dc619a4d6374931"
     },
@@ -14390,6 +14394,10 @@
     {
       "node": "tests/test_storage_retirement.py::test_unknown_retirement_preserves_uncertainty_without_an_absence_claim[recovered]",
       "purpose_sha256": "f1d604b4e5c2c4c83a1beb5edd889497107c13b10199e40a6e62d3a081f660c5"
+    },
+    {
+      "node": "tests/test_submission_closure.py::test_submit_and_close_share_one_exact_decision",
+      "purpose_sha256": "fc6104cacb51a59f0084f3dd28ac01f5e1ac639a567fad5c54ecb8405d75bd80"
     },
     {
       "node": "tests/test_tracking.py::DiscoveryNonblocking::test_directory_has_no_receipt_preflight_or_storage_gate",

@@ -31,6 +31,11 @@ def validate_release(release: dict[str, Any], *, expected_digest: str) -> None:
     validate("records.schema.json", release, "Release")
     if any(a >= b for a, b in pairwise(map(canonical, release["sources"]))):
         raise ContractError("release sources must be in strictly increasing JCS byte order")
+    selection = release["runtime"]
+    if selection["source_artifact"] not in release["artifacts"]:
+        raise ContractError("release runtime source artifact is missing")
+    if any(a >= b for a, b in pairwise(selection["components"])):
+        raise ContractError("release runtime components must be in strictly increasing ASCII order")
     for name in ("secret_receipts", "hook_closure", "recovery_closure"):
         if any(a >= b for a, b in pairwise(release[name])):
             raise ContractError("release material must be in strictly increasing digest order")

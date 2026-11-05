@@ -33,7 +33,7 @@ CHECK_PURPOSE = {
 }
 
 
-def selected(role="service", names=("web",)):
+def selected(role="service", names=("web",), *, slot=None):
     empty = {"type": "object", "properties": {}, "additionalProperties": False}
     source = {
         "type": "object",
@@ -41,6 +41,8 @@ def selected(role="service", names=("web",)):
         "required": ["name"],
         "additionalProperties": False,
     }
+    if slot is not None:
+        source["properties"]["slot"] = {"type": ["boolean", "integer"]}
     methods = (
         ["plan", "apply", "observe", "reconcile"]
         if role == "service"
@@ -111,6 +113,8 @@ def selected(role="service", names=("web",)):
             "executor": instance_reference(instance, scope),
             "namespace": namespace,
         }
+        if slot is not None:
+            target["selection"]["source"]["slot"] = slot
         registry.enroll_source_target(target, owner_approved=True)
         targets.append(target)
     return registry, targets
@@ -158,12 +162,16 @@ def service_output(query, attempt, *, mode="native"):
 
 
 def test_running_disabled_service_has_independent_boot_policy_intent_and_evidence():
-    registry, (target,) = selected()
+    registry, (target,) = selected(slot=1)
     query = service_query(target)
     original = invocation_for(query)
     registry.authorize_invocation("service", original, owner_approved=True)
     response = response_for(query, original["attempt"], service_output(query, original["attempt"]))
     check_response("service", query, response, invocation=original)
+    substituted = copy.deepcopy(response)
+    substituted["output"]["services"][0]["target"]["selection"]["source"]["slot"] = True
+    with pytest.raises(ContractError, match="TARGET_OBSERVATION_IDENTITY"):
+        check_response("service", query, substituted, invocation=original)
     changed = copy.deepcopy(query)
     changed["input"]["intent"]["enabled"] = True
     assert digest(changed) != digest(query)
@@ -329,7 +337,7 @@ def test_software_hold_policy_round_trips_without_artifact_inference(method, rec
 
 @pytest.mark.parametrize("version", [None, "1:2.3-4"], ids=["provider-selection", "exact-version"])
 def test_software_resolution_echoes_requested_policy_without_claiming_it_is_enforced(version):
-    registry, (target,) = selected("software", ("package",))
+    registry, (target,) = selected("software", ("package",), slot=1)
     query = {
         "contract": "fishhat.software",
         "method": "resolve",
@@ -360,6 +368,10 @@ def test_software_resolution_echoes_requested_policy_without_claiming_it_is_enfo
         },
     }
     check_response("software", query, response)
+    substituted = copy.deepcopy(response)
+    substituted["output"]["target"]["selection"]["source"]["slot"] = True
+    with pytest.raises(ContractError, match="SOFTWARE_RESOLUTION_IDENTITY"):
+        check_response("software", query, substituted)
     response["output"]["held"] = True
     with pytest.raises(ContractError):
         check_response("software", query, response)

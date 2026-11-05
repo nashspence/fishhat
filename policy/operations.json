@@ -1290,6 +1290,24 @@
       "use_case": "plan.prepare"
     },
     {
+      "id": "owner-form:close-if-unaccepted",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-owner-form",
+      "tests": {
+        "failure": [],
+        "growth": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops",
+        "app-ops"
+      ],
+      "use_case": "operation.close"
+    },
+    {
       "id": "owner-form:content-read",
       "implementation": null,
       "recovery": "required",
@@ -2478,6 +2496,23 @@
       ]
     },
     {
+      "id": "rpc:operation.close",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-rpc",
+      "tests": {
+        "failure": [],
+        "growth": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops",
+        "app-ops"
+      ]
+    },
+    {
       "id": "rpc:operation.get",
       "implementation": null,
       "recovery": "required",
@@ -2744,10 +2779,10 @@
     "fishhat/host-ops/src/fishhat_host/cli.py": "d8457ca822e6d01be0b1301fb439ef9f5ed74b6224aca2d85feb189dadeb611c",
     "packages/fishhat-contracts/src/fishhat_contracts/contracts/actions.json": "d2139b4286ed2f531e4a71a8a1ab38293e2de00197a9560ee37d9c43509cb1bc",
     "packages/fishhat-contracts/src/fishhat_contracts/contracts/client-commands.json": "5b3e29df1fb1fecd18ef5699f8dc89da22c2f2dd6154f9d18a30f18d26db7f3e",
-    "packages/fishhat-contracts/src/fishhat_contracts/contracts/owner-cli.json": "aaa80548c1bdf9e08f1b69679b98360aec17d186a9ea8304872f4c8a1c1994e5",
-    "packages/fishhat-contracts/src/fishhat_contracts/contracts/ssh-methods.json": "f7aa80b22ce8ad2de3ae17a332b2a5e11ce1546f46934d1b7667161149450d9c",
+    "packages/fishhat-contracts/src/fishhat_contracts/contracts/owner-cli.json": "dd630b8e0af937effaaa926798d7fc27f60a63837240100ca6c647a6c8de4f08",
+    "packages/fishhat-contracts/src/fishhat_contracts/contracts/ssh-methods.json": "a59613908ac6565ad7a7060fb081fdea6675988da47050045ea57516e9c71715",
     "policy/components.toml": "d83506dc63602aec3932e1ac35244efca0db494a38a5d4cd9ec94c68476b235c",
-    "policy/interfaces.json": "8940470d9a8c2d6fb9f6e652e971946d6bb4d2ec8926616056e140cd6b4ce9bb",
+    "policy/interfaces.json": "73c37b3b0f7ad05998e1bd3e6a9a8081cd5312ab8252667e6b4d2fce8b3b3cc8",
     "policy/operation-coverage.toml": "a4f3f76cdbb755ea03ba39eb36ccc5ebcd682f6aabaacaa5fb88f849d42c54c4",
     "release.toml": "87a48bd19f97e977b2be6d6399b1d60a911dcf66ed9b81b59386d8fb7a624996",
     "some-implementations/fishhat/backup/restic/pyproject.toml": "665f88e34c00d431e829678503ae3bb7075294d0db3f303c318f87dbdab651e8",

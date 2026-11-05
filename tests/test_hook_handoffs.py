@@ -51,6 +51,18 @@ def request(role="restore"):
         "recovery_point": None,
         "artifacts": [deepcopy(artifact)],
         "restore_requirements": [],
+        "dataset_identity": {
+            "obligation_id": "00000000-0000-4000-8000-000000000001",
+            "obligation_digest": D,
+            "native_identity": {
+                "scope": {
+                    "authority": "00000000-0000-4000-8000-000000000003",
+                    "kind": "dataset",
+                    "handle": "state",
+                },
+                "incarnation": D,
+            },
+        },
         "producer": {
             "instance": "capture",
             "role": "capture",

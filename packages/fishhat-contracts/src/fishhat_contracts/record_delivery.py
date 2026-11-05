@@ -192,6 +192,7 @@ class RecordSnapshot:
         validate("common.schema.json", snapshot_id, "UUID")
         self._record = copy.deepcopy(record)
         self._data = canonical(self._record)
+        self._inline = True
         schema = installed_schema or InstalledRecordSchema(kind)
         _require(schema.kind == kind, "record codec kind changed")
         self._reference = {
@@ -233,6 +234,9 @@ class RecordSnapshot:
         result._record = record
         result._data = bytes(data)
         result._reference = copy.deepcopy(reference)
+        result._inline = reference["schema"] == schema_identity(
+            _schema_uri(reference["record"]["kind"])
+        )
         return result
 
     @property
@@ -253,7 +257,7 @@ class RecordSnapshot:
             type(max_inline_bytes) is int and 0 < max_inline_bytes <= MAX_BYTES,
             "invalid inline record budget",
         )
-        if len(self._data) <= max_inline_bytes:
+        if self._inline and len(self._data) <= max_inline_bytes:
             return copy.deepcopy(self._record)
         _require(len(canonical(self._reference)) <= max_inline_bytes, "record reference capacity")
         return self.reference
