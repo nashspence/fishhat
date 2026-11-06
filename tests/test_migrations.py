@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 from alembic import command
+from fishhat_contracts import ContractError
 from sqlalchemy import URL, create_engine, event
 
 from scripts.project_policy import ROOT, read_toml
@@ -80,7 +81,13 @@ def test_preserved_v1_adoption_is_idempotent(owner, tmp_path):
     first = contents(path)
     module.upgrade(path)
     assert contents(path) == first
-    assert [line for line in first if "alembic_version" not in line] == before
+    additions = []
+    if owner["id"] == "owner-journal":
+        additions = [module.ACTIVE_INDEX + ";"]
+    assert [
+        line for line in first if "alembic_version" not in line and line not in additions
+    ] == before
+    assert all(first.count(line) == 1 for line in additions)
     with sqlite3.connect(path) as db:
         assert db.execute("SELECT version_num FROM alembic_version").fetchall() == [(module.HEAD,)]
         assert db.execute("PRAGMA integrity_check").fetchone() == ("ok",)
@@ -91,6 +98,9 @@ def test_alembic_baseline_matches_preserved_schema_and_refuses_downgrade(owner, 
     legacy = fixture(owner, tmp_path)
     fresh = tmp_path / "fresh.sqlite"
     module = importlib.import_module(owner["migrations"])
+    execute(module, fresh, revision="v1_0001")
+    assert schema(fresh) == schema(legacy)
+    module.upgrade(legacy)
     execute(module, fresh)
     assert schema(fresh) == schema(legacy)
     before = contents(fresh)
@@ -132,14 +142,14 @@ def test_migration_failure_and_process_death_roll_back_then_retry(owner, tmp_pat
     shutil.copytree(
         Path(module.__file__).parent, history, ignore=shutil.ignore_patterns("__pycache__")
     )
-    revision = history / "versions/v1_0002.py"
-    prefix = """from alembic import op
-revision = "v1_0002"
-down_revision = "v1_0001"
+    revision = history / "versions/probe.py"
+    prefix = f'''from alembic import op
+revision = "probe"
+down_revision = "{module.HEAD}"
 def upgrade():
     op.execute("CREATE TABLE migration_probe(value TEXT NOT NULL)")
     op.execute("INSERT INTO migration_probe VALUES ('synthetic')")
-"""
+'''
     revision.write_text(prefix + '    raise RuntimeError("injected migration failure")\n')
     with pytest.raises(RuntimeError, match="injected migration failure"):
         execute(module, path, history)
@@ -164,7 +174,7 @@ execute(importlib.import_module(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3
     execute(module, path, history)
     with sqlite3.connect(path) as db:
         assert db.execute("SELECT value FROM migration_probe").fetchall() == [("synthetic",)]
-        assert db.execute("SELECT version_num FROM alembic_version").fetchall() == [("v1_0002",)]
+        assert db.execute("SELECT version_num FROM alembic_version").fetchall() == [("probe",)]
         assert db.execute("PRAGMA integrity_check").fetchone() == ("ok",)
     with pytest.raises(
         ValueError, match=r"unrecognized legacy state|unsupported migration revision"
@@ -209,6 +219,109 @@ def test_alembic_requires_a_real_sqlite_transaction_before_ddl(tmp_path):
             )
     finally:
         engine.dispose()
+
+
+@pytest.mark.parametrize(
+    "disposition",
+    ["legacy", "marked-baseline", "current", "wrong-predicate", "extra-index", "missing-index"],
+)
+def test_owner_active_index_is_explicit_and_schema_checked(tmp_path, disposition):
+    from fishhat_owner import migrations
+    from fishhat_owner.journal import Journal
+
+    from tests.test_engineering import EPOCH, OWNER
+
+    if disposition == "current":
+        path = tmp_path / "current.sqlite"
+        journal = Journal(path, OWNER, EPOCH, initialize=True)
+        journal.close()
+    else:
+        path = restore_fixture(tmp_path, "owner")
+    with sqlite3.connect(path) as db:
+        if disposition == "marked-baseline":
+            db.execute("CREATE TABLE alembic_version(version_num VARCHAR(32) NOT NULL PRIMARY KEY)")
+            db.execute("INSERT INTO alembic_version VALUES ('v1_0001')")
+        elif disposition == "wrong-predicate":
+            db.execute(
+                "CREATE INDEX requests_active ON requests(request_id) WHERE state='succeeded'"
+            )
+        elif disposition == "extra-index":
+            db.execute(migrations.ACTIVE_INDEX)
+            db.execute("CREATE INDEX unexpected ON requests(request_id)")
+        elif disposition == "missing-index":
+            migrations.upgrade(path)
+            db.execute("DROP INDEX requests_active")
+    before = contents(path)
+    if disposition in {"legacy", "marked-baseline", "wrong-predicate", "missing-index"}:
+        with pytest.raises(ContractError, match=r"upgrade required|unsupported migration revision"):
+            Journal(path, OWNER, EPOCH)
+        assert contents(path) == before
+    if disposition in {"wrong-predicate", "extra-index", "missing-index"}:
+        with pytest.raises(ContractError, match=r"unrecognized|mismatch"):
+            migrations.upgrade(path)
+        assert contents(path) == before
+        return
+    migrations.upgrade(path)
+    journal = Journal(path, OWNER, EPOCH)
+    try:
+        assert journal.db.execute(
+            "SELECT sql FROM sqlite_master WHERE name='requests_active'"
+        ).fetchone() == (migrations.ACTIVE_INDEX,)
+        assert journal.db.execute("SELECT version_num FROM alembic_version").fetchone() == (
+            migrations.HEAD,
+        )
+        assert journal.db.execute("PRAGMA integrity_check").fetchone() == ("ok",)
+    finally:
+        journal.close()
+
+
+@pytest.mark.parametrize("failure", ["exception", "process-death"])
+def test_active_index_upgrade_rolls_back_and_retries(tmp_path, failure):
+    from fishhat_owner import migrations
+
+    path = restore_fixture(tmp_path, "owner")
+    before = contents(path)
+    history = tmp_path / "history"
+    shutil.copytree(
+        Path(migrations.__file__).parent, history, ignore=shutil.ignore_patterns("__pycache__")
+    )
+    revision = history / "versions/v1_0002.py"
+    injection = (
+        '    raise RuntimeError("injected active index failure")'
+        if failure == "exception"
+        else "    import os; os._exit(37)"
+    )
+    revision.write_text(
+        revision.read_text().replace("\n\ndef downgrade", "\n" + injection + "\n\ndef downgrade")
+    )
+    script = """import sys
+from pathlib import Path
+from fishhat_owner import migrations
+original = migrations.configuration
+def configuration(connection):
+    config = original(connection)
+    config.set_main_option('script_location', sys.argv[2])
+    return config
+migrations.configuration = configuration
+migrations.upgrade(Path(sys.argv[1]))
+"""
+    child = subprocess.run(
+        [sys.executable, "-B", "-c", script, str(path), str(history)],
+        capture_output=True,
+        timeout=watchdog(15),
+        check=False,
+    )
+    assert child.returncode == (1 if failure == "exception" else 37), child.stderr.decode()
+    if failure == "exception":
+        assert b"injected active index failure" in child.stderr
+    assert contents(path) == before
+    migrations.upgrade(path)
+    after = contents(path)
+    assert [
+        line
+        for line in after
+        if "alembic_version" not in line and line != migrations.ACTIVE_INDEX + ";"
+    ] == before
 
 
 CHECK_OVERRIDES = {
@@ -260,4 +373,10 @@ CHECK_OVERRIDES = {
         "reason": "Immutable fixture data, literal revision/schema assertions, controlled failing DDL and process-death rollback/retry.",
         "claims": ["migration:owner-journal", "migration:reported-events"],
     },
+}
+
+CHECK_OVERRIDES["test_active_index_upgrade_rolls_back_and_retries"] = {
+    **CHECK_PURPOSE,
+    "relationship": "scoped-witness",
+    "claims": ["migration:owner-journal"],
 }

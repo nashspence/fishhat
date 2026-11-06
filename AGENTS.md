@@ -60,7 +60,7 @@ The operation-owned declarations, [engineering projection](scripts/engineering.p
 
 Limiting the size of each step does not guarantee that the total work stays manageable.
 
-A *growth bound* describes how an operation’s work increases as its input grows. All implementations must meet the linear-growth requirement in [release policy](release.toml). Costs must be declared and justified by the operation’s owner with measured work at increasing input extents, including complete runs across pages and retries. Extent checks alone are not growth evidence. Reference models have no exemption; missing or failing growth proofs block an implementation. Keep their scan costs explicit; do not present them as bounded native implementations.
+A *growth bound* describes how an operation’s work increases as its input grows. All implementations must meet the growth requirements in [release policy](release.toml). Costs must be declared and justified by the operation’s owner with measured work at increasing input extents, including complete runs across pages and retries. Extent checks alone are not growth evidence. Reference models have no exemption; missing or failing growth proofs block an implementation. Keep their scan costs explicit; do not present them as bounded native implementations.
 
 Reason about these bounds and test them with the maintained implementation. Include difficult inputs, resource limits being reached, interruptions, and retries. Do not hide repeated whole-resource work behind batching, concurrency, or caches.
 

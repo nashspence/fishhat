@@ -2784,7 +2784,7 @@
     "policy/components.toml": "d83506dc63602aec3932e1ac35244efca0db494a38a5d4cd9ec94c68476b235c",
     "policy/interfaces.json": "f8d4cb4d5ca0603e0e4167ddde9eb357449dcbea5235ba7184bfa8df417124fe",
     "policy/operation-coverage.toml": "a4f3f76cdbb755ea03ba39eb36ccc5ebcd682f6aabaacaa5fb88f849d42c54c4",
-    "release.toml": "87a48bd19f97e977b2be6d6399b1d60a911dcf66ed9b81b59386d8fb7a624996",
+    "release.toml": "7057aceac0232f24bb962384c27058c2f1899bd81fa6bcf49f476ba1eb777631",
     "some-implementations/fishhat/backup/restic/pyproject.toml": "665f88e34c00d431e829678503ae3bb7075294d0db3f303c318f87dbdab651e8",
     "some-implementations/fishhat/backup/sealed-archive/pyproject.toml": "772e4d721d40ccedc73a56f7a474eb9641ee817e209b4a37a58e7a36713a224e",
     "some-implementations/fishhat/bootstrap-source/forgejo-restic/pyproject.toml": "23019290c82c543d7105ec39c4d058b53c0f4e8088fffb2e282dd9cce3b83494",
@@ -2820,8 +2820,8 @@
     "some-implementations/fishhat/software/homebrew/pyproject.toml": "b0f2e3dbe95c73a2dcf6864a1b39a808388282a2579bd0cfbf4e13cc1ac31a95",
     "some-implementations/fishhat/storage/ext4-filesystem/pyproject.toml": "c44f077b5697e948c3a6c2f7bcd4d2061d60521f45ad5b3596c67cbd0d9c1e3f",
     "some-implementations/fishhat/storage/xfs-project/pyproject.toml": "73e00e3691845add0fc45f4d7286bb87bff35a62083f3d310b63694b61da03af",
-    "tests/test_component_policy.py": "aba2cec9509409c3e8d4eda2b3532317ccf590a850ff35ad119bf69b909f04cd",
-    "tests/test_linear_growth.py": "238c554ee57c932a2b14c605a17d40bc17e40b979e3b4936cc5ae49f60b2885d",
+    "tests/test_component_policy.py": "7ecdb4fe665c1f7761682bd32785d1d0c9c9a6ccdb673ff9c689bf91abe31ec4",
+    "tests/test_linear_growth.py": "e1f12f1500b7fd4f642605ea8e6aba80705fe9da70d19978cef853264acae846",
     "tests/test_operation_coverage.py": "d505e73d98b6df339ca6058546c18ce0be4e2fbf1ba341bdc38e414e87f11203"
   }
 }

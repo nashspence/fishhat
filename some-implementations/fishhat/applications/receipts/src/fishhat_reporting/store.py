@@ -22,6 +22,47 @@ from fishhat_reporting.migrations import check_revision
 from fishhat_reporting.reports import validate_event
 
 
+class _Corrections:
+    """Workflow-scoped forest connectivity, union by rank with path compression.
+
+    An event has at most one immutable outgoing correction edge. A fresh source
+    has no outgoing edge, so joining vertices already in one component creates
+    exactly a directed cycle. Missing originals are ordinary placeholder vertices.
+    Aggregate forest work is O(N alpha(N)), not a strict linear-growth claim.
+    """
+
+    def __init__(self) -> None:
+        self.parents: dict[tuple[str, str], tuple[str, str]] = {}
+        self.ranks: dict[tuple[str, str], int] = {}
+
+    def _root(self, node: tuple[str, str]) -> tuple[str, str]:
+        root = node
+        while self.parents.get(root, root) != root:
+            root = self.parents[root]
+        while self.parents.get(node, node) != root:
+            parent = self.parents[node]
+            self.parents[node] = root
+            node = parent
+        return root
+
+    def connected(self, source: tuple[str, str], target: tuple[str, str]) -> bool:
+        # A refused or failed candidate must not retain new placeholder vertices.
+        return self._root(source) == self._root(target)
+
+    def retain(self, source: tuple[str, str], target: tuple[str, str]) -> None:
+        left, right = self._root(source), self._root(target)
+        if left == right:
+            raise ContractError("correction cycle")
+        for node in (left, right):
+            self.parents.setdefault(node, node)
+            self.ranks.setdefault(node, 0)
+        if self.ranks[left] < self.ranks[right]:
+            left, right = right, left
+        self.parents[right] = left
+        if self.ranks[left] == self.ranks[right]:
+            self.ranks[left] += 1
+
+
 class EventStore:
     def __init__(
         self,
@@ -66,7 +107,10 @@ class EventStore:
             self.db.close()
             raise
         self.domain, self.service = domain_id, service_id
-        self._workflow_marker: tuple[int, int] | None = None
+        self._correction_sequence = 0
+        self._corrections = _Corrections()
+        self._workflow_sequence = 0
+        self._workflow_ids: set[str] = set()
         self._workflow_rows: list[tuple[str, int, str]] = []
         self._workflow_sequences: list[int] = []
         self._workflow_positions: dict[int, int] = {}
@@ -102,14 +146,22 @@ class EventStore:
     @bounds(
         Bounds(
             id="reporting.put",
-            linear_proofs=("tests/test_linear_growth.py::test_event_put_linear_work",),
-            work="O(retained_bytes + event_bytes) reference-scan for corrections with hash-indexed traversal; ordinary appends use indexed identity lookup",
+            growth="inverse-ackermann",
+            growth_proofs=(
+                "tests/test_linear_growth.py::test_event_put_linear_work",
+                "tests/test_aggregate_growth.py::test_correction_sequences_obey_approved_growth",
+            ),
+            work="O(total_event_bytes + correction_edges * alpha(correction_vertices)) across append and bounded retry sequences, including one cold reconstruction per connection; only correction forest connectivity has the approved near-linear allowance; ordinary appends use indexed identity lookup",
             extent="one-immutable-event",
             limits=(),
             capacity=(),
             proofs=(
                 "tests/test_engineering.py::test_reporting_accepts_complete_extent_and_preserves_replay",
                 "tests/test_engineering.py::test_reporting_crash_replay_preserves_committed_event",
+                "tests/test_aggregate_growth.py::test_correction_cache_preserves_failed_or_uncertain_commit",
+                "tests/test_aggregate_growth.py::test_correction_crash_reconstruction_preserves_forward_references",
+                "tests/test_aggregate_growth.py::test_correction_forest_scopes_branches_and_missing_originals",
+                "tests/test_aggregate_growth.py::test_interrupted_correction_reconstruction_retries_from_committed_rows",
             ),
         )
     )
@@ -141,24 +193,15 @@ class EventStore:
                     raise ContractError("immutable event conflict")
                 self.db.commit()
                 return 200, self._append_response(row, scopes)
-            # Correction admission reads the complete relevant graph once;
-            # ordinary appends do not scan retained history.
             successor = event["supersedes"]
             if successor:
-                parents = {
-                    identity: json.loads(encoded)["supersedes"]
-                    for identity, encoded in self.db.execute(
-                        "SELECT event_id,canonical_event FROM events "
-                        "WHERE domain_id=? AND workflow_id=?",
-                        (self.domain, event["workflow_id"]),
-                    )
-                }
-                seen = {event["id"]}
-                while successor:
-                    if successor in seen:
-                        raise ContractError("correction cycle")
-                    seen.add(successor)
-                    successor = parents.get(successor)
+                self._catch_up_corrections()
+                if self._corrections.connected(
+                    (event["workflow_id"], event["id"]), (event["workflow_id"], successor)
+                ):
+                    raise ContractError("correction cycle")
+            # Do not cache this candidate before commit. The next catch-up reads
+            # it from SQLite, so failed/uncertain commits cannot invent an edge.
             now = datetime.now(UTC).isoformat(timespec="microseconds").replace("+00:00", "Z")
             self.db.execute(
                 "INSERT INTO events(domain_id,workflow_id,event_id,content_digest,canonical_event,reporter,received_at) VALUES(?,?,?,?,?,?,?)",
@@ -171,6 +214,24 @@ class EventStore:
             return 201, self._append_response(row, scopes)
         except Exception:
             self.db.rollback()
+            raise
+
+    def _catch_up_corrections(self) -> None:
+        try:
+            for sequence, workflow, identity, encoded in self.db.execute(
+                "SELECT sequence,workflow_id,event_id,canonical_event FROM events NOT INDEXED "
+                "WHERE sequence>? AND domain_id=? ORDER BY sequence",
+                (self._correction_sequence, self.domain),
+            ):
+                successor = json.loads(encoded)["supersedes"]
+                if successor is not None:
+                    self._corrections.retain((workflow, identity), (workflow, successor))
+                self._correction_sequence = sequence
+        except BaseException:
+            # An interrupted reconstruction is discarded; a retry is an explicit
+            # cold rebuild. Previously committed records remain the authority.
+            self._corrections = _Corrections()
+            self._correction_sequence = 0
             raise
 
     def get(
@@ -237,13 +298,17 @@ class EventStore:
     @bounds(
         Bounds(
             id="reporting.workflows",
-            linear_proofs=("tests/test_linear_growth.py::test_workflow_pages_linear_work",),
-            work="O(retained_events + page_items) one cold reference scan, constant-work issued cursors and linear page output; database changes rebuild the index",
+            linear_proofs=(
+                "tests/test_linear_growth.py::test_workflow_pages_linear_work",
+                "tests/test_aggregate_growth.py::test_workflow_traversals_with_interleaved_appends_are_linear",
+            ),
+            work="O(retained_events + appended_events + returned_items) across complete traversals and interleaved appends; one cold scan per connection, incremental rowid catch-up, constant-work issued cursors and one seek for arbitrary positions",
             extent="complete-page-with-resume-cursor",
             limits=(("page_items", 100),),
             capacity=(),
             proofs=(
                 "tests/test_engineering.py::test_workflow_pagination_preserves_logical_extent",
+                "tests/test_aggregate_growth.py::test_interrupted_workflow_reconstruction_preserves_complete_extent",
             ),
         )
     )
@@ -258,24 +323,31 @@ class EventStore:
     ) -> dict[str, Any]:
         self._auth(principal, scopes, "read", self.domain)
         self._page_args(after, limit, expected_store_epoch)
-        marker = (self.db.total_changes, self.db.execute("PRAGMA data_version").fetchone()[0])
-        if marker != self._workflow_marker:
-            seen: set[str] = set()
-            rows: list[tuple[str, int, str]] = []
+        # Events are immutable and append-only. Catch up only rows committed after
+        # this connection's previous observation, including other connections' writes.
+        # A fixed rowid range preserves linear traversal even when every page is
+        # separated by a new append to an existing workflow.
+        try:
             for workflow, sequence, received in self.db.execute(
                 "SELECT workflow_id,sequence,received_at FROM events NOT INDEXED "
-                "WHERE domain_id=? ORDER BY sequence",
-                (self.domain,),
+                "WHERE sequence>? AND domain_id=? ORDER BY sequence",
+                (self._workflow_sequence, self.domain),
             ):
-                if workflow not in seen:
-                    seen.add(workflow)
-                    rows.append((workflow, sequence, received))
-            self._workflow_rows = rows
-            self._workflow_sequences = [row[1] for row in rows]
-            self._workflow_positions = {row[1]: index + 1 for index, row in enumerate(rows)}
-            self._workflow_marker = marker
-        # Issued continuation cursors resume in constant work. Arbitrary accepted
-        # positions use one seek. A changed database rebuilds the complete index.
+                if workflow not in self._workflow_ids:
+                    self._workflow_ids.add(workflow)
+                    self._workflow_rows.append((workflow, sequence, received))
+                    self._workflow_sequences.append(sequence)
+                    self._workflow_positions[sequence] = len(self._workflow_rows)
+                self._workflow_sequence = sequence
+        except BaseException:
+            self._workflow_sequence = 0
+            self._workflow_ids.clear()
+            self._workflow_rows.clear()
+            self._workflow_sequences.clear()
+            self._workflow_positions.clear()
+            raise
+        # Issued continuations resume in constant work; arbitrary positions use
+        # one indexed seek. Cold open visits retained rows once per connection.
         start = self._workflow_positions.get(after)
         if start is None:
             start = bisect.bisect_right(self._workflow_sequences, after)

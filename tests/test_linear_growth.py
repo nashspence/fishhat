@@ -358,10 +358,17 @@ def test_every_declared_implementation_requires_linear_proofs():
     assert read_toml(ROOT / "release.toml")["engineering"] == {
         "growth": "linear",
         "implementations": "all",
+        "exceptions": {"reporting.put": "inverse-ackermann"},
     }
-    assert all(
-        value["growth"] == "linear" and value["linear_proofs"] for value in declarations().values()
-    )
+    owned = declarations()
+    assert owned["reporting.put"]["symbol"] == "fishhat_reporting.store:EventStore.put"
+    for identity, value in owned.items():
+        if identity == "reporting.put":
+            assert value["growth"] == "inverse-ackermann" and value["growth_proofs"]
+            assert not value["linear_proofs"]
+        else:
+            assert value["growth"] == "linear" and value["linear_proofs"]
+            assert not value["growth_proofs"]
 
 
 _OWNERS = {
@@ -422,10 +429,20 @@ def test_nonlinear_or_missing_growth_declarations_block_implementation(monkeypat
     from dataclasses import replace
 
     original = validate_phase_evidence.__growth_bounds__
-    for change in ({"growth": "quadratic"}, {"linear_proofs": ()}):
+    for change in ({"growth": "quadratic"}, {"growth": "inverse-ackermann"}, {"linear_proofs": ()}):
         monkeypatch.setattr(
             validate_phase_evidence, "__growth_bounds__", replace(original, **change)
         )
+        with pytest.raises(ValueError, match="incomplete operation bounds"):
+            declarations()
+
+    original = EventStore.put.__growth_bounds__
+    for change in (
+        {"growth": "quadratic"},
+        {"growth_proofs": ()},
+        {"linear_proofs": original.growth_proofs},
+    ):
+        monkeypatch.setattr(EventStore.put, "__growth_bounds__", replace(original, **change))
         with pytest.raises(ValueError, match="incomplete operation bounds"):
             declarations()
 

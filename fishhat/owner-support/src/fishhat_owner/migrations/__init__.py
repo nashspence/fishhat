@@ -10,7 +10,9 @@ from alembic.config import Config
 from fishhat_contracts import ContractError
 from sqlalchemy import URL, Connection, create_engine, event
 
-HEAD = "v1_0001"
+HEAD = "v1_0002"
+ACTIVE_PREDICATE = "state IN ('accepted','running','waiting','quarantined') OR (state IN ('failed','cancelled') AND effect != 'none')"
+ACTIVE_INDEX = "CREATE INDEX requests_active ON requests(request_id) WHERE " + ACTIVE_PREDICATE
 
 
 def check_revision(db: sqlite3.Connection) -> None:
@@ -19,6 +21,11 @@ def check_revision(db: sqlite3.Connection) -> None:
     ).fetchone():
         if db.execute("SELECT version_num FROM alembic_version").fetchall() != [(HEAD,)]:
             raise ContractError("unsupported migration revision")
+
+    if db.execute(
+        "SELECT sql FROM sqlite_master WHERE type='index' AND name='requests_active'"
+    ).fetchone() != (ACTIVE_INDEX,):
+        raise ContractError("explicit owner index upgrade required")
 
 
 def configuration(connection: Connection) -> Config:
@@ -72,7 +79,14 @@ def upgrade(path: Path) -> None:
                 ]
                 if actual != columns:
                     raise ContractError("unrecognized legacy schema")
+            active_index = connection.exec_driver_sql(
+                "SELECT sql FROM sqlite_master WHERE type='index' AND name='requests_active'"
+            ).fetchone()
+            if active_index is not None and active_index[0] != ACTIVE_INDEX:
+                raise ContractError("unrecognized owner active index")
             indexes = {"meta": {(1, ("owner",))}, "requests": {(1, ("request_id",))}}
+            if active_index is not None:
+                indexes["requests"].add((0, ("request_id",)))
             for table, expected_indexes in indexes.items():
                 actual_indexes = {
                     (
@@ -88,16 +102,25 @@ def upgrade(path: Path) -> None:
                         "SELECT * FROM pragma_index_list(?)", (table,)
                     )
                 }
-                if actual_indexes != expected_indexes:
+                if actual_indexes != expected_indexes or len(
+                    list(connection.exec_driver_sql("SELECT * FROM pragma_index_list(?)", (table,)))
+                ) != len(expected_indexes):
                     raise ContractError("unrecognized legacy indexes")
             validate_marker(connection)
             if "alembic_version" in tables:
                 if list(
                     connection.exec_driver_sql("SELECT version_num FROM alembic_version").scalars()
-                ) != [HEAD]:
+                ) not in (["v1_0001"], [HEAD]):
                     raise ContractError("unsupported migration revision")
+                revision = connection.exec_driver_sql(
+                    "SELECT version_num FROM alembic_version"
+                ).scalar_one()
+                if (revision == HEAD) != (active_index is not None):
+                    raise ContractError("migration revision/index mismatch")
             else:
-                command.stamp(configuration(connection), HEAD)
+                command.stamp(
+                    configuration(connection), HEAD if active_index is not None else "v1_0001"
+                )
             command.upgrade(configuration(connection), "head")
     finally:
         engine.dispose()

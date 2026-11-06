@@ -3780,6 +3780,58 @@
       "purpose_sha256": "a4cc3c057cddd75af07798ff1c46f06ea417ba72da781cdf160580391083ccc9"
     },
     {
+      "node": "tests/test_aggregate_growth.py::test_complete_admission_sequences_are_linear",
+      "purpose_sha256": "aa8bd15ebae8f321ec8e4f6863b4759eeb56b96ac61272b5816feb11ac27ec9f"
+    },
+    {
+      "node": "tests/test_aggregate_growth.py::test_correction_cache_preserves_failed_or_uncertain_commit[after-commit]",
+      "purpose_sha256": "2d108d420fe4792bf072610b3cb2623934c68a3cca96b234602c7d07d231b79e"
+    },
+    {
+      "node": "tests/test_aggregate_growth.py::test_correction_cache_preserves_failed_or_uncertain_commit[before-commit]",
+      "purpose_sha256": "2d108d420fe4792bf072610b3cb2623934c68a3cca96b234602c7d07d231b79e"
+    },
+    {
+      "node": "tests/test_aggregate_growth.py::test_correction_crash_reconstruction_preserves_forward_references[committed]",
+      "purpose_sha256": "2d108d420fe4792bf072610b3cb2623934c68a3cca96b234602c7d07d231b79e"
+    },
+    {
+      "node": "tests/test_aggregate_growth.py::test_correction_crash_reconstruction_preserves_forward_references[uncommitted]",
+      "purpose_sha256": "2d108d420fe4792bf072610b3cb2623934c68a3cca96b234602c7d07d231b79e"
+    },
+    {
+      "node": "tests/test_aggregate_growth.py::test_correction_forest_scopes_branches_and_missing_originals",
+      "purpose_sha256": "2d108d420fe4792bf072610b3cb2623934c68a3cca96b234602c7d07d231b79e"
+    },
+    {
+      "node": "tests/test_aggregate_growth.py::test_correction_sequences_obey_approved_growth[backward]",
+      "purpose_sha256": "2d108d420fe4792bf072610b3cb2623934c68a3cca96b234602c7d07d231b79e"
+    },
+    {
+      "node": "tests/test_aggregate_growth.py::test_correction_sequences_obey_approved_growth[balanced]",
+      "purpose_sha256": "2d108d420fe4792bf072610b3cb2623934c68a3cca96b234602c7d07d231b79e"
+    },
+    {
+      "node": "tests/test_aggregate_growth.py::test_correction_sequences_obey_approved_growth[forward]",
+      "purpose_sha256": "2d108d420fe4792bf072610b3cb2623934c68a3cca96b234602c7d07d231b79e"
+    },
+    {
+      "node": "tests/test_aggregate_growth.py::test_interrupted_correction_reconstruction_retries_from_committed_rows",
+      "purpose_sha256": "2d108d420fe4792bf072610b3cb2623934c68a3cca96b234602c7d07d231b79e"
+    },
+    {
+      "node": "tests/test_aggregate_growth.py::test_interrupted_workflow_reconstruction_preserves_complete_extent",
+      "purpose_sha256": "ce6a312d5c441a4f264dfd1184766755239464c01409201fac3bc1346b9b8cf2"
+    },
+    {
+      "node": "tests/test_aggregate_growth.py::test_workflow_traversals_with_interleaved_appends_are_linear[external]",
+      "purpose_sha256": "ce6a312d5c441a4f264dfd1184766755239464c01409201fac3bc1346b9b8cf2"
+    },
+    {
+      "node": "tests/test_aggregate_growth.py::test_workflow_traversals_with_interleaved_appends_are_linear[same]",
+      "purpose_sha256": "ce6a312d5c441a4f264dfd1184766755239464c01409201fac3bc1346b9b8cf2"
+    },
+    {
       "node": "tests/test_backup_results.py::test_backup_hard_cut_rejects_unselected_action_and_bare_checkpoint_result",
       "purpose_sha256": "f4ded4db049a1d204f87cb67f0330a41ae0a437332c0e99b3a85177a1b7f6c83"
     },
@@ -9492,6 +9544,14 @@
       "purpose_sha256": "5a9ef0fd7cc115a3b8ab7371dd3ae47c7d0359232e290e83a0cb8f3d08d40a88"
     },
     {
+      "node": "tests/test_migrations.py::test_active_index_upgrade_rolls_back_and_retries[exception]",
+      "purpose_sha256": "d9f6435f9f6661493052b503ef7f9dbd5ff48cceaad0c2ead75cf9f2bbb9a0ab"
+    },
+    {
+      "node": "tests/test_migrations.py::test_active_index_upgrade_rolls_back_and_retries[process-death]",
+      "purpose_sha256": "d9f6435f9f6661493052b503ef7f9dbd5ff48cceaad0c2ead75cf9f2bbb9a0ab"
+    },
+    {
       "node": "tests/test_migrations.py::test_alembic_baseline_matches_preserved_schema_and_refuses_downgrade[owner-journal]",
       "purpose_sha256": "953ec70dfd358e0433c27626ac74420f6979e36ea5e4a52c32ef70b0b7377991"
     },
@@ -9510,6 +9570,30 @@
     {
       "node": "tests/test_migrations.py::test_migration_failure_and_process_death_roll_back_then_retry[reported-events]",
       "purpose_sha256": "953ec70dfd358e0433c27626ac74420f6979e36ea5e4a52c32ef70b0b7377991"
+    },
+    {
+      "node": "tests/test_migrations.py::test_owner_active_index_is_explicit_and_schema_checked[current]",
+      "purpose_sha256": "e814270a401e50d3fd8d7c8e8a2b526223568f0bfb161ce5319c6ec75e4cc82a"
+    },
+    {
+      "node": "tests/test_migrations.py::test_owner_active_index_is_explicit_and_schema_checked[extra-index]",
+      "purpose_sha256": "e814270a401e50d3fd8d7c8e8a2b526223568f0bfb161ce5319c6ec75e4cc82a"
+    },
+    {
+      "node": "tests/test_migrations.py::test_owner_active_index_is_explicit_and_schema_checked[legacy]",
+      "purpose_sha256": "e814270a401e50d3fd8d7c8e8a2b526223568f0bfb161ce5319c6ec75e4cc82a"
+    },
+    {
+      "node": "tests/test_migrations.py::test_owner_active_index_is_explicit_and_schema_checked[marked-baseline]",
+      "purpose_sha256": "e814270a401e50d3fd8d7c8e8a2b526223568f0bfb161ce5319c6ec75e4cc82a"
+    },
+    {
+      "node": "tests/test_migrations.py::test_owner_active_index_is_explicit_and_schema_checked[missing-index]",
+      "purpose_sha256": "e814270a401e50d3fd8d7c8e8a2b526223568f0bfb161ce5319c6ec75e4cc82a"
+    },
+    {
+      "node": "tests/test_migrations.py::test_owner_active_index_is_explicit_and_schema_checked[wrong-predicate]",
+      "purpose_sha256": "e814270a401e50d3fd8d7c8e8a2b526223568f0bfb161ce5319c6ec75e4cc82a"
     },
     {
       "node": "tests/test_migrations.py::test_preserved_v1_adoption_is_idempotent[owner-journal]",
