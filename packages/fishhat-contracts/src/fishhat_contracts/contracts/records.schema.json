@@ -772,7 +772,8 @@
             "none",
             "known",
             "unknown"
-          ]
+          ],
+          "description": "Current summary of the complete owning execution, separate from cumulative confirmed facts and unresolved-attempt evidence retained in owner custody under states.json. Later uncertainty may coexist with earlier known facts. None cannot erase those facts or clear their holds. Success requires independently verified complete requested results, not merely an earlier known stage or a known no-op. Failure and cancellation preserve original effect history; separate verified recovery may resolve obligations without rewriting this Operation."
         },
         "holds": {
           "type": "array",

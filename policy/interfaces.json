@@ -22,7 +22,7 @@
       "sha256": "1d135d29eda541f2867e8112dd4abf0b7f1c049fb64f70505e8d74851029db8a"
     },
     "https://fishhat.invalid/contracts/states.json": {
-      "sha256": "bd84ec42cd9e97f73f615bd4cd2d4891e3485926b88154d6cd2b147a673fc79b"
+      "sha256": "971d3e6cbca2aa93b668196175af32a59b2768558e1c27ceeeab8d49621ce431"
     }
   },
   "cli": {
@@ -482,7 +482,7 @@
     },
     "records.schema.json": {
       "id": "https://fishhat.invalid/contracts/records.schema.json",
-      "sha256": "1b0b8b7a71824465376506359cc166190eb6b69648b72af2e23e0a20afc2ff71"
+      "sha256": "530c096098cb8e11230f8b2f9d980eacb0261553a4940b359e636fccba44458c"
     },
     "recovery-point.schema.json": {
       "id": "https://fishhat.invalid/contracts/recovery-point.schema.json",

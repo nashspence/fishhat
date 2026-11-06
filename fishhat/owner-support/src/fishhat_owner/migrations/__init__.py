@@ -10,9 +10,13 @@ from alembic.config import Config
 from fishhat_contracts import ContractError
 from sqlalchemy import URL, Connection, create_engine, event
 
-HEAD = "v1_0002"
+HEAD = "v1_0003"
 ACTIVE_PREDICATE = "state IN ('accepted','running','waiting','quarantined') OR (state IN ('failed','cancelled') AND effect != 'none')"
 ACTIVE_INDEX = "CREATE INDEX requests_active ON requests(request_id) WHERE " + ACTIVE_PREDICATE
+
+EFFECT_TABLE = "CREATE TABLE request_effects(request_id TEXT PRIMARY KEY REFERENCES requests(request_id),known INTEGER,revision INTEGER NOT NULL,held INTEGER NOT NULL)"
+EFFECT_INDEX = "CREATE INDEX request_effects_held ON request_effects(request_id) WHERE held=1"
+RESOLUTION_TABLE = "CREATE TABLE effect_resolutions(request_id TEXT NOT NULL REFERENCES requests(request_id),transition INTEGER NOT NULL,evidence_digest TEXT NOT NULL,PRIMARY KEY(request_id,transition))"
 
 
 def check_revision(db: sqlite3.Connection) -> None:
@@ -26,6 +30,16 @@ def check_revision(db: sqlite3.Connection) -> None:
         "SELECT sql FROM sqlite_master WHERE type='index' AND name='requests_active'"
     ).fetchone() != (ACTIVE_INDEX,):
         raise ContractError("explicit owner index upgrade required")
+
+    for name, expected in (
+        ("request_effects", EFFECT_TABLE),
+        ("request_effects_held", EFFECT_INDEX),
+        ("effect_resolutions", RESOLUTION_TABLE),
+    ):
+        if db.execute("SELECT sql FROM sqlite_master WHERE name=?", (name,)).fetchone() != (
+            expected,
+        ):
+            raise ContractError("explicit owner effect-history upgrade required")
 
 
 def configuration(connection: Connection) -> Config:
@@ -68,6 +82,27 @@ def upgrade(path: Path) -> None:
                     ("effect", "TEXT", 1, 0),
                 ],
             }
+            effect_tables = {"request_effects", "effect_resolutions"}
+            present = tables & effect_tables
+            if present and present != effect_tables:
+                raise ContractError("unrecognized legacy state")
+            current = present == effect_tables
+            if current:
+                expected.update(
+                    {
+                        "request_effects": [
+                            ("request_id", "TEXT", 0, 1),
+                            ("known", "INTEGER", 0, 0),
+                            ("revision", "INTEGER", 1, 0),
+                            ("held", "INTEGER", 1, 0),
+                        ],
+                        "effect_resolutions": [
+                            ("request_id", "TEXT", 1, 1),
+                            ("transition", "INTEGER", 1, 2),
+                            ("evidence_digest", "TEXT", 1, 0),
+                        ],
+                    }
+                )
             if tables - {"alembic_version", "sqlite_sequence"} != set(expected):
                 raise ContractError("unrecognized legacy state")
             for table, columns in expected.items():
@@ -84,9 +119,30 @@ def upgrade(path: Path) -> None:
             ).fetchone()
             if active_index is not None and active_index[0] != ACTIVE_INDEX:
                 raise ContractError("unrecognized owner active index")
-            indexes = {"meta": {(1, ("owner",))}, "requests": {(1, ("request_id",))}}
+            indexes: dict[str, set[tuple[int, tuple[str, ...]]]] = {
+                "meta": {(1, ("owner",))},
+                "requests": {(1, ("request_id",))},
+            }
             if active_index is not None:
                 indexes["requests"].add((0, ("request_id",)))
+            if current:
+                if active_index is None:
+                    raise ContractError("migration revision/index mismatch")
+                indexes.update(
+                    {
+                        "request_effects": {(1, ("request_id",)), (0, ("request_id",))},
+                        "effect_resolutions": {(1, ("request_id", "transition"))},
+                    }
+                )
+                for name, sql in (
+                    ("request_effects", EFFECT_TABLE),
+                    ("request_effects_held", EFFECT_INDEX),
+                    ("effect_resolutions", RESOLUTION_TABLE),
+                ):
+                    if connection.exec_driver_sql(
+                        "SELECT sql FROM sqlite_master WHERE name=?", (name,)
+                    ).fetchone() != (sql,):
+                        raise ContractError("unrecognized owner effect-history schema")
             for table, expected_indexes in indexes.items():
                 actual_indexes = {
                     (
@@ -110,16 +166,20 @@ def upgrade(path: Path) -> None:
             if "alembic_version" in tables:
                 if list(
                     connection.exec_driver_sql("SELECT version_num FROM alembic_version").scalars()
-                ) not in (["v1_0001"], [HEAD]):
+                ) not in (["v1_0001"], ["v1_0002"], [HEAD]):
                     raise ContractError("unsupported migration revision")
                 revision = connection.exec_driver_sql(
                     "SELECT version_num FROM alembic_version"
                 ).scalar_one()
-                if (revision == HEAD) != (active_index is not None):
+                expected_revision = (
+                    HEAD if current else "v1_0002" if active_index is not None else "v1_0001"
+                )
+                if revision != expected_revision:
                     raise ContractError("migration revision/index mismatch")
             else:
                 command.stamp(
-                    configuration(connection), HEAD if active_index is not None else "v1_0001"
+                    configuration(connection),
+                    HEAD if current else "v1_0002" if active_index is not None else "v1_0001",
                 )
             command.upgrade(configuration(connection), "head")
     finally:

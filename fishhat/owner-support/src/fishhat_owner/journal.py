@@ -6,25 +6,53 @@ unit test. A production caller cannot assert that decision in request JSON.
 The minimal requests rows are epoch-lifetime replay reservations, independent of
 optional terminal-detail history. They are never garbage-collected or reused;
 capacity refusal for new identities must preserve these accepted commitments.
+
+Current uncertainty and cumulative known facts are stored separately. A selected
+receiver verifier may establish complete no-effect evidence for an exact current
+nonterminal predecessor with a complete history and no known facts. It authenticates
+all original work, cessation and continuous exclusion and retains complete proof
+bytes independently before returning their digest. This reference only retains
+that root; it supplies no native proof, authority or terminal recovery executor.
 """
 
 from __future__ import annotations
 
 import json
 import sqlite3
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any, cast
 
 from fishhat_contracts.bounds import Bounds, bounds
-from fishhat_contracts.validation import ROOT, ContractError, digest
+from fishhat_contracts.validation import ROOT, ContractError, digest, validate
 
-from fishhat_owner.migrations import ACTIVE_INDEX, ACTIVE_PREDICATE, check_revision
+from fishhat_owner.migrations import (
+    ACTIVE_INDEX,
+    ACTIVE_PREDICATE,
+    EFFECT_INDEX,
+    EFFECT_TABLE,
+    RESOLUTION_TABLE,
+    check_revision,
+)
 
 STATES = json.loads((ROOT / "contracts/states.json").read_text())["owner"]
 
 
 class Journal:
-    def __init__(self, path: Path, owner: str, epoch: str, initialize: bool = False):
+    def __init__(
+        self,
+        path: Path,
+        owner: str,
+        epoch: str,
+        initialize: bool = False,
+        *,
+        verify_no_effect: Callable[[dict[str, Any]], str] | None = None,
+    ):
+        # Protected receiver configuration, never a request-supplied callback.
+        # It verifies locally retained evidence under continuous native exclusion
+        # for the exact predecessor context and returns its retained proof digest.
+        # It must not perform external I/O while the SQLite writer is reserved.
+        self._verify_no_effect = verify_no_effect
         new = not path.exists()
         if new and not initialize:
             raise ContractError("missing journal is not empty state")
@@ -53,6 +81,9 @@ class Journal:
                     "CREATE TABLE IF NOT EXISTS requests(request_id TEXT PRIMARY KEY,payload_digest TEXT NOT NULL,principal TEXT NOT NULL,state TEXT NOT NULL,effect TEXT NOT NULL)"
                 )
                 self.db.execute(ACTIVE_INDEX)
+                self.db.execute(EFFECT_TABLE)
+                self.db.execute(EFFECT_INDEX)
+                self.db.execute(RESOLUTION_TABLE)
                 self.db.execute("INSERT OR IGNORE INTO meta VALUES(?,?,0)", (owner, epoch))
         try:
             found = self.db.execute("SELECT owner,epoch FROM meta").fetchone()
@@ -74,6 +105,7 @@ class Journal:
             linear_proofs=(
                 "tests/test_linear_growth.py::test_journal_linear_work",
                 "tests/test_aggregate_growth.py::test_complete_admission_sequences_are_linear",
+                "tests/test_owner_effect_history.py::test_complete_effect_resolution_sequences_are_linear",
             ),
             work="O(total_input_bytes + admissions + transitions + bounded_retries) across complete sequences; durable partial index visits unresolved holds only, without rescanning settled replay history",
             extent="one-durable-request-identity",
@@ -135,12 +167,16 @@ class Journal:
                 + ACTIVE_PREDICATE
                 + " LIMIT 1"
             ).fetchone()
-            if active:
+            held = self.db.execute(
+                "SELECT 1 FROM request_effects INDEXED BY request_effects_held WHERE held=1 LIMIT 1"
+            ).fetchone()
+            if active or held:
                 raise ContractError("resource held/busy")
             self.db.execute(
                 "INSERT INTO requests VALUES(?,?,?,?,?)",
                 (request_id, payload, principal, "accepted", "none"),
             )
+            self.db.execute("INSERT INTO request_effects VALUES(?,0,0,1)", (request_id,))
             self.db.commit()
             return {
                 "request_id": request_id,
@@ -148,7 +184,7 @@ class Journal:
                 "state": "accepted",
                 "effect": "none",
             }
-        except Exception:
+        except BaseException:
             self.db.rollback()
             raise
 
@@ -161,15 +197,51 @@ class Journal:
         self.db.execute("BEGIN IMMEDIATE")
         with self.db:
             old = self.db.execute(
-                "SELECT state FROM requests WHERE request_id=?", (request_id,)
+                "SELECT r.state,r.effect,r.payload_digest,r.principal,k.known,k.revision "
+                "FROM requests AS r JOIN request_effects AS k USING(request_id) WHERE request_id=?",
+                (request_id,),
             ).fetchone()
             if not old or new_state not in STATES.get(old[0], []):
                 raise ContractError("illegal transition")
             if new_state == "succeeded" and effect != "known":
                 raise ContractError("success requires verified known effect")
+            state, previous_effect, payload, principal, known, revision = old
+            if effect == "none" and known != 0:
+                raise ContractError("retained effect history requires separate recovery")
+            validate("adapter.schema.json", revision + 1, "Generation")
+            if previous_effect == "unknown" and effect == "none":
+                if self._verify_no_effect is None:
+                    raise ContractError("positive no-effect evidence required")
+                context = {
+                    "owner": self.owner,
+                    "epoch": self.epoch,
+                    "request_id": request_id,
+                    "payload_digest": payload,
+                    "principal": principal,
+                    "state": state,
+                    "effect": previous_effect,
+                    "revision": revision,
+                }
+                proof = self._verify_no_effect(context)
+                validate("common.schema.json", proof, "Digest")
+                self.db.execute(
+                    "INSERT INTO effect_resolutions VALUES(?,?,?)", (request_id, revision, proof)
+                )
             self.db.execute(
                 "UPDATE requests SET state=?,effect=? WHERE request_id=?",
                 (new_state, effect, request_id),
+            )
+            # A known fact survives later uncertainty. NULL means that an imported
+            # history cannot establish whether earlier known facts were lost.
+            # Neither case can become a no-effect admission clearance.
+            retained_known = 1 if effect == "known" else known
+            held = int(
+                new_state != "succeeded"
+                and not (new_state in {"failed", "cancelled"} and effect == "none")
+            )
+            self.db.execute(
+                "UPDATE request_effects SET known=?,revision=?,held=? WHERE request_id=?",
+                (retained_known, revision + 1, held, request_id),
             )
             if new_state == "succeeded":
                 self.db.execute("UPDATE meta SET generation=generation+1")
