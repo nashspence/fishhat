@@ -1370,6 +1370,7 @@
       ],
       "extent": "complete selected candidate/file collections without a total-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "action-results.capture",
       "limits": [],
       "linear_proofs": [
@@ -1392,6 +1393,7 @@
       ],
       "extent": "complete selected candidate/file collections without a total-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "action-results.capture-material",
       "limits": [],
       "linear_proofs": [
@@ -1414,6 +1416,7 @@
       ],
       "extent": "complete selected candidate/file collections without a total-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "action-results.cleanup",
       "limits": [],
       "linear_proofs": [
@@ -1436,6 +1439,7 @@
       ],
       "extent": "Whole configuration, grants, selections and evidence; no list truncation",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.Registry.authorize",
       "limits": [],
       "linear_proofs": [
@@ -1458,6 +1462,7 @@
       ],
       "extent": "Whole configuration, grants, selections and evidence; no list truncation",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.Registry.authorize_invocation",
       "limits": [],
       "linear_proofs": [
@@ -1480,6 +1485,7 @@
       ],
       "extent": "Whole configuration, grants, selections and evidence; no list truncation",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.Registry.authorize_request",
       "limits": [],
       "linear_proofs": [
@@ -1502,6 +1508,7 @@
       ],
       "extent": "Whole configuration, grants, selections and evidence; no list truncation",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.Registry.enroll",
       "limits": [],
       "linear_proofs": [
@@ -1524,6 +1531,7 @@
       ],
       "extent": "Whole configuration, grants, selections and evidence; no list truncation",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.Registry.enroll_repository",
       "limits": [],
       "linear_proofs": [
@@ -1546,6 +1554,7 @@
       ],
       "extent": "Whole configuration, grants, selections and evidence; no list truncation",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.Registry.enroll_source_target",
       "limits": [],
       "linear_proofs": [
@@ -1568,6 +1577,7 @@
       ],
       "extent": "Whole configuration, grants, selections and evidence; no list truncation",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.Registry.inspect_delegation",
       "limits": [],
       "linear_proofs": [
@@ -1590,6 +1600,7 @@
       ],
       "extent": "Whole configuration, grants, selections and evidence; no list truncation",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.Registry.inspect_instance",
       "limits": [],
       "linear_proofs": [
@@ -1612,6 +1623,7 @@
       ],
       "extent": "Whole configuration, grants, selections and evidence; no list truncation",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.Registry.install",
       "limits": [],
       "linear_proofs": [
@@ -1634,6 +1646,7 @@
       ],
       "extent": "Whole configuration, grants, selections and evidence; no list truncation",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.Registry.resolve",
       "limits": [],
       "linear_proofs": [
@@ -1656,6 +1669,7 @@
       ],
       "extent": "Whole configuration, grants, selections and evidence; no list truncation",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.Registry.resolve_host_targets",
       "limits": [],
       "linear_proofs": [
@@ -1678,6 +1692,7 @@
       ],
       "extent": "Whole configuration, grants, selections and evidence; no list truncation",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.Registry.resolve_source",
       "limits": [],
       "linear_proofs": [
@@ -1700,6 +1715,7 @@
       ],
       "extent": "Whole configuration, grants, selections and evidence; no list truncation",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.Registry.source_target",
       "limits": [],
       "linear_proofs": [
@@ -1722,6 +1738,7 @@
       ],
       "extent": "Every retained result, including unknown observations and exact replays",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.accumulate_result",
       "limits": [],
       "linear_proofs": [
@@ -1744,6 +1761,7 @@
       ],
       "extent": "Whole configuration, grants, selections and evidence; no list truncation",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.check_configuration",
       "limits": [],
       "linear_proofs": [
@@ -1766,6 +1784,7 @@
       ],
       "extent": "Whole configuration, grants, selections and evidence; no list truncation",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.check_descriptor",
       "limits": [],
       "linear_proofs": [
@@ -1788,6 +1807,7 @@
       ],
       "extent": "Exact whole inputs and outputs; observation pages retain explicit continuation",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.check_invocation",
       "limits": [],
       "linear_proofs": [
@@ -1813,6 +1833,7 @@
       ],
       "extent": "Exact whole inputs and outputs; observation pages retain explicit continuation",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.check_request",
       "limits": [],
       "linear_proofs": [
@@ -1841,6 +1862,7 @@
       ],
       "extent": "Exact whole inputs and outputs; observation pages retain explicit continuation",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.check_response",
       "limits": [],
       "linear_proofs": [
@@ -1869,6 +1891,7 @@
       ],
       "extent": "Exact whole inputs and outputs; observation pages retain explicit continuation",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.check_result",
       "limits": [],
       "linear_proofs": [
@@ -1891,6 +1914,7 @@
       ],
       "extent": "Whole configuration, grants, selections and evidence; no list truncation",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.check_schema",
       "limits": [],
       "linear_proofs": [
@@ -1913,6 +1937,7 @@
       ],
       "extent": "Whole configuration, grants, selections and evidence; no list truncation",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.instance_reference",
       "limits": [],
       "linear_proofs": [
@@ -1935,6 +1960,7 @@
       ],
       "extent": "All records and pages; indexed logical identities and exact page retry commitments",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.observation-sequence.accept",
       "limits": [],
       "linear_proofs": [
@@ -1963,6 +1989,7 @@
       ],
       "extent": "All records and pages; indexed logical identities and exact page retry commitments",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.observation-sequence.start",
       "limits": [],
       "linear_proofs": [
@@ -1991,6 +2018,7 @@
       ],
       "extent": "Every approved private input and original operation-value binding; no total cap",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.process.private_value_source",
       "limits": [
         [
@@ -2022,6 +2050,7 @@
       ],
       "extent": "Complete admitted files and manifest entries; no additional transport extent ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.process.receive_process_result",
       "limits": [
         [
@@ -2049,6 +2078,7 @@
       ],
       "extent": "Complete value stream; no total extent cap or public plaintext digest",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.process.receive_process_value",
       "limits": [
         [
@@ -2076,6 +2106,7 @@
       ],
       "extent": "Complete admitted files and manifest entries; no additional transport extent ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.process.validate_process_launch",
       "limits": [
         [
@@ -2103,6 +2134,7 @@
       ],
       "extent": "Complete admitted files and manifest entries; no additional transport extent ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.process.verify_process_inputs",
       "limits": [
         [
@@ -2130,6 +2162,7 @@
       ],
       "extent": "Complete admitted files and manifest entries; no additional transport extent ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.process.verify_process_outputs",
       "limits": [
         [
@@ -2157,6 +2190,7 @@
       ],
       "extent": "Every approved private input and original operation-value binding; no total cap",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.process.verify_process_private_inputs",
       "limits": [
         [
@@ -2188,6 +2222,7 @@
       ],
       "extent": "Complete exact original invocation and returned value identities",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.protected-values.check_request",
       "limits": [],
       "linear_proofs": [
@@ -2210,6 +2245,7 @@
       ],
       "extent": "Complete exact original invocation and returned value identities",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.protected-values.check_response",
       "limits": [],
       "linear_proofs": [
@@ -2232,6 +2268,7 @@
       ],
       "extent": "Complete exact original invocation and returned value identities",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.protected-values.require_custody",
       "limits": [],
       "linear_proofs": [
@@ -2254,6 +2291,7 @@
       ],
       "extent": "Whole configuration, grants, selections and evidence; no list truncation",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.require_qualification",
       "limits": [],
       "linear_proofs": [
@@ -2276,6 +2314,7 @@
       ],
       "extent": "Whole configuration, grants, selections and evidence; no list truncation",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "adapters.runtime_binding_digest",
       "limits": [],
       "linear_proofs": [
@@ -2298,6 +2337,7 @@
       ],
       "extent": "Every selected preserved dataset, secret generation and complete checkpoint result",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "backup.result",
       "limits": [],
       "linear_proofs": [
@@ -2321,6 +2361,7 @@
       ],
       "extent": "All S sources in the catalogue; no prefix selection or silent truncation",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "bootstrap.catalogue",
       "limits": [],
       "linear_proofs": [
@@ -2334,7 +2375,7 @@
       "sources": {
         "packages/fishhat-client/src/fishhat_client/bootstrap.py": "a3e08fe4d728a08d9f6357441f3d72e819024bd804412df9b126d4b85c845a07",
         "tests/test_bootstrap.py": "d5163e64320aea8ac2fb06edc9395be550557ae7683e9b166692007b53089b13",
-        "tests/test_linear_growth.py": "238c554ee57c932a2b14c605a17d40bc17e40b979e3b4936cc5ae49f60b2885d"
+        "tests/test_linear_growth.py": "e1f12f1500b7fd4f642605ea8e6aba80705fe9da70d19978cef853264acae846"
       },
       "symbol": "fishhat_client.bootstrap:validate_catalogue",
       "work": "O(B + S) bounded reference record validation and one source identity pass"
@@ -2345,6 +2386,7 @@
       ],
       "extent": "Exact durable stop intent or terminal-race decision without changing target outcomes",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "cancellation.admit",
       "limits": [],
       "linear_proofs": [
@@ -2369,6 +2411,7 @@
       ],
       "extent": "Every retained decision for the exact target in its pinned append-order traversal",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "cancellation.list",
       "limits": [
         [
@@ -2398,6 +2441,7 @@
       ],
       "extent": "One complete retained decision",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "cancellation.lookup",
       "limits": [],
       "linear_proofs": [
@@ -2422,6 +2466,7 @@
       ],
       "extent": "Every retained cancellation identity, original decision and attribution",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "cancellation.restore",
       "limits": [],
       "linear_proofs": [
@@ -2446,6 +2491,7 @@
       ],
       "extent": "Every accepted identity",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "cancellation.snapshot",
       "limits": [],
       "linear_proofs": [
@@ -2470,6 +2516,7 @@
       ],
       "extent": "Complete original decision",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "cancellation.validate",
       "limits": [],
       "linear_proofs": [
@@ -2494,6 +2541,7 @@
       ],
       "extent": "All selected preserved datasets and every referenced capture, store, verification and artifact identity",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "checkpoints.resolve",
       "limits": [],
       "linear_proofs": [
@@ -2517,6 +2565,7 @@
       ],
       "extent": "All selected preserved datasets and every referenced capture, store, verification and artifact identity",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "checkpoints.validate",
       "limits": [],
       "linear_proofs": [
@@ -2540,6 +2589,7 @@
       ],
       "extent": "Complete owner-selected artifact, including empty files and trailing-byte rejection",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "custody.verify-artifact-stream",
       "limits": [
         [
@@ -2567,6 +2617,7 @@
       ],
       "extent": "Complete values are validated or explicitly rejected; no truncated collections",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "data.canonical",
       "limits": [],
       "linear_proofs": [
@@ -2589,6 +2640,7 @@
       ],
       "extent": "Complete values are validated or explicitly rejected; no truncated collections",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "data.digest",
       "limits": [],
       "linear_proofs": [
@@ -2611,6 +2663,7 @@
       ],
       "extent": "Complete values are validated or explicitly rejected; no truncated collections",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "data.strict_json",
       "limits": [],
       "linear_proofs": [
@@ -2633,6 +2686,7 @@
       ],
       "extent": "Complete values are validated or explicitly rejected; no truncated collections",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "data.strict_yaml",
       "limits": [],
       "linear_proofs": [
@@ -2655,6 +2709,7 @@
       ],
       "extent": "Complete values are validated or explicitly rejected; no truncated collections",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "data.validate",
       "limits": [],
       "linear_proofs": [
@@ -2677,6 +2732,7 @@
       ],
       "extent": "Every active and discharged obligation, proposed binding, admission and discharge; no collection-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "datasets.inventory",
       "limits": [],
       "linear_proofs": [
@@ -2699,6 +2755,7 @@
       ],
       "extent": "Every active and discharged obligation, proposed binding, admission and discharge; no collection-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "datasets.transition",
       "limits": [],
       "linear_proofs": [
@@ -2719,6 +2776,7 @@
       "capacity": [],
       "extent": "complete-document-or-rejection",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "directory.load",
       "limits": [
         [
@@ -2740,8 +2798,8 @@
       "qualification": "reference-model",
       "sources": {
         "some-implementations/fishhat/applications/directory/src/fishhat_directory/projection.py": "91ea0196f3b83f36d4d7a37d1f4b1c9438a4db4a630e3ca9b2a80d0f8c76283a",
-        "tests/test_engineering.py": "577c8f19c6656e61d8b52b5778677b40b952bd5c4fd27d0c8c64ab68efc7184d",
-        "tests/test_linear_growth.py": "238c554ee57c932a2b14c605a17d40bc17e40b979e3b4936cc5ae49f60b2885d"
+        "tests/test_engineering.py": "fdcf378f5be38ee1bb6d69b771f6e2b5dfd1c0386031da3c08c6eed8181971e4",
+        "tests/test_linear_growth.py": "e1f12f1500b7fd4f642605ea8e6aba80705fe9da70d19978cef853264acae846"
       },
       "symbol": "fishhat_directory.projection:load_directory",
       "work": "O(input_bytes)-bounded-parser-depth"
@@ -2752,6 +2810,7 @@
       ],
       "extent": "Complete authoritative scoped RRsets and every requested change",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "dns.publication-precondition",
       "limits": [],
       "linear_proofs": [
@@ -2774,6 +2833,7 @@
       ],
       "extent": "The original checkpoint, every restored/verified dataset and complete retained hook evidence",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "drill.result",
       "limits": [],
       "linear_proofs": [
@@ -2798,6 +2858,7 @@
       ],
       "extent": "Exact committed result bytes, every nested invocation/output artifact and full selected schema closure",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "handoffs.retained-result",
       "limits": [],
       "linear_proofs": [
@@ -2825,6 +2886,7 @@
       ],
       "extent": "Every retained original event and accepted command across bounded pages and chunks, including denied scan windows and exact retries",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "history.journal.command",
       "limits": [
         [
@@ -2856,6 +2918,7 @@
       ],
       "extent": "Every retained original event and accepted command across bounded pages and chunks, including denied scan windows and exact retries",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "history.journal.content",
       "limits": [
         [
@@ -2887,6 +2950,7 @@
       ],
       "extent": "Every retained original event and accepted command across bounded pages and chunks, including denied scan windows and exact retries",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "history.journal.input",
       "limits": [
         [
@@ -2918,6 +2982,7 @@
       ],
       "extent": "Every retained original event and accepted command across bounded pages and chunks, including denied scan windows and exact retries",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "history.journal.list",
       "limits": [
         [
@@ -2949,6 +3014,7 @@
       ],
       "extent": "Every retained original event and accepted command across bounded pages and chunks, including denied scan windows and exact retries",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "history.journal.read",
       "limits": [
         [
@@ -2980,6 +3046,7 @@
       ],
       "extent": "Every retained original event and accepted command across bounded pages and chunks, including denied scan windows and exact retries",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "history.journal.register",
       "limits": [
         [
@@ -3011,6 +3078,7 @@
       ],
       "extent": "Every required check, dataset, materialization and artifact; no collection truncation",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "hooks.require_hook_success",
       "limits": [],
       "linear_proofs": [
@@ -3033,6 +3101,7 @@
       ],
       "extent": "Every required check, dataset, materialization and artifact; no collection truncation",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "hooks.require_selected_restore_input",
       "limits": [],
       "linear_proofs": [
@@ -3055,6 +3124,7 @@
       ],
       "extent": "Every required check, dataset, materialization and artifact; no collection truncation",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "hooks.validate_hook_request",
       "limits": [],
       "linear_proofs": [
@@ -3077,6 +3147,7 @@
       ],
       "extent": "Every required check, dataset, materialization and artifact; no collection truncation",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "hooks.validate_hook_result",
       "limits": [],
       "linear_proofs": [
@@ -3099,6 +3170,7 @@
       ],
       "extent": "Every accepted target and every proposed patch member; no collection-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "host-intent.destinations",
       "limits": [],
       "linear_proofs": [
@@ -3122,6 +3194,7 @@
       ],
       "extent": "Every accepted target and every proposed patch member; no collection-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "host-intent.supplementary",
       "limits": [],
       "linear_proofs": [
@@ -3145,6 +3218,7 @@
       ],
       "extent": "Every accepted target and every proposed patch member; no collection-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "host-intent.supplementary-patch",
       "limits": [],
       "linear_proofs": [
@@ -3168,6 +3242,7 @@
       ],
       "extent": "Every reviewed effect and complete private projection/capture; no total collection or private-content cap",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "host-preimages.current",
       "limits": [],
       "linear_proofs": [
@@ -3188,24 +3263,28 @@
       "capacity": [],
       "extent": "one-durable-request-identity",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "journal.submit",
       "limits": [],
       "linear_proofs": [
-        "tests/test_linear_growth.py::test_journal_linear_work"
+        "tests/test_linear_growth.py::test_journal_linear_work",
+        "tests/test_aggregate_growth.py::test_complete_admission_sequences_are_linear"
       ],
       "proofs": [
         "tests/test_engineering.py::test_journal_reference_scan_and_replay_identity",
         "tests/test_engineering.py::test_owner_crash_replay_preserves_state",
-        "tests/test_linear_growth.py::test_journal_linear_work"
+        "tests/test_linear_growth.py::test_journal_linear_work",
+        "tests/test_aggregate_growth.py::test_complete_admission_sequences_are_linear"
       ],
       "qualification": "reference-model",
       "sources": {
-        "fishhat/owner-support/src/fishhat_owner/journal.py": "34a5fc47c3fc7ef525c181bba5fa34b9887537ad1522f48811e5a4679f33449c",
-        "tests/test_engineering.py": "577c8f19c6656e61d8b52b5778677b40b952bd5c4fd27d0c8c64ab68efc7184d",
-        "tests/test_linear_growth.py": "238c554ee57c932a2b14c605a17d40bc17e40b979e3b4936cc5ae49f60b2885d"
+        "fishhat/owner-support/src/fishhat_owner/journal.py": "29b622c65e2365aa9032780344ddc46de5bcf4d370bafb527a7b2bc0e3b79869",
+        "tests/test_aggregate_growth.py": "1ae21da981260f899ff8484d97750a86e8e6c6d04c48ff36dea41fad82a23134",
+        "tests/test_engineering.py": "fdcf378f5be38ee1bb6d69b771f6e2b5dfd1c0386031da3c08c6eed8181971e4",
+        "tests/test_linear_growth.py": "e1f12f1500b7fd4f642605ea8e6aba80705fe9da70d19978cef853264acae846"
       },
       "symbol": "fishhat_owner.journal:Journal.submit",
-      "work": "O(retained_requests + input_bytes)-reference-scan"
+      "work": "O(total_input_bytes + admissions + transitions + bounded_retries) across complete sequences; durable partial index visits unresolved holds only, without rescanning settled replay history"
     },
     "lifecycle.admission": {
       "capacity": [
@@ -3213,6 +3292,7 @@
       ],
       "extent": "Every selected resource/object, policy, obligation and surviving recovery closure; no collection-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "lifecycle.admission",
       "limits": [],
       "linear_proofs": [
@@ -3235,6 +3315,7 @@
       ],
       "extent": "Every selected resource/object, policy, obligation and surviving recovery closure; no collection-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "lifecycle.evidence",
       "limits": [],
       "linear_proofs": [
@@ -3257,6 +3338,7 @@
       ],
       "extent": "Every selected resource/object, policy, obligation and surviving recovery closure; no collection-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "lifecycle.input",
       "limits": [],
       "linear_proofs": [
@@ -3279,6 +3361,7 @@
       ],
       "extent": "Every selected resource/object, policy, obligation and surviving recovery closure; no collection-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "lifecycle.material",
       "limits": [],
       "linear_proofs": [
@@ -3301,6 +3384,7 @@
       ],
       "extent": "Every selected resource/object, policy, obligation and surviving recovery closure; no collection-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "lifecycle.plan",
       "limits": [],
       "linear_proofs": [
@@ -3323,6 +3407,7 @@
       ],
       "extent": "Every selected resource/object, policy, obligation and surviving recovery closure; no collection-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "lifecycle.prepare",
       "limits": [],
       "linear_proofs": [
@@ -3345,6 +3430,7 @@
       ],
       "extent": "Every selected resource/object, policy, obligation and surviving recovery closure; no collection-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "lifecycle.read",
       "limits": [],
       "linear_proofs": [
@@ -3367,6 +3453,7 @@
       ],
       "extent": "Every selected resource/object, policy, obligation and surviving recovery closure; no collection-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "lifecycle.reference",
       "limits": [],
       "linear_proofs": [
@@ -3389,6 +3476,7 @@
       ],
       "extent": "Complete resolved inputs and retained ordinary child or hook result; no collection-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "maintenance.checkpoint-selection",
       "limits": [],
       "linear_proofs": [
@@ -3411,6 +3499,7 @@
       ],
       "extent": "Complete resolved inputs and retained ordinary child or hook result; no collection-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "maintenance.execution",
       "limits": [],
       "linear_proofs": [
@@ -3435,6 +3524,7 @@
       ],
       "extent": "Complete resolved inputs and retained ordinary child or hook result; no collection-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "maintenance.result",
       "limits": [],
       "linear_proofs": [
@@ -3459,6 +3549,7 @@
       ],
       "extent": "Complete resolved inputs and retained ordinary child or hook result; no collection-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "maintenance.result-custody",
       "limits": [],
       "linear_proofs": [
@@ -3483,6 +3574,7 @@
       ],
       "extent": "complete exact selection, including an empty selection",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "observations.decode",
       "limits": [],
       "linear_proofs": [
@@ -3504,6 +3596,7 @@
       "capacity": [],
       "extent": "complete retained traversal through bounded independent pages",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "observations.page",
       "limits": [
         [
@@ -3534,6 +3627,7 @@
       "capacity": [],
       "extent": "one complete retained observation through bounded chunks",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "observations.record-chunk",
       "limits": [
         [
@@ -3561,6 +3655,7 @@
       ],
       "extent": "complete exact selection, including an empty selection",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "observations.start",
       "limits": [],
       "linear_proofs": [
@@ -3584,6 +3679,7 @@
       ],
       "extent": "All exact requests and response records remain retained without history caps",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "owner.adapter-commits",
       "limits": [],
       "linear_proofs": [
@@ -3604,6 +3700,7 @@
       "capacity": [],
       "extent": "one-record-chunk",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "record-delivery.chunk",
       "limits": [
         [
@@ -3621,7 +3718,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/record_delivery.py": "b5737733d4ed3c40ff0352afbc3360318107ffdb5e06745ac4ed59cc95353e31",
-        "tests/test_linear_growth.py": "238c554ee57c932a2b14c605a17d40bc17e40b979e3b4936cc5ae49f60b2885d",
+        "tests/test_linear_growth.py": "e1f12f1500b7fd4f642605ea8e6aba80705fe9da70d19978cef853264acae846",
         "tests/test_record_delivery.py": "07df2d04fe0795d403f8666ba728db2baa58f78753b0b356ddde64c055f46954"
       },
       "symbol": "fishhat_contracts.record_delivery:RecordSnapshot.chunk",
@@ -3633,6 +3730,7 @@
       ],
       "extent": "Every selected dataset, its immutable data-time bounds and independent current clock",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "recovery-points.assess",
       "limits": [],
       "linear_proofs": [
@@ -3654,6 +3752,7 @@
       "capacity": [],
       "extent": "Both inclusive UTC bounds and the exact supporting evidence digest",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "recovery-points.interval",
       "limits": [],
       "linear_proofs": [
@@ -3675,6 +3774,7 @@
       "capacity": [],
       "extent": "complete-page-with-resume-cursor",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "reporting.events",
       "limits": [
         [
@@ -3696,9 +3796,9 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "some-implementations/fishhat/applications/receipts/src/fishhat_reporting/store.py": "23da0c25d91f3b253d7adbed95c94c3f46938daeab6eb67b9d7a2c0336c1f0e2",
-        "tests/test_engineering.py": "577c8f19c6656e61d8b52b5778677b40b952bd5c4fd27d0c8c64ab68efc7184d",
-        "tests/test_linear_growth.py": "238c554ee57c932a2b14c605a17d40bc17e40b979e3b4936cc5ae49f60b2885d"
+        "some-implementations/fishhat/applications/receipts/src/fishhat_reporting/store.py": "7e5e18843acae239c27a8c06a969a15df923ebb46da37c11753fa0c1c37f56d1",
+        "tests/test_engineering.py": "fdcf378f5be38ee1bb6d69b771f6e2b5dfd1c0386031da3c08c6eed8181971e4",
+        "tests/test_linear_growth.py": "e1f12f1500b7fd4f642605ea8e6aba80705fe9da70d19978cef853264acae846"
       },
       "symbol": "fishhat_reporting.store:EventStore.events",
       "work": "O(log(retained_events) + page_bytes) indexed seek and linear page construction with one serialization per returned event"
@@ -3706,30 +3806,39 @@
     "reporting.put": {
       "capacity": [],
       "extent": "one-immutable-event",
-      "growth": "linear",
+      "growth": "inverse-ackermann",
+      "growth_proofs": [
+        "tests/test_linear_growth.py::test_event_put_linear_work",
+        "tests/test_aggregate_growth.py::test_correction_sequences_obey_approved_growth"
+      ],
       "id": "reporting.put",
       "limits": [],
-      "linear_proofs": [
-        "tests/test_linear_growth.py::test_event_put_linear_work"
-      ],
+      "linear_proofs": [],
       "proofs": [
         "tests/test_engineering.py::test_reporting_accepts_complete_extent_and_preserves_replay",
         "tests/test_engineering.py::test_reporting_crash_replay_preserves_committed_event",
-        "tests/test_linear_growth.py::test_event_put_linear_work"
+        "tests/test_aggregate_growth.py::test_correction_cache_preserves_failed_or_uncertain_commit",
+        "tests/test_aggregate_growth.py::test_correction_crash_reconstruction_preserves_forward_references",
+        "tests/test_aggregate_growth.py::test_correction_forest_scopes_branches_and_missing_originals",
+        "tests/test_aggregate_growth.py::test_interrupted_correction_reconstruction_retries_from_committed_rows",
+        "tests/test_linear_growth.py::test_event_put_linear_work",
+        "tests/test_aggregate_growth.py::test_correction_sequences_obey_approved_growth"
       ],
       "qualification": "reference-model",
       "sources": {
-        "some-implementations/fishhat/applications/receipts/src/fishhat_reporting/store.py": "23da0c25d91f3b253d7adbed95c94c3f46938daeab6eb67b9d7a2c0336c1f0e2",
-        "tests/test_engineering.py": "577c8f19c6656e61d8b52b5778677b40b952bd5c4fd27d0c8c64ab68efc7184d",
-        "tests/test_linear_growth.py": "238c554ee57c932a2b14c605a17d40bc17e40b979e3b4936cc5ae49f60b2885d"
+        "some-implementations/fishhat/applications/receipts/src/fishhat_reporting/store.py": "7e5e18843acae239c27a8c06a969a15df923ebb46da37c11753fa0c1c37f56d1",
+        "tests/test_aggregate_growth.py": "1ae21da981260f899ff8484d97750a86e8e6c6d04c48ff36dea41fad82a23134",
+        "tests/test_engineering.py": "fdcf378f5be38ee1bb6d69b771f6e2b5dfd1c0386031da3c08c6eed8181971e4",
+        "tests/test_linear_growth.py": "e1f12f1500b7fd4f642605ea8e6aba80705fe9da70d19978cef853264acae846"
       },
       "symbol": "fishhat_reporting.store:EventStore.put",
-      "work": "O(retained_bytes + event_bytes) reference-scan for corrections with hash-indexed traversal; ordinary appends use indexed identity lookup"
+      "work": "O(total_event_bytes + correction_edges * alpha(correction_vertices)) across append and bounded retry sequences, including one cold reconstruction per connection; only correction forest connectivity has the approved near-linear allowance; ordinary appends use indexed identity lookup"
     },
     "reporting.workflows": {
       "capacity": [],
       "extent": "complete-page-with-resume-cursor",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "reporting.workflows",
       "limits": [
         [
@@ -3738,20 +3847,24 @@
         ]
       ],
       "linear_proofs": [
-        "tests/test_linear_growth.py::test_workflow_pages_linear_work"
+        "tests/test_linear_growth.py::test_workflow_pages_linear_work",
+        "tests/test_aggregate_growth.py::test_workflow_traversals_with_interleaved_appends_are_linear"
       ],
       "proofs": [
         "tests/test_engineering.py::test_workflow_pagination_preserves_logical_extent",
-        "tests/test_linear_growth.py::test_workflow_pages_linear_work"
+        "tests/test_aggregate_growth.py::test_interrupted_workflow_reconstruction_preserves_complete_extent",
+        "tests/test_linear_growth.py::test_workflow_pages_linear_work",
+        "tests/test_aggregate_growth.py::test_workflow_traversals_with_interleaved_appends_are_linear"
       ],
       "qualification": "reference-model",
       "sources": {
-        "some-implementations/fishhat/applications/receipts/src/fishhat_reporting/store.py": "23da0c25d91f3b253d7adbed95c94c3f46938daeab6eb67b9d7a2c0336c1f0e2",
-        "tests/test_engineering.py": "577c8f19c6656e61d8b52b5778677b40b952bd5c4fd27d0c8c64ab68efc7184d",
-        "tests/test_linear_growth.py": "238c554ee57c932a2b14c605a17d40bc17e40b979e3b4936cc5ae49f60b2885d"
+        "some-implementations/fishhat/applications/receipts/src/fishhat_reporting/store.py": "7e5e18843acae239c27a8c06a969a15df923ebb46da37c11753fa0c1c37f56d1",
+        "tests/test_aggregate_growth.py": "1ae21da981260f899ff8484d97750a86e8e6c6d04c48ff36dea41fad82a23134",
+        "tests/test_engineering.py": "fdcf378f5be38ee1bb6d69b771f6e2b5dfd1c0386031da3c08c6eed8181971e4",
+        "tests/test_linear_growth.py": "e1f12f1500b7fd4f642605ea8e6aba80705fe9da70d19978cef853264acae846"
       },
       "symbol": "fishhat_reporting.store:EventStore.workflows",
-      "work": "O(retained_events + page_items) one cold reference scan, constant-work issued cursors and linear page output; database changes rebuild the index"
+      "work": "O(retained_events + appended_events + returned_items) across complete traversals and interleaved appends; one cold scan per connection, incremental rowid catch-up, constant-work issued cursors and one seek for arbitrary positions"
     },
     "resources.cleanup-plan": {
       "capacity": [
@@ -3759,6 +3872,7 @@
       ],
       "extent": "complete inventory, retention input and reviewed unreferenced candidate frontier across every dispatch batch; newly unreferenced dependencies require a new reviewed intent",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "resources.cleanup-plan",
       "limits": [],
       "linear_proofs": [
@@ -3783,6 +3897,7 @@
       ],
       "extent": "complete native graph and retention closure plus every attempt; unchanged input is never rescanned per candidate or batch",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "resources.cleanup-traversal",
       "limits": [],
       "linear_proofs": [
@@ -3807,6 +3922,7 @@
       ],
       "extent": "all resource accounts, adapter grants and quota roots, without a count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "resources.host",
       "limits": [],
       "linear_proofs": [
@@ -3831,6 +3947,7 @@
       ],
       "extent": "all native inventory objects, references and protection labels",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "resources.inventory",
       "limits": [],
       "linear_proofs": [
@@ -3855,6 +3972,7 @@
       ],
       "extent": "all current pools and the four semantic quota buckets with independent byte and inode remainders",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "resources.reservation.charge",
       "limits": [],
       "linear_proofs": [
@@ -3879,6 +3997,7 @@
       ],
       "extent": "all observed pools and the four semantic quota buckets; exact current binding validation precedes subtraction",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "resources.reservation.release",
       "limits": [],
       "linear_proofs": [
@@ -3901,6 +4020,7 @@
       ],
       "extent": "all observed pools and the four semantic quota buckets; no pool-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "resources.reservation.reserve",
       "limits": [],
       "linear_proofs": [
@@ -3923,6 +4043,7 @@
       ],
       "extent": "every retained release, blocking reference, runtime handle and archive receipt",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "resources.retention",
       "limits": [],
       "linear_proofs": [
@@ -3947,6 +4068,7 @@
       ],
       "extent": "Every declared component, dataset, procedure, target and grant; no collection-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "source.app",
       "limits": [],
       "linear_proofs": [
@@ -3969,6 +4091,7 @@
       ],
       "extent": "Every dependency, including chains deeper than the interpreter call stack",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "source.dependencies",
       "limits": [],
       "linear_proofs": [
@@ -3992,6 +4115,7 @@
       ],
       "extent": "Every declared component, dataset, procedure, target and grant; no collection-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "source.domain",
       "limits": [],
       "linear_proofs": [
@@ -4014,6 +4138,7 @@
       ],
       "extent": "Every declared component, dataset, procedure, target and grant; no collection-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "source.host",
       "limits": [],
       "linear_proofs": [
@@ -4034,6 +4159,7 @@
       "capacity": [],
       "extent": "one-complete-frame",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "wire.read-frame",
       "limits": [
         [
@@ -4051,8 +4177,8 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-client/src/fishhat_client/wire.py": "f3665bb6b807ede2cbc6dfe08eb6f0cc3faac635c9905f2edd09163d88c9a341",
-        "tests/test_engineering.py": "577c8f19c6656e61d8b52b5778677b40b952bd5c4fd27d0c8c64ab68efc7184d",
-        "tests/test_linear_growth.py": "238c554ee57c932a2b14c605a17d40bc17e40b979e3b4936cc5ae49f60b2885d"
+        "tests/test_engineering.py": "fdcf378f5be38ee1bb6d69b771f6e2b5dfd1c0386031da3c08c6eed8181971e4",
+        "tests/test_linear_growth.py": "e1f12f1500b7fd4f642605ea8e6aba80705fe9da70d19978cef853264acae846"
       },
       "symbol": "fishhat_client.wire:read_frame",
       "work": "O(frame_bytes)"
@@ -4063,6 +4189,7 @@
       ],
       "extent": "Complete issuer-local participant closure, original requests/results and native material; no prefix selection or collection cap",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.attestation-assemble",
       "limits": [],
       "linear_proofs": [
@@ -4086,6 +4213,7 @@
       ],
       "extent": "Complete issuer-local participant closure, original requests/results and native material; no prefix selection or collection cap",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.attestation-check",
       "limits": [],
       "linear_proofs": [
@@ -4109,6 +4237,7 @@
       ],
       "extent": "Complete issuer-local participant closure, original requests/results and native material; no prefix selection or collection cap",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.attestation-issue",
       "limits": [],
       "linear_proofs": [
@@ -4132,6 +4261,7 @@
       ],
       "extent": "Complete issuer-local participant closure, original requests/results and native material; no prefix selection or collection cap",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.attestation-lookup",
       "limits": [],
       "linear_proofs": [
@@ -4155,6 +4285,7 @@
       ],
       "extent": "Complete issuer-local participant closure, original requests/results and native material; no prefix selection or collection cap",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.attestation-native-assemble",
       "limits": [],
       "linear_proofs": [
@@ -4178,6 +4309,7 @@
       ],
       "extent": "Complete issuer-local participant closure, original requests/results and native material; no prefix selection or collection cap",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.attestation-native-check",
       "limits": [],
       "linear_proofs": [
@@ -4201,6 +4333,7 @@
       ],
       "extent": "Complete issuer-local participant closure, original requests/results and native material; no prefix selection or collection cap",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.attestation-native-issue",
       "limits": [],
       "linear_proofs": [
@@ -4224,6 +4357,7 @@
       ],
       "extent": "Complete issuer-local participant closure, original requests/results and native material; no prefix selection or collection cap",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.attestation-restore",
       "limits": [],
       "linear_proofs": [
@@ -4247,6 +4381,7 @@
       ],
       "extent": "Every immutable child slot, accepted binding, predecessor/material input and installed initial-review barrier; no prefix or total-count cap",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.bindings",
       "limits": [],
       "linear_proofs": [
@@ -4276,6 +4411,7 @@
       ],
       "extent": "Every complete selected command and record byte across all chunks and retries",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal-delivery.custody",
       "limits": [],
       "linear_proofs": [
@@ -4299,6 +4435,7 @@
       ],
       "extent": "Every complete selected command and record byte across all chunks and retries",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal-delivery.decode",
       "limits": [],
       "linear_proofs": [
@@ -4322,6 +4459,7 @@
       ],
       "extent": "Every complete selected command and record byte across all chunks and retries",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal-delivery.events",
       "limits": [],
       "linear_proofs": [
@@ -4345,6 +4483,7 @@
       ],
       "extent": "Every complete selected command and record byte across all chunks and retries",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal-delivery.get",
       "limits": [],
       "linear_proofs": [
@@ -4368,6 +4507,7 @@
       ],
       "extent": "Every complete selected command and record byte across all chunks and retries",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal-delivery.heads",
       "limits": [],
       "linear_proofs": [
@@ -4391,6 +4531,7 @@
       ],
       "extent": "Every complete selected command and record byte across all chunks and retries",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal-delivery.input",
       "limits": [],
       "linear_proofs": [
@@ -4414,6 +4555,7 @@
       ],
       "extent": "Every complete selected command and record byte across all chunks and retries",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal-delivery.read",
       "limits": [],
       "linear_proofs": [
@@ -4437,6 +4579,7 @@
       ],
       "extent": "Every complete selected command and record byte across all chunks and retries",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal-delivery.read-input",
       "limits": [],
       "linear_proofs": [
@@ -4460,6 +4603,7 @@
       ],
       "extent": "Every complete selected command and record byte across all chunks and retries",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal-delivery.retain",
       "limits": [],
       "linear_proofs": [
@@ -4483,6 +4627,7 @@
       ],
       "extent": "Every original owner, child disposition, retained outcome and successor slot; no collection limit",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal-recovery.apply",
       "limits": [],
       "linear_proofs": [
@@ -4507,6 +4652,7 @@
       ],
       "extent": "Every original owner, child disposition, retained outcome and successor slot; no collection limit",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal-recovery.blocks_work",
       "limits": [],
       "linear_proofs": [
@@ -4531,6 +4677,7 @@
       ],
       "extent": "Every original owner, child disposition, retained outcome and successor slot; no collection limit",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal-recovery.context",
       "limits": [],
       "linear_proofs": [
@@ -4555,6 +4702,7 @@
       ],
       "extent": "Every original owner, child disposition, retained outcome and successor slot; no collection limit",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal-recovery.initialize_gate",
       "limits": [],
       "linear_proofs": [
@@ -4579,6 +4727,7 @@
       ],
       "extent": "Every original owner, child disposition, retained outcome and successor slot; no collection limit",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal-recovery.initialize_member",
       "limits": [],
       "linear_proofs": [
@@ -4603,6 +4752,7 @@
       ],
       "extent": "Every ordered member epoch, original local accepted Plan, outcome, recovery reservation and tombstone; no history count limit",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal-recovery.member-restore",
       "limits": [],
       "linear_proofs": [
@@ -4628,6 +4778,7 @@
       ],
       "extent": "Every original owner, child disposition, retained outcome and successor slot; no collection limit",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal-recovery.outcome",
       "limits": [],
       "linear_proofs": [
@@ -4652,6 +4803,7 @@
       ],
       "extent": "Complete journal and selected records; no history or record-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal-store.append",
       "limits": [
         [
@@ -4681,6 +4833,7 @@
       ],
       "extent": "Complete journal and selected records; no history or record-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal-store.close",
       "limits": [
         [
@@ -4710,6 +4863,7 @@
       ],
       "extent": "Complete journal and selected records; no history or record-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal-store.command_bytes",
       "limits": [
         [
@@ -4739,6 +4893,7 @@
       ],
       "extent": "Complete journal and selected records; no history or record-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal-store.create",
       "limits": [
         [
@@ -4768,6 +4923,7 @@
       ],
       "extent": "Complete journal and selected records; no history or record-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal-store.genesis",
       "limits": [
         [
@@ -4797,6 +4953,7 @@
       ],
       "extent": "Complete journal and selected records; no history or record-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal-store.guard",
       "limits": [
         [
@@ -4826,6 +4983,7 @@
       ],
       "extent": "Complete journal and selected records; no history or record-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal-store.iter_events",
       "limits": [
         [
@@ -4855,6 +5013,7 @@
       ],
       "extent": "Complete journal and selected records; no history or record-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal-store.lookup",
       "limits": [
         [
@@ -4884,6 +5043,7 @@
       ],
       "extent": "Complete journal and selected records; no history or record-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal-store.open",
       "limits": [
         [
@@ -4913,6 +5073,7 @@
       ],
       "extent": "Complete journal and selected records; no history or record-count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal-store.outcome_bytes",
       "limits": [
         [
@@ -4940,6 +5101,7 @@
       "capacity": [],
       "extent": "One exact held source checkpoint through the complete requested read",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal-store.read-guard",
       "limits": [],
       "linear_proofs": [
@@ -4962,6 +5124,7 @@
       ],
       "extent": "The complete suffix after the authenticated, already verified prefix",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal-store.repair-tail",
       "limits": [
         [
@@ -4989,6 +5152,7 @@
       ],
       "extent": "Complete owner-local inputs, dependency edges and fixed installed phases; no owner, child, material or history count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal.gate-initialize",
       "limits": [],
       "linear_proofs": [
@@ -5013,6 +5177,7 @@
       ],
       "extent": "Complete original gate custody, every original participant and every retained transfer/recovery reservation; no history or owner-count cap",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal.gate-recover",
       "limits": [],
       "linear_proofs": [
@@ -5036,6 +5201,7 @@
       ],
       "extent": "Complete owner-local inputs, dependency edges and fixed installed phases; no owner, child, material or history count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal.get",
       "limits": [],
       "linear_proofs": [
@@ -5060,6 +5226,7 @@
       ],
       "extent": "Complete owner-local inputs, dependency edges and fixed installed phases; no owner, child, material or history count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal.initialize",
       "limits": [],
       "linear_proofs": [
@@ -5084,6 +5251,7 @@
       ],
       "extent": "Complete owner-local inputs, dependency edges and fixed installed phases; no owner, child, material or history count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal.member-initialize",
       "limits": [],
       "linear_proofs": [
@@ -5108,6 +5276,7 @@
       ],
       "extent": "Complete owner-local inputs, dependency edges and fixed installed phases; no owner, child, material or history count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal.operation-admission",
       "limits": [],
       "linear_proofs": [
@@ -5132,6 +5301,7 @@
       ],
       "extent": "Complete owner-local inputs, dependency edges and fixed installed phases; no owner, child, material or history count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal.replay-reference",
       "limits": [],
       "linear_proofs": [
@@ -5156,6 +5326,7 @@
       ],
       "extent": "Complete owner-local inputs, dependency edges and fixed installed phases; no owner, child, material or history count ceiling",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.journal.submit",
       "limits": [],
       "linear_proofs": [
@@ -5183,6 +5354,7 @@
       ],
       "extent": "Complete current workflow history, exact original request attribution and complete accepted receipt/evidence; no history prefix selection",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.lifecycle-request",
       "limits": [],
       "linear_proofs": [
@@ -5208,6 +5380,7 @@
       ],
       "extent": "Every byte of the selected individual receipt and its original request; complete workflow custody and validation remain separately required",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.mutation-acknowledgment",
       "limits": [],
       "linear_proofs": [
@@ -5228,6 +5401,7 @@
       "capacity": [],
       "extent": "Every acknowledgment identity, exact request commitment and original committed generation; no current-state substitution",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.mutation-acknowledgment-validation",
       "limits": [],
       "linear_proofs": [
@@ -5250,6 +5424,7 @@
       ],
       "extent": "Every participant resource, every child started before the destination phase and every native evidence handle; no prefix selection or total-size cap",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.phase-evidence",
       "limits": [],
       "linear_proofs": [
@@ -5264,7 +5439,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/workflow_evidence.py": "a99fae42867e953497b2a901565d40241f00fdcd7dc5dc2090696ffa328884a9",
-        "tests/test_linear_growth.py": "238c554ee57c932a2b14c605a17d40bc17e40b979e3b4936cc5ae49f60b2885d",
+        "tests/test_linear_growth.py": "e1f12f1500b7fd4f642605ea8e6aba80705fe9da70d19978cef853264acae846",
         "tests/test_relocation_participants.py": "d652c272806af555d7cc93ff9c74a0d412010924fed769735972a845dad3bd98",
         "tests/test_workflow_evidence.py": "e8065ac6f530a08f534f6efa03e1d30f0b7daba71dbc58d7d8ee5953e973c060"
       },
@@ -5277,6 +5452,7 @@
       ],
       "extent": "Every original/current owner, resource, child, retained acceptance/success, preparation and abandonment, including positive never-prepared proofs and recovered origin custody; no prefix selection or total-size cap",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.recovery-proposal",
       "limits": [],
       "linear_proofs": [
@@ -5306,6 +5482,7 @@
       ],
       "extent": "Every original proposal participant, accepted phase input, freeze/commit witness and exact completion receipt for the selected transfer identity",
       "growth": "linear",
+      "growth_proofs": [],
       "id": "workflow.transfer-record",
       "limits": [],
       "linear_proofs": [
@@ -5329,7 +5506,7 @@
   "production_qualified": false,
   "state_owners": [
     {
-      "head": "v1_0001",
+      "head": "v1_0002",
       "owner": "owner-journal",
       "proofs": [
         "tests/test_migrations.py::test_preserved_v1_adoption_is_idempotent",
@@ -5337,11 +5514,13 @@
         "tests/test_migrations.py::test_unknown_or_corrupted_schema_is_not_adopted",
         "tests/test_migrations.py::test_store_open_rejects_unknown_alembic_revision_without_changing_state",
         "tests/test_migrations.py::test_alembic_requires_a_real_sqlite_transaction_before_ddl",
-        "tests/test_migrations.py::test_migration_failure_and_process_death_roll_back_then_retry"
+        "tests/test_migrations.py::test_migration_failure_and_process_death_roll_back_then_retry",
+        "tests/test_migrations.py::test_active_index_upgrade_rolls_back_and_retries"
       ],
       "qualification": "reference-model",
       "revisions": {
-        "fishhat/owner-support/src/fishhat_owner/migrations/versions/v1_0001.py": "ce9e88af5d0c0501974c16f50b7dd093d1bf422035ef9828e8663f93cc444f1d"
+        "fishhat/owner-support/src/fishhat_owner/migrations/versions/v1_0001.py": "ce9e88af5d0c0501974c16f50b7dd093d1bf422035ef9828e8663f93cc444f1d",
+        "fishhat/owner-support/src/fishhat_owner/migrations/versions/v1_0002.py": "7a3b9e695888a6be5727a2fdf92acacafafb281f99e0b911d77aa33b5c712091"
       },
       "source": "fishhat_owner.migrations"
     },

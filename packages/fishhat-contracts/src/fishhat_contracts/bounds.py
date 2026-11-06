@@ -21,6 +21,7 @@ class Bounds:
     linear_proofs: tuple[str, ...] = ()
     growth: str = "linear"
     qualification: str = "reference-model"
+    growth_proofs: tuple[str, ...] = ()
 
 
 def bounds(declaration: Bounds) -> Callable[[Callable[P, T]], Callable[P, T]]:

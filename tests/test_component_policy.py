@@ -77,6 +77,9 @@ def restore_fixture(tmp_path: Path, name: str) -> Path:
 
 def test_preserved_owner_journal_replays_and_retains_epoch(tmp_path):
     path = restore_fixture(tmp_path, "owner")
+    from fishhat_owner.migrations import upgrade
+
+    upgrade(path)
     owner = "00000000-0000-4000-8000-000000000001"
     epoch = "00000000-0000-4000-8000-000000000002"
     request = "00000000-0000-4000-8000-000000000003"

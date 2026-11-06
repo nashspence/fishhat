@@ -113,8 +113,12 @@ def public_implementations(root: Path = ROOT) -> dict[str, dict[str, Any]]:
 
 def declarations(root: Path = ROOT) -> dict[str, Any]:
     policy = read_toml(root / "release.toml")["engineering"]
-    if policy != {"growth": "linear", "implementations": "all"}:
-        raise ValueError("all implementations require linear growth")
+    if policy != {
+        "growth": "linear",
+        "implementations": "all",
+        "exceptions": {"reporting.put": "inverse-ackermann"},
+    }:
+        raise ValueError("linear growth with the reviewed correction-index exception required")
     found: dict[str, Any] = {}
     for component in components(root):
         source = root / component["path"] / "src"
@@ -143,8 +147,13 @@ def declarations(root: Path = ROOT) -> dict[str, Any]:
                     declaration is None
                     or declaration.id in found
                     or not declaration.proofs
-                    or declaration.growth != policy["growth"]
-                    or not declaration.linear_proofs
+                    or declaration.growth
+                    != policy["exceptions"].get(declaration.id, policy["growth"])
+                    or (
+                        not declaration.linear_proofs or declaration.growth_proofs
+                        if declaration.growth == "linear"
+                        else not declaration.growth_proofs or declaration.linear_proofs
+                    )
                     or declaration.qualification != "reference-model"
                 ):
                     raise ValueError("duplicate or incomplete operation bounds declaration")
@@ -155,13 +164,23 @@ def declarations(root: Path = ROOT) -> dict[str, Any]:
                 ):
                     raise ValueError("operation bounds do not resolve to their owner")
                 sources = {str(path.relative_to(root)): fingerprint(path)}
-                for reference in (*declaration.proofs, *declaration.linear_proofs):
+                for reference in (
+                    *declaration.proofs,
+                    *declaration.linear_proofs,
+                    *declaration.growth_proofs,
+                ):
                     test = test_path(reference, root)
                     sources[test] = fingerprint(root / test)
                 found[declaration.id] = {
                     **asdict(declaration),
                     "proofs": list(
-                        dict.fromkeys((*declaration.proofs, *declaration.linear_proofs))
+                        dict.fromkeys(
+                            (
+                                *declaration.proofs,
+                                *declaration.linear_proofs,
+                                *declaration.growth_proofs,
+                            )
+                        )
                     ),
                     "symbol": symbol,
                     "sources": sources,
@@ -236,6 +255,10 @@ def migration_histories(root: Path = ROOT) -> list[dict[str, Any]]:
                 ],
             }
         )
+        if owner["id"] == "owner-journal":
+            histories[-1]["proofs"].append(
+                "tests/test_migrations.py::test_active_index_upgrade_rolls_back_and_retries"
+            )
         for reference in histories[-1]["proofs"]:
             test_path(reference, root)
     return histories

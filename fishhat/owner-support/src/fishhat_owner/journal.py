@@ -18,7 +18,7 @@ from typing import Any, cast
 from fishhat_contracts.bounds import Bounds, bounds
 from fishhat_contracts.validation import ROOT, ContractError, digest
 
-from fishhat_owner.migrations import check_revision
+from fishhat_owner.migrations import ACTIVE_INDEX, ACTIVE_PREDICATE, check_revision
 
 STATES = json.loads((ROOT / "contracts/states.json").read_text())["owner"]
 
@@ -34,7 +34,8 @@ class Journal:
             self.db.close()
             raise ContractError("unsupported journal schema")
         try:
-            check_revision(self.db)
+            if not new:
+                check_revision(self.db)
         except Exception:
             self.db.close()
             raise
@@ -51,6 +52,7 @@ class Journal:
                 self.db.execute(
                     "CREATE TABLE IF NOT EXISTS requests(request_id TEXT PRIMARY KEY,payload_digest TEXT NOT NULL,principal TEXT NOT NULL,state TEXT NOT NULL,effect TEXT NOT NULL)"
                 )
+                self.db.execute(ACTIVE_INDEX)
                 self.db.execute("INSERT OR IGNORE INTO meta VALUES(?,?,0)", (owner, epoch))
         try:
             found = self.db.execute("SELECT owner,epoch FROM meta").fetchone()
@@ -69,8 +71,11 @@ class Journal:
     @bounds(
         Bounds(
             id="journal.submit",
-            linear_proofs=("tests/test_linear_growth.py::test_journal_linear_work",),
-            work="O(retained_requests + input_bytes)-reference-scan",
+            linear_proofs=(
+                "tests/test_linear_growth.py::test_journal_linear_work",
+                "tests/test_aggregate_growth.py::test_complete_admission_sequences_are_linear",
+            ),
+            work="O(total_input_bytes + admissions + transitions + bounded_retries) across complete sequences; durable partial index visits unresolved holds only, without rescanning settled replay history",
             extent="one-durable-request-identity",
             limits=(),
             capacity=(),
@@ -126,7 +131,9 @@ class Journal:
             if self.generation != expected_generation:
                 raise ContractError("generation conflict")
             active = self.db.execute(
-                "SELECT 1 FROM requests WHERE state IN ('accepted','running','waiting','quarantined') OR (state IN ('failed','cancelled') AND effect != 'none')"
+                "SELECT 1 FROM requests INDEXED BY requests_active WHERE "
+                + ACTIVE_PREDICATE
+                + " LIMIT 1"
             ).fetchone()
             if active:
                 raise ContractError("resource held/busy")

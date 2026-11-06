@@ -11,6 +11,7 @@ native_qualified_profiles = []
 [engineering]
 growth = "linear"
 implementations = "all"
+exceptions = { "reporting.put" = "inverse-ackermann" }
 
 [interfaces]
 python_modules = ["fishhat_contracts", "fishhat_adapters"]

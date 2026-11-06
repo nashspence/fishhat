@@ -102,6 +102,9 @@ def test_directory_capacity_is_rejection_not_silent_truncation():
 
 def test_journal_reference_scan_and_replay_identity(tmp_path):
     path = restore_fixture(tmp_path, "owner")
+    from fishhat_owner.migrations import upgrade
+
+    upgrade(path)
     journal = Journal(path, OWNER, EPOCH)
     try:
         first = replay(journal)
@@ -130,6 +133,9 @@ def test_journal_reference_scan_and_replay_identity(tmp_path):
 @pytest.mark.parametrize("committed", [False, True], ids=["uncommitted", "committed"])
 def test_owner_crash_replay_preserves_state(tmp_path, committed):
     path = restore_fixture(tmp_path, "owner")
+    from fishhat_owner.migrations import upgrade
+
+    upgrade(path)
     script = """import os, sys
 from pathlib import Path
 from fishhat_owner.journal import Journal
@@ -344,7 +350,8 @@ def test_operation_owned_bounds_are_discovered_and_never_claim_native_qualificat
         for row in public_implementations().values()
     )
     assert all(item["qualification"] == "reference-model" for item in found.values())
-    assert "reference-scan" in found["reporting.put"]["work"]
+    assert found["reporting.put"]["growth"] == "inverse-ackermann"
+    assert "only correction forest connectivity" in found["reporting.put"]["work"]
     assert all(item["proofs"] and item["sources"] for item in found.values())
     phase_evidence = found["workflow.phase-evidence"]
     assert phase_evidence["symbol"] == "fishhat_contracts.workflow_evidence:validate_phase_evidence"
