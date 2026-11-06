@@ -9992,6 +9992,86 @@
       "purpose_sha256": "a9b1d896c1bffdf4e79390324b8ef2244b8eef20d5ac3093157e3f8424786a9c"
     },
     {
+      "node": "tests/test_owner_effect_history.py::test_cancellation_without_effects_can_clear_admission_after_positive_resolution[False]",
+      "purpose_sha256": "b9f4ff19d9182f1c6f147e68b68c37749927c4a565c97f341de1b9c0679ac829"
+    },
+    {
+      "node": "tests/test_owner_effect_history.py::test_cancellation_without_effects_can_clear_admission_after_positive_resolution[True]",
+      "purpose_sha256": "b9f4ff19d9182f1c6f147e68b68c37749927c4a565c97f341de1b9c0679ac829"
+    },
+    {
+      "node": "tests/test_owner_effect_history.py::test_competing_uncertainty_and_cancellation_preserve_confirmed_facts",
+      "purpose_sha256": "b9f4ff19d9182f1c6f147e68b68c37749927c4a565c97f341de1b9c0679ac829"
+    },
+    {
+      "node": "tests/test_owner_effect_history.py::test_complete_effect_resolution_sequences_are_linear[False]",
+      "purpose_sha256": "51847ffcfc9f560def68e5c61286b9140eadaf989a1be1deadc0958c14d0604a"
+    },
+    {
+      "node": "tests/test_owner_effect_history.py::test_complete_effect_resolution_sequences_are_linear[True]",
+      "purpose_sha256": "51847ffcfc9f560def68e5c61286b9140eadaf989a1be1deadc0958c14d0604a"
+    },
+    {
+      "node": "tests/test_owner_effect_history.py::test_effect_history_upgrade_is_atomic_and_retryable[exception]",
+      "purpose_sha256": "b9f4ff19d9182f1c6f147e68b68c37749927c4a565c97f341de1b9c0679ac829"
+    },
+    {
+      "node": "tests/test_owner_effect_history.py::test_effect_history_upgrade_is_atomic_and_retryable[process-death]",
+      "purpose_sha256": "b9f4ff19d9182f1c6f147e68b68c37749927c4a565c97f341de1b9c0679ac829"
+    },
+    {
+      "node": "tests/test_owner_effect_history.py::test_imported_history_preserves_rows_and_keeps_unproved_absence_held",
+      "purpose_sha256": "b9f4ff19d9182f1c6f147e68b68c37749927c4a565c97f341de1b9c0679ac829"
+    },
+    {
+      "node": "tests/test_owner_effect_history.py::test_known_facts_cannot_be_erased_directly_or_through_uncertainty[False-cancelled]",
+      "purpose_sha256": "b9f4ff19d9182f1c6f147e68b68c37749927c4a565c97f341de1b9c0679ac829"
+    },
+    {
+      "node": "tests/test_owner_effect_history.py::test_known_facts_cannot_be_erased_directly_or_through_uncertainty[False-failed]",
+      "purpose_sha256": "b9f4ff19d9182f1c6f147e68b68c37749927c4a565c97f341de1b9c0679ac829"
+    },
+    {
+      "node": "tests/test_owner_effect_history.py::test_known_facts_cannot_be_erased_directly_or_through_uncertainty[True-cancelled]",
+      "purpose_sha256": "b9f4ff19d9182f1c6f147e68b68c37749927c4a565c97f341de1b9c0679ac829"
+    },
+    {
+      "node": "tests/test_owner_effect_history.py::test_known_facts_cannot_be_erased_directly_or_through_uncertainty[True-failed]",
+      "purpose_sha256": "b9f4ff19d9182f1c6f147e68b68c37749927c4a565c97f341de1b9c0679ac829"
+    },
+    {
+      "node": "tests/test_owner_effect_history.py::test_positive_resolution_is_revision_bound_retained_and_does_not_erase_later_facts",
+      "purpose_sha256": "b9f4ff19d9182f1c6f147e68b68c37749927c4a565c97f341de1b9c0679ac829"
+    },
+    {
+      "node": "tests/test_owner_effect_history.py::test_resolution_and_effect_update_commit_atomically[exception]",
+      "purpose_sha256": "b9f4ff19d9182f1c6f147e68b68c37749927c4a565c97f341de1b9c0679ac829"
+    },
+    {
+      "node": "tests/test_owner_effect_history.py::test_resolution_and_effect_update_commit_atomically[process-death]",
+      "purpose_sha256": "b9f4ff19d9182f1c6f147e68b68c37749927c4a565c97f341de1b9c0679ac829"
+    },
+    {
+      "node": "tests/test_owner_effect_history.py::test_unknown_cannot_become_none_without_exact_positive_receiver_evidence[absent]",
+      "purpose_sha256": "b9f4ff19d9182f1c6f147e68b68c37749927c4a565c97f341de1b9c0679ac829"
+    },
+    {
+      "node": "tests/test_owner_effect_history.py::test_unknown_cannot_become_none_without_exact_positive_receiver_evidence[denied]",
+      "purpose_sha256": "b9f4ff19d9182f1c6f147e68b68c37749927c4a565c97f341de1b9c0679ac829"
+    },
+    {
+      "node": "tests/test_owner_effect_history.py::test_unknown_cannot_become_none_without_exact_positive_receiver_evidence[invalid-digest]",
+      "purpose_sha256": "b9f4ff19d9182f1c6f147e68b68c37749927c4a565c97f341de1b9c0679ac829"
+    },
+    {
+      "node": "tests/test_owner_effect_history.py::test_unknown_cannot_become_none_without_exact_positive_receiver_evidence[wrong-request]",
+      "purpose_sha256": "b9f4ff19d9182f1c6f147e68b68c37749927c4a565c97f341de1b9c0679ac829"
+    },
+    {
+      "node": "tests/test_owner_effect_history.py::test_unknown_cannot_become_none_without_exact_positive_receiver_evidence[wrong-revision]",
+      "purpose_sha256": "b9f4ff19d9182f1c6f147e68b68c37749927c4a565c97f341de1b9c0679ac829"
+    },
+    {
       "node": "tests/test_owner_handoffs.py::test_committed_inputs_reject_epoch_principal_resource_and_purpose_substitution",
       "purpose_sha256": "1b27229e83e1f19dba46c975999e03c6bda493010e05a68c69bdacf5dd1d5bb5"
     },

@@ -3268,20 +3268,23 @@
       "limits": [],
       "linear_proofs": [
         "tests/test_linear_growth.py::test_journal_linear_work",
-        "tests/test_aggregate_growth.py::test_complete_admission_sequences_are_linear"
+        "tests/test_aggregate_growth.py::test_complete_admission_sequences_are_linear",
+        "tests/test_owner_effect_history.py::test_complete_effect_resolution_sequences_are_linear"
       ],
       "proofs": [
         "tests/test_engineering.py::test_journal_reference_scan_and_replay_identity",
         "tests/test_engineering.py::test_owner_crash_replay_preserves_state",
         "tests/test_linear_growth.py::test_journal_linear_work",
-        "tests/test_aggregate_growth.py::test_complete_admission_sequences_are_linear"
+        "tests/test_aggregate_growth.py::test_complete_admission_sequences_are_linear",
+        "tests/test_owner_effect_history.py::test_complete_effect_resolution_sequences_are_linear"
       ],
       "qualification": "reference-model",
       "sources": {
-        "fishhat/owner-support/src/fishhat_owner/journal.py": "29b622c65e2365aa9032780344ddc46de5bcf4d370bafb527a7b2bc0e3b79869",
+        "fishhat/owner-support/src/fishhat_owner/journal.py": "a5b1f5104cff13c19f5c8d9e3309dd136706cbcbd7ebf70c40c3c997c7518278",
         "tests/test_aggregate_growth.py": "1ae21da981260f899ff8484d97750a86e8e6c6d04c48ff36dea41fad82a23134",
         "tests/test_engineering.py": "fdcf378f5be38ee1bb6d69b771f6e2b5dfd1c0386031da3c08c6eed8181971e4",
-        "tests/test_linear_growth.py": "e1f12f1500b7fd4f642605ea8e6aba80705fe9da70d19978cef853264acae846"
+        "tests/test_linear_growth.py": "e1f12f1500b7fd4f642605ea8e6aba80705fe9da70d19978cef853264acae846",
+        "tests/test_owner_effect_history.py": "342c84e8a7ed054a289f35c25e3ad168d3062f17fb228996c09c76890ddd275f"
       },
       "symbol": "fishhat_owner.journal:Journal.submit",
       "work": "O(total_input_bytes + admissions + transitions + bounded_retries) across complete sequences; durable partial index visits unresolved holds only, without rescanning settled replay history"
@@ -5506,7 +5509,7 @@
   "production_qualified": false,
   "state_owners": [
     {
-      "head": "v1_0002",
+      "head": "v1_0003",
       "owner": "owner-journal",
       "proofs": [
         "tests/test_migrations.py::test_preserved_v1_adoption_is_idempotent",
@@ -5520,7 +5523,8 @@
       "qualification": "reference-model",
       "revisions": {
         "fishhat/owner-support/src/fishhat_owner/migrations/versions/v1_0001.py": "ce9e88af5d0c0501974c16f50b7dd093d1bf422035ef9828e8663f93cc444f1d",
-        "fishhat/owner-support/src/fishhat_owner/migrations/versions/v1_0002.py": "7a3b9e695888a6be5727a2fdf92acacafafb281f99e0b911d77aa33b5c712091"
+        "fishhat/owner-support/src/fishhat_owner/migrations/versions/v1_0002.py": "7a3b9e695888a6be5727a2fdf92acacafafb281f99e0b911d77aa33b5c712091",
+        "fishhat/owner-support/src/fishhat_owner/migrations/versions/v1_0003.py": "ecfb90109d3b689ea4e5d51386cbe525a7386ff10a7cd6db50ab59200f8ecc74"
       },
       "source": "fishhat_owner.migrations"
     },

@@ -26,7 +26,7 @@ CHECK_PURPOSE = {
 }
 
 
-def _competing_terminal_transitions(tmp_path, second_state, second_effect):
+def _competing_terminal_transitions(tmp_path, second_state, second_effect, first_state="succeeded"):
     path = tmp_path / "owner.sqlite"
     owner = Journal(path, "owner", "epoch", initialize=True)
     owner.submit(
@@ -39,7 +39,7 @@ def _competing_terminal_transitions(tmp_path, second_state, second_effect):
         expires=10,
         now=0,
     )
-    owner.transition("request", "running", "unknown")
+    owner.transition("request", "running", "known" if first_state == "waiting" else "unknown")
     owner.close()
 
     coordination_budget = watchdog(10)
@@ -77,7 +77,10 @@ def _competing_terminal_transitions(tmp_path, second_state, second_effect):
     # enter transition, then the second starts its transaction after the first
     # commits. A predecessor read outside that transaction would already be stale.
     workers = [
-        threading.Thread(target=finish, args=("first", "succeeded", "known")),
+        threading.Thread(
+            target=finish,
+            args=("first", first_state, "unknown" if first_state == "waiting" else "known"),
+        ),
         threading.Thread(target=finish, args=("second", second_state, second_effect)),
     ]
     for worker in workers:
@@ -95,7 +98,11 @@ def _competing_terminal_transitions(tmp_path, second_state, second_effect):
     assert not coordination_errors
     assert outcomes["first"] == "committed"
     assert isinstance(outcomes["second"], ContractError)
-    assert str(outcomes["second"]) == "illegal transition"
+    assert str(outcomes["second"]) == (
+        "retained effect history requires separate recovery"
+        if first_state == "waiting"
+        else "illegal transition"
+    )
 
     owner = Journal(path, "owner", "epoch")
     try:
@@ -112,10 +119,12 @@ def _competing_terminal_transitions(tmp_path, second_state, second_effect):
         assert retained == {
             "request_id": "request",
             "principal": "operator",
-            "state": "succeeded",
-            "effect": "known",
+            "state": first_state,
+            "effect": "unknown" if first_state == "waiting" else "known",
         }
-        assert owner.generation == 1
+        assert owner.generation == int(first_state == "succeeded")
+        if first_state == "waiting":
+            assert owner.db.execute("SELECT known,held FROM request_effects").fetchone() == (1, 1)
     finally:
         owner.close()
 

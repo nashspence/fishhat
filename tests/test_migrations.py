@@ -38,6 +38,24 @@ def contents(path):
         return list(db.iterdump())
 
 
+def preserved_owner_rows(lines, module):
+    additions = {
+        module.ACTIVE_INDEX + ";",
+        module.EFFECT_TABLE + ";",
+        module.EFFECT_INDEX + ";",
+        module.RESOLUTION_TABLE + ";",
+    }
+    return [
+        line
+        for line in lines
+        if "alembic_version" not in line
+        and line not in additions
+        and not line.startswith(
+            ('INSERT INTO "request_effects" ', 'INSERT INTO "effect_resolutions" ')
+        )
+    ]
+
+
 def schema(path):
     with sqlite3.connect(path) as db:
         tables = [
@@ -83,10 +101,15 @@ def test_preserved_v1_adoption_is_idempotent(owner, tmp_path):
     assert contents(path) == first
     additions = []
     if owner["id"] == "owner-journal":
-        additions = [module.ACTIVE_INDEX + ";"]
-    assert [
-        line for line in first if "alembic_version" not in line and line not in additions
-    ] == before
+        additions = [
+            module.ACTIVE_INDEX + ";",
+            module.EFFECT_TABLE + ";",
+            module.EFFECT_INDEX + ";",
+            module.RESOLUTION_TABLE + ";",
+        ]
+        assert preserved_owner_rows(first, module) == before
+    else:
+        assert [line for line in first if "alembic_version" not in line] == before
     assert all(first.count(line) == 1 for line in additions)
     with sqlite3.connect(path) as db:
         assert db.execute("SELECT version_num FROM alembic_version").fetchall() == [(module.HEAD,)]
@@ -317,11 +340,7 @@ migrations.upgrade(Path(sys.argv[1]))
     assert contents(path) == before
     migrations.upgrade(path)
     after = contents(path)
-    assert [
-        line
-        for line in after
-        if "alembic_version" not in line and line != migrations.ACTIVE_INDEX + ";"
-    ] == before
+    assert preserved_owner_rows(after, migrations) == before
 
 
 CHECK_OVERRIDES = {

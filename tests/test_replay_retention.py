@@ -5,7 +5,7 @@ from __future__ import annotations
 import copy
 
 import pytest
-from fishhat_contracts.validation import ContractError
+from fishhat_contracts.validation import ContractError, canonical, digest
 from fishhat_owner.journal import Journal
 
 from tests.test_contracts import OWNER, SUBJECT, uid
@@ -50,13 +50,39 @@ def submit(journal, request_id, *, subject=SUBJECT, now=100, expires=200, genera
 def test_terminal_identity_is_reserved_after_restart_and_admission_expiry(tmp_path, state, effect):
     path = tmp_path / "owner.sqlite"
     identity = uid("retained-terminal-request")
-    journal = Journal(path, OWNER["id"], OWNER["epoch"], initialize=True)
+    expected = {
+        "owner": OWNER["id"],
+        "epoch": OWNER["epoch"],
+        "request_id": identity,
+        "payload_digest": digest(
+            {"subject": SUBJECT, "epoch": OWNER["epoch"], "generation": 0, "expires": 200}
+        ),
+        "principal": "original-operator",
+        "state": "running",
+        "effect": "unknown",
+        "revision": 1,
+    }
+    proof = digest({"verified": expected})
+    verified = []
+
+    def verify_no_effect(context):
+        assert canonical(context) == canonical(expected)
+        verified.append(context)
+        return proof
+
+    journal = Journal(
+        path, OWNER["id"], OWNER["epoch"], initialize=True, verify_no_effect=verify_no_effect
+    )
     submit(journal, identity)
     journal.transition(identity, "running", "unknown")
     journal.transition(identity, state, effect)
+    assert verified == ([expected] if effect == "none" else [])
     journal.close()
     journal = Journal(path, OWNER["id"], OWNER["epoch"])
     try:
+        assert journal.db.execute("SELECT * FROM effect_resolutions").fetchall() == (
+            [(identity, 1, proof)] if effect == "none" else []
+        )
         statements = []
         journal.db.set_trace_callback(statements.append)
         replay = journal.submit(
