@@ -108,11 +108,15 @@ def _recovery_digest(context: RecoveryContext | None) -> str | None:
 
 
 def _declaration(name: str, work: str) -> Bounds:
-    additional_proofs = (
+    additional_proofs: tuple[str, ...] = (
         ("tests/test_workflow_admission_renewal.py::test_unused_permit_renewal_history_is_linear",)
         if name == "submit"
         else ()
     )
+    if name in {"gate-initialize", "member-initialize"}:
+        additional_proofs += (
+            "tests/test_workflow_effect_history.py::test_complete_effect_index_replay_and_refusal_work_is_linear",
+        )
     return Bounds(
         id="workflow.journal." + name,
         work=work,
@@ -358,8 +362,21 @@ def _verify_plan(plan: JSON, keys: KeyRing) -> None:
     verify_witness(plan["witness"], key, plan["owner"], plan["digest"])
 
 
-def _known_outcome(previous: JSON | None, operation: JSON, *, allow_repeat: bool = True) -> None:
-    """Check potentially nonadjacent observations against the installed owner state graph."""
+def _known_outcome(
+    previous: JSON | None,
+    operation: JSON,
+    *,
+    allow_repeat: bool = True,
+    known_effects: bool = False,
+) -> None:
+    """Check state progress without forgetting facts behind intervening uncertainty."""
+    _require(
+        operation["effect_certainty"] != "none"
+        or not (
+            known_effects or (previous is not None and previous["effect_certainty"] == "known")
+        ),
+        "workflow child contradicts retained known effect facts",
+    )
     if previous is None or (allow_repeat and previous == operation):
         return
     _require(
@@ -394,6 +411,16 @@ def _known_outcome(previous: JSON | None, operation: JSON, *, allow_repeat: bool
                 reachable.add(successor)
                 pending.append(successor)
     _require(operation["state"] in reachable, "workflow native Operation state regressed")
+
+
+def _remember_outcome(
+    outcomes: dict[bytes, JSON], known_effects: set[bytes], key: bytes, operation: JSON
+) -> None:
+    """Rebuild the cumulative index from immutable events in one ordered pass."""
+    _known_outcome(outcomes.get(key), operation, known_effects=key in known_effects)
+    if operation["effect_certainty"] == "known":
+        known_effects.add(key)
+    outcomes[key] = operation
 
 
 def _selected_review(request: JSON, review: JSON) -> None:
@@ -480,6 +507,7 @@ class _JournalTarget:
         self._failed = False
         self.state = "prepared"
         self._cancelled = False
+        self._known_effects: set[bytes] = set()
 
     @property
     def _recovery_readers(self) -> RecoveryReaders | None:
@@ -1028,6 +1056,7 @@ class WorkflowGate(_JournalTarget):
             for key, binding in self.ready.items()
             if "completed" in binding
         }
+        self._known_effects.update(self._known_outcomes)
         self.phase_windows: dict[str, tuple[int, int | None]] = {}
         for participant in proposal["participants"]:
             member = canonical(participant["owner"])
@@ -1220,8 +1249,11 @@ class WorkflowGate(_JournalTarget):
             self.check_reservation(record["owner"], body["reservation"], round)
             for proof in body["reservation"]["participants"]:
                 for result in proof["operations"]:
+                    key = _key(result["child"])
                     _known_outcome(
-                        self._known_outcomes.get(_key(result["child"])), result["operation"]
+                        self._known_outcomes.get(key),
+                        result["operation"],
+                        known_effects=key in self._known_effects,
                     )
             return self._outcome(
                 command,
@@ -1338,7 +1370,11 @@ class WorkflowGate(_JournalTarget):
                     else operation["witness"]["workflow_id"],
                     recovery_readers=self._recovery_readers,
                 )
-                _known_outcome(self._known_outcomes.get(key), operation)
+                _known_outcome(
+                    self._known_outcomes.get(key),
+                    operation,
+                    known_effects=key in self._known_effects,
+                )
             return self._outcome(
                 command,
                 {
@@ -1395,7 +1431,12 @@ class WorkflowGate(_JournalTarget):
                 self._earliest_expiry = expiry
             for proof in vote["body"]["reservation"]["participants"]:
                 for result in proof["operations"]:
-                    self._known_outcomes[_key(result["child"])] = result["operation"]
+                    _remember_outcome(
+                        self._known_outcomes,
+                        self._known_effects,
+                        _key(result["child"]),
+                        result["operation"],
+                    )
         elif action == "decision":
             self._require_phase_progress(body["authority"])
             self._decision = outcome
@@ -1418,7 +1459,7 @@ class WorkflowGate(_JournalTarget):
             for operation in request["predecessors"]:
                 slot = self.children[_key(request["child"])][1]
                 key = _key(_predecessor(slot["intent"]))
-                self._known_outcomes[key] = operation
+                _remember_outcome(self._known_outcomes, self._known_effects, key, operation)
         elif self.extension is not None:
             self.extension.apply(self, command, outcome)
             return
@@ -2030,7 +2071,12 @@ class WorkflowMember(_JournalTarget):
                 == admission["body"]["authenticated_principal"],
                 "workflow child admission identity changed",
             )
-            _known_outcome(self.outcomes.get(key), operation, allow_repeat=False)
+            _known_outcome(
+                self.outcomes.get(key),
+                operation,
+                allow_repeat=False,
+                known_effects=key in self._known_effects,
+            )
             if operation["result_handle"] is not None:
                 data = self.native.result_payload(operation)
                 _require(
@@ -2088,9 +2134,12 @@ class WorkflowMember(_JournalTarget):
             self._admissions[_key(payload["child"])] = outcome
         elif action == "complete":
             operation = payload["operation"]
-            self.outcomes[
-                _key({"owner": operation["owner"], "request_id": operation["request_id"]})
-            ] = operation
+            _remember_outcome(
+                self.outcomes,
+                self._known_effects,
+                _key({"owner": operation["owner"], "request_id": operation["request_id"]}),
+                operation,
+            )
         elif self.extension is not None:
             self.extension.apply(self, command, outcome)
             return

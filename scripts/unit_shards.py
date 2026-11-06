@@ -86,16 +86,27 @@ def observations(
 
 
 def partition(weights: dict[str, float]) -> list[list[str]]:
-    slots: list[list[str]] = [[] for _ in range(SHARDS * WORKERS)]
+    # Balance the complete work sharing each runner's CPU and memory. Grouping
+    # separately balanced worker slots can place every large case on one runner.
+    slots: list[list[str]] = [[] for _ in range(SHARDS)]
     loads = [0.0] * len(slots)
+    # Each initially buffered primary needs a companion. Otherwise a heavy shard
+    # can contain too few cases for the load scheduler to use its idle workers.
+    companions = sorted(weights, key=lambda name: (weights[name], name))[
+        : SHARDS * min(WORKERS, len(weights) // SHARDS)
+    ]
+    for index, node in enumerate(companions):
+        slot = index % SHARDS
+        slots[slot].append(node)
+        loads[slot] += weights[node]
+    reserved = set(companions)
     for node in sorted(weights, key=lambda name: (-weights[name], name)):
+        if node in reserved:
+            continue
         slot = min(range(len(slots)), key=lambda index: (loads[index], index))
         slots[slot].append(node)
         loads[slot] += weights[node]
-    return [
-        sorted(node for slot in slots[i * WORKERS : (i + 1) * WORKERS] for node in slot)
-        for i in range(SHARDS)
-    ]
+    return [sorted(slot) for slot in slots]
 
 
 def execution_order(nodes: list[str], weights: dict[str, float]) -> list[str]:

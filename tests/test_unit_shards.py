@@ -465,3 +465,31 @@ def test_unobserved_cases_start_as_primary_work_without_losing_selection(tmp_pat
         order = unit_shards.execution_order(shard, weights)
         primary.update(order[: 2 * unit_shards.WORKERS : 2])
     assert unknown <= primary
+
+
+@pytest.mark.parametrize("new_cases", [0, 1, 7, 20, 21])
+def test_runner_balance_keeps_measured_heavy_cases_distributed_with_new_work(tmp_path, new_cases):
+    known = {
+        f"tests/test_known.py::test_case_{i:03d}": value
+        for i, value in enumerate([900.0, 850.0, 800.0, *([10.0] * 61)])
+    }
+    unknown = [f"tests/test_new.py::test_case_{i:03d}" for i in range(new_cases)]
+    reference = tmp_path / "reference.xml"
+    cases = "".join(
+        f'<testcase classname="{unit_shards.xml_key(node)[0]}" name="{unit_shards.xml_key(node)[1]}" time="{seconds}"/>'
+        for node, seconds in known.items()
+    )
+    reference.write_text("<testsuites><testsuite>" + cases + "</testsuite></testsuites>")
+    nodes = [*known, *unknown]
+    weights, report = unit_shards.observations(nodes, reference)
+    shards = unit_shards.partition(weights)
+    assert report["matched_nodes"] == len(known) and report["unobserved_nodes"] == new_cases
+    assert sorted(node for shard in shards for node in shard) == sorted(nodes)
+    assert not set(shards[0]) & set(shards[1])
+    heavy = set(list(known)[:3])
+    assert all(heavy.intersection(shard) for shard in shards)
+    assert shards == unit_shards.partition(dict(reversed(list(weights.items()))))
+    # Timing inputs are advisory scheduling data, not numerical product gates.
+    for shard in shards:
+        order = unit_shards.execution_order(shard, weights)
+        assert set(order) == set(shard) and len(order) == len(shard)
