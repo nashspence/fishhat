@@ -200,6 +200,7 @@ def test_compute_launch_requires_independent_exact_allocation_approval(method, a
     manifest, configuration, kwargs = process_case(
         registry, executor, payload, mode="mutation" if method == "set-limits" else "query"
     )
+    kwargs["retained_invocation"] = invocation
     validate_process_launch(
         manifest, payload, configuration, expected_compute_target=target, **kwargs
     )

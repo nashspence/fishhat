@@ -101,13 +101,13 @@
     "runtime": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/runtime-adapter.schema.json",
-        "digest": "sha256:148e5b576d6db26bd39f8c4868e6d94c992b7beabcce05d2c377722ee79c6615"
+        "digest": "sha256:77c5bdb9202df0719408ca65b8505351493573ac8679ae3ffae521665d22370a"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/runtime-adapter.schema.json#/$defs/Response",
-        "digest": "sha256:033deb0bcc1462e57f5c61f3eaec5dfa148dc5034b74d18f08b5985b1e9c7825"
+        "digest": "sha256:0e01e9a166983041b1542c04d530252a409f1313c7feee483c055981b40dacf8"
       }
     }
   },
-  "process_schema_digest": "sha256:81490bcbcb838edbbd1e2f1744d9ab2099a33567db8e84070d42af7aafb0bec1"
+  "process_schema_digest": "sha256:c09b1f550cc8f464e8e3703c262b49cd4dc2e132550bc3322449edfb045ae17f"
 }

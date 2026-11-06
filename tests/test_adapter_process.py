@@ -118,6 +118,7 @@ def run_peer(
         descriptor=descriptor,
         approved_installation=installation,
         expected_executor=call["attempt"]["executor"],
+        retained_invocation=call,
         expected_private_use=None,
     )
     verify_process_inputs(

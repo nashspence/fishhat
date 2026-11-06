@@ -66,6 +66,7 @@ class AdapterCoordinator:
         *,
         processes_quiescent: Callable[[dict[str, Any]], bool] | None = None,
         native_exclusion: Callable[[dict[str, Any]], str | None] | None = None,
+        approved_deployment: Callable[[str, str], dict[str, Any] | None] | None = None,
     ) -> None:
         validate("common.schema.json", owner, "Owner")
         self.registry = registry
@@ -75,6 +76,10 @@ class AdapterCoordinator:
         # releasing and reacquiring that exclusion must return a new identity.
         self.native_exclusion = native_exclusion
         self.processes_quiescent = processes_quiescent
+        # Resolve the operation/effect's selected deployment only from approved resolution
+        # and verified immutable projection custody, including authorized historical targets.
+        # This is deliberately absent from restored state and from the proposed request.
+        self.approved_deployment = approved_deployment
         self._poisoned = False
         self._observation_scans: dict[str, tuple[dict[str, Any], ObservationSequence]] = {}
         self._quiescence_proofs: dict[str, dict[str, Any]] = {}
@@ -363,6 +368,15 @@ class AdapterCoordinator:
             private_inputs_digest=private_inputs_digest,
         )
 
+    def _check_deployment(self, operation_id: str, effect_id: str, request: dict[str, Any]) -> None:
+        expected = (
+            self.approved_deployment(operation_id, effect_id) if self.approved_deployment else None
+        )
+        require(
+            expected is not None and request["input"]["deployment"] == expected,
+            "DEPLOYMENT_NOT_APPROVED",
+        )
+
     def _service_instance(
         self, binding: dict[str, Any], instance_id: str, target: dict[str, Any]
     ) -> dict[str, Any]:
@@ -478,6 +492,8 @@ class AdapterCoordinator:
             old = self.state["attempts"][earlier]
             require(old["state"] == "resolved", "UNCERTAIN_EFFECT_RETRY")
             raise ContractError("EFFECT_RETRY_REQUIRES_NEW_PLAN")
+        if instance["role"] == "runtime":
+            self._check_deployment(operation_id, effect_id, request)
         check_invocation(instance["role"], {"attempt": attempt, "request": request})
         self._publish(
             {"attempts": {attempt_id: attempt}, "requests": {attempt_id: request}},
@@ -515,6 +531,10 @@ class AdapterCoordinator:
             "STALE_DISPATCH",
         )
         require(attempt["state"] == "prepared", "RECONCILE_REQUIRED")
+        if attempt["contract"] == "fishhat.runtime":
+            self._check_deployment(
+                attempt["operation_id"], attempt["effect_id"], self.state["requests"][attempt_id]
+            )
         changed = {**attempt, "state": "dispatched", "certainty": "unknown"}
         self._publish({"attempts": {attempt_id: changed}}, invalidate=(subject,))
         # Release the exact executable closure only after the owner commit has returned.

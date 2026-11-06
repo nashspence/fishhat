@@ -1,0 +1,363 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fishhat.invalid/contracts/owner-decision-v1.schema.json",
+  "description": "The v1 wire readers for durable cancellation receipts, submission refusals and their accompanying Problems are immutable, including referenced constraints and original decision semantics. An owner retains the original canonical decision bytes, attribution and evidence. Before an installation, restart under changed software or custody restoration may serve or resume v1 work, independently verify support for this pinned reader closure and the current disclosure checks. An incompatible candidate must remain fenced and preserve the original store. A later protocol needs its own reader and must continue to serve original v1 bytes. A retained ProblemEvidence reference uses its independently pinned payload reader.",
+  "$defs": {
+    "SubmissionRefusal": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "SubmissionRefusal"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "request_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "plan_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "claimed_actor": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "plan_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "subject_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "workflow_id": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/UUID"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "enum": [
+            "PLAN_EXPIRED",
+            "PRECONDITION_FAILED",
+            "CAPACITY_BLOCKED",
+            "UNSUPPORTED_CAPABILITY",
+            "CANCELLED"
+          ]
+        },
+        "resource": {
+          "$ref": "common.schema.json#/$defs/Resource"
+        }
+      },
+      "required": [
+        "kind",
+        "owner",
+        "request_id",
+        "resource",
+        "plan_id",
+        "claimed_actor",
+        "plan_digest",
+        "subject_digest",
+        "workflow_id",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "description": "An authenticated operation.submit refusal for this exact original submission. After authorizing disclosure of the request and resource, the owner serializes with native acceptance, verifies the complete retained epoch index, and durably closes this previously unaccepted request ID against all later acceptance before responding. A matching retry returns the original refusal after current read authorization. Compare all canonical operation.submit params except driver_term, which governs only a fresh decision. A stale term alone cannot close an unused request ID or issue a durable refusal. A changed immutable submission conflicts. An unavailable index, ambiguous outcome, denied disclosure, already accepted identity, or failed commit cannot issue this proof. Neither an ordinary Problem nor a not-found lookup proves nonacceptance. The accompanying Problem matches the owner, resource and reason, with retry none. The receiver authenticates the responding owner, correlates the original SSH message and matches every refusal identity to its original delivery. A copied JSON value supplies no independent authority. Retain this refusal and its matching Problem for the owner epoch. operation.get can return them unchanged to a currently authorized reader of the original protected resource using only the original owner and request ID. New submission permission and original client state are unnecessary. No lookup creates a decision. Preserve the original submitted plan_id and claimed_actor unchanged, including null. Receivers match both when resolving a Delivery. An explicitly confirmed operation.close can create reason CANCELLED for an unaccepted standalone submission. This proves withdrawal before acceptance and never describes a cancelled Operation. A fresh operation.submit cannot create a CANCELLED refusal; it can only replay one retained by operation.close.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "reason": {
+                "const": "CANCELLED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "workflow_id": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Problem": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "$ref": "common.schema.json#/$defs/ProblemCode"
+        },
+        "summary": {
+          "$ref": "common.schema.json#/$defs/ProblemSummary"
+        },
+        "retry": {
+          "$ref": "common.schema.json#/$defs/ProblemRetry"
+        },
+        "owner": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "tool": {
+                  "enum": [
+                    "host-ops",
+                    "app-ops"
+                  ]
+                },
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+                },
+                "epoch": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+                }
+              },
+              "required": [
+                "tool",
+                "id",
+                "epoch"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "resource": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Resource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "evidence": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 71,
+                "maxLength": 71,
+                "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
+              },
+              "minItems": 0,
+              "uniqueItems": true,
+              "maxItems": 64
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "common.schema.json#/$defs/RecordReference"
+                },
+                {
+                  "properties": {
+                    "record": {
+                      "properties": {
+                        "kind": {
+                          "const": "ProblemEvidence"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "description": "The complete evidence selection: at most 64 digests inline, or an exact ProblemEvidence RecordReference for the whole selection. The inline threshold bounds representation, not total evidence. A reference requires a non-null Problem owner and resource matching its protected owner/resource identity. Every read separately reauthorizes that disclosure scope; failure reporting grants no bearer access. Never silently drop evidence or divide one selection into unrelated errors to fit a frame."
+        }
+      },
+      "required": [
+        "code",
+        "summary",
+        "retry",
+        "owner",
+        "resource",
+        "evidence"
+      ],
+      "additionalProperties": false,
+      "description": "An actionable account of what is known and the permitted next step for the named owner/resource. Preserve uncertainty and exact request identity; a failure summary must not imply that earlier effects were undone.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "evidence": {
+                "type": "object"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "owner": {
+                "$ref": "common.schema.json#/$defs/Owner"
+              },
+              "resource": {
+                "$ref": "common.schema.json#/$defs/Resource"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "CancellationReceipt": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/cancellation/v1"
+        },
+        "kind": {
+          "const": "OperationCancellationReceipt"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "request_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "cancellation_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "request_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "authenticated_principal": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "resource": {
+          "$ref": "common.schema.json#/$defs/Resource"
+        },
+        "decision": {
+          "enum": [
+            "stop-requested",
+            "already-terminal"
+          ]
+        },
+        "operation_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "operation_generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "operation_state": {
+          "enum": [
+            "accepted",
+            "running",
+            "waiting",
+            "succeeded",
+            "failed",
+            "cancelled",
+            "quarantined"
+          ]
+        },
+        "effect_certainty": {
+          "enum": [
+            "none",
+            "known",
+            "unknown"
+          ]
+        },
+        "decided_at": {
+          "$ref": "common.schema.json#/$defs/Time"
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "owner",
+        "request_id",
+        "cancellation_id",
+        "request_digest",
+        "authenticated_principal",
+        "resource",
+        "decision",
+        "operation_id",
+        "operation_generation",
+        "operation_state",
+        "effect_certainty",
+        "decided_at"
+      ],
+      "additionalProperties": false,
+      "description": "The immutable original cancellation decision, separate from the target Operation outcome. request_digest covers canonical {owner, request_id, cancellation_id}; these fields retain the original request exactly. resource and operation identity/state/generation/effect certainty are independently loaded target facts captured atomically with the decision, not caller assertions. stop-requested proves only durable acceptance of the stop intent; it does not prove current pending status, process cessation, final cancellation, rollback or release of any effect, hold, input or output custody. The target Operation remains independently readable and may subsequently succeed, fail, quarantine or cancel. already-terminal records the original terminal race without changing it. Every exact replay returns these original values and original authenticated_principal even for a different currently permitted reader. The owner retains the immutable identity, payload and receipt for its epoch lifetime, independently of Operation history pruning, and restores accepted stop intents after an ordinary restart. Restoring owner authority to a new epoch does not turn old receipts into current authority. Receipt lookup and disclosure recheck current scope permission; possession and schema validity do not authenticate the owner. CLI presentation uses observed and request_id equal to cancellation_id; success describes this decision only. A new-epoch custodian retains original cancellation receipts as read-only evidence under independently verified restoration custody. It does not restore executable stop flags from those receipts. Its newly authorized recovery must reconcile both the original operation and accepted stop intent before further effects; historical reads never revive either original execution or cancellation authority.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "decision": {
+                "const": "stop-requested"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "operation_state": {
+                "enum": [
+                  "accepted",
+                  "running",
+                  "waiting"
+                ]
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "operation_state": {
+                "enum": [
+                  "succeeded",
+                  "failed",
+                  "cancelled",
+                  "quarantined"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation_state": {
+                "const": "succeeded"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "effect_certainty": {
+                "const": "known"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/SubmissionRefusal"
+    },
+    {
+      "$ref": "#/$defs/Problem"
+    },
+    {
+      "$ref": "#/$defs/CancellationReceipt"
+    }
+  ]
+}

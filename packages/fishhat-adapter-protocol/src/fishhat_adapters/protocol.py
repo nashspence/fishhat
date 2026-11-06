@@ -7,7 +7,7 @@ from typing import Any, cast
 
 from fishhat_contracts.adapter_semantics import (
     ROLES,
-    _attempt_identity,
+    _check_reconciliation,
     _handoff_binding,
     _is_released_attempt,
     check_invocation,
@@ -20,6 +20,13 @@ from fishhat_contracts.validation import ContractError, canonical, digest, valid
 from referencing.exceptions import Unresolvable
 
 from .schemas import check_closed_schema, validate_configuration
+
+
+def _require_runtime_deployment(
+    role: str, request: dict[str, Any], approved: dict[str, Any] | None
+) -> None:
+    if role == "runtime":
+        require(request["input"]["deployment"] == approved, "DEPLOYMENT_NOT_APPROVED")
 
 
 def _require_recovery_target(
@@ -322,24 +329,25 @@ class Registry:
         validate("source.schema.json", host, "Host")
         resolved: list[dict[str, Any]] = []
         namespaces: set[bytes] = set()
+        checked_instances: set[str] = set()
         for concern in host["concerns"].values():
             for kind, role in (("services", "service"), ("packages", "software")):
                 for declaration in concern[kind].values():
                     selection, scope = declaration["adapter"], declaration["scope"]
-                    instance = self.resolve_source(selection, role, scope)
-                    require(
-                        canonical(host["adapter_instances"].get(instance["id"]))
-                        == canonical(instance),
-                        "SOURCE_INSTANCE_REBIND_REQUIRED",
-                    )
                     key = self._source_target_key(selection, role, scope)
                     target = self._source_targets.get(key)
                     require(target is not None, "UNAPPROVED_SOURCE_TARGET_MAPPING")
                     assert target is not None
-                    require(
-                        target["executor"] == instance_reference(instance, scope),
-                        "HANDOFF_INSTANCE_IDENTITY",
-                    )
+                    # Enrollment already validated this exact selector, scope, grant and
+                    # executor. The mapping and its registry instance are immutable.
+                    instance_id = selection["instance"]
+                    if instance_id not in checked_instances:
+                        require(
+                            canonical(host["adapter_instances"].get(instance_id))
+                            == canonical(self._instances[instance_id]),
+                            "SOURCE_INSTANCE_REBIND_REQUIRED",
+                        )
+                        checked_instances.add(instance_id)
                     namespace = canonical(target["namespace"])
                     require(namespace not in namespaces, "DUPLICATE_NATIVE_SOURCE_TARGET")
                     namespaces.add(namespace)
@@ -500,16 +508,8 @@ class Registry:
             owner_approved=owner_approved,
         )
         if request["method"] == "reconcile":
-            require(invocation is not None, "EFFECT_INVOCATION_REQUIRED")
+            _check_reconciliation(role, request, invocation)
             assert invocation is not None
-            check_invocation(role, invocation)
-            original = request["input"]["invocation"]
-            require(
-                canonical(_attempt_identity(original["attempt"]))
-                == canonical(_attempt_identity(invocation["attempt"]))
-                and canonical(original["request"]) == canonical(invocation["request"]),
-                "RECONCILIATION_IDENTITY",
-            )
             require(
                 invocation["attempt"]["executor"]
                 == instance_reference(instance, request["input"]["scope"]),
@@ -554,12 +554,13 @@ class Registry:
         invocation: dict[str, Any],
         *,
         owner_approved: bool,
+        approved_deployment: dict[str, Any] | None = None,
         expected_compute_target: dict[str, Any] | None = None,
         approved_bootstrap_request_digest: str | None = None,
         expected_capture_identity: dict[str, Any] | None = None,
         expected_prune_target: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Check an owner-authored mutation closure; native dispatch remains owner-controlled."""
+        """Check the released mutation against the independently approved deployment/targets."""
         check_invocation(role, invocation)
         request, attempt = invocation["request"], invocation["attempt"]
         if role == "compute":
@@ -580,6 +581,7 @@ class Registry:
             attempt["executor"] == instance_reference(instance, request["input"]["scope"]),
             "HANDOFF_INSTANCE_IDENTITY",
         )
+        _require_runtime_deployment(role, request, approved_deployment)
         if role == "repository":
             self._check_repository_mapping(request["input"]["repository"])
         if role in {"ingress", "network"}:

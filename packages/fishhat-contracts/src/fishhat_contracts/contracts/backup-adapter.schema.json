@@ -44,7 +44,8 @@
         "object",
         "artifacts"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "Each fresh store creates a new sealed native incarnation within the exact approved repository and object key. Use atomic create-if-absent for a single-version key. An occupied key conflicts before changing any bytes, even for identical artifacts. Alternatively append a fresh immutable native version atomically when every retained prior incarnation remains independently retrievable by its exact identity until authorized pruning. Retain the version-specific retrieval mapping in protected custody. A latest-version alias or age-based expiry cannot provide this guarantee. Refuse an unsupported primitive or an uncertain create-if-absent precondition without mutation. Preserve the exclusion or conditional creation through the write. Reconcile an unknown store through the original invocation and native creation evidence. A matching object or matching bytes alone cannot identify which attempt created it."
     },
     "retrieve": {
       "type": "object",

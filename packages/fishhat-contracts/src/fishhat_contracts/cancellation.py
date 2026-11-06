@@ -15,7 +15,12 @@ from dataclasses import dataclass
 from typing import Any
 
 from .bounds import Bounds, bounds
-from .discovery import admission_contract, owner_contract_schemas, require_admission_contract
+from .discovery import (
+    admission_contract,
+    owner_contract_schemas,
+    require_admission_contract,
+    require_v1_decision_reader,
+)
 from .operations import _TERMINAL_STATES
 from .validation import ContractError, digest, validate
 
@@ -159,6 +164,7 @@ class CancellationJournal:
     ) -> None:
         validate("common.schema.json", owner, "Owner")
         self._owner = copy.deepcopy(owner)
+        require_v1_decision_reader()
         self._installed_contract = admission_contract(owner_contract_schemas())
         self._custodian = copy.deepcopy(owner if custodian is None else custodian)
         validate("common.schema.json", self._custodian, "Owner")

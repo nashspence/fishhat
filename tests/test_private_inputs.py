@@ -141,6 +141,7 @@ def validate_launch(data):
         approved_installation=data["installation"],
         expected_executor=data["call"]["attempt"]["executor"],
         expected_private_use=data["use"],
+        retained_invocation=data["call"],
     )
 
 

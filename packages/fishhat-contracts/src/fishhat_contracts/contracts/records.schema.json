@@ -2702,7 +2702,7 @@
               },
               "minItems": 1,
               "uniqueItems": true,
-              "description": "The complete selected component IDs in strictly increasing ASCII order."
+              "description": "The complete selected component IDs in strictly increasing ASCII order. Each ID must exist in the independently verified pinned App source at release admission. A release may select a subset of the declared components."
             }
           },
           "required": [
@@ -2734,128 +2734,7 @@
       "description": "An immutable closure of the exact software, settings, bindings, secret receipts and recovery inputs selected for one application instance. A release existing in source or storage does not prove owner admission or current activation."
     },
     "Problem": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "$ref": "common.schema.json#/$defs/ProblemCode"
-        },
-        "summary": {
-          "$ref": "common.schema.json#/$defs/ProblemSummary"
-        },
-        "retry": {
-          "$ref": "common.schema.json#/$defs/ProblemRetry"
-        },
-        "owner": {
-          "anyOf": [
-            {
-              "type": "object",
-              "properties": {
-                "tool": {
-                  "enum": [
-                    "host-ops",
-                    "app-ops"
-                  ]
-                },
-                "id": {
-                  "type": "string",
-                  "format": "uuid",
-                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-                },
-                "epoch": {
-                  "type": "string",
-                  "format": "uuid",
-                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
-                }
-              },
-              "required": [
-                "tool",
-                "id",
-                "epoch"
-              ],
-              "additionalProperties": false
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "resource": {
-          "anyOf": [
-            {
-              "$ref": "common.schema.json#/$defs/Resource"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "evidence": {
-          "oneOf": [
-            {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "minLength": 71,
-                "maxLength": 71,
-                "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])"
-              },
-              "minItems": 0,
-              "uniqueItems": true,
-              "maxItems": 64
-            },
-            {
-              "allOf": [
-                {
-                  "$ref": "common.schema.json#/$defs/RecordReference"
-                },
-                {
-                  "properties": {
-                    "record": {
-                      "properties": {
-                        "kind": {
-                          "const": "ProblemEvidence"
-                        }
-                      }
-                    }
-                  }
-                }
-              ]
-            }
-          ],
-          "description": "The complete evidence selection: at most 64 digests inline, or an exact ProblemEvidence RecordReference for the whole selection. The inline threshold bounds representation, not total evidence. A reference requires a non-null Problem owner and resource matching its protected owner/resource identity. Every read separately reauthorizes that disclosure scope; failure reporting grants no bearer access. Never silently drop evidence or divide one selection into unrelated errors to fit a frame."
-        }
-      },
-      "required": [
-        "code",
-        "summary",
-        "retry",
-        "owner",
-        "resource",
-        "evidence"
-      ],
-      "additionalProperties": false,
-      "description": "An actionable account of what is known and the permitted next step for the named owner/resource. Preserve uncertainty and exact request identity; a failure summary must not imply that earlier effects were undone.",
-      "allOf": [
-        {
-          "if": {
-            "properties": {
-              "evidence": {
-                "type": "object"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "owner": {
-                "$ref": "common.schema.json#/$defs/Owner"
-              },
-              "resource": {
-                "$ref": "common.schema.json#/$defs/Resource"
-              }
-            }
-          }
-        }
-      ]
+      "$ref": "owner-decision-v1.schema.json#/$defs/Problem"
     },
     "Info": {
       "type": "object",
@@ -4900,117 +4779,31 @@
       "description": "One regular file in a complete captured source scope. content identifies retrievable immutable bytes and retains original producer ownership; its digest is SHA-256 of the exact file bytes. Filesystem confinement and source mapping are independently verified by the native owner. Multiple paths may share the same exact content handle. Reusing an owner/id with different handle fields, or a digest with a different byte size, rejects."
     },
     "SubmissionRefusal": {
-      "type": "object",
-      "properties": {
-        "kind": {
-          "const": "SubmissionRefusal"
-        },
-        "owner": {
-          "$ref": "common.schema.json#/$defs/Owner"
-        },
-        "request_id": {
-          "$ref": "common.schema.json#/$defs/UUID"
-        },
-        "plan_id": {
-          "$ref": "common.schema.json#/$defs/UUID"
-        },
-        "claimed_actor": {
-          "anyOf": [
-            {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 256
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "plan_digest": {
-          "$ref": "common.schema.json#/$defs/Digest"
-        },
-        "subject_digest": {
-          "$ref": "common.schema.json#/$defs/Digest"
-        },
-        "workflow_id": {
-          "anyOf": [
-            {
-              "$ref": "common.schema.json#/$defs/UUID"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "reason": {
-          "enum": [
-            "PLAN_EXPIRED",
-            "PRECONDITION_FAILED",
-            "CAPACITY_BLOCKED",
-            "UNSUPPORTED_CAPABILITY",
-            "CANCELLED"
-          ]
-        },
-        "resource": {
-          "$ref": "common.schema.json#/$defs/Resource"
-        }
-      },
-      "required": [
-        "kind",
-        "owner",
-        "request_id",
-        "resource",
-        "plan_id",
-        "claimed_actor",
-        "plan_digest",
-        "subject_digest",
-        "workflow_id",
-        "reason"
-      ],
-      "additionalProperties": false,
-      "description": "An authenticated operation.submit refusal for this exact original submission. After authorizing disclosure of the request and resource, the owner serializes with native acceptance, verifies the complete retained epoch index, and durably closes this previously unaccepted request ID against all later acceptance before responding. A matching retry returns the original refusal after current read authorization. Compare all canonical operation.submit params except driver_term, which governs only a fresh decision. A stale term alone cannot close an unused request ID or issue a durable refusal. A changed immutable submission conflicts. An unavailable index, ambiguous outcome, denied disclosure, already accepted identity, or failed commit cannot issue this proof. Neither an ordinary Problem nor a not-found lookup proves nonacceptance. The accompanying Problem matches the owner, resource and reason, with retry none. The receiver authenticates the responding owner, correlates the original SSH message and matches every refusal identity to its original delivery. A copied JSON value supplies no independent authority. Retain this refusal and its matching Problem for the owner epoch. operation.get can return them unchanged to a currently authorized reader of the original protected resource using only the original owner and request ID. New submission permission and original client state are unnecessary. No lookup creates a decision. Preserve the original submitted plan_id and claimed_actor unchanged, including null. Receivers match both when resolving a Delivery. An explicitly confirmed operation.close can create reason CANCELLED for an unaccepted standalone submission. This proves withdrawal before acceptance and never describes a cancelled Operation. A fresh operation.submit cannot create a CANCELLED refusal; it can only replay one retained by operation.close.",
-      "allOf": [
-        {
-          "if": {
-            "properties": {
-              "reason": {
-                "const": "CANCELLED"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "workflow_id": {
-                "type": "null"
-              }
-            }
-          }
-        }
-      ]
+      "$ref": "owner-decision-v1.schema.json#/$defs/SubmissionRefusal"
     },
     "SubmissionClose": {
       "type": "object",
       "properties": {
         "owner": {
-          "$ref": "#/$defs/SubmissionRefusal/properties/owner"
+          "$ref": "owner-decision-v1.schema.json#/$defs/SubmissionRefusal/properties/owner"
         },
         "request_id": {
-          "$ref": "#/$defs/SubmissionRefusal/properties/request_id"
+          "$ref": "owner-decision-v1.schema.json#/$defs/SubmissionRefusal/properties/request_id"
         },
         "plan_id": {
-          "$ref": "#/$defs/SubmissionRefusal/properties/plan_id"
+          "$ref": "owner-decision-v1.schema.json#/$defs/SubmissionRefusal/properties/plan_id"
         },
         "plan_digest": {
-          "$ref": "#/$defs/SubmissionRefusal/properties/plan_digest"
+          "$ref": "owner-decision-v1.schema.json#/$defs/SubmissionRefusal/properties/plan_digest"
         },
         "subject_digest": {
-          "$ref": "#/$defs/SubmissionRefusal/properties/subject_digest"
+          "$ref": "owner-decision-v1.schema.json#/$defs/SubmissionRefusal/properties/subject_digest"
         },
         "claimed_actor": {
-          "$ref": "#/$defs/SubmissionRefusal/properties/claimed_actor"
+          "$ref": "owner-decision-v1.schema.json#/$defs/SubmissionRefusal/properties/claimed_actor"
         },
         "resource": {
-          "$ref": "#/$defs/SubmissionRefusal/properties/resource"
+          "$ref": "owner-decision-v1.schema.json#/$defs/SubmissionRefusal/properties/resource"
         },
         "confirm_close": {
           "const": true

@@ -164,6 +164,7 @@ def test_exact_bootstrap_selection_survives_initial_dispatch_and_lost_reply(
             approved_installation=value["installation"],
             expected_executor=executor,
             expected_private_use=None,
+            retained_invocation=call,
             approved_bootstrap_request_digest=digest(request),
         )
 

@@ -422,6 +422,7 @@ def test_backup_success_has_method_specific_custody_and_noop_deletion_identity(m
                 "approved_installation": installation,
                 "expected_executor": executor,
                 "expected_private_use": None,
+                "retained_invocation": invocation,
             }
             validate_process_launch(
                 manifest,
@@ -439,7 +440,11 @@ def test_backup_success_has_method_specific_custody_and_noop_deletion_identity(m
                     alternate_payload,
                     {"endpoint": "different-endpoint"},
                     expected_prune_target=approved,
-                    **{**options, "expected_executor": alternate_executor},
+                    **{
+                        **options,
+                        "expected_executor": alternate_executor,
+                        "retained_invocation": alternate,
+                    },
                 )
             with pytest.raises(ContractError, match="PRUNING_APPROVED_TARGET"):
                 validate_process_launch(

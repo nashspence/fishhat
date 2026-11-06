@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import copy
 from collections.abc import Callable, Mapping
+from contextlib import ExitStack
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
@@ -85,6 +86,10 @@ def _body(target: Any, record: JSON, kind: str, owner: JSON | None = None) -> JS
     authority = getattr(target, "_recovery_gate_authority", None)
     gate = owner == target.header["gate_owner"]
     if gate and authority is not None:
+        _require(
+            target._recovery_gate_approval["owner"] == target.owner,
+            "current member must independently reapprove the recovery gate",
+        )
         owner = authority["owner"]
     target._verify(record, owner)
     body = record["body"]
@@ -236,6 +241,15 @@ class RecoveryContext:
 
 
 @dataclass(frozen=True)
+class MemberJournalSource:
+    """Exact checkpoint of a fenced member epoch, selected by the current custodian."""
+
+    journal: JournalStore
+    schema: JSON
+    head: str
+
+
+@dataclass(frozen=True)
 class OriginRecoveryContext:
     """Qualified protected custody of one original member, including exact schema.
 
@@ -243,10 +257,12 @@ class OriginRecoveryContext:
     It is not an exported Python state tuple. The current native owner verifies
     restoration membership, permanent old-epoch fencing and material retention
     independently before supplying this context or allowing any recovery fact.
+    source_keys is the independently indexed signing-key closure of the selected
+    sources. Operation trust also uses an independently indexed reader. A prior
+    target's recursively composed configuration overlay is not either reader.
     """
 
-    source: JournalStore
-    source_schema: JSON
+    sources: tuple[MemberJournalSource, ...]
     signed_projection: JSON
     enrollment: GateEnrollment
     custody: JSON
@@ -264,8 +280,8 @@ class WorkflowRecoveryMember(_JournalTarget):
     @bounds(
         Bounds(
             id="workflow.journal-recovery.member-restore",
-            work="O(L + H) one original owner-local projection and one verified replay of each original and current retained event",
-            extent="All original local accepted Plans, outcomes and recovery tombstones; no history count limit",
+            work="O(L + H + S) one original local projection, a fixed-size digest fold per supplied epoch, and one pass over every source and current event per cold restoration",
+            extent="Every ordered member epoch, original local accepted Plan, outcome, recovery reservation and tombstone; no history count limit",
             limits=(),
             capacity=(
                 "Missing qualified original custody blocks recovery and never becomes empty state",
@@ -275,6 +291,7 @@ class WorkflowRecoveryMember(_JournalTarget):
             ),
             linear_proofs=(
                 "tests/test_workflow_journal_epoch.py::test_restored_epoch_recovery_is_linear",
+                "tests/test_workflow_journal_epoch.py::test_member_epoch_lineage_restoration_is_linear",
             ),
         )
     )
@@ -293,6 +310,10 @@ class WorkflowRecoveryMember(_JournalTarget):
         clock: Callable[[], str] = _now,
         command: JSON | None = None,
     ) -> None:
+        _require(
+            not any(isinstance(keys, _KeyOverlay) for keys in (origin.source_keys, operation_keys)),
+            "member recovery requires independently indexed trust readers",
+        )
         self.native, self.enrollment = native, origin.enrollment
         keys: KeyRing = _KeyOverlay(
             {
@@ -326,7 +347,9 @@ class WorkflowRecoveryMember(_JournalTarget):
             and command["payload"] == projection_selection,
             "restored member initialization changed exact caller command",
         )
-        identity = origin.source_schema
+        _require(bool(origin.sources), "member recovery lacks original journal lineage")
+        first = origin.sources[0]
+        identity = first.schema
         _require(
             identity["uri"]
             == "https://fishhat.invalid/contracts/workflow-journal.schema.json#/$defs/JournalRecord",
@@ -364,7 +387,7 @@ class WorkflowRecoveryMember(_JournalTarget):
         _require(
             self.projection.get("type") == "projection"
             and self.projection["owner"] == original_owner
-            and origin.source.owner == original_owner
+            and first.journal.owner == original_owner
             and self.projection_digest == origin.enrollment.projection_digest
             and self.header["proposal_digest"] == origin.enrollment.proposal_digest
             and self.header["workflow_id"] == self.workflow_id
@@ -378,21 +401,7 @@ class WorkflowRecoveryMember(_JournalTarget):
             "restored workflow custody was not independently approved",
         )
         validate_owner_custody(origin.custody, expected_custodian=owner)
-        _require(
-            origin.custody["origin"] == original_owner
-            and getattr(origin.source, "schema", None) == origin.source_schema,
-            "restored workflow source identity changed",
-        )
-        context: JSON = {
-            "owner": owner,
-            "origin": original_owner,
-            "custody": origin.custody,
-            "source_head": origin.source.head,
-            "source_schema": identity,
-            "projection_digest": self.projection_digest,
-            "workflow_id": self.workflow_id,
-        }
-        native.restore_recovery(context)
+        _require(origin.custody["origin"] == original_owner, "restored member origin changed")
         self.children = proposal_children({"participants": self.projection["participants"]})
         self.ready = {
             key: binding
@@ -406,26 +415,46 @@ class WorkflowRecoveryMember(_JournalTarget):
         }
         self._admissions: dict[bytes, JSON] = {}
         self._preparation: JSON | None = None
-        found = False
-        with origin.source.guard(context["source_head"]):
-            for event in origin.source.iter_events(read_authorized=True):
-                request, record = event["request"], event["outcome"]
-                self._source_record(record, original_owner, extension, historical, selected)
+        with ExitStack() as guards:
+            lineage = digest([])
+            seen = {canonical(owner)}
+            for index, segment in enumerate(origin.sources):
+                source_owner = segment.journal.owner
                 _require(
-                    request["workflow_id"] == self.workflow_id
-                    and record["id"] == request["id"]
-                    and record["body"].get("command_digest") == digest(request),
-                    "restored source event commitment changed",
+                    canonical(source_owner) not in seen
+                    and all(source_owner[k] == original_owner[k] for k in ("tool", "id"))
+                    and segment.schema["uri"] == identity["uri"]
+                    and getattr(segment.journal, "schema", None) == segment.schema,
+                    "member recovery repeated or changed an epoch or schema",
                 )
-                if not found:
-                    _require(
-                        request["action"] == "member.join"
-                        and request["payload"].get("projection") == origin.signed_projection,
-                        "restored source lacks its exact original initialization",
-                    )
-                    found = True
-                self._source_event(request, record, extension)
-        _require(found, "restored original journal is empty")
+                seen.add(canonical(source_owner))
+                guards.enter_context(segment.journal.read_guard(segment.head))
+                self._restore_segment(
+                    segment, extension, lineage, projection_selection, original=index == 0
+                )
+                lineage = digest(
+                    {
+                        "previous": lineage,
+                        "owner": source_owner,
+                        "head": segment.head,
+                        "schema": segment.schema,
+                    }
+                )
+            previous = origin.sources[-1]
+            context: JSON = {
+                "owner": owner,
+                "origin": original_owner,
+                "custody": origin.custody,
+                "predecessor": previous.journal.owner,
+                "source_head": previous.head,
+                "source_schema": previous.schema,
+                "source_lineage_digest": lineage,
+                "projection_digest": self.projection_digest,
+                "workflow_id": self.workflow_id,
+            }
+            if journal.lookup(command["id"], read_authorized=True) is None:
+                self._authorize(principal, "initialize")
+            native.restore_recovery(context)
         self._known_outcomes = dict(self.outcomes)
         self._initialize(
             command,
@@ -436,10 +465,66 @@ class WorkflowRecoveryMember(_JournalTarget):
                     "header_digest": self.header_digest,
                     "projection_digest": self.projection_digest,
                     "custody_digest": digest(context),
+                    "source_lineage_digest": lineage,
                 },
             ),
             principal,
         )
+
+    def _restore_segment(
+        self,
+        segment: MemberJournalSource,
+        extension: JournalRecovery,
+        lineage: str,
+        projection_selection: JSON,
+        *,
+        original: bool,
+    ) -> None:
+        selected = (segment.schema["uri"], segment.schema["digest"])
+        historical = segment.schema != schema_identity(selected[0])
+        if historical:
+            _require(
+                extension.retained_readers is not None
+                and selected in extension.retained_readers
+                and extension.recovery_readers is not None
+                and selected in extension.recovery_readers,
+                "member journal lacks independently qualified historical recovery reader",
+            )
+        found = False
+        for event in segment.journal.iter_events(read_authorized=True):
+            request, record = event["request"], event["outcome"]
+            self._source_record(record, segment.journal.owner, extension, historical, selected)
+            _require(
+                request["workflow_id"] == self.workflow_id
+                and record["id"] == request["id"]
+                and record["body"].get("command_digest") == digest(request),
+                "restored source event commitment changed",
+            )
+            if not found:
+                if original:
+                    _require(
+                        request["action"] == "member.join"
+                        and request["payload"] == {"projection": self.signed_projection},
+                        "restored source lacks its exact original initialization",
+                    )
+                else:
+                    _require(
+                        request["action"] == "member.recover"
+                        and request["payload"] == projection_selection
+                        and record["body"].get("type") == "recovery-initialized"
+                        and record["body"].get("header_digest") == self.header_digest
+                        and record["body"].get("projection_digest") == self.projection_digest
+                        and record["body"].get("source_lineage_digest") == lineage,
+                        "member recovery lineage omitted or substituted a predecessor",
+                    )
+                found = True
+                continue
+            _require(
+                original or request["action"].startswith("recover."),
+                "invalid recovery-only history",
+            )
+            self._source_event(request, record, extension)
+        _require(found, "restored member journal is empty")
 
     def _source_record(
         self,
@@ -490,14 +575,21 @@ class WorkflowRecoveryMember(_JournalTarget):
             self._recovery_gate_authority = copy.deepcopy(record["body"]["authority"])
             self._recovery_gate_approval = copy.deepcopy(record)
         elif action in {
-            "member.join",
+            "recover.inspect",
+            "recover.reconcile",
+            "recover.install",
+            "recover.abandon",
+            "recover.observe_abandon",
+        }:
+            extension.apply(self, command, record)
+        elif action in {
             "agreement",
             "vote",
             "apply",
             "pause",
             "resume",
             "cancel",
-        } or action.startswith(("transfer.", "recover.")):
+        } or action.startswith("transfer."):
             return
         else:
             raise ContractError("restored original event has no qualified recovery semantics")

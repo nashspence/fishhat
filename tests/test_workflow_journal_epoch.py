@@ -1,5 +1,6 @@
 """Original journal bytes survive independently approved current-epoch recovery."""
 
+from contextlib import ExitStack, contextmanager, nullcontext
 from copy import deepcopy
 from dataclasses import replace
 
@@ -11,9 +12,11 @@ from fishhat_contracts.witness import sign
 from fishhat_contracts.workflow_journal import GateEnrollment, WorkflowGate, WorkflowMember
 from fishhat_contracts.workflow_journal_recovery import (
     JournalRecovery,
+    MemberJournalSource,
     OriginRecoveryContext,
     WorkflowRecoveryMember,
 )
+from fishhat_owner.workflow_journal import WorkflowJournal
 
 from tests.test_contracts import uid
 from tests.test_owner_history import seal_custody
@@ -66,9 +69,21 @@ CHECK_OVERRIDES = {
 class CurrentNative:
     """Independent synthetic current owner with retained native restoration facts."""
 
-    def __init__(self, original, owner, custody, source, path, meter, *, restore=False):
+    def __init__(self, original, owner, custody, source, path, meter, *, restore=False, earlier=()):
         self.original, self.owner, self.custody = original, owner, custody
         self.source_head, self.source_schema = source.head, source.schema
+        self.predecessor = source.owner
+        lineage = digest([])
+        for segment in (*earlier, source):
+            lineage = digest(
+                {
+                    "previous": lineage,
+                    "owner": segment.owner,
+                    "head": segment.head,
+                    "schema": segment.schema,
+                }
+            )
+        self.lineage = lineage
         self.meter = meter
         self.store = meter.store(path, owner, source.schema, restore=restore)
         self.successor = None
@@ -81,7 +96,13 @@ class CurrentNative:
         if not restore:
             self._append(
                 "adopt",
-                {"custody": custody, "source_head": source.head, "source_schema": source.schema},
+                {
+                    "custody": custody,
+                    "source_head": source.head,
+                    "source_schema": source.schema,
+                    "predecessor": self.predecessor,
+                    "source_lineage_digest": self.lineage,
+                },
             )
 
     def _append(self, action, outcome):
@@ -116,7 +137,11 @@ class CurrentNative:
             and context["origin"] == self.original.owner
             and context["custody"] == self.custody == self.adoption["custody"]
             and context["source_head"] == self.adoption["source_head"] == self.source_head
-            and context["source_schema"] == self.adoption["source_schema"] == self.source_schema,
+            and context["source_schema"] == self.adoption["source_schema"] == self.source_schema
+            and context["predecessor"] == self.adoption["predecessor"] == self.predecessor
+            and context["source_lineage_digest"]
+            == self.adoption["source_lineage_digest"]
+            == self.lineage,
             "native independently approved restoration custody changed",
         )
         require(
@@ -237,6 +262,79 @@ class CurrentNative:
         self._append("observe-abandon", {"successor_workflow_id": successor})
 
 
+def reopen_source(journal, meter):
+    path, owner, schema = journal._path, journal.owner, journal.schema
+    journal.close()
+    return WorkflowJournal.open(
+        path,
+        expected_owner=owner,
+        expected_schema=schema,
+        verified_prefix_head=meter.checkpoints[path],
+        metrics=meter.values,
+    )
+
+
+@contextmanager
+def next_member_epoch(
+    root, original, previous, previous_native, meter, *, prior_sources=(), trusted_keys=None
+):
+    """Open authenticated source checkpoints and supply independently enrolled signer keys."""
+    with ExitStack() as cleanup:
+        if not prior_sources:
+            a = reopen_source(original.journal, meter)
+            cleanup.callback(a.close)
+            prior_sources = (MemberJournalSource(a, a.schema, a.head),)
+        b = reopen_source(previous.journal, meter)
+        cleanup.callback(b.close)
+        sources = (*prior_sources, MemberJournalSource(b, b.schema, b.head))
+        number = len(sources) + 1
+        latest = {**original.owner, "epoch": uid("member-epoch-" + str(number))}
+        custody = previous_native.custody
+        adopted = seal_custody(
+            {
+                **custody,
+                "custodian": latest,
+                "manifest": {**custody["manifest"], "digest": digest([s.head for s in sources])},
+            }
+        )
+        native = type(previous_native)(
+            previous_native.original,
+            latest,
+            adopted,
+            b,
+            root / f"epoch-{number}-native.journal",
+            meter,
+            earlier=tuple(s.journal for s in prior_sources),
+        )
+        cleanup.callback(native.store.close)
+        local = meter.store(
+            root / f"epoch-{number}-member.journal", latest, previous.journal.schema
+        )
+        cleanup.callback(local.close)
+        keys = dict(trusted_keys or {})
+        keys[(canonical(original.owner), KEY_ID)] = original.private_key.public_key()
+        keys[(canonical(previous.owner), KEY_ID)] = previous.private_key.public_key()
+        origin = OriginRecoveryContext(
+            sources, original.signed_projection, original.enrollment, adopted, keys
+        )
+        yield (
+            origin,
+            dict(
+                owner=latest,
+                key_id=KEY_ID,
+                private_key=MeteredPrivateKey(latest, meter.values),
+                native=native,
+                operation_keys={},
+                journal=local,
+                principal=DRIVER,
+                extension=JournalRecovery(
+                    current_owners={canonical(original.owner): latest},
+                    verified_custody={canonical(original.owner): adopted},
+                ),
+            ),
+        )
+
+
 def original_run(root, workload, meter):
     run = WorkflowRun(root, workload, meter)
     try:
@@ -302,8 +400,11 @@ class EpochRun:
             )
             self.native.append(actor)
             context = OriginRecoveryContext(
-                old.target.journal,
-                old.target.journal.schema,
+                (
+                    MemberJournalSource(
+                        old.target.journal, old.target.journal.schema, old.target.journal.head
+                    ),
+                ),
                 old.target.signed_projection,
                 old.target.enrollment,
                 custody,
@@ -467,7 +568,7 @@ def test_restored_epoch_requires_exact_custody_and_preserves_original_bytes(tmp_
                     key_id=KEY_ID,
                     private_key=run.keys[0],
                     native=run.native[0],
-                    operation_keys=member.keys,
+                    operation_keys=dict(member.keys),
                     journal=store,
                     principal=DRIVER,
                     extension=run.extension,
@@ -475,7 +576,9 @@ def test_restored_epoch_requires_exact_custody_and_preserves_original_bytes(tmp_
         finally:
             store.close()
         old_schema = {**run.original.schema, "digest": digest("exact-approved-historical-profile")}
-        historical = meter.store(root / "historical.journal", context.source.owner, old_schema)
+        historical = meter.store(
+            root / "historical.journal", context.sources[0].journal.owner, old_schema
+        )
         historical_projection = run.original.gate.target._sign(
             {**context.signed_projection["body"], "historical_note": "exact-old-v1"},
             context.signed_projection["id"],
@@ -492,7 +595,7 @@ def test_restored_epoch_requires_exact_custody_and_preserves_original_bytes(tmp_
             signed_projection=historical_projection,
             enrollment=replace(context.enrollment, projection_digest=historical_projection_digest),
         )
-        for event in context.source.iter_events(read_authorized=True):
+        for event in context.sources[0].journal.iter_events(read_authorized=True):
             request, outcome = event["request"], event["outcome"]
             if request["action"] == "member.join":
                 request = {**request, "payload": {"projection": historical_projection}}
@@ -510,12 +613,15 @@ def test_restored_epoch_requires_exact_custody_and_preserves_original_bytes(tmp_
         try:
             with pytest.raises(ContractError, match="qualified recovery reader"):
                 WorkflowRecoveryMember(
-                    replace(historical_origin, source=historical, source_schema=old_schema),
+                    replace(
+                        historical_origin,
+                        sources=(MemberJournalSource(historical, old_schema, historical.head),),
+                    ),
                     owner=member.owner,
                     key_id=KEY_ID,
                     private_key=run.keys[0],
                     native=run.native[0],
-                    operation_keys=member.keys,
+                    operation_keys=dict(member.keys),
                     journal=store,
                     principal=DRIVER,
                     extension=run.extension,
@@ -558,15 +664,14 @@ def test_restored_epoch_requires_exact_custody_and_preserves_original_bytes(tmp_
             protected = {
                 "origin": replace(
                     historical_origin,
-                    source=historical,
-                    source_schema=old_schema,
+                    sources=(MemberJournalSource(historical, old_schema, historical.head),),
                     custody=accepted_custody,
                 ),
                 "owner": member.owner,
                 "key_id": KEY_ID,
                 "private_key": run.keys[0],
                 "native": native,
-                "operation_keys": member.keys,
+                "operation_keys": dict(member.keys),
                 "journal": store,
                 "extension": approved,
             }
@@ -674,6 +779,15 @@ def test_unused_successor_requires_complete_positive_abandonment(tmp_path):
             assert run.extension.blocks_work(member.target)
         replacement = run.inspect("two")
         run.finish(replacement)
+        previous = run.members[0].target
+        with next_member_epoch(
+            complete_root, run.original.members[0].target, previous, run.native[0], meter
+        ) as (origin, config):
+            third = WorkflowRecoveryMember(origin, **config)
+            for field in ("abandoned", "abandonment_certificates", "recovery"):
+                assert third._recovery_state[field] == previous._recovery_state[field]
+            assert third._recovery_state["recovery"]["certificate"] is not None
+            assert third._recovery_state["abandoned"]
     finally:
         run.close()
 
@@ -785,3 +899,77 @@ def test_unknown_disposition_advances_only_with_exact_successful_native_recovery
         )
     finally:
         run.close()
+
+
+def test_member_epoch_lineage_restoration_is_linear(tmp_path):
+    samples = []
+    for extent in (2, 8, 32):
+        root = tmp_path / str(extent)
+        meter = WorkMeter()
+        workload = LogicalWorkload(owners=2, children=1)
+        original_run(root, workload, meter)
+        run = EpochRun(root, workload, meter)
+        try:
+            original = run.original.members[0].target
+            previous, previous_native = run.members[0].target, run.native[0]
+            sources, trusted = (), {}
+            with ExitStack() as cleanup:
+                for count in range(2, extent + 1):
+                    measured = count == extent
+                    if measured:
+                        meter.values.clear()
+                    with meter.account() if measured else nullcontext():
+                        origin, config = cleanup.enter_context(
+                            next_member_epoch(
+                                root,
+                                original,
+                                previous,
+                                previous_native,
+                                meter,
+                                prior_sources=sources,
+                                trusted_keys=trusted,
+                            )
+                        )
+                        if measured:
+                            initial = config["journal"].head
+                            native_head = config["native"].store.head
+                            for selection in ("source", "operation"):
+                                unsafe_origin = (
+                                    replace(origin, source_keys=previous.keys)
+                                    if selection == "source"
+                                    else origin
+                                )
+                                unsafe_config = (
+                                    {**config, "operation_keys": previous.keys}
+                                    if selection == "operation"
+                                    else config
+                                )
+                                with pytest.raises(ContractError, match="independently indexed"):
+                                    WorkflowRecoveryMember(unsafe_origin, **unsafe_config)
+                                assert config["journal"].head == initial
+                                assert config["native"].store.head == native_head
+                        restored = WorkflowRecoveryMember(origin, **config)
+                    sources, trusted = origin.sources, origin.source_keys
+                    previous, previous_native = restored, config["native"]
+                assert len(sources) == extent
+                assert meter.values["source_read_guards"] == extent
+                assert restored.ready == run.members[0].target.ready
+                samples.append((extent, dict(meter.values)))
+        finally:
+            run.close()
+    initial_extent, initial = samples[0]
+    for extent, counts in samples[1:]:
+        for metric in initial.keys() | counts.keys():
+            assert (
+                counts.get(metric, 0) * initial_extent <= 1.25 * initial.get(metric, 0) * extent
+            ), (
+                metric,
+                samples,
+            )
+
+
+CHECK_OVERRIDES["test_member_epoch_lineage_restoration_is_linear"] = {
+    **CHECK_OVERRIDES["test_restored_epoch_recovery_is_linear"],
+    "scope": "one complete cold member restoration across an increasing ordered epoch lineage with independently indexed source trust",
+    "reason": "Two, eight and thirty-two real signed source epochs are independently prepared outside measurement. The measured final restoration includes source selection, signer indexing, native custody, source reads, verification and journal commitment; every work counter must remain linear. A recursively composed prior-target reader must reject before either destination journal changes. No native recovery qualification is asserted.",
+}

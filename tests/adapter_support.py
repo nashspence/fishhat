@@ -200,21 +200,28 @@ def observation_target(executor: dict, *, admission_generation: int = 0) -> dict
     }
 
 
+def approved_deployment() -> dict:
+    """Synthetic owner-retained deployment with its independently verified projection."""
+    return {
+        "handle": "deployment:demo",
+        "release_digest": D,
+        "source_digest": D,
+        "binding_digest": runtime_binding_digest(binding()),
+        "projection_digest": D,
+        "components": ["web"],
+    }
+
+
+def deployment_approval():
+    retained = approved_deployment()
+    return lambda operation_id, effect_id: retained
+
+
 def request(method: str = "activate") -> dict:
     return {
         "contract": "fishhat.runtime",
         "method": method,
-        "input": {
-            "scope": copy.deepcopy(SCOPE),
-            "deployment": {
-                "handle": "deployment:demo",
-                "release_digest": D,
-                "source_digest": D,
-                "binding_digest": runtime_binding_digest(binding()),
-                "projection_digest": D,
-                "components": ["web"],
-            },
-        },
+        "input": {"scope": copy.deepcopy(SCOPE), "deployment": approved_deployment()},
     }
 
 

@@ -60,13 +60,13 @@
     "dns": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/dns-adapter.schema.json",
-        "digest": "sha256:1d6eb7f5be493dc0bdb1ed647b80ca6b15f7a2705a2a2da6f181764b33448181"
+        "digest": "sha256:163c55f396cb76b1fb27e94e4a23a6e0971582af8a88180c578826b3c6f9c415"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/dns-adapter.schema.json#/$defs/Response",
-        "digest": "sha256:1ac1f4614ef0034dfb47e7433152187a16e7bf75efe4d0e548d35175c5e485f6"
+        "digest": "sha256:1870ed7bbdb7d0aff652187a3a1fc68c4ac094f40d619b461a94a0385fb55340"
       }
     }
   },
-  "process_schema_digest": "sha256:81490bcbcb838edbbd1e2f1744d9ab2099a33567db8e84070d42af7aafb0bec1"
+  "process_schema_digest": "sha256:c09b1f550cc8f464e8e3703c262b49cd4dc2e132550bc3322449edfb045ae17f"
 }

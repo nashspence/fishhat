@@ -3,6 +3,7 @@
 import json
 from urllib.parse import urldefrag, urljoin
 
+from fishhat_contracts.discovery import require_v1_decision_reader
 from fishhat_contracts.operations import validate_operation
 from fishhat_contracts.release_identity import validate_release
 from fishhat_contracts.schema_profile import pointer_tokens
@@ -32,6 +33,7 @@ def load(path):
 
 
 def run():
+    require_v1_decision_reader()
     index = load("index.json")
     assert set(index["schemas"]) == set(SCHEMAS), "schema index mismatch"
     by_id = {s["$id"]: s for s in SCHEMAS.values()}

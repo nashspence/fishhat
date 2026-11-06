@@ -19,6 +19,7 @@ def host_target(
     registry=None,
     instance_id=None,
     namespace=None,
+    granted_namespaces=None,
     scope=None,
     controller=None,
 ):
@@ -44,7 +45,10 @@ def host_target(
             {
                 "scope": scope,
                 "access": ["observe", "change"],
-                "mutation": {"controller": controller or instance_id, "namespaces": [namespace]},
+                "mutation": {
+                    "controller": controller or instance_id,
+                    "namespaces": granted_namespaces or [namespace],
+                },
             }
         ],
         "generation": 1,

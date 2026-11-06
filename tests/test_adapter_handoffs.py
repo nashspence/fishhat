@@ -17,6 +17,7 @@ from tests.adapter_support import (
     OWNER,
     binding,
     contract_versions,
+    deployment_approval,
     fresh_observation,
     identifier,
     native_exclusion,
@@ -303,6 +304,7 @@ def test_lost_activation_reply_is_settled_without_a_second_dispatch():
         lambda value: commits.append(copy.deepcopy(value)),
         processes_quiescent=lambda _: True,
         native_exclusion=native_exclusion,
+        approved_deployment=deployment_approval(),
     )
     owner.bind(binding(), **runtime_sources(registry), owner_approved=True)
     owner.prove_quiescent("demo", *fresh_observation(owner), owner_approved=True)
