@@ -348,7 +348,27 @@ def registry_call(name, count):
         concern = host["concerns"]["base"]
         concern["services"], concern["packages"] = {}, {}
         registry = Registry()
+        namespaces = [
+            {"authority": OWNER["id"], "resource": f"shared:{i:04d}", "facet": "lifecycle"}
+            for i in range(count)
+        ]
+        _, shared, target = host_target(
+            host,
+            "systemd",
+            {"unit": "shared-0000.service"},
+            registry=registry,
+            instance_id="shared",
+            namespace=namespaces[0],
+            granted_namespaces=namespaces,
+        )
         for i in range(count):
+            entry = copy.deepcopy(shared)
+            entry["adapter"]["source"] = {"unit": f"shared-{i:04d}.service"}
+            registry.enroll_source_target(
+                {**target, "selection": entry["adapter"], "namespace": namespaces[i]},
+                owner_approved=True,
+            )
+            concern["services"][f"shared-{i:04d}"] = entry
             _, declaration, _ = host_target(
                 host,
                 "systemd",
@@ -357,7 +377,7 @@ def registry_call(name, count):
                 instance_id=f"service-{i:04d}",
             )
             concern["services"][f"service-{i:04d}"] = declaration
-        return lambda: registry.resolve_host_targets(host), lambda result: len(result) == count
+        return lambda: registry.resolve_host_targets(host), lambda result: len(result) == 2 * count
     if name == "inspect_instance":
         return lambda: registry.inspect_instance("selected"), lambda result: result == instance
     if name == "resolve":

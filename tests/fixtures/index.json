@@ -36,6 +36,7 @@
     "network-adapter.schema.json",
     "observation.schema.json",
     "onboarding.schema.json",
+    "owner-decision-v1.schema.json",
     "owner-history.schema.json",
     "plan-input.schema.json",
     "publisher-receipt.schema.json",

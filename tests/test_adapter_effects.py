@@ -11,6 +11,7 @@ from tests.adapter_commit_support import CommitStore
 from tests.adapter_support import (
     OWNER,
     binding,
+    deployment_approval,
     fresh_observation,
     identifier,
     native_exclusion,
@@ -38,6 +39,7 @@ def coordinator(commit=None):
         commit or (lambda value: commits.append(copy.deepcopy(value))),
         processes_quiescent=lambda _: True,
         native_exclusion=native_exclusion,
+        approved_deployment=deployment_approval(),
     )
     c.bind(binding(), **runtime_sources(registry), owner_approved=True)
     c.prove_quiescent("demo", *fresh_observation(c), owner_approved=True)

@@ -11,6 +11,7 @@ from typing import Any, BinaryIO, cast
 from fishhat_contracts.adapter_semantics import (
     ROLES,
     _attempt_identity,
+    _check_reconciliation,
     _handoff_binding,
     _is_released_attempt,
     check_invocation,
@@ -25,6 +26,7 @@ from fishhat_contracts.validation import ContractError, canonical, digest, stric
 from .protocol import (
     _require_bootstrap_approval,
     _require_recovery_target,
+    _require_runtime_deployment,
     _require_runtime_release,
     check_configuration,
     check_descriptor,
@@ -83,6 +85,8 @@ def validate_process_launch(
     expected_private_use: dict[str, Any] | None,
     expected_runtime_binding: dict[str, Any] | None = None,
     approved_release: dict[str, Any] | None = None,
+    approved_deployment: dict[str, Any] | None = None,
+    retained_invocation: dict[str, Any] | None = None,
     approved_bootstrap_request_digest: str | None = None,
     expected_publication_target: dict[str, Any] | None = None,
     expected_compute_target: dict[str, Any] | None = None,
@@ -134,6 +138,7 @@ def validate_process_launch(
             "process mutation lacks released invocation",
         )
         request = payload["request"]
+        _require_runtime_deployment(role, request, approved_deployment)
     else:
         check_request(role, payload)
         _require(
@@ -141,6 +146,7 @@ def validate_process_launch(
         )
         request = payload
         if request["method"] == "reconcile":
+            _check_reconciliation(role, request, retained_invocation)
             _require(
                 request["input"]["invocation"]["attempt"]["executor"] == executor,
                 "process reconciliation executor changed",

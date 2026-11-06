@@ -102,6 +102,7 @@ class WorkflowJournal:
         self._fd = fd
         self.metrics = metrics if metrics is not None else {}
         self._lock = threading.RLock()
+        self._source_reads = 0
         self._head = _ZERO
         self._index: dict[str, tuple[dict[str, Any], bytes, bytes, bytes]] = {}
         self._genesis: dict[str, Any] = {}
@@ -229,13 +230,13 @@ class WorkflowJournal:
         return identity, sequence, size, body[-32:]
 
     @staticmethod
-    def _descriptor(path: str | Path, *, create: bool) -> int:
+    def _descriptor(path: str | Path, *, create: bool, read_only: bool = False) -> int:
         try:
             import fcntl
         except ModuleNotFoundError as exc:
             raise ContractError("workflow journal requires POSIX file custody") from exc
 
-        flags = os.O_RDWR | os.O_CLOEXEC | os.O_NOFOLLOW
+        flags = (os.O_RDONLY if read_only else os.O_RDWR) | os.O_CLOEXEC | os.O_NOFOLLOW
         if create:
             _require(
                 not os.path.lexists(str(path) + ".head"),
@@ -326,7 +327,9 @@ class WorkflowJournal:
         """
         validate("common.schema.json", expected_owner, "Owner")
         validate("common.schema.json", expected_schema, "SchemaIdentity")
-        journal = cls(cls._descriptor(path, create=False), metrics)
+        journal = cls(
+            cls._descriptor(path, create=False, read_only=verified_prefix_head is not None), metrics
+        )
         journal._path = Path(path)
         try:
             local_head = journal._read_head()
@@ -486,12 +489,23 @@ class WorkflowJournal:
                 and os.fstat(self._fd).st_size == self._prefix_size + tail_size,
                 "workflow journal custody changed during repair",
             )
-            if checkpoint[2] != self._prefix_size:
-                # Publish the authenticated prefix before truncating: an interruption
-                # leaves the already supported old-HEAD-with-uncertain-tail shape.
-                self._write_local_head(self._head, len(self._index), self._prefix_size)
-            os.ftruncate(self._fd, self._prefix_size)
-            self._sync()
+            # The prefix itself has only a read descriptor and retains its inode lock.
+            # Acquire write access solely for this authorized repair, on the same inode.
+            fd = os.open(self._path, os.O_RDWR | os.O_CLOEXEC | os.O_NOFOLLOW)
+            try:
+                _require(
+                    os.path.samestat(os.fstat(fd), os.fstat(self._fd)),
+                    "workflow journal repair target changed",
+                )
+                if checkpoint[2] != self._prefix_size:
+                    # Publish the authenticated prefix before truncating: an interruption
+                    # leaves the already supported old-HEAD-with-uncertain-tail shape.
+                    self._write_local_head(self._head, len(self._index), self._prefix_size)
+                os.ftruncate(fd, self._prefix_size)
+                self._count("fsync_calls")
+                os.fsync(fd)
+            finally:
+                os.close(fd)
 
     def _load_genesis(
         self,
@@ -560,6 +574,35 @@ class WorkflowJournal:
     def journal_id(self) -> str:
         return str(self._genesis["journal_id"])
 
+    @bounds(
+        Bounds(
+            id="workflow.journal-store.read-guard",
+            work="O(1) per verified fixed-size head; no history or filesystem scan",
+            extent="One exact held source checkpoint through the complete requested read",
+            limits=(),
+            capacity=(),
+            proofs=("tests/test_workflow_journal.py::test_uncertain_tail_repair_cost_and_custody",),
+            linear_proofs=(
+                "tests/test_workflow_journal.py::test_uncertain_tail_repair_cost_and_custody",
+            ),
+        )
+    )
+    def read_guard(self, expected_head: str) -> AbstractContextManager[None]:
+        """Pin one verified immutable head while reading its complete committed prefix."""
+        return self._read_guard(expected_head)
+
+    @contextmanager
+    def _read_guard(self, expected_head: str) -> Iterator[None]:
+        with self._lock:
+            _require(not self._closed and not self._failed, "workflow journal reader unavailable")
+            _require(expected_head == self.head, "workflow journal source head changed")
+            self._count("source_read_guards")
+            self._source_reads += 1
+            try:
+                yield
+            finally:
+                self._source_reads -= 1
+
     @bounds(_bounds("guard"))
     def guard(self, expected_head: str) -> AbstractContextManager[None]:
         """Hold the shared owner boundary through native acceptance or a new event.
@@ -575,7 +618,10 @@ class WorkflowJournal:
     def _guard(self, expected_head: str) -> Iterator[None]:
         with self._lock:
             _require(
-                not self._closed and not self._failed and self._prefix_size is None,
+                not self._closed
+                and not self._failed
+                and self._prefix_size is None
+                and not self._source_reads,
                 "workflow journal writer unavailable",
             )
             _require(expected_head == self.head, "workflow journal predecessor changed")
@@ -634,7 +680,10 @@ class WorkflowJournal:
         """Commit exact new bytes before acknowledgment; the caller owns write authority."""
         with self._lock:
             _require(
-                not self._closed and not self._failed and self._prefix_size is None,
+                not self._closed
+                and not self._failed
+                and self._prefix_size is None
+                and not self._source_reads,
                 "workflow journal writer unavailable",
             )
             _require(

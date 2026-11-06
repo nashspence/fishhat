@@ -77,6 +77,27 @@ def test_legacy_discovery_without_exact_identities_is_rejected():
         validate("records.schema.json", advertised, "Info")
 
 
+@pytest.mark.parametrize("definition", ["CancellationReceipt", "SubmissionRefusal", "Problem"])
+def test_incompatible_candidate_cannot_open_v1_decision_custody(monkeypatch, definition):
+    from fishhat_contracts.cancellation import CancellationJournal
+    from fishhat_contracts.validation import SCHEMAS, canonical
+
+    from tests.test_cancellation import OWNER, context, request
+
+    accepted = CancellationJournal(OWNER).cancel(request(), **context())
+    original = canonical(accepted)
+    name = "owner-decision-v1.schema.json"
+    changed = copy.deepcopy(SCHEMAS[name])
+    changed["$defs"][definition]["properties"]["new_required_field"] = {"type": "string"}
+    changed["$defs"][definition]["required"].append("new_required_field")
+    with monkeypatch.context() as candidate:
+        candidate.setitem(SCHEMAS, name, changed)
+        with pytest.raises(ContractError, match="incompatible v1 decision reader"):
+            CancellationJournal(OWNER, retained=[accepted])
+    reopened = CancellationJournal(OWNER, retained=[accepted])
+    assert canonical(reopened.cancel(request(), **context(target=None))) == original
+
+
 def test_upgrade_between_discovery_and_stop_intent_preserves_only_original_replay(monkeypatch):
     import io
 

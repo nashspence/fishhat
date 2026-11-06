@@ -158,6 +158,8 @@ def validate_release_boundary(
         raise ContractError("application secret catalogue differs from pinned source")
     catalogue = document(path, catalogue_blob) if catalogue_blob is not None else None
     projection = application_boundary(domain, host, app, catalogue)
+    if any(name not in app["components"] for name in release["runtime"]["components"]):
+        raise ContractError("release selects a component outside the pinned application")
     placement = domain["apps"][app["id"]]
     identity = ("instance", "repository_id")
     if (

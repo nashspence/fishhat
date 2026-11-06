@@ -39,10 +39,14 @@ CHECK_OVERRIDES = {
         "authority": [
             "packages/fishhat-contracts/src/fishhat_contracts/contracts/workflow-journal.schema.json",
             "fishhat/owner-support/src/fishhat_owner/workflow_journal.py#WorkflowJournal.repair_tail",
+            "fishhat/owner-support/src/fishhat_owner/workflow_journal.py#WorkflowJournal.read_guard",
         ],
         "scope": "Reference repair and measured I/O and hash extent for increasing torn suffixes",
         "reason": "Checks exact quarantine, refusal and positive closure against real store bytes.",
-        "claims": ["engineering:workflow.journal-store.repair-tail"],
+        "claims": [
+            "engineering:workflow.journal-store.repair-tail",
+            "engineering:workflow.journal-store.read-guard",
+        ],
     },
     "test_complete_workflow_survives_disk_restart_and_lost_replies": {
         **CHECK_PURPOSE,
@@ -876,6 +880,14 @@ def test_uncertain_tail_repair_cost_and_custody(tmp_path):
         meter = WorkMeter()
         journal = meter.store(path, owner, schema)
         checkpoint = journal.head
+        with journal.read_guard(checkpoint):
+            with pytest.raises(ContractError, match="writer unavailable"):
+                journal.append("reentrant", {}, {}, expected_head=checkpoint)
+            with (
+                pytest.raises(ContractError, match="writer unavailable"),
+                journal.guard(checkpoint),
+            ):
+                pytest.fail("read guard permitted native acceptance")
         journal.close()
         torn = b"!" * extent
         with path.open("ab") as stream:
@@ -891,6 +903,11 @@ def test_uncertain_tail_repair_cost_and_custody(tmp_path):
                 return True
 
             measured = prefix.metrics
+            measured.clear()
+            for _ in range(extent // 1000):
+                with prefix.read_guard(checkpoint):
+                    assert prefix.head == checkpoint
+            assert measured == {"source_read_guards": extent // 1000}
             measured.clear()
             prefix.repair_tail(writer_lease=meter.writer_lease(path), reconcile=approve)
             assert measured["bytes_written"] == extent

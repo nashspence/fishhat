@@ -57,10 +57,7 @@ def check_request(role: str, value: dict[str, Any]) -> None:
         invocation = inputs["invocation"]
         check_invocation(role, invocation)
         original = invocation["attempt"]
-        require(
-            original["state"] != "prepared" and original["outcome"] != "cancelled",
-            "RECONCILIATION_NEVER_DISPATCHED",
-        )
+        _require_dispatched(original, "RECONCILIATION_NEVER_DISPATCHED")
         require(
             original["contract"] == value["contract"]
             and original["scope"] == inputs["scope"]
@@ -262,6 +259,31 @@ def _attempt_identity(attempt: dict[str, Any]) -> dict[str, Any]:
     return {key: value for key, value in attempt.items() if key not in mutable}
 
 
+def _require_dispatched(attempt: dict[str, Any], code: str) -> None:
+    require(
+        attempt["state"] in {"dispatched", "reconciling", "resolved"}
+        and attempt["outcome"] != "cancelled",
+        code,
+    )
+
+
+def _check_reconciliation(
+    role: str, query: dict[str, Any], retained: dict[str, Any] | None
+) -> None:
+    """Check the independently retained dispatch, allowing subsequent progress."""
+    require(retained is not None, "EFFECT_INVOCATION_REQUIRED")
+    assert retained is not None
+    check_invocation(role, retained)
+    _require_dispatched(retained["attempt"], "RECONCILIATION_NEVER_DISPATCHED")
+    original = query["input"]["invocation"]
+    require(
+        canonical(_attempt_identity(original["attempt"]))
+        == canonical(_attempt_identity(retained["attempt"]))
+        and canonical(original["request"]) == canonical(retained["request"]),
+        "RECONCILIATION_IDENTITY",
+    )
+
+
 @bounds(_semantic_bounds("check_response"))
 def check_response(
     role: str,
@@ -291,16 +313,8 @@ def check_response(
         "INCOMPLETE_RESPONSE_COVERAGE",
     )
     if request["method"] == "reconcile":
-        require(invocation is not None, "EFFECT_INVOCATION_REQUIRED")
+        _check_reconciliation(role, request, invocation)
         assert invocation is not None
-        check_invocation(role, invocation)
-        original = request["input"]["invocation"]
-        require(
-            canonical(_attempt_identity(invocation["attempt"]))
-            == canonical(_attempt_identity(original["attempt"]))
-            and canonical(invocation["request"]) == canonical(original["request"]),
-            "RECONCILIATION_IDENTITY",
-        )
         check_result(invocation["attempt"], response["effect"])
         request = invocation["request"]
         # Recovery has the same output obligations as the original method. Its
@@ -320,6 +334,7 @@ def check_response(
         require(invocation is not None, "EFFECT_INVOCATION_REQUIRED")
         assert invocation is not None
         check_invocation(role, invocation)
+        _require_dispatched(invocation["attempt"], "RESPONSE_NEVER_DISPATCHED")
         require(
             canonical(invocation["request"]) == canonical(request),
             "RESPONSE_EFFECT_IDENTITY",

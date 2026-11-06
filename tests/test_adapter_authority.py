@@ -12,8 +12,10 @@ from tests.adapter_support import (
     OWNER,
     SCOPE,
     D,
+    approved_deployment,
     binding,
     contract_versions,
+    deployment_approval,
     fresh_observation,
     identifier,
     observation_target,
@@ -146,6 +148,91 @@ def test_deployment_for_another_binding_is_rejected_before_an_attempt_is_committ
     assert not c.snapshot()["attempts"]
 
 
+@pytest.mark.parametrize(
+    "field,substitute",
+    [
+        ("handle", "deployment:other"),
+        ("release_digest", "sha256:" + "b" * 64),
+        ("source_digest", "sha256:" + "b" * 64),
+        ("projection_digest", "sha256:" + "b" * 64),
+        ("components", ["other"]),
+    ],
+    ids=["handle", "release", "source", "projection", "components"],
+)
+def test_runtime_mutation_requires_exact_retained_deployment(field, substitute):
+    from fishhat_adapters.process import validate_process_launch
+
+    from tests.test_adapter_handoffs import invocation_for
+    from tests.test_compute_allocation_identity import process_case
+
+    owner, commits = coordinator()
+    approved = approved_deployment()
+    query = request()
+    query["input"]["deployment"][field] = substitute
+    count = len(commits)
+    with pytest.raises(ContractError, match="DEPLOYMENT_NOT_APPROVED"):
+        owner.prepare(
+            "demo",
+            query,
+            **runtime_sources(owner.registry),
+            operation_id=identifier(8),
+            effect_id=identifier(9),
+            attempt_id=identifier(10),
+            owner_approved=True,
+        )
+    assert len(commits) == count
+    executor = instance_reference(owner.registry.inspect_instance("native-demo"), SCOPE)
+    invocation = invocation_for(query)
+    invocation["attempt"]["executor"] = executor
+    with pytest.raises(ContractError, match="DEPLOYMENT_NOT_APPROVED"):
+        owner.registry.authorize_invocation(
+            "runtime", invocation, owner_approved=True, approved_deployment=approved
+        )
+    manifest, config, options = process_case(owner.registry, executor, invocation, mode="mutation")
+    with pytest.raises(ContractError, match="DEPLOYMENT_NOT_APPROVED"):
+        validate_process_launch(
+            manifest, invocation, config, approved_deployment=approved, **options
+        )
+
+
+@pytest.mark.parametrize("approval", ["missing", "changed", "retained"])
+def test_restored_prepared_runtime_dispatch_rechecks_deployment(approval):
+    owner, _ = coordinator()
+    attempt = owner.prepare(
+        "demo",
+        request("deactivate"),
+        **runtime_sources(owner.registry),
+        operation_id=identifier(81),
+        effect_id=identifier(82),
+        attempt_id=identifier(83),
+        owner_approved=True,
+    )
+    selected = approved_deployment()
+    if approval == "changed":
+        selected["projection_digest"] = "sha256:" + "e" * 64
+
+    def lookup(operation_id, effect_id):
+        assert (operation_id, effect_id) == (attempt["operation_id"], attempt["effect_id"])
+        return selected
+
+    commits = []
+    restored = AdapterCoordinator(
+        OWNER,
+        owner.registry,
+        commits.append,
+        approved_deployment=None if approval == "missing" else lookup,
+    )
+    restored.restore(owner.snapshot())
+    before = len(commits)
+    if approval == "retained":
+        assert restored.dispatch("demo", attempt["attempt_id"])["attempt"]["state"] == "dispatched"
+    else:
+        with pytest.raises(ContractError, match="DEPLOYMENT_NOT_APPROVED"):
+            restored.dispatch("demo", attempt["attempt_id"])
+        assert len(commits) == before
+        assert restored.snapshot()["attempts"][attempt["attempt_id"]]["state"] == "prepared"
+
+
 @pytest.mark.parametrize("change", ["unchanged", "observe-only", "controller", "namespace"])
 def test_runtime_dispatch_rechecks_exact_accepted_mutation_authority_after_restore(change):
     c, _ = coordinator()
@@ -184,7 +271,9 @@ def test_runtime_dispatch_rechecks_exact_accepted_mutation_authority_after_resto
     elif change == "namespace":
         grant["mutation"]["namespaces"][0]["resource"] = "reassigned.service"
     registry.enroll(instance, owner_approved=True)
-    restored = AdapterCoordinator(OWNER, registry, lambda value: None)
+    restored = AdapterCoordinator(
+        OWNER, registry, lambda value: None, approved_deployment=deployment_approval()
+    )
     restored.restore(saved)
     assert restored.snapshot()["attempts"] == saved["attempts"]
     if change == "unchanged":

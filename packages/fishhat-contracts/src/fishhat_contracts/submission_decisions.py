@@ -12,7 +12,12 @@ from collections.abc import Callable
 from threading import Lock
 from typing import Any
 
-from .discovery import admission_contract, owner_contract_schemas, require_admission_contract
+from .discovery import (
+    admission_contract,
+    owner_contract_schemas,
+    require_admission_contract,
+    require_v1_decision_reader,
+)
 from .operations import (
     operation_matches_delivery,
     submission_replay_identity,
@@ -28,6 +33,7 @@ class StandaloneDecisions:
     def __init__(self, owner: JSON) -> None:
         validate("common.schema.json", owner, "Owner")
         self._owner = copy.deepcopy(owner)
+        require_v1_decision_reader()
         self._installed_contract = admission_contract(owner_contract_schemas())
         self._decisions: dict[str, tuple[bytes, JSON, JSON, str]] = {}
         self._lock = Lock()

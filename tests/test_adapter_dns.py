@@ -88,6 +88,20 @@ def test_bind_compiles_exact_rrset_preconditions_and_not_zone_wide_deletion():
     assert b"update delete web.example.test. A" in script
     assert b"update delete example.test." not in script
 
+    # RFC 2136 ignores additions that conflict with an extant CNAME or ordinary RR.
+    alias = {**before, "type": "CNAME", "rdata": [{"target": "alias.example.test."}]}
+    for old, new in ((before, alias), (alias, before)):
+        remove = {"before": old, "after": None}
+        create = {"before": None, "after": new}
+        for items in ([create, remove], [remove, create]):
+            batch = change()
+            batch["changes"] = items
+            commands = render_update(batch, zone="example.test.").decode("ascii").splitlines()
+            assert all(command.startswith("prereq ") for command in commands[1:3])
+            assert commands[3] == f"update delete web.example.test. {old['type']}"
+            assert commands[4].startswith(f"update add web.example.test. 0 {new['type']} ")
+            assert commands[5:] == ["send"]
+
 
 def test_cname_is_not_a_hosts_alias():
     value = {

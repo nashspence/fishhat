@@ -16,6 +16,7 @@ from tests.adapter_commit_support import CommitStore
 from tests.adapter_support import (
     OWNER,
     binding,
+    deployment_approval,
     fresh_observation,
     identifier,
     native_exclusion,
@@ -60,6 +61,7 @@ def fixture():
         store,
         processes_quiescent=lambda _: True,
         native_exclusion=native_exclusion,
+        approved_deployment=deployment_approval(),
     )
     sources = runtime_sources(registry)
     owner.bind(binding(), **sources, owner_approved=True)
@@ -173,6 +175,7 @@ def test_failed_delta_acknowledgment_preserves_recoverable_exact_work(committed)
         store,
         processes_quiescent=lambda _: True,
         native_exclusion=native_exclusion,
+        approved_deployment=deployment_approval(),
     )
     recovered.restore(store.snapshot())
     assert store.state == recovered.snapshot()
@@ -229,6 +232,7 @@ def test_restored_indexes_preserve_effect_retry_and_pending_scope_rules():
         store,
         processes_quiescent=lambda _: True,
         native_exclusion=native_exclusion,
+        approved_deployment=deployment_approval(),
     )
     recovered.restore(store.snapshot())
     arguments = {
@@ -393,6 +397,7 @@ def test_effect_settlement_waits_for_all_attempt_processes_across_recovery(missi
         owner.registry,
         store,
         native_exclusion=native_exclusion,
+        approved_deployment=deployment_approval(),
         processes_quiescent=lambda original: original["attempt_id"] in stopped,
     )
     if missing_supervision:

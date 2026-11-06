@@ -10,6 +10,7 @@ from functools import cache
 import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from fishhat_contracts import checkpoints
+from fishhat_contracts.backup_results import require_backup_store_precondition
 from fishhat_contracts.checkpoints import resolve_checkpoint, validate_checkpoint
 from fishhat_contracts.handoffs import schema_identity, validate_cli_result, validate_result_payload
 from fishhat_contracts.operations import validate_operation
@@ -136,7 +137,7 @@ def fixture(count=2, *, shared=True, recovery_points=None):
         artifact = {
             "digest": digest({"captured": dataset}),
             "media_type": "application/octet-stream",
-            "size_bytes": 64,
+            "size_bytes": len(canonical({"captured": dataset})),
         }
         closure.add(artifact["digest"])
         snapshot = {
@@ -268,6 +269,79 @@ def test_fresh_owner_resolves_exact_historical_inputs():
         resolve_checkpoint(restored, **{**context, "records": dict(context["records"])})
         == recovered
     )
+
+
+@pytest.mark.parametrize("primitive", ["create-if-absent", "append-immutable-version"])
+def test_backup_store_collision_preserves_first_checkpoint(tmp_path, primitive):
+    checkpoint, context, _ = fixture(1)
+    resolved = resolve_checkpoint(checkpoint, **context)
+    dataset, first_receipt = next(iter(resolved.dataset_backups.items()))
+    first = resolved.backup_objects[first_receipt]
+    original_bytes = canonical({"captured": dataset})
+    request = {
+        "contract": "fishhat.backup",
+        "method": "store",
+        "input": {
+            "scope": checkpoint["backup_executor"]["scope"],
+            "repository": first["repository"],
+            "object": first["handle"],
+            "artifacts": first["artifacts"],
+        },
+    }
+    later_bytes = b"replacement capture"
+    later_artifact = {
+        "digest": "sha256:" + hashlib.sha256(later_bytes).hexdigest(),
+        "size_bytes": len(later_bytes),
+        "media_type": "application/octet-stream",
+    }
+    later = deepcopy(request)
+    later["input"]["artifacts"] = [later_artifact]
+
+    # One fixed logical key in a synthetic backend, with two independent stores.
+    unversioned = tmp_path / "object"
+
+    def store(query, incarnation, data):
+        require_backup_store_precondition(
+            query,
+            creation_primitive=primitive,
+            key_absent=not unversioned.exists() if primitive == "create-if-absent" else None,
+        )
+        target = (
+            unversioned
+            if primitive == "create-if-absent"
+            else tmp_path / incarnation.removeprefix("sha256:")
+        )
+        with target.open("xb") as stream:
+            stream.write(data)
+
+    store(request, first["incarnation"], original_bytes)
+    if primitive == "create-if-absent":
+        for collision, data in ((request, original_bytes), (later, later_bytes)):
+            with pytest.raises(ContractError, match="absent key"):
+                store(collision, digest("second incarnation"), data)
+    else:
+        second_incarnation = digest("second incarnation")
+        store(later, second_incarnation, later_bytes)
+        assert (tmp_path / second_incarnation.removeprefix("sha256:")).read_bytes() == later_bytes
+
+    # A fresh reader uses the first checkpoint's retained incarnation and artifact.
+    recovered = resolve_checkpoint(checkpoint, **context).backup_objects[first_receipt]
+    target = (
+        unversioned
+        if primitive == "create-if-absent"
+        else tmp_path / recovered["incarnation"].removeprefix("sha256:")
+    )
+    retrieved = target.read_bytes()
+    assert retrieved == original_bytes
+    assert "sha256:" + hashlib.sha256(retrieved).hexdigest() == recovered["artifacts"][0]["digest"]
+    assert len(retrieved) == recovered["artifacts"][0]["size_bytes"]
+
+    with pytest.raises(ContractError, match="absent key"):
+        require_backup_store_precondition(
+            request, creation_primitive="create-if-absent", key_absent=None
+        )
+    with pytest.raises(ContractError, match="unsupported"):
+        require_backup_store_precondition(request, creation_primitive="overwrite", key_absent=True)
 
 
 def test_resolved_backup_object_joins_lifecycle_repository_scope():
@@ -668,4 +742,14 @@ CHECK_OVERRIDES = {
         "test_fresh_owner_resolves_exact_historical_inputs",
         "test_checkpoint_resolution_linear_work",
     )
+}
+
+CHECK_OVERRIDES["test_backup_store_collision_preserves_first_checkpoint"] = {
+    **CHECK_PURPOSE,
+    "authority": [
+        "packages/fishhat-contracts/src/fishhat_contracts/contracts/backup-adapter.schema.json#/$defs/store",
+        "packages/fishhat-contracts/src/fishhat_contracts/contracts/records.schema.json#/$defs/Checkpoint",
+    ],
+    "scope": "collision-safe store and retrieval of the earlier checkpoint's exact incarnation",
+    "reason": "Single-version and immutable-version filesystem models exercise collisions and exact byte retrieval. Native backend guarantees require separate qualification.",
 }

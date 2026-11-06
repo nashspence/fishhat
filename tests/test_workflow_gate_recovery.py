@@ -1,6 +1,7 @@
 """A restored gate needs complete original custody and each owner's fresh delegation."""
 
 from copy import deepcopy
+from dataclasses import replace
 from types import SimpleNamespace
 
 import pytest
@@ -18,13 +19,14 @@ from fishhat_contracts.workflow_gate_recovery import (
 from fishhat_contracts.workflow_journal import WorkflowGate, initialize_workflow_journal
 from fishhat_contracts.workflow_journal_recovery import (
     JournalRecovery,
+    MemberJournalSource,
     OriginRecoveryContext,
     WorkflowRecoveryMember,
 )
 from fishhat_owner.workflow_journal import WorkflowJournal
 
 from tests.test_contracts import uid
-from tests.test_workflow_journal_epoch import CurrentNative
+from tests.test_workflow_journal_epoch import CurrentNative, next_member_epoch, reopen_source
 from tests.workflow_journal_support import (
     APPROVED_ADMISSION,
     DRIVER,
@@ -797,8 +799,11 @@ def test_member_epoch_restore_preserves_a_prior_gate_reapproval(tmp_path):
             )
             target = WorkflowRecoveryMember(
                 OriginRecoveryContext(
-                    original.journal,
-                    original.journal.schema,
+                    (
+                        MemberJournalSource(
+                            original.journal, original.journal.schema, original.journal.head
+                        ),
+                    ),
                     original.signed_projection,
                     original.enrollment,
                     custody,
@@ -860,6 +865,37 @@ def test_member_epoch_restore_preserves_a_prior_gate_reapproval(tmp_path):
                     },
                     DRIVER,
                 )
+
+            # A new owner must recover the previous member's approval and native predecessor from
+            # the ordered member history. Both source journals are opened without leases.
+            with next_member_epoch(tmp_path, original, target, current_native, meter) as (
+                origin,
+                config,
+            ):
+                local, native, latest = config["journal"], config["native"], config["owner"]
+                sources = origin.sources
+                initial_head = local.head
+                for bad in (
+                    sources[:1],
+                    sources[1:],
+                    tuple(reversed(sources)),
+                    (sources[0], *sources),
+                ):
+                    with pytest.raises(ContractError):
+                        WorkflowRecoveryMember(replace(origin, sources=bad), **config)
+                    assert local.head == initial_head
+                third = WorkflowRecoveryMember(origin, **config)
+                assert third._recovery_gate_approval == new_approval
+                third.extension.gate_recovery_enrollments = {digest(grant.authority): grant}
+                native.enrolled_gate_context = {
+                    **current_native.enrolled_gate_context,
+                    "owner": latest,
+                }
+                approval = third._run({**command, "id": uid("third-member-approval")}, DRIVER)
+                assert approval["owner"] == latest
+                assert approval["body"]["native"]["previous_authority_digest"] == digest(
+                    grant.authority
+                )
         finally:
             if current_journal is not None:
                 current_journal.close()
@@ -874,7 +910,7 @@ def test_gate_recovery_cold_reopen_preserves_current_epoch_outcomes(tmp_path):
     meter = WorkMeter()
     with meter.account():
         run = WorkflowRun(tmp_path, LogicalWorkload(children=1), meter)
-        recovered = reopened = None
+        recovered = reopened = archived = None
         try:
             run.prepare()
             recovered = recovered_gate(run)
@@ -891,6 +927,16 @@ def test_gate_recovery_cold_reopen_preserves_current_epoch_outcomes(tmp_path):
                 metrics=meter.values,
             )
             context["journal"] = reopened
+            archived = reopen_source(run.gate.target.journal, meter)
+            (segment,) = recovered.origin.sources
+            context["origin"] = replace(
+                recovered.origin, sources=(replace(segment, journal=archived),)
+            )
+            with (
+                pytest.raises(ContractError, match="writer unavailable"),
+                archived.guard(archived.head),
+            ):
+                pytest.fail("historical source allowed admission")
             target = WorkflowRecoveryGate(**context)
             assert target.record(certificate["id"], principal=DRIVER) == certificate
             assert list(reopened.iter_events(read_authorized=True)) == original
@@ -922,6 +968,8 @@ def test_gate_recovery_cold_reopen_preserves_current_epoch_outcomes(tmp_path):
             ):
                 WorkflowRecoveryGate(**changed)
         finally:
+            if archived is not None:
+                archived.close()
             if reopened is not None:
                 reopened.close()
             if recovered is not None:

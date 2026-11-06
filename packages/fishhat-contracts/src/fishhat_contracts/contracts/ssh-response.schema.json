@@ -698,7 +698,7 @@
           "problem": {
             "properties": {
               "code": {
-                "$ref": "records.schema.json#/$defs/SubmissionRefusal/properties/reason"
+                "$ref": "owner-decision-v1.schema.json#/$defs/SubmissionRefusal/properties/reason"
               },
               "retry": {
                 "const": "none"

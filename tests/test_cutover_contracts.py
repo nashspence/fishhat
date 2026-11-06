@@ -107,6 +107,12 @@ def test_boundary_requires_independent_approval_and_same_source():
             release, expected_release_digest=release["digest"], **(context | overrides)
         )
 
+    release["runtime"]["components"] = ["database", "web"]
+    verify()
+    release["runtime"]["components"] = ["web", "worker"]
+    with pytest.raises(ContractError, match="component outside the pinned application"):
+        verify()
+    release["runtime"]["components"] = ["web"]
     verify()
     for key, substitute in (
         ("source_id", "other"),

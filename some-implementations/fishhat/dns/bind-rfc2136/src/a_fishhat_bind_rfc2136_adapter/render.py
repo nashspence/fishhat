@@ -39,6 +39,7 @@ def render_update(change: dict[str, Any], *, zone: str) -> bytes:
         "RRset",
     )
     lines = ["zone " + zone]
+    deletions = []
     additions = []
     for item in change["changes"]:
         before, after = item["before"], item["after"]
@@ -51,11 +52,11 @@ def render_update(change: dict[str, Any], *, zone: str) -> bytes:
         else:
             for value in before["rdata"]:
                 lines.append(f"prereq yxrrset {name} {typ} " + _data(before, value))
-            additions.append(f"update delete {name} {typ}")
+            deletions.append(f"update delete {name} {typ}")
         if after is not None:
             if after["ttl"]["mode"] != "exact":
                 raise ContractError("EXPLICIT_TTL_REQUIRED")
             ttl = after["ttl"]["seconds"]
             for value in after["rdata"]:
                 additions.append(f"update add {name} {ttl} {typ} " + _data(after, value))
-    return ("\n".join(lines + additions + ["send", ""])).encode("ascii")
+    return ("\n".join(lines + deletions + additions + ["send", ""])).encode("ascii")

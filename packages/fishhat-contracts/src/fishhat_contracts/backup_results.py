@@ -14,6 +14,28 @@ def _require(condition: bool, message: str) -> None:
         raise ContractError(message)
 
 
+def require_backup_store_precondition(
+    request: dict[str, Any],
+    *,
+    creation_primitive: str,
+    key_absent: bool | None,
+) -> None:
+    """Check native store facts supplied by the approved executor, outside the request.
+
+    The executor must actually use the named atomic primitive on this repository
+    and key. An absence observation alone never reserves a key. Immutable version
+    creation must preserve independent retrieval by incarnation through pruning.
+    """
+    validate("backup-adapter.schema.json", request)
+    _require(request["method"] == "store", "expected a backup store")
+    inputs = request["input"]
+    _require(inputs["repository"] == inputs["scope"]["handle"], "backup repository scope changed")
+    if creation_primitive == "append-immutable-version":
+        return
+    _require(creation_primitive == "create-if-absent", "unsupported backup creation primitive")
+    _require(key_absent is True, "backup store requires a definitively absent key")
+
+
 def validate_backup_selection(
     selection: dict[str, Any],
     *,

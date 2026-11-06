@@ -69,7 +69,7 @@
     "bootstrap-source": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/bootstrap-source-adapter.schema.json",
-        "digest": "sha256:af81532ac8dc30c786b5603d73edbabeb56c3f2a7ede8d765459ff131b533b7c"
+        "digest": "sha256:9b7e562b27efbcf38c58a3db394763b9552f1436668dc77af18cb587a007c424"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/bootstrap-source-adapter.schema.json#/$defs/Response",
@@ -77,5 +77,5 @@
       }
     }
   },
-  "process_schema_digest": "sha256:81490bcbcb838edbbd1e2f1744d9ab2099a33567db8e84070d42af7aafb0bec1"
+  "process_schema_digest": "sha256:c09b1f550cc8f464e8e3703c262b49cd4dc2e132550bc3322449edfb045ae17f"
 }

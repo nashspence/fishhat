@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from .handoffs import schema_identity
+from .handoffs import schema_document_digest, schema_identity
 from .validation import CATALOGUES, SCHEMAS, ContractError, digest, validate
 
 OWNER_CONTRACTS = {
@@ -18,6 +18,26 @@ OWNER_CONTRACTS = {
 FRESH_ADMISSION_METHODS = frozenset(
     CATALOGUES["https://fishhat.invalid/contracts/ssh-methods.json"]["fresh_admission"]["methods"]
 )
+
+_DECISION_SCHEMA = "owner-decision-v1.schema.json"
+# A different decision format needs a new reader while v1 custody is retained.
+# Updating an ordinary release/interface snapshot cannot replace this identity.
+_V1_DECISION_READER = "sha256:25e0abd9ed3564ab409d259883c0a59b3bbbbc72d7099568989fe6c3e329e932"
+
+
+def require_v1_decision_reader() -> None:
+    """Fence an incompatible installation before it opens original v1 decision custody."""
+    for schema, local, frozen in (
+        ("records.schema.json", "SubmissionRefusal", "SubmissionRefusal"),
+        ("records.schema.json", "Problem", "Problem"),
+        ("cancellation.schema.json", "Receipt", "CancellationReceipt"),
+    ):
+        if SCHEMAS[schema]["$defs"].get(local) != {"$ref": f"{_DECISION_SCHEMA}#/$defs/{frozen}"}:
+            raise ContractError("incompatible v1 decision reader")
+    uri = "https://fishhat.invalid/contracts/" + _DECISION_SCHEMA
+    installed = SCHEMAS.get(_DECISION_SCHEMA, {})
+    if installed.get("$id") != uri or schema_document_digest(uri) != _V1_DECISION_READER:
+        raise ContractError("incompatible v1 decision reader")
 
 
 def admission_contract(schemas: Mapping[str, dict[str, str]]) -> str:

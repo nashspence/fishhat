@@ -269,6 +269,8 @@ def read_historical_refusal(
     descriptor digest, original request ID and canonical protected resource.
     Missing entries can reflect the backup cut and never create a decision.
     """
+    from .discovery import require_v1_decision_reader
+
     authorize_history_request(
         "history.refusal",
         request,
@@ -276,6 +278,7 @@ def read_historical_refusal(
         read_authorized=read_authorized,
         verified_custody=verified_custody,
     )
+    require_v1_decision_reader()
     key = (verified_custody["digest"], request["request_id"], canonical(request["resource"]))
     data = verified_pairs.get(key)
     if data is None:

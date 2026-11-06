@@ -255,7 +255,7 @@ class WorkflowRecoveryGate(WorkflowGate):
         self._gate_recovery_initialized: JSON | None = None
         with ExitStack() as guards:
             for source in origin.sources:
-                guards.enter_context(source.journal.guard(source.head))
+                guards.enter_context(source.journal.read_guard(source.head))
             self._restore_sources(origin, source_keys)
             # Freeze only this finite workflow's selected native mapping once.
             # Owner-wide indexes may be mutable and contain unrelated entries;
