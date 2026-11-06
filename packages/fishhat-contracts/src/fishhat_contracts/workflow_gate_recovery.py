@@ -74,7 +74,8 @@ class OriginGateRecoveryContext:
     index is accepted. Native restore verifies completeness and anti-rollback
     against the custody manifest before authorizing a replacement. source_keys is
     the exact finite signing-key closure of these sources, not an owner-wide
-    unrelated trust registry. It is materialized once during cold reconstruction.
+    unrelated trust registry. It is independently indexed and materialized once
+    during cold reconstruction; a target configuration overlay is not this reader.
     """
 
     proposal: JSON
@@ -226,6 +227,10 @@ class WorkflowRecoveryGate(WorkflowGate):
         clock: Callable[[], str] = _now,
         command: JSON | None = None,
     ) -> None:
+        _require(
+            not isinstance(origin.source_keys, _KeyOverlay),
+            "gate recovery requires independently indexed source keys",
+        )
         _require(bool(origin.sources), "gate recovery lacks complete original custody")
         validate_owner_custody(origin.custody, expected_custodian=owner)
         predecessor = origin.sources[-1]

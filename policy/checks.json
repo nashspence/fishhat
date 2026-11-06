@@ -16476,6 +16476,10 @@
       "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
     },
     {
+      "node": "tests/test_workflow_journal_epoch.py::test_member_epoch_lineage_restoration_is_linear",
+      "purpose_sha256": "543d6f03d53a8078d20ebc9622d680fa589fb476521145c471df6685723203b8"
+    },
+    {
       "node": "tests/test_workflow_journal_epoch.py::test_restored_epoch_recovery_is_linear",
       "purpose_sha256": "f6912b3559fbd03ce5bbd8a2359302d7dc122745483221f890f3cf0b029df211"
     },

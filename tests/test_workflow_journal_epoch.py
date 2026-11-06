@@ -1,6 +1,6 @@
 """Original journal bytes survive independently approved current-epoch recovery."""
 
-from contextlib import ExitStack, contextmanager
+from contextlib import ExitStack, contextmanager, nullcontext
 from copy import deepcopy
 from dataclasses import replace
 
@@ -275,20 +275,26 @@ def reopen_source(journal, meter):
 
 
 @contextmanager
-def next_member_epoch(root, original, previous, previous_native, meter):
-    """Open only authenticated archived journals; enroll the next custodian independently."""
+def next_member_epoch(
+    root, original, previous, previous_native, meter, *, prior_sources=(), trusted_keys=None
+):
+    """Open authenticated source checkpoints and supply independently enrolled signer keys."""
     with ExitStack() as cleanup:
-        a = reopen_source(original.journal, meter)
-        cleanup.callback(a.close)
+        if not prior_sources:
+            a = reopen_source(original.journal, meter)
+            cleanup.callback(a.close)
+            prior_sources = (MemberJournalSource(a, a.schema, a.head),)
         b = reopen_source(previous.journal, meter)
         cleanup.callback(b.close)
-        latest = {**original.owner, "epoch": uid("third-member-epoch")}
+        sources = (*prior_sources, MemberJournalSource(b, b.schema, b.head))
+        number = len(sources) + 1
+        latest = {**original.owner, "epoch": uid("member-epoch-" + str(number))}
         custody = previous_native.custody
         adopted = seal_custody(
             {
                 **custody,
                 "custodian": latest,
-                "manifest": {**custody["manifest"], "digest": digest([a.head, b.head])},
+                "manifest": {**custody["manifest"], "digest": digest([s.head for s in sources])},
             }
         )
         native = type(previous_native)(
@@ -296,16 +302,20 @@ def next_member_epoch(root, original, previous, previous_native, meter):
             latest,
             adopted,
             b,
-            root / "third-native.journal",
+            root / f"epoch-{number}-native.journal",
             meter,
-            earlier=(a,),
+            earlier=tuple(s.journal for s in prior_sources),
         )
         cleanup.callback(native.store.close)
-        local = meter.store(root / "third-member.journal", latest, previous.journal.schema)
+        local = meter.store(
+            root / f"epoch-{number}-member.journal", latest, previous.journal.schema
+        )
         cleanup.callback(local.close)
-        sources = tuple(MemberJournalSource(j, j.schema, j.head) for j in (a, b))
+        keys = dict(trusted_keys or {})
+        keys[(canonical(original.owner), KEY_ID)] = original.private_key.public_key()
+        keys[(canonical(previous.owner), KEY_ID)] = previous.private_key.public_key()
         origin = OriginRecoveryContext(
-            sources, original.signed_projection, original.enrollment, adopted, previous.keys
+            sources, original.signed_projection, original.enrollment, adopted, keys
         )
         yield (
             origin,
@@ -558,7 +568,7 @@ def test_restored_epoch_requires_exact_custody_and_preserves_original_bytes(tmp_
                     key_id=KEY_ID,
                     private_key=run.keys[0],
                     native=run.native[0],
-                    operation_keys=member.keys,
+                    operation_keys=dict(member.keys),
                     journal=store,
                     principal=DRIVER,
                     extension=run.extension,
@@ -611,7 +621,7 @@ def test_restored_epoch_requires_exact_custody_and_preserves_original_bytes(tmp_
                     key_id=KEY_ID,
                     private_key=run.keys[0],
                     native=run.native[0],
-                    operation_keys=member.keys,
+                    operation_keys=dict(member.keys),
                     journal=store,
                     principal=DRIVER,
                     extension=run.extension,
@@ -661,7 +671,7 @@ def test_restored_epoch_requires_exact_custody_and_preserves_original_bytes(tmp_
                 "key_id": KEY_ID,
                 "private_key": run.keys[0],
                 "native": native,
-                "operation_keys": member.keys,
+                "operation_keys": dict(member.keys),
                 "journal": store,
                 "extension": approved,
             }
@@ -889,3 +899,77 @@ def test_unknown_disposition_advances_only_with_exact_successful_native_recovery
         )
     finally:
         run.close()
+
+
+def test_member_epoch_lineage_restoration_is_linear(tmp_path):
+    samples = []
+    for extent in (2, 8, 32):
+        root = tmp_path / str(extent)
+        meter = WorkMeter()
+        workload = LogicalWorkload(owners=2, children=1)
+        original_run(root, workload, meter)
+        run = EpochRun(root, workload, meter)
+        try:
+            original = run.original.members[0].target
+            previous, previous_native = run.members[0].target, run.native[0]
+            sources, trusted = (), {}
+            with ExitStack() as cleanup:
+                for count in range(2, extent + 1):
+                    measured = count == extent
+                    if measured:
+                        meter.values.clear()
+                    with meter.account() if measured else nullcontext():
+                        origin, config = cleanup.enter_context(
+                            next_member_epoch(
+                                root,
+                                original,
+                                previous,
+                                previous_native,
+                                meter,
+                                prior_sources=sources,
+                                trusted_keys=trusted,
+                            )
+                        )
+                        if measured:
+                            initial = config["journal"].head
+                            native_head = config["native"].store.head
+                            for selection in ("source", "operation"):
+                                unsafe_origin = (
+                                    replace(origin, source_keys=previous.keys)
+                                    if selection == "source"
+                                    else origin
+                                )
+                                unsafe_config = (
+                                    {**config, "operation_keys": previous.keys}
+                                    if selection == "operation"
+                                    else config
+                                )
+                                with pytest.raises(ContractError, match="independently indexed"):
+                                    WorkflowRecoveryMember(unsafe_origin, **unsafe_config)
+                                assert config["journal"].head == initial
+                                assert config["native"].store.head == native_head
+                        restored = WorkflowRecoveryMember(origin, **config)
+                    sources, trusted = origin.sources, origin.source_keys
+                    previous, previous_native = restored, config["native"]
+                assert len(sources) == extent
+                assert meter.values["source_read_guards"] == extent
+                assert restored.ready == run.members[0].target.ready
+                samples.append((extent, dict(meter.values)))
+        finally:
+            run.close()
+    initial_extent, initial = samples[0]
+    for extent, counts in samples[1:]:
+        for metric in initial.keys() | counts.keys():
+            assert (
+                counts.get(metric, 0) * initial_extent <= 1.25 * initial.get(metric, 0) * extent
+            ), (
+                metric,
+                samples,
+            )
+
+
+CHECK_OVERRIDES["test_member_epoch_lineage_restoration_is_linear"] = {
+    **CHECK_OVERRIDES["test_restored_epoch_recovery_is_linear"],
+    "scope": "one complete cold member restoration across an increasing ordered epoch lineage with independently indexed source trust",
+    "reason": "Two, eight and thirty-two real signed source epochs are independently prepared outside measurement. The measured final restoration includes source selection, signer indexing, native custody, source reads, verification and journal commitment; every work counter must remain linear. A recursively composed prior-target reader must reject before either destination journal changes. No native recovery qualification is asserted.",
+}

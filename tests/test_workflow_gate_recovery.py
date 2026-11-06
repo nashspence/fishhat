@@ -807,7 +807,7 @@ def test_member_epoch_restore_preserves_a_prior_gate_reapproval(tmp_path):
                     original.signed_projection,
                     original.enrollment,
                     custody,
-                    original.keys,
+                    {(canonical(original.owner), KEY_ID): original.private_key.public_key()},
                 ),
                 owner=current,
                 key_id=KEY_ID,
@@ -937,6 +937,15 @@ def test_gate_recovery_cold_reopen_preserves_current_epoch_outcomes(tmp_path):
                 archived.guard(archived.head),
             ):
                 pytest.fail("historical source allowed admission")
+            initial_head = reopened.head
+            with pytest.raises(ContractError, match="independently indexed source keys"):
+                WorkflowRecoveryGate(
+                    **{
+                        **context,
+                        "origin": replace(context["origin"], source_keys=run.gate.target.keys),
+                    }
+                )
+            assert reopened.head == initial_head
             target = WorkflowRecoveryGate(**context)
             assert target.record(certificate["id"], principal=DRIVER) == certificate
             assert list(reopened.iter_events(read_authorized=True)) == original

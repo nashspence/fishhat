@@ -257,6 +257,9 @@ class OriginRecoveryContext:
     It is not an exported Python state tuple. The current native owner verifies
     restoration membership, permanent old-epoch fencing and material retention
     independently before supplying this context or allowing any recovery fact.
+    source_keys is the independently indexed signing-key closure of the selected
+    sources. Operation trust also uses an independently indexed reader. A prior
+    target's recursively composed configuration overlay is not either reader.
     """
 
     sources: tuple[MemberJournalSource, ...]
@@ -288,6 +291,7 @@ class WorkflowRecoveryMember(_JournalTarget):
             ),
             linear_proofs=(
                 "tests/test_workflow_journal_epoch.py::test_restored_epoch_recovery_is_linear",
+                "tests/test_workflow_journal_epoch.py::test_member_epoch_lineage_restoration_is_linear",
             ),
         )
     )
@@ -306,6 +310,10 @@ class WorkflowRecoveryMember(_JournalTarget):
         clock: Callable[[], str] = _now,
         command: JSON | None = None,
     ) -> None:
+        _require(
+            not any(isinstance(keys, _KeyOverlay) for keys in (origin.source_keys, operation_keys)),
+            "member recovery requires independently indexed trust readers",
+        )
         self.native, self.enrollment = native, origin.enrollment
         keys: KeyRing = _KeyOverlay(
             {

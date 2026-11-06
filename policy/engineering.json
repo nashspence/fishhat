@@ -4494,7 +4494,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "cbe42996705c0cb9a7d36370f674cca93e03c602e5dd99fb4d4fb42874df368a",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "305953e31793e02a8070084bb8b198af551abbf70c6708462e23169e068f71d6",
         "tests/test_workflow_journal.py": "760553c0a9e5800a13272a0c059575ac7dae79eb31b932905d4c8853fa9ed37e",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
@@ -4518,7 +4518,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "cbe42996705c0cb9a7d36370f674cca93e03c602e5dd99fb4d4fb42874df368a",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "305953e31793e02a8070084bb8b198af551abbf70c6708462e23169e068f71d6",
         "tests/test_workflow_journal.py": "760553c0a9e5800a13272a0c059575ac7dae79eb31b932905d4c8853fa9ed37e",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
@@ -4542,7 +4542,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "cbe42996705c0cb9a7d36370f674cca93e03c602e5dd99fb4d4fb42874df368a",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "305953e31793e02a8070084bb8b198af551abbf70c6708462e23169e068f71d6",
         "tests/test_workflow_journal.py": "760553c0a9e5800a13272a0c059575ac7dae79eb31b932905d4c8853fa9ed37e",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
@@ -4566,7 +4566,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "cbe42996705c0cb9a7d36370f674cca93e03c602e5dd99fb4d4fb42874df368a",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "305953e31793e02a8070084bb8b198af551abbf70c6708462e23169e068f71d6",
         "tests/test_workflow_journal.py": "760553c0a9e5800a13272a0c059575ac7dae79eb31b932905d4c8853fa9ed37e",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
@@ -4590,7 +4590,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "cbe42996705c0cb9a7d36370f674cca93e03c602e5dd99fb4d4fb42874df368a",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "305953e31793e02a8070084bb8b198af551abbf70c6708462e23169e068f71d6",
         "tests/test_workflow_journal.py": "760553c0a9e5800a13272a0c059575ac7dae79eb31b932905d4c8853fa9ed37e",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
@@ -4606,16 +4606,18 @@
       "id": "workflow.journal-recovery.member-restore",
       "limits": [],
       "linear_proofs": [
-        "tests/test_workflow_journal_epoch.py::test_restored_epoch_recovery_is_linear"
+        "tests/test_workflow_journal_epoch.py::test_restored_epoch_recovery_is_linear",
+        "tests/test_workflow_journal_epoch.py::test_member_epoch_lineage_restoration_is_linear"
       ],
       "proofs": [
         "tests/test_workflow_journal_epoch.py::test_restored_epoch_requires_exact_custody_and_preserves_original_bytes",
-        "tests/test_workflow_journal_epoch.py::test_restored_epoch_recovery_is_linear"
+        "tests/test_workflow_journal_epoch.py::test_restored_epoch_recovery_is_linear",
+        "tests/test_workflow_journal_epoch.py::test_member_epoch_lineage_restoration_is_linear"
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "cbe42996705c0cb9a7d36370f674cca93e03c602e5dd99fb4d4fb42874df368a",
-        "tests/test_workflow_journal_epoch.py": "22b6fc78e911485d5b52370f81eac5bb58ab8f70b325fe4ad4a58a9c2859d90b"
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "305953e31793e02a8070084bb8b198af551abbf70c6708462e23169e068f71d6",
+        "tests/test_workflow_journal_epoch.py": "89836bbe83ff63a105bad834d020c701dafeb1b672b15113bbeb9be1b5a57c69"
       },
       "symbol": "fishhat_contracts.workflow_journal_recovery:WorkflowRecoveryMember.__init__",
       "work": "O(L + H + S) one original local projection, a fixed-size digest fold per supplied epoch, and one pass over every source and current event per cold restoration"
@@ -4637,7 +4639,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "cbe42996705c0cb9a7d36370f674cca93e03c602e5dd99fb4d4fb42874df368a",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal_recovery.py": "305953e31793e02a8070084bb8b198af551abbf70c6708462e23169e068f71d6",
         "tests/test_workflow_journal.py": "760553c0a9e5800a13272a0c059575ac7dae79eb31b932905d4c8853fa9ed37e",
         "tests/test_workflow_journal_growth.py": "8137349bb30333da46ebb681d025595e3e5f9bcb0201213287312ca34833966d"
       },
@@ -5022,8 +5024,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_gate_recovery.py": "f540b644aa2416b17df035e39399309e26030927e62888bdd173689b4e13a715",
-        "tests/test_workflow_gate_recovery.py": "89e62de48d9b1f92548a97b492bd1c3162ba336d2f780689421db60ed615879a"
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_gate_recovery.py": "f7566407a766ef429452b1984501fbb2f0905ef4209878f4d20847aff1bc6eec",
+        "tests/test_workflow_gate_recovery.py": "d47550501cce52070fa8503178fd149fabe3fb9b0331fddf62acf357b835f52a"
       },
       "symbol": "fishhat_contracts.workflow_gate_recovery:WorkflowRecoveryGate.__init__",
       "work": "O(B + N + H) one manifest partition, one pass over each qualified epoch segment and one current journal replay; each local reapproval is indexed once"
