@@ -25,6 +25,11 @@ from uuid import UUID
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from fishhat_client.wire import frame, read_frame
 from fishhat_contracts import validation
+from fishhat_contracts.discovery import (
+    FRESH_ADMISSION_METHODS,
+    admission_contract,
+    owner_contract_schemas,
+)
 from fishhat_contracts.handoffs import PHASES, schema_identity
 from fishhat_contracts.operations import submission_replay_identity
 from fishhat_contracts.record_delivery import (
@@ -51,6 +56,8 @@ from fishhat_owner.workflow_journal import WorkflowJournal
 
 from tests.test_contracts import uid
 from tests.test_owner_handoffs import operation
+
+APPROVED_ADMISSION = admission_contract(owner_contract_schemas())
 
 NOW = "2026-11-01T00:00:00Z"
 LATER = "2026-11-01T01:00:00Z"
@@ -149,6 +156,7 @@ class MeteredPrivateKey:
 
 class WorkMeter:
     def __init__(self):
+        self.approved_admission = APPROVED_ADMISSION
         self.values = Counter()
         self.messages = []
         self.checkpoints = {}
@@ -330,8 +338,14 @@ class WorkMeter:
             "method": method,
             "params": params,
         }
+        if method in FRESH_ADMISSION_METHODS:
+            request["admission_contract"] = self.approved_admission
         incoming = self.message(source, destination, request, category=category)
         validate("ssh-request.schema.json", incoming)
+        if method in FRESH_ADMISSION_METHODS:
+            require(
+                incoming["admission_contract"] == self.approved_admission, "admission pin changed"
+            )
         return incoming["params"]
 
     def stage(
@@ -854,7 +868,9 @@ class NativeOwner:
             )
             self.meter.values["native_exact_replays"] += 1
             return deepcopy(accepted["operation"])
-        with member.operation_admission_guard(submission, principal=principal) as permit:
+        with member.operation_admission_guard(
+            submission, principal=principal, admission_pin=self.meter.approved_admission
+        ) as permit:
             with self._native_lock:
                 return self._accept_native(submission, member, principal, child, key, permit)
 
@@ -1309,7 +1325,9 @@ class Endpoint:
             now=NOW,
             retained_command=None if retained is None else retained["request"],
         )
-        outcome = dispatch_journal_command(self.target, decoded, principal=principal)
+        outcome = dispatch_journal_command(
+            self.target, decoded, principal=principal, admission_pin=self.meter.approved_admission
+        )
         staging["accepted_references"] = 1
         self._register(identifier)
         result = self.read(identifier, principal=principal)
@@ -1608,7 +1626,12 @@ class WorkflowRun:
             validate_journal_input_custody(
                 incoming, decoded, staging, principal=self.principal, now=NOW
             )
-        return initialize_workflow_journal(decoded, principal=self.principal, context=context)
+        return initialize_workflow_journal(
+            decoded,
+            principal=self.principal,
+            context=context,
+            admission_pin=self.meter.approved_admission,
+        )
 
     def store(self, path, owner, *, restore):
         if restore:
@@ -1782,6 +1805,7 @@ class WorkflowRun:
         return initialize_workflow_journal(
             strict_json(data, max_bytes=len(data)),
             principal=self.principal,
+            admission_pin=self.meter.approved_admission,
             context={
                 "owner": actor.owner,
                 "key_id": KEY_ID,

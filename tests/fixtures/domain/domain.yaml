@@ -45,7 +45,7 @@ apps:
     source: app-demo-app
     host: node-a
     placement_generation: 1
-    boundary_digest: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    boundary_digest: sha256:b229758aa14534a652587a65439c80a45b32c1bc2d7c7a0e6a38880cec11d1d2
     security_control: false
 providers: {}
 backup_backends:

@@ -13,6 +13,7 @@ from uuid import uuid4
 
 from fishhat_adapters import (
     ROLES,
+    ObservationSequence,
     Registry,
     check_invocation,
     check_request,
@@ -75,7 +76,7 @@ class AdapterCoordinator:
         self.native_exclusion = native_exclusion
         self.processes_quiescent = processes_quiescent
         self._poisoned = False
-        self._observation_barriers: dict[str, dict[str, Any]] = {}
+        self._observation_scans: dict[str, tuple[dict[str, Any], ObservationSequence]] = {}
         self._quiescence_proofs: dict[str, dict[str, Any]] = {}
         self._effect_attempts: dict[tuple[str, str], str] = {}
         self._scope_subjects: dict[bytes, str] = {}
@@ -114,7 +115,7 @@ class AdapterCoordinator:
         require(not self._poisoned, "OWNER_COMMIT_UNCERTAIN")
         changed = copy.deepcopy(updates)
         for subject in invalidate:
-            self._observation_barriers.pop(subject, None)
+            self._observation_scans.pop(subject, None)
             self._quiescence_proofs.pop(subject, None)
             changed.setdefault("quiescent", {})[subject] = False
         previous = self.state["revision"]
@@ -740,6 +741,9 @@ class AdapterCoordinator:
             "admission_generation": binding["admission_generation"],
             "exclusion_id": self._exclusion_identity(binding["scope"]),
         }
+        executor = instance_reference(
+            self.registry.inspect_instance(binding["instance"]), binding["scope"]
+        )
         query = {
             "contract": "fishhat.runtime",
             "method": method,
@@ -748,9 +752,7 @@ class AdapterCoordinator:
                 "cursor": None,
                 "limit": limit,
                 "barrier": barrier,
-                "binding": instance_reference(
-                    self.registry.inspect_instance(binding["instance"]), binding["scope"]
-                ),
+                "binding": executor,
                 "target": copy.deepcopy(binding),
             },
         }
@@ -764,16 +766,28 @@ class AdapterCoordinator:
         if self.state["quiescent"][subject]:
             self._publish({"quiescent": {subject: False}})
         self._quiescence_proofs.pop(subject, None)
-        self._observation_barriers[subject] = copy.deepcopy(barrier)
+        self._observation_scans[subject] = (
+            copy.deepcopy(barrier),
+            ObservationSequence(
+                "runtime",
+                query,
+                approved_binding=executor,
+                approved_runtime_binding=binding,
+            ),
+        )
         return query
 
     def prove_quiescent(
-        self, subject: str, observation: dict[str, Any], *, owner_approved: bool
-    ) -> None:
-        """Consume one authenticated post-drain result while its exclusion remains held."""
+        self,
+        subject: str,
+        request: dict[str, Any],
+        response: dict[str, Any],
+        *,
+        owner_approved: bool,
+    ) -> bool:
+        """Consume an authenticated scan page under exclusion; return True only on clearance."""
         require(not self._poisoned, "OWNER_COMMIT_UNCERTAIN")
         require(owner_approved, "OBSERVATION_NOT_AUTHORIZED")
-        validate("adapter.schema.json", observation, "Observation")
         binding = self.state["bindings"].get(subject)
         require(
             binding is not None and not self.state["admission"][subject], "ADMISSION_NOT_CLOSED"
@@ -781,27 +795,28 @@ class AdapterCoordinator:
         assert binding is not None
         self._instance_matches(binding)
         self._require_drained(binding["scope"])
+        scan = self._observation_scans.get(subject)
+        require(scan is not None, "OBSERVATION_BARRIER_REQUIRED")
+        assert scan is not None
+        barrier, sequence = scan
         require(
-            observation["scope"] == binding["scope"]
-            and observation["generation"] == binding["generation"]
-            and observation["instance"] == binding["instance"]
-            and observation["installation_digest"] == binding["installation_digest"]
-            and observation["native_incarnation"] == binding["native_incarnation"]
-            and observation["admission_generation"] == binding["admission_generation"],
-            "OBSERVATION_IDENTITY",
-        )
-        barrier = self._observation_barriers.get(subject)
-        require(barrier is not None, "OBSERVATION_BARRIER_REQUIRED")
-        assert barrier is not None
-        require(
-            observation["barrier"] == barrier
-            and barrier["owner"] == self.state["owner"]
-            and barrier["scope"] == binding["scope"]
-            and barrier["binding_digest"] == runtime_binding_digest(binding)
+            barrier["binding_digest"] == runtime_binding_digest(binding)
             and barrier["admission_generation"] == binding["admission_generation"]
             and barrier["exclusion_id"] == self._exclusion_identity(binding["scope"]),
             "STALE_OBSERVATION_BARRIER",
         )
+        self.registry.authorize_request(
+            binding["instance"],
+            "runtime",
+            request,
+            owner_approved=owner_approved,
+            expected_runtime_binding=binding,
+        )
+        sequence.accept(request, response)
+        if response["coverage"] == "incomplete":
+            return False
+        observation = response["output"]["observation"]
+        require(sequence.complete and observation is not None, "INCOMPLETE_QUIESCENCE")
         require(
             observation["coverage"] == "complete"
             and observation["continuation"] is None
@@ -810,8 +825,9 @@ class AdapterCoordinator:
             "INCOMPLETE_QUIESCENCE",
         )
         self._publish({"quiescent": {subject: True}})
-        self._observation_barriers.pop(subject, None)
+        self._observation_scans.pop(subject, None)
         self._quiescence_proofs[subject] = copy.deepcopy(barrier)
+        return True
 
     def snapshot(self) -> dict[str, Any]:
         require(not self._poisoned, "OWNER_COMMIT_UNCERTAIN")
@@ -819,7 +835,7 @@ class AdapterCoordinator:
 
     def restore(self, snapshot: dict[str, Any]) -> None:
         """Load owner-verified state; cached observations never restore start authority."""
-        self._observation_barriers.clear()
+        self._observation_scans.clear()
         self._quiescence_proofs.clear()
         canonical(snapshot)
         require(

@@ -197,6 +197,7 @@ def test_unapproved_gate_signature_never_creates_native_reservation(journal_run)
 def test_member_rejects_signed_projection_with_different_installed_procedure(
     journal_run, monkeypatch
 ):
+    from fishhat_contracts.discovery import admission_contract, owner_contract_schemas
     from fishhat_contracts.validation import CATALOGUES
 
     run, member = journal_run, journal_run.members[0]
@@ -206,6 +207,10 @@ def test_member_rejects_signed_projection_with_different_installed_procedure(
     installed = deepcopy(CATALOGUES[uri])
     installed["workflow_phases"]["host-drain"][1:3] = ["quiescent", "draining"]
     monkeypatch.setitem(CATALOGUES, uri, installed)
+    with pytest.raises(ContractError, match="contract revision mismatch"):
+        run.clone_member(0)
+    # Approval of the upgraded wire surface cannot approve a different signed procedure.
+    run.meter.approved_admission = admission_contract(owner_contract_schemas())
     with pytest.raises(
         ContractError, match="workflow requirements or independent gate grant changed"
     ):

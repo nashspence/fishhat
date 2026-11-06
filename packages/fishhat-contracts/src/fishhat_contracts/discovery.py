@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from .handoffs import schema_identity
-from .validation import SCHEMAS, ContractError, validate
+from .validation import CATALOGUES, SCHEMAS, ContractError, digest, validate
 
 OWNER_CONTRACTS = {
     "request": "ssh-request.schema.json",
@@ -14,6 +14,27 @@ OWNER_CONTRACTS = {
     "cli": "cli-output.schema.json",
     "source": "source.schema.json",
 }
+
+FRESH_ADMISSION_METHODS = frozenset(
+    CATALOGUES["https://fishhat.invalid/contracts/ssh-methods.json"]["fresh_admission"]["methods"]
+)
+
+
+def admission_contract(schemas: Mapping[str, dict[str, str]]) -> str:
+    """Commit independently approved boundaries on the caller, installed boundaries on the owner."""
+    if schemas.keys() != OWNER_CONTRACTS.keys():
+        raise ContractError("all owner contract boundaries are required")
+    for name, value in schemas.items():
+        validate("common.schema.json", value, "SchemaIdentity")
+        if value["uri"] != SCHEMAS[OWNER_CONTRACTS[name]]["$id"]:
+            raise ContractError("owner contract boundary URI changed")
+    return digest(dict(schemas))
+
+
+def require_admission_contract(supplied: str | None, installed: str) -> None:
+    """Run under native upgrade/admission exclusion before any fresh write, after exact replay."""
+    if supplied is None or supplied != installed:
+        raise ContractError("CONFLICT: owner contract revision mismatch")
 
 
 def owner_contract_schemas() -> dict[str, dict[str, str]]:

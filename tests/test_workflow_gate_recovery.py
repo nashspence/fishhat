@@ -4,6 +4,7 @@ from copy import deepcopy
 from types import SimpleNamespace
 
 import pytest
+from fishhat_contracts.discovery import admission_contract, owner_contract_schemas
 from fishhat_contracts.handoffs import schema_identity
 from fishhat_contracts.validation import CATALOGUES, ContractError, canonical, digest
 from fishhat_contracts.workflow_evidence import procedure_commitment
@@ -25,6 +26,7 @@ from fishhat_owner.workflow_journal import WorkflowJournal
 from tests.test_contracts import uid
 from tests.test_workflow_journal_epoch import CurrentNative
 from tests.workflow_journal_support import (
+    APPROVED_ADMISSION,
     DRIVER,
     KEY_ID,
     NEXT_DRIVER,
@@ -329,6 +331,10 @@ def test_historical_gate_requires_original_header_readers_and_source_reducer(tmp
         assert restored.target.authority["source_schema"] == original_schema
         assert len(reductions) == len(accepted) and reads
         assert original.journal._path.read_bytes() == original_bytes
+        with pytest.raises(ContractError, match="contract revision mismatch"):
+            restored.endpoint.call("round", {"to_phase": "draining"}, fresh=True)
+        # Approve the deliberately changed dispatcher. Historical custody still cannot run a round.
+        meter.approved_admission = admission_contract(owner_contract_schemas())
         with pytest.raises(ContractError, match="recovery only"):
             restored.endpoint.call("round", {"to_phase": "draining"}, fresh=True)
     finally:
@@ -417,7 +423,9 @@ def test_gate_recovery_rejects_substituted_or_unapproved_authority(tmp_path, tam
                 context = dict(recovered.context)
                 context.pop("principal")
                 with pytest.raises(ContractError, match="custody commitment"):
-                    initialize_workflow_journal(command, principal=DRIVER, context=context)
+                    initialize_workflow_journal(
+                        command, principal=DRIVER, context=context, admission_pin=APPROVED_ADMISSION
+                    )
         finally:
             if recovered is not None:
                 recovered.endpoint.close()

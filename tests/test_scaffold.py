@@ -7,7 +7,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import pytest
 from fishhat_cli.validation import main
+from fishhat_contracts.validation import ContractError, validate
 
 from tests.support import FIXTURES, ROOT
 
@@ -84,6 +86,39 @@ class Scaffold(unittest.TestCase):
         source = (ROOT / "fishhat/cli-support/src/fishhat_cli/validation.py").read_text()
         self.assertNotIn("subprocess", source)
         self.assertNotIn("requests", source)
+
+
+def test_validate_refuses_unspecified_or_invented_collection_definitions(tmp_path):
+    sample = tmp_path / "value.json"
+    sample.write_text("false")
+    for schema in ("records.schema.json", "plan-input.schema.json", "workflow-journal.schema.json"):
+        with contextlib.redirect_stderr(io.StringIO()):
+            assert main("domain-ops", ["validate", str(sample), "--schema", schema]) == 2
+    for name in ("nonexistent", "Plan/properties/digest", ""):
+        with pytest.raises(ContractError):
+            validate("records.schema.json", False, name)
+    assert (
+        main(
+            "domain-ops",
+            [
+                "validate",
+                str(FIXTURES / "plan.json"),
+                "--schema",
+                "records.schema.json",
+                "--definition",
+                "Plan",
+            ],
+        )
+        == 0
+    )
+
+
+def test_validate_file_capacity_is_independent_of_ssh_frames(tmp_path):
+    sample = tmp_path / "padded.json"
+    sample.write_bytes(b" " * (1024 * 1024) + (FIXTURES / "readiness.json").read_bytes())
+    args = ["validate", str(sample), "--schema", "readiness.schema.json"]
+    assert main("domain-ops", args) == 0
+    assert main("domain-ops", [*args, "--capacity-bytes", "128"]) == 2
 
 
 if __name__ == "__main__":

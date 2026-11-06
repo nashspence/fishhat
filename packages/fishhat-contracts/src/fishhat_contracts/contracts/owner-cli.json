@@ -112,7 +112,7 @@
         "--json"
       ],
       "use_case": "check",
-      "description": "Stage the exact one-application SelectionInput once under content custody and begin check. Observation cannot silently repair, adopt source, or authorize mutation; empty exact selections are separately representable through the request form."
+      "description": "Stage the exact one-application SelectionInput once under content custody and begin check. Observation cannot silently repair, adopt source, or authorize mutation; empty exact selections are separately representable through the request form. This form also accepts the admission pin for its preparatory content writes."
     },
     {
       "name": "app-restart",
@@ -799,5 +799,6 @@
   ],
   "parser": "bounded tokens; no shell evaluation",
   "authorization": "actual receiving principal, same protected owner use cases",
-  "rpc_command": "rpc-v1"
+  "rpc_command": "rpc-v1",
+  "admission_contract": "For any form, including inspections with preparatory writes, the optional leading tokens immediately after the tool are --admission-contract {digest}. Carry that caller-approved value into native admission as the SSH envelope admission_contract, outside immutable params. Without it only an authorized exact retained replay is eligible. For forms accepting an SSH envelope on stdin, an outer and inner pin must agree when both are present. Propagate the pin across preparatory content writes even when the final use case is observational. Read-only steps do not require a fresh admission. Never synthesize a pin from the receiving installation."
 }

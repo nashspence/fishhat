@@ -14,6 +14,7 @@ from fishhat_contracts.cancellation import (
     validate_cancellation_page,
     validate_cancellation_receipt,
 )
+from fishhat_contracts.discovery import admission_contract, owner_contract_schemas
 from fishhat_contracts.handoffs import schema_identity, validate_cli_result
 from fishhat_contracts.validation import ContractError, canonical, digest, validate, validate_cli
 from fishhat_owner.commands import parse_command
@@ -114,12 +115,16 @@ def target(state="running"):
     }
 
 
+ADMISSION_CONTRACT = admission_contract(owner_contract_schemas())
+
+
 def context(**changes):
     value = {
         "principal": "ops-app-operate",
         "expected_owner": copy.deepcopy(OWNER),
         "read_authorized": True,
         "cancel_authorized": True,
+        "admission_pin": ADMISSION_CONTRACT,
         "target": target(),
         "now": NOW,
     }

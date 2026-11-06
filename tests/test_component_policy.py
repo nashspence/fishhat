@@ -137,13 +137,13 @@ def test_preserved_reporting_store_retains_immutable_events(tmp_path):
     )
     try:
         assert store.epoch == "00000000-0000-4000-8000-000000000005"
-        status, envelope = store.put(event, principal="fixture-reporter", scopes={"append"})
+        status, envelope = store.put(event, principal="fixture-reporter", scopes={"append", "read"})
         assert status == 200
         assert envelope["event"] == event
         changed = copy.deepcopy(event)
         changed["reported_at"] = "2026-01-02T00:00:00Z"
         with pytest.raises(ContractError, match="immutable event conflict"):
-            store.put(changed, principal="fixture-reporter", scopes={"append"})
+            store.put(changed, principal="fixture-reporter", scopes={"append", "read"})
     finally:
         store.close()
 

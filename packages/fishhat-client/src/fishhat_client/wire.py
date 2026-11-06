@@ -8,10 +8,20 @@ import struct
 from typing import Any, BinaryIO
 
 from fishhat_contracts.bounds import Bounds, bounds
+from fishhat_contracts.discovery import FRESH_ADMISSION_METHODS
 from fishhat_contracts.validation import MAX_BYTES, ContractError, canonical, strict_json
 
 
-def frame(message: dict[str, Any]) -> bytes:
+def frame(message: dict[str, Any], *, admission_contract: str | None = None) -> bytes:
+    """Encode the original frame, optionally binding a new request to independently approved policy."""
+    if admission_contract is not None:
+        if message.get("method") not in FRESH_ADMISSION_METHODS or "params" not in message:
+            raise ContractError("admission contract requires a mutating owner request")
+        if not re.fullmatch(r"sha256:[a-f0-9]{64}", admission_contract):
+            raise ContractError("invalid admission contract digest")
+        if message.get("admission_contract", admission_contract) != admission_contract:
+            raise ContractError("conflicting admission contract digests")
+        message = {**message, "admission_contract": admission_contract}
     data = canonical(message)
     if not 0 < len(data) <= MAX_BYTES:
         raise ContractError("frame size")

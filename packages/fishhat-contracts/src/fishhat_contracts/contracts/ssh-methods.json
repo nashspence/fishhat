@@ -105,5 +105,21 @@
     }
   ],
   "max_frame_bytes": 1048576,
-  "max_content_chunk_bytes": 196608
+  "max_content_chunk_bytes": 196608,
+  "fresh_admission": {
+    "methods": [
+      "plan.prepare",
+      "operation.submit",
+      "operation.cancel",
+      "content.begin",
+      "content.chunk",
+      "content.commit",
+      "lifecycle.evidence.prepare",
+      "workflow.journal.submit",
+      "operation.close"
+    ],
+    "field": "admission_contract",
+    "commitment": "SHA-256 of the JCS encoding of the complete contract_schemas object in Info, with its request, response, cli and source SchemaIdentity values. The caller derives this digest from independently approved identities. Do not substitute live discovery as approval. The receiver derives its own digest from its active installed revision.",
+    "ordering": "For these methods a new decision, staged write, preparation or effect requires the caller’s exact admission_contract. Check it under the same protected exclusion as the new action, against the revision actually dispatching it. An upgrade fences old dispatchers and checks before reopening. If absent or stale return an ordinary CONFLICT Problem with retry safe-read, before new custody, work or effects. This is never durable nonacceptance. After current read authorization an exact previously committed identity may return its original immutable outcome through a retained reader independent of the current pin. The pin is outside params and replay identity. Every resumed chunk that appends new bytes is a new write. Discovery, historical reads and reads that only maintain traversal bookkeeping remain available."
+  }
 }

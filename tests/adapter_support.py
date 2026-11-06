@@ -242,7 +242,9 @@ def observation(admission_generation: int = 0, *, barrier: dict | None = None) -
     }
 
 
-def fresh_observation(owner, subject: str = "demo", *, method: str = "observe") -> dict:
+def fresh_observation(
+    owner, subject: str = "demo", *, method: str = "observe"
+) -> tuple[dict, dict]:
     query = owner.observation_request(subject, owner_approved=True, method=method)
     barrier = query["input"]["barrier"]
     value = observation(barrier["admission_generation"], barrier=barrier)
@@ -259,4 +261,14 @@ def fresh_observation(owner, subject: str = "demo", *, method: str = "observe") 
             )
         }
     )
-    return value
+    return query, {
+        "contract": query["contract"],
+        "method": method,
+        "request_digest": digest(query),
+        "scope": copy.deepcopy(target["scope"]),
+        "coverage": "complete",
+        "continuation": None,
+        "proposal": None,
+        "problem": None,
+        "output": {"deployment": None, "objects": [], "observation": value},
+    }

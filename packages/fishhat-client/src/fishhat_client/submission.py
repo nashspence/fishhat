@@ -56,7 +56,9 @@ def submit_once(
     Exit 8 means acceptance is unknown, never rejected or safe to submit anew.
 
     The injected transport must authenticate the owner, correlate the SSH reply to
-    its exact submitted message and verify its evidence. An authenticated refusal
+    its exact submitted message and verify its evidence. For fresh submissions and
+    withdrawals the transport carries the independently approved admission_contract
+    in the SSH envelope, outside the original params and Delivery. An authenticated refusal
     proves the owner closed this unaccepted identity. All other errors are ambiguous.
     This model checks the decoded Operation's shape and exact delivery bindings;
     those checks are not authentication or native execution qualification.

@@ -146,16 +146,42 @@ def main() -> None:
             reporting = EventStore(
                 Path(temporary) / "index.db", event["domain_id"], "fixture-service", initialize=True
             )
-            first, envelope = reporting.put(event, principal="fixture-reporter", scopes={"append"})
-            repeated, _ = reporting.put(event, principal="fixture-reporter", scopes={"append"})
-            assert first == 201 and repeated == 200 and envelope["event"] == event
-            reporting.close()
+            try:
+                first, ack = reporting.put(event, principal="fixture-reporter", scopes={"append"})
+                repeated, duplicate = reporting.put(
+                    event, principal="another-reporter", scopes={"append"}
+                )
+                assert first == 201 and repeated == 200
+                validate("tracking-records.schema.json", ack, "AppendAcknowledgment")
+                assert (
+                    ack
+                    == duplicate
+                    == {
+                        "format": "deployment-ops/index-append-ack/v1",
+                        "workflow_id": event["workflow_id"],
+                        "event_id": event["id"],
+                        "content_digest": digest(event),
+                    }
+                )
+                envelope = reporting.get(
+                    event["workflow_id"], event["id"], principal="reader", scopes={"read"}
+                )
+                assert envelope is not None and envelope["event"] == event
+                assert envelope["reporter"] == "fixture-reporter"
+            finally:
+                reporting.close()
             reporting_upgrade(Path(temporary) / "index.db")
             reopened_index = EventStore(
                 Path(temporary) / "index.db", event["domain_id"], "fixture-service"
             )
-            assert reopened_index.put(event, principal="reader", scopes={"append"})[0] == 200
-            reopened_index.close()
+            try:
+                status, envelope = reopened_index.put(
+                    event, principal="reader", scopes={"append", "read"}
+                )
+                assert status == 200 and envelope["event"] == event
+                assert envelope["reporter"] == "fixture-reporter"
+            finally:
+                reopened_index.close()
     if args.component == "directory":
         from fishhat_directory.projection import load_directory, prepare_projection
 

@@ -5,6 +5,7 @@ from unittest.mock import Mock
 
 import pytest
 from fishhat_client.submission import close_if_unaccepted, submit_once
+from fishhat_contracts.discovery import admission_contract, owner_contract_schemas
 from fishhat_contracts.submission_decisions import StandaloneDecisions
 from fishhat_contracts.validation import ContractError, validate
 from fishhat_owner.commands import close_request_params, parse_command
@@ -64,6 +65,7 @@ def test_submit_and_close_share_one_exact_decision():
         context = {
             "principal": op["authenticated_principal"],
             "can_read": Mock(return_value=True),
+            "admission_pin": admission_contract(owner_contract_schemas()),
             "can_close": Mock(return_value=True),
             "admit": Mock(return_value=op),
             "reviewed_plan": Mock(return_value=json.loads((FIXTURES / "plan.json").read_text())),
@@ -108,6 +110,7 @@ def test_submit_and_close_share_one_exact_decision():
             **context,
             "can_close": Mock(return_value=False),
             "principal": "reader",
+            "admission_pin": None,
             "reviewed_plan": unavailable,
         }
         assert index.decide("operation.submit", submit, **replay) == result

@@ -184,6 +184,9 @@
         },
         "params": {
           "$ref": "plan-input.schema.json#/$defs/InputReference"
+        },
+        "admission_contract": {
+          "$ref": "common.schema.json#/$defs/Digest"
         }
       },
       "required": [
@@ -360,6 +363,9 @@
               }
             }
           }
+        },
+        "admission_contract": {
+          "$ref": "common.schema.json#/$defs/Digest"
         }
       },
       "required": [
@@ -521,6 +527,9 @@
         },
         "params": {
           "$ref": "cancellation.schema.json#/$defs/Request"
+        },
+        "admission_contract": {
+          "$ref": "common.schema.json#/$defs/Digest"
         }
       },
       "required": [
@@ -631,6 +640,9 @@
           ],
           "additionalProperties": false,
           "description": "Allocate durable bounded staging before a plan exists. The owner binds the actual authenticated principal and exact resource/purpose. The same staging ID is the retry identity; creating or committing bytes does not plan, accept or activate an operation."
+        },
+        "admission_contract": {
+          "$ref": "common.schema.json#/$defs/Digest"
         }
       },
       "required": [
@@ -683,6 +695,9 @@
           ],
           "additionalProperties": false,
           "description": "Append at the exact staging offset after current custody authorization; decode at most 196608 bytes. A repeated offset is byte-identical or a conflict, never an implicit overwrite. No caller filesystem path is accepted."
+        },
+        "admission_contract": {
+          "$ref": "common.schema.json#/$defs/Digest"
         }
       },
       "required": [
@@ -723,6 +738,9 @@
           ],
           "additionalProperties": false,
           "description": "Verify complete declared size and digest, then durably expose one immutable handle. Same-ID retries return the same committed identity. Commit grants no observation or mutation permission. Each consumer independently verifies the exact retained custody and current scoped authority required by its contract; mutation inputs remain subject to reviewed planning and durable operation admission."
+        },
+        "admission_contract": {
+          "$ref": "common.schema.json#/$defs/Digest"
         }
       },
       "required": [
@@ -1180,6 +1198,9 @@
         },
         "params": {
           "$ref": "lifecycle-evidence.schema.json#/$defs/InputReference"
+        },
+        "admission_contract": {
+          "$ref": "common.schema.json#/$defs/Digest"
         }
       },
       "required": [
@@ -1206,6 +1227,9 @@
         },
         "params": {
           "$ref": "workflow-journal.schema.json#/$defs/InputReference"
+        },
+        "admission_contract": {
+          "$ref": "common.schema.json#/$defs/Digest"
         }
       },
       "required": [
@@ -1362,6 +1386,9 @@
         },
         "params": {
           "$ref": "records.schema.json#/$defs/SubmissionClose"
+        },
+        "admission_contract": {
+          "$ref": "common.schema.json#/$defs/Digest"
         }
       },
       "required": [

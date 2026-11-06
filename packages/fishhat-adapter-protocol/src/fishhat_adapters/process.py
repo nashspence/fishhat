@@ -11,6 +11,7 @@ from typing import Any, BinaryIO, cast
 from fishhat_contracts.adapter_semantics import (
     ROLES,
     _attempt_identity,
+    _handoff_binding,
     _is_released_attempt,
     check_invocation,
     check_request,
@@ -145,11 +146,6 @@ def validate_process_launch(
                 "process reconciliation executor changed",
             )
     _require(request["input"]["scope"] == executor["scope"], "process scope changed")
-    if role == "storage" and request["method"] == "observe":
-        _require(
-            request["input"]["binding"] == executor,
-            "process storage observer binding is not approved",
-        )
     if role == "compute":
         original = (
             request["input"]["invocation"]["request"]
@@ -187,6 +183,9 @@ def validate_process_launch(
             and request["input"]["target"]["binding"] == executor,
             "process publication target is not approved",
         )
+    if manifest["mode"] == "query":
+        binding = _handoff_binding(role, request)
+        _require(binding is None or binding == executor, "process query binding is not approved")
     _require(
         role + "." + request["method"] in descriptor["implemented"],
         "process method is not implemented",

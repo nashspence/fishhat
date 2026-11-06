@@ -193,14 +193,14 @@ store.put(sample, principal="child-reporter", scopes={"append"})
     assert result.returncode == 29, result.stderr.decode()
     store = EventStore(path, expected["domain_id"], SERVICE)
     try:
-        status, receipt = store.put(expected, principal="replacement", scopes={"append"})
+        status, receipt = store.put(expected, principal="replacement", scopes={"append", "read"})
         assert status == 200 and receipt["event"] == expected
         assert receipt["reporter"] == "fixture-reporter"
         assert store.epoch == "00000000-0000-4000-8000-000000000005"
         assert store.db.execute("SELECT count(*) FROM events").fetchone() == (
             (2,) if committed else (1,)
         )
-        status, replayed = store.put(pending, principal="replacement", scopes={"append"})
+        status, replayed = store.put(pending, principal="replacement", scopes={"append", "read"})
         assert status == (200 if committed else 201)
         assert replayed["reporter"] == ("child-reporter" if committed else "replacement")
         assert store.db.execute("SELECT count(*) FROM events").fetchone() == (2,)
@@ -218,9 +218,11 @@ def test_reporting_accepts_complete_extent_and_preserves_replay(tmp_path):
         for count in (16, 64, 256):
             seed(store, count, workflows=True)
             accepted = {**original, "id": str(uuid.uuid4()), "workflow_id": str(uuid.uuid4())}
-            status, first = store.put(accepted, principal="reader", scopes={"append"})
+            status, first = store.put(accepted, principal="reader", scopes={"append", "read"})
             assert status == 201
-            status, replayed = store.put(accepted, principal="another-reader", scopes={"append"})
+            status, replayed = store.put(
+                accepted, principal="another-reader", scopes={"append", "read"}
+            )
             assert status == 200 and replayed == first
             assert store.events(accepted["workflow_id"], **AUTH)["items"] == [first]
         expected = store.db.execute("SELECT count(DISTINCT workflow_id) FROM events").fetchone()[0]

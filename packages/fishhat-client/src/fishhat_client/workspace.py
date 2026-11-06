@@ -320,31 +320,60 @@ def validate_recovery_set(
     bundle: dict[str, Any],
     *,
     expected_domain_id: str,
+    expected_catalogue_digest: str,
+    expected_native_kit_digest: str,
+    retained_owner_rescues: Collection[str],
     retained_application_closures: Collection[str],
+    retained_encrypted_secret_generations: Collection[str],
+    retained_service_checkpoints: Collection[str],
+    require_qualified: bool = False,
     authenticated_evidence: Mapping[str, dict[str, Any]] | None = None,
     trusted_verifier: str | None = None,
 ) -> dict[str, Any]:
-    """Check complete application obligations from independent same-domain custody."""
+    """Compare the manifest with independently retained same-domain recovery obligations.
+
+    Callers authenticate both install and native recovery reports before supplying
+    them. Production use requires require_qualified=True. Structural inspection
+    of a candidate grants no recovery or retirement authority.
+    """
     validate("recovery-set.schema.json", value)
+    if require_qualified and not value["qualified"]:
+        raise ContractError("unqualified native recovery set")
     validate_bundle(
         bundle,
         require_qualified=value["qualified"],
         authenticated_evidence=authenticated_evidence,
         trusted_verifier=trusted_verifier,
     )
-    if value["domain_id"] != expected_domain_id or set(value["application_closure_digests"]) != set(
-        retained_application_closures
+    if (
+        value["domain_id"] != expected_domain_id
+        or value["catalogue_digest"] != expected_catalogue_digest
+        or value["native_kit_digest"] != expected_native_kit_digest
     ):
-        raise ContractError("recovery application closure coverage mismatch")
+        raise ContractError("recovery domain, catalogue or native kit mismatch")
+    for field, retained in (
+        ("owner_rescue_digests", retained_owner_rescues),
+        ("application_closure_digests", retained_application_closures),
+        ("encrypted_secret_generation_digests", retained_encrypted_secret_generations),
+        ("service_checkpoint_digests", retained_service_checkpoints),
+    ):
+        if set(value[field]) != set(retained):
+            raise ContractError(f"recovery {field} coverage mismatch")
     if value["installation_bundle_digest"] != digest(bundle):
         raise ContractError("recovery install bundle mismatch")
     clean_path(value["installation_bundle_path"])
     if value["platform"] != bundle["platform"]:
         raise ContractError("recovery platform mismatch")
-    if value["qualified"] and (
-        not value["independent_custody"]
-        or not value["evidence"]
-        or bundle["qualification"] != "qualified"
-    ):
-        raise ContractError("recovery set not qualified")
+    if value["qualified"]:
+        subject = digest({k: v for k, v in value.items() if k not in {"qualified", "evidence"}})
+        for identity in value["evidence"]:
+            proof = _authenticated_report(
+                identity,
+                authenticated_evidence,
+                trusted_verifier,
+                "recovery-set.schema.json",
+                "QualificationEvidence",
+            )
+            if proof["subject_digest"] != subject:
+                raise ContractError("native recovery qualification subject mismatch")
     return value

@@ -89,6 +89,16 @@ class EventStore:
             "event": json.loads(row[5]),
         }
 
+    def _append_response(self, row: tuple[Any, ...], scopes: set[str]) -> dict[str, Any]:
+        if "read" in scopes:
+            return self._envelope(row)
+        return {
+            "format": "deployment-ops/index-append-ack/v1",
+            "workflow_id": row[2],
+            "event_id": row[3],
+            "content_digest": row[4],
+        }
+
     @bounds(
         Bounds(
             id="reporting.put",
@@ -130,7 +140,7 @@ class EventStore:
                 if row[5] != data:
                     raise ContractError("immutable event conflict")
                 self.db.commit()
-                return 200, self._envelope(row)
+                return 200, self._append_response(row, scopes)
             # Correction admission reads the complete relevant graph once;
             # ordinary appends do not scan retained history.
             successor = event["supersedes"]
@@ -158,7 +168,7 @@ class EventStore:
                 "SELECT * FROM events WHERE domain_id=? AND workflow_id=? AND event_id=?", key
             ).fetchone()
             self.db.commit()
-            return 201, self._envelope(row)
+            return 201, self._append_response(row, scopes)
         except Exception:
             self.db.rollback()
             raise

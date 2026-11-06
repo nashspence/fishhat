@@ -55,6 +55,7 @@ def drill_result(checkpoint, record, snapshots):
         "production_binding": binding(),
         "target_binding": binding(),
         "isolation_evidence": digest("independent synthetic native isolation"),
+        "dataset_targets": {},
         "restorations": [],
         "verifications": [],
         "completed_at": "2026-10-25T00:00:00Z",
@@ -66,6 +67,17 @@ def drill_result(checkpoint, record, snapshots):
     )
     value["target_binding"]["scope"]["handle"] = "isolated-drill"
     for dataset, snapshot in snapshots.items():
+        value["dataset_targets"][dataset] = {
+            "path": "/synthetic/target/" + dataset,
+            "native_identity": {
+                "scope": {
+                    "kind": "dataset",
+                    "authority": value["owner"]["id"],
+                    "handle": "drill-target:" + dataset,
+                },
+                "incarnation": digest({"isolated-target": dataset}),
+            },
+        }
         for role, destination in (("restore", "restorations"), ("verify-restore", "verifications")):
             request, result, procedure = hook_records(role=role)
             request.update(

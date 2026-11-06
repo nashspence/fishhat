@@ -40,7 +40,8 @@
         "$ref": "common.schema.json#/$defs/Digest"
       },
       "minItems": 1,
-      "uniqueItems": true
+      "uniqueItems": true,
+      "description": "Complete rescue artifact commitments selected from independent retained owner obligations for this domain."
     },
     "application_closure_digests": {
       "type": "array",
@@ -63,10 +64,29 @@
         "$ref": "common.schema.json#/$defs/Digest"
       },
       "minItems": 0,
-      "uniqueItems": true
+      "uniqueItems": true,
+      "description": "Digests of authenticated QualificationEvidence for this exact set. A bundle install report or asserted custody flag cannot qualify native recovery."
     },
     "installation_bundle_path": {
       "$ref": "common.schema.json#/$defs/AbsolutePath"
+    },
+    "encrypted_secret_generation_digests": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/Digest"
+      },
+      "minItems": 0,
+      "uniqueItems": true,
+      "description": "Complete inventory of immutable encrypted secret-generation material for this domain. Only encrypted material commitments under independent recovery custody are permitted. Never publish raw or low-entropy secret hashes. Empty exactly when no such obligation exists in the independently retained domain inventory."
+    },
+    "service_checkpoint_digests": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/Digest"
+      },
+      "minItems": 0,
+      "uniqueItems": true,
+      "description": "Complete inventory of independently required service checkpoints, including the repository host when applicable. Recovered source alone cannot satisfy these service obligations. Empty exactly when no such obligation exists in the independently retained domain inventory."
     }
   },
   "required": [
@@ -81,9 +101,59 @@
     "start_record_hint",
     "owner_rescue_digests",
     "application_closure_digests",
+    "encrypted_secret_generation_digests",
+    "service_checkpoint_digests",
     "independent_custody",
     "qualified",
     "evidence"
   ],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "qualified": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "independent_custody": {
+            "const": true
+          },
+          "evidence": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "QualificationEvidence": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "fishhat.native-recovery-set-evidence/v1"
+        },
+        "subject_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "verifier": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "result": {
+          "const": "passed"
+        }
+      },
+      "required": [
+        "format",
+        "subject_digest",
+        "verifier",
+        "result"
+      ],
+      "additionalProperties": false,
+      "description": "Successful independent native recovery verification under the receiver's authenticated verifier policy. subject_digest is SHA-256 of RFC 8785 canonical UTF-8 bytes of the complete set with only the top-level qualified and evidence fields omitted. It commits domain, catalogue, kit, platform, installation bundle and path, start record, all owner rescue, encrypted secret-generation, service-checkpoint and application closure inventories, and independent custody. The verifier independently verifies complete applicable inventories, retrievability and native recovery under the selected profile. These fields cannot authenticate the verifier or prove native custody on their own."
+    }
+  }
 }

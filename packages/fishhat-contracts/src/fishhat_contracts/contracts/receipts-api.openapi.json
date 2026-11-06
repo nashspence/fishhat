@@ -57,7 +57,14 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Envelope"
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/AppendAcknowledgment"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Envelope"
+                    }
+                  ]
                 }
               }
             }
@@ -67,7 +74,14 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Envelope"
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/AppendAcknowledgment"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Envelope"
+                    }
+                  ]
                 }
               }
             }
@@ -132,7 +146,8 @@
               }
             }
           }
-        }
+        },
+        "description": "Append scope permits an acknowledgement of the exact submitted event. Only a caller with both append and read scope receives the full stored envelope, including on duplicate PUT. A conflicting payload returns 409 without disclosing the retained event or reporter."
       },
       "get": {
         "operationId": "getEvent",
@@ -501,6 +516,9 @@
       },
       "Problem": {
         "$ref": "./tracking-records.schema.json#/$defs/Problem"
+      },
+      "AppendAcknowledgment": {
+        "$ref": "./tracking-records.schema.json#/$defs/AppendAcknowledgment"
       }
     }
   }

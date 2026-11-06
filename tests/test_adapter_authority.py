@@ -478,7 +478,7 @@ def test_delegate_uncertainty_blocks_quiescence_in_the_same_runtime_owner():
     with pytest.raises(ContractError, match="PENDING_NATIVE_WORK"):
         c.observation_request("demo", owner_approved=True)
     c.settle(attempt["attempt_id"], *result(c, attempt))
-    c.prove_quiescent("demo", fresh_observation(c), owner_approved=True)
+    c.prove_quiescent("demo", *fresh_observation(c), owner_approved=True)
     assert c.snapshot()["quiescent"]["demo"] is True
 
 
