@@ -3720,7 +3720,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/record_delivery.py": "b5737733d4ed3c40ff0352afbc3360318107ffdb5e06745ac4ed59cc95353e31",
+        "packages/fishhat-contracts/src/fishhat_contracts/record_delivery.py": "96f815d52c157648b33c690d4c8fc2d2982998c5fbed3cb0387a5aff3aed7289",
         "tests/test_linear_growth.py": "e1f12f1500b7fd4f642605ea8e6aba80705fe9da70d19978cef853264acae846",
         "tests/test_record_delivery.py": "07df2d04fe0795d403f8666ba728db2baa58f78753b0b356ddde64c055f46954"
       },
@@ -5501,7 +5501,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/workflow_recovery.py": "7d943d98606365eb77db848b8f921c3699e67394a004a4cb755c1b44a86f8e42",
+        "packages/fishhat-contracts/src/fishhat_contracts/workflow_recovery.py": "317a7e2c361b57505b3b9dc299ae49af420b9d82dd228ccf3dcf3ffab1cb5793",
         "tests/test_workflow_abandonment.py": "9b23228d771abc02ae704a05c6b7faba1e2d014c1aa3817bd39f165bb0b7c3ca",
         "tests/test_workflow_validation_growth.py": "789e9b8b22d11804bb3c9b050c8a09483da9f2cae1a7bdd341a45b8b259eaaf2"
       },

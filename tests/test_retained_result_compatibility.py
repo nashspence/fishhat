@@ -108,13 +108,19 @@ def test_historical_recovery_keeps_qualified_original_result(monkeypatch, histor
     raw = canonical(original)
     reference = context["verified_reference"]
     readers, observed = result_readers(original)
-    inspected = []
+    inspected, qualified = [], []
 
     def inspect(value):
         inspected.append(canonical(value))
         validate_operation(value, recovery_readers=readers)
 
-    retained = {(reference["schema"]["uri"], reference["schema"]["digest"]): inspect}
+    def qualify(value):
+        qualified.append(canonical(value))
+        validate_operation(value, recovery_readers=readers)
+
+    key = reference["schema"]["uri"], reference["schema"]["digest"]
+    retained = {key: inspect}
+    readers[key] = qualify
     assert validate_historical_recovery(plan, raw, **context) == original
     editorial_change(monkeypatch, "publisher-receipt.schema.json")
     if historical_record:
@@ -124,7 +130,7 @@ def test_historical_recovery_keeps_qualified_original_result(monkeypatch, histor
         plan, raw, retained_readers=retained, recovery_readers=readers, **context
     )
     assert recovered == original and canonical(recovered) == raw
-    assert inspected == ([raw] if historical_record else [])
+    assert inspected == qualified == ([raw] if historical_record else [])
     assert not observed  # Operation validation does not consume the separate result bytes.
     assert (
         validate_result_payload(recovered, canonical(payload), recovery_readers=readers) == payload

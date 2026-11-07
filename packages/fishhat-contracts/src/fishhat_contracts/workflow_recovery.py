@@ -25,7 +25,7 @@ from typing import Any
 from .bounds import Bounds, bounds
 from .history import validate_owner_custody
 from .operations import _known_outcome, validate_operation_plan
-from .record_delivery import validate_record_payload
+from .record_delivery import _validate_recovery_record_payload
 from .validation import ContractError, canonical, digest, validate
 from .workflow_unprepared import (
     _proposal_binding,
@@ -64,57 +64,6 @@ def _record_schema(reference: dict[str, Any], kind: str) -> None:
         == f"https://fishhat.invalid/contracts/records.schema.json#/$defs/{kind}",
         "workflow recovery record kind or schema URI changed",
     )
-
-
-def _recovery_record(
-    reference: dict[str, Any],
-    record: dict[str, Any],
-    kind: str,
-    *,
-    retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
-    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
-) -> dict[str, Any]:
-    """Read exact original bytes under independently installed recovery semantics.
-
-    Inspection support alone never qualifies historical evidence for recovery.
-    The receiving owner installs each recovery reader for one exact URI and
-    closure digest after establishing compatible v1 meanings and preserved
-    guarantees. It may validate, but never translate or rewrite, original bytes.
-    Current v1 semantic checks remain required after that independent reader.
-    This context provides neither record authentication nor execution authority.
-    """
-    from .handoffs import schema_identity, validate_workflow
-    from .operations import validate_operation
-
-    _record_schema(reference, kind)
-    schema = reference["schema"]
-    current = schema == schema_identity(schema["uri"])
-    reader = (
-        None
-        if recovery_readers is None
-        else recovery_readers.get((schema["uri"], schema["digest"]))
-    )
-    _require(
-        current or reader is not None,
-        "unsupported workflow recovery schema: independently installed compatible v1 reader required",
-    )
-    original = canonical(record)
-    result = validate_record_payload(
-        reference,
-        original,
-        expected_owner=reference["owner"],
-        retained_readers=retained_readers,
-        recovery_readers=recovery_readers,
-    )
-    if not current:
-        assert reader is not None
-        reader(result)
-        _require(canonical(result) == original, "workflow recovery reader changed original bytes")
-        if kind == "Workflow":
-            validate_workflow(result, recovery_readers=recovery_readers)
-        else:
-            validate_operation(result, recovery_readers=recovery_readers)
-    return result
 
 
 def _owners(proposal: dict[str, Any]) -> dict[bytes, dict[str, Any]]:
@@ -255,10 +204,11 @@ def _origin_records(
             assert custody is not None
             validate_owner_custody(custody, expected_custodian=current)
             _require(custody["origin"] == reference["owner"], "workflow recovery custody changed")
-        record = _recovery_record(
+        record = _validate_recovery_record_payload(
             reference,
-            known["record"],
+            canonical(known["record"]),
             "Workflow",
+            expected_owner=reference["owner"],
             retained_readers=retained_readers,
             recovery_readers=recovery_readers,
         )
@@ -338,10 +288,11 @@ def _evidence(
     recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
 ) -> dict[str, Any]:
     reference, record = evidence["reference"], evidence["operation"]
-    return _recovery_record(
+    return _validate_recovery_record_payload(
         reference,
-        record,
+        canonical(record),
         "Operation",
+        expected_owner=reference["owner"],
         retained_readers=retained_readers,
         recovery_readers=recovery_readers,
     )
