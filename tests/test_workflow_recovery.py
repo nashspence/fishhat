@@ -557,7 +557,7 @@ def test_other_historical_schema_reader_is_inspection_only_for_workflow_recovery
         )
         == record
     )
-    with pytest.raises(ContractError, match="unsupported workflow recovery schema"):
+    with pytest.raises(ContractError, match="unsupported recovery schema"):
         validate_recovery_proposal(proposal, verified_origins=records, retained_readers=readers)
 
 

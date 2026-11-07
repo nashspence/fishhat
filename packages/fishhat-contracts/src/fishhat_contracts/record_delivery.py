@@ -434,6 +434,57 @@ def validate_record_payload(
     return cast(dict[str, Any], value)
 
 
+def _validate_recovery_record_payload(
+    reference: dict[str, Any],
+    data: bytes,
+    kind: str,
+    *,
+    expected_owner: dict[str, Any],
+    retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
+) -> dict[str, Any]:
+    """Read exact Operation/Workflow bytes under installed recovery semantics.
+
+    Inspection support alone never qualifies historical evidence for recovery.
+    The receiver independently installs a compatible-v1 recovery reader for the
+    exact URI and closure digest, separately from read-only inspection support.
+    Readers may validate but cannot translate original bytes. Current-v1 record
+    semantics, including exact result compatibility, remain required afterward.
+    This check supplies neither authentication, custody nor execution authority.
+    """
+    validate("common.schema.json", reference, "RecordReference")
+    _require(
+        kind in {"Operation", "Workflow"}
+        and reference["record"]["kind"] == kind
+        and reference["schema"]["uri"] == _schema_uri(kind),
+        "recovery record kind or schema URI changed",
+    )
+    schema = reference["schema"]
+    current = schema == schema_identity(schema["uri"])
+    reader = (
+        None
+        if recovery_readers is None
+        else recovery_readers.get((schema["uri"], schema["digest"]))
+    )
+    _require(
+        current or reader is not None,
+        "unsupported recovery schema: independently installed compatible v1 reader required",
+    )
+    result = validate_record_payload(
+        reference,
+        data,
+        expected_owner=expected_owner,
+        retained_readers=retained_readers,
+        recovery_readers=recovery_readers,
+    )
+    if not current:
+        assert reader is not None
+        reader(result)
+        _require(canonical(result) == data, "recovery reader changed original bytes")
+        _validate_record(result, kind, recovery_readers=recovery_readers)
+    return result
+
+
 def validate_observation(observation: dict[str, Any]) -> None:
     """Check one complete observation without upgrading its provenance or authority."""
     validate("records.schema.json", observation, "Observation")

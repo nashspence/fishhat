@@ -14,8 +14,8 @@ from typing import Any
 
 from .operations import validate_submission_refusal
 from .record_delivery import (
+    _validate_recovery_record_payload,
     validate_record_chunk,
-    validate_record_payload,
     validate_record_reference,
 )
 from .validation import ContractError, canonical, digest, strict_json, validate, validate_plan
@@ -350,6 +350,9 @@ def validate_historical_recovery(
     manifest as the latest retained authoritative Operation snapshot, including
     every confirmed outcome and unresolved hold. A caller cannot select an older
     valid member to erase later accepted work, or authenticate its own bytes.
+    A prior Operation schema requires both installed inspection support and an
+    exact compatible-v1 recovery reader. Reader acceptance preserves original
+    bytes and does not replace current Operation semantics or result qualification.
     """
     validate_plan(plan)
     _require(recovery_authorized is True, "current recovery permission required")
@@ -364,9 +367,10 @@ def validate_historical_recovery(
     _require(origin["custody_id"] == verified_custody["id"], "historical recovery custody changed")
     reference = origin["reference"]
     _require(reference == verified_reference, "historical recovery authoritative record changed")
-    original = validate_record_payload(
+    original = _validate_recovery_record_payload(
         reference,
         operation_bytes,
+        "Operation",
         expected_owner=verified_custody["origin"],
         retained_readers=retained_readers,
         recovery_readers=recovery_readers,
