@@ -337,6 +337,7 @@ def validate_historical_recovery(
     verified_reference: dict[str, Any],
     recovery_authorized: bool,
     retained_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> dict[str, Any]:
     """Join a newly reviewed recovery Plan to unchanged original accepted work.
 
@@ -368,6 +369,7 @@ def validate_historical_recovery(
         operation_bytes,
         expected_owner=verified_custody["origin"],
         retained_readers=retained_readers,
+        recovery_readers=recovery_readers,
     )
     _require(
         original["subject"]["resource"] == plan["subject"]["resource"],

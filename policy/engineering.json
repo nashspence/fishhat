@@ -2845,7 +2845,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/drill_results.py": "0a03f1525a2041d5d719a8ba64b6e716b299ede3d8f1c8246d814ea7e14666bb",
+        "packages/fishhat-contracts/src/fishhat_contracts/drill_results.py": "e32b94812407f456816e5217e7d11037f827434a684986f9a6696927367478e6",
         "tests/test_drill_results.py": "2d0501d54e139f68484286728f4aaddbc9a23b32ec9893f6947a90765dfb5060"
       },
       "symbol": "fishhat_contracts.drill_results:validate_drill_result",
@@ -2873,7 +2873,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/handoffs.py": "ad3eee6e338919fa580defbe52fe0a6ebafb9f4f380cc7b51a4e8991d911d915",
+        "packages/fishhat-contracts/src/fishhat_contracts/handoffs.py": "d95a1ff325a6da44057d6f9afcf3d63d70406615f5517df23c653cd2f347d6b5",
         "tests/test_result_schema_admission.py": "a9dda15195f6a875d0f1ee1fafcb6a6d524b735aac558f2fb07867d1267cbf5f",
         "tests/test_retained_result_growth.py": "05e644216c56e1c0cdcd16b67ff03dc08a82975995d2b9b4db0b31995b842802"
       },
@@ -3490,7 +3490,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/maintenance.py": "d4e5c38031ceb119ff3b1868c54a421e1a3e8c228bbf0683fce56fa3f8327ac5",
+        "packages/fishhat-contracts/src/fishhat_contracts/maintenance.py": "6b1d62e69f764e1b1bf1036beb5c4109be21d8ede70fed0109be5669cfad5c26",
         "tests/test_maintenance_handoffs.py": "8da0fde31d3b34384834ce3283f10580fabfb298583bf778e8df5216eb369ad4"
       },
       "symbol": "fishhat_contracts.maintenance:select_maintenance_checkpoint",
@@ -3515,7 +3515,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/maintenance.py": "d4e5c38031ceb119ff3b1868c54a421e1a3e8c228bbf0683fce56fa3f8327ac5",
+        "packages/fishhat-contracts/src/fishhat_contracts/maintenance.py": "6b1d62e69f764e1b1bf1036beb5c4109be21d8ede70fed0109be5669cfad5c26",
         "tests/test_maintenance_handoffs.py": "8da0fde31d3b34384834ce3283f10580fabfb298583bf778e8df5216eb369ad4"
       },
       "symbol": "fishhat_contracts.maintenance:validate_maintenance_execution",
@@ -3540,7 +3540,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/maintenance.py": "d4e5c38031ceb119ff3b1868c54a421e1a3e8c228bbf0683fce56fa3f8327ac5",
+        "packages/fishhat-contracts/src/fishhat_contracts/maintenance.py": "6b1d62e69f764e1b1bf1036beb5c4109be21d8ede70fed0109be5669cfad5c26",
         "tests/test_maintenance_handoffs.py": "8da0fde31d3b34384834ce3283f10580fabfb298583bf778e8df5216eb369ad4"
       },
       "symbol": "fishhat_contracts.maintenance:validate_maintenance_result",
@@ -3565,7 +3565,7 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/maintenance.py": "d4e5c38031ceb119ff3b1868c54a421e1a3e8c228bbf0683fce56fa3f8327ac5",
+        "packages/fishhat-contracts/src/fishhat_contracts/maintenance.py": "6b1d62e69f764e1b1bf1036beb5c4109be21d8ede70fed0109be5669cfad5c26",
         "tests/test_maintenance_handoffs.py": "8da0fde31d3b34384834ce3283f10580fabfb298583bf778e8df5216eb369ad4"
       },
       "symbol": "fishhat_contracts.maintenance:require_maintenance_result_custody",

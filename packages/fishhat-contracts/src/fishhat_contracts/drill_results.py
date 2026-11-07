@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from itertools import chain
 from pathlib import PurePosixPath
 from typing import Any
@@ -121,6 +121,7 @@ def validate_drill_result(
     expected_production_binding: dict[str, Any] | None = None,
     expected_target_binding: dict[str, Any] | None = None,
     expected_dataset_targets: Mapping[str, dict[str, Any]] | None = None,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> None:
     """Check exact retained joins, with optional independently accepted owner context.
 
@@ -229,7 +230,7 @@ def validate_drill_result(
 
         _require(operation is not None, "drill Plan requires producing Operation")
         assert operation is not None
-        validate_operation_plan(operation, plan)
+        validate_operation_plan(operation, plan, recovery_readers=recovery_readers)
         planned = {
             checkpoint_digest,
             _binding_digest(production),

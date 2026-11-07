@@ -243,10 +243,13 @@ def maintenance_child_request_id(operation: dict[str, Any]) -> str:
 
 
 def retained_maintenance_execution(
-    operation: dict[str, Any], plan: dict[str, Any]
+    operation: dict[str, Any],
+    plan: dict[str, Any],
+    *,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> dict[str, Any]:
     """Recover the original capsule after client loss; current source is not an input."""
-    validate_operation_plan(operation, plan)
+    validate_operation_plan(operation, plan, recovery_readers=recovery_readers)
     _require(operation["subject"]["action"] == "app.maintenance-run", "not maintenance work")
     return deepcopy(plan["maintenance"])
 
@@ -311,10 +314,17 @@ def _validate_hook_handoff(
 
 
 @bounds(_bounds("result"))
-def validate_maintenance_result(value: dict[str, Any], operation: dict[str, Any]) -> None:
+def validate_maintenance_result(
+    value: dict[str, Any],
+    operation: dict[str, Any],
+    *,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
+) -> None:
     """Join the complete original Plan and ordinary child; verify bytes separately."""
     validate("maintenance.schema.json", value, "MaintenanceResult")
-    execution = retained_maintenance_execution(operation, value["plan"])
+    execution = retained_maintenance_execution(
+        operation, value["plan"], recovery_readers=recovery_readers
+    )
     _require(
         value["owner"] == operation["owner"]
         and value["operation_id"] == operation["id"]
@@ -333,7 +343,7 @@ def validate_maintenance_result(value: dict[str, Any], operation: dict[str, Any]
     _require(child is not None or operation["state"] != "succeeded", "maintenance child missing")
     if child is None:
         return
-    validate_operation(child)
+    validate_operation(child, recovery_readers=recovery_readers)
     _require(
         child["owner"] == operation["owner"]
         and child["id"] != operation["id"]
@@ -360,6 +370,7 @@ def require_maintenance_result_custody(
     *,
     open_content: Callable[[dict[str, Any]], BinaryIO],
     max_bytes: int = MAX_BYTES,
+    recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> None:
     """Check exact independently retained child payload or hook artifact byte custody.
 
@@ -370,7 +381,7 @@ def require_maintenance_result_custody(
     """
     from .handoffs import validate_result_payload
 
-    validate_maintenance_result(value, operation)
+    validate_maintenance_result(value, operation, recovery_readers=recovery_readers)
     _require(type(max_bytes) is int and max_bytes > 0, "invalid maintenance result capacity")
     child = value["child"]
     if child is not None:
@@ -391,7 +402,9 @@ def require_maintenance_result_custody(
                     stream,
                     destination=retained,
                 )
-            validate_result_payload(child, retained.getvalue(), max_bytes=max_bytes)
+            validate_result_payload(
+                child, retained.getvalue(), max_bytes=max_bytes, recovery_readers=recovery_readers
+            )
         return
     hook = value["hook"]
     _require(
