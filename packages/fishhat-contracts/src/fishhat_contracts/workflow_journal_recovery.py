@@ -32,6 +32,7 @@ from .workflow_journal import (
     _KeyOverlay,
     _known_outcome,
     _now,
+    _remember_outcome,
     _verify_plan,
     verify_journal_record,
     verify_journal_signature,
@@ -413,6 +414,7 @@ class WorkflowRecoveryMember(_JournalTarget):
             for key, binding in self.ready.items()
             if "completed" in binding
         }
+        self._known_effects.update(self.outcomes)
         self._admissions: dict[bytes, JSON] = {}
         self._preparation: JSON | None = None
         with ExitStack() as guards:
@@ -569,8 +571,7 @@ class WorkflowRecoveryMember(_JournalTarget):
                 "restored outcome lacks original admission",
             )
             extension._operation(self, operation, bound_plan(self.ready[key]), self.workflow_id)
-            _known_outcome(self.outcomes.get(key), operation)
-            self.outcomes[key] = operation
+            _remember_outcome(self.outcomes, self._known_effects, key, operation)
         elif action == "recover.gate_approve":
             self._recovery_gate_authority = copy.deepcopy(record["body"]["authority"])
             self._recovery_gate_approval = copy.deepcopy(record)
@@ -1483,7 +1484,7 @@ class JournalRecovery:
             if "completed" not in original
             else operation["witness"]["workflow_id"],
         )
-        _known_outcome(known, operation)
+        _known_outcome(known, operation, known_effects=key in target._known_effects)
         _require(
             operation["owner"] == bound_plan(original)["owner"]
             and (
@@ -1972,4 +1973,9 @@ class JournalRecovery:
                 validate_completed_binding(
                     binding, participant, recovery_readers=self.recovery_readers
                 )
-                target.outcomes[key] = copy.deepcopy(binding["completed"]["operation"])
+                _remember_outcome(
+                    target.outcomes,
+                    target._known_effects,
+                    key,
+                    copy.deepcopy(binding["completed"]["operation"]),
+                )

@@ -15200,6 +15200,26 @@
       "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
     },
     {
+      "node": "tests/test_unit_shards.py::test_runner_balance_keeps_measured_heavy_cases_distributed_with_new_work[0]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_runner_balance_keeps_measured_heavy_cases_distributed_with_new_work[1]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_runner_balance_keeps_measured_heavy_cases_distributed_with_new_work[20]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_runner_balance_keeps_measured_heavy_cases_distributed_with_new_work[21]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
+      "node": "tests/test_unit_shards.py::test_runner_balance_keeps_measured_heavy_cases_distributed_with_new_work[7]",
+      "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
+    },
+    {
       "node": "tests/test_unit_shards.py::test_unavailable_duration_reference_never_omits_current_tests[malformed]",
       "purpose_sha256": "c2ce9e46d5374a77879a9fd44de0de6defcee0276df57435c3e52a54a38a1a9e"
     },
@@ -15906,6 +15926,54 @@
     {
       "node": "tests/test_workflow_continuations.py::test_successor_plan_uses_fresh_generation_after_exact_predecessor_and_replays",
       "purpose_sha256": "50e0ef04ffd3d53020def4337b37d89b713112ce618aa1d1999ee77f61db1348"
+    },
+    {
+      "node": "tests/test_workflow_effect_history.py::test_complete_effect_index_replay_and_refusal_work_is_linear",
+      "purpose_sha256": "c084a1e0af255e8682fcba039a70a6824d2312389c64c175d36f851a469b8af6"
+    },
+    {
+      "node": "tests/test_workflow_effect_history.py::test_conflicting_signed_history_refuses_reconstruction_without_rewriting_custody",
+      "purpose_sha256": "ff340057f33bf3ec8d5ece1dc801672bca126fcac369252760f40cf1b2a53747"
+    },
+    {
+      "node": "tests/test_workflow_effect_history.py::test_gate_intake_refuses_none_against_independently_retained_known_context[known]",
+      "purpose_sha256": "b18495c0488695a6d48cd2062ff20cba44a8fa61106cc5b5a798a6e6985fb035"
+    },
+    {
+      "node": "tests/test_workflow_effect_history.py::test_gate_intake_refuses_none_against_independently_retained_known_context[unknown]",
+      "purpose_sha256": "b18495c0488695a6d48cd2062ff20cba44a8fa61106cc5b5a798a6e6985fb035"
+    },
+    {
+      "node": "tests/test_workflow_effect_history.py::test_retained_known_child_cannot_become_none[cancelled-False-False]",
+      "purpose_sha256": "ff340057f33bf3ec8d5ece1dc801672bca126fcac369252760f40cf1b2a53747"
+    },
+    {
+      "node": "tests/test_workflow_effect_history.py::test_retained_known_child_cannot_become_none[cancelled-False-True]",
+      "purpose_sha256": "ff340057f33bf3ec8d5ece1dc801672bca126fcac369252760f40cf1b2a53747"
+    },
+    {
+      "node": "tests/test_workflow_effect_history.py::test_retained_known_child_cannot_become_none[failed-False-False]",
+      "purpose_sha256": "ff340057f33bf3ec8d5ece1dc801672bca126fcac369252760f40cf1b2a53747"
+    },
+    {
+      "node": "tests/test_workflow_effect_history.py::test_retained_known_child_cannot_become_none[failed-False-True]",
+      "purpose_sha256": "ff340057f33bf3ec8d5ece1dc801672bca126fcac369252760f40cf1b2a53747"
+    },
+    {
+      "node": "tests/test_workflow_effect_history.py::test_retained_known_child_cannot_become_none[running-True-False]",
+      "purpose_sha256": "ff340057f33bf3ec8d5ece1dc801672bca126fcac369252760f40cf1b2a53747"
+    },
+    {
+      "node": "tests/test_workflow_effect_history.py::test_retained_known_child_cannot_become_none[running-True-True]",
+      "purpose_sha256": "ff340057f33bf3ec8d5ece1dc801672bca126fcac369252760f40cf1b2a53747"
+    },
+    {
+      "node": "tests/test_workflow_effect_history.py::test_uncertainty_and_noncontradictory_signed_resolution_remain_readable[False]",
+      "purpose_sha256": "ff340057f33bf3ec8d5ece1dc801672bca126fcac369252760f40cf1b2a53747"
+    },
+    {
+      "node": "tests/test_workflow_effect_history.py::test_uncertainty_and_noncontradictory_signed_resolution_remain_readable[True]",
+      "purpose_sha256": "ff340057f33bf3ec8d5ece1dc801672bca126fcac369252760f40cf1b2a53747"
     },
     {
       "node": "tests/test_workflow_evidence.py::test_each_installed_procedure_owns_complete_native_and_success_barriers[checkpoint]",

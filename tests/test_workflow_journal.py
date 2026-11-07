@@ -1049,6 +1049,7 @@ def test_successor_gate_and_phase_proof_use_installed_publisher_reader(journal_r
             ready=gate.ready,
             keys=keys,
             outcomes={},
+            _known_effects=set(),
             native=native,
             workflow_id=gate.workflow_id,
         )
