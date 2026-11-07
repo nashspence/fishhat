@@ -187,11 +187,7 @@ def test_recovery_rejects_substitution_of_retained_success(change):
     proposal, records = scenario(
         original=value, kinds=kinds, outcomes={original["request_id"]: replacement}
     )
-    expected = (
-        "Operation identity changed"
-        if change == "identity"
-        else "successful workflow child outcome"
-    )
+    expected = "successful workflow child outcome"
     with pytest.raises(ContractError, match=expected):
         validate_recovery_proposal(proposal, verified_origins=records)
 
@@ -256,8 +252,6 @@ def test_recovery_rejects_conflicting_retained_facts_across_original_owners(chan
     seal_phase_participant(phase, participant)
     other["advances"][-1]["request_digest"] = digest(other["advances"][-1]["request"])
     _replace_origin(proposal, records, 1, other)
-    expected = (
-        "Operation identity changed" if change == "identity" else "successful outcome changed"
-    )
+    expected = "replaced or regressed" if change == "identity" else "terminal child outcome"
     with pytest.raises(ContractError, match=expected):
         validate_recovery_proposal(proposal, verified_origins=records)

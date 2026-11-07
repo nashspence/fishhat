@@ -23,7 +23,9 @@ from heapq import merge
 from typing import Any
 
 from .adapter_semantics import check_request
+from .bounds import Bounds, bounds
 from .handoffs import PHASES, schema_identity, validate_staged_input, validate_staging
+from .operations import _known_outcome, validate_operation_plan
 from .validation import (
     SCHEMAS,
     ContractError,
@@ -153,18 +155,12 @@ def validate_completed_binding(
     *,
     recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None = None,
 ) -> None:
-    from .operations import validate_operation
-
     retained = binding["completed"]
     plan, operation = retained["plan"], retained["operation"]
-    validate_plan(plan)
-    validate_operation(operation, recovery_readers=recovery_readers)
+    validate_operation_plan(operation, plan, recovery_readers=recovery_readers)
     _require(
         all(plan["owner"][key] == participant["owner"][key] for key in ("tool", "id"))
         and plan["subject"]["resource"] == participant["resource"]
-        and operation["owner"] == plan["owner"]
-        and operation["plan_digest"] == plan["digest"]
-        and operation["subject"] == plan["subject"]
         and operation["state"] == "succeeded"
         and operation["effect_certainty"] == "known",
         "completed workflow slot changed original successful work",
@@ -538,6 +534,7 @@ def validate_workflow_proposal_binding(
         workflow, require_complete=workflow["phase"] != PHASES[workflow["type"]][0]
     )
     _validate_advance_history(workflow, recovery_readers=recovery_readers)
+    _validate_operation_history(_operation_observations(workflow))
     phases = PHASES[workflow["type"]]
     if workflow["phase"] in phases and phases.index(workflow["phase"]) > 0:
         require_bound_phase(workflow, phases[phases.index(workflow["phase"]) - 1])
@@ -961,6 +958,90 @@ def _validate_advance_history(
         "workflow phase lacks its complete retained transition history",
     )
     _require(workflow["state"] == state, "workflow lifecycle differs from retained history")
+
+
+def _operation_observations(
+    workflow: dict[str, Any],
+) -> Iterator[tuple[bytes, dict[str, Any]]]:
+    """Yield validated child observations in this capsule's custody order."""
+    from .workflow_bindings import _predecessor
+
+    children = proposal_children(workflow["proposal"])
+    for key, (_, binding) in children.items():
+        if "completed" in binding:
+            yield key, binding["completed"]["operation"]
+    bindings = ((r["generation"], 0, r["request"]) for r in workflow["bindings"])
+    advances = ((r["generation"], 1, retained_transition_input(r)) for r in workflow["advances"])
+    for _, kind, request in merge(bindings, advances):
+        if kind == 0:
+            slot = children[
+                _request_key(request["child"]["owner"], request["child"]["request_id"])
+            ][1]
+            if slot["intent"]["kind"] != "reviewed-initial":
+                reference = _predecessor(slot["intent"])
+                yield (
+                    _request_key(reference["owner"], reference["request_id"]),
+                    request["predecessors"][0],
+                )
+        else:
+            evidence = request.get("phase_evidence")
+            if evidence is not None:
+                for participant in evidence["participants"]:
+                    for outcome in participant["operations"]:
+                        child = outcome["child"]
+                        yield (
+                            _request_key(child["owner"], child["request_id"]),
+                            outcome["operation"],
+                        )
+
+
+@bounds(
+    Bounds(
+        id="workflow.operation-history",
+        work="O(B + N) complete validated observation bytes with indexed child progress and seven fixed generation-byte passes for independently ordered capsules",
+        extent="Every retained child observation and completed ancestor; no collection cap or arrival-order authority",
+        limits=(),
+        capacity=("receiving owner complete audit metadata memory",),
+        proofs=(
+            "tests/test_workflow_audit_history.py::test_complete_observation_reconciliation_is_linear",
+        ),
+        linear_proofs=(
+            "tests/test_workflow_audit_history.py::test_complete_observation_reconciliation_is_linear",
+        ),
+    )
+)
+def _validate_operation_history(
+    observations: Iterable[tuple[bytes, dict[str, Any]]],
+    *,
+    ordered: bool = True,
+) -> tuple[dict[bytes, dict[str, Any]], set[bytes]]:
+    """Index complete ordered observations and cumulative effects once."""
+    latest: dict[bytes, dict[str, Any]] = {}
+    known: set[bytes] = set()
+    for key, operation in observations if ordered else _generation_order(observations):
+        _known_outcome(latest.get(key), operation, known_effects=key in known)
+        latest[key] = operation
+        if operation["effect_certainty"] == "known":
+            known.add(key)
+    return latest, known
+
+
+def _generation_order(
+    observations: Iterable[tuple[bytes, dict[str, Any]]],
+) -> list[tuple[bytes, dict[str, Any]]]:
+    """Order independent snapshots by their validated 53-bit owner generation.
+
+    Seven fixed byte passes are linear in all observations. Owner-capsule arrival
+    order has no chronology; there is no comparison sort or collection cap.
+    Callers have already validated each complete Operation and ordered capsule.
+    """
+    ordered = list(observations)
+    for shift in range(0, 53, 8):
+        buckets: list[list[tuple[bytes, dict[str, Any]]]] = [[] for _ in range(256)]
+        for item in ordered:
+            buckets[(int(item[1]["generation"]) >> shift) & 255].append(item)
+        ordered = [item for bucket in buckets for item in bucket]
+    return ordered
 
 
 def _completion_witnesses(request: dict[str, Any], workflow: dict[str, Any]) -> None:
