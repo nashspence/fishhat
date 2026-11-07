@@ -26,6 +26,7 @@ from fishhat_contracts.workflows import (
 )
 
 from tests.linear_support import assert_linear, measure
+from tests.operation_support import seal_operation
 from tests.support import FIXTURES
 from tests.test_contracts import uid
 from tests.test_owner_handoffs import preparation_witness
@@ -88,6 +89,12 @@ def child_context(value, *, state="running"):
 
 def advance_pair(values, phase, *, state="running"):
     outcomes = child_context(values[0], state=state)
+    if state == "succeeded":
+        for outcome in outcomes.values():
+            outcome.update(
+                generation=outcome["generation"] + 1, last_event=outcome["last_event"] + 1
+            )
+            seal_operation(outcome)
     return [
         advance_with_evidence(advance_request(value, phase, operations=outcomes), value)
         for value in values

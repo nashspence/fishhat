@@ -24,8 +24,9 @@ from typing import Any
 
 from .bounds import Bounds, bounds
 from .history import validate_owner_custody
+from .operations import _known_outcome, validate_operation_plan
 from .record_delivery import validate_record_payload
-from .validation import ContractError, canonical, digest, validate, validate_plan
+from .validation import ContractError, canonical, digest, validate
 from .workflow_unprepared import (
     _proposal_binding,
     origin_digest,
@@ -35,12 +36,13 @@ from .workflow_unprepared import (
 )
 from .workflows import (
     _child_identity_matches,
+    _operation_observations,
     _request_key,
+    _validate_operation_history,
     bound_plan,
     child_action,
     prepared_workflow_view,
     proposal_children,
-    retained_transition_input,
     validate_workflow_proposal,
 )
 
@@ -305,72 +307,28 @@ def _ready(
     )
 
 
-def _same_child_operation(first: dict[str, Any], later: dict[str, Any]) -> None:
-    _require(
-        all(
-            first[name] == later[name]
-            for name in (
-                "owner",
-                "id",
-                "request_id",
-                "plan_digest",
-                "subject",
-                "authenticated_principal",
-                "claimed_actor",
-            )
-        ),
-        "retained workflow child Operation identity changed",
-    )
-
-
 def _retained_acceptance(
     records: Mapping[bytes, dict[str, Any]],
     children: Mapping[bytes, tuple[dict[str, Any], dict[str, Any]]],
-) -> tuple[dict[bytes, dict[str, Any]], dict[bytes, dict[str, Any]]]:
-    """Index facts in every verified origin, including another owner's capsule.
+) -> tuple[dict[bytes, dict[str, Any]], dict[bytes, dict[str, Any]], set[bytes]]:
+    """Join all independently retained observations without assuming arrival order.
 
-    Absence here is not evidence of nonacceptance. Native retirement still proves
-    the latest disposition independently. Logical completed-slot references keep
-    their original Operation epoch and request identity, without retargeting it.
+    Each origin's ordered history has already passed complete validation. Absence
+    is never proof of nonacceptance; native retirement independently establishes
+    the latest disposition. Completed ancestors retain their original identity.
     """
-    from .workflow_bindings import _predecessor
-
-    accepted: dict[bytes, dict[str, Any]] = {}
-    succeeded: dict[bytes, dict[str, Any]] = {}
-
-    def remember(key: bytes, operation: dict[str, Any]) -> None:
-        _require(key in children, "retained Operation outside original workflow child closure")
-        if key in accepted:
-            _same_child_operation(accepted[key], operation)
-        else:
-            accepted[key] = operation
-        if operation["state"] == "succeeded":
-            _require(
-                key not in succeeded or succeeded[key] == operation,
-                "retained workflow child successful outcome changed",
-            )
-            succeeded[key] = operation
-
-    for key, (_, binding) in children.items():
-        if "completed" in binding:
-            remember(key, binding["completed"]["operation"])
-    for record in records.values():
-        for receipt in record["bindings"]:
-            request = receipt["request"]
-            slot = children[_key(request["child"])][1]
-            if slot["intent"]["kind"] == "reviewed-initial":
-                # Its complete predecessor facts are in the retained installed
-                # phase-entry evidence below, not a caller-selected child edge.
-                continue
-            key = _key(_predecessor(slot["intent"]))
-            remember(key, request["predecessors"][0])
-        for receipt in record["advances"]:
-            evidence = retained_transition_input(receipt).get("phase_evidence")
-            if evidence is not None:
-                for participant in evidence["participants"]:
-                    for outcome in participant["operations"]:
-                        remember(_key(outcome["child"]), outcome["operation"])
-    return accepted, succeeded
+    observations = (
+        (key, operation)
+        for record in records.values()
+        for key, operation in _operation_observations(record)
+    )
+    accepted, known = _validate_operation_history(observations, ordered=False)
+    _require(
+        accepted.keys() <= children.keys(),
+        "retained Operation outside original workflow child closure",
+    )
+    succeeded = {key: value for key, value in accepted.items() if value["state"] == "succeeded"}
+    return accepted, succeeded, known
 
 
 def _evidence(
@@ -402,15 +360,13 @@ def _recovered_child(
         recovered, retained_readers=retained_readers, recovery_readers=recovery_readers
     )
     plan = recovered["plan"]
-    validate_plan(plan)
+    validate_operation_plan(operation, plan, recovery_readers=recovery_readers)
     scoped_action = "app.recover" if current_owner["tool"] == "app-ops" else "host.recover"
     _require(
         original["state"] in {"failed", "cancelled", "quarantined"}
-        and operation["owner"] == plan["owner"] == current_owner
+        and plan["owner"] == current_owner
         and operation["id"] != original["id"]
         and operation["request_id"] != original["request_id"]
-        and operation["plan_digest"] == plan["digest"]
-        and operation["subject"] == plan["subject"]
         and operation["state"] == "succeeded"
         and operation["effect_certainty"] == "known"
         and plan["subject"]["action"] in {"operation.recover", scoped_action}
@@ -446,7 +402,7 @@ def _dispositions(
         if "plan" in binding or "completed" in binding
     }
     ready = {owner: _ready(record, initial) for owner, record in records.items()}
-    accepted, succeeded = _retained_acceptance(records, original_children)
+    accepted, succeeded, known_effects = _retained_acceptance(records, original_children)
     seen = {_key(d["origin"]) for d in proposal["children"]}
     _require(seen == set(original_children), "workflow recovery omits original child disposition")
     mapped = {_key(d["origin"]): d["successor"] for d in proposal["children"]}
@@ -506,17 +462,16 @@ def _dispositions(
             retained_readers=retained_readers,
             recovery_readers=recovery_readers,
         )
-        if key in accepted:
-            _same_child_operation(accepted[key], operation)
         if key in succeeded:
             _require(
                 operation == succeeded[key],
                 "recovery changed retained successful workflow child outcome",
             )
+        if key in accepted:
+            _known_outcome(accepted[key], operation, known_effects=key in known_effects)
+        validate_operation_plan(operation, plan, recovery_readers=recovery_readers)
         _require(
-            _child_identity_matches(operation, old, binding, original["workflow_id"])
-            and operation["plan_digest"] == plan["digest"]
-            and operation["subject"] == plan["subject"],
+            _child_identity_matches(operation, old, binding, original["workflow_id"]),
             "workflow recovery substituted original child work",
         )
         if disposition["kind"] == "completed":

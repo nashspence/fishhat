@@ -19,7 +19,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey,
 from .bounds import Bounds, bounds
 from .handoffs import schema_identity, validate_result_payload
 from .history import validate_owner_custody
-from .operations import validate_operation_plan
+from .operations import _known_outcome, validate_operation_plan
 from .validation import ContractError, canonical, digest, validate
 from .witness import verify as verify_witness
 from .workflow_bindings import _key
@@ -30,7 +30,6 @@ from .workflow_journal import (
     _identity,
     _JournalTarget,
     _KeyOverlay,
-    _known_outcome,
     _now,
     _remember_outcome,
     _verify_plan,

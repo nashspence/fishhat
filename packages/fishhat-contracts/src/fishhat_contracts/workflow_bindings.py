@@ -23,7 +23,7 @@ from typing import Any
 
 from .bounds import Bounds, bounds
 from .handoffs import PHASES
-from .operations import validate_operation
+from .operations import validate_operation_plan
 from .validation import ContractError, canonical, digest, validate
 from .workflows import (
     _child_identity_matches,
@@ -115,12 +115,10 @@ def _operation(
     *,
     recovery_readers: Mapping[tuple[str, str], Callable[[dict[str, Any]], None]] | None,
 ) -> None:
-    validate_operation(record, recovery_readers=recovery_readers)
     plan = bound_plan(binding)
+    validate_operation_plan(record, plan, recovery_readers=recovery_readers)
     _require(
         _child_identity_matches(record, reference, binding, workflow_id)
-        and record["subject"] == plan["subject"]
-        and record["plan_digest"] == plan["digest"]
         and record["state"] == "succeeded"
         and record["effect_certainty"] == "known",
         "workflow predecessor does not prove exact successful child",

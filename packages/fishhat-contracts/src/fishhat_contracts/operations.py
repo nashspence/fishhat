@@ -172,3 +172,61 @@ def validate_operation_plan(
         and plan["subject"] == operation["subject"]
     ):
         raise ContractError("accepted operation Plan identity mismatch")
+
+
+def _progress_require(condition: bool, message: str) -> None:
+    if not condition:
+        raise ContractError(message)
+
+
+def _known_outcome(
+    previous: dict[str, Any] | None,
+    operation: dict[str, Any],
+    *,
+    allow_repeat: bool = True,
+    known_effects: bool = False,
+) -> None:
+    """Check state progress without forgetting facts behind intervening uncertainty."""
+    _progress_require(
+        operation["effect_certainty"] != "none"
+        or not (
+            known_effects or (previous is not None and previous["effect_certainty"] == "known")
+        ),
+        "workflow child contradicts retained known effect facts",
+    )
+    if previous is None or (allow_repeat and previous == operation):
+        return
+    _progress_require(
+        all(
+            operation[field] == previous[field]
+            for field in (
+                "id",
+                "owner",
+                "request_id",
+                "plan_id",
+                "plan_digest",
+                "subject",
+                "authenticated_principal",
+                "claimed_actor",
+                "created_at",
+            )
+        )
+        and operation["witness"]["workflow_id"] == previous["witness"]["workflow_id"]
+        and operation["generation"] > previous["generation"]
+        and operation["last_event"] >= previous["last_event"],
+        "workflow evidence replaced or regressed a retained native Operation",
+    )
+    state = previous["state"]
+    _progress_require(
+        state not in _TERMINAL_STATES, "workflow terminal child outcome cannot be replaced"
+    )
+    # The same state may have a later snapshot. Otherwise some number of legal
+    # transitions must connect the two observations, even after missed replies.
+    reachable = {state}
+    pending = [state]
+    while pending:
+        for successor in _OWNER_STATES[pending.pop()]:
+            if successor not in reachable:
+                reachable.add(successor)
+                pending.append(successor)
+    _progress_require(operation["state"] in reachable, "workflow native Operation state regressed")

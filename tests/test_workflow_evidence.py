@@ -248,6 +248,8 @@ def test_multi_phase_relocation_requires_native_milestones_before_final_operatio
     with pytest.raises(ContractError, match="successful known child"):
         advance_with_evidence(query, value)
     successful = synthetic_operation(value, participant, binding)
+    successful.update(generation=active["generation"] + 1, last_event=active["last_event"] + 1)
+    seal_operation(successful)
     query = advance_request(value, "completed", operations={canonical(reference): successful})
     complete = advance_with_evidence(query, value)
     assert complete["state"] == "completed"
