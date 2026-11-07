@@ -601,7 +601,7 @@ def validate_result_payload(
     if action == "app.maintenance-run":
         from .maintenance import validate_maintenance_result
 
-        validate_maintenance_result(value, operation)
+        validate_maintenance_result(value, operation, recovery_readers=recovery_readers)
     if action == "host.capture-changes":
         from .action_results import validate_source_proposal
 
@@ -613,7 +613,7 @@ def validate_result_payload(
     if action == "app.drill":
         from .drill_results import validate_drill_result
 
-        validate_drill_result(value, operation=operation)
+        validate_drill_result(value, operation=operation, recovery_readers=recovery_readers)
     if action == "adapter.execute":
         selected = _adapter_result_contract(
             operation["subject"]["arguments"],
@@ -794,7 +794,7 @@ def validate_cli_result(
     elif kind == "DrillResult":
         from .drill_results import validate_drill_result
 
-        validate_drill_result(result)
+        validate_drill_result(result, recovery_readers=recovery_readers)
     elif kind == "LifecycleEvidenceReference":
         from .lifecycle import validate_lifecycle_reference
 

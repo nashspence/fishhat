@@ -12844,6 +12844,78 @@
       "purpose_sha256": "8e172d0d96261e4f15a635542aeddbc885fc83801ce99bc2950e579acabbfbae"
     },
     {
+      "node": "tests/test_retained_result_compatibility.py::test_compatible_drill_reader_cannot_bypass_reviewed_input_closure",
+      "purpose_sha256": "4d31a0ef4c2c3d161fe64f7a731b6aca6d0df4621f9441038602ba753ac1b99b"
+    },
+    {
+      "node": "tests/test_retained_result_compatibility.py::test_compatible_maintenance_reader_cannot_bypass_child_identity",
+      "purpose_sha256": "4d31a0ef4c2c3d161fe64f7a731b6aca6d0df4621f9441038602ba753ac1b99b"
+    },
+    {
+      "node": "tests/test_retained_result_compatibility.py::test_compatible_result_does_not_supply_historical_recovery_authority[generation]",
+      "purpose_sha256": "4d31a0ef4c2c3d161fe64f7a731b6aca6d0df4621f9441038602ba753ac1b99b"
+    },
+    {
+      "node": "tests/test_retained_result_compatibility.py::test_compatible_result_does_not_supply_historical_recovery_authority[latest-reference]",
+      "purpose_sha256": "4d31a0ef4c2c3d161fe64f7a731b6aca6d0df4621f9441038602ba753ac1b99b"
+    },
+    {
+      "node": "tests/test_retained_result_compatibility.py::test_compatible_result_does_not_supply_historical_recovery_authority[permission]",
+      "purpose_sha256": "4d31a0ef4c2c3d161fe64f7a731b6aca6d0df4621f9441038602ba753ac1b99b"
+    },
+    {
+      "node": "tests/test_retained_result_compatibility.py::test_drill_preserves_qualified_result_with_original_reviewed_plan",
+      "purpose_sha256": "4d31a0ef4c2c3d161fe64f7a731b6aca6d0df4621f9441038602ba753ac1b99b"
+    },
+    {
+      "node": "tests/test_retained_result_compatibility.py::test_historical_recovery_keeps_qualified_original_result[False]",
+      "purpose_sha256": "4d31a0ef4c2c3d161fe64f7a731b6aca6d0df4621f9441038602ba753ac1b99b"
+    },
+    {
+      "node": "tests/test_retained_result_compatibility.py::test_historical_recovery_keeps_qualified_original_result[True]",
+      "purpose_sha256": "4d31a0ef4c2c3d161fe64f7a731b6aca6d0df4621f9441038602ba753ac1b99b"
+    },
+    {
+      "node": "tests/test_retained_result_compatibility.py::test_historical_recovery_requires_exact_result_qualification[missing]",
+      "purpose_sha256": "4d31a0ef4c2c3d161fe64f7a731b6aca6d0df4621f9441038602ba753ac1b99b"
+    },
+    {
+      "node": "tests/test_retained_result_compatibility.py::test_historical_recovery_requires_exact_result_qualification[wrong-digest]",
+      "purpose_sha256": "4d31a0ef4c2c3d161fe64f7a731b6aca6d0df4621f9441038602ba753ac1b99b"
+    },
+    {
+      "node": "tests/test_retained_result_compatibility.py::test_historical_recovery_requires_exact_result_qualification[wrong-uri]",
+      "purpose_sha256": "4d31a0ef4c2c3d161fe64f7a731b6aca6d0df4621f9441038602ba753ac1b99b"
+    },
+    {
+      "node": "tests/test_retained_result_compatibility.py::test_maintenance_preserves_qualified_parent_child_and_result_custody[backup-result.schema.json]",
+      "purpose_sha256": "4d31a0ef4c2c3d161fe64f7a731b6aca6d0df4621f9441038602ba753ac1b99b"
+    },
+    {
+      "node": "tests/test_retained_result_compatibility.py::test_maintenance_preserves_qualified_parent_child_and_result_custody[maintenance.schema.json]",
+      "purpose_sha256": "4d31a0ef4c2c3d161fe64f7a731b6aca6d0df4621f9441038602ba753ac1b99b"
+    },
+    {
+      "node": "tests/test_retained_result_compatibility.py::test_maintenance_requires_qualified_unchanged_child_bytes[missing]",
+      "purpose_sha256": "4d31a0ef4c2c3d161fe64f7a731b6aca6d0df4621f9441038602ba753ac1b99b"
+    },
+    {
+      "node": "tests/test_retained_result_compatibility.py::test_maintenance_requires_qualified_unchanged_child_bytes[mutate]",
+      "purpose_sha256": "4d31a0ef4c2c3d161fe64f7a731b6aca6d0df4621f9441038602ba753ac1b99b"
+    },
+    {
+      "node": "tests/test_retained_result_compatibility.py::test_maintenance_requires_qualified_unchanged_child_bytes[reject]",
+      "purpose_sha256": "4d31a0ef4c2c3d161fe64f7a731b6aca6d0df4621f9441038602ba753ac1b99b"
+    },
+    {
+      "node": "tests/test_retained_result_compatibility.py::test_maintenance_requires_qualified_unchanged_child_bytes[wrong-digest]",
+      "purpose_sha256": "4d31a0ef4c2c3d161fe64f7a731b6aca6d0df4621f9441038602ba753ac1b99b"
+    },
+    {
+      "node": "tests/test_retained_result_compatibility.py::test_maintenance_requires_qualified_unchanged_child_bytes[wrong-uri]",
+      "purpose_sha256": "4d31a0ef4c2c3d161fe64f7a731b6aca6d0df4621f9441038602ba753ac1b99b"
+    },
+    {
       "node": "tests/test_retained_result_growth.py::test_retained_adapter_results_linear_work",
       "purpose_sha256": "08c61968f35a0ef45aae4bdad4c27bc8c8b4ee5713c76235421ba8255fc3bbcd"
     },
