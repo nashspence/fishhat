@@ -16,6 +16,10 @@ See `research/authority_counterexamples/ABOUT.txt` for the deliberately failing,
 
 The experiment demonstrates owner-local admission while the *local target* is unavailable, atomic compare-and-swap claims, scoped epoch/request/effect identity, same-host replay, durable uncertain dispatch, positive local tombstones, a new-epoch owner restore without restored live activation, explicit target epoch handoff, and a checkpoint root that covers outcomes and is computed from a consistent snapshot. Claim IDs remain historically resolvable, but sessions recorded in the journal are not reactivated after restart; a fresh claim must fence the previous one.
 
+Owner-local scope enrollment is stored in the owner journal independently of target availability. Unenrolled requests and claims are rejected even with test-injected authorization; explicit restore retains the enrollment and the checkpoint root binds its contents. The historical request-ID lookup has a unique secondary index so a missing-ID admission does not scan retained origins. These are research-model properties, not validated native enrollment, protected file custody, or a production growth proof.
+
+The simulated target now requires durable `prepare_handoff` before `adopt_epoch`: preparation atomically invalidates old sessions and blocks new claims, effects, and no-effect tombstones until explicit adoption or abort. A lost preparation reply can be recovered by reopening the same local target, and abort does not revive prior sessions. This closes a *simulated* pre-adoption effect window, but not the owner-journal/target multi-database crash gap or any native physical-process gap. Native handoff needs independent cessation and protected mutation-path evidence; separate SQLite files do not provide a cross-file atomic transaction.
+
 ## Deliberate guarantee boundaries
 
 - Full host clones, including the local target, can perform independent local effects. No software-only local algorithm can elect a globally unique physical writer among disconnected identical clones. Do not describe the per-host local fence as cross-machine exclusivity.

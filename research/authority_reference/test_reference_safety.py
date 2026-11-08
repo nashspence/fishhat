@@ -41,7 +41,8 @@ SUBJECT = {"scope": SCOPE, "delta": 3}
 
 
 def owner(path: Path, *, epoch: str = OWNER["epoch"], initialize: bool = False) -> LocalOwner:
-    return LocalOwner(path, {**OWNER, "epoch": epoch}, initialize=initialize)
+    return LocalOwner(path, {**OWNER, "epoch": epoch}, initialize=initialize,
+                      scopes=(SCOPE,) if initialize else None)
 
 
 def target(path: Path, *, initialize: bool = True,
@@ -214,6 +215,7 @@ def test_new_epoch_retains_history_and_locally_fences_original(tmp_path):
                 restored.run("new-work", native, authorized=True)
             with pytest.raises(UnsafeAuthority, match="TARGET_EPOCH_MISMATCH"):
                 restored.claim("pre-handoff", SCOPE, native, authorized=True)
+            native.prepare_handoff(restored_owner, authorized=True)
             native.adopt_epoch(restored_owner, authorized=True)
             with pytest.raises(UnsafeAuthority, match="TARGET_EPOCH_MISMATCH"):
                 original.claim("stale", SCOPE, native, authorized=True)
@@ -412,7 +414,7 @@ def test_full_host_clone_has_independent_local_effects_no_global_claim(tmp_path)
 @pytest.mark.parametrize("tool", ["host-ops", "app-ops"])
 def test_both_local_owner_kinds_require_no_off_host_authority(tmp_path, tool):
     configured = {**OWNER, "tool": tool}
-    own = LocalOwner(tmp_path / "owner.db", configured, initialize=True)
+    own = LocalOwner(tmp_path / "owner.db", configured, initialize=True, scopes=(SCOPE,))
     native = LocalEffectTarget(tmp_path / "native.db", configured, (SCOPE,), initialize=True)
     try:
         own.accept("work", SUBJECT, "alice", authorized=True)
@@ -444,3 +446,116 @@ def test_distinct_local_processes_cas_one_same_host_generation(tmp_path):
     assert codes.count(1) == 3
     assert all("FENCE_STALE" in err for (_, err), code in zip(results, codes) if code == 1)
     assert native.generation(SCOPE, OWNER, authorized=True) == 1
+
+
+def test_owner_scope_enrollment_is_local_and_survives_restore(tmp_path):
+    native = target(tmp_path / "native.db")
+    native.available = False
+    first = owner(tmp_path / "first.db", initialize=True)
+    try:
+        assert first.accept("offline", SUBJECT, "alice", authorized=True)["state"] == "accepted"
+        with pytest.raises(UnsafeAuthority, match="SCOPE_NOT_ENROLLED"):
+            first.accept("unapproved", {"scope": "other-host-resource", "delta": 1},
+                         "alice", authorized=True)
+        with pytest.raises(UnsafeAuthority, match="SCOPE_NOT_ENROLLED"):
+            first.claim("unapproved-claim", "other-host-resource", native, authorized=True)
+        with pytest.raises(UnsafeAuthority, match="OWNER_SCOPE_MISMATCH"):
+            LocalOwner(first.path, OWNER, scopes=("other-host-resource",))
+        manifest, _ = first.export_manifest()
+        restored = LocalOwner.restore(first, tmp_path / "restored.db",
+                                      {**OWNER, "epoch": "44444444-4444-4444-8444-444444444444"},
+                                      expected_manifest=manifest, approved=True)
+        try:
+            assert restored.scopes == frozenset((SCOPE,))
+            with pytest.raises(UnsafeAuthority, match="SCOPE_NOT_ENROLLED"):
+                restored.accept("unapproved", {"scope": "other-host-resource", "delta": 1},
+                                "alice", authorized=True)
+        finally:
+            restored.close()
+    finally:
+        first.close()
+
+
+def test_owner_scope_enrollment_changes_checkpoint_root(tmp_path):
+    local = owner(tmp_path / "owner.db", initialize=True)
+    try:
+        root, _ = local.export_manifest()
+        local.db.execute("INSERT INTO enrolled VALUES(?)", ("extra-local-scope",))
+        assert local.export_manifest()[0] != root
+    finally:
+        local.close()
+
+
+def test_historical_replay_lookup_uses_request_id_index(tmp_path):
+    local = owner(tmp_path / "owner.db", initialize=True)
+    try:
+        # Synthetic retained history: query-plan evidence, not native scale qualification.
+        rows = [
+            ("prior-origin", f"historical-{i}", b'{}', "alice", "succeeded", "known", i)
+            for i in range(10000)
+        ]
+        with local.db:
+            local.db.executemany("INSERT INTO history VALUES(?,?,?,?,?,?,?)", rows)
+        plan = local.db.execute(
+            "EXPLAIN QUERY PLAN SELECT 1 FROM history WHERE request_id=? LIMIT 1",
+            ("missing-id",),
+        ).fetchall()
+        assert any("SEARCH history USING" in str(row[-1]) and
+                   "history_request_id" in str(row[-1]) for row in plan), plan
+        with pytest.raises(UnsafeAuthority, match="HISTORICAL_REQUEST_ID"):
+            local.accept("historical-9999", SUBJECT, "alice", authorized=True)
+        assert local.accept("fresh", SUBJECT, "alice", authorized=True)["state"] == "accepted"
+    finally:
+        local.close()
+
+
+def test_handoff_preparation_is_durable_and_fences_old_local_effects(tmp_path):
+    path = tmp_path / "native.db"
+    native = target(path)
+    local = owner(tmp_path / "owner.db", initialize=True)
+    next_owner = {**OWNER, "epoch": "55555555-5555-4555-8555-555555555555"}
+    try:
+        gen = local.claim("old-claim", SCOPE, native, authorized=True)
+        local.accept("old-work", SUBJECT, "alice", authorized=True)
+        with pytest.raises(UnsafeAuthority, match="HANDOFF_NOT_PREPARED"):
+            native.adopt_epoch(next_owner, authorized=True)
+        with pytest.raises(UnsafeAuthority, match="LOCAL_PERMISSION_DENIED"):
+            native.prepare_handoff(next_owner, authorized=False)
+        native.prepare_handoff(next_owner, authorized=True)
+        recovered = target(path, initialize=False)
+        recovered.prepare_handoff(next_owner, authorized=True)  # Lost prepare reply.
+        with pytest.raises(UnsafeAuthority, match="TARGET_HANDOFF_PENDING"):
+            native.claim(SCOPE, gen, "stale", "stale-activation", OWNER, authorized=True)
+        with pytest.raises(UnsafeAuthority, match="TARGET_HANDOFF_PENDING"):
+            native.effect(SCOPE, gen, local.live[SCOPE][1],
+                          _effect_id(OWNER, SCOPE, "old-work"), SUBJECT, OWNER,
+                          authorized=True)
+        with pytest.raises(UnsafeAuthority, match="TARGET_HANDOFF_PENDING"):
+            native.close_absent(SCOPE, _effect_id(OWNER, SCOPE, "old-work"),
+                                SUBJECT, OWNER, authorized=True)
+        recovered.adopt_epoch(next_owner, authorized=True)
+        with pytest.raises(UnsafeAuthority, match="TARGET_EPOCH_MISMATCH"):
+            native.generation(SCOPE, OWNER, authorized=True)
+        successor = LocalEffectTarget(path, next_owner, (SCOPE,))
+        assert successor.claim(SCOPE, gen + 1, "new-session", "new-claim", next_owner,
+                               authorized=True) == gen + 2
+    finally:
+        local.close()
+
+
+def test_prepared_handoff_conflict_or_abort_never_revives_old_session(tmp_path):
+    native = target(tmp_path / "native.db")
+    old_gen = native.claim(SCOPE, 0, "old-session", "old-activation", OWNER, authorized=True)
+    next_owner = {**OWNER, "epoch": "66666666-6666-4666-8666-666666666666"}
+    wrong_owner = {**OWNER, "epoch": "77777777-7777-4777-8777-777777777777"}
+    native.prepare_handoff(next_owner, authorized=True)
+    with pytest.raises(UnsafeAuthority, match="HANDOFF_TARGET_CONFLICT"):
+        native.prepare_handoff(wrong_owner, authorized=True)
+    with pytest.raises(UnsafeAuthority, match="HANDOFF_NOT_PREPARED"):
+        native.adopt_epoch(wrong_owner, authorized=True)
+    native.abort_handoff(next_owner, authorized=True)
+    with pytest.raises(UnsafeAuthority, match="FENCE_STALE"):
+        native.effect(SCOPE, old_gen, "old-session", _effect_id(OWNER, SCOPE, "old-work"),
+                      SUBJECT, OWNER, authorized=True)
+    assert native.claim(SCOPE, old_gen + 1, "recovery-session", "recovery-claim",
+                        OWNER, authorized=True) == old_gen + 2

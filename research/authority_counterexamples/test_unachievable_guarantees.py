@@ -21,7 +21,7 @@ INTENT = {"scope": SCOPE, "delta": 1}
 
 def test_false_guarantee_local_state_detects_its_own_complete_rollback(tmp_path):
     current, backup = tmp_path / "local.db", tmp_path / "old.db"
-    original = LocalOwner(current, OWNER, initialize=True)
+    original = LocalOwner(current, OWNER, initialize=True, scopes=(SCOPE,))
     original.accept("before", INTENT, "alice", authorized=True)
     original.close()
     shutil.copyfile(current, backup)
@@ -38,7 +38,7 @@ def test_false_guarantee_local_state_detects_its_own_complete_rollback(tmp_path)
 
 def test_false_guarantee_identical_cold_clones_elect_unique_owner_locally(tmp_path):
     first_path, copy_path = tmp_path / "a.db", tmp_path / "b.db"
-    initial = LocalOwner(first_path, OWNER, initialize=True)
+    initial = LocalOwner(first_path, OWNER, initialize=True, scopes=(SCOPE,))
     initial.close()
     shutil.copyfile(first_path, copy_path)
     a, b = LocalOwner(first_path, OWNER), LocalOwner(copy_path, OWNER)
@@ -65,7 +65,7 @@ def test_false_guarantee_copied_live_session_proves_physical_uniqueness(tmp_path
 def test_false_guarantee_unavailable_local_target_can_authorize_effect(tmp_path):
     native = LocalEffectTarget(tmp_path / "target.db", OWNER, (SCOPE,), initialize=True)
     native.available = False
-    local = LocalOwner(tmp_path / "owner.db", OWNER, initialize=True)
+    local = LocalOwner(tmp_path / "owner.db", OWNER, initialize=True, scopes=(SCOPE,))
     try:
         local.accept("offline-local-work", INTENT, "alice", authorized=True)
         assert local.claim("takeover", SCOPE, native, authorized=True) == 1
@@ -75,7 +75,7 @@ def test_false_guarantee_unavailable_local_target_can_authorize_effect(tmp_path)
 
 def test_false_guarantee_lost_reply_proves_effect_absent(tmp_path):
     native = LocalEffectTarget(tmp_path / "target.db", OWNER, (SCOPE,), initialize=True)
-    local = LocalOwner(tmp_path / "owner.db", OWNER, initialize=True)
+    local = LocalOwner(tmp_path / "owner.db", OWNER, initialize=True, scopes=(SCOPE,))
     try:
         local.accept("request", {**INTENT, "delta": 4}, "alice", authorized=True)
         local.claim("activation", SCOPE, native, authorized=True)
@@ -94,7 +94,7 @@ def test_false_guarantee_full_host_clones_have_unique_global_writer(tmp_path):
     a_dir, b_dir = tmp_path / "machine-a", tmp_path / "machine-b"
     a_dir.mkdir()
     b_dir.mkdir()
-    initial = LocalOwner(a_dir / "owner.db", OWNER, initialize=True)
+    initial = LocalOwner(a_dir / "owner.db", OWNER, initialize=True, scopes=(SCOPE,))
     initial.close()
     LocalEffectTarget(a_dir / "target.db", OWNER, (SCOPE,), initialize=True)
     shutil.copyfile(a_dir / "owner.db", b_dir / "owner.db")

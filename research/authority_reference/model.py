@@ -85,7 +85,7 @@ class LocalEffectTarget:
         with closing(_connection(path)) as db:
             if initialize:
                 db.executescript(
-                    "CREATE TABLE meta(owner TEXT NOT NULL);"
+                    "CREATE TABLE meta(owner TEXT NOT NULL, handoff TEXT);"
                     "CREATE TABLE enrolled(scope TEXT PRIMARY KEY);"
                     "CREATE TABLE writers("
                     "scope TEXT PRIMARY KEY, generation INTEGER NOT NULL, "
@@ -99,7 +99,7 @@ class LocalEffectTarget:
                     "intent BLOB NOT NULL, state TEXT NOT NULL, result INTEGER);"
                 )
                 def enroll() -> None:
-                    db.execute("INSERT INTO meta VALUES(?)", (_origin(owner),))
+                    db.execute("INSERT INTO meta VALUES(?,NULL)", (_origin(owner),))
                     db.executemany("INSERT INTO enrolled VALUES(?)", ((s,) for s in scopes))
                 _commit(db, enroll)
             if db.execute("SELECT owner FROM meta").fetchone() != (_origin(owner),):
@@ -124,6 +124,11 @@ class LocalEffectTarget:
         ).fetchone() is None:
             raise UnsafeAuthority("SCOPE_NOT_ENROLLED")
 
+    @staticmethod
+    def _require_active(db: sqlite3.Connection) -> None:
+        if db.execute("SELECT handoff FROM meta").fetchone()[0] is not None:
+            raise UnsafeAuthority("TARGET_HANDOFF_PENDING")
+
     def generation(self, scope: str, owner: dict[str, str], *, authorized: bool) -> int:
         with closing(self._connect()) as db:
             self._require(db, owner, authorized, scope)
@@ -139,6 +144,7 @@ class LocalEffectTarget:
         with closing(self._connect()) as db:
             def change() -> int:
                 self._require(db, owner, authorized, scope)
+                self._require_active(db)
                 previous = db.execute(
                     "SELECT scope,expected,session_digest,generation "
                     "FROM claims WHERE origin=? AND id=?", (origin, activation_id)
@@ -204,6 +210,7 @@ class LocalEffectTarget:
         with closing(self._connect()) as db:
             def change() -> int:
                 self._require(db, owner, authorized, scope)
+                self._require_active(db)
                 previous = db.execute(
                     "SELECT scope,intent,state,result FROM effects WHERE id=?", (effect_id,)
                 ).fetchone()
@@ -235,6 +242,7 @@ class LocalEffectTarget:
         with closing(self._connect()) as db:
             def change() -> bool:
                 self._require(db, owner, authorized, scope)
+                self._require_active(db)
                 previous = db.execute(
                     "SELECT scope,intent,state FROM effects WHERE id=?", (effect_id,)
                 ).fetchone()
@@ -249,8 +257,12 @@ class LocalEffectTarget:
                 return True
             return bool(_commit(db, change))
 
-    def adopt_epoch(self, new_owner: dict[str, str], *, authorized: bool) -> None:
-        """Explicit same-host restore authorization, fences all earlier sessions."""
+    def prepare_handoff(self, new_owner: dict[str, str], *, authorized: bool) -> None:
+        """Durably block old simulated effects before epoch adoption.
+
+        Native effect paths require separately proved cessation and exclusion.
+        Preparation is idempotent for the exact successor after a lost reply.
+        """
         validate("common.schema.json", new_owner, "Owner")
         if not authorized:
             raise UnsafeAuthority("LOCAL_PERMISSION_DENIED")
@@ -261,8 +273,43 @@ class LocalEffectTarget:
         with closing(self._connect()) as db:
             def change() -> None:
                 self._require(db, self.owner, True)
+                pending = db.execute("SELECT handoff FROM meta").fetchone()[0]
+                if pending is not None:
+                    if pending != _origin(new_owner):
+                        raise UnsafeAuthority("HANDOFF_TARGET_CONFLICT")
+                    return
                 db.execute("UPDATE writers SET generation=generation+1,session_digest=NULL")
-                db.execute("UPDATE meta SET owner=?", (_origin(new_owner),))
+                db.execute("UPDATE meta SET handoff=?", (_origin(new_owner),))
+            _commit(db, change)
+
+    def abort_handoff(self, new_owner: dict[str, str], *, authorized: bool) -> None:
+        """Explicit receiver-local abort; old live sessions remain fenced."""
+        validate("common.schema.json", new_owner, "Owner")
+        if not authorized:
+            raise UnsafeAuthority("LOCAL_PERMISSION_DENIED")
+        with closing(self._connect()) as db:
+            def change() -> None:
+                self._require(db, self.owner, True)
+                if db.execute("SELECT handoff FROM meta").fetchone()[0] != _origin(new_owner):
+                    raise UnsafeAuthority("HANDOFF_TARGET_CONFLICT")
+                db.execute("UPDATE meta SET handoff=NULL")
+            _commit(db, change)
+
+    def adopt_epoch(self, new_owner: dict[str, str], *, authorized: bool) -> None:
+        """Finish an explicitly prepared same-host target epoch handoff."""
+        validate("common.schema.json", new_owner, "Owner")
+        if not authorized:
+            raise UnsafeAuthority("LOCAL_PERMISSION_DENIED")
+        if any(self.owner[k] != new_owner[k] for k in ("tool", "id")) or (
+            self.owner["epoch"] == new_owner["epoch"]
+        ):
+            raise UnsafeAuthority("INVALID_EPOCH_HANDOFF")
+        with closing(self._connect()) as db:
+            def change() -> None:
+                self._require(db, self.owner, True)
+                if db.execute("SELECT handoff FROM meta").fetchone()[0] != _origin(new_owner):
+                    raise UnsafeAuthority("HANDOFF_NOT_PREPARED")
+                db.execute("UPDATE meta SET owner=?,handoff=NULL", (_origin(new_owner),))
             _commit(db, change)
         self.owner = dict(new_owner)
 
@@ -282,8 +329,15 @@ class LocalOwner:
     local correctness is scoped to one host, not a replicated shared resource.
     """
 
-    def __init__(self, path: Path, owner: dict[str, str], *, initialize: bool = False) -> None:
+    def __init__(self, path: Path, owner: dict[str, str], *, initialize: bool = False,
+                 scopes: tuple[str, ...] | None = None) -> None:
         validate("common.schema.json", owner, "Owner")
+        if scopes is not None and (not scopes or any(
+            not isinstance(scope, str) or not scope for scope in scopes
+        ) or len(set(scopes)) != len(scopes)):
+            raise UnsafeAuthority("INVALID_LOCAL_ENROLLMENT")
+        if initialize and scopes is None:
+            raise UnsafeAuthority("OWNER_ENROLLMENT_REQUIRED")
         if initialize and path.exists():
             raise UnsafeAuthority("OWNER_ALREADY_INITIALIZED")
         if not path.exists() and not initialize:
@@ -294,6 +348,7 @@ class LocalOwner:
         if initialize:
             self.db.executescript(
                 "CREATE TABLE meta(owner TEXT PRIMARY KEY);"
+                "CREATE TABLE enrolled(scope TEXT PRIMARY KEY);"
                 "CREATE TABLE requests("
                 "id TEXT PRIMARY KEY, body BLOB NOT NULL, principal TEXT NOT NULL, "
                 "state TEXT NOT NULL, certainty TEXT NOT NULL, result INTEGER);"
@@ -304,11 +359,19 @@ class LocalOwner:
                 "origin TEXT NOT NULL, request_id TEXT NOT NULL, body BLOB NOT NULL, "
                 "principal TEXT NOT NULL, state TEXT NOT NULL, certainty TEXT NOT NULL, "
                 "result INTEGER, PRIMARY KEY(origin,request_id));"
+                "CREATE UNIQUE INDEX history_request_id ON history(request_id);"
             )
-            _commit(self.db, lambda: self.db.execute("INSERT INTO meta VALUES(?)", (_origin(owner),)))
+            def enroll() -> None:
+                self.db.execute("INSERT INTO meta VALUES(?)", (_origin(owner),))
+                self.db.executemany("INSERT INTO enrolled VALUES(?)", ((s,) for s in scopes or ()))
+            _commit(self.db, enroll)
         if self.db.execute("SELECT owner FROM meta").fetchone() != (_origin(owner),):
             self.db.close()
             raise UnsafeAuthority("OWNER_EPOCH_MISMATCH")
+        self.scopes = frozenset(row[0] for row in self.db.execute("SELECT scope FROM enrolled"))
+        if not self.scopes or (scopes is not None and self.scopes != frozenset(scopes)):
+            self.db.close()
+            raise UnsafeAuthority("OWNER_SCOPE_MISMATCH")
         self.live: dict[str, tuple[int, str]] = {}
         self.pending_here: set[str] = set()
 
@@ -337,6 +400,8 @@ class LocalOwner:
             or type(subject["delta"]) is not int
         ):
             raise UnsafeAuthority("INVALID_INTENT")
+        if subject["scope"] not in self.scopes:
+            raise UnsafeAuthority("SCOPE_NOT_ENROLLED")
         body = canonical(subject)
         def change() -> None:
             old = self.db.execute("SELECT body FROM requests WHERE id=?", (request_id,)).fetchone()
@@ -363,6 +428,8 @@ class LocalOwner:
         """A claim can be retried in-process, but never reanimated on cold start."""
         if not authorized:
             raise UnsafeAuthority("LOCAL_PERMISSION_DENIED")
+        if scope not in self.scopes:
+            raise UnsafeAuthority("SCOPE_NOT_ENROLLED")
         row = self.db.execute(
             "SELECT scope,expected,session,state,generation FROM activations WHERE id=?",
             (activation_id,),
@@ -513,12 +580,14 @@ class LocalOwner:
                 "SELECT origin,request_id,body,principal,state,certainty,result "
                 "FROM history ORDER BY origin,request_id"
             ).fetchall()
+            enrolled = self.db.execute("SELECT scope FROM enrolled ORDER BY scope").fetchall()
             activations = self.db.execute(
                 "SELECT id,scope,expected,session,generation,state "
                 "FROM activations ORDER BY id"
             ).fetchall()
             identity = hashlib.sha256(canonical({
                 "owner": self.owner,
+                "enrolled": [row[0] for row in enrolled],
                 "records": [[r[0], json.loads(r[1]), *r[2:]] for r in records],
                 "history": [[r[0], r[1], json.loads(r[2]), *r[3:]] for r in history],
                 "activations": [
@@ -552,7 +621,8 @@ class LocalOwner:
             raise UnsafeAuthority("RESTORED_EPOCH_REUSED")
         if manifest != expected_manifest:
             raise UnsafeAuthority("RESTORE_MANIFEST_MISMATCH")
-        restored = cls(destination, new_owner, initialize=True)
+        restored = cls(destination, new_owner, initialize=True,
+                       scopes=tuple(sorted(source.scopes)))
         try:
             origin = _origin(source.owner)
             def commit_history() -> None:
