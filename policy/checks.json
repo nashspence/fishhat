@@ -6016,7 +6016,11 @@
       "purpose_sha256": "c38cc11e69cd15bf02fc216f465a00d893386464d62f68f497258aeece7cf916"
     },
     {
-      "node": "tests/test_copyable_state_counterexamples.py::test_copyable_state_only_guarantees_fail_for_the_intended_assertions",
+      "node": "tests/test_copyable_state_counterexamples.py::test_copyable_state_limit_fails_for_the_intended_assertion[copyable_state_cannot_attest_rollback_freshness]",
+      "purpose_sha256": "a73819c48b4fd897d6529ea74782b67ce520e11322fc4b3cf80a475f820cbb46"
+    },
+    {
+      "node": "tests/test_copyable_state_counterexamples.py::test_copyable_state_limit_fails_for_the_intended_assertion[copyable_state_cannot_elect_global_writer]",
       "purpose_sha256": "a73819c48b4fd897d6529ea74782b67ce520e11322fc4b3cf80a475f820cbb46"
     },
     {
