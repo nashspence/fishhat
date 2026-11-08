@@ -306,7 +306,7 @@
         "repository-policy"
       ],
       "scope": "repository-local",
-      "work_sha256": "d71171bef5034a6c1742c0c3a0402bf14443bb3dfceb3e0a5e831ac53d4f95e1"
+      "work_sha256": "37d3b8debb771684eb67a7e325170da19a5d5ac8e24623a3c2447a488f07455b"
     },
     "make:license": {
       "authority": "Makefile",
@@ -386,7 +386,7 @@
         "repository-policy"
       ],
       "scope": "repository-local",
-      "work_sha256": "e1325b68bf0c4798a8b419c131fa2496cf7001c92f9d8644b15c1ac9c0b9a802"
+      "work_sha256": "3b3fbb3e2d4ed73c4cad282e5809c6f81b757e6ede2bb366ab5149216628107f"
     },
     "make:test": {
       "authority": "Makefile",
@@ -4708,11 +4708,11 @@
       "purpose_sha256": "f9d4487085d6c84dc7e02ba9ab524a49c04de463a61ce753ecec62c1e193c32e"
     },
     {
-      "node": "tests/test_ci_config.py::SecurityGates::test_commit_hook_propagates_unit_failure",
+      "node": "tests/test_ci_config.py::SecurityGates::test_dependency_review_rejects_even_low_severity",
       "purpose_sha256": "f9d4487085d6c84dc7e02ba9ab524a49c04de463a61ce753ecec62c1e193c32e"
     },
     {
-      "node": "tests/test_ci_config.py::SecurityGates::test_dependency_review_rejects_even_low_severity",
+      "node": "tests/test_ci_config.py::SecurityGates::test_setup_leaves_commits_and_pushes_without_validation_hooks",
       "purpose_sha256": "f9d4487085d6c84dc7e02ba9ab524a49c04de463a61ce753ecec62c1e193c32e"
     },
     {

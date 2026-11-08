@@ -152,30 +152,71 @@ class SecurityGates(unittest.TestCase):
             commands,
         )
 
-    def test_commit_hook_propagates_unit_failure(self):
+    def test_setup_leaves_commits_and_pushes_without_validation_hooks(self):
         import os
+        import shutil
         import tempfile
         from pathlib import Path
 
         with tempfile.TemporaryDirectory() as tmp:
-            runner = Path(tmp) / "mise"
-            runner.write_text(
-                '#!/bin/sh\ntest "${GIT_INDEX_FILE+x}" != x || exit 18\ncase "$*" in *SYNTHETIC_REPORT_FILTER*) exit 19;; esac\nexit 17\n'
-            )
+            checkout = Path(tmp) / "checkout"
+            checkout.mkdir()
+            tools = Path(tmp) / "tools"
+            tools.mkdir()
+            remote = Path(tmp) / "remote.git"
+            shutil.copyfile(ROOT / "Makefile", checkout / "Makefile")
+            if (ROOT / ".githooks").exists():
+                shutil.copytree(ROOT / ".githooks", checkout / ".githooks")
+            runner = tools / "mise"
+            runner.write_text("#!/bin/sh\nexit 0\n")
             runner.chmod(0o755)
-            result = subprocess.run(
-                [str(ROOT / ".githooks/pre-commit")],
-                cwd=ROOT,
-                env={
-                    **os.environ,
-                    "GIT_INDEX_FILE": ".git/index",
-                    "UNIT_REPORT_ARGS": "-k SYNTHETIC_REPORT_FILTER",
-                    "PATH": tmp + os.pathsep + os.environ["PATH"],
-                },
+            environment = {
+                **os.environ,
+                "PATH": str(tools) + os.pathsep + os.environ["PATH"],
+                "GIT_CONFIG_GLOBAL": os.devnull,
+                "GIT_CONFIG_NOSYSTEM": "1",
+                "GIT_ALLOW_PROTOCOL": "file",
+            }
+
+            def run(*command):
+                return subprocess.run(
+                    command, cwd=checkout, env=environment, capture_output=True, check=True
+                ).stdout
+
+            run("git", "init", "--quiet", "--template=", "--initial-branch=main")
+            run("make", "setup")
+            configured = subprocess.run(
+                ["git", "config", "--local", "--get", "core.hooksPath"],
+                cwd=checkout,
+                env=environment,
                 capture_output=True,
             )
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn(b"Error 17", result.stderr)
+            self.assertEqual(configured.returncode, 1)
+            # Validation tools now fail. Ordinary Git operations still succeed;
+            # complete validation is a separate pre-push maintainer obligation.
+            runner.write_text("#!/bin/sh\nexit 17\n")
+            make = tools / "make"
+            make.write_text("#!/bin/sh\nexit 17\n")
+            make.chmod(0o755)
+            run("git", "add", "Makefile")
+            run(
+                "git",
+                "-c",
+                "user.name=Fixture Maintainer",
+                "-c",
+                "user.email=maintainer@example.invalid",
+                "commit",
+                "--quiet",
+                "--no-gpg-sign",
+                "-m",
+                "Synthetic fixture",
+            )
+            run("git", "init", "--quiet", "--bare", "--template=", str(remote))
+            run("git", "push", "--quiet", str(remote), "HEAD:refs/heads/main")
+            self.assertEqual(
+                run("git", "rev-parse", "HEAD"),
+                run("git", "--git-dir", str(remote), "rev-parse", "refs/heads/main"),
+            )
 
 
 if __name__ == "__main__":

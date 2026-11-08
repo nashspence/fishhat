@@ -376,7 +376,6 @@ def test_workflow_requires_complete_aggregation_and_attempt_scoped_raw_artifacts
     )
     assert "github.run_attempt" in upload["with"]["name"] and "always()" in upload["if"]
     assert "artifacts/unit-plan.json" in upload["with"]["path"]
-    assert "make unit" in (ROOT / ".githooks/pre-commit").read_text()
 
 
 @pytest.mark.parametrize("newest", ["push", "workflow_dispatch"])

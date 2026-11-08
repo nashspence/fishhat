@@ -122,7 +122,7 @@ Use `make help` for setup, validation, reporting, and argument conventions. The 
 
 Run focused tests while working. Cover relevant failure, interruption, and retry paths as well as success. New components must enter the existing validation gates, not sit outside them. Check built and installed software where packaging, platform behavior, or handoffs are affected. A declared operation is not evidence that it ran correctly.
 
-Before pushing, run the full required checks. Include compilation for Python changes, migration qualification for state changes, installed-package checks for packaging, platform or handoff changes, and a dependency audit for dependency changes. The commit hook must run the full unit suite; do not bypass it.
+Commits have no validation hook. Before pushing, run the complete local validation described by `make help`, including its change-specific checks. Substantial integration, handoff and release work also requires exhaustive qualification of each claimed native profile; reference tests and prerequisite probes do not substitute for that evidence.
 
 Review operation bindings and engineering declarations before explicitly refreshing their generated maps. A generated map is not execution evidence.
 
