@@ -19,7 +19,7 @@ args ?=
 help:
 	@printf '%s\n' \
 		'Targets:' \
-		'  make setup         Install locked tools/dependencies and the local commit hook.' \
+		'  make setup         Install locked tools and dependencies.' \
 		'  make unit          Run the local unit suite.' \
 		'  make ruff          Check Python lint.' \
 		'  make ruff-fix      Apply safe Ruff fixes.' \
@@ -46,6 +46,13 @@ help:
 		'  make governance    Audit live GitHub controls without changing them.' \
 		'  make operation-qualification  Check the source-derived operation coverage map.' \
 		'' \
+		'Before pushing:' \
+		'  make check' \
+		'  make dist-smoke' \
+		'  For Python changes, also run make compile; for dependency changes, make audit.' \
+		'  Use complete default selections; focused checks are for iteration.' \
+		'  Migration qualification is included in the full unit suite.' \
+		'' \
 		'Variables:' \
 		"  args='...'         Forward tool flags to unit, ruff, ruff-fix, format, format-check or mypy." \
 		"                     For operation-qualification/engineering: check (default), generate or report [--require-current-proofs]." \
@@ -70,7 +77,6 @@ help:
 setup:
 	"$(MISE_BIN)" install --locked
 	$(WATCHDOG_UV) "$(MISE_BIN)" x -- uv sync --locked --all-packages --group dev
-	git config --local core.hooksPath .githooks
 
 # check-purpose: validation-tooling
 ruff:
