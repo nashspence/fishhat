@@ -1,13 +1,11 @@
-# Intentionally failing authority counterexamples
+# Intentionally failing local-only authority counterexamples
 
-Run from the repository root after installing the fishhat workspace:
+Run these explicit *negative* experiments from the repository root with the locked project environment:
 
 ```sh
-python -m pytest -o addopts= -q research/authority_counterexamples/test_unachievable_guarantees.py
+uv run --locked --all-packages --group dev python -m pytest -o addopts= -q research/authority_counterexamples/test_unachievable_guarantees.py
 ```
 
-**Expected exit status: nonzero (five failed tests).** These tests deliberately assert five guarantees that local-only authority or copyable writer sessions cannot establish. They are kept outside the default `tests/` discovery root and are not candidates for xfail/skip markers. A failure is the demonstration; success on any individual test would require investigating the model or that asserted impossibility boundary.
+**Expected exit status: nonzero (six failed tests).** Every test asserts a guarantee that a host-local authority cannot establish on its own: (1) detecting an internally consistent rollback, (2) globally electing between identical journal clones, (3) inferring physical writer identity from a copyable session, (4) authorizing a local effect through an unavailable local target, (5) inferring no effect from an unobservable lost reply, and (6) globally excluding a second full host clone with its own copied local target. The sixth experiment is especially important for fishhat's *no central or off-host host-ops/app-ops authority* rule: both machines can work safely on **their own local targets**, but no local-only theorem makes them one global writer.
 
-The positive reference suite is `research/authority_reference/test_reference_safety.py`. The model is `research/authority_reference/model.py`. Both run without specialized hardware. The resource database simulates a single serialized resource endpoint; it is not a deployable cross-machine SQLite coordinator, a native SSH service, or a production-qualified enforcer. In particular, the model cannot exclude indistinguishable simultaneous copies of a *live* writer session, privileged bypasses of its write path, or rollback of the enforcing resource itself.
-
-The counterexamples show: complete owner-state rollback is internally indistinguishable from valid earlier state; cold clones cannot elect a unique physical owner locally; a copied live session cannot be distinguished by a resource that authenticates only that session; an unreachable enforcing resource cannot authorize a safe takeover; and a missing reply cannot prove a remote effect absent. Native qualification must address the write-path and storage assumptions separately.
+These tests intentionally fail; do not turn them into xfails/skips or weaken the hypotheses to make the suite green. The positive portable experiment is `research/authority_reference/test_reference_safety.py`, and its model is `research/authority_reference/model.py`. Tests exercise SQLite on the current machine; they are not native physical-writer, cross-platform IPC, storage, OS, or application qualification. They remain outside default `tests/` discovery and maintained check-evidence inventory pending review.

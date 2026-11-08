@@ -1,14 +1,22 @@
-"""Portable executable proof obligations for a test-only owner/resource model."""
+"""Portable opt-in same-host authority experiment (not native qualification)."""
 
 from __future__ import annotations
 
 import shutil
+import sqlite3
+import subprocess
+import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
 
-from research.authority_reference.model import LocalOwner, TransactionalResource, UnsafeAuthority
+from research.authority_reference.model import (
+    LocalEffectTarget,
+    LocalOwner,
+    UnsafeAuthority,
+    _effect_id,
+)
 
 CHECK_PURPOSE = {
     "purpose": "implementation",
@@ -17,246 +25,422 @@ CHECK_PURPOSE = {
         "fishhat/owner-support/src/fishhat_owner/journal.py",
         "packages/fishhat-contracts/src/fishhat_contracts/contracts/common.schema.json#/$defs/Owner",
     ],
-    "scope": "test-only portable local accepted-work persistence and resource-side atomic fencing model",
+    "scope": "opt-in same-host local owner/target model; no central/off-host authority",
     "relationship": "candidate",
-    "reason": "These SQLite reference scenarios exercise an isolated serialized resource and separate owner databases, not native SSH, filesystem, OS, multi-host enforcement, or power-loss qualification.",
+    "reason": "The model exercises local SQLite transactions, not native IPC, filesystem, process identity, host clone exclusion, or power-loss qualification.",
     "claims": [],
 }
 
-OWNER = {"tool": "app-ops", "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", "epoch": "11111111-1111-4111-8111-111111111111"}
-SCOPE = "database:orders"
+OWNER = {
+    "tool": "app-ops",
+    "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    "epoch": "11111111-1111-4111-8111-111111111111",
+}
+SCOPE = "local-application:orders"
+SUBJECT = {"scope": SCOPE, "delta": 3}
 
 
-def owner(path: Path, *, epoch: str = "11111111-1111-4111-8111-111111111111", initialize: bool = False) -> LocalOwner:
+def owner(path: Path, *, epoch: str = OWNER["epoch"], initialize: bool = False) -> LocalOwner:
     return LocalOwner(path, {**OWNER, "epoch": epoch}, initialize=initialize)
 
 
-def test_local_acceptance_and_replay_without_resource_or_client(tmp_path):
+def target(path: Path, *, initialize: bool = True,
+           scopes: tuple[str, ...] = (SCOPE,)) -> LocalEffectTarget:
+    return LocalEffectTarget(path, OWNER, scopes, initialize=initialize)
+
+
+def execute(local: LocalOwner, native: LocalEffectTarget, request: str, *,
+            delta: int = 3, scope: str = SCOPE) -> int:
+    local.accept(request, {"scope": scope, "delta": delta}, "alice", authorized=True)
+    return local.run(request, native, authorized=True)
+
+
+def test_local_acceptance_and_replay_without_target_or_client(tmp_path):
     journal = tmp_path / "owner.db"
-    resource = TransactionalResource(tmp_path / "resource.db", initialize=True)
-    resource.available = False
-    first = owner(journal, initialize=True)
-    subject = {"scope": SCOPE, "delta": 3}
-    original = first.accept("request-1", subject, "alice", authorized=True)
+    native = target(tmp_path / "native.db")
+    native.available = False
+    original = owner(journal, initialize=True)
+    submitted = original.accept("request-1", SUBJECT, "alice", authorized=True)
     with pytest.raises(UnsafeAuthority, match="LOCAL_PERMISSION_DENIED"):
-        first.accept("request-2", subject, "mallory", authorized=False)
+        original.accept("request-2", SUBJECT, "mallory", authorized=False)
     with pytest.raises(UnsafeAuthority, match="REQUEST_ID_CONFLICT"):
-        first.accept("request-1", {**subject, "delta": 4}, "alice", authorized=True)
-    assert original["principal"] == "alice"
-    first.close()
-    restarted = owner(journal)
+        original.accept("request-1", {**SUBJECT, "delta": 4}, "alice", authorized=True)
+    assert submitted["principal"] == "alice"
+    original.close()
+    reopened = owner(journal)
     try:
-        assert restarted.accept("request-1", subject, "bob", authorized=True) == original
-        assert restarted.accept("request-3", subject, "alice", authorized=True)["state"] == "accepted"
-        with pytest.raises(UnsafeAuthority, match="RESOURCE_UNAVAILABLE"):
-            restarted.claim("activate-1", SCOPE, resource, authorized=True)
+        assert reopened.accept("request-1", SUBJECT, "bob", authorized=True) == submitted
+        assert reopened.accept("request-3", SUBJECT, "alice", authorized=True)["state"] == "accepted"
+        with pytest.raises(UnsafeAuthority, match="TARGET_UNAVAILABLE"):
+            reopened.claim("activation-1", SCOPE, native, authorized=True)
     finally:
-        restarted.close()
+        reopened.close()
 
 
-def test_effect_is_journaled_unknown_before_native_dispatch_and_reconciled(tmp_path):
-    local = tmp_path / "owner.db"
-    external = TransactionalResource(tmp_path / "resource.db", initialize=True)
-    first = owner(local, initialize=True)
-    first.accept("e-1", {"scope": SCOPE, "delta": 7}, "alice", authorized=True)
-    generation = first.claim("activation-1", SCOPE, external, authorized=True)
-    assert generation == 1
+def test_lost_effect_reply_reconciled_after_process_restart(tmp_path):
+    native = target(tmp_path / "native.db")
+    local_file = tmp_path / "owner.db"
+    first = owner(local_file, initialize=True)
+    first.accept("e-1", {**SUBJECT, "delta": 7}, "alice", authorized=True)
+    assert first.claim("a-1", SCOPE, native, authorized=True) == 1
 
     class ReplyLost:
-        def effect(self, *args):
-            value = external.effect(*args)
-            assert value == 7
-            raise ConnectionError("reply lost after resource commit")
+        def effect(self, *args, **kwargs):
+            assert native.effect(*args, **kwargs) == 7
+            raise ConnectionError("reply lost after local commit")
 
     with pytest.raises(ConnectionError, match="reply lost"):
-        first.run("e-1", ReplyLost())
-    assert first.accepted("e-1")["state"] == "dispatched"
+        first.run("e-1", ReplyLost(), authorized=True)
     assert first.accepted("e-1")["certainty"] == "unknown"
-    first.close()  # simulates process death and the loss of its live session
-    fresh = owner(local)
+    first.close()
+    reopened = owner(local_file)
     try:
         with pytest.raises(UnsafeAuthority, match="RECONCILIATION_REQUIRED"):
-            fresh.run("e-1", external)
-        assert fresh.reconcile("e-1", external)["state"] == "succeeded"
-        assert fresh.accepted("e-1")["certainty"] == "known"
-        assert fresh.run("e-1", external) == 7  # exact replay; no second effect
-        assert external.value(SCOPE) == 7
+            reopened.run("e-1", native, authorized=True)
+        assert reopened.reconcile("e-1", native, authorized=True)["state"] == "succeeded"
+        assert reopened.run("e-1", native, authorized=True) == 7
+        assert native.value(SCOPE) == 7
         with pytest.raises(UnsafeAuthority, match="REACTIVATION_REQUIRED"):
-            fresh.claim("activation-1", SCOPE, external, authorized=True)
+            reopened.claim("a-1", SCOPE, native, authorized=True)
     finally:
-        fresh.close()
+        reopened.close()
 
 
-def test_unknown_before_external_execution_is_never_inferred_absent(tmp_path):
-    external = TransactionalResource(tmp_path / "resource.db", initialize=True)
+def test_unknown_local_effect_never_inferred_absent(tmp_path):
+    native = target(tmp_path / "native.db")
     local = owner(tmp_path / "owner.db", initialize=True)
     try:
-        local.accept("e-1", {"scope": SCOPE, "delta": 2}, "alice", authorized=True)
-        local.claim("activation", SCOPE, external, authorized=True)
-        external.available = False
-        with pytest.raises(UnsafeAuthority, match="RESOURCE_UNAVAILABLE"):
-            local.run("e-1", external)
+        local.accept("e-1", {**SUBJECT, "delta": 2}, "alice", authorized=True)
+        local.claim("activation", SCOPE, native, authorized=True)
+        native.available = False
+        with pytest.raises(UnsafeAuthority, match="TARGET_UNAVAILABLE"):
+            local.run("e-1", native, authorized=True)
         assert local.accepted("e-1")["state"] == "dispatched"
-        with pytest.raises(UnsafeAuthority, match="RESOURCE_UNAVAILABLE"):
-            local.reconcile("e-1", external)
-        external.available = True
+        with pytest.raises(UnsafeAuthority, match="TARGET_UNAVAILABLE"):
+            local.reconcile("e-1", native, authorized=True)
+        native.available = True
         with pytest.raises(UnsafeAuthority, match="EFFECT_UNRESOLVED"):
-            local.reconcile("e-1", external)
-        closed = local.close_absent("e-1", external)
-        assert closed["state"] == "failed" and closed["certainty"] == "none"
+            local.reconcile("e-1", native, authorized=True)
+        assert local.close_absent("e-1", native, authorized=True)["state"] == "failed"
         with pytest.raises(UnsafeAuthority, match="EFFECT_PERMANENTLY_CLOSED"):
-            external.effect(SCOPE, 1, local.live[SCOPE][1], "e-1", 2)
-        assert external.value(SCOPE) == 0
+            native.effect(
+                SCOPE, 1, local.live[SCOPE][1], _effect_id(OWNER, SCOPE, "e-1"),
+                {**SUBJECT, "delta": 2}, OWNER, authorized=True,
+            )
+        assert native.value(SCOPE) == 0
     finally:
         local.close()
 
 
-def test_cloned_owner_files_have_independent_management_but_stale_effects_fail(tmp_path):
-    external = TransactionalResource(tmp_path / "resource.db", initialize=True)
-    primary_file, copy_file = tmp_path / "primary.db", tmp_path / "copy.db"
-    original = owner(primary_file, initialize=True)
-    original.accept("historical", {"scope": SCOPE, "delta": 1}, "alice", authorized=True)
-    original.close()
-    shutil.copyfile(primary_file, copy_file)  # exact owner-state clone, same epoch and keys
-    a, b = owner(primary_file), owner(copy_file)
+def test_two_copies_of_local_journal_share_one_local_fence(tmp_path):
+    native = target(tmp_path / "native.db")
+    primary, copied = tmp_path / "primary.db", tmp_path / "copy.db"
+    initial = owner(primary, initialize=True)
+    initial.accept("historical", {**SUBJECT, "delta": 1}, "alice", authorized=True)
+    initial.close()
+    shutil.copyfile(primary, copied)
+    a, b = owner(primary), owner(copied)
     try:
-        assert a.accepted("historical") == b.accepted("historical")
-        assert a.claim("activation-a", SCOPE, external, authorized=True) == 1
-        assert b.claim("activation-b", SCOPE, external, authorized=True) == 2
-        a.accept("local-a", {"scope": SCOPE, "delta": 6}, "alice", authorized=True)
-        b.accept("local-b", {"scope": SCOPE, "delta": 9}, "bob", authorized=True)
+        assert a.claim("activation-a", SCOPE, native, authorized=True) == 1
+        assert b.claim("activation-b", SCOPE, native, authorized=True) == 2
+        a.accept("local-a", {**SUBJECT, "delta": 6}, "alice", authorized=True)
+        b.accept("local-b", {**SUBJECT, "delta": 9}, "bob", authorized=True)
         with pytest.raises(UnsafeAuthority, match="FENCE_STALE"):
-            a.run("local-a", external)
-        assert a.accepted("local-a")["state"] == "dispatched"
-        assert b.run("local-b", external) == 9
-        assert external.value(SCOPE) == 9
-        # The source owner can still inspect and accept *local* management work.
-        assert a.accept("new-local", {"scope": SCOPE, "delta": 1}, "alice", authorized=True)
-        assert a.close_absent("local-a", external)["state"] == "failed"
+            a.run("local-a", native, authorized=True)
+        assert b.run("local-b", native, authorized=True) == 9
+        assert native.value(SCOPE) == 9
+        assert a.close_absent("local-a", native, authorized=True)["state"] == "failed"
     finally:
         a.close()
         b.close()
 
 
-def test_fence_claim_compare_and_swap_is_atomic(tmp_path):
-    external = TransactionalResource(tmp_path / "resource.db", initialize=True)
-    def attempt(session):
+def test_same_host_cas_claim_is_atomic(tmp_path):
+    native = target(tmp_path / "native.db")
+
+    def attempt(i: int):
         try:
-            return external.claim(SCOPE, 0, session)
+            return native.claim(SCOPE, 0, f"session-{i}", f"a-{i}", OWNER, authorized=True)
         except UnsafeAuthority as exc:
             return str(exc)
-    with ThreadPoolExecutor(max_workers=8) as workers:
-        results = list(workers.map(attempt, (f"session-{i}" for i in range(8))))
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        results = list(pool.map(attempt, range(8)))
     assert results.count(1) == 1
     assert results.count("FENCE_STALE") == 7
-    assert external.generation(SCOPE) == 1
+    assert native.generation(SCOPE, OWNER, authorized=True) == 1
 
 
-def test_resource_effect_identity_is_atomic_even_with_duplicate_delivery(tmp_path):
-    external = TransactionalResource(tmp_path / "resource.db", initialize=True)
-    gen = external.claim(SCOPE, 0, "session")
-    with ThreadPoolExecutor(max_workers=6) as workers:
-        values = list(workers.map(
-            lambda _: external.effect(SCOPE, gen, "session", "e-1", 4), range(6)
-        ))
-    assert values == [4] * 6
-    assert external.value(SCOPE) == 4
+def test_same_host_effect_identity_is_atomic_with_duplicate_delivery(tmp_path):
+    native = target(tmp_path / "native.db")
+    generation = native.claim(SCOPE, 0, "session", "activation", OWNER, authorized=True)
+    eid = _effect_id(OWNER, SCOPE, "e-1")
+    def attempt(_):
+        return native.effect(SCOPE, generation, "session", eid, {**SUBJECT, "delta": 4}, OWNER, authorized=True)
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        results = list(pool.map(attempt, range(6)))
+    assert results == [4] * 6
+    assert native.value(SCOPE) == 4
     with pytest.raises(UnsafeAuthority, match="EFFECT_ID_CONFLICT"):
-        external.effect(SCOPE, gen, "session", "e-1", 5)
+        native.effect(SCOPE, generation, "session", eid, {**SUBJECT, "delta": 5}, OWNER, authorized=True)
 
 
-def test_explicit_restore_new_epoch_keeps_history_but_no_old_execution(tmp_path):
-    external = TransactionalResource(tmp_path / "resource.db", initialize=True)
-    source = owner(tmp_path / "original.db", initialize=True)
+def test_new_epoch_retains_history_and_locally_fences_original(tmp_path):
+    native = target(tmp_path / "native.db")
+    original = owner(tmp_path / "original.db", initialize=True)
     destination = tmp_path / "restored.db"
+    restored_owner = {**OWNER, "epoch": "22222222-2222-4222-8222-222222222222"}
     try:
-        source.accept("old-request", {"scope": SCOPE, "delta": 5}, "alice", authorized=True)
-        source.claim("original-activation", SCOPE, external, authorized=True)
-        assert source.run("old-request", external) == 5
-        manifest, _ = source.export_manifest()
+        original.accept("old-request", {**SUBJECT, "delta": 5}, "alice", authorized=True)
+        original.claim("original-activation", SCOPE, native, authorized=True)
+        assert original.run("old-request", native, authorized=True) == 5
+        manifest, _ = original.export_manifest()
         with pytest.raises(UnsafeAuthority, match="RESTORED_EPOCH_REUSED"):
-            LocalOwner.restore(source, destination, OWNER, expected_manifest=manifest, approved=True)
+            LocalOwner.restore(original, destination, OWNER, expected_manifest=manifest, approved=True)
         with pytest.raises(UnsafeAuthority, match="RESTORE_MANIFEST_MISMATCH"):
-            LocalOwner.restore(
-                source, destination, {**OWNER, "epoch": "22222222-2222-4222-8222-222222222222"},
-                expected_manifest="sha256:" + "0" * 64, approved=True,
-            )
-        restored = LocalOwner.restore(
-            source, destination, {**OWNER, "epoch": "22222222-2222-4222-8222-222222222222"},
-            expected_manifest=manifest, approved=True,
-        )
+            LocalOwner.restore(original, destination, restored_owner,
+                               expected_manifest="sha256:" + "0" * 64, approved=True)
+        restored = LocalOwner.restore(original, destination, restored_owner,
+                                      expected_manifest=manifest, approved=True)
         try:
-            historical = restored.db.execute(
-                "SELECT state,certainty,principal FROM history WHERE request_id='old-request'"
-            ).fetchone()
-            assert historical == ("succeeded", "known", "alice")
+            assert restored.db.execute(
+                "SELECT state,certainty,principal,result FROM history WHERE request_id='old-request'"
+            ).fetchone() == ("succeeded", "known", "alice", 5)
             assert restored.accepted("old-request") is None
             with pytest.raises(UnsafeAuthority, match="HISTORICAL_REQUEST_ID"):
-                restored.accept(
-                    "old-request", {"scope": SCOPE, "delta": 5}, "alice", authorized=True
-                )
-            restored.accept("recovery-request", {"scope": SCOPE, "delta": 2}, "alice", authorized=True)
+                restored.accept("old-request", {**SUBJECT, "delta": 5}, "alice", authorized=True)
+            restored.accept("new-work", {**SUBJECT, "delta": 2}, "alice", authorized=True)
             with pytest.raises(UnsafeAuthority, match="FENCE_NOT_ACTIVATED"):
-                restored.run("recovery-request", external)
-            assert restored.claim("successor-activation", SCOPE, external, authorized=True) == 2
-            assert restored.run("recovery-request", external) == 7
+                restored.run("new-work", native, authorized=True)
+            with pytest.raises(UnsafeAuthority, match="TARGET_EPOCH_MISMATCH"):
+                restored.claim("pre-handoff", SCOPE, native, authorized=True)
+            native.adopt_epoch(restored_owner, authorized=True)
+            with pytest.raises(UnsafeAuthority, match="TARGET_EPOCH_MISMATCH"):
+                original.claim("stale", SCOPE, native, authorized=True)
+            assert restored.claim("new-activation", SCOPE, native, authorized=True) == 3
+            assert restored.run("new-work", native, authorized=True) == 7
         finally:
             restored.close()
     finally:
-        source.close()
+        original.close()
 
 
 def test_missing_journal_is_not_new_empty_state(tmp_path):
     with pytest.raises(UnsafeAuthority, match="OWNER_STATE_MISSING"):
-        owner(tmp_path / "lost.db")
-    with pytest.raises(UnsafeAuthority, match="RESOURCE_MISSING"):
-        TransactionalResource(tmp_path / "lost-resource.db")
+        owner(tmp_path / "missing.db")
+    with pytest.raises(UnsafeAuthority, match="TARGET_MISSING"):
+        LocalEffectTarget(tmp_path / "missing-target.db", OWNER, (SCOPE,))
 
 
-def test_multiple_restores_preserve_every_origin_without_reusing_epoch(tmp_path):
+def test_multiple_local_restores_preserve_every_origin(tmp_path):
     first = owner(tmp_path / "first.db", initialize=True)
-    first.accept("first-work", {"scope": SCOPE, "delta": 1}, "alice", authorized=True)
-    one_manifest, _ = first.export_manifest()
-    second = LocalOwner.restore(
-        first, tmp_path / "second.db", {**OWNER, "epoch": "22222222-2222-4222-8222-222222222222"},
-        expected_manifest=one_manifest, approved=True,
-    )
-    second.accept("second-work", {"scope": SCOPE, "delta": 2}, "alice", authorized=True)
+    first.accept("first-work", {**SUBJECT, "delta": 1}, "alice", authorized=True)
+    first_manifest, _ = first.export_manifest()
+    second = LocalOwner.restore(first, tmp_path / "second.db",
+                                {**OWNER, "epoch": "22222222-2222-4222-8222-222222222222"},
+                                expected_manifest=first_manifest, approved=True)
+    second.accept("second-work", {**SUBJECT, "delta": 2}, "alice", authorized=True)
     second_manifest, _ = second.export_manifest()
-    third = LocalOwner.restore(
-        second, tmp_path / "third.db", {**OWNER, "epoch": "33333333-3333-4333-8333-333333333333"},
-        expected_manifest=second_manifest, approved=True,
-    )
+    third = LocalOwner.restore(second, tmp_path / "third.db",
+                               {**OWNER, "epoch": "33333333-3333-4333-8333-333333333333"},
+                               expected_manifest=second_manifest, approved=True)
     try:
-        origins = third.db.execute(
+        assert third.db.execute(
             "SELECT request_id,state FROM history ORDER BY request_id"
-        ).fetchall()
-        assert origins == [("first-work", "accepted"), ("second-work", "accepted")]
+        ).fetchall() == [("first-work", "accepted"), ("second-work", "accepted")]
         with pytest.raises(UnsafeAuthority, match="RESTORED_EPOCH_REUSED"):
-            LocalOwner.restore(
-                third, tmp_path / "reused.db", {**OWNER, "epoch": "11111111-1111-4111-8111-111111111111"},
-                expected_manifest=third.export_manifest()[0], approved=True,
-            )
+            LocalOwner.restore(third, tmp_path / "reused.db", OWNER,
+                               expected_manifest=third.export_manifest()[0], approved=True)
     finally:
         first.close()
         second.close()
         third.close()
 
 
-def test_effect_reconciliation_rejects_same_id_from_different_resource_scope(tmp_path):
-    external = TransactionalResource(tmp_path / "resource.db", initialize=True)
+def test_reconciliation_checks_exact_intent_not_just_effect_name(tmp_path):
+    other = "local-application:another"
+    native = target(tmp_path / "native.db", scopes=(SCOPE, other))
     local = owner(tmp_path / "owner.db", initialize=True)
     try:
-        local.accept("e-1", {"scope": SCOPE, "delta": 2}, "alice", authorized=True)
-        local.claim("activation", SCOPE, external, authorized=True)
-        external.available = False
-        with pytest.raises(UnsafeAuthority, match="RESOURCE_UNAVAILABLE"):
-            local.run("e-1", external)
-        external.available = True
-        other = "database:another-instance"
-        external.effect(other, external.claim(other, 0, "other"), "other", "e-1", 2)
+        local.accept("e-1", {**SUBJECT, "delta": 2}, "alice", authorized=True)
+        local.claim("activation", SCOPE, native, authorized=True)
+        native.available = False
+        with pytest.raises(UnsafeAuthority, match="TARGET_UNAVAILABLE"):
+            local.run("e-1", native, authorized=True)
+        native.available = True
+        generation = native.claim(other, 0, "other", "other-activation", OWNER, authorized=True)
+        native.effect(other, generation, "other", _effect_id(OWNER, SCOPE, "e-1"),
+                      {"scope": other, "delta": 2}, OWNER, authorized=True)
         with pytest.raises(UnsafeAuthority, match="EFFECT_ID_CONFLICT"):
-            local.reconcile("e-1", external)
-        assert local.accepted("e-1")["state"] == "dispatched"
+            local.reconcile("e-1", native, authorized=True)
     finally:
         local.close()
+
+
+def test_unauthorized_claim_effect_and_tombstone_fail_closed(tmp_path):
+    native = target(tmp_path / "native.db")
+    local = owner(tmp_path / "owner.db", initialize=True)
+    try:
+        with pytest.raises(UnsafeAuthority, match="SCOPE_NOT_ENROLLED"):
+            native.claim("unapproved-local-target", 0, "session", "unauthorized", OWNER,
+                         authorized=True)
+        with pytest.raises(UnsafeAuthority, match="LOCAL_PERMISSION_DENIED"):
+            native.claim(SCOPE, 0, "session", "act", OWNER, authorized=False)
+        with pytest.raises(UnsafeAuthority, match="LOCAL_PERMISSION_DENIED"):
+            native.close_absent(SCOPE, _effect_id(OWNER, SCOPE, "e-1"), SUBJECT,
+                                OWNER, authorized=False)
+        with pytest.raises(UnsafeAuthority, match="LOCAL_PERMISSION_DENIED"):
+            local.claim("act", SCOPE, native, authorized=False)
+        local.accept("e-1", SUBJECT, "alice", authorized=True)
+        with pytest.raises(UnsafeAuthority, match="LOCAL_PERMISSION_DENIED"):
+            local.run("e-1", native, authorized=False)
+        assert native.value(SCOPE) == 0
+    finally:
+        local.close()
+
+
+def test_lost_local_claim_reply_is_idempotent_without_cold_session_restore(tmp_path):
+    native = target(tmp_path / "native.db")
+    local_file = tmp_path / "owner.db"
+    local = owner(local_file, initialize=True)
+
+    class ClaimReplyLost:
+        def generation(self, *args, **kwargs):
+            return native.generation(*args, **kwargs)
+        def claim(self, *args, **kwargs):
+            assert native.claim(*args, **kwargs) == 1
+            raise ConnectionError("claim reply lost")
+
+    with pytest.raises(ConnectionError, match="claim reply lost"):
+        local.claim("activation", SCOPE, ClaimReplyLost(), authorized=True)
+    assert native.observe_claim(SCOPE, "activation", OWNER, authorized=True) == 1
+    assert local.claim("activation", SCOPE, native, authorized=True) == 1
+    local.close()
+    reopened = owner(local_file)
+    try:
+        with pytest.raises(UnsafeAuthority, match="REACTIVATION_REQUIRED"):
+            reopened.claim("activation", SCOPE, native, authorized=True)
+        assert reopened.claim("new-activation", SCOPE, native, authorized=True) == 2
+    finally:
+        reopened.close()
+
+
+def test_claim_committed_but_owner_crashes_before_ack_is_not_reanimated(tmp_path):
+    native = target(tmp_path / "native.db")
+    path = tmp_path / "owner.db"
+    first = owner(path, initialize=True)
+
+    class Lost:
+        def generation(self, *args, **kwargs):
+            return native.generation(*args, **kwargs)
+        def claim(self, *args, **kwargs):
+            native.claim(*args, **kwargs)
+            raise ConnectionError("lost")
+
+    with pytest.raises(ConnectionError, match="lost"):
+        first.claim("pending", SCOPE, Lost(), authorized=True)
+    first.close()
+    reopened = owner(path)
+    try:
+        assert native.observe_claim(SCOPE, "pending", OWNER, authorized=True) == 1
+        with pytest.raises(UnsafeAuthority, match="REACTIVATION_REQUIRED"):
+            reopened.claim("pending", SCOPE, native, authorized=True)
+        assert reopened.claim("fresh", SCOPE, native, authorized=True) == 2
+    finally:
+        reopened.close()
+
+
+def test_result_corruption_changes_checkpoint_root(tmp_path):
+    path = tmp_path / "owner.db"
+    local = owner(path, initialize=True)
+    native = target(tmp_path / "native.db")
+    try:
+        local.claim("activation", SCOPE, native, authorized=True)
+        assert execute(local, native, "e-1", delta=7) == 7
+        checkpoint, _ = local.export_manifest()
+        local.db.execute("UPDATE requests SET result=999 WHERE id='e-1'")
+        assert local.export_manifest()[0] != checkpoint
+    finally:
+        local.close()
+
+
+def test_snapshot_stays_consistent_during_concurrent_local_write(tmp_path):
+    path = tmp_path / "owner.db"
+    local = owner(path, initialize=True)
+    local.accept("a", SUBJECT, "alice", authorized=True)
+    second_write = []
+    def concurrent_writer(statement):
+        if "FROM history ORDER BY" in statement and not second_write:
+            with sqlite3.connect(path, timeout=5) as other:
+                other.execute("UPDATE requests SET certainty='known' WHERE id='a'")
+            second_write.append(True)
+    local.db.set_trace_callback(concurrent_writer)
+    try:
+        snapshot_root, records = local.export_manifest()
+        assert second_write
+        assert records[0][4] == "none"  # The snapshot held the earlier read view.
+        local.db.set_trace_callback(None)
+        assert local.export_manifest()[0] != snapshot_root
+    finally:
+        local.close()
+
+
+def test_full_host_clone_has_independent_local_effects_no_global_claim(tmp_path):
+    """Two host images can each run locally; neither can elect a global winner."""
+    first_root = tmp_path / "host-a"
+    second_root = tmp_path / "host-b"
+    first_root.mkdir()
+    second_root.mkdir()
+    a = owner(first_root / "owner.db", initialize=True)
+    native_a = target(first_root / "target.db")
+    a.close()
+    shutil.copyfile(first_root / "owner.db", second_root / "owner.db")
+    shutil.copyfile(first_root / "target.db", second_root / "target.db")
+    one, two = owner(first_root / "owner.db"), owner(second_root / "owner.db")
+    native_b = target(second_root / "target.db", initialize=False)
+    try:
+        assert one.claim("activation", SCOPE, native_a, authorized=True) == 1
+        assert two.claim("activation", SCOPE, native_b, authorized=True) == 1
+        assert execute(one, native_a, "work", delta=5) == 5
+        assert execute(two, native_b, "work", delta=5) == 5
+        assert (native_a.value(SCOPE), native_b.value(SCOPE)) == (5, 5)
+    finally:
+        one.close()
+        two.close()
+
+
+@pytest.mark.parametrize("tool", ["host-ops", "app-ops"])
+def test_both_local_owner_kinds_require_no_off_host_authority(tmp_path, tool):
+    configured = {**OWNER, "tool": tool}
+    own = LocalOwner(tmp_path / "owner.db", configured, initialize=True)
+    native = LocalEffectTarget(tmp_path / "native.db", configured, (SCOPE,), initialize=True)
+    try:
+        own.accept("work", SUBJECT, "alice", authorized=True)
+        assert own.claim("activation", SCOPE, native, authorized=True) == 1
+        assert own.run("work", native, authorized=True) == 3
+    finally:
+        own.close()
+
+
+def test_distinct_local_processes_cas_one_same_host_generation(tmp_path):
+    """Use actual OS processes, not only Python threads; no POSIX-only primitives."""
+    native = target(tmp_path / "native.db")
+    code = (
+        "from research.authority_reference.model import LocalEffectTarget, UnsafeAuthority; "
+        "from pathlib import Path; import sys; "
+        "owner={'tool':'app-ops','id':'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',"
+        "'epoch':'11111111-1111-4111-8111-111111111111'}; "
+        "native=LocalEffectTarget(Path(sys.argv[1]),owner,('local-application:orders',)); "
+        "native.claim('local-application:orders',0,sys.argv[2],sys.argv[2],owner,authorized=True)"
+    )
+    processes = [
+        subprocess.Popen([sys.executable, "-c", code, str(native.path), f"p-{i}"],
+                         stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        for i in range(4)
+    ]
+    results = [process.communicate(timeout=20) for process in processes]
+    codes = [process.returncode for process in processes]
+    assert codes.count(0) == 1
+    assert codes.count(1) == 3
+    assert all("FENCE_STALE" in err for (_, err), code in zip(results, codes) if code == 1)
+    assert native.generation(SCOPE, OWNER, authorized=True) == 1
