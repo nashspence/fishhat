@@ -6016,6 +6016,10 @@
       "purpose_sha256": "c38cc11e69cd15bf02fc216f465a00d893386464d62f68f497258aeece7cf916"
     },
     {
+      "node": "tests/test_copyable_state_counterexamples.py::test_copyable_state_only_guarantees_fail_for_the_intended_assertions",
+      "purpose_sha256": "a73819c48b4fd897d6529ea74782b67ce520e11322fc4b3cf80a475f820cbb46"
+    },
+    {
       "node": "tests/test_core_regex.py::test_bootstrap_consumers_use_the_frozen_ref_whitespace_policy",
       "purpose_sha256": "e1266c74ecf0580d835794082966cfaff140fae04e2d93527c11e2f073cfd219"
     },
