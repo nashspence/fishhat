@@ -96,6 +96,9 @@ class WorkflowJournal:
     suffix and requires durable native reconciliation before reopening. Rolling
     back both file and HEAD requires an independent protected monotone checkpoint
     to detect; native anti-rollback and filesystem qualification remain separate.
+    Commissioned authority may be host-local. Copying this store or its keys does
+    not commission another writer; ProtocolRules in workflow-journal.schema.json
+    owns the restart, restore and whole-authority failure boundaries.
     """
 
     def __init__(self, fd: int, metrics: MutableMapping[str, int] | None) -> None:
@@ -319,6 +322,10 @@ class WorkflowJournal:
         the new head or raises. None means genesis requires absent custody. Reopen
         compares the verified local head to the independently retained current head
         without advancing it. Publication failures prevent acknowledgement.
+        The owner supplies this capability from independently commissioned local
+        authority, never by deriving it solely from copied journal bytes or keys.
+        Known backup restore or movement between authority domains uses explicit
+        recovery/commissioning; this file reader cannot establish that authority.
         Only protected owner recovery supplies verified_prefix_head, from a current
         anti-rollback checkpoint independent of the journal and its HEAD. This
         selects a read-only view ending at that exact frame, even when the local

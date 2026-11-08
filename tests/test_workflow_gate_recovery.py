@@ -84,6 +84,7 @@ def recovered_gate(
     restore=False,
     historical_header=None,
     historical_reducer=None,
+    fenced=True,
 ):
     old = run.gate.target if predecessor is None else predecessor.target
     owner = {**old.owner, "epoch": uid("gate-recovery-epoch-" + label)}
@@ -122,7 +123,7 @@ def recovered_gate(
     origin = OriginGateRecoveryContext(run.manifest, lineage, custody, source_keys)
     path = run.root / ("gate-recovered-" + label + ".journal")
     store = run.meter.store(path, owner, run.schema, restore=restore)
-    native_fence = {"retired": True, "head": old.journal.head, "custody": custody}
+    native_fence = {"retired": fenced, "head": old.journal.head, "custody": custody}
 
     def authorize(principal, action, context):
         run.meter.values["restored_gate_authorization_visits"] += 1
@@ -1027,3 +1028,30 @@ def test_reapproval_history_uses_one_index_without_recursive_key_layers():
             assert target.keys[(canonical(authority["owner"]), KEY_ID)] == "synthetic-key"
             assert target.keys[("original", "key")] == "original-key"
         assert len(target._recovery_gate_key_index) == count
+
+
+def test_new_gate_epoch_cannot_replace_positive_prior_authority_fencing(tmp_path):
+    meter = WorkMeter()
+    run = WorkflowRun(tmp_path, LogicalWorkload(owners=1, children=1), meter)
+    try:
+        run.prepare()
+        old = run.gate.target
+        retained = old.journal._path.read_bytes()
+        holds = set(run.native[0].protection_holds)
+        with pytest.raises(ContractError, match="previous native gate authority is not fenced"):
+            recovered_gate(run, fenced=False)
+        assert old.journal._path.read_bytes() == retained
+        assert run.native[0].protection_holds == holds
+        assert not run.native[0].admissions
+        assert meter.values["gate_native_restoration_visits"] == 1
+        # The failed new epoch retained no initialization/acceptance event.
+        owner = {**old.owner, "epoch": uid("gate-recovery-epoch-first")}
+        store = meter.store(
+            tmp_path / "gate-recovered-first.journal", owner, run.schema, restore=True
+        )
+        try:
+            assert list(store.iter_events(read_authorized=True)) == []
+        finally:
+            store.close()
+    finally:
+        run.close()
