@@ -1,0 +1,15 @@
+# Executable owner-local authority and resource-fencing reference
+
+This test-only model represents two independent durability domains. `LocalOwner` owns its own SQLite WAL/FULL accepted-work journal, immutable request replay, explicit restored-epoch historical custody, and uncertain-effect records. `TransactionalResource` represents a **single** serialized resource endpoint with atomic writer-generation compare-and-swap, exact effect identities, a write barrier, and retained outcome/no-effect facts. The resource's SQLite file is not intended to be shared over a network; calls simulate independently implemented resource RPCs.
+
+It tests a useful and narrow invariant: an owner can locally accept and recover work when the resource is offline, but cannot activate or mutate a shared resource without the resource's independently current generation and session. Restoring local bytes never restores an in-process production writer. Unknown effects are not retried, and cannot be declared absent without the resource's positive atomic tombstone. Each successful resource effect commits its fence check, idempotency reservation, and mutation in the same transaction.
+
+From a checked-out, locked fishhat development environment, run the passing suite explicitly:
+
+```sh
+uv run --locked --all-packages --group dev python -m pytest -o addopts= -q research/authority_reference/test_reference_safety.py
+```
+
+Then run the *separate, intentionally failing* counterexamples described in `research/authority_counterexamples/ABOUT.txt`. This path is outside `tests/` to avoid altering maintained public-claim evidence and to keep the negative suite out of required CI. It must be reviewed and promoted through the repository's normal check-purpose/inventory process before any native or public-contract claim is made.
+
+**Safety boundaries:** This is not a deployed owner daemon, direct SSH server, qualified production database adapter, network fencing service, durable key custodian, historical signed-checkpoint resolver, or OS filesystem test. `authorized=True` is synthetic receiving-authority input, never a wire permission. `expected_manifest` is caller-provided and cannot detect rollback unless independently anchored. The resource cannot distinguish two live process clones holding the same copied writer session, a privileged bypass of its write path, or rollback of its own storage. Full physical exclusion requires a resource/session mechanism with those stronger properties. No host can infer exclusive shared-resource authority from local state alone.

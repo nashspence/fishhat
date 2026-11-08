@@ -1,0 +1,13 @@
+# Intentionally failing authority counterexamples
+
+Run from the repository root after installing the fishhat workspace:
+
+```sh
+python -m pytest -o addopts= -q research/authority_counterexamples/test_unachievable_guarantees.py
+```
+
+**Expected exit status: nonzero (five failed tests).** These tests deliberately assert five guarantees that local-only authority or copyable writer sessions cannot establish. They are kept outside the default `tests/` discovery root and are not candidates for xfail/skip markers. A failure is the demonstration; success on any individual test would require investigating the model or that asserted impossibility boundary.
+
+The positive reference suite is `research/authority_reference/test_reference_safety.py`. The model is `research/authority_reference/model.py`. Both run without specialized hardware. The resource database simulates a single serialized resource endpoint; it is not a deployable cross-machine SQLite coordinator, a native SSH service, or a production-qualified enforcer. In particular, the model cannot exclude indistinguishable simultaneous copies of a *live* writer session, privileged bypasses of its write path, or rollback of the enforcing resource itself.
+
+The counterexamples show: complete owner-state rollback is internally indistinguishable from valid earlier state; cold clones cannot elect a unique physical owner locally; a copied live session cannot be distinguished by a resource that authenticates only that session; an unreachable enforcing resource cannot authorize a safe takeover; and a missing reply cannot prove a remote effect absent. Native qualification must address the write-path and storage assumptions separately.
