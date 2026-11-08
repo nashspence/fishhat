@@ -50,6 +50,16 @@
       "scope": "repository checks; no product or native qualification",
       "work_sha256": "7fd840cfabcc56d6b1c3526858cee66fefc5da4f62eb5c1b3dde8cb1f81a64dc"
     },
+    ".github/workflows/ci.yml:native-controller": {
+      "authority": "scripts/native_linux_enrollment.py",
+      "purposes": [
+        "validation-tooling"
+      ],
+      "requiredness_authority": "release.toml#/governance/required_checks",
+      "result_authority": "GitHub job conclusion; classification supplies no execution proof",
+      "scope": "explicitly enrolled disposable controller dependency identities; no guest or native owner qualification",
+      "work_sha256": "b3bae2df1cf8bf3af0c8ecc6c1792ff1186c7ab78655cd30e7b14f19ff3257b7"
+    },
     ".github/workflows/ci.yml:native-prerequisites": {
       "authority": "release.toml",
       "purposes": [
@@ -136,7 +146,7 @@
       "requiredness_authority": "release.toml#/governance/required_checks",
       "result_authority": "GitHub job conclusion; classification supplies no execution proof",
       "scope": "watchdog propagation and negative progress/cleanup regressions",
-      "work_sha256": "9e1383c68110b5bd39fbdece276004784d18521761830e3627fafc822dc17d15"
+      "work_sha256": "ad484d258e5fec8901f761e1c2e997aeb2d8c6c4ec07e724e9bf2b156eebc0c4"
     },
     ".github/workflows/ci.yml:watchdogs": {
       "authority": ".github/workflows/ci.yml",
@@ -4733,6 +4743,10 @@
     },
     {
       "node": "tests/test_ci_config.py::WorkflowSafety::test_main_push_is_a_trigger",
+      "purpose_sha256": "f9d4487085d6c84dc7e02ba9ab524a49c04de463a61ce753ecec62c1e193c32e"
+    },
+    {
+      "node": "tests/test_ci_config.py::WorkflowSafety::test_native_controller_requires_main_and_early_regressions",
       "purpose_sha256": "f9d4487085d6c84dc7e02ba9ab524a49c04de463a61ce753ecec62c1e193c32e"
     },
     {
@@ -9746,6 +9760,134 @@
     {
       "node": "tests/test_migrations.py::test_unknown_or_corrupted_schema_is_not_adopted[reported-events]",
       "purpose_sha256": "953ec70dfd358e0433c27626ac74420f6979e36ea5e4a52c32ef70b0b7377991"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_enrollment_requires_confirmation_and_accepts_selected_host",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_host_facts_cannot_be_replaced_by_runner_labels[root]",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_host_facts_cannot_be_replaced_by_runner_labels[wrong-abi]",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_host_facts_cannot_be_replaced_by_runner_labels[wrong-cgroup]",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_host_facts_cannot_be_replaced_by_runner_labels[wrong-distribution]",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_host_facts_cannot_be_replaced_by_runner_labels[wrong-init]",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_host_facts_cannot_be_replaced_by_runner_labels[wrong-platform]",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_host_facts_cannot_be_replaced_by_runner_labels[wrong-version]",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_missing_command_is_a_required_failure",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_ordinary_invocation_creates_no_artifacts_or_native_commands",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_real_command_failure_discards_private_output_and_inherited_environment",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_real_held_command_expires_and_is_reaped",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_selected_packages_root_watchdogs_and_binary_identity[1]",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_selected_packages_root_watchdogs_and_binary_identity[4]",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_selected_run_records_failure_source_scope_and_required_statistics[changed-source]",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_selected_run_records_failure_source_scope_and_required_statistics[dirty-source]",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_selected_run_records_failure_source_scope_and_required_statistics[none]",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_selected_run_records_failure_source_scope_and_required_statistics[provisioning]",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_unverified_tool_identity_never_passes[duplicate]",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_unverified_tool_identity_never_passes[foreign]",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_unverified_tool_identity_never_passes[malformed]",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_unverified_tool_identity_never_passes[missing-binary]",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_unverified_tool_identity_never_passes[missing]",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_unverified_tool_identity_never_passes[wrong-abi]",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_unverified_tool_identity_never_passes[wrong-binary]",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_unverified_tool_identity_never_passes[wrong-version]",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_wrong_enrollment_rejects_before_host_inspection[ordinary]",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_wrong_enrollment_rejects_before_host_inspection[persistent]",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_wrong_enrollment_rejects_before_host_inspection[pull-request-event]",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_wrong_enrollment_rejects_before_host_inspection[pull-request-ref]",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_wrong_enrollment_rejects_before_host_inspection[wrong-image]",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_wrong_enrollment_rejects_before_host_inspection[wrong-temporary-root]",
+      "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
     },
     {
       "node": "tests/test_native_smoke.py::test_account_failure_preserves_primary_exit_and_reports_cleanup[cleanup-failure]",

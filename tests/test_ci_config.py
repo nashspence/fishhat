@@ -85,6 +85,21 @@ class WorkflowSafety(unittest.TestCase):
         self.assertIn("github.ref == 'refs/heads/main'", cond)
         self.assertNotIn("== 'pull_request'", cond)
 
+    def test_native_controller_requires_main_and_early_regressions(self):
+        job = self.workflow["jobs"]["native-controller"]
+        self.assertIn("github.ref == 'refs/heads/main'", job["if"])
+        self.assertIn("watchdog-regressions", job["needs"])
+        self.assertEqual(job["env"]["CHECK_PURPOSES"], "validation-tooling")
+        self.assertIn("no guest or native owner qualification", job["env"]["CHECK_SCOPE"])
+        commands = "\n".join(step.get("run", "") for step in job["steps"])
+        self.assertIn("scripts.native_linux_enrollment --github-hosted-only", commands)
+        self.assertNotIn("secrets.", str(job))
+        artifact = next(step for step in job["steps"] if "upload-artifact@" in step.get("uses", ""))
+        self.assertEqual(
+            artifact["with"]["path"], "artifacts/native-fixture/controller-enrollment.json"
+        )
+        self.assertEqual(artifact["with"]["if-no-files-found"], "error")
+
     def test_native_script_refuses_ordinary_machine(self):
         proc = subprocess.run(
             ["bash", str(ROOT / "scripts/ci/native_smoke.sh")],

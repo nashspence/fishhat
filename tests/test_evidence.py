@@ -30,7 +30,11 @@ def accounted(tmp_path):
     shutil.copyfile(ROOT / "Makefile", tmp_path / "Makefile")
     shutil.copyfile(ROOT / "release.toml", tmp_path / "release.toml")
     (tmp_path / "scripts").mkdir(exist_ok=True)
-    for helper in ("validation_timeouts.py", "validation_workflows.py"):
+    for helper in (
+        "validation_timeouts.py",
+        "validation_workflows.py",
+        "native_linux_enrollment.py",
+    ):
         shutil.copyfile(ROOT / "scripts" / helper, tmp_path / "scripts" / helper)
     source = {"commit": "a" * 40, "clean": True, "fingerprint": "b" * 64}
     run = sample_run(tmp_path, source)
