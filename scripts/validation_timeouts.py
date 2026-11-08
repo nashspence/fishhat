@@ -226,7 +226,16 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "command",
-        choices=["seconds", "units", "deadline", "pending", "uv-http", "audit-http", "bootstrap"],
+        choices=[
+            "seconds",
+            "units",
+            "deadline",
+            "pending",
+            "remaining",
+            "uv-http",
+            "audit-http",
+            "bootstrap",
+        ],
     )
     parser.add_argument("value", type=float, nargs="?")
     parser.add_argument("--github-env", type=Path)
@@ -246,6 +255,12 @@ def main() -> None:
         return
     if args.command == "pending":
         raise SystemExit(0 if time.monotonic() < positive(args.value) else 1)
+    if args.command == "remaining":
+        remaining = Deadline(positive(args.value)).remaining()
+        if remaining <= 0:
+            raise SystemExit(124)
+        print(format(remaining, ".17g"))
+        return
     result: float
     if args.command in {"uv-http", "audit-http"}:
         result = uv_http_watchdog() if args.command == "uv-http" else audit_http_watchdog()

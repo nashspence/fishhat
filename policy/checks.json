@@ -136,7 +136,7 @@
       "requiredness_authority": "release.toml#/governance/required_checks",
       "result_authority": "GitHub job conclusion; classification supplies no execution proof",
       "scope": "watchdog propagation and negative progress/cleanup regressions",
-      "work_sha256": "520ebad7a4f9a98f6c8037bb102fdd7d41fbed0a5ef40ebc58df1d7861831721"
+      "work_sha256": "9e1383c68110b5bd39fbdece276004784d18521761830e3627fafc822dc17d15"
     },
     ".github/workflows/ci.yml:watchdogs": {
       "authority": ".github/workflows/ci.yml",
@@ -9748,6 +9748,26 @@
       "purpose_sha256": "953ec70dfd358e0433c27626ac74420f6979e36ea5e4a52c32ef70b0b7377991"
     },
     {
+      "node": "tests/test_native_smoke.py::test_account_failure_preserves_primary_exit_and_reports_cleanup[cleanup-failure]",
+      "purpose_sha256": "11d920adc9969e71bd8da559a7e8f68d78f10f93f9c7ad0a352802d31cc794e6"
+    },
+    {
+      "node": "tests/test_native_smoke.py::test_account_failure_preserves_primary_exit_and_reports_cleanup[cleanup-success]",
+      "purpose_sha256": "11d920adc9969e71bd8da559a7e8f68d78f10f93f9c7ad0a352802d31cc794e6"
+    },
+    {
+      "node": "tests/test_native_smoke.py::test_failed_package_stage_records_failure_and_runs_cleanup[install-failure-19-package-install]",
+      "purpose_sha256": "11d920adc9969e71bd8da559a7e8f68d78f10f93f9c7ad0a352802d31cc794e6"
+    },
+    {
+      "node": "tests/test_native_smoke.py::test_failed_package_stage_records_failure_and_runs_cleanup[update-failure-17-package-update]",
+      "purpose_sha256": "11d920adc9969e71bd8da559a7e8f68d78f10f93f9c7ad0a352802d31cc794e6"
+    },
+    {
+      "node": "tests/test_native_smoke.py::test_stage_deadline_kills_term_ignoring_command_and_keeps_failure",
+      "purpose_sha256": "11d920adc9969e71bd8da559a7e8f68d78f10f93f9c7ad0a352802d31cc794e6"
+    },
+    {
       "node": "tests/test_observation_delivery.py::test_error_reference_requires_the_exact_non_null_problem_owner_and_resource[kind]",
       "purpose_sha256": "f6608df3615f8f143ebaf7dc9c0177ec2b9ee3e45c25005b1f38aee780fe3226"
     },
@@ -15688,6 +15708,18 @@
       "purpose_sha256": "ae4211b47e8886b4cd2e9c6f7080f8e52ba4d8b3fe011793614c1bb9b53379b6"
     },
     {
+      "node": "tests/test_validation_timeouts.py::test_remaining_cli_consumes_one_deadline_without_rescaling[100--124]",
+      "purpose_sha256": "ae4211b47e8886b4cd2e9c6f7080f8e52ba4d8b3fe011793614c1bb9b53379b6"
+    },
+    {
+      "node": "tests/test_validation_timeouts.py::test_remaining_cli_consumes_one_deadline_without_rescaling[101.25-1.25-None]",
+      "purpose_sha256": "ae4211b47e8886b4cd2e9c6f7080f8e52ba4d8b3fe011793614c1bb9b53379b6"
+    },
+    {
+      "node": "tests/test_validation_timeouts.py::test_remaining_cli_consumes_one_deadline_without_rescaling[99--124]",
+      "purpose_sha256": "ae4211b47e8886b4cd2e9c6f7080f8e52ba4d8b3fe011793614c1bb9b53379b6"
+    },
+    {
       "node": "tests/test_validation_timeouts.py::test_shell_guard_rejects_hidden_watchdogs[assigned-curl]",
       "purpose_sha256": "ae4211b47e8886b4cd2e9c6f7080f8e52ba4d8b3fe011793614c1bb9b53379b6"
     },
@@ -15701,6 +15733,22 @@
     },
     {
       "node": "tests/test_validation_timeouts.py::test_shell_guard_rejects_hidden_watchdogs[retry-loop]",
+      "purpose_sha256": "ae4211b47e8886b4cd2e9c6f7080f8e52ba4d8b3fe011793614c1bb9b53379b6"
+    },
+    {
+      "node": "tests/test_validation_timeouts.py::test_shell_guard_requires_stage_and_force_kill_policy[managed]",
+      "purpose_sha256": "ae4211b47e8886b4cd2e9c6f7080f8e52ba4d8b3fe011793614c1bb9b53379b6"
+    },
+    {
+      "node": "tests/test_validation_timeouts.py::test_shell_guard_requires_stage_and_force_kill_policy[unknown-stage]",
+      "purpose_sha256": "ae4211b47e8886b4cd2e9c6f7080f8e52ba4d8b3fe011793614c1bb9b53379b6"
+    },
+    {
+      "node": "tests/test_validation_timeouts.py::test_shell_guard_requires_stage_and_force_kill_policy[unscaled-kill-grace]",
+      "purpose_sha256": "ae4211b47e8886b4cd2e9c6f7080f8e52ba4d8b3fe011793614c1bb9b53379b6"
+    },
+    {
+      "node": "tests/test_validation_timeouts.py::test_shell_guard_requires_stage_and_force_kill_policy[unscaled-stage]",
       "purpose_sha256": "ae4211b47e8886b4cd2e9c6f7080f8e52ba4d8b3fe011793614c1bb9b53379b6"
     },
     {

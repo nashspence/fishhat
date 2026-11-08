@@ -344,3 +344,41 @@ def test_invalid_policy_prevents_direct_pytest_start(checkout):
     )
     assert result.returncode != 0 and VARIABLE in result.stderr
     assert "1 passed" not in result.stdout
+
+
+@pytest.mark.parametrize(
+    "deadline,output,status", [(101.25, "1.25", None), (100, "", 124), (99, "", 124)]
+)
+def test_remaining_cli_consumes_one_deadline_without_rescaling(
+    monkeypatch, capsys, deadline, output, status
+):
+    from scripts import validation_timeouts
+
+    monkeypatch.setenv(VARIABLE, "4")
+    monkeypatch.setattr(time, "monotonic", lambda: 100.0)
+    monkeypatch.setattr(sys, "argv", ["validation_timeouts", "remaining", str(deadline)])
+    if status is None:
+        validation_timeouts.main()
+    else:
+        with pytest.raises(SystemExit) as stopped:
+            validation_timeouts.main()
+        assert stopped.value.code == status
+    assert capsys.readouterr().out.strip() == output
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        'timeout -k "$kill_timeout" "$remaining_timeout" tool',
+        'timeout -k 5 "$remaining_timeout" tool',
+        'timeout -k "$kill_timeout" 10 tool',
+        'timeout -k "$kill_timeout" "$unknown" tool',
+    ],
+    ids=["managed", "unscaled-kill-grace", "unscaled-stage", "unknown-stage"],
+)
+def test_shell_guard_requires_stage_and_force_kill_policy(command):
+    prefix = """kill_timeout="$(python3 "$timeout_helper" seconds 5)"
+  remaining_timeout="$(python3 "$timeout_helper" remaining "$stage_deadline")"
+"""
+    errors = shell_errors(prefix + command, "scripts/ci/native_smoke.sh")
+    assert bool(errors) == (command != 'timeout -k "$kill_timeout" "$remaining_timeout" tool')

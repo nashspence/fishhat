@@ -152,15 +152,19 @@ def python_errors(text: str, name: str, *, runtime: bool = False) -> list[str]:
 
 def shell_errors(text: str, name: str) -> list[str]:
     errors = []
-    for match in re.finditer(r"(?:--connect-timeout|--max-time|\btimeout)\s+([^\s;]+)", text):
-        value = match[1]
-        variable = re.fullmatch(r'["\']?\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?["\']?', value)
-        if variable is None or not re.search(
-            r"^" + re.escape(variable[1]) + r"=.*(?:timeout_helper|validation_timeouts).*seconds",
-            text,
-            re.M,
-        ):
-            errors.append(name + ": unmanaged shell timeout")
+    timeout = r"\btimeout(?:\s+-k\s+([^\s;]+))?\s+([^\s;]+)"
+    contact = r"(?:--connect-timeout|--max-time)\s+([^\s;]+)"
+    for match in re.finditer(timeout + "|" + contact, text):
+        for value in filter(None, match.groups()):
+            variable = re.fullmatch(r'["\']?\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?["\']?', value)
+            if variable is None or not re.search(
+                r"^\s*(?:local\s+)?"
+                + re.escape(variable[1])
+                + r"=.*(?:timeout_helper|validation_timeouts).*(?:seconds|remaining)",
+                text,
+                re.M,
+            ):
+                errors.append(name + ": unmanaged shell timeout")
     if re.search(r"for .*?(?:seq|attempt).*?;?\s*(?:do|\n)", text) and re.search(
         r"\bsleep\s", text
     ):
