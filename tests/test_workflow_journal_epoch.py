@@ -973,3 +973,49 @@ CHECK_OVERRIDES["test_member_epoch_lineage_restoration_is_linear"] = {
     "scope": "one complete cold member restoration across an increasing ordered epoch lineage with independently indexed source trust",
     "reason": "Two, eight and thirty-two real signed source epochs are independently prepared outside measurement. The measured final restoration includes source selection, signer indexing, native custody, source reads, verification and journal commitment; every work counter must remain linear. A recursively composed prior-target reader must reject before either destination journal changes. No native recovery qualification is asserted.",
 }
+
+
+@pytest.mark.parametrize("unknown", [False, True])
+def test_explicit_epoch_recovery_preserves_known_outcomes_uncertainty_and_holds(tmp_path, unknown):
+    meter, workload = WorkMeter(), LogicalWorkload(owners=1, children=2)
+    run = WorkflowRun(tmp_path, workload, meter)
+    try:
+        run.prepare()
+        for phase in ("draining", "quiescent", "host-effect"):
+            run.round(phase)
+        run.children(unknown_at=(0, 1) if unknown else None)
+        original_owner = deepcopy(run.members[0].target.owner)
+        outcomes = deepcopy(run.members[0].target.outcomes)
+        holds = set(run.native[0].protection_holds)
+        paths = (run.members[0].target.journal._path, run.native[0].store._path)
+        retained = [path.read_bytes() for path in paths]
+    finally:
+        run.close()
+    assert len(outcomes) == 2 and holds
+    assert any(op["effect_certainty"] == "unknown" for op in outcomes.values()) == unknown
+    # Exact local custody is independently approved by the current native actor;
+    # changing the epoch alone does not authorize this recovery target.
+    recovered = EpochRun(tmp_path, workload, meter)
+    try:
+        member = recovered.members[0]
+        assert member.target.owner["epoch"] != original_owner["epoch"]
+        assert member.target.outcomes == outcomes
+        assert recovered.original.native[0].protection_holds == holds
+        for outcome in member.target.outcomes.values():
+            assert outcome["owner"] == original_owner
+        with pytest.raises(ContractError, match="recovery only"):
+            member.call("admit", {"child": workload.child(0, 0)}, fresh=True)
+        assert recovered.native[0].successor is None
+        assert recovered.native[0].facts == {}
+        assert [path.read_bytes() for path in paths] == retained
+    finally:
+        recovered.close()
+    # Recovery custody itself survives a second cold reopen without reclassifying
+    # an unknown effect, releasing a hold or replacing an original signature.
+    reopened = EpochRun(tmp_path, workload, meter, restore=True)
+    try:
+        assert reopened.members[0].target.outcomes == outcomes
+        assert reopened.original.native[0].protection_holds == holds
+        assert [path.read_bytes() for path in paths] == retained
+    finally:
+        reopened.close()

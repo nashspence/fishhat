@@ -6017,11 +6017,11 @@
     },
     {
       "node": "tests/test_copyable_state_counterexamples.py::test_copyable_state_limit_fails_for_the_intended_assertion[copyable_state_cannot_attest_rollback_freshness]",
-      "purpose_sha256": "a73819c48b4fd897d6529ea74782b67ce520e11322fc4b3cf80a475f820cbb46"
+      "purpose_sha256": "b96547e8da41469a0bf9036beca1ae6da878164a6e91b384598aa1c9e5fb5148"
     },
     {
       "node": "tests/test_copyable_state_counterexamples.py::test_copyable_state_limit_fails_for_the_intended_assertion[copyable_state_cannot_elect_global_writer]",
-      "purpose_sha256": "a73819c48b4fd897d6529ea74782b67ce520e11322fc4b3cf80a475f820cbb46"
+      "purpose_sha256": "b96547e8da41469a0bf9036beca1ae6da878164a6e91b384598aa1c9e5fb5148"
     },
     {
       "node": "tests/test_core_regex.py::test_bootstrap_consumers_use_the_frozen_ref_whitespace_policy",
@@ -9430,6 +9430,34 @@
     {
       "node": "tests/test_live_change_authority.py::test_unknown_or_misbound_native_observation_is_not_treated_as_unchanged[observation1]",
       "purpose_sha256": "f57d5d223bcf21ffe06900eec89acdd0faa9d5ce5eaec2c29c1ee8130ffe5529"
+    },
+    {
+      "node": "tests/test_local_authority.py::test_consistent_backup_restore_stays_fenced_without_current_continuity[survives]",
+      "purpose_sha256": "6a7bc705813712c1c8ab8d42d7ecc68f4ae73304f886337fccec88c40655e30b"
+    },
+    {
+      "node": "tests/test_local_authority.py::test_consistent_backup_restore_stays_fenced_without_current_continuity[unavailable]",
+      "purpose_sha256": "6a7bc705813712c1c8ab8d42d7ecc68f4ae73304f886337fccec88c40655e30b"
+    },
+    {
+      "node": "tests/test_local_authority.py::test_copied_custody_cannot_supply_its_own_writer_authority[absent]",
+      "purpose_sha256": "6a7bc705813712c1c8ab8d42d7ecc68f4ae73304f886337fccec88c40655e30b"
+    },
+    {
+      "node": "tests/test_local_authority.py::test_copied_custody_cannot_supply_its_own_writer_authority[uncommissioned]",
+      "purpose_sha256": "6a7bc705813712c1c8ab8d42d7ecc68f4ae73304f886337fccec88c40655e30b"
+    },
+    {
+      "node": "tests/test_local_authority.py::test_copied_custody_cannot_supply_its_own_writer_authority[writer-active]",
+      "purpose_sha256": "6a7bc705813712c1c8ab8d42d7ecc68f4ae73304f886337fccec88c40655e30b"
+    },
+    {
+      "node": "tests/test_local_authority.py::test_local_checkpoint_allows_verified_restart_without_remote_authority[app-ops]",
+      "purpose_sha256": "6a7bc705813712c1c8ab8d42d7ecc68f4ae73304f886337fccec88c40655e30b"
+    },
+    {
+      "node": "tests/test_local_authority.py::test_local_checkpoint_allows_verified_restart_without_remote_authority[host-ops]",
+      "purpose_sha256": "6a7bc705813712c1c8ab8d42d7ecc68f4ae73304f886337fccec88c40655e30b"
     },
     {
       "node": "tests/test_maintenance_authority.py::test_builtin_maintenance_cannot_inject_a_hook[backup-check]",
@@ -16524,6 +16552,10 @@
       "purpose_sha256": "4fbe39fd48e544b52c4e437517b9c57be8c1637dda93c525c182b38798fa8b94"
     },
     {
+      "node": "tests/test_workflow_gate_recovery.py::test_new_gate_epoch_cannot_replace_positive_prior_authority_fencing",
+      "purpose_sha256": "4fbe39fd48e544b52c4e437517b9c57be8c1637dda93c525c182b38798fa8b94"
+    },
+    {
       "node": "tests/test_workflow_gate_recovery.py::test_reapproval_history_uses_one_index_without_recursive_key_layers",
       "purpose_sha256": "4fbe39fd48e544b52c4e437517b9c57be8c1637dda93c525c182b38798fa8b94"
     },
@@ -17022,6 +17054,14 @@
     {
       "node": "tests/test_workflow_journal.py::test_vote_once_per_common_round_survives_cold_restart",
       "purpose_sha256": "a287ef940785c388fcf9b94e74e63e7047da20026b796ec3eb01b055003a2fc4"
+    },
+    {
+      "node": "tests/test_workflow_journal_epoch.py::test_explicit_epoch_recovery_preserves_known_outcomes_uncertainty_and_holds[False]",
+      "purpose_sha256": "2e26d6a6785960817bc4224227d0a92c634b7e3412594887b4326d66f586545c"
+    },
+    {
+      "node": "tests/test_workflow_journal_epoch.py::test_explicit_epoch_recovery_preserves_known_outcomes_uncertainty_and_holds[True]",
+      "purpose_sha256": "2e26d6a6785960817bc4224227d0a92c634b7e3412594887b4326d66f586545c"
     },
     {
       "node": "tests/test_workflow_journal_epoch.py::test_member_epoch_lineage_restoration_is_linear",

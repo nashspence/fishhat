@@ -19,14 +19,14 @@ from scripts.project_policy import ROOT
 from scripts.validation_timeouts import watchdog
 
 CHECK_PURPOSE = {
-    "purpose": "public-contract",
+    "purpose": "implementation",
     "authority": [
-        "AGENTS.md",
+        "packages/fishhat-contracts/src/fishhat_contracts/contracts/workflow-journal.schema.json#/$defs/ProtocolRules",
         "fishhat/owner-support/src/fishhat_owner/journal.py",
     ],
-    "scope": "copyable local journal state cannot alone prove global writer exclusivity or rollback freshness",
-    "relationship": "candidate",
-    "reason": "Exact intentionally false assertions against the existing owner Journal reject only unsupported copyable-state guarantees; no native or independently protected local authority is tested.",
+    "scope": "two SQLite Journal experiments with injected authorization and no independent continuity or exclusion mechanism",
+    "relationship": "scoped-witness",
+    "reason": "Checks precise failures under the declared limited fixture assumptions, not all self-contained designs. If Journal gains independent protection, revise these experiment assumptions rather than weakening the owner to retain a counterexample. No shared native effect or qualified authority is exercised.",
     "claims": [],
 }
 
@@ -51,7 +51,9 @@ COUNTEREXAMPLES = (
     ],
 )
 def test_copyable_state_limit_fails_for_the_intended_assertion(
-    tmp_path: Path, counterexample: str, expected_assertion: str,
+    tmp_path: Path,
+    counterexample: str,
+    expected_assertion: str,
 ) -> None:
     report = tmp_path / "counterexample.xml"
     environment = os.environ.copy()
@@ -61,18 +63,31 @@ def test_copyable_state_limit_fails_for_the_intended_assertion(
     environment.pop("PYTEST_PLUGINS", None)
     result = subprocess.run(
         [
-            sys.executable, "-m", "pytest", "-o", "addopts=", "-q",
-            "--tb=short", f"--junitxml={report}", f"{COUNTEREXAMPLES}::{counterexample}",
+            sys.executable,
+            "-m",
+            "pytest",
+            "-o",
+            "addopts=",
+            "-q",
+            "--tb=short",
+            f"--junitxml={report}",
+            f"{COUNTEREXAMPLES}::{counterexample}",
         ],
-        cwd=ROOT, env=environment, capture_output=True, text=True,
-        timeout=watchdog(60), check=False,
+        cwd=ROOT,
+        env=environment,
+        capture_output=True,
+        text=True,
+        timeout=watchdog(60),
+        check=False,
     )
     assert result.returncode == 1, (result.returncode, result.stdout, result.stderr)
     assert report.is_file(), (result.stdout, result.stderr)
     root = ET.parse(report).getroot()
     cases = list(root.iter("testcase"))
     assert len(cases) == 1 and cases[0].get("name") == counterexample, (
-        [(case.get("name"), case.attrib) for case in cases], result.stdout, result.stderr,
+        [(case.get("name"), case.attrib) for case in cases],
+        result.stdout,
+        result.stderr,
     )
     assert len(list(root.iter("failure"))) == 1
     assert not list(root.iter("error")) and not list(root.iter("skipped"))

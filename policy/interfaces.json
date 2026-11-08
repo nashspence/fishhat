@@ -570,7 +570,7 @@
     },
     "workflow-journal.schema.json": {
       "id": "https://fishhat.invalid/contracts/workflow-journal.schema.json",
-      "sha256": "c4dd1d3397c0470a019390f6e694b34062c61d6e4009c0cec3b0121868b1b1c6"
+      "sha256": "48fdfe235eaca4cd7a27fb981c081d82792d56d0ea3581c12702b56035d9422b"
     },
     "workflow-recovery.schema.json": {
       "id": "https://fishhat.invalid/contracts/workflow-recovery.schema.json",

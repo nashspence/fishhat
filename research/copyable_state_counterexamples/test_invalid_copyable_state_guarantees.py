@@ -78,8 +78,9 @@ def test_false_claim_rolled_back_journal_detects_its_missing_tail(tmp_path: Path
     _snapshot(prior, current)
     rolled_back = Journal(current, OWNER, EPOCH)
     try:
-        assert rolled_back.db.execute(
-            "SELECT 1 FROM requests WHERE request_id='lost-tail'"
-        ).fetchone() is not None, "COPYABLE_STATE_CANNOT_ATTEST_ROLLBACK_FRESHNESS"
+        assert (
+            rolled_back.db.execute("SELECT 1 FROM requests WHERE request_id='lost-tail'").fetchone()
+            is not None
+        ), "COPYABLE_STATE_CANNOT_ATTEST_ROLLBACK_FRESHNESS"
     finally:
         rolled_back.close()
