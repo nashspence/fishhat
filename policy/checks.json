@@ -57,7 +57,7 @@
       ],
       "requiredness_authority": "release.toml#/governance/required_checks",
       "result_authority": "GitHub job conclusion; classification supplies no execution proof",
-      "scope": "explicitly enrolled disposable controller dependency, paused TCG/QMP identities and owned-controller fault cleanup; no guest or native owner qualification",
+      "scope": "explicitly enrolled disposable controller dependency, paused TCG/QMP identities and owned-controller fault cleanup and authenticated guest image/disks; no guest or native owner qualification",
       "work_sha256": "b3bae2df1cf8bf3af0c8ecc6c1792ff1186c7ab78655cd30e7b14f19ff3257b7"
     },
     ".github/workflows/ci.yml:native-prerequisites": {
@@ -146,7 +146,7 @@
       "requiredness_authority": "release.toml#/governance/required_checks",
       "result_authority": "GitHub job conclusion; classification supplies no execution proof",
       "scope": "watchdog propagation and negative progress/cleanup regressions",
-      "work_sha256": "303b4054f5ad337aef06002c0b55bb3ffbf8ce879f369c19c56b190f064ce3d1"
+      "work_sha256": "3687ef15152db5252fe09140a0906333b169d4241e01d146a6c1837341469556"
     },
     ".github/workflows/ci.yml:watchdogs": {
       "authority": ".github/workflows/ci.yml",
@@ -10060,6 +10060,130 @@
     {
       "node": "tests/test_native_linux_enrollment.py::test_wrong_enrollment_rejects_before_host_inspection[wrong-temporary-root]",
       "purpose_sha256": "4d119042ae1127fec99c1ff321b4a6ee175b5b8e1c6e44b6c496a9349d0ee61f"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[base-backing]",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[base-changed]",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[create-failure]",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[disk-replaced]",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[download-failure]",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[external-data]",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[float-extent]",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[foreign-backing]",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[hardlink]",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[malformed-info]",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[symlink]",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[tool-changed]",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[wrong-extent]",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[wrong-format]",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[wrong-hash]",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[wrong-size]",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[wrong-tool]",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_cleanup_failure_keeps_failed_status_and_required_statistics",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_download_worker_never_overwrites_existing_or_foreign_destination[file]",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_download_worker_never_overwrites_existing_or_foreign_destination[symlink]",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_download_worker_refuses_redirects_proxies_and_wrong_extent[complete]",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_download_worker_refuses_redirects_proxies_and_wrong_extent[oversized]",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_download_worker_refuses_redirects_proxies_and_wrong_extent[truncated]",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_interrupted_use_preserves_base_and_records_cleanup_without_success",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_invalid_enrollment_is_refused_before_files_or_commands[empty]",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_invalid_enrollment_is_refused_before_files_or_commands[invalid]",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_invalid_enrollment_is_refused_before_files_or_commands[noncanonical]",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_main_retains_exact_source_scope_and_guest_input_failure[accepted]",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_main_retains_exact_source_scope_and_guest_input_failure[rejected]",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_owned_inputs_preserve_base_bind_enrollment_and_remove_all_disks",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_substituted_directory_cannot_be_removed_as_owned",
+      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
     },
     {
       "node": "tests/test_native_smoke.py::test_account_failure_preserves_primary_exit_and_reports_cleanup[cleanup-failure]",

@@ -20,6 +20,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
+from scripts.native_linux_images import GuestInputError, guest_inputs
 from scripts.run_stats import RunStats, valid_stats
 from scripts.validation import source_identity
 from scripts.validation_timeouts import Deadline, current, invocation, watchdog
@@ -608,7 +609,8 @@ def main(argv: list[str] | None = None) -> int:
     metrics = RunStats()
     report: dict[str, Any] = {
         "format": "fishhat-native-controller-enrollment/v1",
-        "scope": "disposable-controller-prerequisites-only",
+        "scope": "disposable-controller-and-guest-inputs-only",
+        "fixture_enrollment": str(uuid.uuid4()),
         "guest_booted": False,
         "native_tools_qualified": False,
         "production_qualified": False,
@@ -630,8 +632,18 @@ def main(argv: list[str] | None = None) -> int:
             Path(os.environ["RUNNER_TEMP"]),
             report["controller_faults"],
         )
+        report["guest_inputs"] = {}
+        with stage("guest-inputs"):
+            with guest_inputs(
+                report["fixture_enrollment"],
+                Path(os.environ["RUNNER_TEMP"]),
+                run,
+                stage,
+                report["guest_inputs"],
+            ):
+                pass
         report["status"] = "passed"
-    except EnrollmentError as error:
+    except (EnrollmentError, GuestInputError) as error:
         status = 1
         report.update(status="failed", problem={"stage": error.stage, "reason": error.reason})
     report["source_after"] = source_identity()
