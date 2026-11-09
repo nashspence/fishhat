@@ -91,6 +91,9 @@ class WorkflowSafety(unittest.TestCase):
         self.assertIn("watchdog-regressions", job["needs"])
         self.assertEqual(job["env"]["CHECK_PURPOSES"], "validation-tooling")
         self.assertIn("no guest or native owner qualification", job["env"]["CHECK_SCOPE"])
+        self.assertIn("paused TCG/QMP identities", job["env"]["CHECK_SCOPE"])
+        regressions = self.workflow["jobs"]["watchdog-regressions"]["steps"]
+        self.assertIn("tests/test_native_linux_controller.py", str(regressions))
         commands = "\n".join(step.get("run", "") for step in job["steps"])
         self.assertIn("scripts.native_linux_enrollment --github-hosted-only", commands)
         self.assertNotIn("secrets.", str(job))

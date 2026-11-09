@@ -216,6 +216,8 @@ def test_selected_run_records_failure_source_scope_and_required_statistics(
     sources = iter([before, after])
     monkeypatch.setattr(native, "source_identity", lambda: next(sources))
     monkeypatch.setattr(native, "enroll", lambda *args, **kwargs: {"machine": "x86_64"})
+    monkeypatch.setenv("RUNNER_TEMP", str(tmp_path))
+    monkeypatch.setattr(native, "probe_controller", lambda *args: {"controlled_fixture": True})
     monkeypatch.setenv("NATIVE_TEST_SECRET", "fixture-private-value")
     if failure == "provisioning":
 
