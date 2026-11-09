@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import math
 import os
 import shutil
 import socket
@@ -424,11 +425,14 @@ class Guest:
         role: str = "admin",
         hosts: str = "known-hosts",
         deadline: Deadline | None = None,
+        nominal: float = 15,
     ) -> str:
+        if not math.isfinite(nominal) or nominal <= 0:
+            raise GuestBootError("invalid-guest-command-budget")
         self.verify_tools()
         if self.verify_process is None:
             raise GuestBootError("owned-guest-unavailable")
-        deadline = Deadline.after(15) if deadline is None else deadline
+        deadline = Deadline.after(nominal) if deadline is None else deadline
         if deadline.remaining() <= 0:
             raise GuestBootError("guest-readiness-deadline")
         self.verify_process(deadline)
@@ -478,7 +482,7 @@ class Guest:
         if remaining <= 0:
             raise GuestBootError("guest-readiness-deadline")
         return self.command(
-            arguments, "guest-ssh", min(15, remaining / current().scale), capture=True
+            arguments, "guest-ssh", min(nominal, remaining / current().scale), capture=True
         )
 
     def remote(self, expected: dict[str, Any] | None, action: list[str] | None = None) -> str:
@@ -584,11 +588,19 @@ class Guest:
             time.sleep(min(watchdog(1), deadline.remaining()))
         raise GuestBootError("guest-readiness-deadline")
 
-    def guarded(self, action: list[str], enrollment: str, boot: str) -> str:
+    def guarded(
+        self,
+        action: list[str],
+        enrollment: str,
+        boot: str,
+        *,
+        deadline: Deadline | None = None,
+        nominal: float = 15,
+    ) -> str:
         if self.observed is None or enrollment != self.enrollment:
             raise GuestBootError("fixture-enrollment-mismatch")
         expected = dict(self.observed, boot_id=boot)
-        return self.ssh(self.remote(expected, action))
+        return self.ssh(self.remote(expected, action), deadline=deadline, nominal=nominal)
 
     def refusals(self) -> None:
         if self.observed is None:

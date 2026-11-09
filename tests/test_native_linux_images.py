@@ -241,6 +241,8 @@ def test_main_retains_exact_source_scope_and_guest_input_failure(
     monkeypatch.setattr(native, "boot_guest", lambda *args: None)
     monkeypatch.setattr(native, "probe_controller", lambda *args: {"fixture_only": True})
     monkeypatch.setattr(native, "controller_faults", lambda *args: None)
+    monkeypatch.setattr(native, "guest_storage_faults", lambda *a: None)
+    monkeypatch.setattr(native, "verify_guest_cleanup", lambda *a: None)
     monkeypatch.setattr(native, "run", command)
     monkeypatch.setenv("RUNNER_TEMP", str(temporary))
     output = tmp_path / "report.json"

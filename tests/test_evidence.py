@@ -36,6 +36,7 @@ def accounted(tmp_path):
         "native_linux_enrollment.py",
         "native_linux_images.py",
         "native_linux_guest.py",
+        "native_linux_storage.py",
     ):
         shutil.copyfile(ROOT / "scripts" / helper, tmp_path / "scripts" / helper)
     source = {"commit": "a" * 40, "clean": True, "fingerprint": "b" * 64}

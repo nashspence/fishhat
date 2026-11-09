@@ -529,6 +529,8 @@ def test_main_reports_verified_boot_without_promoting_native_qualification(
     monkeypatch.setattr(native, "provision", provision)
     monkeypatch.setattr(native, "probe_controller", lambda *a: {})
     monkeypatch.setattr(native, "controller_faults", lambda *a: None)
+    monkeypatch.setattr(native, "guest_storage_faults", lambda *a: None)
+    monkeypatch.setattr(native, "verify_guest_cleanup", lambda *a: None)
     monkeypatch.setattr(native, "provision_tools", lambda *a: {})
     monkeypatch.setattr(native, "guest_inputs", lambda *a: nullcontext(fixture["inputs"]))
 
@@ -670,14 +672,30 @@ def test_missing_or_foreign_private_root_preserves_failure_stats_and_foreign_dat
         guests.shutil.rmtree(relocated)
 
 
-@pytest.mark.parametrize("refused", [False, True], ids=["started", "refused"])
+@pytest.mark.parametrize(
+    ("refused", "storage_error"),
+    [(False, False), (True, False), (False, True)],
+    ids=["started", "refused", "storage-refused"],
+)
 def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
-    fixture, monkeypatch, refused
+    fixture, monkeypatch, refused, storage_error
 ):
     events = []
     report = {}
     monkeypatch.setattr(native, "run", fixture["command"])
     monkeypatch.setattr(native, "QEMU", Path("/controlled/qemu"))
+    storage_calls = []
+
+    def qualify(guest, progress, result, *, inject_failure):
+        assert guest is fixture["guest"] and result is report["storage"]
+        assert report["boot_verified"] and report["peer_authenticated"]
+        assert report["denied_mutation_canary_absent"]
+        assert inject_failure is storage_error
+        storage_calls.append("storage")
+        if storage_error:
+            raise native.GuestStorageError("controlled-storage-refusal")
+
+    monkeypatch.setattr(native, "qualify_storage", qualify)
 
     @contextmanager
     def owned(temporary, launch, *, enrollment):
@@ -711,23 +729,113 @@ def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
         "controller_executable",
         lambda process, digest, deadline: events.append("reverified"),
     )
+
+    def invoke():
+        native.boot_guest(
+            fixture["inputs"],
+            fixture["tools"],
+            "c" * 64,
+            fixture["temporary"],
+            report,
+            storage_failure=storage_error,
+        )
+
+    if refused or storage_error:
+        reason = "guest-start-rejected" if refused else "controlled-storage-refusal"
+        with pytest.raises(guests.GuestBootError, match=reason):
+            invoke()
+    else:
+        invoke()
     if refused:
-        with pytest.raises(guests.GuestBootError, match="guest-start-rejected"):
-            native.boot_guest(
-                fixture["inputs"], fixture["tools"], "c" * 64, fixture["temporary"], report
-            )
         assert not any(call[1] == "guest-ssh" for call in fixture["calls"])
     else:
-        native.boot_guest(
-            fixture["inputs"], fixture["tools"], "c" * 64, fixture["temporary"], report
-        )
         assert report["controller_verified"]["instance_uuid"] == fixture["inputs"].enrollment
         assert report["controller_verified"]["unix_peer_verified"]
+    assert storage_calls == ([] if refused else ["storage"])
     assert events[:3] == ["launch", "identity-verified", "cont"] and events[-1] == "reaped"
     assert report["boot_verified"] is not refused
-    assert report["status"] == ("failed" if refused else "passed")
+    assert report["status"] == ("failed" if refused or storage_error else "passed")
     assert (
         report["process_reaped"]
         and report["temporary_resources_removed"]
         and valid_stats(report["statistics"])
     )
+
+
+@pytest.mark.parametrize(
+    ("remaining", "scale", "expected"),
+    [(90, 1, 60), (17, 1, 17), (17, 4, 4.25)],
+    ids=["operation-budget", "remaining-deadline", "scaled-remaining-deadline"],
+)
+def test_guarded_storage_command_respects_caller_and_shared_deadline(
+    fixture, monkeypatch, remaining, scale, expected
+):
+    report = {}
+    with session(fixture, report) as guest:
+        boot(fixture, guest)
+        guest.refusals()
+        bound = SimpleNamespace(remaining=lambda: remaining)
+        monkeypatch.setattr(
+            guests,
+            "current",
+            lambda: SimpleNamespace(scale=scale, units=lambda *args, **kwargs: 5),
+        )
+        try:
+            guest.guarded(
+                ["/usr/bin/true"],
+                guest.enrollment,
+                guest.observed["boot_id"],
+                deadline=bound,
+                nominal=60,
+            )
+            assert fixture["calls"][-1][2] == expected
+            assert fixture["actions"][-1] == ["/usr/bin/true"]
+        finally:
+            fixture["process"].returncode = 0
+    assert report["status"] == "passed" and valid_stats(report["statistics"])
+
+
+@pytest.mark.parametrize(
+    "nominal",
+    [0, -1, float("inf"), float("nan")],
+    ids=["zero", "negative", "infinite", "not-a-number"],
+)
+def test_invalid_guarded_command_budget_refuses_before_dispatch(fixture, nominal):
+    report = {}
+    with session(fixture, report) as guest:
+        boot(fixture, guest)
+        guest.refusals()
+        before = len(fixture["calls"])
+        try:
+            with pytest.raises(guests.GuestBootError, match="invalid-guest-command-budget"):
+                guest.guarded(
+                    ["/usr/bin/true"],
+                    guest.enrollment,
+                    guest.observed["boot_id"],
+                    nominal=nominal,
+                )
+            assert len(fixture["calls"]) == before
+        finally:
+            fixture["process"].returncode = 0
+    assert report["status"] == "passed" and valid_stats(report["statistics"])
+
+
+def test_expired_storage_deadline_refuses_before_dispatch(fixture):
+    report = {}
+    with session(fixture, report) as guest:
+        boot(fixture, guest)
+        guest.refusals()
+        before = len(fixture["calls"])
+        try:
+            with pytest.raises(guests.GuestBootError, match="guest-readiness-deadline"):
+                guest.guarded(
+                    ["/usr/bin/true"],
+                    guest.enrollment,
+                    guest.observed["boot_id"],
+                    deadline=SimpleNamespace(remaining=lambda: 0),
+                    nominal=60,
+                )
+            assert len(fixture["calls"]) == before
+        finally:
+            fixture["process"].returncode = 0
+    assert report["status"] == "passed" and valid_stats(report["statistics"])

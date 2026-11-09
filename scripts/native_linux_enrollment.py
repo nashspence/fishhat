@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import errno
 import hashlib
 import json
 import os
@@ -22,6 +23,7 @@ from typing import Any
 
 from scripts.native_linux_guest import GuestBootError, guest_session, provision_tools
 from scripts.native_linux_images import GuestInputError, GuestInputs, guest_inputs
+from scripts.native_linux_storage import GuestStorageError, qualify_storage
 from scripts.run_stats import RunStats, valid_stats
 from scripts.validation import source_identity
 from scripts.validation_timeouts import Deadline, current, invocation, watchdog
@@ -609,6 +611,8 @@ def boot_guest(
     binary_sha256: str,
     temporary: Path,
     report: dict[str, Any],
+    *,
+    storage_failure: bool = False,
 ) -> None:
     with stage("guest-session"):
         with guest_session(inputs, temporary, run, tools, QEMU, report) as guest:
@@ -641,6 +645,112 @@ def boot_guest(
                     )
                 with stage("guest-refusals"):
                     guest.refusals()
+                report["storage"] = {}
+                with stage("guest-storage"):
+                    qualify_storage(guest, stage, report["storage"], inject_failure=storage_failure)
+
+
+def endpoint_closed(endpoint: dict[str, Any]) -> None:
+    port = endpoint.get("port")
+    if (
+        endpoint.get("address") != "127.0.0.1"
+        or endpoint.get("owned_listener") is not True
+        or type(port) is not int
+        or not 0 < port < 65536
+    ):
+        raise GuestStorageError("cleanup-endpoint-not-verified")
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as observer:
+            observer.settimeout(watchdog(3))
+            result = observer.connect_ex(("127.0.0.1", port))
+    except OSError:
+        raise GuestStorageError("cleanup-endpoint-observation-unavailable") from None
+    if result != errno.ECONNREFUSED:
+        raise GuestStorageError("cleanup-endpoint-still-available")
+
+
+def verify_guest_cleanup(guest: dict[str, Any], inputs: dict[str, Any]) -> None:
+    # Destroy the whole owned guest, not a guessed set of mounts or descendants.
+    # Context owners verify their directory identities before removing resources.
+    if (
+        guest.get("process_reaped") is not True
+        or guest.get("temporary_resources_removed") is not True
+        or inputs.get("temporary_resources_removed") is not True
+        or inputs.get("base_preserved") is not True
+        or not isinstance(guest.get("storage"), dict)
+        or not isinstance(guest.get("endpoint"), dict)
+    ):
+        raise GuestStorageError("guest-resources-not-removed")
+    endpoint_closed(guest["endpoint"])
+    guest["endpoint"]["closed_after_cleanup"] = True
+    guest["storage"]["resources_destroyed_with_guest"] = True
+
+
+def guest_storage_faults(
+    tools: dict[str, Any], binary_sha256: str, temporary: Path, results: list[dict[str, Any]]
+) -> None:
+    metrics = RunStats()
+    case: dict[str, Any] = {
+        "scenario": "after-control-mount",
+        "scope": "disposable-guest-partial-storage-setup-only",
+        "status": "failed",
+        "enrollment": str(uuid.uuid4()),
+        "expected_failure_verified": False,
+        "unrelated_state_preserved": False,
+        "guest_inputs": {},
+        "guest": {},
+    }
+    results.append(case)
+    try:
+        with stage("guest-storage-fault"):
+            with tempfile.TemporaryDirectory(prefix="fishhat-canary-", dir=temporary) as folder:
+                canary = Path(folder) / "unrelated"
+                value = uuid.uuid4().bytes
+                canary.write_bytes(value)
+                identity = canary.lstat()
+                try:
+                    with guest_inputs(
+                        case["enrollment"], temporary, run, stage, case["guest_inputs"]
+                    ) as inputs:
+                        boot_guest(
+                            inputs,
+                            tools,
+                            binary_sha256,
+                            temporary,
+                            case["guest"],
+                            storage_failure=True,
+                        )
+                except GuestStorageError as error:
+                    case["problem"] = {"stage": error.stage, "reason": error.reason}
+                finally:
+                    after = canary.lstat()
+                    case["unrelated_state_preserved"] = (
+                        after.st_dev,
+                        after.st_ino,
+                        after.st_mode,
+                    ) == (
+                        identity.st_dev,
+                        identity.st_ino,
+                        identity.st_mode,
+                    ) and canary.read_bytes() == value
+                verify_guest_cleanup(case["guest"], case["guest_inputs"])
+                case["expected_failure_verified"] = (
+                    case.get("problem")
+                    == {"stage": "guest-storage", "reason": "injected-after-control-mount"}
+                    and case["guest"].get("boot_verified") is True
+                    and case["guest"]["storage"].get("fault_injection_verified") is True
+                    and case["guest"]["storage"].get("permissions_verified") is False
+                    and case["guest"]["storage"].get("status") == "failed"
+                    and case["unrelated_state_preserved"]
+                )
+                if not case["expected_failure_verified"]:
+                    raise GuestStorageError("required-storage-failure-proof-missing")
+    except OSError:
+        raise GuestStorageError("storage-fault-observation-unavailable") from None
+    finally:
+        case["statistics"] = metrics.finish()
+        if not valid_stats(case["statistics"]):
+            raise ValueError("invalid required guest storage fault statistics")
 
 
 @invocation
@@ -699,6 +809,15 @@ def main(argv: list[str] | None = None) -> int:
                     Path(os.environ["RUNNER_TEMP"]),
                     report["guest"],
                 )
+        with stage("guest-cleanup-observation"):
+            verify_guest_cleanup(report["guest"], report["guest_inputs"])
+        report["guest_storage_faults"] = []
+        guest_storage_faults(
+            report["guest_tools"],
+            report["controller"]["binary_sha256"],
+            Path(os.environ["RUNNER_TEMP"]),
+            report["guest_storage_faults"],
+        )
         report["status"] = "passed"
     except (EnrollmentError, GuestInputError, GuestBootError) as error:
         status = 1
