@@ -95,6 +95,8 @@ class WorkflowSafety(unittest.TestCase):
         self.assertIn("owned-controller fault cleanup", job["env"]["CHECK_SCOPE"])
         regressions = self.workflow["jobs"]["watchdog-regressions"]["steps"]
         self.assertIn("tests/test_native_linux_controller.py", str(regressions))
+        self.assertIn("tests/test_native_linux_images.py", str(regressions))
+        self.assertIn("authenticated guest image/disks", job["env"]["CHECK_SCOPE"])
         commands = "\n".join(step.get("run", "") for step in job["steps"])
         self.assertIn("scripts.native_linux_enrollment --github-hosted-only", commands)
         self.assertNotIn("secrets.", str(job))

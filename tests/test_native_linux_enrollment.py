@@ -6,6 +6,8 @@ import hashlib
 import json
 import os
 import sys
+from contextlib import nullcontext
+from types import SimpleNamespace
 
 import pytest
 
@@ -219,6 +221,11 @@ def test_selected_run_records_failure_source_scope_and_required_statistics(
     monkeypatch.setenv("RUNNER_TEMP", str(tmp_path))
     monkeypatch.setattr(native, "probe_controller", lambda *args: {"controlled_fixture": True})
     monkeypatch.setattr(native, "controller_faults", lambda *args: None)
+    monkeypatch.setattr(
+        native,
+        "guest_inputs",
+        lambda *args: nullcontext(SimpleNamespace(verify=lambda *args: None)),
+    )
     monkeypatch.setenv("NATIVE_TEST_SECRET", "fixture-private-value")
     if failure == "provisioning":
 
