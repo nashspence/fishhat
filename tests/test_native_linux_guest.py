@@ -697,6 +697,14 @@ def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
 
     monkeypatch.setattr(native, "qualify_storage", qualify)
 
+    def process_kill(guest, progress, temporary, result):
+        assert guest is fixture["guest"] and result is report["process_kill"]
+        assert storage_calls == ["storage"] and not storage_error
+        assert temporary == fixture["temporary"]
+        storage_calls.append("process")
+
+    monkeypatch.setattr(native, "qualify_process_kill", process_kill)
+
     @contextmanager
     def owned(temporary, launch, *, enrollment):
         assert enrollment == fixture["inputs"].enrollment
@@ -751,7 +759,9 @@ def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
     else:
         assert report["controller_verified"]["instance_uuid"] == fixture["inputs"].enrollment
         assert report["controller_verified"]["unix_peer_verified"]
-    assert storage_calls == ([] if refused else ["storage"])
+    assert storage_calls == (
+        [] if refused else ["storage"] if storage_error else ["storage", "process"]
+    )
     assert events[:3] == ["launch", "identity-verified", "cont"] and events[-1] == "reaped"
     assert report["boot_verified"] is not refused
     assert report["status"] == ("failed" if refused or storage_error else "passed")
