@@ -190,6 +190,7 @@ def test_report_requires_current_complete_executed_proofs(monkeypatch, tmp_path)
         "validation_workflows.py",
         "native_linux_enrollment.py",
         "native_linux_images.py",
+        "native_linux_guest.py",
     ):
         shutil.copyfile(ROOT / "scripts" / helper, tmp_path / "scripts" / helper)
     folder = tmp_path / "artifacts/validation"

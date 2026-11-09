@@ -237,6 +237,8 @@ def test_main_retains_exact_source_scope_and_guest_input_failure(
     monkeypatch.setattr(native, "enroll", lambda *args, **kwargs: {})
     monkeypatch.setattr(native, "source_identity", lambda: source)
     monkeypatch.setattr(native, "provision", lambda: {"binary_sha256": "c" * 64})
+    monkeypatch.setattr(native, "provision_tools", lambda *args: {})
+    monkeypatch.setattr(native, "boot_guest", lambda *args: None)
     monkeypatch.setattr(native, "probe_controller", lambda *args: {"fixture_only": True})
     monkeypatch.setattr(native, "controller_faults", lambda *args: None)
     monkeypatch.setattr(native, "run", command)
