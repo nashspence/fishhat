@@ -57,7 +57,7 @@
       ],
       "requiredness_authority": "release.toml#/governance/required_checks",
       "result_authority": "GitHub job conclusion; classification supplies no execution proof",
-      "scope": "explicitly enrolled disposable controller dependency, paused TCG/QMP identities and owned-controller fault cleanup and authenticated guest boot/SSH identity and owned disks, isolated guest filesystems/account permissions and partial-storage setup cleanup; no native owner qualification",
+      "scope": "explicitly enrolled disposable controller dependency, paused TCG/QMP identities and owned-controller fault cleanup and authenticated guest boot/SSH identity and owned disks, isolated guest filesystems/account permissions and partial-storage setup cleanup and owned guest process kill/reaping; no native owner qualification",
       "work_sha256": "b3bae2df1cf8bf3af0c8ecc6c1792ff1186c7ab78655cd30e7b14f19ff3257b7"
     },
     ".github/workflows/ci.yml:native-prerequisites": {
@@ -146,7 +146,7 @@
       "requiredness_authority": "release.toml#/governance/required_checks",
       "result_authority": "GitHub job conclusion; classification supplies no execution proof",
       "scope": "watchdog propagation and negative progress/cleanup regressions",
-      "work_sha256": "f23627377d5c7799a11eded0d9b0930f1db11d826d3089db483b16d2f785240a"
+      "work_sha256": "8cb7017e160612bc3c58c21c0171a0697449a3cf6a11f209d174e93ad92f09fd"
     },
     ".github/workflows/ci.yml:watchdogs": {
       "authority": ".github/workflows/ci.yml",
@@ -10436,6 +10436,258 @@
     {
       "node": "tests/test_native_linux_images.py::test_substituted_directory_cannot_be_removed_as_owned",
       "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_complete_controlled_helper_preserves_host_canary_and_never_claims_guest_cleanup",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_controller_rejects_inexact_kernel_termination[cleanup_kill-True]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_controller_rejects_inexact_kernel_termination[code-CLD_EXITED]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_controller_rejects_inexact_kernel_termination[pid-999]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_controller_rejects_inexact_kernel_termination[reaped-False]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_controller_rejects_inexact_kernel_termination[returncode-0]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_controller_rejects_inexact_kernel_termination[signal-True]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_controller_rejects_inexact_kernel_termination[stale_handle_refused-1]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_controller_rejects_inexact_process_identity[arguments_sha256-invalid]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_controller_rejects_inexact_process_identity[enrollment-foreign]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_controller_rejects_inexact_process_identity[executable-value5]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_controller_rejects_inexact_process_identity[parent_pid-400]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_controller_rejects_inexact_process_identity[pid-True]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_controller_rejects_inexact_process_identity[session-999]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_controller_rejects_inexact_process_identity[start_ticks-0]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_controller_rejects_inexact_process_identity[uid-0]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_controller_rejects_inexact_progress_identity[device-999]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_controller_rejects_inexact_progress_identity[inode-True]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_controller_rejects_inexact_progress_identity[mode-True]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_controller_rejects_inexact_progress_identity[sha256-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_controller_rejects_inexact_progress_identity[uid-True]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_controller_rejects_missing_or_falsely_typed_observations[guest_canaries_preserved-False]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_controller_rejects_missing_or_falsely_typed_observations[identity-value2]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_controller_rejects_missing_or_falsely_typed_observations[progress-None]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_controller_rejects_missing_or_falsely_typed_observations[refusals_verified-value1]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_controller_rejects_missing_or_falsely_typed_observations[requested_kill-1]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_controller_rejects_missing_or_falsely_typed_observations[setup_failure_injected-True]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_controller_rejects_missing_or_falsely_typed_observations[status-failed]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_controller_rejects_missing_or_falsely_typed_observations[termination-None]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_failed_setup_cleans_only_the_pinned_owned_child[arguments]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_failed_setup_cleans_only_the_pinned_owned_child[birth-changed]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_failed_setup_cleans_only_the_pinned_owned_child[executable]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_failed_setup_cleans_only_the_pinned_owned_child[gid]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_failed_setup_cleans_only_the_pinned_owned_child[groups]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_failed_setup_cleans_only_the_pinned_owned_child[parent]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_failed_setup_cleans_only_the_pinned_owned_child[partial-readiness]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_failed_setup_cleans_only_the_pinned_owned_child[pidfd]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_failed_setup_cleans_only_the_pinned_owned_child[progress]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_failed_setup_cleans_only_the_pinned_owned_child[readiness]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_failed_setup_cleans_only_the_pinned_owned_child[session]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_failed_setup_cleans_only_the_pinned_owned_child[uid]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_guest_admission_refusals_precede_task_creation_or_launch[actor]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_guest_admission_refusals_precede_task_creation_or_launch[boot]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_guest_admission_refusals_precede_task_creation_or_launch[data-directory]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_guest_admission_refusals_precede_task_creation_or_launch[enrollment]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_guest_admission_refusals_precede_task_creation_or_launch[facility]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_guest_admission_refusals_precede_task_creation_or_launch[guest-canary]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_guest_admission_refusals_precede_task_creation_or_launch[not-root]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_guest_admission_refusals_precede_task_creation_or_launch[root-directory]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_helper_requires_verified_guest_storage_and_remaining_shared_budget[deadline]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_helper_requires_verified_guest_storage_and_remaining_shared_budget[guest]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_helper_requires_verified_guest_storage_and_remaining_shared_budget[storage]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_helper_retains_failed_case_statistics_without_claiming_success[array]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_helper_retains_failed_case_statistics_without_claiming_success[empty-object]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_helper_retains_failed_case_statistics_without_claiming_success[invalid-json]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_helper_retains_failed_case_statistics_without_claiming_success[null]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_missing_actual_kernel_termination_reaping_or_stale_handle_refusal_fails[returncode]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_missing_actual_kernel_termination_reaping_or_stale_handle_refusal_fails[stale-handle]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_missing_actual_kernel_termination_reaping_or_stale_handle_refusal_fails[wait-code]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_remote_program_observes_progress_refusals_kernel_termination_and_reaping[after-process-admission]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_remote_program_observes_progress_refusals_kernel_termination_and_reaping[kill]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_whole_guest_cleanup_claim_requires_resource_owners_and_endpoint_observation[False]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
+    },
+    {
+      "node": "tests/test_native_linux_processes.py::test_whole_guest_cleanup_claim_requires_resource_owners_and_endpoint_observation[True]",
+      "purpose_sha256": "7726255a439f670afe63bf68a9ab1834573f905a52298e93f2b676149c98c23d"
     },
     {
       "node": "tests/test_native_linux_storage.py::test_admission_mount_permission_and_final_observations",

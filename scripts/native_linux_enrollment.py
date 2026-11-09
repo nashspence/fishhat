@@ -23,6 +23,7 @@ from typing import Any
 
 from scripts.native_linux_guest import GuestBootError, guest_session, provision_tools
 from scripts.native_linux_images import GuestInputError, GuestInputs, guest_inputs
+from scripts.native_linux_processes import qualify_process_kill
 from scripts.native_linux_storage import GuestStorageError, qualify_storage
 from scripts.run_stats import RunStats, valid_stats
 from scripts.validation import source_identity
@@ -648,6 +649,9 @@ def boot_guest(
                 report["storage"] = {}
                 with stage("guest-storage"):
                     qualify_storage(guest, stage, report["storage"], inject_failure=storage_failure)
+                report["process_kill"] = {}
+                with stage("guest-process-kill"):
+                    qualify_process_kill(guest, stage, temporary, report["process_kill"])
 
 
 def endpoint_closed(endpoint: dict[str, Any]) -> None:
@@ -684,6 +688,8 @@ def verify_guest_cleanup(guest: dict[str, Any], inputs: dict[str, Any]) -> None:
     endpoint_closed(guest["endpoint"])
     guest["endpoint"]["closed_after_cleanup"] = True
     guest["storage"]["resources_destroyed_with_guest"] = True
+    if isinstance(guest.get("process_kill"), dict):
+        guest["process_kill"]["resources_destroyed_with_guest"] = True
 
 
 def guest_storage_faults(
