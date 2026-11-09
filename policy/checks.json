@@ -57,7 +57,7 @@
       ],
       "requiredness_authority": "release.toml#/governance/required_checks",
       "result_authority": "GitHub job conclusion; classification supplies no execution proof",
-      "scope": "explicitly enrolled disposable controller dependency identities; no guest or native owner qualification",
+      "scope": "explicitly enrolled disposable controller dependency and paused TCG/QMP identities; no guest or native owner qualification",
       "work_sha256": "b3bae2df1cf8bf3af0c8ecc6c1792ff1186c7ab78655cd30e7b14f19ff3257b7"
     },
     ".github/workflows/ci.yml:native-prerequisites": {
@@ -146,7 +146,7 @@
       "requiredness_authority": "release.toml#/governance/required_checks",
       "result_authority": "GitHub job conclusion; classification supplies no execution proof",
       "scope": "watchdog propagation and negative progress/cleanup regressions",
-      "work_sha256": "ad484d258e5fec8901f761e1c2e997aeb2d8c6c4ec07e724e9bf2b156eebc0c4"
+      "work_sha256": "303b4054f5ad337aef06002c0b55bb3ffbf8ce879f369c19c56b190f064ce3d1"
     },
     ".github/workflows/ci.yml:watchdogs": {
       "authority": ".github/workflows/ci.yml",
@@ -9760,6 +9760,90 @@
     {
       "node": "tests/test_migrations.py::test_unknown_or_corrupted_schema_is_not_adopted[reported-events]",
       "purpose_sha256": "953ec70dfd358e0433c27626ac74420f6979e36ea5e4a52c32ef70b0b7377991"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_commands_require_their_own_success_response[boolean-reply]",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_commands_require_their_own_success_response[float-reply]",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_commands_require_their_own_success_response[rejected]",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_commands_require_their_own_success_response[stale-reply]",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_executing_binary_must_match_selected_package_identity",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_fragmented_reads_and_multiple_commands_consume_one_deadline",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_kernel_unix_peer_must_be_the_owned_child",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_launch_uses_only_paused_diskless_tcg_and_private_control",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_probe_failure_is_retained_as_failed_unqualified_enrollment",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_real_child_peer_protocol_and_cleanup_leave_unrelated_process[events]",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_real_child_peer_protocol_and_cleanup_leave_unrelated_process[normal]",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_wrong_controller_identity_never_passes_and_owned_child_is_reaped[capabilities]",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_wrong_controller_identity_never_passes_and_owned_child_is_reaped[float-greeting]",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_wrong_controller_identity_never_passes_and_owned_child_is_reaped[float-query]",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_wrong_controller_identity_never_passes_and_owned_child_is_reaped[invalid-version]",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_wrong_controller_identity_never_passes_and_owned_child_is_reaped[kvm]",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_wrong_controller_identity_never_passes_and_owned_child_is_reaped[running]",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_wrong_controller_identity_never_passes_and_owned_child_is_reaped[wrong-greeting]",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_wrong_controller_identity_never_passes_and_owned_child_is_reaped[wrong-instance]",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_wrong_controller_identity_never_passes_and_owned_child_is_reaped[wrong-query]",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_wrong_controller_identity_never_passes_and_owned_child_is_reaped[wrong-state]",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_enrollment_requires_confirmation_and_accepts_selected_host",

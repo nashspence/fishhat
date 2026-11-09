@@ -7,9 +7,14 @@ import hashlib
 import json
 import os
 import platform
+import signal
+import socket
+import struct
 import subprocess
 import sys
+import tempfile
 import time
+import uuid
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from pathlib import Path
@@ -17,7 +22,7 @@ from typing import Any
 
 from scripts.run_stats import RunStats, valid_stats
 from scripts.validation import source_identity
-from scripts.validation_timeouts import current, invocation, watchdog
+from scripts.validation_timeouts import Deadline, current, invocation, watchdog
 
 VERSION = "1:8.2.2+ds-0ubuntu1.18"
 PACKAGES = ("qemu-system-x86", "qemu-utils")
@@ -210,6 +215,246 @@ def provision() -> dict[str, Any]:
         return {"packages": packages, "qemu_version": "8.2.2", "binary_sha256": binary_sha256}
 
 
+def controller_remaining(deadline: Deadline) -> float:
+    remaining = deadline.remaining()
+    if remaining <= 0:
+        raise EnrollmentError("controller-probe", "observation-deadline")
+    return remaining
+
+
+def child_exited(process: subprocess.Popen[bytes]) -> bool:
+    # WNOWAIT retains our child identity until cleanup; poll() would reap it.
+    return os.waitid(os.P_PID, process.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT) is not None
+
+
+def start_controller(endpoint: Path, identity: str) -> subprocess.Popen[bytes]:
+    return subprocess.Popen(
+        [
+            str(QEMU),
+            "-no-user-config",
+            "-machine",
+            "none",
+            "-accel",
+            "tcg",
+            "-S",
+            "-nodefaults",
+            "-display",
+            "none",
+            "-monitor",
+            "none",
+            "-nic",
+            "none",
+            "-m",
+            "128M",
+            "-smp",
+            "1",
+            "-uuid",
+            identity,
+            "-qmp",
+            f"unix:{endpoint},server=on,wait=off",
+        ],
+        cwd=endpoint.parent,
+        env=COMMAND_ENV,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+        umask=0o077,
+    )
+
+
+def stop_controller(process: subprocess.Popen[bytes]) -> None:
+    with stage("controller-cleanup"):
+        try:
+            child_exited(process)
+            if os.getpgid(process.pid) != process.pid:
+                os.kill(process.pid, signal.SIGKILL)
+                process.wait(timeout=watchdog(5))
+                raise EnrollmentError("controller-cleanup", "process-group-mismatch")
+            os.killpg(process.pid, signal.SIGTERM)
+            grace = Deadline.after(5)
+            while not child_exited(process) and grace.remaining() > 0:
+                time.sleep(min(0.02, grace.remaining()))
+            # Our unreaped leader still reserves the group identity. Kill any
+            # remaining owned members before reaping it and releasing that ID.
+            os.killpg(process.pid, signal.SIGKILL)
+            process.wait(timeout=watchdog(5))
+            try:
+                os.killpg(process.pid, 0)
+            except ProcessLookupError:
+                return
+            raise EnrollmentError("controller-cleanup", "process-group-remains")
+        except (OSError, subprocess.TimeoutExpired):
+            raise EnrollmentError("controller-cleanup", "owned-process-not-reaped") from None
+
+
+def controller_executable(
+    process: subprocess.Popen[bytes], expected: str, deadline: Deadline
+) -> None:
+    if child_exited(process) or os.getpgid(process.pid) != process.pid:
+        raise EnrollmentError("controller-identity", "owned-controller-unavailable")
+    digest = hashlib.sha256()
+    with Path(f"/proc/{process.pid}/exe").open("rb") as stream:
+        while chunk := stream.read(1024 * 1024):
+            controller_remaining(deadline)
+            digest.update(chunk)
+    controller_remaining(deadline)
+    if digest.hexdigest() != expected:
+        raise EnrollmentError("controller-identity", "executable-mismatch")
+
+
+def controller_connection(
+    endpoint: Path, process: subprocess.Popen[bytes], deadline: Deadline
+) -> socket.socket:
+    while True:
+        if child_exited(process):
+            raise EnrollmentError("controller-identity", "owned-controller-unavailable")
+        connection = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        try:
+            connection.settimeout(controller_remaining(deadline))
+            connection.connect(str(endpoint))
+            return connection
+        except (FileNotFoundError, ConnectionRefusedError):
+            connection.close()
+            time.sleep(min(0.02, controller_remaining(deadline)))
+        except BaseException:
+            connection.close()
+            raise
+
+
+def qmp_fields(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result = dict(pairs)
+    if len(result) != len(pairs):
+        raise ValueError("duplicate QMP fields")
+    return result
+
+
+def qmp_constant(value: str) -> None:
+    raise ValueError("non-JSON QMP constant")
+
+
+def qmp_version_matches(value: Any, expected: dict[str, int]) -> bool:
+    qemu = value.get("qemu") if isinstance(value, dict) else None
+    return (
+        isinstance(qemu, dict)
+        and qemu == expected
+        and all(type(part) is int for part in qemu.values())
+    )
+
+
+class Qmp:
+    def __init__(self, connection: socket.socket, deadline: Deadline) -> None:
+        self.connection = connection
+        self.deadline = deadline
+        self.pending = b""
+        self.identifier = 0
+
+    def receive(self) -> dict[str, Any]:
+        parts: list[bytes] = []
+        size = 0
+        chunk, self.pending = self.pending, b""
+        while True:
+            controller_remaining(self.deadline)
+            end = chunk.find(b"\n")
+            part = chunk if end < 0 else chunk[:end]
+            parts.append(part)
+            size += len(part)
+            if size > 65536:
+                raise EnrollmentError("controller-probe", "invalid-control-frame")
+            if end >= 0:
+                self.pending = chunk[end + 1 :]
+                break
+            self.connection.settimeout(controller_remaining(self.deadline))
+            chunk = self.connection.recv(4096)
+            if not chunk:
+                raise EnrollmentError("controller-probe", "control-connection-closed")
+        try:
+            value = json.loads(
+                b"".join(parts), object_pairs_hook=qmp_fields, parse_constant=qmp_constant
+            )
+        except (ValueError, UnicodeError):
+            raise EnrollmentError("controller-probe", "invalid-control-frame") from None
+        if not isinstance(value, dict):
+            raise EnrollmentError("controller-probe", "invalid-control-frame")
+        return value
+
+    def command(self, name: str) -> dict[str, Any]:
+        self.identifier += 1
+        self.connection.settimeout(controller_remaining(self.deadline))
+        self.connection.sendall(
+            json.dumps({"execute": name, "id": self.identifier}).encode("ascii") + b"\n"
+        )
+        while True:
+            response = self.receive()
+            if "event" in response and not {"return", "error", "id"} & response.keys():
+                continue
+            if (
+                type(response.get("id")) is not int
+                or response.get("id") != self.identifier
+                or "error" in response
+            ):
+                raise EnrollmentError("controller-probe", "uncorrelated-or-rejected-command")
+            value = response.get("return")
+            if not isinstance(value, dict):
+                raise EnrollmentError("controller-probe", "invalid-control-response")
+            return value
+
+
+def probe_controller(binary_sha256: str, temporary: Path) -> dict[str, Any]:
+    deadline = Deadline.after(30)
+    identity = str(uuid.uuid4())
+    version = {"major": 8, "minor": 2, "micro": 2}
+    try:
+        with tempfile.TemporaryDirectory(prefix="fhc-", dir=temporary) as directory:
+            endpoint = Path(directory) / "qmp"
+            process = start_controller(endpoint, identity)
+            try:
+                controller_executable(process, binary_sha256, deadline)
+                with controller_connection(endpoint, process, deadline) as connection:
+                    peer = struct.unpack(
+                        "3i", connection.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, 12)
+                    )
+                    if peer != (process.pid, os.geteuid(), os.getegid()):
+                        raise EnrollmentError("controller-identity", "control-peer-mismatch")
+                    qmp = Qmp(connection, deadline)
+                    greeting = qmp.receive().get("QMP")
+                    greeting_version = (
+                        greeting.get("version") if isinstance(greeting, dict) else None
+                    )
+                    if not qmp_version_matches(greeting_version, version):
+                        raise EnrollmentError("controller-identity", "greeting-version-mismatch")
+                    if qmp.command("qmp_capabilities") != {}:
+                        raise EnrollmentError("controller-probe", "capabilities-rejected")
+                    if not qmp_version_matches(qmp.command("query-version"), version):
+                        raise EnrollmentError("controller-identity", "query-version-mismatch")
+                    if qmp.command("query-uuid").get("UUID") != identity:
+                        raise EnrollmentError("controller-identity", "instance-mismatch")
+                    status = qmp.command("query-status")
+                    if status.get("running") is not False or status.get("status") != "prelaunch":
+                        raise EnrollmentError("controller-identity", "controller-not-quiescent")
+                    if qmp.command("query-kvm").get("enabled") is not False:
+                        raise EnrollmentError("controller-identity", "unexpected-accelerator")
+                    controller_executable(process, binary_sha256, deadline)
+            finally:
+                stop_controller(process)
+        return {
+            "instance_uuid": identity,
+            "qmp_version": version,
+            "executable_sha256": binary_sha256,
+            "unix_peer_verified": True,
+            "accelerator": "tcg",
+            "machine": "none",
+            "status": "prelaunch",
+            "running": False,
+            "process_reaped": True,
+            "temporary_resources_removed": True,
+        }
+    except TimeoutError:
+        raise EnrollmentError("controller-probe", "observation-deadline") from None
+    except OSError:
+        raise EnrollmentError("controller-probe", "controller-unavailable") from None
+
+
 @invocation
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -237,6 +482,10 @@ def main(argv: list[str] | None = None) -> int:
         if not before["clean"]:
             raise EnrollmentError("source", "clean-unchanged-source-required")
         report["controller"] = provision()
+        with stage("controller-probe"):
+            report["controller_probe"] = probe_controller(
+                report["controller"]["binary_sha256"], Path(os.environ["RUNNER_TEMP"])
+            )
         report["status"] = "passed"
     except EnrollmentError as error:
         status = 1
