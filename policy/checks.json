@@ -57,7 +57,7 @@
       ],
       "requiredness_authority": "release.toml#/governance/required_checks",
       "result_authority": "GitHub job conclusion; classification supplies no execution proof",
-      "scope": "explicitly enrolled disposable controller dependency and paused TCG/QMP identities; no guest or native owner qualification",
+      "scope": "explicitly enrolled disposable controller dependency, paused TCG/QMP identities and owned-controller fault cleanup; no guest or native owner qualification",
       "work_sha256": "b3bae2df1cf8bf3af0c8ecc6c1792ff1186c7ab78655cd30e7b14f19ff3257b7"
     },
     ".github/workflows/ci.yml:native-prerequisites": {
@@ -9762,6 +9762,14 @@
       "purpose_sha256": "953ec70dfd358e0433c27626ac74420f6979e36ea5e4a52c32ef70b0b7377991"
     },
     {
+      "node": "tests/test_native_linux_controller.py::test_an_unexpected_success_in_a_selected_failure_case_blocks_the_matrix",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_cleanup_failure_cannot_be_accepted_as_an_expected_fault",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
       "node": "tests/test_native_linux_controller.py::test_commands_require_their_own_success_response[boolean-reply]",
       "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
     },
@@ -9778,11 +9786,27 @@
       "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
     },
     {
+      "node": "tests/test_native_linux_controller.py::test_controller_launch_failure_removes_private_directory",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_event_cannot_masquerade_as_a_correlated_command_result",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
       "node": "tests/test_native_linux_controller.py::test_executing_binary_must_match_selected_package_identity",
       "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
     },
     {
+      "node": "tests/test_native_linux_controller.py::test_failed_fault_injection_cannot_supply_an_expected_controller_loss",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
       "node": "tests/test_native_linux_controller.py::test_fragmented_reads_and_multiple_commands_consume_one_deadline",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_group_identity_mismatch_never_signals_an_unrelated_group",
       "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
     },
     {
@@ -9791,6 +9815,58 @@
     },
     {
       "node": "tests/test_native_linux_controller.py::test_launch_uses_only_paused_diskless_tcg_and_private_control",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_live_protocol_failure_reaps_child_and_removes_only_owned_resources[closed-partial]",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_live_protocol_failure_reaps_child_and_removes_only_owned_resources[exit]",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_live_protocol_failure_reaps_child_and_removes_only_owned_resources[malformed]",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_live_protocol_failure_reaps_child_and_removes_only_owned_resources[stalled-command]",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_live_protocol_failure_reaps_child_and_removes_only_owned_resources[stalled-greeting]",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_malformed_control_frames_fail_without_exposing_payload[array]",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_malformed_control_frames_fail_without_exposing_payload[deep]",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_malformed_control_frames_fail_without_exposing_payload[duplicate-fields]",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_malformed_control_frames_fail_without_exposing_payload[invalid-utf8]",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_malformed_control_frames_fail_without_exposing_payload[non-finite]",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_malformed_control_frames_fail_without_exposing_payload[oversized]",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_malformed_control_frames_fail_without_exposing_payload[syntax]",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_malformed_control_frames_fail_without_exposing_payload[utf16]",
       "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
     },
     {
@@ -9803,6 +9879,18 @@
     },
     {
       "node": "tests/test_native_linux_controller.py::test_real_child_peer_protocol_and_cleanup_leave_unrelated_process[normal]",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_real_fault_matrix_preserves_refusals_statistics_and_unrelated_resources",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_required_fault_failure_returns_failed_enrollment_and_original_statistics",
+      "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
+    },
+    {
+      "node": "tests/test_native_linux_controller.py::test_unresponsive_owned_group_is_force_killed_and_reaped",
       "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
     },
     {

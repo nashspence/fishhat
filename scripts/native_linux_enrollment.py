@@ -15,7 +15,7 @@ import sys
 import tempfile
 import time
 import uuid
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
@@ -272,6 +272,8 @@ def stop_controller(process: subprocess.Popen[bytes]) -> None:
                 process.wait(timeout=watchdog(5))
                 raise EnrollmentError("controller-cleanup", "process-group-mismatch")
             os.killpg(process.pid, signal.SIGTERM)
+            # A suspended owned controller must receive its pending termination.
+            os.killpg(process.pid, signal.SIGCONT)
             grace = Deadline.after(5)
             while not child_exited(process) and grace.remaining() > 0:
                 time.sleep(min(0.02, grace.remaining()))
@@ -370,9 +372,11 @@ class Qmp:
                 raise EnrollmentError("controller-probe", "control-connection-closed")
         try:
             value = json.loads(
-                b"".join(parts), object_pairs_hook=qmp_fields, parse_constant=qmp_constant
+                b"".join(parts).decode("utf-8"),
+                object_pairs_hook=qmp_fields,
+                parse_constant=qmp_constant,
             )
-        except (ValueError, UnicodeError):
+        except (ValueError, UnicodeError, RecursionError):
             raise EnrollmentError("controller-probe", "invalid-control-frame") from None
         if not isinstance(value, dict):
             raise EnrollmentError("controller-probe", "invalid-control-frame")
@@ -392,6 +396,7 @@ class Qmp:
                 type(response.get("id")) is not int
                 or response.get("id") != self.identifier
                 or "error" in response
+                or "event" in response
             ):
                 raise EnrollmentError("controller-probe", "uncorrelated-or-rejected-command")
             value = response.get("return")
@@ -400,46 +405,71 @@ class Qmp:
             return value
 
 
-def probe_controller(binary_sha256: str, temporary: Path) -> dict[str, Any]:
-    deadline = Deadline.after(30)
-    identity = str(uuid.uuid4())
+@contextmanager
+def owned_controller(
+    temporary: Path,
+    launch: Callable[[Path, str], subprocess.Popen[bytes]] | None = None,
+) -> Iterator[tuple[subprocess.Popen[bytes], Path, str]]:
+    with tempfile.TemporaryDirectory(prefix="fhc-", dir=temporary) as directory:
+        endpoint = Path(directory) / "qmp"
+        identity = str(uuid.uuid4())
+        process = (start_controller if launch is None else launch)(endpoint, identity)
+        try:
+            yield process, endpoint, identity
+        finally:
+            stop_controller(process)
+
+
+@contextmanager
+def controller_channel(
+    process: subprocess.Popen[bytes],
+    endpoint: Path,
+    identity: str,
+    binary_sha256: str,
+    deadline: Deadline,
+) -> Iterator[Qmp]:
     version = {"major": 8, "minor": 2, "micro": 2}
     try:
-        with tempfile.TemporaryDirectory(prefix="fhc-", dir=temporary) as directory:
-            endpoint = Path(directory) / "qmp"
-            process = start_controller(endpoint, identity)
-            try:
-                controller_executable(process, binary_sha256, deadline)
-                with controller_connection(endpoint, process, deadline) as connection:
-                    peer = struct.unpack(
-                        "3i", connection.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, 12)
-                    )
-                    if peer != (process.pid, os.geteuid(), os.getegid()):
-                        raise EnrollmentError("controller-identity", "control-peer-mismatch")
-                    qmp = Qmp(connection, deadline)
-                    greeting = qmp.receive().get("QMP")
-                    greeting_version = (
-                        greeting.get("version") if isinstance(greeting, dict) else None
-                    )
-                    if not qmp_version_matches(greeting_version, version):
-                        raise EnrollmentError("controller-identity", "greeting-version-mismatch")
-                    if qmp.command("qmp_capabilities") != {}:
-                        raise EnrollmentError("controller-probe", "capabilities-rejected")
-                    if not qmp_version_matches(qmp.command("query-version"), version):
-                        raise EnrollmentError("controller-identity", "query-version-mismatch")
-                    if qmp.command("query-uuid").get("UUID") != identity:
-                        raise EnrollmentError("controller-identity", "instance-mismatch")
-                    status = qmp.command("query-status")
-                    if status.get("running") is not False or status.get("status") != "prelaunch":
-                        raise EnrollmentError("controller-identity", "controller-not-quiescent")
-                    if qmp.command("query-kvm").get("enabled") is not False:
-                        raise EnrollmentError("controller-identity", "unexpected-accelerator")
-                    controller_executable(process, binary_sha256, deadline)
-            finally:
-                stop_controller(process)
+        controller_executable(process, binary_sha256, deadline)
+        with controller_connection(endpoint, process, deadline) as connection:
+            peer = struct.unpack(
+                "3i", connection.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, 12)
+            )
+            if peer != (process.pid, os.geteuid(), os.getegid()):
+                raise EnrollmentError("controller-identity", "control-peer-mismatch")
+            qmp = Qmp(connection, deadline)
+            greeting = qmp.receive().get("QMP")
+            greeting_version = greeting.get("version") if isinstance(greeting, dict) else None
+            if not qmp_version_matches(greeting_version, version):
+                raise EnrollmentError("controller-identity", "greeting-version-mismatch")
+            if qmp.command("qmp_capabilities") != {}:
+                raise EnrollmentError("controller-probe", "capabilities-rejected")
+            if not qmp_version_matches(qmp.command("query-version"), version):
+                raise EnrollmentError("controller-identity", "query-version-mismatch")
+            if qmp.command("query-uuid").get("UUID") != identity:
+                raise EnrollmentError("controller-identity", "instance-mismatch")
+            status = qmp.command("query-status")
+            if status.get("running") is not False or status.get("status") != "prelaunch":
+                raise EnrollmentError("controller-identity", "controller-not-quiescent")
+            if qmp.command("query-kvm").get("enabled") is not False:
+                raise EnrollmentError("controller-identity", "unexpected-accelerator")
+            controller_executable(process, binary_sha256, deadline)
+            yield qmp
+    except TimeoutError:
+        raise EnrollmentError("controller-probe", "observation-deadline") from None
+    except OSError:
+        raise EnrollmentError("controller-probe", "controller-unavailable") from None
+
+
+def probe_controller(binary_sha256: str, temporary: Path) -> dict[str, Any]:
+    deadline = Deadline.after(30)
+    try:
+        with owned_controller(temporary) as (process, endpoint, identity):
+            with controller_channel(process, endpoint, identity, binary_sha256, deadline):
+                pass
         return {
             "instance_uuid": identity,
-            "qmp_version": version,
+            "qmp_version": {"major": 8, "minor": 2, "micro": 2},
             "executable_sha256": binary_sha256,
             "unix_peer_verified": True,
             "accelerator": "tcg",
@@ -449,10 +479,118 @@ def probe_controller(binary_sha256: str, temporary: Path) -> dict[str, Any]:
             "process_reaped": True,
             "temporary_resources_removed": True,
         }
-    except TimeoutError:
-        raise EnrollmentError("controller-probe", "observation-deadline") from None
     except OSError:
         raise EnrollmentError("controller-probe", "controller-unavailable") from None
+
+
+def controller_faults(binary_sha256: str, temporary: Path, results: list[dict[str, Any]]) -> None:
+    expected = {
+        "socket-setup": {
+            ("controller-identity", "owned-controller-unavailable"),
+            ("controller-probe", "controller-unavailable"),
+        },
+        "controller-loss": {
+            ("controller-probe", "controller-unavailable"),
+            ("controller-probe", "control-connection-closed"),
+        },
+        "control-stall": {("controller-probe", "observation-deadline")},
+    }
+    for scenario, problems in expected.items():
+        metrics = RunStats()
+        process: subprocess.Popen[bytes] | None = None
+        endpoint: Path | None = None
+        case: dict[str, Any] = {
+            "scenario": scenario,
+            "scope": "disposable-controller-injected-fault-only",
+            "status": "failed",
+            "expected_failure_verified": False,
+            "identity_verified_before_fault": False,
+            "fault_injection_verified": False,
+            "process_reaped": False,
+            "temporary_resources_removed": False,
+        }
+        results.append(case)
+
+        def launch(
+            address: Path,
+            identity: str,
+            *,
+            socket_fault: bool = scenario == "socket-setup",
+            record: dict[str, Any] = case,
+        ) -> subprocess.Popen[bytes]:
+            nonlocal process, endpoint
+            endpoint = address
+            if socket_fault:
+                address.mkdir(mode=0o700)
+                record["fault_injection_verified"] = address.is_dir()
+            process = start_controller(address, identity)
+            return process
+
+        try:
+            with stage(f"fault-{scenario}"):
+                try:
+                    deadline = Deadline.after(30)
+                    with owned_controller(temporary, launch) as (child, address, identity):
+                        with controller_channel(
+                            child, address, identity, binary_sha256, deadline
+                        ) as qmp:
+                            if scenario == "socket-setup":
+                                raise EnrollmentError(
+                                    "controller-faults", "setup-fault-not-observed"
+                                )
+                            case["identity_verified_before_fault"] = True
+                            os.kill(
+                                child.pid,
+                                signal.SIGKILL if scenario == "controller-loss" else signal.SIGSTOP,
+                            )
+                            while True:
+                                controller_remaining(deadline)
+                                if scenario == "controller-loss":
+                                    transitioned = child_exited(child)
+                                else:
+                                    transitioned = (
+                                        os.waitid(
+                                            os.P_PID,
+                                            child.pid,
+                                            os.WSTOPPED | os.WNOHANG | os.WNOWAIT,
+                                        )
+                                        is not None
+                                    )
+                                if transitioned:
+                                    case["fault_injection_verified"] = True
+                                    break
+                                time.sleep(min(0.02, controller_remaining(deadline)))
+                            # This is a new fault-observation stage, not a reset
+                            # of the shared controller-acquisition deadline.
+                            qmp.deadline = Deadline.after(1)
+                            qmp.command("query-status")
+                except EnrollmentError as error:
+                    case["problem"] = {"stage": error.stage, "reason": error.reason}
+                except OSError:
+                    case["problem"] = {
+                        "stage": "controller-faults",
+                        "reason": "fault-injection-unavailable",
+                    }
+                else:
+                    case["status"] = "passed"
+                case["process_reaped"] = process is not None and process.returncode is not None
+                case["temporary_resources_removed"] = (
+                    endpoint is not None and not endpoint.parent.exists()
+                )
+                problem = case.get("problem", {})
+                case["expected_failure_verified"] = (
+                    (problem.get("stage"), problem.get("reason")) in problems
+                    and case["fault_injection_verified"]
+                    and (scenario == "socket-setup" or case["identity_verified_before_fault"])
+                    and case["process_reaped"]
+                    and case["temporary_resources_removed"]
+                )
+                if not case["expected_failure_verified"]:
+                    raise EnrollmentError("controller-faults", "required-failure-proof-missing")
+        finally:
+            case["statistics"] = metrics.finish()
+            if not valid_stats(case["statistics"]):
+                raise ValueError("invalid required controller fault statistics")
 
 
 @invocation
@@ -486,6 +624,12 @@ def main(argv: list[str] | None = None) -> int:
             report["controller_probe"] = probe_controller(
                 report["controller"]["binary_sha256"], Path(os.environ["RUNNER_TEMP"])
             )
+        report["controller_faults"] = []
+        controller_faults(
+            report["controller"]["binary_sha256"],
+            Path(os.environ["RUNNER_TEMP"]),
+            report["controller_faults"],
+        )
         report["status"] = "passed"
     except EnrollmentError as error:
         status = 1

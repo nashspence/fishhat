@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import signal
 import subprocess
 import sys
 import tempfile
@@ -25,9 +27,10 @@ CHECK_PURPOSE = {
 }
 
 SERVER = r"""
-import json, socket, sys
+import json, socket, sys, time
 
 endpoint, identity, mode = sys.argv[1:]
+if mode == "exit-before-socket": sys.exit(23)
 version = {"major": 8, "minor": 2, "micro": 2}
 greeting = {"qemu": dict(version), "package": "fixture"}
 if mode == "wrong-greeting": greeting["qemu"]["minor"] = 3
@@ -38,10 +41,18 @@ with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as server:
     server.listen(1)
     connection, _ = server.accept()
     with connection, connection.makefile("rb") as reader:
+        if mode == "stall-greeting": time.sleep(60)
         connection.sendall(json.dumps({"QMP": {"version": greeting, "capabilities": []}}).encode()+b"\r\n")
         for line in reader:
             command = json.loads(line)
             name = command["execute"]
+            if mode == "stall-reply": time.sleep(60)
+            if mode == "partial-reply":
+                connection.sendall(b'{"private":"fixture-private-output"')
+                break
+            if mode == "malformed-reply":
+                connection.sendall(b'{"private":"fixture-private-output",}\n')
+                break
             if name == "qmp_capabilities":
                 result = {"unexpected": True} if mode == "capabilities" else {}
             elif name == "query-version":
@@ -273,3 +284,284 @@ def test_probe_failure_is_retained_as_failed_unqualified_enrollment(tmp_path, mo
         and not report["production_qualified"]
     )
     assert valid_stats(report["statistics"])
+
+
+@pytest.mark.parametrize(
+    "frame",
+    [
+        b'{"private":"fixture-private-output",}\n',
+        b'{"return":{},"return":{},"id":1}\n',
+        b'{"return":{"n":NaN},"id":1}\n',
+        b'{"return":{"s":"\xff"},"id":1}\n',
+        '{"return":{},"id":1}\n'.encode("utf-16"),
+        b"[]\n",
+        b'{"return":{"nested":' + b"[" * 2000 + b'"fixture-private-output"}\n',
+        b"x" * 65537 + b"\n",
+    ],
+    ids=[
+        "syntax",
+        "duplicate-fields",
+        "non-finite",
+        "invalid-utf8",
+        "utf16",
+        "array",
+        "deep",
+        "oversized",
+    ],
+)
+def test_malformed_control_frames_fail_without_exposing_payload(frame):
+    connection = Connection([frame])
+    with pytest.raises(native.EnrollmentError, match="invalid-control-frame") as caught:
+        native.Qmp(connection, Deadline.after(5)).command("query-status")
+    assert "fixture-private-output" not in str(caught.value)
+
+
+def test_event_cannot_masquerade_as_a_correlated_command_result():
+    response = b'{"event":"fixture","return":{},"id":1}\n'
+    with pytest.raises(native.EnrollmentError, match="uncorrelated-or-rejected-command"):
+        native.Qmp(Connection([response]), Deadline.after(5)).command("query-status")
+
+
+@pytest.mark.parametrize(
+    "mode,reason",
+    [
+        ("exit-before-socket", r"owned-controller-unavailable|controller-unavailable"),
+        ("stall-greeting", "observation-deadline"),
+        ("stall-reply", "observation-deadline"),
+        ("partial-reply", "control-connection-closed"),
+        ("malformed-reply", "invalid-control-frame"),
+    ],
+    ids=["exit", "stalled-greeting", "stalled-command", "closed-partial", "malformed"],
+)
+def test_live_protocol_failure_reaps_child_and_removes_only_owned_resources(
+    controller, monkeypatch, mode, reason
+):
+    state, digest, directory = controller
+    state["mode"] = mode
+    marker = directory / "unrelated"
+    marker.write_text("keep")
+    real_after = Deadline.after
+    monkeypatch.setattr(
+        native.Deadline, "after", lambda nominal: real_after(2 if nominal == 30 else nominal)
+    )
+    with pytest.raises(native.EnrollmentError, match=reason) as caught:
+        native.probe_controller(digest, directory)
+    assert "fixture-private-output" not in str(caught.value)
+    assert state["children"][0].returncode is not None
+    assert not state["endpoints"][0].parent.exists()
+    assert marker.read_text() == "keep"
+    assert list(directory.iterdir()) == [marker]
+
+
+def test_controller_launch_failure_removes_private_directory(controller, monkeypatch):
+    _, digest, directory = controller
+    owned = []
+
+    def unavailable(endpoint, identity):
+        owned.append(endpoint.parent)
+        raise OSError("fixture-private-output")
+
+    monkeypatch.setattr(native, "start_controller", unavailable)
+    with pytest.raises(native.EnrollmentError, match="controller-unavailable") as caught:
+        native.probe_controller(digest, directory)
+    assert "fixture-private-output" not in str(caught.value)
+    assert owned and not owned[0].exists() and not list(directory.iterdir())
+
+
+def test_real_fault_matrix_preserves_refusals_statistics_and_unrelated_resources(controller):
+    state, digest, directory = controller
+    marker = directory / "unrelated"
+    marker.write_text("keep")
+    unrelated = subprocess.Popen(
+        [sys.executable, "-c", "import time;time.sleep(60)"], start_new_session=True
+    )
+    results = []
+    try:
+        native.controller_faults(digest, directory, results)
+        assert [case["scenario"] for case in results] == [
+            "socket-setup",
+            "controller-loss",
+            "control-stall",
+        ]
+        assert [case["identity_verified_before_fault"] for case in results] == [False, True, True]
+        for case in results:
+            assert case["status"] == "failed" and case["expected_failure_verified"] is True
+            assert case["scope"] == "disposable-controller-injected-fault-only"
+            assert case["process_reaped"] and case["temporary_resources_removed"]
+            assert case["fault_injection_verified"] is True
+            assert valid_stats(case["statistics"])
+            assert case["statistics"]["scope"] == "process-excludes-children"
+        assert all(child.returncode is not None for child in state["children"])
+        assert all(not endpoint.parent.exists() for endpoint in state["endpoints"])
+        assert marker.read_text() == "keep" and list(directory.iterdir()) == [marker]
+        assert unrelated.poll() is None
+    finally:
+        unrelated.terminate()
+        unrelated.wait(timeout=watchdog(5))
+
+
+def test_cleanup_failure_cannot_be_accepted_as_an_expected_fault(controller, monkeypatch):
+    state, digest, directory = controller
+    real_stop = native.stop_controller
+
+    def failed_cleanup(process):
+        real_stop(process)
+        raise native.EnrollmentError("controller-cleanup", "controlled-cleanup-failure")
+
+    monkeypatch.setattr(native, "stop_controller", failed_cleanup)
+    results = []
+    with pytest.raises(native.EnrollmentError, match="required-failure-proof-missing"):
+        native.controller_faults(digest, directory, results)
+    assert len(results) == 1 and not results[0]["expected_failure_verified"]
+    assert results[0]["status"] == "failed"
+    assert results[0]["problem"]["stage"] == "controller-cleanup"
+    assert valid_stats(results[0]["statistics"])
+    assert state["children"][0].returncode is not None and not list(directory.iterdir())
+
+
+def test_group_identity_mismatch_never_signals_an_unrelated_group(controller, monkeypatch):
+    state, digest, directory = controller
+    real_getpgid = native.os.getpgid
+    real_stop = native.stop_controller
+    unrelated = subprocess.Popen(
+        [sys.executable, "-c", "import time;time.sleep(60)"], start_new_session=True
+    )
+    signalled_groups = []
+    real_killpg = native.os.killpg
+
+    def killpg(group, sig):
+        signalled_groups.append(group)
+        return real_killpg(group, sig)
+
+    def mismatched_stop(process):
+        monkeypatch.setattr(native.os, "getpgid", lambda pid: unrelated.pid)
+        return real_stop(process)
+
+    monkeypatch.setattr(native.os, "killpg", killpg)
+    monkeypatch.setattr(native, "stop_controller", mismatched_stop)
+    try:
+        with pytest.raises(native.EnrollmentError, match="process-group-mismatch"):
+            native.probe_controller(digest, directory)
+        assert unrelated.poll() is None
+        assert signalled_groups == []
+        assert state["children"][0].returncode is not None and not list(directory.iterdir())
+    finally:
+        monkeypatch.setattr(native.os, "getpgid", real_getpgid)
+        unrelated.terminate()
+        unrelated.wait(timeout=watchdog(5))
+
+
+def test_unresponsive_owned_group_is_force_killed_and_reaped(tmp_path):
+    ready = tmp_path / "ready"
+    process = subprocess.Popen(
+        [
+            sys.executable,
+            "-c",
+            "import signal,sys,time;from pathlib import Path;signal.signal(signal.SIGTERM,signal.SIG_IGN);Path(sys.argv[1]).touch();time.sleep(60)",
+            str(ready),
+        ],
+        start_new_session=True,
+    )
+    try:
+        deadline = Deadline.after(10)
+        while not ready.exists():
+            native.controller_remaining(deadline)
+            native.time.sleep(min(0.02, native.controller_remaining(deadline)))
+        native.stop_controller(process)
+        assert process.returncode == -signal.SIGKILL
+        with pytest.raises(ProcessLookupError):
+            os.kill(process.pid, 0)
+        with pytest.raises(ProcessLookupError):
+            os.killpg(process.pid, 0)
+    finally:
+        if process.returncode is None:
+            process.kill()
+            process.wait(timeout=watchdog(5))
+
+
+def test_required_fault_failure_returns_failed_enrollment_and_original_statistics(
+    controller, monkeypatch, tmp_path
+):
+    _, digest, directory = controller
+    source = {"commit": "a" * 40, "clean": True, "fingerprint": "b" * 64}
+    monkeypatch.setattr(native, "enroll", lambda *args, **kwargs: {})
+    monkeypatch.setattr(native, "source_identity", lambda: source)
+    monkeypatch.setattr(native, "provision", lambda: {"binary_sha256": digest})
+    monkeypatch.setenv("RUNNER_TEMP", str(directory))
+    real_stop = native.stop_controller
+    calls = 0
+
+    def selected_failure(process):
+        nonlocal calls
+        calls += 1
+        real_stop(process)
+        if calls == 2:
+            raise native.EnrollmentError("controller-cleanup", "controlled-cleanup-failure")
+
+    monkeypatch.setattr(native, "stop_controller", selected_failure)
+    output = tmp_path / "report.json"
+    assert native.main(["--github-hosted-only", "--output", str(output)]) == 1
+    report = json.loads(output.read_text())
+    assert report["status"] == "failed"
+    assert report["problem"] == {
+        "stage": "controller-faults",
+        "reason": "required-failure-proof-missing",
+    }
+    assert report["controller_faults"][0]["problem"]["stage"] == "controller-cleanup"
+    assert not report["controller_faults"][0]["expected_failure_verified"]
+    assert valid_stats(report["statistics"])
+    assert valid_stats(report["controller_faults"][0]["statistics"])
+    assert report["source_before"] == report["source_after"] == source
+    assert not any(
+        report[key] for key in ("guest_booted", "native_tools_qualified", "production_qualified")
+    )
+
+
+def test_an_unexpected_success_in_a_selected_failure_case_blocks_the_matrix(
+    controller, monkeypatch
+):
+    state, digest, directory = controller
+    real_command = native.Qmp.command
+
+    def command(self, name):
+        if name == "query-status" and native.child_exited(state["children"][-1]):
+            return {}
+        return real_command(self, name)
+
+    monkeypatch.setattr(native.Qmp, "command", command)
+    results = []
+    with pytest.raises(native.EnrollmentError, match="required-failure-proof-missing"):
+        native.controller_faults(digest, directory, results)
+    assert len(results) == 2
+    assert results[0]["expected_failure_verified"]
+    assert results[1]["status"] == "passed" and not results[1]["expected_failure_verified"]
+    assert "problem" not in results[1]
+    assert valid_stats(results[1]["statistics"])
+    assert all(child.returncode is not None for child in state["children"])
+    assert not list(directory.iterdir())
+
+
+def test_failed_fault_injection_cannot_supply_an_expected_controller_loss(controller, monkeypatch):
+    state, digest, directory = controller
+    real_kill = native.os.kill
+
+    def kill(pid, sig):
+        if sig == signal.SIGKILL and pid == state["children"][-1].pid:
+            raise PermissionError("fixture-private-output")
+        return real_kill(pid, sig)
+
+    monkeypatch.setattr(native.os, "kill", kill)
+    results = []
+    with pytest.raises(native.EnrollmentError, match="required-failure-proof-missing"):
+        native.controller_faults(digest, directory, results)
+    assert len(results) == 2 and results[0]["expected_failure_verified"]
+    assert results[1]["problem"] == {
+        "stage": "controller-probe",
+        "reason": "controller-unavailable",
+    }
+    assert not results[1]["fault_injection_verified"]
+    assert not results[1]["expected_failure_verified"]
+    assert valid_stats(results[1]["statistics"])
+    assert "fixture-private-output" not in json.dumps(results)
+    assert all(child.returncode is not None for child in state["children"])
+    assert not list(directory.iterdir())

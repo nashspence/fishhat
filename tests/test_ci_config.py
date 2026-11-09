@@ -92,6 +92,7 @@ class WorkflowSafety(unittest.TestCase):
         self.assertEqual(job["env"]["CHECK_PURPOSES"], "validation-tooling")
         self.assertIn("no guest or native owner qualification", job["env"]["CHECK_SCOPE"])
         self.assertIn("paused TCG/QMP identities", job["env"]["CHECK_SCOPE"])
+        self.assertIn("owned-controller fault cleanup", job["env"]["CHECK_SCOPE"])
         regressions = self.workflow["jobs"]["watchdog-regressions"]["steps"]
         self.assertIn("tests/test_native_linux_controller.py", str(regressions))
         commands = "\n".join(step.get("run", "") for step in job["steps"])
