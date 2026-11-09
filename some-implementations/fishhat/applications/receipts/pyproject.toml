@@ -9,7 +9,7 @@ description = "Fishhat optional-reporting reference scaffold"
 requires-python = ">=3.11"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
-dependencies = ["fishhat-contracts==0.1.0.dev0", "alembic>=1.18,<2", "SQLAlchemy>=2.0,<3"]
+dependencies = ["fishhat-contracts==0.1.0.dev0", "alembic>=1.18,<2", "sqlalchemy>=2.0,<3"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
