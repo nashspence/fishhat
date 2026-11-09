@@ -20,7 +20,8 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
-from scripts.native_linux_images import GuestInputError, guest_inputs
+from scripts.native_linux_guest import GuestBootError, guest_session, provision_tools
+from scripts.native_linux_images import GuestInputError, GuestInputs, guest_inputs
 from scripts.run_stats import RunStats, valid_stats
 from scripts.validation import source_identity
 from scripts.validation_timeouts import Deadline, current, invocation, watchdog
@@ -410,10 +411,18 @@ class Qmp:
 def owned_controller(
     temporary: Path,
     launch: Callable[[Path, str], subprocess.Popen[bytes]] | None = None,
+    *,
+    enrollment: str | None = None,
 ) -> Iterator[tuple[subprocess.Popen[bytes], Path, str]]:
+    if enrollment is not None:
+        try:
+            if str(uuid.UUID(enrollment)) != enrollment:
+                raise ValueError("noncanonical enrollment")
+        except (ValueError, TypeError, AttributeError):
+            raise EnrollmentError("controller-identity", "invalid-fixture-enrollment") from None
     with tempfile.TemporaryDirectory(prefix="fhc-", dir=temporary) as directory:
         endpoint = Path(directory) / "qmp"
-        identity = str(uuid.uuid4())
+        identity = enrollment if enrollment is not None else str(uuid.uuid4())
         process = (start_controller if launch is None else launch)(endpoint, identity)
         try:
             yield process, endpoint, identity
@@ -594,6 +603,46 @@ def controller_faults(binary_sha256: str, temporary: Path, results: list[dict[st
                 raise ValueError("invalid required controller fault statistics")
 
 
+def boot_guest(
+    inputs: GuestInputs,
+    tools: dict[str, Any],
+    binary_sha256: str,
+    temporary: Path,
+    report: dict[str, Any],
+) -> None:
+    with stage("guest-session"):
+        with guest_session(inputs, temporary, run, tools, QEMU, report) as guest:
+            with owned_controller(temporary, guest.launch, enrollment=inputs.enrollment) as (
+                process,
+                endpoint,
+                identity,
+            ):
+                with stage("guest-controller"):
+                    with controller_channel(
+                        process, endpoint, identity, binary_sha256, Deadline.after(30)
+                    ) as qmp:
+                        guest.listener()
+                        if qmp.command("cont") != {}:
+                            raise GuestBootError("guest-start-rejected")
+                        report["controller_verified"] = {
+                            "instance_uuid": identity,
+                            "qmp_version": {"major": 8, "minor": 2, "micro": 2},
+                            "executable_sha256": binary_sha256,
+                            "unix_peer_verified": True,
+                            "machine": "pc-q35-8.2",
+                            "accelerator": "tcg",
+                            "memory_mib": 2048,
+                            "vcpus": 2,
+                            "started_from_verified_prelaunch": True,
+                        }
+                with stage("guest-readiness"):
+                    guest.ready(
+                        lambda deadline: controller_executable(process, binary_sha256, deadline)
+                    )
+                with stage("guest-refusals"):
+                    guest.refusals()
+
+
 @invocation
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -609,7 +658,7 @@ def main(argv: list[str] | None = None) -> int:
     metrics = RunStats()
     report: dict[str, Any] = {
         "format": "fishhat-native-controller-enrollment/v1",
-        "scope": "disposable-controller-and-guest-inputs-only",
+        "scope": "disposable-authenticated-guest-fixture-only",
         "fixture_enrollment": str(uuid.uuid4()),
         "guest_booted": False,
         "native_tools_qualified": False,
@@ -632,6 +681,7 @@ def main(argv: list[str] | None = None) -> int:
             Path(os.environ["RUNNER_TEMP"]),
             report["controller_faults"],
         )
+        report["guest_tools"] = provision_tools(run, root_run, stage)
         report["guest_inputs"] = {}
         with stage("guest-inputs"):
             with guest_inputs(
@@ -640,12 +690,20 @@ def main(argv: list[str] | None = None) -> int:
                 run,
                 stage,
                 report["guest_inputs"],
-            ):
-                pass
+            ) as inputs:
+                report["guest"] = {}
+                boot_guest(
+                    inputs,
+                    report["guest_tools"],
+                    report["controller"]["binary_sha256"],
+                    Path(os.environ["RUNNER_TEMP"]),
+                    report["guest"],
+                )
         report["status"] = "passed"
-    except (EnrollmentError, GuestInputError) as error:
+    except (EnrollmentError, GuestInputError, GuestBootError) as error:
         status = 1
         report.update(status="failed", problem={"stage": error.stage, "reason": error.reason})
+    report["guest_booted"] = report.get("guest", {}).get("boot_verified") is True
     report["source_after"] = source_identity()
     if status == 0 and report["source_after"] != before:
         status = 1
