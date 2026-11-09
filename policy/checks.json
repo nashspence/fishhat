@@ -57,7 +57,7 @@
       ],
       "requiredness_authority": "release.toml#/governance/required_checks",
       "result_authority": "GitHub job conclusion; classification supplies no execution proof",
-      "scope": "explicitly enrolled disposable controller dependency, paused TCG/QMP identities and owned-controller fault cleanup and authenticated guest boot/SSH identity and owned disks; no native owner qualification",
+      "scope": "explicitly enrolled disposable controller dependency, paused TCG/QMP identities and owned-controller fault cleanup and authenticated guest boot/SSH identity and owned disks, isolated guest filesystems/account permissions and partial-storage setup cleanup; no native owner qualification",
       "work_sha256": "b3bae2df1cf8bf3af0c8ecc6c1792ff1186c7ab78655cd30e7b14f19ff3257b7"
     },
     ".github/workflows/ci.yml:native-prerequisites": {
@@ -146,7 +146,7 @@
       "requiredness_authority": "release.toml#/governance/required_checks",
       "result_authority": "GitHub job conclusion; classification supplies no execution proof",
       "scope": "watchdog propagation and negative progress/cleanup regressions",
-      "work_sha256": "05408139d0b006da50ad057b0108aca1d9a22f2204d2fb0ecf800d3d7188dffa"
+      "work_sha256": "f23627377d5c7799a11eded0d9b0930f1db11d826d3089db483b16d2f785240a"
     },
     ".github/workflows/ci.yml:watchdogs": {
       "authority": ".github/workflows/ci.yml",
@@ -10074,6 +10074,10 @@
       "purpose_sha256": "0d86443cbbfea01ae4b1ec4ca3d75a3a94cd3c25f92b78f4a07a4ff1a5c8ca41"
     },
     {
+      "node": "tests/test_native_linux_guest.py::test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps[storage-refused]",
+      "purpose_sha256": "0d86443cbbfea01ae4b1ec4ca3d75a3a94cd3c25f92b78f4a07a4ff1a5c8ca41"
+    },
+    {
       "node": "tests/test_native_linux_guest.py::test_exact_guest_profile_rejects_contradictory_or_untyped_identity[accounts-value14]",
       "purpose_sha256": "0d86443cbbfea01ae4b1ec4ca3d75a3a94cd3c25f92b78f4a07a4ff1a5c8ca41"
     },
@@ -10134,6 +10138,22 @@
       "purpose_sha256": "0d86443cbbfea01ae4b1ec4ca3d75a3a94cd3c25f92b78f4a07a4ff1a5c8ca41"
     },
     {
+      "node": "tests/test_native_linux_guest.py::test_expired_storage_deadline_refuses_before_dispatch",
+      "purpose_sha256": "0d86443cbbfea01ae4b1ec4ca3d75a3a94cd3c25f92b78f4a07a4ff1a5c8ca41"
+    },
+    {
+      "node": "tests/test_native_linux_guest.py::test_guarded_storage_command_respects_caller_and_shared_deadline[operation-budget]",
+      "purpose_sha256": "0d86443cbbfea01ae4b1ec4ca3d75a3a94cd3c25f92b78f4a07a4ff1a5c8ca41"
+    },
+    {
+      "node": "tests/test_native_linux_guest.py::test_guarded_storage_command_respects_caller_and_shared_deadline[remaining-deadline]",
+      "purpose_sha256": "0d86443cbbfea01ae4b1ec4ca3d75a3a94cd3c25f92b78f4a07a4ff1a5c8ca41"
+    },
+    {
+      "node": "tests/test_native_linux_guest.py::test_guarded_storage_command_respects_caller_and_shared_deadline[scaled-remaining-deadline]",
+      "purpose_sha256": "0d86443cbbfea01ae4b1ec4ca3d75a3a94cd3c25f92b78f4a07a4ff1a5c8ca41"
+    },
+    {
       "node": "tests/test_native_linux_guest.py::test_guest_helper_package_identity_is_exact_before_boot[architecture]",
       "purpose_sha256": "0d86443cbbfea01ae4b1ec4ca3d75a3a94cd3c25f92b78f4a07a4ff1a5c8ca41"
     },
@@ -10163,6 +10183,22 @@
     },
     {
       "node": "tests/test_native_linux_guest.py::test_invalid_authentication_identity_or_endpoint_cannot_report_success[wrong-pin-accepted-wrong-host-key-accepted]",
+      "purpose_sha256": "0d86443cbbfea01ae4b1ec4ca3d75a3a94cd3c25f92b78f4a07a4ff1a5c8ca41"
+    },
+    {
+      "node": "tests/test_native_linux_guest.py::test_invalid_guarded_command_budget_refuses_before_dispatch[infinite]",
+      "purpose_sha256": "0d86443cbbfea01ae4b1ec4ca3d75a3a94cd3c25f92b78f4a07a4ff1a5c8ca41"
+    },
+    {
+      "node": "tests/test_native_linux_guest.py::test_invalid_guarded_command_budget_refuses_before_dispatch[negative]",
+      "purpose_sha256": "0d86443cbbfea01ae4b1ec4ca3d75a3a94cd3c25f92b78f4a07a4ff1a5c8ca41"
+    },
+    {
+      "node": "tests/test_native_linux_guest.py::test_invalid_guarded_command_budget_refuses_before_dispatch[not-a-number]",
+      "purpose_sha256": "0d86443cbbfea01ae4b1ec4ca3d75a3a94cd3c25f92b78f4a07a4ff1a5c8ca41"
+    },
+    {
+      "node": "tests/test_native_linux_guest.py::test_invalid_guarded_command_budget_refuses_before_dispatch[zero]",
       "purpose_sha256": "0d86443cbbfea01ae4b1ec4ca3d75a3a94cd3c25f92b78f4a07a4ff1a5c8ca41"
     },
     {
@@ -10400,6 +10436,326 @@
     {
       "node": "tests/test_native_linux_images.py::test_substituted_directory_cannot_be_removed_as_owned",
       "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_admission_mount_permission_and_final_observations",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_cleanup_acceptance_follows_all_resource_owners_and_independent_endpoint_observer[base]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_cleanup_acceptance_follows_all_resource_owners_and_independent_endpoint_observer[disks]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_cleanup_acceptance_follows_all_resource_owners_and_independent_endpoint_observer[endpoint]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_cleanup_acceptance_follows_all_resource_owners_and_independent_endpoint_observer[guest-private]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_cleanup_acceptance_follows_all_resource_owners_and_independent_endpoint_observer[none]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_cleanup_acceptance_follows_all_resource_owners_and_independent_endpoint_observer[process]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_cleanup_acceptance_follows_all_resource_owners_and_independent_endpoint_observer[still-listening]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_cleanup_acceptance_follows_all_resource_owners_and_independent_endpoint_observer[storage]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_cleanup_endpoint_requires_actual_refusal_on_the_exact_loopback_listener[bool-port]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_cleanup_endpoint_requires_actual_refusal_on_the_exact_loopback_listener[closed]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_cleanup_endpoint_requires_actual_refusal_on_the_exact_loopback_listener[large-port]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_cleanup_endpoint_requires_actual_refusal_on_the_exact_loopback_listener[observer-error]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_cleanup_endpoint_requires_actual_refusal_on_the_exact_loopback_listener[open]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_cleanup_endpoint_requires_actual_refusal_on_the_exact_loopback_listener[timeout-result]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_cleanup_endpoint_requires_actual_refusal_on_the_exact_loopback_listener[unowned]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_cleanup_endpoint_requires_actual_refusal_on_the_exact_loopback_listener[wrong-address]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_cleanup_endpoint_requires_actual_refusal_on_the_exact_loopback_listener[zero-port]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_controlled_complete_storage_run_keeps_teardown_unclaimed",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_false_mounted_observation_cannot_qualify_permissions[device]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_false_mounted_observation_cannot_qualify_permissions[filesystem]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_false_mounted_observation_cannot_qualify_permissions[mode]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_false_mounted_observation_cannot_qualify_permissions[quota]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_false_mounted_observation_cannot_qualify_permissions[root-inode]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_false_mounted_observation_cannot_qualify_permissions[uid]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_false_mounted_observation_cannot_qualify_permissions[uuid]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_invalid_device_admission_never_dispatches_format[device-type]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_invalid_device_admission_never_dispatches_format[duplicate-device]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_invalid_device_admission_never_dispatches_format[duplicate-number]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_invalid_device_admission_never_dispatches_format[duplicate-path]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_invalid_device_admission_never_dispatches_format[extra]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_invalid_device_admission_never_dispatches_format[mount-root]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_invalid_device_admission_never_dispatches_format[packages]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_invalid_device_admission_never_dispatches_format[serial]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_invalid_device_admission_never_dispatches_format[size]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_main_cannot_pass_storage_cleanup_or_fault_failure_and_preserves_statistics[cleanup]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_main_cannot_pass_storage_cleanup_or_fault_failure_and_preserves_statistics[fault]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_main_cannot_pass_storage_cleanup_or_fault_failure_and_preserves_statistics[none]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_missing_identity_or_admission_refuses_before_dispatch",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_partial_setup_fault_retains_statistics_and_never_formats_data",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_partial_storage_fault_requires_exact_failure_and_cleanup_without_changing_unrelated_state[expected]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_partial_storage_fault_requires_exact_failure_and_cleanup_without_changing_unrelated_state[no-failure]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_partial_storage_fault_requires_exact_failure_and_cleanup_without_changing_unrelated_state[not-injected]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_partial_storage_fault_requires_exact_failure_and_cleanup_without_changing_unrelated_state[unclean]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_partial_storage_fault_requires_exact_failure_and_cleanup_without_changing_unrelated_state[unrelated-changed]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_partial_storage_fault_requires_exact_failure_and_cleanup_without_changing_unrelated_state[unverified-boot]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_partial_storage_fault_requires_exact_failure_and_cleanup_without_changing_unrelated_state[wrong-failure]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_production_formatter_is_reached_only_after_both_admissions",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_production_permission_probe_observes_separate_accounts[admin]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_production_permission_probe_observes_separate_accounts[peer]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_production_permission_probe_refuses_false_identity_or_denial[boot]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_production_permission_probe_refuses_false_identity_or_denial[enrollment]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_production_permission_probe_refuses_false_identity_or_denial[inode]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_production_permission_probe_refuses_false_identity_or_denial[uid]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_production_permission_probe_refuses_false_identity_or_denial[wrong-denial]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_production_probe_reads_only_owned_devices",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_production_program_refuses_before_any_mutation[account]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_production_program_refuses_before_any_mutation[boot]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_production_program_refuses_before_any_mutation[device-number]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_production_program_refuses_before_any_mutation[enrollment]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_production_program_refuses_before_any_mutation[existing-root]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_production_program_refuses_before_any_mutation[formatted]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_production_program_refuses_before_any_mutation[mounted]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_production_program_refuses_before_any_mutation[not-block]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_production_program_refuses_before_any_mutation[not-root]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_production_program_refuses_before_any_mutation[packages]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_production_program_refuses_before_any_mutation[partition-table]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_production_program_refuses_before_any_mutation[partitions]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_production_program_refuses_before_any_mutation[readonly]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_production_program_refuses_before_any_mutation[serial]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_production_program_refuses_before_any_mutation[size]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_raw_filesystem_probe_bypasses_udev_and_refuses_foreign_or_ambiguous_identity[device]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_raw_filesystem_probe_bypasses_udev_and_refuses_foreign_or_ambiguous_identity[duplicate]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_raw_filesystem_probe_bypasses_udev_and_refuses_foreign_or_ambiguous_identity[malformed]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_raw_filesystem_probe_bypasses_udev_and_refuses_foreign_or_ambiguous_identity[missing]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_raw_filesystem_probe_bypasses_udev_and_refuses_foreign_or_ambiguous_identity[partition-entry]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_raw_filesystem_probe_bypasses_udev_and_refuses_foreign_or_ambiguous_identity[partition-table]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_raw_filesystem_probe_bypasses_udev_and_refuses_foreign_or_ambiguous_identity[type]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_raw_filesystem_probe_bypasses_udev_and_refuses_foreign_or_ambiguous_identity[uuid]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
+    },
+    {
+      "node": "tests/test_native_linux_storage.py::test_raw_filesystem_probe_bypasses_udev_and_refuses_foreign_or_ambiguous_identity[valid]",
+      "purpose_sha256": "5c306db7f9548886f347d4e3df408aadfa9136a855c2aa50c877538906d79efd"
     },
     {
       "node": "tests/test_native_smoke.py::test_account_failure_preserves_primary_exit_and_reports_cleanup[cleanup-failure]",
