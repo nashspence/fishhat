@@ -60,7 +60,11 @@ def test_onboarding_documents_preserve_other_path_and_content_checks(tmp_path, m
 
 def test_markdown_links_receive_destination_checks():
     assert check_text("README.md", "[reference](https://" + "private-domain.internal/path)")
+    assert check_text(
+        "source.py", "https://" + "cloud-images.ubuntu.com.private-domain.internal/path"
+    )
     for url in (
+        "https://cloud-images.ubuntu.com/",
         "https://docs.ansible.com/projects/ansible/latest/getting_started/basic_concepts.html",
         "https://pyinfra.com/",
         "https://kamal-deploy.org/",

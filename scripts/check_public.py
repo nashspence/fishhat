@@ -54,6 +54,7 @@ ALLOWED_DOMAINS = {
     "www.rfc-editor.org",
     "pypi.org",
     "files.pythonhosted.org",
+    "cloud-images.ubuntu.com",
     "localhost",
     "www.apache.org",
     "apache.org",
