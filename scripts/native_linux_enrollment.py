@@ -25,6 +25,7 @@ from scripts.native_linux_guest import GuestBootError, guest_session, provision_
 from scripts.native_linux_images import GuestInputError, GuestInputs, guest_inputs
 from scripts.native_linux_processes import qualify_process_kill
 from scripts.native_linux_storage import GuestStorageError, qualify_storage
+from scripts.native_linux_transport import qualify_transport_loss
 from scripts.run_stats import RunStats, valid_stats
 from scripts.validation import source_identity
 from scripts.validation_timeouts import Deadline, current, invocation, watchdog
@@ -652,6 +653,9 @@ def boot_guest(
                 report["process_kill"] = {}
                 with stage("guest-process-kill"):
                     qualify_process_kill(guest, stage, temporary, report["process_kill"])
+                report["transport_loss"] = {}
+                with stage("guest-transport-loss"):
+                    qualify_transport_loss(guest, stage, temporary, report["transport_loss"])
 
 
 def endpoint_closed(endpoint: dict[str, Any]) -> None:
@@ -690,6 +694,8 @@ def verify_guest_cleanup(guest: dict[str, Any], inputs: dict[str, Any]) -> None:
     guest["storage"]["resources_destroyed_with_guest"] = True
     if isinstance(guest.get("process_kill"), dict):
         guest["process_kill"]["resources_destroyed_with_guest"] = True
+    if isinstance(guest.get("transport_loss"), dict):
+        guest["transport_loss"]["resources_destroyed_with_guest"] = True
 
 
 def guest_storage_faults(

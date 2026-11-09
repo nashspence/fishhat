@@ -102,6 +102,7 @@ class WorkflowSafety(unittest.TestCase):
         self.assertIn("isolated guest filesystems/account permissions", job["env"]["CHECK_SCOPE"])
         self.assertIn("partial-storage setup cleanup", job["env"]["CHECK_SCOPE"])
         self.assertIn("tests/test_native_linux_processes.py", str(regressions))
+        self.assertIn("tests/test_native_linux_transport.py", str(regressions))
         self.assertIn("owned guest process kill/reaping", job["env"]["CHECK_SCOPE"])
         commands = "\n".join(step.get("run", "") for step in job["steps"])
         self.assertIn("scripts.native_linux_enrollment --github-hosted-only", commands)
