@@ -418,7 +418,7 @@ class Guest:
         if listening_endpoints(self.process.pid) != [("127.0.0.1", self.port)]:
             raise GuestBootError("owned-loopback-endpoint-mismatch")
 
-    def ssh(
+    def ssh_command(
         self,
         remote: str,
         *,
@@ -426,7 +426,7 @@ class Guest:
         hosts: str = "known-hosts",
         deadline: Deadline | None = None,
         nominal: float = 15,
-    ) -> str:
+    ) -> tuple[list[str], Deadline]:
         if not math.isfinite(nominal) or nominal <= 0:
             raise GuestBootError("invalid-guest-command-budget")
         self.verify_tools()
@@ -478,6 +478,20 @@ class Guest:
             "127.0.0.1",
             remote,
         ]
+        return arguments, deadline
+
+    def ssh(
+        self,
+        remote: str,
+        *,
+        role: str = "admin",
+        hosts: str = "known-hosts",
+        deadline: Deadline | None = None,
+        nominal: float = 15,
+    ) -> str:
+        arguments, deadline = self.ssh_command(
+            remote, role=role, hosts=hosts, deadline=deadline, nominal=nominal
+        )
         remaining = deadline.remaining()
         if remaining <= 0:
             raise GuestBootError("guest-readiness-deadline")

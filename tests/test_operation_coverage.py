@@ -193,6 +193,7 @@ def test_report_requires_current_complete_executed_proofs(monkeypatch, tmp_path)
         "native_linux_guest.py",
         "native_linux_storage.py",
         "native_linux_processes.py",
+        "native_linux_transport.py",
     ):
         shutil.copyfile(ROOT / "scripts" / helper, tmp_path / "scripts" / helper)
     folder = tmp_path / "artifacts/validation"
