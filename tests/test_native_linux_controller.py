@@ -10,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -195,15 +196,22 @@ def test_executing_binary_must_match_selected_package_identity(controller):
 
 def test_kernel_unix_peer_must_be_the_owned_child(controller, monkeypatch):
     state, digest, directory = controller
-    unpack = native.struct.unpack
+    structs = native.struct
+    unpack = structs.unpack
+    formats = []
 
     def different_peer(format, data):
+        formats.append(format)
         pid, uid, gid = unpack(format, data)
         return pid + 1, uid, gid
 
-    monkeypatch.setattr(native.struct, "unpack", different_peer)
+    monkeypatch.setattr(native, "struct", SimpleNamespace(unpack=different_peer))
+    # An unrelated parallel transport must retain its original packet decoding.
+    packet = structs.pack("!bii", 4, 11, 0)
+    assert structs.unpack("!bii", packet) == (4, 11, 0)
     with pytest.raises(native.EnrollmentError, match="control-peer-mismatch"):
         native.probe_controller(digest, directory)
+    assert formats == ["3i"]
     assert state["children"][0].returncode is not None
     assert not list(directory.iterdir())
 

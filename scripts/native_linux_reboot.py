@@ -327,9 +327,18 @@ def new_boot(
         try:
             value = guest.observe(deadline)
         except RuntimeError as error:
-            if not command_failed(error, 255):
+            if command_failed(error, 255):
+                observation = {"transport_outcome": "unobserved", "exit_status": 255}
+            elif (
+                getattr(error, "stage", None) == "guest-ssh"
+                and getattr(error, "reason", None) == "observation-deadline"
+            ):
+                # This call only reads identity. Its timeout supplies no boot
+                # outcome; retry that read within the original shared deadline.
+                observation = {"transport_outcome": "unobserved", "reason": "observation-deadline"}
+            else:
                 raise
-            evidence["observations"].append({"transport_outcome": "unobserved", "exit_status": 255})
+            evidence["observations"].append(observation)
         else:
             evidence["observations"].append({"identity": value})
             require(type(value.get("cloud_init_complete")) is bool, "invalid-reboot-readiness")

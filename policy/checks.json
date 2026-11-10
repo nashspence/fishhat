@@ -11271,227 +11271,247 @@
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_canary_prepare_refuses_foreign_storage_before_creating_state[boot]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_canary_prepare_refuses_foreign_storage_before_creating_state[capacity]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_canary_prepare_refuses_foreign_storage_before_creating_state[device]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_canary_prepare_refuses_foreign_storage_before_creating_state[enrollment]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_canary_prepare_refuses_foreign_storage_before_creating_state[existing-directory]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_canary_prepare_refuses_foreign_storage_before_creating_state[mounted-target]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_canary_prepare_refuses_foreign_storage_before_creating_state[parent-device]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_canary_prepare_refuses_foreign_storage_before_creating_state[parent-mode]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_canary_prepare_refuses_foreign_storage_before_creating_state[parent-owner]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_canary_prepare_refuses_foreign_storage_before_creating_state[partition-parent]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_canary_prepare_refuses_foreign_storage_before_creating_state[root-readonly]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_canary_prepare_refuses_foreign_storage_before_creating_state[serial]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_canary_program_reads_back_fsyncs_and_reobserves_exact_persistent_disk_state",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_host_custody_pins_existing_owned_inputs_controller_and_private_endpoint",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_host_custody_refuses_replaced_unprotected_or_foreign_resources[base]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_host_custody_refuses_replaced_unprotected_or_foreign_resources[directory]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_host_custody_refuses_replaced_unprotected_or_foreign_resources[disk]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_host_custody_refuses_replaced_unprotected_or_foreign_resources[group]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_host_custody_refuses_replaced_unprotected_or_foreign_resources[identity]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_host_custody_refuses_replaced_unprotected_or_foreign_resources[listener]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_host_custody_refuses_replaced_unprotected_or_foreign_resources[socket]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_inspect_refuses_changed_root_canary_without_mutating_it[bytes]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_inspect_refuses_changed_root_canary_without_mutating_it[denied]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_inspect_refuses_changed_root_canary_without_mutating_it[directory]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_inspect_refuses_changed_root_canary_without_mutating_it[disk]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_inspect_refuses_changed_root_canary_without_mutating_it[filesystem]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_inspect_refuses_changed_root_canary_without_mutating_it[inode]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_inspect_refuses_changed_root_canary_without_mutating_it[links]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_inspect_refuses_changed_root_canary_without_mutating_it[mode]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_inspect_refuses_changed_root_canary_without_mutating_it[mount]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_inspect_refuses_changed_root_canary_without_mutating_it[owner]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_inspect_refuses_changed_root_canary_without_mutating_it[symlink]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_invalid_preparation_keeps_original_reply_and_never_requests_reboot[content]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_invalid_preparation_keeps_original_reply_and_never_requests_reboot[image]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_invalid_preparation_keeps_original_reply_and_never_requests_reboot[owner]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_invalid_preparation_keeps_original_reply_and_never_requests_reboot[shared-disks]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_new_boot_profile_observation_does_not_rebind_existing_mutation_admission",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_reboot_coordinator_requires_independent_new_boot_canary_custody_and_scoped_stats[request-acknowledged]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_reboot_coordinator_requires_independent_new_boot_canary_custody_and_scoped_stats[request-reply-lost]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_reboot_failures_preserve_old_admission_original_observations_and_stats[error]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
+    },
+    {
+      "node": "tests/test_native_linux_reboot.py::test_reboot_failures_preserve_old_admission_original_observations_and_stats[foreign-timeout]",
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_reboot_failures_preserve_old_admission_original_observations_and_stats[foreign]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_reboot_failures_preserve_old_admission_original_observations_and_stats[guard-accepted]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
+    },
+    {
+      "node": "tests/test_native_linux_reboot.py::test_reboot_failures_preserve_old_admission_original_observations_and_stats[guard-refused]",
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_reboot_failures_preserve_old_admission_original_observations_and_stats[host]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_reboot_failures_preserve_old_admission_original_observations_and_stats[malformed]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
+    },
+    {
+      "node": "tests/test_native_linux_reboot.py::test_reboot_failures_preserve_old_admission_original_observations_and_stats[request-timeout]",
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_reboot_failures_preserve_old_admission_original_observations_and_stats[request]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
+    },
+    {
+      "node": "tests/test_native_linux_reboot.py::test_reboot_failures_preserve_old_admission_original_observations_and_stats[ssh-unavailable]",
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_reboot_failures_preserve_old_admission_original_observations_and_stats[stuck]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_reboot_missing_required_stats_cannot_qualify",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
+    },
+    {
+      "node": "tests/test_native_linux_reboot.py::test_reboot_query_timeouts_exhaust_original_shared_budget_without_replaying_mutation",
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_reboot_rejects_inexact_prepared_or_fresh_canary_evidence[boot_id]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_reboot_rejects_inexact_prepared_or_fresh_canary_evidence[content]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_reboot_rejects_inexact_prepared_or_fresh_canary_evidence[denied]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_reboot_rejects_inexact_prepared_or_fresh_canary_evidence[enrollment]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_reboot_rejects_inexact_prepared_or_fresh_canary_evidence[fsync]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_reboot_rejects_inexact_prepared_or_fresh_canary_evidence[image]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_reboot_rejects_inexact_prepared_or_fresh_canary_evidence[inode]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_reboot_rejects_inexact_prepared_or_fresh_canary_evidence[mode]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_reboot.py::test_reboot_rejects_inexact_prepared_or_fresh_canary_evidence[probe]",
-      "purpose_sha256": "4e8335fbfa52a62e17b2e9b24a83395e5490c8400486221a590aebe22ab0ea11"
+      "purpose_sha256": "99a83b5e7c155b0acb2ad2df9ea0076124e2532823efb37ff96e474a20c64d74"
     },
     {
       "node": "tests/test_native_linux_storage.py::test_admission_mount_permission_and_final_observations",
