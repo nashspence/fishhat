@@ -33,7 +33,7 @@ CHECK_PURPOSE = {
         "scripts/native_linux_storage.py",
         "scripts/native_linux_enrollment.py",
     ],
-    "scope": "controlled execution of fixed quota preparation, kernel-allocation worker and independent observer, foreign/stale/mounted admission refusal, exact selected-profile errno preservation, matching outside-project allocation and global space evidence, finite fail-safe allocation, canaries, teardown evidence and mandatory measurement scope",
+    "scope": "controlled execution of fixed quota preparation, kernel-allocation worker and independent observer, foreign/stale/mounted admission refusal, exact selected-profile errno preservation, matching outside-project allocation and global space evidence, finite fail-safe allocation, exact release/reuse and idempotent known release, canaries, teardown evidence and mandatory measurement scope",
     "relationship": "no-product-claim",
     "reason": "All guest filesystem, quota, kernel, process and SSH facilities are substituted. Passing tooling checks cannot qualify actual native operations or product owners; real enrolled main-only evidence remains required.",
     "claims": [],
@@ -224,6 +224,13 @@ class Harness:
         if project:
             self.q["used_bytes"] = v.st_blocks * 512
 
+    def truncate(self, fd, size):
+        assert size == 0 and self.projects[self.fds[fd]] == self.c["project_id"]
+        self.events.append("truncate")
+        value = self.meta[self.fds[fd]]
+        value.st_size = value.st_blocks = 0
+        self.q["used_bytes"] = 0
+
     def ioctl(self, fd, operation, buffer):
         assert operation == 0x801C581F and len(buffer) == 28
         path = self.fds[fd]
@@ -316,6 +323,7 @@ class Harness:
         operating_system.chown = self.chown
         operating_system.fstat = lambda fd: copy.copy(self.meta[self.fds[fd]])
         operating_system.posix_fallocate = self.allocate
+        operating_system.ftruncate = self.truncate
         operating_system.pwrite = lambda fd, data, offset: len(data)
         operating_system.write = self.write
         operating_system.fsync = lambda fd: self.events.append("fsync")
@@ -673,16 +681,24 @@ def test_exhaustion_cleanup_flag_is_recorded_only_after_whole_guest_owner_observ
         "storage": {},
         "endpoint": {},
         "exhaustion": {"resources_destroyed_with_guest": False},
+        "allocation_release_reuse": {
+            "resources_destroyed_with_guest": False,
+            "per_allocation_destruction_qualified": False,
+        },
     }
     inputs = {"temporary_resources_removed": True, "base_preserved": True}
     monkeypatch.setattr(native, "endpoint_closed", lambda endpoint: None)
     native.verify_guest_cleanup(value, inputs)
     assert value["exhaustion"]["resources_destroyed_with_guest"] is True
+    assert value["allocation_release_reuse"]["resources_destroyed_with_guest"] is True
+    assert value["allocation_release_reuse"]["per_allocation_destruction_qualified"] is False
     value["exhaustion"]["resources_destroyed_with_guest"] = False
+    value["allocation_release_reuse"]["resources_destroyed_with_guest"] = False
     value["process_reaped"] = False
     with pytest.raises(native.GuestStorageError):
         native.verify_guest_cleanup(value, inputs)
     assert value["exhaustion"]["resources_destroyed_with_guest"] is False
+    assert value["allocation_release_reuse"]["resources_destroyed_with_guest"] is False
 
 
 def test_project_limit_crossing_includes_allocated_blocks_beyond_logical_size():
@@ -741,3 +757,186 @@ def test_independent_proof_requires_matching_outside_allocation_and_available_fi
             controlled_guest(h, alter), lambda name: nullcontext(), tmp_path, report
         )
     assert report["status"] == "failed" and valid_stats(report["statistics"])
+
+
+def test_exact_release_frees_capacity_and_repeated_observation_does_not_repeat_effect():
+    h = Harness()
+    h.prepare()
+    h.fill()
+    first = h.invoke("release")
+    exhaustion.validate_release(first, h.c, "release", already_empty=False)
+    assert first["allocation_after"]["size"] == first["allocation_after"]["allocated_bytes"] == 0
+    assert h.events.count("truncate") == 1
+    assert first["release_effect"] == {"syscall": "ftruncate", "length": 0, "fsynced": True}
+    h.events.clear()
+    observed = h.invoke("inspect-release")
+    repeated = h.invoke("release")
+    for value, mode in ((observed, "inspect-release"), (repeated, "release")):
+        exhaustion.validate_release(value, h.c, mode, already_empty=True)
+        assert value["allocation_before"] == value["allocation_after"] == first["allocation_after"]
+        assert value["release_effect"] == {"syscall": None, "length": None, "fsynced": False}
+    assert "truncate" not in h.events and "fallocate" not in h.events
+
+
+def test_fresh_reuse_runs_same_inode_and_project_as_nonroot_then_releases_again():
+    h = Harness()
+    h.prepare()
+    original = h.fill()["allocation"]
+    h.invoke("release")
+    reused = h.invoke("reuse")
+    exhaustion.validate_common(reused, h.c, "reuse")
+    exhaustion.validate_allocation(reused["allocation"], h.c, "reuse")
+    value = reused["allocation"]
+    assert value["inode"] == original["inode"] and value["project_id"] == original["project_id"]
+    assert value["size_before"] == 0 and value["size_after"] == exhaustion.CHUNK
+    assert value["failure"] is None and value["actor"] == {"uid": 1000, "gid": 1000}
+    h.c["allocation"] = value
+    final = h.invoke("release")
+    exhaustion.validate_release(final, h.c, "release", already_empty=False)
+    assert final["quota"]["used_bytes"] == 0
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        "inode",
+        "project",
+        "directory",
+        "actor",
+        "boot",
+        "mounted",
+        "hardlink",
+        "mode",
+        "size",
+        "blocks",
+    ],
+)
+def test_release_refuses_foreign_stale_or_changed_state_before_truncating(change):
+    h = Harness()
+    h.prepare()
+    h.fill()
+    allocation = h.meta[h.c["target"] + "/allocation"]
+    if change == "inode":
+        h.c["allocation"]["inode"] += 1
+    elif change == "project":
+        h.bad_attributes = True
+    elif change == "directory":
+        h.meta[h.c["target"]].st_ino += 1
+    elif change == "actor":
+        h.c["actor"] = {"uid": 0, "gid": 0}
+    elif change == "boot":
+        h.c["boot_id"] = str(uuid.uuid4())
+    elif change == "mounted":
+        h.mounted = True
+    elif change == "hardlink":
+        allocation.st_nlink = 2
+    elif change == "mode":
+        allocation.st_mode = stat.S_IFREG | 0o644
+    elif change == "size":
+        allocation.st_size -= 1
+    else:
+        allocation.st_blocks += 1
+    h.events.clear()
+    with pytest.raises((ValueError, subprocess.CalledProcessError)):
+        h.invoke("release")
+    assert "truncate" not in h.events and "fallocate" not in h.events
+
+
+@pytest.mark.parametrize("mode", ["inspect-release", "reuse"])
+def test_unreleased_allocation_cannot_qualify_release_observation_or_reuse(mode):
+    h = Harness()
+    h.prepare()
+    h.fill()
+    h.events.clear()
+    with pytest.raises(ValueError):
+        h.invoke(mode)
+    assert "truncate" not in h.events and "fallocate" not in h.events
+
+
+def source_exhaustion(h, tmp_path):
+    source = {}
+    guest = controlled_guest(h)
+    exhaustion.qualify_exhaustion(guest, lambda name: nullcontext(), tmp_path, source)
+    guest.report["exhaustion"] = source
+    return guest
+
+
+def test_release_coordinator_observes_capacity_retries_reuses_and_releases_exact_resource(tmp_path):
+    h = Harness()
+    guest = source_exhaustion(h, tmp_path)
+    report = {}
+    exhaustion.qualify_release_reuse(guest, lambda name: nullcontext(), tmp_path, report)
+    assert report["status"] == "passed"
+    assert [v["scenario"] for v in report["cases"]] == [
+        "release",
+        "independent-release",
+        "repeat-release",
+        "fresh-reuse",
+        "final-release",
+        "final-observer",
+    ]
+    assert all(v["status"] == "passed" and valid_stats(v["statistics"]) for v in report["cases"])
+    assert valid_stats(report["statistics"]) and report["unrelated_host_canary_preserved"]
+    assert report["resources_destroyed_with_guest"] is False
+    assert report["per_allocation_destruction_qualified"] is False
+    assert h.events.count("truncate") == 2 and not list(tmp_path.iterdir())
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        "inode",
+        "remaining-capacity",
+        "released-size",
+        "retry-effect",
+        "reuse-error",
+        "reuse-identity",
+        "missing-canary",
+    ],
+)
+def test_release_coordinator_rejects_inexact_witness_and_retains_failed_case_stats(
+    change, tmp_path
+):
+    h = Harness()
+    guest = source_exhaustion(h, tmp_path)
+    report = {}
+
+    def alter(value):
+        if value["mode"] == "reuse":
+            if change == "reuse-error":
+                value["allocation"]["failure"] = {"errno": 28, "name": "ENOSPC"}
+            elif change == "reuse-identity":
+                value["allocation"]["inode"] += 1
+            return
+        if value["mode"] != "inspect-release":
+            return
+        if change == "inode":
+            value["allocation_after"]["inode"] += 1
+        elif change == "remaining-capacity":
+            value["quota"]["used_bytes"] = exhaustion.CAPACITY
+        elif change == "released-size":
+            value["allocation_after"]["size"] = 1
+        elif change == "retry-effect":
+            value["already_empty"] = False
+        elif change == "missing-canary":
+            value["guest_canaries_preserved"] = 1
+
+    controlled_guest(h, alter)
+    with pytest.raises(exhaustion.GuestExhaustionError):
+        exhaustion.qualify_release_reuse(guest, lambda name: nullcontext(), tmp_path, report)
+    assert report["status"] == "failed" and report["cases"][-1]["status"] == "failed"
+    assert valid_stats(report["statistics"]) and all(
+        valid_stats(v["statistics"]) for v in report["cases"]
+    )
+    assert (
+        report["unrelated_host_canary_preserved"] and not report["resources_destroyed_with_guest"]
+    )
+    assert not list(tmp_path.iterdir())
+
+
+def test_release_requires_current_verified_exhaustion_and_preserves_failed_statistics(tmp_path):
+    h = Harness()
+    report = {}
+    with pytest.raises(exhaustion.GuestExhaustionError, match="exhaustion-not-verified"):
+        exhaustion.qualify_release_reuse(h.guest, lambda name: nullcontext(), tmp_path, report)
+    assert not h.events and valid_stats(report["statistics"]) and report["status"] == "failed"

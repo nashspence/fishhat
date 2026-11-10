@@ -36,7 +36,7 @@ c = json.loads(sys.argv[1])
 def require(value):
     if not value:
         raise ValueError("exhaustion-worker-refused")
-require(c["mode"] in ("fill", "probe"))
+require(c["mode"] in ("fill", "probe", "reuse"))
 require(os.getuid() == os.geteuid() == c["actor"]["uid"] >= 1000)
 require(os.getgid() == os.getegid() == c["actor"]["gid"] and not os.getgroups())
 status = dict(row.split(":", 1) for row in pathlib.Path("/proc/self/status").read_text().splitlines())
@@ -56,8 +56,10 @@ try:
     require(v.st_dev == c["directory"]["device"])
     attributes = struct.unpack("=5I8s", fcntl.ioctl(fd, 0x801c581f, bytes(28)))
     require(attributes[3] == c["project_id"])
-    if c["mode"] == "probe":
+    if c["mode"] != "fill":
         require(v.st_ino == c["allocation_inode"])
+    if c["mode"] == "reuse":
+        require(v.st_size == 0)
     before = v.st_size
     offset = before
     failure = None
@@ -114,7 +116,7 @@ def directory(path):
     v = path.lstat()
     require(stat.S_ISDIR(v.st_mode))
     return {"device": v.st_dev, "inode": v.st_ino, "uid": v.st_uid, "gid": v.st_gid, "mode": stat.S_IMODE(v.st_mode)}
-require(os.geteuid() == 0 and c["mode"] in ("prepare", "fill", "observe"))
+require(os.geteuid() == 0 and c["mode"] in ("prepare", "fill", "observe", "release", "inspect-release", "reuse"))
 require(str(uuid.UUID(c["task"])) == c["task"])
 root = pathlib.Path("/run/fhs-" + uuid.UUID(c["enrollment"]).hex)
 target = root / "data" / ("exhaustion-" + uuid.UUID(c["task"]).hex)
@@ -174,7 +176,7 @@ def check_identity():
 def worker(mode):
     w = {k: c[k] for k in ("actor", "enrollment", "boot_id", "project_id", "chunk_bytes", "seconds")}
     w.update(mode=mode, target=str(target), directory=c["identity"]["directory"], outside=str(root / "data" / ("outside-" + uuid.UUID(c["task"]).hex)))
-    if mode == "probe":
+    if mode in ("probe", "reuse"):
         w["allocation_inode"] = c["allocation"]["inode"]
     result = json.loads(command(["/usr/bin/python3", "-I", "-S", "-c", c["worker"], json.dumps(w, sort_keys=True)], user=admin.pw_uid, group=admin.pw_gid, extra_groups=[], umask=0o077, start_new_session=True, cwd=target))
     require(result["actor"] == c["actor"] and result["supplementary_groups"] == [] and result["effective_capabilities"] == 0)
@@ -189,6 +191,33 @@ def worker(mode):
     finally:
         os.close(fd)
     return result
+def allocation_snapshot(fd):
+    v = os.fstat(fd)
+    require(stat.S_ISREG(v.st_mode) and v.st_nlink == 1 and v.st_uid == admin.pw_uid and v.st_gid == admin.pw_gid and stat.S_IMODE(v.st_mode) == 0o600)
+    require(v.st_dev == c["identity"]["directory"]["device"] and v.st_ino == c["allocation"]["inode"])
+    attrs = struct.unpack("=5I8s", fcntl.ioctl(fd, 0x801c581f, bytes(28)))
+    require(attrs[3] == c["project_id"])
+    return {"device": v.st_dev, "inode": v.st_ino, "uid": v.st_uid, "gid": v.st_gid, "mode": stat.S_IMODE(v.st_mode), "project_id": attrs[3], "size": v.st_size, "allocated_bytes": v.st_blocks * 512}
+def release_allocation():
+    before = check_identity()
+    fd = os.open(target / "allocation", (os.O_RDWR if c["mode"] == "release" else os.O_RDONLY) | os.O_NOFOLLOW)
+    try:
+        original = allocation_snapshot(fd)
+        if original["size"] != 0:
+            require(original["size"] == c["allocation"]["size_after"] and original["allocated_bytes"] == c["allocation"]["allocated_bytes"])
+        already_empty = original["size"] == 0
+        if c["mode"] == "release" and not already_empty:
+            os.ftruncate(fd, 0)
+            os.fsync(fd)
+        after = allocation_snapshot(fd)
+        require(after["size"] == 0 and after["allocated_bytes"] <= original["allocated_bytes"])
+        if not already_empty:
+            require(after["allocated_bytes"] + c["chunk_bytes"] <= original["allocated_bytes"])
+    finally:
+        os.close(fd)
+    value = check_identity()
+    require(value["used_bytes"] <= before["used_bytes"] and value["used_bytes"] + c["chunk_bytes"] <= c["capacity_bytes"])
+    return {"identity": c["identity"], "quota_before": before, "quota": value, "allocation_before": original, "allocation_after": after, "already_empty": already_empty, "release_effect": {"syscall": "ftruncate" if c["mode"] == "release" and not already_empty else None, "length": 0 if c["mode"] == "release" and not already_empty else None, "fsynced": c["mode"] == "release" and not already_empty}}
 if c["mode"] == "prepare":
     before = quota()
     require(before["hard_bytes"] == before["soft_bytes"] == before["used_bytes"] == before["inodes"] == before["inode_hard"] == before["inode_soft"] == 0)
@@ -228,9 +257,11 @@ if c["mode"] == "prepare":
     require(value["present"] and value["hard_bytes"] == c["capacity_bytes"] and value["soft_bytes"] == value["used_bytes"] == 0 and value["inodes"] == 1)
     identity = {"enrollment": c["enrollment"], "boot_id": c["boot_id"], "task": c["task"], "target": str(target), "project_id": c["project_id"], "directory": directory(target)}
     result = {"identity": identity, "quota_before": before, "quota": value, "refusals_verified": refusals}
+elif c["mode"] in ("release", "inspect-release"):
+    result = release_allocation()
 else:
     before = check_identity()
-    result = {"identity": c["identity"], "quota_before": before, "allocation": worker("fill" if c["mode"] == "fill" else "probe"), "quota": check_identity()}
+    result = {"identity": c["identity"], "quota_before": before, "allocation": worker("fill" if c["mode"] == "fill" else "reuse" if c["mode"] == "reuse" else "probe"), "quota": check_identity()}
     if c["mode"] == "observe":
         # Independent control-plane progress is on the separate control disk.
         witness = root / "control" / ("exhaustion-witness-" + uuid.UUID(c["task"]).hex)
@@ -387,20 +418,31 @@ def validate_allocation(value: Any, c: dict[str, Any], mode: str) -> None:
         "exhaustion-allocation-mismatch",
     )
     failure = value.get("failure")
-    # Linux XFS project-quota reservation failures return ENOSPC. Preserve that
-    # actual errno; quota usage and a matching outside allocation establish scope.
-    require(
-        isinstance(failure, dict)
-        and failure
-        == {
-            "errno": 28,
-            "name": "ENOSPC",
-            "syscall": "posix_fallocate",
-            "offset": value["size_after"],
-            "length": CHUNK,
-        },
-        "expected-project-quota-enospc-not-observed",
-    )
+    if mode == "reuse":
+        require(
+            type(value.get("size_before")) is int
+            and value["size_before"] == 0
+            and value["size_after"] == CHUNK
+            and value["allocated_bytes"] >= CHUNK
+            and failure is None,
+            "fresh-allocation-reuse-not-observed",
+        )
+    else:
+        failure = value.get("failure")
+        # Linux XFS project-quota reservation failures return ENOSPC. Preserve that
+        # actual errno; quota usage and a matching outside allocation establish scope.
+        require(
+            isinstance(failure, dict)
+            and failure
+            == {
+                "errno": 28,
+                "name": "ENOSPC",
+                "syscall": "posix_fallocate",
+                "offset": value["size_after"],
+                "length": CHUNK,
+            },
+            "expected-project-quota-enospc-not-observed",
+        )
     image = value.get("executable")
     require(
         isinstance(image, dict)
@@ -568,3 +610,170 @@ def qualify_exhaustion(
         report["statistics"] = metrics.finish()
         if not valid_stats(report["statistics"]):
             raise ValueError("invalid required guest exhaustion statistics")
+
+
+def validate_release(
+    value: dict[str, Any], c: dict[str, Any], mode: str, *, already_empty: bool
+) -> None:
+    validate_common(value, c, mode)
+    require(
+        value["identity"] == c["identity"] and value.get("already_empty") is already_empty,
+        "release-observation-mismatch",
+    )
+    for name in ("allocation_before", "allocation_after"):
+        snapshot = value.get(name)
+        if not isinstance(snapshot, dict):
+            raise GuestExhaustionError("release-allocation-identity-mismatch")
+        expected = {
+            "device": c["identity"]["directory"]["device"],
+            "inode": c["allocation"]["inode"],
+            "uid": c["actor"]["uid"],
+            "gid": c["actor"]["gid"],
+            "mode": 0o600,
+            "project_id": c["project_id"],
+        }
+        for key, want in expected.items():
+            require(
+                type(snapshot.get(key)) is int and snapshot[key] == want,
+                "release-allocation-identity-mismatch",
+            )
+        for key in ("size", "allocated_bytes"):
+            require(
+                type(snapshot.get(key)) is int and snapshot[key] >= 0,
+                "release-allocation-state-mismatch",
+            )
+    mutated = mode == "release" and not already_empty
+    require(
+        value.get("release_effect")
+        == {
+            "syscall": "ftruncate" if mutated else None,
+            "length": 0 if mutated else None,
+            "fsynced": mutated,
+        }
+        and type(value["release_effect"]["fsynced"]) is bool,
+        "release-effect-observation-mismatch",
+    )
+    before, after = value["allocation_before"], value["allocation_after"]
+    require(
+        after["size"] == 0 and after["allocated_bytes"] <= before["allocated_bytes"],
+        "release-capacity-not-observed",
+    )
+    if already_empty:
+        require(before == after and before["size"] == 0, "release-retry-changed-allocation")
+    else:
+        require(
+            before["size"] == c["allocation"]["size_after"]
+            and before["allocated_bytes"] == c["allocation"]["allocated_bytes"]
+            and after["allocated_bytes"] + CHUNK <= before["allocated_bytes"],
+            "release-capacity-not-observed",
+        )
+    require(
+        value["quota"]["used_bytes"] <= value["quota_before"]["used_bytes"]
+        and value["quota"]["used_bytes"] + CHUNK <= CAPACITY,
+        "release-capacity-not-observed",
+    )
+
+
+def release_configuration(guest: Guest) -> dict[str, Any]:
+    c = configuration(guest)
+    source = guest.report.get("exhaustion", {})
+    require(
+        source.get("status") == "passed"
+        and source.get("enrollment") == c["enrollment"]
+        and source.get("boot_id") == c["boot_id"],
+        "exhaustion-not-verified",
+    )
+    c["identity"] = source["prepare"]["identity"]
+    c["allocation"] = source["fill"]["allocation"]
+    for name in ("task", "target", "project_id"):
+        c[name] = c["identity"][name]
+    validate_identity({"identity": c["identity"]}, c)
+    validate_allocation(c["allocation"], c, "fill")
+    return c
+
+
+def qualify_release_reuse(
+    guest: Guest,
+    progress: Callable[[str], AbstractContextManager[None]],
+    temporary: Path,
+    report: dict[str, Any],
+) -> None:
+    metrics = RunStats()
+    report.update(
+        status="failed",
+        scope="disposable-guest-known-allocation-release-reuse-only",
+        resources_destroyed_with_guest=False,
+        per_allocation_destruction_qualified=False,
+        unrelated_host_canary_preserved=False,
+        cases=[],
+    )
+    try:
+        c = release_configuration(guest)
+        report.update(
+            enrollment=c["enrollment"], boot_id=c["boot_id"], task=c["task"], identity=c["identity"]
+        )
+        deadline = Deadline.after(240)
+        with tempfile.TemporaryDirectory(prefix="fishhat-release-canary-", dir=temporary) as name:
+            canary = Path(name) / "unrelated"
+            contents = uuid.uuid4().bytes
+            canary.write_bytes(contents)
+            before = canary.lstat()
+            try:
+                phases = (
+                    ("release", "release", False),
+                    ("independent-release", "inspect-release", True),
+                    ("repeat-release", "release", True),
+                    ("fresh-reuse", "reuse", False),
+                    ("final-release", "release", False),
+                    ("final-observer", "inspect-release", True),
+                )
+                for scenario, mode, empty in phases:
+                    with progress("allocation-" + scenario):
+                        case: dict[str, Any] = {"scenario": scenario, "status": "failed"}
+                        report["cases"].append(case)
+                        observations = RunStats()
+                        try:
+                            value = invoke(guest, mode, c, deadline)
+                            case["observation"] = value
+                            if mode == "reuse":
+                                validate_common(value, c, mode)
+                                validate_allocation(value.get("allocation"), c, mode)
+                                require(
+                                    value["identity"] == c["identity"]
+                                    and value["allocation"]["inode"] == c["allocation"]["inode"]
+                                    and value["allocation"]["executable"]
+                                    == c["allocation"]["executable"]
+                                    and value["allocation"]["pid"] != c["allocation"]["pid"],
+                                    "reuse-allocation-identity-mismatch",
+                                )
+                                require(
+                                    value["quota"]["used_bytes"]
+                                    >= value["allocation"]["allocated_bytes"]
+                                    >= CHUNK,
+                                    "reuse-quota-observation-mismatch",
+                                )
+                                c["allocation"] = value["allocation"]
+                            else:
+                                validate_release(value, c, mode, already_empty=empty)
+                            case["status"] = "passed"
+                        finally:
+                            case["statistics"] = observations.finish()
+                            if not valid_stats(case["statistics"]):
+                                raise ValueError(
+                                    "invalid required allocation release case statistics"
+                                )
+            finally:
+                after = canary.lstat()
+                report["unrelated_host_canary_preserved"] = (
+                    before.st_dev,
+                    before.st_ino,
+                    before.st_mode,
+                ) == (after.st_dev, after.st_ino, after.st_mode) and canary.read_bytes() == contents
+                require(report["unrelated_host_canary_preserved"], "unrelated-host-canary-changed")
+        report["status"] = "passed"
+    except OSError:
+        raise GuestExhaustionError("release-observation-unavailable") from None
+    finally:
+        report["statistics"] = metrics.finish()
+        if not valid_stats(report["statistics"]):
+            raise ValueError("invalid required allocation release statistics")
