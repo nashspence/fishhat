@@ -36,7 +36,7 @@ CHECK_PURPOSE = {
         "scripts/native_linux_guest.py",
         "scripts/native_linux_enrollment.py",
     ],
-    "scope": "controlled execution of persistent-root canary admission/readback/fsync and disk identity queries, delayed new-boot observations with bounded read-only timeout recovery, exact host custody, original request acknowledgement/loss, stale/foreign command refusal, admission ordering, selected pre-admission observer interruption, independent whole-resource absence and required scoped statistics",
+    "scope": "controlled execution of persistent-root canary admission/readback/fsync and disk identity queries, delayed new-boot observations with bounded read-only timeout recovery and deterministic shared observation-budget exhaustion, exact host custody, original request acknowledgement/loss, stale/foreign command refusal, admission ordering, selected pre-admission observer interruption, independent whole-resource absence and required scoped statistics",
     "relationship": "no-product-claim",
     "reason": "Guest devices/filesystem/boot/SSH and controller observations are substituted. Unprivileged temporary paths, private sockets and short child processes challenge custody/absence guards only; no QEMU, native guest reboot, product continuity or writer authority is qualified.",
     "claims": [],
@@ -488,7 +488,7 @@ def controlled(monkeypatch):
         return {"pid": 42, "endpoint": "owned", "disks": "exact"}
 
     monkeypatch.setattr(reboot, "host_custody", custody)
-    monkeypatch.setattr(reboot.time, "sleep", lambda seconds: None)
+    monkeypatch.setattr(reboot, "time", SimpleNamespace(sleep=lambda seconds: None))
     return guest, calls
 
 
@@ -582,17 +582,40 @@ def test_reboot_failures_preserve_old_admission_original_observations_and_stats(
     else:
         guest.failure = failure
     if failure == "stuck":
-        monkeypatch.setattr(
-            reboot, "Deadline", SimpleNamespace(after=lambda nominal: Deadline.after(0.02))
-        )
+        budget = reboot.current().seconds(2)
+        remaining, budgets, sleeps = [budget], [], []
+        deadline = SimpleNamespace(remaining=lambda: remaining[0])
+
+        def after(nominal):
+            budgets.append(nominal)
+            return deadline
+
+        def sleep(seconds):
+            assert 0 < seconds <= remaining[0]
+            sleeps.append(seconds)
+            remaining[0] -= seconds
+
+        monkeypatch.setattr(reboot, "Deadline", SimpleNamespace(after=after))
+        monkeypatch.setattr(reboot.time, "sleep", sleep)
     report = {}
-    with pytest.raises((native.EnrollmentError, guests.GuestBootError)):
+    with pytest.raises((native.EnrollmentError, guests.GuestBootError)) as caught:
         reboot.qualify_reboot(guest, tmp_path / "qmp", lambda name: nullcontext(), tmp_path, report)
     assert report["status"] == "failed" and report["reboot_continuity_qualified"] is False
     assert guest.observed == guest.original and len(guest.requests) == 1
     assert report["phases"][-1]["status"] == "failed" and valid_stats(report["statistics"])
     assert all(valid_stats(p["statistics"]) for p in report["phases"])
     assert report["unrelated_host_canary_preserved"] and not list(tmp_path.iterdir())
+    if failure == "stuck":
+        assert isinstance(caught.value, reboot.GuestRebootError)
+        assert caught.value.reason == "new-boot-not-observed"
+        assert budgets == [300] and sum(sleeps) == budget and remaining == [0]
+        assert sleeps == [budget / 2, budget / 2]
+        assert guest.observations == ["stuck", "stuck"]
+        assert report["phases"][-1]["phase"] == "independent-boot"
+        assert report["phases"][-1]["observations"] == [
+            {"identity": guest.original},
+            {"identity": guest.original},
+        ]
     if failure in ("request", "request-timeout"):
         assert not guest.observations and report["phases"][-1]["phase"] == "request"
     elif failure in ("error", "foreign-timeout", "ssh-unavailable", "guard-refused"):
