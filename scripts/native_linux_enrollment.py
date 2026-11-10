@@ -21,6 +21,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
+from scripts.native_linux_exhaustion import qualify_exhaustion
 from scripts.native_linux_guest import GuestBootError, guest_session, provision_tools
 from scripts.native_linux_images import GuestInputError, GuestInputs, guest_inputs
 from scripts.native_linux_processes import qualify_process_kill
@@ -656,6 +657,9 @@ def boot_guest(
                 report["transport_loss"] = {}
                 with stage("guest-transport-loss"):
                     qualify_transport_loss(guest, stage, temporary, report["transport_loss"])
+                report["exhaustion"] = {}
+                with stage("guest-exhaustion"):
+                    qualify_exhaustion(guest, stage, temporary, report["exhaustion"])
 
 
 def endpoint_closed(endpoint: dict[str, Any]) -> None:
@@ -696,6 +700,8 @@ def verify_guest_cleanup(guest: dict[str, Any], inputs: dict[str, Any]) -> None:
         guest["process_kill"]["resources_destroyed_with_guest"] = True
     if isinstance(guest.get("transport_loss"), dict):
         guest["transport_loss"]["resources_destroyed_with_guest"] = True
+    if isinstance(guest.get("exhaustion"), dict):
+        guest["exhaustion"]["resources_destroyed_with_guest"] = True
 
 
 def guest_storage_faults(
