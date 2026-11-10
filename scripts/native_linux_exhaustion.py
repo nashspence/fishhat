@@ -83,10 +83,13 @@ if c["mode"] == "probe":
     outside = pathlib.Path(c["outside"])
     fd = os.open(outside, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
     try:
-        require(os.write(fd, b"unrelated-allocation\n") == 21)
+        attributes = struct.unpack("=5I8s", fcntl.ioctl(fd, 0x801c581f, bytes(28)))
+        require(attributes[3] == 0)
+        os.posix_fallocate(fd, 0, c["chunk_bytes"])
+        require(os.pwrite(fd, b"unrelated-allocation\n", 0) == 21)
         os.fsync(fd)
         v = os.fstat(fd)
-        result["outside_write"] = {"device": v.st_dev, "inode": v.st_ino, "uid": v.st_uid, "bytes": v.st_size, "fsynced": True}
+        result["outside_write"] = {"device": v.st_dev, "inode": v.st_ino, "uid": v.st_uid, "gid": v.st_gid, "bytes": v.st_size, "allocated_bytes": v.st_blocks * 512, "project_id": attributes[3], "syscall": "posix_fallocate", "offset": 0, "length": c["chunk_bytes"], "fsynced": True}
     finally:
         os.close(fd)
         outside.unlink()
@@ -242,6 +245,8 @@ else:
             os.close(fd)
             witness.unlink()
 admission(claim)
+space = os.statvfs(root / "data")
+result["filesystem_space"] = {"device": c["storage"]["state"]["data"]["directory"]["device"], "block_bytes": space.f_frsize, "available_blocks": space.f_bavail, "available_bytes": space.f_frsize * space.f_bavail}
 result.update(mode=c["mode"], guest_canaries_preserved=True, allocation_retained_until_guest_cleanup=True)
 print(json.dumps(result, sort_keys=True))
 """
@@ -382,19 +387,19 @@ def validate_allocation(value: Any, c: dict[str, Any], mode: str) -> None:
         "exhaustion-allocation-mismatch",
     )
     failure = value.get("failure")
-    # Preserve the actual observation in the report before checking the selected
-    # quota outcome. ENOSPC is never relabeled EDQUOT or accepted as quota proof.
+    # Linux XFS project-quota reservation failures return ENOSPC. Preserve that
+    # actual errno; quota usage and a matching outside allocation establish scope.
     require(
         isinstance(failure, dict)
         and failure
         == {
-            "errno": 122,
-            "name": "EDQUOT",
+            "errno": 28,
+            "name": "ENOSPC",
             "syscall": "posix_fallocate",
             "offset": value["size_after"],
             "length": CHUNK,
         },
-        "expected-kernel-edquot-not-observed",
+        "expected-project-quota-enospc-not-observed",
     )
     image = value.get("executable")
     require(
@@ -416,6 +421,49 @@ def validate_common(value: dict[str, Any], c: dict[str, Any], mode: str) -> None
     )
     validate_identity(value, c)
     validate_quota(value.get("quota"), c)
+    space = value.get("filesystem_space")
+    if not isinstance(space, dict):
+        raise GuestExhaustionError("filesystem-space-observation-missing")
+    for key in ("device", "block_bytes", "available_blocks", "available_bytes"):
+        require(
+            type(space.get(key)) is int and space[key] > 0, "filesystem-space-observation-missing"
+        )
+    require(
+        space["device"] == c["storage"]["state"]["data"]["directory"]["device"]
+        and space["available_bytes"] == space["block_bytes"] * space["available_blocks"]
+        and space["available_bytes"] > CHUNK,
+        "whole-filesystem-space-unavailable",
+    )
+
+
+def validate_rejection(value: dict[str, Any], c: dict[str, Any], mode: str) -> None:
+    validate_allocation(value.get("allocation"), c, mode)
+    require(
+        value["quota"]["used_bytes"] >= value["allocation"]["allocated_bytes"] > 0
+        and value["quota"]["used_bytes"] + value["allocation"]["failure"]["length"]
+        > value["quota"]["hard_bytes"],
+        "project-quota-bound-not-reached",
+    )
+
+
+def validate_outside(value: Any, c: dict[str, Any]) -> None:
+    validate_witness(value, c["identity"]["directory"]["device"], c["actor"]["uid"], CHUNK)
+    for key, expected in (
+        ("gid", c["actor"]["gid"]),
+        ("project_id", 0),
+        ("offset", 0),
+        ("length", CHUNK),
+    ):
+        require(
+            type(value.get(key)) is int and value[key] == expected,
+            "matching-outside-allocation-missing",
+        )
+    require(
+        value.get("syscall") == "posix_fallocate"
+        and type(value.get("allocated_bytes")) is int
+        and value["allocated_bytes"] >= CHUNK,
+        "matching-outside-allocation-missing",
+    )
 
 
 def validate_witness(value: Any, device: int, uid: int, length: int) -> None:
@@ -477,19 +525,13 @@ def qualify_exhaustion(
                     report["fill"] = filled
                     validate_common(filled, c, "fill")
                     require(filled["identity"] == c["identity"], "exhaustion-identity-changed")
-                    validate_allocation(filled.get("allocation"), c, "fill")
-                    require(
-                        filled["quota"]["used_bytes"]
-                        >= filled["allocation"]["allocated_bytes"]
-                        > 0,
-                        "exhaustion-usage-mismatch",
-                    )
+                    validate_rejection(filled, c, "fill")
                     c["allocation"] = filled["allocation"]
                 with progress("exhaustion-independent-observer"):
                     observed = invoke(guest, "observe", c, deadline)
                     report["observe"] = observed
                     validate_common(observed, c, "observe")
-                    validate_allocation(observed.get("allocation"), c, "probe")
+                    validate_rejection(observed, c, "probe")
                     require(
                         observed["identity"] == c["identity"]
                         and observed["quota"] == filled["quota"],
@@ -510,12 +552,7 @@ def qualify_exhaustion(
                         0,
                         17,
                     )
-                    validate_witness(
-                        observed["allocation"].get("outside_write"),
-                        c["identity"]["directory"]["device"],
-                        c["actor"]["uid"],
-                        21,
-                    )
+                    validate_outside(observed["allocation"].get("outside_write"), c)
             finally:
                 after = canary.lstat()
                 report["unrelated_host_canary_preserved"] = (
