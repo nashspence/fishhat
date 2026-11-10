@@ -55,9 +55,12 @@ admin, peer, expected, action = sys.argv[1:]
 fields = dict(line.split("=", 1) for line in pathlib.Path("/etc/os-release").read_text().splitlines() if "=" in line)
 packages = subprocess.check_output(["/usr/bin/dpkg-query", "-W", "-f", "${Package}\t${Version}\n", "linux-image-6.8.0-147-generic", "systemd", "openssh-server"], stderr=subprocess.DEVNULL, timeout=10).decode()
 accounts = {name: {"uid": pwd.getpwnam(name).pw_uid, "gid": pwd.getpwnam(name).pw_gid} for name in (admin, peer)}
-cloud = json.loads(pathlib.Path("/run/cloud-init/status.json").read_text()).get("v1", {})
-errors = sum(len(v.get("errors", [])) for v in cloud.values() if isinstance(v, dict))
-info = {"distribution": fields.get("ID", "").strip('"'), "distribution_version": fields.get("VERSION_ID", "").strip('"'), "machine": platform.machine(), "kernel": platform.release(), "pid1": pathlib.Path("/proc/1/comm").read_text().strip(), "cgroup_v2": pathlib.Path("/sys/fs/cgroup/cgroup.controllers").is_file(), "boot_id": str(uuid.UUID(pathlib.Path("/proc/sys/kernel/random/boot_id").read_text().strip())), "dmi_uuid": str(uuid.UUID(pathlib.Path("/sys/class/dmi/id/product_uuid").read_text().strip())), "enrollment": pathlib.Path("/etc/fishhat-fixture-enrollment").read_text().strip(), "instance_id": pathlib.Path("/var/lib/cloud/data/instance-id").read_text().strip(), "accounts": accounts, "ssh_principal": os.environ.get("SUDO_USER"), "packages": dict(line.split("\t", 1) for line in packages.splitlines()), "cloud_init_complete": pathlib.Path("/var/lib/cloud/instance/boot-finished").is_file() and not errors}
+try:
+    cloud = json.loads(pathlib.Path("/run/cloud-init/status.json").read_text()).get("v1", {})
+except FileNotFoundError:
+    cloud = None
+errors = sum(len(v.get("errors", [])) for v in cloud.values() if isinstance(v, dict)) if cloud is not None else 0
+info = {"distribution": fields.get("ID", "").strip('"'), "distribution_version": fields.get("VERSION_ID", "").strip('"'), "machine": platform.machine(), "kernel": platform.release(), "pid1": pathlib.Path("/proc/1/comm").read_text().strip(), "cgroup_v2": pathlib.Path("/sys/fs/cgroup/cgroup.controllers").is_file(), "boot_id": str(uuid.UUID(pathlib.Path("/proc/sys/kernel/random/boot_id").read_text().strip())), "dmi_uuid": str(uuid.UUID(pathlib.Path("/sys/class/dmi/id/product_uuid").read_text().strip())), "enrollment": pathlib.Path("/etc/fishhat-fixture-enrollment").read_text().strip(), "instance_id": pathlib.Path("/var/lib/cloud/data/instance-id").read_text().strip(), "accounts": accounts, "ssh_principal": os.environ.get("SUDO_USER"), "packages": dict(line.split("\t", 1) for line in packages.splitlines()), "cloud_init_complete": cloud is not None and pathlib.Path("/var/lib/cloud/instance/boot-finished").is_file() and not errors}
 if expected != "null" and info != json.loads(expected):
     sys.exit(73)
 if action != "null":
@@ -525,7 +528,8 @@ class Guest:
             raise GuestBootError("invalid-guest-observation")
         return value
 
-    def validate(self, value: dict[str, Any]) -> None:
+    def validate_profile(self, value: dict[str, Any]) -> None:
+        """Check measured profile facts without adopting a boot identity."""
         expected = {
             "distribution": "ubuntu",
             "distribution_version": "24.04",
@@ -566,6 +570,9 @@ class Guest:
                 raise ValueError("account identity")
         except (ValueError, KeyError, TypeError, AttributeError):
             raise GuestBootError("guest-identity-mismatch") from None
+
+    def validate(self, value: dict[str, Any]) -> None:
+        self.validate_profile(value)
         if self.observed is not None and value != self.observed:
             raise GuestBootError("guest-boot-or-identity-changed")
 

@@ -30,6 +30,7 @@ from scripts.native_linux_exhaustion import (
 from scripts.native_linux_guest import GuestBootError, guest_session, provision_tools
 from scripts.native_linux_images import GuestInputError, GuestInputs, guest_inputs
 from scripts.native_linux_processes import qualify_process_kill
+from scripts.native_linux_reboot import qualify_reboot
 from scripts.native_linux_storage import GuestStorageError, qualify_storage
 from scripts.native_linux_transport import qualify_transport_loss
 from scripts.run_stats import RunStats, valid_stats
@@ -653,6 +654,12 @@ def boot_guest(
                     )
                 with stage("guest-refusals"):
                     guest.refusals()
+                if not storage_failure:
+                    report["reboot"] = {}
+                    with stage("guest-reboot"):
+                        qualify_reboot(guest, endpoint, stage, temporary, report["reboot"])
+                    with stage("guest-refusals-after-reboot"):
+                        guest.refusals()
                 report["storage"] = {}
                 with stage("guest-storage"):
                     qualify_storage(guest, stage, report["storage"], inject_failure=storage_failure)
@@ -714,6 +721,8 @@ def verify_guest_cleanup(guest: dict[str, Any], inputs: dict[str, Any]) -> None:
     endpoint_closed(guest["endpoint"])
     guest["endpoint"]["closed_after_cleanup"] = True
     guest["storage"]["resources_destroyed_with_guest"] = True
+    if isinstance(guest.get("reboot"), dict):
+        guest["reboot"]["resources_destroyed_with_guest"] = True
     if isinstance(guest.get("process_kill"), dict):
         guest["process_kill"]["resources_destroyed_with_guest"] = True
     if isinstance(guest.get("transport_loss"), dict):
