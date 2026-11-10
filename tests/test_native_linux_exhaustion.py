@@ -33,7 +33,7 @@ CHECK_PURPOSE = {
         "scripts/native_linux_storage.py",
         "scripts/native_linux_enrollment.py",
     ],
-    "scope": "controlled execution of fixed quota preparation, kernel-allocation worker and independent observer, foreign/stale/mounted admission refusal, exact errno preservation, finite fail-safe allocation, canaries, teardown evidence and mandatory measurement scope",
+    "scope": "controlled execution of fixed quota preparation, kernel-allocation worker and independent observer, foreign/stale/mounted admission refusal, exact selected-profile errno preservation, matching outside-project allocation and global space evidence, finite fail-safe allocation, canaries, teardown evidence and mandatory measurement scope",
     "relationship": "no-product-claim",
     "reason": "All guest filesystem, quota, kernel, process and SSH facilities are substituted. Passing tooling checks cannot qualify actual native operations or product owners; real enrolled main-only evidence remains required.",
     "claims": [],
@@ -57,10 +57,12 @@ class Harness:
         self.root = "/run/fhs-" + uuid.UUID(self.enrollment).hex
         self.meta, self.files, self.fds, self.projects = {}, {}, {}, {}
         self.events = []
+        self.allocations = []
         self.uid = 0
         self.pid = 40
-        self.code = errno.EDQUOT
+        self.code = errno.ENOSPC
         self.enforced = True
+        self.allocation_overhead = 4096
         self.clock = 0
         self.next_fd = 100
         self.state = {"root": self.directory(self.root, 10, 1, 0, 0o711)}
@@ -211,12 +213,16 @@ class Harness:
 
     def allocate(self, fd, offset, length):
         self.events.append("fallocate")
-        if self.enforced and offset + length > self.q["hard_bytes"]:
+        self.allocations.append((self.fds[fd], offset, length))
+        project = self.projects[self.fds[fd]]
+        overhead = self.allocation_overhead if project else 0
+        if project and self.enforced and offset + length + overhead > self.q["hard_bytes"]:
             raise OSError(self.code, "controlled kernel error")
         v = self.meta[self.fds[fd]]
         v.st_size = offset + length
-        v.st_blocks = v.st_size // 512
-        self.q["used_bytes"] = v.st_size
+        v.st_blocks = (v.st_size + overhead) // 512
+        if project:
+            self.q["used_bytes"] = v.st_blocks * 512
 
     def ioctl(self, fd, operation, buffer):
         assert operation == 0x801C581F and len(buffer) == 28
@@ -313,6 +319,7 @@ class Harness:
         operating_system.pwrite = lambda fd, data, offset: len(data)
         operating_system.write = self.write
         operating_system.fsync = lambda fd: self.events.append("fsync")
+        operating_system.statvfs = lambda path: SimpleNamespace(f_frsize=4096, f_bavail=800000)
         operating_system.readlink = lambda path: "/usr/bin/python3.12"
         lib = SimpleNamespace(quotactl=lambda *args: self.quotactl(*args))
         return dict(
@@ -380,10 +387,10 @@ def test_fixed_workers_and_fresh_observer_record_real_syscall_result_and_preserv
     filled = h.fill()
     observed = h.invoke("observe")
     assert filled["allocation"]["failure"] == {
-        "errno": 122,
-        "name": "EDQUOT",
+        "errno": 28,
+        "name": "ENOSPC",
         "syscall": "posix_fallocate",
-        "offset": exhaustion.CAPACITY,
+        "offset": exhaustion.CAPACITY - exhaustion.CHUNK,
         "length": exhaustion.CHUNK,
     }
     assert observed["allocation"]["failure"] == filled["allocation"]["failure"]
@@ -392,11 +399,20 @@ def test_fixed_workers_and_fresh_observer_record_real_syscall_result_and_preserv
     assert observed["allocation"]["inode"] == filled["allocation"]["inode"]
     assert observed["control_write"]["device"] == 11 and observed["control_write"]["fsynced"]
     assert observed["allocation"]["outside_write"]["device"] == 12
+    outside = observed["allocation"]["outside_write"]
+    assert outside["project_id"] == 0 and outside["bytes"] == outside["length"] == exhaustion.CHUNK
+    assert (
+        outside["allocated_bytes"] >= exhaustion.CHUNK and outside["syscall"] == "posix_fallocate"
+    )
+    assert h.allocations[-1][0].startswith(h.root + "/data/outside-") and h.allocations[-1][1:] == (
+        0,
+        exhaustion.CHUNK,
+    )
     assert not any("outside-" in p or "witness-" in p for p in h.meta)
     assert observed["guest_canaries_preserved"]
 
 
-@pytest.mark.parametrize("code", [errno.ENOSPC, errno.EIO, errno.EACCES])
+@pytest.mark.parametrize("code", [errno.EDQUOT, errno.EIO, errno.EACCES])
 def test_fixed_worker_reports_actual_errno_without_relabeling(code):
     h = Harness()
     h.prepare()
@@ -404,7 +420,7 @@ def test_fixed_worker_reports_actual_errno_without_relabeling(code):
     value = h.fill()
     assert value["allocation"]["failure"]["errno"] == code
     assert value["allocation"]["failure"]["name"] == errno.errorcode[code]
-    with pytest.raises(exhaustion.GuestExhaustionError, match="edquot"):
+    with pytest.raises(exhaustion.GuestExhaustionError, match="enospc"):
         exhaustion.validate_allocation(value["allocation"], h.c, "fill")
 
 
@@ -552,7 +568,7 @@ def test_coordinator_runs_three_guarded_observations_and_preserves_host_canary_a
     assert (
         report["fill"]["allocation"]["failure"]["name"]
         == report["observe"]["allocation"]["failure"]["name"]
-        == "EDQUOT"
+        == "ENOSPC"
     )
 
 
@@ -581,7 +597,7 @@ def test_coordinator_cannot_accept_missing_forged_or_inexact_proof_and_keeps_sta
         if value["mode"] != "observe":
             return
         if change == "wrong-error":
-            value["allocation"]["failure"].update(errno=28, name="ENOSPC")
+            value["allocation"]["failure"].update(errno=122, name="EDQUOT")
         elif change == "missing-error":
             value["allocation"]["failure"] = None
         elif change == "wrong-type":
@@ -609,7 +625,7 @@ def test_coordinator_cannot_accept_missing_forged_or_inexact_proof_and_keeps_sta
     assert report["unrelated_host_canary_preserved"] and valid_stats(report["statistics"])
     assert not list(tmp_path.iterdir())
     if change == "wrong-error":
-        assert report["observe"]["allocation"]["failure"]["name"] == "ENOSPC"
+        assert report["observe"]["allocation"]["failure"]["name"] == "EDQUOT"
 
 
 @pytest.mark.parametrize("raw", ["[]", "null", "{bad"], ids=["list", "null", "invalid-json"])
@@ -667,3 +683,61 @@ def test_exhaustion_cleanup_flag_is_recorded_only_after_whole_guest_owner_observ
     with pytest.raises(native.GuestStorageError):
         native.verify_guest_cleanup(value, inputs)
     assert value["exhaustion"]["resources_destroyed_with_guest"] is False
+
+
+def test_project_limit_crossing_includes_allocated_blocks_beyond_logical_size():
+    h = Harness()
+    h.prepare()
+    filled = h.fill()
+    allocation = filled["allocation"]
+    assert allocation["size_after"] == 15 * exhaustion.CHUNK
+    assert allocation["allocated_bytes"] == allocation["size_after"] + 4096
+    assert filled["quota"]["used_bytes"] == allocation["allocated_bytes"]
+    assert (
+        filled["quota"]["hard_bytes"] - filled["quota"]["used_bytes"]
+        < allocation["failure"]["length"]
+    )
+    exhaustion.validate_rejection(filled, h.c, "fill")
+
+
+def test_errno_alone_cannot_prove_project_exhaustion_before_the_hard_bound():
+    h = Harness()
+    h.prepare()
+    filled = h.fill()
+    filled["quota"]["used_bytes"] = exhaustion.CHUNK
+    filled["allocation"]["allocated_bytes"] = exhaustion.CHUNK
+    with pytest.raises(exhaustion.GuestExhaustionError, match="bound-not-reached"):
+        exhaustion.validate_rejection(filled, h.c, "fill")
+
+
+@pytest.mark.parametrize(
+    "changed", ["project", "length", "syscall", "allocation", "global-space", "space-type"]
+)
+def test_independent_proof_requires_matching_outside_allocation_and_available_filesystem(
+    changed, tmp_path
+):
+    h = Harness()
+    report = {}
+
+    def alter(value):
+        if value["mode"] != "observe":
+            return
+        outside = value["allocation"]["outside_write"]
+        if changed == "project":
+            outside["project_id"] = value["identity"]["project_id"]
+        elif changed == "length":
+            outside["length"] = 21
+        elif changed == "syscall":
+            outside["syscall"] = "write"
+        elif changed == "allocation":
+            outside["allocated_bytes"] = 21
+        elif changed == "global-space":
+            value["filesystem_space"].update(available_blocks=1, available_bytes=4096)
+        else:
+            value["filesystem_space"]["available_blocks"] = True
+
+    with pytest.raises(exhaustion.GuestExhaustionError):
+        exhaustion.qualify_exhaustion(
+            controlled_guest(h, alter), lambda name: nullcontext(), tmp_path, report
+        )
+    assert report["status"] == "failed" and valid_stats(report["statistics"])

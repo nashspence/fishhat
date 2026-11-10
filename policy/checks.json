@@ -10063,179 +10063,211 @@
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_changed_live_resource_is_rejected_before_allocation[allocation-inode]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_changed_live_resource_is_rejected_before_allocation[directory]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_changed_live_resource_is_rejected_before_allocation[mount]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_changed_live_resource_is_rejected_before_allocation[project]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_changed_live_resource_is_rejected_before_allocation[quota-limit]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_changed_live_resource_is_rejected_before_allocation[quota-version]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_changed_live_resource_is_rejected_before_allocation[task]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_changed_or_foreign_preparation_refuses_before_any_mutation[boot_id]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_changed_or_foreign_preparation_refuses_before_any_mutation[device]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_changed_or_foreign_preparation_refuses_before_any_mutation[directory]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_changed_or_foreign_preparation_refuses_before_any_mutation[enrollment]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_changed_or_foreign_preparation_refuses_before_any_mutation[existing-target]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_changed_or_foreign_preparation_refuses_before_any_mutation[mounted-target]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_changed_or_foreign_preparation_refuses_before_any_mutation[quota-in-use]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_changed_or_foreign_preparation_refuses_before_any_mutation[uuid]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_coordinator_cannot_accept_missing_forged_or_inexact_proof_and_keeps_stats[control-write]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_coordinator_cannot_accept_missing_forged_or_inexact_proof_and_keeps_stats[malformed]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_coordinator_cannot_accept_missing_forged_or_inexact_proof_and_keeps_stats[missing-canary]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_coordinator_cannot_accept_missing_forged_or_inexact_proof_and_keeps_stats[missing-error]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_coordinator_cannot_accept_missing_forged_or_inexact_proof_and_keeps_stats[outside-write]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_coordinator_cannot_accept_missing_forged_or_inexact_proof_and_keeps_stats[same-process]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_coordinator_cannot_accept_missing_forged_or_inexact_proof_and_keeps_stats[wrong-error]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_coordinator_cannot_accept_missing_forged_or_inexact_proof_and_keeps_stats[wrong-inode]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_coordinator_cannot_accept_missing_forged_or_inexact_proof_and_keeps_stats[wrong-quota]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_coordinator_cannot_accept_missing_forged_or_inexact_proof_and_keeps_stats[wrong-type]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_coordinator_runs_three_guarded_observations_and_preserves_host_canary_and_stats",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
+    },
+    {
+      "node": "tests/test_native_linux_exhaustion.py::test_errno_alone_cannot_prove_project_exhaustion_before_the_hard_bound",
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_exhaustion_cleanup_flag_is_recorded_only_after_whole_guest_owner_observations",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_failed_storage_observation_still_leaves_owner_cleanup_responsibility_visible",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
+    },
+    {
+      "node": "tests/test_native_linux_exhaustion.py::test_fixed_worker_reports_actual_errno_without_relabeling[122]",
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_fixed_worker_reports_actual_errno_without_relabeling[13]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
-    },
-    {
-      "node": "tests/test_native_linux_exhaustion.py::test_fixed_worker_reports_actual_errno_without_relabeling[28]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_fixed_worker_reports_actual_errno_without_relabeling[5]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_fixed_workers_and_fresh_observer_record_real_syscall_result_and_preserve_custody",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
+    },
+    {
+      "node": "tests/test_native_linux_exhaustion.py::test_independent_proof_requires_matching_outside_allocation_and_available_filesystem[allocation]",
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
+    },
+    {
+      "node": "tests/test_native_linux_exhaustion.py::test_independent_proof_requires_matching_outside_allocation_and_available_filesystem[global-space]",
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
+    },
+    {
+      "node": "tests/test_native_linux_exhaustion.py::test_independent_proof_requires_matching_outside_allocation_and_available_filesystem[length]",
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
+    },
+    {
+      "node": "tests/test_native_linux_exhaustion.py::test_independent_proof_requires_matching_outside_allocation_and_available_filesystem[project]",
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
+    },
+    {
+      "node": "tests/test_native_linux_exhaustion.py::test_independent_proof_requires_matching_outside_allocation_and_available_filesystem[space-type]",
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
+    },
+    {
+      "node": "tests/test_native_linux_exhaustion.py::test_independent_proof_requires_matching_outside_allocation_and_available_filesystem[syscall]",
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_invalid_remote_reply_is_never_evidence[invalid-json]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_invalid_remote_reply_is_never_evidence[list]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_invalid_remote_reply_is_never_evidence[null]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_missing_enforcement_stops_at_finite_fixture_budget_and_cannot_qualify",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_missing_prerequisites_preserve_failed_stats_without_effects[guest]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_missing_prerequisites_preserve_failed_stats_without_effects[storage]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_prepare_refuses_all_foreign_stale_and_mounted_claims_before_effects",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
+    },
+    {
+      "node": "tests/test_native_linux_exhaustion.py::test_project_limit_crossing_includes_allocated_blocks_beyond_logical_size",
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_supervisor_checks_unprivileged_worker_against_independent_file_and_image[actor]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_supervisor_checks_unprivileged_worker_against_independent_file_and_image[capabilities]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_supervisor_checks_unprivileged_worker_against_independent_file_and_image[image]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_supervisor_checks_unprivileged_worker_against_independent_file_and_image[inode]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_supervisor_checks_unprivileged_worker_against_independent_file_and_image[size]",
-      "purpose_sha256": "ccc0ca6505de5b60865f7a201a6b21c7b2b47db6a59c526b3ccf8e79c5bcf497"
+      "purpose_sha256": "4e9e5d1c963100ff5b563f3fcbb0649933aa65836a06822299b9b22248ed627a"
     },
     {
       "node": "tests/test_native_linux_guest.py::test_base_is_reauthenticated_immediately_before_guest_launch",
