@@ -27,7 +27,7 @@ from scripts.run_stats import valid_stats
 CHECK_PURPOSE = {
     "purpose": "validation-tooling",
     "authority": ["scripts/native_linux_guest.py", "scripts/native_linux_enrollment.py"],
-    "scope": "private seed/key custody, exact SSH options, loopback process ownership and guest OS/kernel/boot/enrollment guards with required statistics and ordered storage/process/transport/exhaustion/release/cleanup/partial-quota handoffs",
+    "scope": "private seed/key custody, exact SSH options, loopback process ownership and guest OS/kernel/boot/enrollment guards with required statistics and ordered reboot/storage/process/transport/exhaustion/release/cleanup/partial-quota handoffs",
     "relationship": "no-product-claim",
     "reason": "Controlled tool/SSH observations and execution of the production remote guard against fake filesystem reads challenge tooling only. No image is downloaded, QEMU started or native owner qualified; actual guest behavior requires the separate enrolled main run.",
     "claims": [],
@@ -396,7 +396,17 @@ def test_ssh_uses_only_owned_keys_pins_and_loopback_without_ambient_configuratio
 
 @pytest.mark.parametrize(
     "attribute",
-    [None, "no-guard", "boot_id", "dmi_uuid", "enrollment", "kernel", "packages", "ssh_principal"],
+    [
+        None,
+        "no-guard",
+        "boot_id",
+        "dmi_uuid",
+        "enrollment",
+        "kernel",
+        "packages",
+        "ssh_principal",
+        "boot-readiness",
+    ],
 )
 def test_production_remote_guard_checks_identity_before_mutating_execution(
     fixture, monkeypatch, capsys, attribute
@@ -420,13 +430,15 @@ def test_production_remote_guard_checks_identity_before_mutating_execution(
             }
             original_read = Path.read_text
             original_isfile = Path.is_file
-            monkeypatch.setattr(
-                Path,
-                "read_text",
-                lambda path, *a, **k: (
-                    reads[str(path)] if str(path) in reads else original_read(path, *a, **k)
-                ),
-            )
+
+            def read(path, *args, **kwargs):
+                if attribute == "boot-readiness" and str(path) == "/run/cloud-init/status.json":
+                    raise FileNotFoundError("controlled-boot-readiness")
+                return (
+                    reads[str(path)] if str(path) in reads else original_read(path, *args, **kwargs)
+                )
+
+            monkeypatch.setattr(Path, "read_text", read)
             monkeypatch.setattr(
                 Path,
                 "is_file",
@@ -463,7 +475,7 @@ def test_production_remote_guard_checks_identity_before_mutating_execution(
             expected = copy.deepcopy(info)
             if attribute == "no-guard":
                 expected = None
-            elif attribute is not None:
+            elif attribute is not None and attribute != "boot-readiness":
                 expected[attribute] = "foreign"
             monkeypatch.setattr(
                 sys,
@@ -493,6 +505,10 @@ def test_production_remote_guard_checks_identity_before_mutating_execution(
                 with pytest.raises(SystemExit) as denied:
                     exec(guests.REMOTE, {})
                 assert denied.value.code == 73 and not executed
+            if attribute == "boot-readiness":
+                monkeypatch.setattr(sys, "argv", ["guard", admin, peer, "null", "null"])
+                exec(guests.REMOTE, {})
+                assert json.loads(capsys.readouterr().out)["cloud_init_complete"] is False
             assert not capsys.readouterr().out
             raise RuntimeError("controlled-end")
     assert report["status"] == "failed" and valid_stats(report["statistics"])
@@ -695,6 +711,13 @@ def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
         if storage_error:
             raise native.GuestStorageError("controlled-storage-refusal")
 
+    def reboot(guest, endpoint, progress, temporary, result):
+        assert guest is fixture["guest"] and result is report["reboot"]
+        assert endpoint.name == "qmp" and not storage_error
+        assert temporary == fixture["temporary"] and not storage_calls
+        events.append("reboot")
+
+    monkeypatch.setattr(native, "qualify_reboot", reboot)
     monkeypatch.setattr(native, "qualify_storage", qualify)
 
     def process_kill(guest, progress, temporary, result):
@@ -822,6 +845,7 @@ def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
         ]
     )
     assert events[:3] == ["launch", "identity-verified", "cont"] and events[-1] == "reaped"
+    assert ("reboot" in events) is (not refused and not storage_error)
     assert report["boot_verified"] is not refused
     assert report["status"] == ("failed" if refused or storage_error else "passed")
     assert (
