@@ -24,6 +24,7 @@ from typing import Any
 from scripts.native_linux_exhaustion import (
     qualify_allocation_cleanup,
     qualify_exhaustion,
+    qualify_partial_quota,
     qualify_release_reuse,
 )
 from scripts.native_linux_guest import GuestBootError, guest_session, provision_tools
@@ -674,6 +675,9 @@ def boot_guest(
                     qualify_allocation_cleanup(
                         guest, stage, temporary, report["allocation_cleanup"]
                     )
+                report["partial_quota"] = {}
+                with stage("guest-partial-quota"):
+                    qualify_partial_quota(guest, stage, temporary, report["partial_quota"])
 
 
 def endpoint_closed(endpoint: dict[str, Any]) -> None:
@@ -720,6 +724,8 @@ def verify_guest_cleanup(guest: dict[str, Any], inputs: dict[str, Any]) -> None:
         guest["allocation_release_reuse"]["resources_destroyed_with_guest"] = True
     if isinstance(guest.get("allocation_cleanup"), dict):
         guest["allocation_cleanup"]["resources_destroyed_with_guest"] = True
+    if isinstance(guest.get("partial_quota"), dict):
+        guest["partial_quota"]["resources_destroyed_with_guest"] = True
 
 
 def guest_storage_faults(

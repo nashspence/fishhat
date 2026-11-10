@@ -13,6 +13,7 @@ import os
 import stat
 import struct
 import subprocess
+import sys
 import time
 import uuid
 from contextlib import nullcontext, redirect_stdout
@@ -33,7 +34,7 @@ CHECK_PURPOSE = {
         "scripts/native_linux_storage.py",
         "scripts/native_linux_enrollment.py",
     ],
-    "scope": "controlled execution of fixed quota preparation, kernel-allocation worker and independent observer, foreign/stale/mounted admission refusal, exact selected-profile errno preservation, matching outside-project allocation and global space evidence, finite fail-safe allocation, exact release/reuse and idempotent known release, known allocation destruction and independently observed absence/retry after an unadmitted reply, canaries, teardown evidence and mandatory measurement scope",
+    "scope": "controlled execution of fixed quota preparation, kernel-allocation worker and independent observer, foreign/stale/mounted admission refusal, exact selected-profile errno preservation, matching outside-project allocation and global space evidence, finite fail-safe allocation, exact release/reuse and idempotent known release, known allocation destruction and independently observed absence/retry after an unadmitted reply, protected partial preparation custody/origin exclusion and exact recovery across selected controlled exits, canaries, teardown evidence and mandatory measurement scope",
     "relationship": "no-product-claim",
     "reason": "All guest filesystem, quota, kernel, process and SSH facilities are substituted. Passing tooling checks cannot qualify actual native operations or product owners; real enrolled main-only evidence remains required.",
     "claims": [],
@@ -57,6 +58,12 @@ class Harness:
         self.root = "/run/fhs-" + uuid.UUID(self.enrollment).hex
         self.meta, self.files, self.fds, self.projects = {}, {}, {}, {}
         self.removed = {}
+        self.offsets = {}
+        self.generations = {}
+        self.next_generation = 20
+        self.origin_alive = False
+        self.handle_available = True
+        self.quotas = {}
         self.mountinfo = ""
         self.events = []
         self.allocations = []
@@ -156,12 +163,19 @@ class Harness:
                 h.events.append("mkdir")
                 h.directory(str(self), 12, 500, 0, mode)
                 h.projects[str(self)] = 0
+                h.next_generation += 1
+                h.generations[str(self)] = h.next_generation
 
             def read_text(self):
                 if str(self).endswith("fixture-enrollment"):
                     return h.enrollment
                 if str(self).endswith("boot_id"):
                     return h.boot
+                if str(self).startswith("/proc/") and self.name == "stat":
+                    pid = int(self.parts[2])
+                    if pid != h.pid and not h.origin_alive:
+                        raise FileNotFoundError()
+                    return str(pid) + " (python3) " + " ".join(["S"] + ["0"] * 18 + ["12345"])
                 if str(self) == "/proc/self/mountinfo":
                     return h.mountinfo
                 if str(self) == "/proc/self/status":
@@ -191,18 +205,23 @@ class Harness:
                 st_nlink=1,
                 st_size=0,
                 st_blocks=0,
+                st_mtime_ns=1,
+                st_ctime_ns=1,
             )
             self.projects[path] = self.projects.get(str(PurePosixPath(path).parent), 0)
             self.events.append("create:" + PurePosixPath(path).name)
             if self.projects[path]:
                 self.q["inodes"] += 1
-        assert path in self.meta
+        if path not in self.meta:
+            raise FileNotFoundError(path)
         self.next_fd += 1
         self.fds[self.next_fd] = path
+        self.offsets[self.next_fd] = 0
         return self.next_fd
 
     def close(self, fd):
         path = self.fds.pop(fd)
+        self.offsets.pop(fd)
         if path in self.removed and path not in self.fds.values():
             self.removed.pop(path)
             if self.projects.get(path) == self.c["project_id"]:
@@ -242,10 +261,32 @@ class Harness:
 
     def write(self, fd, data):
         v = self.meta[self.fds[fd]]
-        v.st_size += len(data)
+        path = self.fds[fd]
+        position = self.offsets[fd]
+        content = self.files.get(path, b"")
+        self.files[path] = content[:position] + data + content[position + len(data) :]
+        self.offsets[fd] += len(data)
+        v.st_size = len(self.files[path])
         v.st_blocks = (v.st_size + 511) // 512
         self.events.append("write:" + PurePosixPath(self.fds[fd]).name)
         return len(data)
+
+    def read(self, fd, size):
+        content = self.files.get(self.fds[fd], b"")
+        position = self.offsets[fd]
+        value = content[position : position + size]
+        self.offsets[fd] += len(value)
+        return value
+
+    def handle(self, fd, name, buffer, mount, flags):
+        assert name == b"" and flags == 0x1000
+        if not self.handle_available:
+            return -1
+        path = self.fds[fd]
+        payload = struct.pack("=QI", self.meta[path].st_ino, self.generations[path])
+        ctypes.memmove(buffer, struct.pack("=Ii", len(payload), 129) + payload, 8 + len(payload))
+        ctypes.cast(mount, ctypes.POINTER(ctypes.c_int)).contents.value = 78
+        return 0
 
     def allocate(self, fd, offset, length):
         self.events.append("fallocate")
@@ -376,10 +417,14 @@ class Harness:
         operating_system.ftruncate = self.truncate
         operating_system.pwrite = lambda fd, data, offset: len(data)
         operating_system.write = self.write
+        operating_system.read = self.read
         operating_system.fsync = lambda fd: self.events.append("fsync")
         operating_system.statvfs = lambda path: SimpleNamespace(f_frsize=4096, f_bavail=800000)
         operating_system.readlink = lambda path: "/usr/bin/python3.12"
-        lib = SimpleNamespace(quotactl=lambda *args: self.quotactl(*args))
+        lib = SimpleNamespace(
+            quotactl=lambda *args: self.quotactl(*args),
+            name_to_handle_at=lambda *args: self.handle(*args),
+        )
         return dict(
             copy=copy,
             ctypes=SimpleNamespace(
@@ -388,6 +433,8 @@ class Harness:
                 c_int=ctypes.c_int,
                 c_char_p=ctypes.c_char_p,
                 c_void_p=ctypes.c_void_p,
+                POINTER=ctypes.POINTER,
+                byref=ctypes.byref,
                 create_string_buffer=ctypes.create_string_buffer,
             ),
             errno=errno,
@@ -405,14 +452,20 @@ class Harness:
                 PIPE=subprocess.PIPE,
                 CalledProcessError=subprocess.CalledProcessError,
             ),
-            sys=SimpleNamespace(argv=["program", json.dumps(c)]),
+            sys=SimpleNamespace(argv=["program", json.dumps(c)], exit=sys.exit),
             time=time,
             uuid=uuid,
         )
 
     def invoke(self, mode):
         self.c["mode"] = mode
-        if mode in ("cleanup", "inspect-cleanup"):
+        if mode in (
+            "cleanup",
+            "inspect-cleanup",
+            "prepare-partial",
+            "observe-partial",
+            "cleanup-partial",
+        ):
             self.pid += 1
         return execute(exhaustion.PROGRAM, self.namespace(self.c))
 
@@ -601,8 +654,30 @@ def controlled_guest(h, change=None):
         assert enrollment == h.enrollment and boot == h.boot and deadline.remaining() > 0
         assert argv[:4] == ["/usr/bin/python3", "-I", "-S", "-c"] and argv[4] == exhaustion.PROGRAM
         h.c = json.loads(argv[-1])
-        h.q["project_id"] = h.c["project_id"]
-        value = h.invoke(h.c["mode"])
+        if h.q["project_id"] != h.c["project_id"]:
+            h.quotas[h.q["project_id"]] = h.q
+            h.q = h.quotas.setdefault(
+                h.c["project_id"],
+                {
+                    **dict.fromkeys(
+                        (
+                            "hard_bytes",
+                            "soft_bytes",
+                            "used_bytes",
+                            "inodes",
+                            "inode_hard",
+                            "inode_soft",
+                        ),
+                        0,
+                    ),
+                    "present": False,
+                    "project_id": h.c["project_id"],
+                },
+            )
+        try:
+            value = h.invoke(h.c["mode"])
+        except SystemExit as error:
+            raise native.EnrollmentError("guest-ssh", "command-exit-" + str(error.code)) from None
         if change:
             change(value)
         return json.dumps(value)
@@ -1227,3 +1302,296 @@ def test_cleanup_missing_required_measurements_cannot_report_qualification(tmp_p
     assert report["cases"][0]["status"] == "failed"
     assert report["statistics"] == report["cases"][0]["statistics"] == {}
     assert report["unrelated_host_canary_preserved"] and not list(tmp_path.iterdir())
+
+
+def partial_fixture(h, stage=None):
+    h.c.update(
+        partial_image={
+            "path": "/usr/bin/python3.12",
+            "sha256": hashlib.sha256(b"fixed-guest-interpreter").hexdigest(),
+        },
+        partial_exit_after=stage,
+    )
+    if stage is None:
+        h.invoke("prepare-partial")
+    else:
+        with pytest.raises(SystemExit) as error:
+            h.invoke("prepare-partial")
+        assert error.value.code == 42
+    value = h.invoke("observe-partial")
+    h.c["identity"], h.c["custody"] = value["identity"], value["custody"]
+    h.c["partial_exit_after"] = None
+    return value
+
+
+@pytest.mark.parametrize(
+    "stage", ["directory", "project", "limit", None], ids=["directory", "project", "limit", "ready"]
+)
+def test_partial_preparation_retains_exact_protected_custody_and_cleans_observed_state(stage):
+    h = Harness()
+    value = partial_fixture(h, stage)
+    assert value["state"] == (stage or "ready") and value["origin_exited"] is True
+    assert value["identity"]["origin"]["pid"] != value["observer"]["pid"]
+    assert (
+        value["custody"]["uid"] == value["custody"]["gid"] == 0
+        and value["custody"]["mode"] == 0o600
+    )
+    assert (
+        value["identity"]["directory_handle"]["bytes"]
+        and value["identity"]["directory_handle"]["mount_id"] == 78
+    )
+    custody = copy.deepcopy(value["custody"])
+    result = h.invoke("cleanup-partial")
+    assert result["state"] == "absent" and result["removed_directory_links"] == 0
+    assert result["mutation_effects"] == {
+        "project_reset": stage != "directory",
+        "limit_reset": stage in ("limit", None),
+        "rmdir": True,
+    }
+    assert result["refusals_verified"] == list(exhaustion.PARTIAL_REFUSALS)
+    h.events.clear()
+    repeated = h.invoke("cleanup-partial")
+    observed = h.invoke("observe-partial")
+    assert repeated["state"] == observed["state"] == "absent"
+    assert repeated["custody"] == observed["custody"] == custody
+    assert (
+        not any(repeated["mutation_effects"].values())
+        and repeated["removed_directory_links"] is None
+    )
+    assert set(h.events) <= {"storage-read"} and not h.fds
+
+
+@pytest.mark.parametrize("stage", ["cleanup-project-reset", "cleanup-limit-reset", "cleanup-rmdir"])
+def test_partial_cleanup_exit_is_independently_observed_and_retry_uses_remaining_effects(stage):
+    h = Harness()
+    partial_fixture(h)
+    h.c["partial_exit_after"] = stage
+    with pytest.raises(SystemExit) as error:
+        h.invoke("cleanup-partial")
+    assert error.value.code == 42
+    observed = h.invoke("observe-partial")
+    assert observed["state"] == ("absent" if stage == "cleanup-rmdir" else stage)
+    h.c["partial_exit_after"] = None
+    h.events.clear()
+    result = h.invoke("cleanup-partial")
+    assert result["state"] == "absent"
+    assert result["mutation_effects"] == {
+        "project_reset": False,
+        "limit_reset": stage == "cleanup-project-reset",
+        "rmdir": stage != "cleanup-rmdir",
+    }
+    assert "project-reset" not in h.events and not h.fds
+
+
+def corrupt_partial_custody(h, record, change):
+    if change == "record-inode":
+        h.meta[record].st_ino += 1
+    elif change == "record-owner":
+        h.meta[record].st_uid = 1000
+    elif change == "record-links":
+        h.meta[record].st_nlink = 2
+    elif change == "record-mode":
+        h.meta[record].st_mode = stat.S_IFREG | 0o644
+    elif change == "record-size":
+        h.meta[record].st_size += 1
+    else:
+        assert change == "record-body"
+        h.files[record] = b"x" * len(h.files[record])
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        "record-inode",
+        "record-owner",
+        "record-links",
+        "record-mode",
+        "record-size",
+        "record-body",
+        "directory-inode",
+        "directory-generation",
+        "directory-owner",
+        "directory-mode",
+        "project",
+        "quota-limit",
+        "quota-use",
+        "extra-inode",
+        "extra-entry",
+        "mounted",
+        "bind-mounted",
+        "live-origin",
+        "handle-unavailable",
+        "wrong-claim",
+        "missing-custody",
+    ],
+)
+def test_partial_cleanup_refuses_foreign_stale_live_or_unowned_state_before_effects(change):
+    h = Harness()
+    partial_fixture(h)
+    record = next(path for path in h.meta if "/quota-custody-" in path)
+    target = h.meta[h.c["target"]]
+    if change.startswith("record-"):
+        corrupt_partial_custody(h, record, change)
+    elif change == "directory-inode":
+        target.st_ino += 1
+    elif change == "directory-generation":
+        h.generations[h.c["target"]] += 1
+    elif change == "directory-owner":
+        target.st_uid = target.st_gid = 1001
+    elif change == "directory-mode":
+        target.st_mode = stat.S_IFDIR | 0o755
+    elif change == "project":
+        h.bad_attributes = True
+    elif change == "quota-limit":
+        h.q["hard_bytes"] += 512
+    elif change == "quota-use":
+        h.q["used_bytes"] = 512
+    elif change == "extra-inode":
+        h.q["inodes"] += 1
+    elif change == "extra-entry":
+        h.close(h.open(h.c["target"] + "/foreign", os.O_CREAT | os.O_EXCL, 0o600))
+    elif change == "mounted":
+        h.mounted = True
+    elif change == "bind-mounted":
+        h.mountinfo = "42 1 0:1 / " + h.c["target"] + " rw - xfs /dev/vdc rw\n"
+    elif change == "live-origin":
+        h.origin_alive = True
+    elif change == "handle-unavailable":
+        h.handle_available = False
+    elif change == "wrong-claim":
+        h.c["identity"]["enrollment"] = str(uuid.uuid4())
+    else:
+        del h.c["custody"]
+    before = copy.deepcopy(h.meta)
+    h.events.clear()
+    with pytest.raises((ValueError, subprocess.CalledProcessError)):
+        h.invoke("cleanup-partial")
+    assert h.meta == before and not h.fds
+    assert not any(
+        e.startswith(
+            ("unlink:", "quota-mutate", "project-reset", "rmdir", "create:", "truncate", "chown")
+        )
+        for e in h.events
+    )
+
+
+def source_known_cleanup(h, tmp_path):
+    guest = source_release(h, tmp_path)
+    report = {}
+    exhaustion.qualify_allocation_cleanup(guest, lambda name: nullcontext(), tmp_path, report)
+    guest.report["allocation_cleanup"] = report
+    return guest
+
+
+def test_partial_controller_proves_every_selected_setup_and_cleanup_exit_with_stats(tmp_path):
+    h = Harness()
+    guest = source_known_cleanup(h, tmp_path)
+    report = {}
+    exhaustion.qualify_partial_quota(guest, lambda name: nullcontext(), tmp_path, report)
+    assert report["status"] == "passed" and report["selected_controlled_recovery_qualified"] is True
+    assert report["resources_destroyed_with_guest"] is False and report["unqualified_windows"]
+    assert [c["scenario"] for c in report["cases"]] == [s[0] for s in exhaustion.PARTIAL_SCENARIOS]
+    for case in report["cases"]:
+        assert case["status"] == "passed" and valid_stats(case["statistics"])
+        assert case["cleanup_outcome"] == "absent-observed-independently"
+        assert all(p["status"] == "passed" and valid_stats(p["statistics"]) for p in case["phases"])
+        assert case["phases"][-1]["observation"]["state"] == "absent"
+    original = report["cases"][3]
+    assert original["original_reply_validated_after_independent_observation"] is True
+    assert original["phases"][0]["mutation_reply_admitted"] is False
+    assert original["phases"][0]["outcome"] == "unobserved"
+    assert all(
+        p["observed_remote_exit"] == 42
+        for c in report["cases"]
+        for p in c["phases"]
+        if "observed_remote_exit" in p
+    )
+    assert (
+        valid_stats(report["statistics"])
+        and report["unrelated_host_canary_preserved"]
+        and not list(tmp_path.iterdir())
+    )
+    assert not any("/data/exhaustion-" in p for p in h.meta) and not h.fds
+
+
+@pytest.mark.parametrize("failure", ["unexpected-exit", "spurious-planned-exit"])
+def test_partial_controller_cannot_treat_missing_facilities_as_intended_interruption(
+    failure, tmp_path
+):
+    h = Harness()
+    guest = source_known_cleanup(h, tmp_path)
+    command = guest.guarded
+
+    def failed(argv, enrollment, boot, *, deadline, nominal):
+        if json.loads(argv[-1])["mode"] == "prepare-partial":
+            raise native.EnrollmentError(
+                "guest-ssh", "command-exit-" + ("42" if failure == "spurious-planned-exit" else "1")
+            )
+        return command(argv, enrollment, boot, deadline=deadline, nominal=nominal)
+
+    guest.guarded = failed
+    report = {}
+    with pytest.raises((native.EnrollmentError, exhaustion.GuestExhaustionError)):
+        exhaustion.qualify_partial_quota(guest, lambda name: nullcontext(), tmp_path, report)
+    assert (
+        report["status"] == "failed" and report["selected_controlled_recovery_qualified"] is False
+    )
+    assert report["cases"][0]["status"] == "failed"
+    assert valid_stats(report["statistics"]) and valid_stats(report["cases"][0]["statistics"])
+    assert report["unrelated_host_canary_preserved"] and not list(tmp_path.iterdir())
+
+
+@pytest.mark.parametrize("change", ["identity", "custody", "origin", "state", "canary", "effects"])
+def test_partial_controller_rejects_inexact_evidence_without_qualifying_recovery(change, tmp_path):
+    h = Harness()
+    guest = source_known_cleanup(h, tmp_path)
+
+    def alter(value):
+        if value["mode"] == "observe-partial":
+            if change == "identity":
+                value["directory"]["inode"] += 1
+            elif change == "custody":
+                value["custody"]["sha256"] = "0" * 64
+            elif change == "origin":
+                value["origin_exited"] = False
+            elif change == "state":
+                value["state"] = "absent"
+            elif change == "canary":
+                value["guest_canaries_preserved"] = 1
+        if value["mode"] == "cleanup-partial" and change == "effects":
+            value["mutation_effects"]["rmdir"] = False
+
+    controlled_guest(h, alter)
+    report = {}
+    with pytest.raises((ValueError, exhaustion.GuestExhaustionError)):
+        exhaustion.qualify_partial_quota(guest, lambda name: nullcontext(), tmp_path, report)
+    assert (
+        report["status"] == "failed" and report["selected_controlled_recovery_qualified"] is False
+    )
+    assert report["cases"][0]["status"] == "failed" and valid_stats(report["statistics"])
+    assert all(valid_stats(p["statistics"]) for c in report["cases"] for p in c["phases"])
+    assert report["unrelated_host_canary_preserved"] and not list(tmp_path.iterdir())
+
+
+def test_partial_recovery_missing_required_stats_remains_unqualified(tmp_path, monkeypatch):
+    h = Harness()
+    guest = source_known_cleanup(h, tmp_path)
+    report = {}
+    monkeypatch.setattr(exhaustion, "RunStats", lambda: SimpleNamespace(finish=lambda: {}))
+    with pytest.raises(ValueError, match="invalid required partial quota statistics"):
+        exhaustion.qualify_partial_quota(guest, lambda name: nullcontext(), tmp_path, report)
+    assert (
+        report["status"] == "failed" and report["selected_controlled_recovery_qualified"] is False
+    )
+    assert report["cases"][0]["status"] == report["cases"][0]["phases"][0]["status"] == "failed"
+    assert report["statistics"] == {} and report["unrelated_host_canary_preserved"]
+
+
+def test_partial_recovery_requires_verified_known_cleanup_before_guest_effects(tmp_path):
+    h = Harness()
+    report = {}
+    with pytest.raises(
+        exhaustion.GuestExhaustionError, match="known-allocation-cleanup-not-verified"
+    ):
+        exhaustion.qualify_partial_quota(h.guest, lambda name: nullcontext(), tmp_path, report)
+    assert not h.events and report["status"] == "failed" and valid_stats(report["statistics"])

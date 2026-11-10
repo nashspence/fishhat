@@ -10,7 +10,7 @@ from contextlib import AbstractContextManager
 from pathlib import Path
 from typing import Any
 
-from scripts.native_linux_guest import Guest, GuestBootError
+from scripts.native_linux_guest import Guest, GuestBootError, command_failed
 from scripts.native_linux_storage import PACKAGES
 from scripts.native_linux_storage import PROGRAM as STORAGE_PROGRAM
 from scripts.run_stats import RunStats, valid_stats
@@ -126,7 +126,7 @@ def directory(path):
     v = path.lstat()
     require(stat.S_ISDIR(v.st_mode))
     return {"device": v.st_dev, "inode": v.st_ino, "uid": v.st_uid, "gid": v.st_gid, "mode": stat.S_IMODE(v.st_mode)}
-require(os.geteuid() == 0 and c["mode"] in ("prepare", "fill", "observe", "release", "inspect-release", "reuse", "cleanup", "inspect-cleanup"))
+require(os.geteuid() == 0 and c["mode"] in ("prepare", "fill", "observe", "release", "inspect-release", "reuse", "cleanup", "inspect-cleanup", "prepare-partial", "observe-partial", "cleanup-partial"))
 require(str(uuid.UUID(c["task"])) == c["task"])
 root = pathlib.Path("/run/fhs-" + uuid.UUID(c["enrollment"]).hex)
 target = root / "data" / ("exhaustion-" + uuid.UUID(c["task"]).hex)
@@ -146,13 +146,13 @@ def admission(claim, *, fresh=False):
     # An existing mount or substituted directory must never become a fresh target.
     if fresh:
         require(not target.exists() and not target.is_symlink())
-    elif c["mode"] != "prepare":
+    elif c["mode"] not in ("prepare", "prepare-partial", "observe-partial", "cleanup-partial"):
         if c["mode"] not in ("cleanup", "inspect-cleanup") or target.exists() or target.is_symlink():
             require(directory(target) == c["identity"]["directory"] and not target.is_mount())
     return observed
 claim = {k: c["storage"][k] for k in ("enrollment", "boot_id", "state", "devices", "uuids")}
 claim["target"] = str(target)
-admission(claim, fresh=c["mode"] == "prepare")
+admission(claim, fresh=c["mode"] in ("prepare", "prepare-partial"))
 def quota():
     # fs_disk_quota is 112 bytes, aligned to 64 bits; block units are 512 bytes.
     lib = ctypes.CDLL(None, use_errno=True)
@@ -344,6 +344,242 @@ def cleanup_allocation():
     require(not target.exists() and not target.is_symlink())
     result.update(quota=value, target_absent=True, allocation_absent=True, observer={"pid": os.getpid(), "executable": {"path": os.readlink("/proc/self/exe"), "sha256": hashlib.sha256(pathlib.Path("/proc/self/exe").read_bytes()).hexdigest()}})
     return result
+def partial_image():
+    return {"path": os.readlink("/proc/self/exe"), "sha256": hashlib.sha256(pathlib.Path("/proc/self/exe").read_bytes()).hexdigest()}
+def process_ticks(pid):
+    try:
+        value = pathlib.Path("/proc/" + str(pid) + "/stat").read_text()
+    except FileNotFoundError:
+        return None
+    return int(value.rsplit(")", 1)[1].split()[19])
+def partial_process():
+    value = {"pid": os.getpid(), "start_ticks": process_ticks(os.getpid()), "executable": partial_image()}
+    require(type(value["start_ticks"]) is int and value["start_ticks"] > 0)
+    require(value["executable"] == c["partial_image"])
+    return value
+def partial_handle(fd):
+    # Read-only Linux file_handle query; XFS handles include inode generation.
+    lib = ctypes.CDLL(None, use_errno=True)
+    call = lib.name_to_handle_at
+    call.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_void_p, ctypes.POINTER(ctypes.c_int), ctypes.c_int]
+    call.restype = ctypes.c_int
+    buffer = ctypes.create_string_buffer(136)
+    struct.pack_into("=II", buffer, 0, 128, 0)
+    mount = ctypes.c_int()
+    require(call(fd, b"", buffer, ctypes.byref(mount), 0x1000) == 0)
+    size, kind = struct.unpack_from("=Ii", buffer.raw)
+    require(0 < size <= 128 and 0 < kind < 255 and mount.value > 0)
+    return {"mount_id": mount.value, "type": kind, "bytes": buffer.raw[8:8 + size].hex()}
+def record_path():
+    return root / "control" / ("quota-custody-" + uuid.UUID(c["task"]).hex + ".json")
+def partial_expected():
+    return {"kind": "disposable-guest-quota-custody", "enrollment": c["enrollment"], "boot_id": c["boot_id"], "task": c["task"], "target": str(target), "project_id": c["project_id"], "actor": c["actor"], "capacity_bytes": c["capacity_bytes"], "storage": c["storage"]["state"]}
+def record_metadata(v):
+    require(stat.S_ISREG(v.st_mode) and v.st_nlink == 1 and v.st_uid == v.st_gid == 0 and stat.S_IMODE(v.st_mode) == 0o600)
+    require(v.st_dev == c["storage"]["state"]["control"]["directory"]["device"])
+    return {"device": v.st_dev, "inode": v.st_ino, "uid": v.st_uid, "gid": v.st_gid, "mode": stat.S_IMODE(v.st_mode), "links": v.st_nlink, "size": v.st_size, "mtime_ns": v.st_mtime_ns, "ctime_ns": v.st_ctime_ns}
+def write_record(value):
+    content = json.dumps(value, sort_keys=True, separators=(",", ":")).encode() + b"\n"
+    require(0 < len(content) <= 32768)
+    fd = os.open(record_path(), os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    try:
+        position = 0
+        while position < len(content):
+            size = os.write(fd, content[position:])
+            require(size > 0)
+            position += size
+        os.fsync(fd)
+        require(record_metadata(os.fstat(fd))["size"] == len(content))
+    finally:
+        os.close(fd)
+    fd = os.open(root / "control", os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        require(descriptor_directory(fd) == c["storage"]["state"]["control"]["directory"])
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+def read_record():
+    fd = os.open(record_path(), os.O_RDONLY | os.O_NOFOLLOW)
+    try:
+        before = record_metadata(os.fstat(fd))
+        require(0 < before["size"] <= 32768)
+        content = bytearray()
+        while len(content) <= 32768:
+            block = os.read(fd, 32769 - len(content))
+            if not block:
+                break
+            content.extend(block)
+        require(0 < len(content) <= 32768 and len(content) == before["size"])
+        require(record_metadata(os.fstat(fd)) == before)
+    finally:
+        os.close(fd)
+    value = json.loads(content)
+    require(content == json.dumps(value, sort_keys=True, separators=(",", ":")).encode() + b"\n")
+    expected = partial_expected()
+    require(set(value) == {*expected, "directory", "directory_handle", "origin"})
+    require(all(value[k] == v for k, v in expected.items()))
+    d = value["directory"]
+    require(set(d) == {"device", "inode", "uid", "gid", "mode"})
+    require(d["device"] == c["storage"]["state"]["data"]["directory"]["device"] and type(d["inode"]) is int and d["inode"] > 0)
+    require(d["uid"] == d["gid"] == 0 and d["mode"] == 0o700)
+    origin = value["origin"]
+    require(set(origin) == {"pid", "start_ticks", "executable"})
+    require(all(type(origin[k]) is int and origin[k] > 0 for k in ("pid", "start_ticks")) and origin["executable"] == c["partial_image"])
+    before["sha256"] = hashlib.sha256(content).hexdigest()
+    if "custody" in c or "identity" in c:
+        require(c.get("custody") == before and c.get("identity") == value)
+    return value, before
+def partial_mount_guard():
+    paths = [row.split()[4] for row in pathlib.Path("/proc/self/mountinfo").read_text().splitlines()]
+    require(not any(p == str(record_path()) or p == str(target) or p.startswith(str(target) + "/") for p in paths))
+def partial_observation():
+    identity, custody = read_record()
+    observer = partial_process()
+    exited = process_ticks(identity["origin"]["pid"]) != identity["origin"]["start_ticks"]
+    require(c["mode"] == "prepare-partial" or exited)
+    partial_mount_guard()
+    require(not target.is_symlink())
+    q = quota()
+    require(q["soft_bytes"] == q["used_bytes"] == q["inode_hard"] == q["inode_soft"] == 0 and q["hard_bytes"] in (0, c["capacity_bytes"]))
+    current_directory, attrs = None, None
+    if not target.exists():
+        require(empty_quota(q))
+        state = "absent"
+    else:
+        require(not target.is_mount())
+        fd = os.open(target, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        try:
+            current_directory = descriptor_directory(fd)
+            require(current_directory == directory(target) and os.listdir(fd) == [])
+            require(partial_handle(fd) == identity["directory_handle"])
+            require(all(current_directory[k] == identity["directory"][k] for k in ("device", "inode", "mode")))
+            owner = {k: current_directory[k] for k in ("uid", "gid")}
+            require(owner in ({"uid": 0, "gid": 0}, c["actor"]))
+            a = struct.unpack("=5I8s", fcntl.ioctl(fd, 0x801c581f, bytes(28)))
+            attrs = {"project_id": a[3], "inherit": bool(a[0] & 0x200)}
+        finally:
+            os.close(fd)
+        pair = (attrs["project_id"], attrs["inherit"])
+        require(pair in ((0, False), (c["project_id"], True)))
+        require(q["inodes"] == (1 if attrs["project_id"] else 0))
+        if attrs["project_id"]:
+            require(q["present"])
+            if owner == {"uid": 0, "gid": 0}:
+                state = "limit" if q["hard_bytes"] else "project"
+            else:
+                require(q["hard_bytes"] == c["capacity_bytes"])
+                state = "ready"
+        elif q["hard_bytes"]:
+            state = "cleanup-project-reset"
+        else:
+            state = "directory" if owner == {"uid": 0, "gid": 0} else "cleanup-limit-reset"
+    return {"identity": identity, "custody": custody, "state": state, "directory": current_directory, "attributes": attrs, "quota": q, "target_absent": state == "absent", "origin_exited": exited, "observer": observer, "mutation_effects": {"project_reset": False, "limit_reset": False, "rmdir": False}, "refusals_verified": [], "custody_retained_until_guest_cleanup": True, "directory_retained_until_guest_cleanup": state != "absent", "allocation_retained_until_guest_cleanup": False, "guest_canaries_preserved": True}
+def partial_checkpoint(name):
+    if c.get("partial_exit_after") == name:
+        sys.exit(42)
+def prepare_partial():
+    require(c.get("partial_exit_after") in (None, "directory", "project", "limit"))
+    require(not record_path().exists() and not record_path().is_symlink() and empty_quota(quota()))
+    target.mkdir(mode=0o700)
+    d = directory(target)
+    require(d["uid"] == d["gid"] == 0 and d["mode"] == 0o700)
+    fd = os.open(target, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        require(descriptor_directory(fd) == d)
+        handle = partial_handle(fd)
+    finally:
+        os.close(fd)
+    write_record({**partial_expected(), "directory": d, "directory_handle": handle, "origin": partial_process()})
+    require(partial_observation()["state"] == "directory")
+    partial_checkpoint("directory")
+    base = ["/usr/sbin/xfs_quota", "-x", "-D", "/dev/null", "-P", "/dev/null"]
+    command([*base, "-c", "project -s -d 0 -p " + str(target) + " " + str(c["project_id"]), str(root / "data")])
+    require(partial_observation()["state"] == "project")
+    partial_checkpoint("project")
+    command([*base, "-c", "limit -p bhard=" + str(c["capacity_bytes"]) + " " + str(c["project_id"]), str(root / "data")])
+    require(partial_observation()["state"] == "limit")
+    partial_checkpoint("limit")
+    os.chown(target, admin.pw_uid, admin.pw_gid)
+    value = partial_observation()
+    require(value["state"] == "ready")
+    return value
+def admit_partial(custody, identity):
+    actual, observed = read_record()
+    require(custody == observed and identity == actual)
+    return partial_observation()
+def partial_challenges():
+    refused = []
+    for name in ("foreign-enrollment", "stale-boot", "foreign-project", "stale-directory", "foreign-actor", "mounted-target", "replaced-custody"):
+        custody, identity = copy.deepcopy(c["custody"]), copy.deepcopy(c["identity"])
+        if name in ("foreign-enrollment", "stale-boot"):
+            identity["enrollment" if name == "foreign-enrollment" else "boot_id"] = str(uuid.uuid4())
+        elif name == "foreign-project":
+            identity["project_id"] += 1
+        elif name == "stale-directory":
+            identity["directory"]["inode"] += 1
+        elif name == "foreign-actor":
+            identity["actor"]["uid"] += 1
+        elif name == "mounted-target":
+            identity["target"] = str(root / "data")
+        else:
+            custody["inode"] += 1
+        try:
+            admit_partial(custody, identity)
+        except ValueError:
+            admit_partial(c["custody"], c["identity"])
+            refused.append(name)
+        else:
+            raise ValueError("foreign-partial-cleanup-claim-accepted")
+    return refused
+def cleanup_partial():
+    require(c.get("partial_exit_after") in (None, "cleanup-project-reset", "cleanup-limit-reset", "cleanup-rmdir"))
+    require("custody" in c and "identity" in c)
+    before = admit_partial(c["custody"], c["identity"])
+    effects = {"project_reset": False, "limit_reset": False, "rmdir": False}
+    refused = []
+    removed_links = None
+    if before["state"] != "absent":
+        refused = partial_challenges()
+        parent = os.open(root / "data", os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        try:
+            require(descriptor_directory(parent) == c["storage"]["state"]["data"]["directory"])
+            fd = os.open(target, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+            try:
+                require(descriptor_directory(fd) == before["directory"] and os.listdir(fd) == []
+                        and partial_handle(fd) == c["identity"]["directory_handle"])
+                if before["attributes"]["project_id"]:
+                    a = list(struct.unpack("=5I8s", fcntl.ioctl(fd, 0x801c581f, bytes(28))))
+                    require(a[3] == c["project_id"] and a[0] & 0x200)
+                    a[0] &= ~0x200
+                    a[3] = 0
+                    fcntl.ioctl(fd, 0x401c5820, struct.pack("=5I8s", *a))
+                    os.fsync(fd)
+                    a = struct.unpack("=5I8s", fcntl.ioctl(fd, 0x801c581f, bytes(28)))
+                    require(a[3] == 0 and not a[0] & 0x200)
+                    effects["project_reset"] = True
+                    partial_checkpoint("cleanup-project-reset")
+                if before["quota"]["hard_bytes"]:
+                    base = ["/usr/sbin/xfs_quota", "-x", "-D", "/dev/null", "-P", "/dev/null"]
+                    command([*base, "-c", "limit -p bhard=0 " + str(c["project_id"]), str(root / "data")])
+                    require(empty_quota(quota()))
+                    effects["limit_reset"] = True
+                    partial_checkpoint("cleanup-limit-reset")
+                partial_mount_guard()
+                require(directory(target) == before["directory"] and not target.is_mount())
+                os.rmdir(target.name, dir_fd=parent)
+                removed_links = os.fstat(fd).st_nlink
+                require(removed_links == 0)
+                os.fsync(parent)
+                effects["rmdir"] = True
+                partial_checkpoint("cleanup-rmdir")
+            finally:
+                os.close(fd)
+        finally:
+            os.close(parent)
+    result = partial_observation()
+    require(result["state"] == "absent")
+    result.update(before=before, mutation_effects=effects, removed_directory_links=removed_links, refusals_verified=refused)
+    return result
 if c["mode"] == "prepare":
     before = quota()
     require(before["hard_bytes"] == before["soft_bytes"] == before["used_bytes"] == before["inodes"] == before["inode_hard"] == before["inode_soft"] == 0)
@@ -383,6 +619,8 @@ if c["mode"] == "prepare":
     require(value["present"] and value["hard_bytes"] == c["capacity_bytes"] and value["soft_bytes"] == value["used_bytes"] == 0 and value["inodes"] == 1)
     identity = {"enrollment": c["enrollment"], "boot_id": c["boot_id"], "task": c["task"], "target": str(target), "project_id": c["project_id"], "directory": directory(target)}
     result = {"identity": identity, "quota_before": before, "quota": value, "refusals_verified": refusals}
+elif c["mode"] in ("prepare-partial", "observe-partial", "cleanup-partial"):
+    result = prepare_partial() if c["mode"] == "prepare-partial" else cleanup_partial() if c["mode"] == "cleanup-partial" else partial_observation()
 elif c["mode"] in ("cleanup", "inspect-cleanup"):
     result = cleanup_allocation()
 elif c["mode"] in ("release", "inspect-release"):
@@ -406,7 +644,8 @@ else:
 admission(claim)
 space = os.statvfs(root / "data")
 result["filesystem_space"] = {"device": c["storage"]["state"]["data"]["directory"]["device"], "block_bytes": space.f_frsize, "available_blocks": space.f_bavail, "available_bytes": space.f_frsize * space.f_bavail}
-result.update(mode=c["mode"], guest_canaries_preserved=True, allocation_retained_until_guest_cleanup=c["mode"] not in ("cleanup", "inspect-cleanup"))
+result.update(mode=c["mode"], guest_canaries_preserved=True)
+result.setdefault("allocation_retained_until_guest_cleanup", c["mode"] not in ("cleanup", "inspect-cleanup"))
 print(json.dumps(result, sort_keys=True))
 """
 
@@ -1130,3 +1369,462 @@ def qualify_allocation_cleanup(
         if not valid_stats(report["statistics"]):
             report.update(status="failed", per_allocation_destruction_qualified=False)
             raise ValueError("invalid required allocation cleanup statistics")
+
+
+PARTIAL_SCENARIOS = (
+    ("directory-interruption", "directory", None, False),
+    ("project-interruption", "project", None, False),
+    ("limit-interruption", "limit", None, False),
+    ("unadmitted-prepare-reply", None, None, True),
+    ("cleanup-project-interruption", None, "cleanup-project-reset", False),
+    ("cleanup-limit-interruption", None, "cleanup-limit-reset", False),
+    ("cleanup-remove-interruption", None, "cleanup-rmdir", False),
+)
+PARTIAL_REFUSALS = (
+    "foreign-enrollment",
+    "stale-boot",
+    "foreign-project",
+    "stale-directory",
+    "foreign-actor",
+    "mounted-target",
+    "replaced-custody",
+)
+
+
+class PartialReplyNotAdmitted(Exception):
+    """A controlled observer exception after preparation completed."""
+
+
+def partial_configuration(guest: Guest) -> dict[str, Any]:
+    c = configuration(guest)
+    prior = guest.report.get("allocation_cleanup", {})
+    require(
+        prior.get("status") == "passed"
+        and prior.get("per_allocation_destruction_qualified") is True
+        and prior.get("enrollment") == c["enrollment"]
+        and prior.get("boot_id") == c["boot_id"],
+        "known-allocation-cleanup-not-verified",
+    )
+    c["partial_image"] = guest.report["exhaustion"]["fill"]["allocation"]["executable"]
+    c["partial_exit_after"] = None
+    return c
+
+
+def partial_identity(value: dict[str, Any], c: dict[str, Any]) -> dict[str, Any]:
+    identity = value.get("identity")
+    if not isinstance(identity, dict):
+        raise GuestExhaustionError("partial-custody-identity-mismatch")
+    expected = {
+        k: c[k]
+        for k in (
+            "enrollment",
+            "boot_id",
+            "task",
+            "target",
+            "project_id",
+            "actor",
+            "capacity_bytes",
+        )
+    }
+    expected.update(kind="disposable-guest-quota-custody", storage=c["storage"]["state"])
+    require(
+        set(identity) == {*expected, "directory", "directory_handle", "origin"}
+        and all(identity[k] == v for k, v in expected.items()),
+        "partial-custody-identity-mismatch",
+    )
+    d = identity["directory"]
+    require(
+        isinstance(d, dict) and set(d) == {"device", "inode", "uid", "gid", "mode"},
+        "partial-custody-directory-mismatch",
+    )
+    require(
+        all(type(d[k]) is int for k in d)
+        and d["inode"] > 0
+        and d["device"] == c["storage"]["state"]["data"]["directory"]["device"]
+        and d["uid"] == d["gid"] == 0
+        and d["mode"] == 0o700,
+        "partial-custody-directory-mismatch",
+    )
+    handle = identity.get("directory_handle")
+    require(
+        isinstance(handle, dict)
+        and set(handle) == {"mount_id", "type", "bytes"}
+        and type(handle["mount_id"]) is int
+        and handle["mount_id"] > 0
+        and type(handle["type"]) is int
+        and 0 < handle["type"] < 255
+        and isinstance(handle["bytes"], str)
+        and 0 < len(handle["bytes"]) <= 256
+        and len(handle["bytes"]) % 2 == 0
+        and all(v in "0123456789abcdef" for v in handle["bytes"]),
+        "partial-directory-handle-mismatch",
+    )
+    for name in ("origin", "observer"):
+        proc = identity[name] if name == "origin" else value.get(name)
+        require(
+            isinstance(proc, dict)
+            and set(proc) == {"pid", "start_ticks", "executable"}
+            and all(type(proc[k]) is int and proc[k] > 0 for k in ("pid", "start_ticks"))
+            and proc["executable"] == c["partial_image"],
+            "partial-process-identity-mismatch",
+        )
+    custody = value.get("custody")
+    if not isinstance(custody, dict):
+        raise GuestExhaustionError("partial-custody-file-mismatch")
+    require(
+        set(custody)
+        == {
+            "device",
+            "inode",
+            "uid",
+            "gid",
+            "mode",
+            "links",
+            "size",
+            "mtime_ns",
+            "ctime_ns",
+            "sha256",
+        },
+        "partial-custody-file-mismatch",
+    )
+    require(
+        all(type(custody[k]) is int for k in custody if k != "sha256")
+        and custody["device"] == c["storage"]["state"]["control"]["directory"]["device"]
+        and custody["inode"] > 0
+        and custody["uid"] == custody["gid"] == 0
+        and custody["mode"] == 0o600
+        and custody["links"] == 1
+        and 0 < custody["size"] <= 32768
+        and custody["mtime_ns"] >= 0
+        and custody["ctime_ns"] >= 0,
+        "partial-custody-file-mismatch",
+    )
+    digest = custody["sha256"]
+    require(
+        isinstance(digest, str)
+        and len(digest) == 64
+        and all(v in "0123456789abcdef" for v in digest),
+        "partial-custody-file-mismatch",
+    )
+    if "custody" in c or "identity" in c:
+        require(
+            c.get("custody") == custody and c.get("identity") == identity,
+            "partial-custody-replaced",
+        )
+    return identity
+
+
+def partial_state(value: dict[str, Any], c: dict[str, Any], identity: dict[str, Any]) -> str:
+    q = value.get("quota")
+    if not isinstance(q, dict):
+        raise GuestExhaustionError("partial-quota-mismatch")
+    require(
+        type(q.get("present")) is bool
+        and type(q.get("project_id")) is int
+        and q["project_id"] == c["project_id"],
+        "partial-quota-mismatch",
+    )
+    for name in ("hard_bytes", "soft_bytes", "used_bytes", "inodes", "inode_hard", "inode_soft"):
+        require(type(q.get(name)) is int and q[name] >= 0, "partial-quota-mismatch")
+    require(
+        q["soft_bytes"] == q["used_bytes"] == q["inode_hard"] == q["inode_soft"] == 0
+        and q["hard_bytes"] in (0, CAPACITY),
+        "partial-quota-mismatch",
+    )
+    d, attrs = value.get("directory"), value.get("attributes")
+    if d is None:
+        require(
+            attrs is None and q["hard_bytes"] == q["inodes"] == 0, "partial-absence-not-observed"
+        )
+        return "absent"
+    require(
+        isinstance(d, dict)
+        and set(d) == set(identity["directory"])
+        and all(type(d[k]) is int for k in d)
+        and all(d[k] == identity["directory"][k] for k in ("device", "inode", "mode")),
+        "partial-live-directory-mismatch",
+    )
+    if not isinstance(attrs, dict):
+        raise GuestExhaustionError("partial-live-attributes-mismatch")
+    require(
+        set(attrs) == {"project_id", "inherit"}
+        and type(attrs["project_id"]) is int
+        and type(attrs["inherit"]) is bool,
+        "partial-live-attributes-mismatch",
+    )
+    pair = (attrs["project_id"], attrs["inherit"])
+    require(
+        pair in ((0, False), (c["project_id"], True))
+        and q["inodes"] == (1 if attrs["project_id"] else 0),
+        "partial-live-attributes-mismatch",
+    )
+    owner = {k: d[k] for k in ("uid", "gid")}
+    require(owner in ({"uid": 0, "gid": 0}, c["actor"]), "partial-live-owner-mismatch")
+    if attrs["project_id"]:
+        require(q["present"] is True, "partial-quota-mismatch")
+        if owner == {"uid": 0, "gid": 0}:
+            return "limit" if q["hard_bytes"] else "project"
+        require(q["hard_bytes"] == CAPACITY, "partial-quota-mismatch")
+        return "ready"
+    if q["hard_bytes"]:
+        return "cleanup-project-reset"
+    return "directory" if owner == {"uid": 0, "gid": 0} else "cleanup-limit-reset"
+
+
+def validate_partial(
+    value: dict[str, Any], c: dict[str, Any], mode: str, state: str | None
+) -> None:
+    require(
+        value.get("mode") == mode
+        and value.get("guest_canaries_preserved") is True
+        and value.get("custody_retained_until_guest_cleanup") is True
+        and value.get("allocation_retained_until_guest_cleanup") is False,
+        "partial-observation-mismatch",
+    )
+    identity = partial_identity(value, c)
+    observed = partial_state(value, c, identity)
+    require(
+        value.get("state") == observed
+        and (state is None or observed == state)
+        and value.get("target_absent") is (observed == "absent")
+        and value.get("directory_retained_until_guest_cleanup") is (observed != "absent"),
+        "partial-state-not-observed",
+    )
+    exited = mode != "prepare-partial"
+    require(value.get("origin_exited") is exited, "partial-origin-exit-not-observed")
+    if exited:
+        require(
+            (value["observer"]["pid"], value["observer"]["start_ticks"])
+            != (identity["origin"]["pid"], identity["origin"]["start_ticks"]),
+            "independent-partial-observer-missing",
+        )
+    expected = {"project_reset": False, "limit_reset": False, "rmdir": False}
+    if mode == "cleanup-partial":
+        before = value.get("before")
+        if not isinstance(before, dict):
+            raise GuestExhaustionError("partial-cleanup-before-missing")
+        validate_partial({**before, "mode": "observe-partial"}, c, "observe-partial", None)
+        present = before["state"] != "absent"
+        expected = {
+            "project_reset": present and before["attributes"]["project_id"] != 0,
+            "limit_reset": before["quota"]["hard_bytes"] != 0,
+            "rmdir": present,
+        }
+        require(
+            type(value.get("removed_directory_links")) is int
+            and value["removed_directory_links"] == 0
+            if present
+            else value.get("removed_directory_links") is None,
+            "partial-cleanup-links-not-observed",
+        )
+        require(
+            value.get("refusals_verified") == (list(PARTIAL_REFUSALS) if present else []),
+            "partial-cleanup-refusals-missing",
+        )
+    else:
+        require(value.get("refusals_verified") == [], "partial-observer-had-effects")
+    require(
+        value.get("mutation_effects") == expected
+        and all(type(v) is bool for v in value["mutation_effects"].values()),
+        "partial-cleanup-effects-mismatch",
+    )
+
+
+def partial_phase(
+    guest: Guest,
+    c: dict[str, Any],
+    deadline: Deadline,
+    case: dict[str, Any],
+    name: str,
+    mode: str,
+    state: str | None,
+    *,
+    exit_expected: bool = False,
+    unadmitted: bool = False,
+) -> dict[str, Any] | None:
+    phase: dict[str, Any] = {
+        "phase": name,
+        "mode": mode,
+        "status": "failed",
+        "outcome": "unobserved",
+    }
+    case["phases"].append(phase)
+    metrics = RunStats()
+    try:
+        value = invoke(guest, mode, c, deadline)
+        if unadmitted:
+            phase["unadmitted_reply"] = value
+            try:
+                raise PartialReplyNotAdmitted()
+            except PartialReplyNotAdmitted:
+                phase.update(
+                    status="passed",
+                    mutation_reply_admitted=False,
+                    interruption_kind="controlled-exception-before-reply-admission",
+                )
+            return value
+        phase["observation"] = value
+        require(not exit_expected, "planned-guest-exit-not-observed")
+        validate_partial(value, c, mode, state)
+        phase.update(status="passed", outcome="observed-" + value["state"])
+        return value
+    except RuntimeError as error:
+        if not exit_expected or not command_failed(error, 42):
+            raise
+        phase.update(
+            status="passed",
+            observed_remote_exit=42,
+            interruption_kind="controlled-guest-process-exit-after-checkpoint",
+        )
+        return None
+    finally:
+        phase["statistics"] = metrics.finish()
+        if not valid_stats(phase["statistics"]):
+            phase["status"] = "failed"
+            raise ValueError("invalid required partial quota phase statistics")
+
+
+def partial_case(
+    guest: Guest,
+    progress: Callable[[str], AbstractContextManager[None]],
+    case: dict[str, Any],
+    scenario: str,
+    setup_exit: str | None,
+    cleanup_exit: str | None,
+    unadmitted: bool,
+) -> None:
+    metrics = RunStats()
+    case.update(scenario=scenario, status="failed", phases=[], cleanup_outcome="unobserved")
+    try:
+        c = partial_configuration(guest)
+        c["partial_exit_after"] = setup_exit
+        case.update(
+            task=c["task"],
+            enrollment=c["enrollment"],
+            boot_id=c["boot_id"],
+            setup_checkpoint=setup_exit,
+            cleanup_checkpoint=cleanup_exit,
+        )
+        deadline = Deadline.after(300)
+        with progress("partial-quota-" + scenario):
+            original = partial_phase(
+                guest,
+                c,
+                deadline,
+                case,
+                "prepare",
+                "prepare-partial",
+                "ready",
+                exit_expected=setup_exit is not None,
+                unadmitted=unadmitted,
+            )
+            observed = partial_phase(
+                guest,
+                c,
+                deadline,
+                case,
+                "independent-setup",
+                "observe-partial",
+                setup_exit or "ready",
+            )
+            assert observed is not None
+            c["custody"], c["identity"] = observed["custody"], observed["identity"]
+            case.update(
+                custody=c["custody"],
+                identity=c["identity"],
+                setup_outcome="observed-" + observed["state"],
+            )
+            if unadmitted:
+                require(original is not None, "partial-setup-reply-not-retained")
+                assert original is not None
+                validate_partial(original, c, "prepare-partial", "ready")
+                case["original_reply_validated_after_independent_observation"] = True
+            c["partial_exit_after"] = cleanup_exit
+            if cleanup_exit is not None:
+                partial_phase(
+                    guest,
+                    c,
+                    deadline,
+                    case,
+                    "interrupted-cleanup",
+                    "cleanup-partial",
+                    None,
+                    exit_expected=True,
+                )
+                expected = "absent" if cleanup_exit == "cleanup-rmdir" else cleanup_exit
+                partial_phase(
+                    guest,
+                    c,
+                    deadline,
+                    case,
+                    "independent-partial-cleanup",
+                    "observe-partial",
+                    expected,
+                )
+                case["interrupted_cleanup_outcome"] = "observed-" + expected
+            c["partial_exit_after"] = None
+            partial_phase(guest, c, deadline, case, "cleanup", "cleanup-partial", "absent")
+            partial_phase(
+                guest, c, deadline, case, "independent-absence", "observe-partial", "absent"
+            )
+            case["cleanup_outcome"] = "absent-observed-independently"
+            partial_phase(guest, c, deadline, case, "repeat-cleanup", "cleanup-partial", "absent")
+            partial_phase(guest, c, deadline, case, "final-absence", "observe-partial", "absent")
+        case["status"] = "passed"
+    finally:
+        case["statistics"] = metrics.finish()
+        if not valid_stats(case["statistics"]):
+            case["status"] = "failed"
+            raise ValueError("invalid required partial quota case statistics")
+
+
+def qualify_partial_quota(
+    guest: Guest,
+    progress: Callable[[str], AbstractContextManager[None]],
+    temporary: Path,
+    report: dict[str, Any],
+) -> None:
+    metrics = RunStats()
+    report.update(
+        status="failed",
+        scope="disposable-guest-partial-quota-setup-recovery-only",
+        cases=[],
+        resources_destroyed_with_guest=False,
+        unrelated_host_canary_preserved=False,
+        selected_controlled_recovery_qualified=False,
+        unqualified_windows=[
+            "before-custody-record-fsync",
+            "unplanned-process-or-OS-crash",
+            "reboot-or-restored-copy",
+            "concurrent-product-writers",
+        ],
+    )
+    try:
+        with tempfile.TemporaryDirectory(
+            prefix="fishhat-partial-quota-canary-", dir=temporary
+        ) as name:
+            canary = Path(name) / "unrelated"
+            content = uuid.uuid4().bytes
+            canary.write_bytes(content)
+            before = canary.lstat()
+            try:
+                for scenario, setup, cleanup, unadmitted in PARTIAL_SCENARIOS:
+                    case: dict[str, Any] = {}
+                    report["cases"].append(case)
+                    partial_case(guest, progress, case, scenario, setup, cleanup, unadmitted)
+            finally:
+                after = canary.lstat()
+                report["unrelated_host_canary_preserved"] = (
+                    before.st_dev,
+                    before.st_ino,
+                    before.st_mode,
+                ) == (after.st_dev, after.st_ino, after.st_mode) and canary.read_bytes() == content
+                require(report["unrelated_host_canary_preserved"], "unrelated-host-canary-changed")
+        report.update(status="passed", selected_controlled_recovery_qualified=True)
+    except OSError:
+        raise GuestExhaustionError("partial-quota-observation-unavailable") from None
+    finally:
+        report["statistics"] = metrics.finish()
+        if not valid_stats(report["statistics"]):
+            report.update(status="failed", selected_controlled_recovery_qualified=False)
+            raise ValueError("invalid required partial quota statistics")
