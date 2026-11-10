@@ -546,6 +546,7 @@ def test_main_reports_verified_boot_without_promoting_native_qualification(
     monkeypatch.setattr(native, "probe_controller", lambda *a: {})
     monkeypatch.setattr(native, "controller_faults", lambda *a: None)
     monkeypatch.setattr(native, "guest_storage_faults", lambda *a: None)
+    monkeypatch.setattr(native, "guest_reboot_faults", lambda *a: None)
     monkeypatch.setattr(native, "verify_guest_cleanup", lambda *a: None)
     monkeypatch.setattr(native, "provision_tools", lambda *a: {})
     monkeypatch.setattr(native, "guest_inputs", lambda *a: nullcontext(fixture["inputs"]))
@@ -689,12 +690,12 @@ def test_missing_or_foreign_private_root_preserves_failure_stats_and_foreign_dat
 
 
 @pytest.mark.parametrize(
-    ("refused", "storage_error"),
-    [(False, False), (True, False), (False, True)],
-    ids=["started", "refused", "storage-refused"],
+    ("refused", "storage_error", "reboot_error"),
+    [(False, False, False), (True, False, False), (False, True, False), (False, False, True)],
+    ids=["started", "refused", "storage-refused", "reboot-interrupted"],
 )
 def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
-    fixture, monkeypatch, refused, storage_error
+    fixture, monkeypatch, refused, storage_error, reboot_error
 ):
     events = []
     report = {}
@@ -711,11 +712,14 @@ def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
         if storage_error:
             raise native.GuestStorageError("controlled-storage-refusal")
 
-    def reboot(guest, endpoint, progress, temporary, result):
+    def reboot(guest, endpoint, progress, temporary, result, *, interrupt_observation=False):
         assert guest is fixture["guest"] and result is report["reboot"]
         assert endpoint.name == "qmp" and not storage_error
         assert temporary == fixture["temporary"] and not storage_calls
+        assert interrupt_observation is reboot_error
         events.append("reboot")
+        if reboot_error:
+            raise native.RebootObservationInterrupted()
 
     monkeypatch.setattr(native, "qualify_reboot", reboot)
     monkeypatch.setattr(native, "qualify_storage", qualify)
@@ -816,10 +820,17 @@ def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
             fixture["temporary"],
             report,
             storage_failure=storage_error,
+            reboot_failure=reboot_error,
         )
 
-    if refused or storage_error:
-        reason = "guest-start-rejected" if refused else "controlled-storage-refusal"
+    if refused or storage_error or reboot_error:
+        reason = (
+            "guest-start-rejected"
+            if refused
+            else "controlled-storage-refusal"
+            if storage_error
+            else "injected-before-restart-observation"
+        )
         with pytest.raises(guests.GuestBootError, match=reason):
             invoke()
     else:
@@ -831,7 +842,7 @@ def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
         assert report["controller_verified"]["unix_peer_verified"]
     assert storage_calls == (
         []
-        if refused
+        if refused or reboot_error
         else ["storage"]
         if storage_error
         else [
@@ -847,7 +858,9 @@ def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
     assert events[:3] == ["launch", "identity-verified", "cont"] and events[-1] == "reaped"
     assert ("reboot" in events) is (not refused and not storage_error)
     assert report["boot_verified"] is not refused
-    assert report["status"] == ("failed" if refused or storage_error else "passed")
+    assert report["status"] == ("failed" if refused or storage_error or reboot_error else "passed")
+    if reboot_error:
+        assert "storage" not in report
     assert (
         report["process_reaped"]
         and report["temporary_resources_removed"]

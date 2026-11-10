@@ -30,7 +30,13 @@ from scripts.native_linux_exhaustion import (
 from scripts.native_linux_guest import GuestBootError, guest_session, provision_tools
 from scripts.native_linux_images import GuestInputError, GuestInputs, guest_inputs
 from scripts.native_linux_processes import qualify_process_kill
-from scripts.native_linux_reboot import qualify_reboot
+from scripts.native_linux_reboot import (
+    REBOOT,
+    GuestRebootError,
+    RebootObservationInterrupted,
+    observe_removed_resources,
+    qualify_reboot,
+)
 from scripts.native_linux_storage import GuestStorageError, qualify_storage
 from scripts.native_linux_transport import qualify_transport_loss
 from scripts.run_stats import RunStats, valid_stats
@@ -622,7 +628,10 @@ def boot_guest(
     report: dict[str, Any],
     *,
     storage_failure: bool = False,
+    reboot_failure: bool = False,
 ) -> None:
+    if storage_failure and reboot_failure:
+        raise GuestRebootError("conflicting-guest-faults")
     with stage("guest-session"):
         with guest_session(inputs, temporary, run, tools, QEMU, report) as guest:
             with owned_controller(temporary, guest.launch, enrollment=inputs.enrollment) as (
@@ -657,7 +666,17 @@ def boot_guest(
                 if not storage_failure:
                     report["reboot"] = {}
                     with stage("guest-reboot"):
-                        qualify_reboot(guest, endpoint, stage, temporary, report["reboot"])
+                        if reboot_failure:
+                            qualify_reboot(
+                                guest,
+                                endpoint,
+                                stage,
+                                temporary,
+                                report["reboot"],
+                                interrupt_observation=True,
+                            )
+                        else:
+                            qualify_reboot(guest, endpoint, stage, temporary, report["reboot"])
                     with stage("guest-refusals-after-reboot"):
                         guest.refusals()
                 report["storage"] = {}
@@ -804,6 +823,120 @@ def guest_storage_faults(
             raise ValueError("invalid required guest storage fault statistics")
 
 
+def verify_interrupted_reboot_cleanup(case: dict[str, Any]) -> None:
+    guest, inputs = case["guest"], case["guest_inputs"]
+    reboot = guest.get("reboot", {})
+    phases = reboot.get("phases", [])
+    if (
+        case.get("problem")
+        != {"stage": "guest-reboot", "reason": "injected-before-restart-observation"}
+        or reboot.get("fault_injection_verified") is not True
+        or reboot.get("continuity_outcome") != "unobserved"
+        or reboot.get("status") != "failed"
+        or reboot.get("reboot_continuity_qualified") is not False
+        or "after_identity" in reboot
+        or "storage" in guest
+        or [p["phase"] for p in phases] != ["prepare", "request", "independent-boot"]
+        or [p["status"] for p in phases] != ["passed", "passed", "failed"]
+        or phases[-1].get("interruption_kind") != "controlled-controller-observer-exception"
+        or phases[-1].get("outcome") != "unobserved"
+    ):
+        raise GuestRebootError("required-reboot-interruption-missing")
+    request = phases[1]
+    acknowledged = (
+        request.get("observed_exit_status") == 0
+        and request.get("outcome") == "request-acknowledged"
+        and isinstance(request.get("original_reply"), str)
+    )
+    lost = (
+        request.get("observed_exit_status") == 255
+        and request.get("outcome") == "unobserved"
+        and "original_reply" not in request
+    )
+    if (
+        request.get("command") != REBOOT
+        or type(request.get("observed_exit_status")) is not int
+        or request.get("mutation_reissued") is not False
+        or not (acknowledged or lost)
+        or not all(valid_stats(p.get("statistics")) for p in phases)
+    ):
+        raise GuestRebootError("original-reboot-request-not-preserved")
+    if (
+        guest.get("boot_verified") is not True
+        or guest.get("identity") != reboot.get("before_identity")
+        or guest.get("status") != "failed"
+        or guest.get("process_reaped") is not True
+        or guest.get("temporary_resources_removed") is not True
+        or inputs.get("temporary_resources_removed") is not True
+        or inputs.get("base_preserved") is not True
+        or reboot.get("unrelated_host_canary_preserved") is not True
+        or case.get("unrelated_state_preserved") is not True
+    ):
+        raise GuestRebootError("reboot-resources-not-removed")
+    case["cleanup_observation"] = observe_removed_resources(phases[0]["host_custody"])
+    endpoint_closed(guest["endpoint"])
+    guest["endpoint"]["closed_after_cleanup"] = True
+    reboot.update(resources_destroyed_with_guest=True, failed_restart_cleanup_qualified=True)
+    case.update(expected_failure_verified=True, failed_restart_cleanup_qualified=True)
+
+
+def guest_reboot_faults(
+    tools: dict[str, Any], binary_sha256: str, temporary: Path, results: list[dict[str, Any]]
+) -> None:
+    metrics = RunStats()
+    case: dict[str, Any] = {
+        "scenario": "before-restart-observation",
+        "scope": "disposable-guest-interrupted-reboot-observation-only",
+        "status": "failed",
+        "enrollment": str(uuid.uuid4()),
+        "expected_failure_verified": False,
+        "failed_restart_cleanup_qualified": False,
+        "unrelated_state_preserved": False,
+        "guest_inputs": {},
+        "guest": {},
+    }
+    results.append(case)
+    try:
+        with stage("guest-reboot-fault"):
+            with tempfile.TemporaryDirectory(prefix="fishhat-canary-", dir=temporary) as folder:
+                canary = Path(folder) / "unrelated"
+                content = uuid.uuid4().bytes
+                canary.write_bytes(content)
+                before = canary.lstat()
+                try:
+                    with guest_inputs(
+                        case["enrollment"], temporary, run, stage, case["guest_inputs"]
+                    ) as inputs:
+                        boot_guest(
+                            inputs,
+                            tools,
+                            binary_sha256,
+                            temporary,
+                            case["guest"],
+                            reboot_failure=True,
+                        )
+                except RebootObservationInterrupted as error:
+                    case["problem"] = {"stage": error.stage, "reason": error.reason}
+                finally:
+                    after = canary.lstat()
+                    case["unrelated_state_preserved"] = (
+                        after.st_dev,
+                        after.st_ino,
+                        after.st_mode,
+                    ) == (
+                        before.st_dev,
+                        before.st_ino,
+                        before.st_mode,
+                    ) and canary.read_bytes() == content
+                verify_interrupted_reboot_cleanup(case)
+    except OSError:
+        raise GuestRebootError("reboot-fault-observation-unavailable") from None
+    finally:
+        case["statistics"] = metrics.finish()
+        if not valid_stats(case["statistics"]):
+            raise ValueError("invalid required reboot fault statistics")
+
+
 @invocation
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -868,6 +1001,13 @@ def main(argv: list[str] | None = None) -> int:
             report["controller"]["binary_sha256"],
             Path(os.environ["RUNNER_TEMP"]),
             report["guest_storage_faults"],
+        )
+        report["guest_reboot_faults"] = []
+        guest_reboot_faults(
+            report["guest_tools"],
+            report["controller"]["binary_sha256"],
+            Path(os.environ["RUNNER_TEMP"]),
+            report["guest_reboot_faults"],
         )
         report["status"] = "passed"
     except (EnrollmentError, GuestInputError, GuestBootError) as error:

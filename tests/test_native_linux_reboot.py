@@ -13,10 +13,11 @@ import shlex
 import socket
 import stat
 import subprocess
+import sys
 import time
 import uuid
-from contextlib import nullcontext, redirect_stdout
-from pathlib import PurePosixPath
+from contextlib import contextmanager, nullcontext, redirect_stdout
+from pathlib import Path, PurePosixPath
 from types import SimpleNamespace
 
 import pytest
@@ -25,8 +26,8 @@ from scripts import native_linux_enrollment as native
 from scripts import native_linux_guest as guests
 from scripts import native_linux_images as images
 from scripts import native_linux_reboot as reboot
-from scripts.run_stats import valid_stats
-from scripts.validation_timeouts import Deadline
+from scripts.run_stats import RunStats, valid_stats
+from scripts.validation_timeouts import Deadline, watchdog
 
 CHECK_PURPOSE = {
     "purpose": "validation-tooling",
@@ -35,9 +36,9 @@ CHECK_PURPOSE = {
         "scripts/native_linux_guest.py",
         "scripts/native_linux_enrollment.py",
     ],
-    "scope": "controlled execution of persistent-root canary admission/readback/fsync and disk identity queries, delayed new-boot observations with bounded read-only timeout recovery, exact host custody, original request acknowledgement/loss, stale/foreign command refusal, admission ordering and required scoped statistics",
+    "scope": "controlled execution of persistent-root canary admission/readback/fsync and disk identity queries, delayed new-boot observations with bounded read-only timeout recovery, exact host custody, original request acknowledgement/loss, stale/foreign command refusal, admission ordering, selected pre-admission observer interruption, independent whole-resource absence and required scoped statistics",
     "relationship": "no-product-claim",
-    "reason": "Guest devices/filesystem/boot/SSH and controller observations are substituted. A real unprivileged private socket only challenges host-custody checks; no QEMU, native guest reboot, product continuity or writer authority is qualified.",
+    "reason": "Guest devices/filesystem/boot/SSH and controller observations are substituted. Unprivileged temporary paths, private sockets and short child processes challenge custody/absence guards only; no QEMU, native guest reboot, product continuity or writer authority is qualified.",
     "claims": [],
 }
 
@@ -710,7 +711,11 @@ def host_guest(tmp_path, monkeypatch):
         if not state["listener"]:
             raise guests.GuestBootError("controlled-listener-mismatch")
 
+    private = tmp_path / "private"
+    private.mkdir(mode=0o700)
     guest = SimpleNamespace(
+        directory=private,
+        directory_identity=images.identity(private, directory=True),
         process=SimpleNamespace(pid=pid),
         verify_process=verify,
         listener=listener,
@@ -812,3 +817,361 @@ def test_invalid_preparation_keeps_original_reply_and_never_requests_reboot(
         and json.loads(failed["original_reply"]) == failed["observation"]
     )
     assert valid_stats(failed["statistics"]) and valid_stats(report["statistics"])
+
+
+@pytest.mark.parametrize("lost", [False, True], ids=["acknowledged", "reply-unobserved"])
+def test_controlled_reboot_interruption_preserves_request_without_admitting_or_replaying(
+    controlled, tmp_path, lost
+):
+    guest, custody_calls = controlled
+    guest.request_loss = lost
+    report = {}
+    with pytest.raises(reboot.RebootObservationInterrupted) as failure:
+        reboot.qualify_reboot(
+            guest,
+            tmp_path / "qmp",
+            lambda name: nullcontext(),
+            tmp_path,
+            report,
+            interrupt_observation=True,
+        )
+    assert failure.value.reason == "injected-before-restart-observation"
+    assert report["status"] == "failed" and report["fault_injection_verified"] is True
+    assert report["continuity_outcome"] == "unobserved" and "after_identity" not in report
+    assert (
+        report["reboot_continuity_qualified"] is report["failed_restart_cleanup_qualified"] is False
+    )
+    assert report["snapshot_restore_qualified"] is report["resources_destroyed_with_guest"] is False
+    assert guest.observed == guest.original == report["before_identity"]
+    assert guest.report["identity"] == guest.original and guest.observations == []
+    assert guest.requests == [reboot.REBOOT] and len(custody_calls) == 1
+    prepare, request, interrupted = report["phases"]
+    assert [p["status"] for p in report["phases"]] == ["passed", "passed", "failed"]
+    assert prepare["observation"]["canary_fsynced"] is True
+    assert prepare["observation"]["identity"]["content"].startswith("reboot:" + guest.enrollment)
+    assert request["command"] == reboot.REBOOT and request["mutation_reissued"] is False
+    assert request["outcome"] == ("unobserved" if lost else "request-acknowledged")
+    assert request["observed_exit_status"] == (255 if lost else 0)
+    assert ("original_reply" in request) is (not lost)
+    assert interrupted["phase"] == "independent-boot" and "identity" not in interrupted
+    assert interrupted["outcome"] == "unobserved"
+    assert interrupted["interruption_kind"] == "controlled-controller-observer-exception"
+    assert report["unrelated_host_canary_preserved"] and not list(tmp_path.iterdir())
+    assert all(valid_stats(p["statistics"]) for p in report["phases"])
+    assert valid_stats(report["statistics"])
+
+
+@pytest.mark.parametrize("failure", ["request", "request-timeout", "foreign-custody"])
+def test_unexpected_reboot_error_cannot_satisfy_the_selected_observer_interruption(
+    controlled, tmp_path, monkeypatch, failure
+):
+    guest, _ = controlled
+    guest.failure = failure
+    if failure == "foreign-custody":
+
+        def refuse(*args):
+            raise reboot.GuestRebootError("foreign-custody")
+
+        monkeypatch.setattr(reboot, "host_custody", refuse)
+    report = {}
+    with pytest.raises(RuntimeError) as raised:
+        reboot.qualify_reboot(
+            guest,
+            tmp_path / "qmp",
+            lambda name: nullcontext(),
+            tmp_path,
+            report,
+            interrupt_observation=True,
+        )
+    assert not isinstance(raised.value, reboot.RebootObservationInterrupted)
+    assert report["status"] == "failed" and report["fault_injection_verified"] is False
+    assert not report["reboot_continuity_qualified"] and "after_identity" not in report
+    assert guest.observed == guest.original and guest.observations == []
+    assert len(guest.requests) == int(failure != "foreign-custody")
+    assert valid_stats(report["statistics"]) and not list(tmp_path.iterdir())
+
+
+def cleanup_custody(tmp_path):
+    """Actual unprivileged files/short child; all guest observations are substituted."""
+    folders = {name: tmp_path / name for name in ("inputs", "private", "control")}
+    for directory in folders.values():
+        directory.mkdir(mode=0o700)
+    child = subprocess.Popen([sys.executable, "-I", "-S", "-c", "pass"], start_new_session=True)
+    child.wait(timeout=watchdog(5))
+    files = {}
+    for name in ("base.img", *images.DISK_BYTES):
+        p = folders["inputs"] / name
+        p.write_bytes(b"controlled fixture disk")
+        p.chmod(0o400 if name == "base.img" else 0o600)
+        files[name] = {"path": str(p), "identity": images.identity(p)}
+    private = folders["private"] / "admin"
+    private.write_bytes(b"controlled fixture input")
+    private.chmod(0o600)
+    endpoint = folders["control"] / "qmp"
+    endpoint.write_bytes(b"controlled endpoint")
+    return {
+        "pid": child.pid,
+        "pgid": child.pid,
+        "control_socket": {"path": str(endpoint)},
+        "input_directory": {
+            "path": str(folders["inputs"]),
+            "identity": images.identity(folders["inputs"], directory=True),
+        },
+        "private_directory": {
+            "path": str(folders["private"]),
+            "identity": images.identity(folders["private"], directory=True),
+        },
+        "private_files": {"admin": {"path": str(private), "identity": images.identity(private)}},
+        "disks": files,
+    }
+
+
+def remove_controlled_resources(custody):
+    for entries in (custody["disks"], custody["private_files"]):
+        for value in entries.values():
+            Path(value["path"]).unlink()
+    endpoint = Path(custody["control_socket"]["path"])
+    endpoint.unlink()
+    for directory in (custody["input_directory"], custody["private_directory"]):
+        Path(directory["path"]).rmdir()
+    endpoint.parent.rmdir()
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        "none",
+        "disk",
+        "private",
+        "directory",
+        "socket",
+        "symlink",
+        "foreign-path",
+        "missing-disk",
+        "no-private",
+        "group",
+    ],
+)
+def test_reboot_cleanup_independently_requires_exact_owned_path_and_process_absence(
+    tmp_path, change
+):
+    custody = cleanup_custody(tmp_path)
+    remove_controlled_resources(custody)
+    unrelated = tmp_path / "unrelated"
+    unrelated.write_bytes(b"preserve me")
+    if change in ("disk", "private", "directory", "socket", "symlink"):
+        path = (
+            Path(custody["disks"]["root.qcow2"]["path"])
+            if change == "disk"
+            else Path(custody["private_files"]["admin"]["path"])
+            if change == "private"
+            else Path(custody["control_socket"]["path"])
+            if change == "socket"
+            else Path(custody["private_directory"]["path"])
+        )
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if change == "directory":
+            path.mkdir()
+        elif change == "symlink":
+            path.symlink_to(tmp_path / "absent-unrelated-target")
+        else:
+            path.write_bytes(b"still present")
+    elif change == "foreign-path":
+        custody["disks"]["root.qcow2"]["path"] = str(unrelated)
+    elif change == "missing-disk":
+        del custody["disks"]["data.qcow2"]
+    elif change == "no-private":
+        custody["private_files"] = {}
+    elif change == "group":
+        custody["pgid"] += 1
+    if change == "none":
+        value = reboot.observe_removed_resources(custody)
+        assert (
+            value["status"] == "passed"
+            and value["process_absent"] is value["process_group_absent"] is True
+        )
+        assert len(value["paths"]) == 9 and all(x["absent"] is True for x in value["paths"])
+        assert (
+            valid_stats(value["statistics"])
+            and value["statistics"]["scope"] == "process-excludes-children"
+        )
+    else:
+        with pytest.raises(reboot.GuestRebootError):
+            reboot.observe_removed_resources(custody)
+    assert unrelated.read_bytes() == b"preserve me"
+
+
+@pytest.mark.parametrize("identity", ["process", "group"])
+def test_live_foreign_process_or_group_is_observed_and_never_signalled(
+    tmp_path, monkeypatch, identity
+):
+    custody = cleanup_custody(tmp_path)
+    remove_controlled_resources(custody)
+    child = subprocess.Popen(
+        [sys.executable, "-I", "-S", "-c", "import time; time.sleep(30)"], start_new_session=True
+    )
+    try:
+        custody.update(pid=child.pid, pgid=child.pid)
+        if identity == "group":
+
+            def absent_leader(pid, signal):
+                assert pid == child.pid and signal == 0
+                raise ProcessLookupError()
+
+            monkeypatch.setattr(reboot, "os", SimpleNamespace(kill=absent_leader, killpg=os.killpg))
+        with pytest.raises(reboot.GuestRebootError):
+            reboot.observe_removed_resources(custody)
+        assert child.poll() is None
+    finally:
+        child.terminate()
+        child.wait(timeout=watchdog(5))
+
+
+@pytest.mark.parametrize(
+    "mode",
+    [
+        "expected",
+        "lost",
+        "wrong-error",
+        "no-error",
+        "not-injected",
+        "admission",
+        "request",
+        "unclean",
+        "unrelated",
+        "endpoint",
+    ],
+)
+def test_interrupted_reboot_case_requires_exact_injection_original_request_and_complete_cleanup(
+    tmp_path, monkeypatch, mode
+):
+    results, events = [], []
+    holder = {}
+
+    @contextmanager
+    def inputs(enrollment, temporary, command, progress, report):
+        assert temporary == tmp_path and uuid.UUID(enrollment).version == 4
+        custody = cleanup_custody(tmp_path)
+        holder["custody"] = custody
+        report.update(enrollment=enrollment)
+        events.append("inputs")
+        try:
+            yield SimpleNamespace(enrollment=enrollment)
+        finally:
+            remove_controlled_resources(custody)
+            report.update(temporary_resources_removed=True, base_preserved=True)
+            events.append("inputs-removed")
+
+    def boot(owner, tools, digest, temporary, report, *, reboot_failure):
+        assert reboot_failure is True and temporary == tmp_path and digest == "c" * 64
+        assert tools == {"controlled": True}
+        before = {"enrollment": owner.enrollment, "boot_id": str(uuid.uuid4())}
+        stats = RunStats().finish()
+        report.update(
+            status="failed",
+            boot_verified=True,
+            identity=before,
+            temporary_resources_removed=True,
+            process_reaped=mode != "unclean",
+            endpoint={"address": "127.0.0.1", "port": 2222, "owned_listener": True},
+        )
+        report["reboot"] = {
+            "status": "failed",
+            "before_identity": copy.deepcopy(before),
+            "fault_injection_verified": mode != "not-injected",
+            "continuity_outcome": "unobserved",
+            "reboot_continuity_qualified": False,
+            "failed_restart_cleanup_qualified": False,
+            "snapshot_restore_qualified": False,
+            "unrelated_host_canary_preserved": True,
+            "phases": [
+                {
+                    "phase": "prepare",
+                    "status": "passed",
+                    "host_custody": holder["custody"],
+                    "statistics": stats,
+                },
+                {
+                    "phase": "request",
+                    "status": "passed",
+                    "command": reboot.REBOOT,
+                    "mutation_reissued": mode == "request",
+                    "outcome": "request-acknowledged",
+                    "observed_exit_status": 0,
+                    "original_reply": "",
+                    "statistics": stats,
+                },
+                {
+                    "phase": "independent-boot",
+                    "status": "failed",
+                    "outcome": "unobserved",
+                    "interruption_kind": "controlled-controller-observer-exception",
+                    "statistics": stats,
+                },
+            ],
+        }
+        if mode == "admission":
+            report["identity"] = dict(before, boot_id=str(uuid.uuid4()))
+        if mode == "unrelated":
+            next(tmp_path.glob("fishhat-canary-*/unrelated")).write_bytes(b"changed")
+        if mode == "lost":
+            request = report["reboot"]["phases"][1]
+            request.update(observed_exit_status=255, outcome="unobserved")
+            del request["original_reply"]
+        events.append("request-and-interruption")
+        if mode == "no-error":
+            return
+        if mode == "wrong-error":
+            raise reboot.GuestRebootError("injected-before-restart-observation")
+        raise reboot.RebootObservationInterrupted()
+
+    def observe(endpoint):
+        assert events == ["inputs", "request-and-interruption", "inputs-removed"]
+        assert endpoint["owned_listener"] is True
+        events.append("endpoint-observed")
+        if mode == "endpoint":
+            raise native.GuestStorageError("cleanup-endpoint-still-available")
+
+    monkeypatch.setattr(native, "guest_inputs", inputs)
+    monkeypatch.setattr(native, "boot_guest", boot)
+    monkeypatch.setattr(native, "endpoint_closed", observe)
+    if mode in ("expected", "lost"):
+        native.guest_reboot_faults({"controlled": True}, "c" * 64, tmp_path, results)
+    else:
+        with pytest.raises(RuntimeError):
+            native.guest_reboot_faults({"controlled": True}, "c" * 64, tmp_path, results)
+    case = results[0]
+    assert case["status"] == "failed" and case["scenario"] == "before-restart-observation"
+    assert (
+        case["expected_failure_verified"]
+        is case["failed_restart_cleanup_qualified"]
+        is (mode in ("expected", "lost"))
+    )
+    assert case["guest"]["reboot"]["reboot_continuity_qualified"] is False
+    assert (
+        valid_stats(case["statistics"])
+        and case["statistics"]["scope"] == "process-excludes-children"
+    )
+    assert not list(tmp_path.iterdir())
+    assert ("endpoint-observed" in events) is (mode in ("expected", "lost", "endpoint"))
+
+
+def test_conflicting_guest_faults_refuse_before_creating_or_starting_resources(
+    tmp_path, monkeypatch
+):
+    def unavailable(*args):
+        pytest.fail("conflicting faults must refuse before guest setup")
+
+    monkeypatch.setattr(native, "guest_session", unavailable)
+    report = {}
+    with pytest.raises(reboot.GuestRebootError, match="conflicting-guest-faults"):
+        native.boot_guest(
+            SimpleNamespace(),
+            {},
+            "c" * 64,
+            tmp_path,
+            report,
+            storage_failure=True,
+            reboot_failure=True,
+        )
+    assert report == {} and not list(tmp_path.iterdir())

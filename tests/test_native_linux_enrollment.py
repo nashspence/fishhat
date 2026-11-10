@@ -222,6 +222,7 @@ def test_selected_run_records_failure_source_scope_and_required_statistics(
     monkeypatch.setattr(native, "probe_controller", lambda *args: {"controlled_fixture": True})
     monkeypatch.setattr(native, "controller_faults", lambda *args: None)
     monkeypatch.setattr(native, "guest_storage_faults", lambda *a: None)
+    monkeypatch.setattr(native, "guest_reboot_faults", lambda *a: None)
     monkeypatch.setattr(native, "verify_guest_cleanup", lambda *a: None)
     monkeypatch.setattr(native, "provision_tools", lambda *args: {})
     monkeypatch.setattr(native, "boot_guest", lambda *args: None)

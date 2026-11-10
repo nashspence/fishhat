@@ -775,7 +775,7 @@ def test_partial_storage_fault_requires_exact_failure_and_cleanup_without_changi
     assert ("endpoint-observed" in events) is (mode != "unclean")
 
 
-@pytest.mark.parametrize("failure", ["none", "cleanup", "fault"])
+@pytest.mark.parametrize("failure", ["none", "cleanup", "fault", "reboot-fault"])
 def test_main_cannot_pass_storage_cleanup_or_fault_failure_and_preserves_statistics(
     tmp_path, monkeypatch, failure
 ):
@@ -815,6 +815,13 @@ def test_main_cannot_pass_storage_cleanup_or_fault_failure_and_preserves_statist
     monkeypatch.setattr(native, "boot_guest", boot)
     monkeypatch.setattr(native, "verify_guest_cleanup", cleanup)
     monkeypatch.setattr(native, "guest_storage_faults", faults)
+
+    def reboot_faults(*args):
+        events.append("reboot-fault-observation")
+        if failure == "reboot-fault":
+            raise native.GuestBootError("required-reboot-interruption-missing")
+
+    monkeypatch.setattr(native, "guest_reboot_faults", reboot_faults)
     assert native.main(["--github-hosted-only", "--output", str(output)]) == int(failure != "none")
     report = json.loads(output.read_text())
     assert report["status"] == ("passed" if failure == "none" else "failed")
@@ -827,6 +834,7 @@ def test_main_cannot_pass_storage_cleanup_or_fault_failure_and_preserves_statist
     )
     assert events[:3] == ["boot-storage", "input-cleanup", "cleanup-observation"]
     assert ("fault-observation" in events) is (failure != "cleanup")
+    assert ("reboot-fault-observation" in events) is (failure not in ("cleanup", "fault"))
 
 
 @pytest.mark.parametrize(
