@@ -33,7 +33,7 @@ CHECK_PURPOSE = {
         "scripts/native_linux_storage.py",
         "scripts/native_linux_enrollment.py",
     ],
-    "scope": "controlled execution of fixed quota preparation, kernel-allocation worker and independent observer, foreign/stale/mounted admission refusal, exact selected-profile errno preservation, matching outside-project allocation and global space evidence, finite fail-safe allocation, exact release/reuse and idempotent known release, canaries, teardown evidence and mandatory measurement scope",
+    "scope": "controlled execution of fixed quota preparation, kernel-allocation worker and independent observer, foreign/stale/mounted admission refusal, exact selected-profile errno preservation, matching outside-project allocation and global space evidence, finite fail-safe allocation, exact release/reuse and idempotent known release, known allocation destruction and independently observed absence/retry after an unadmitted reply, canaries, teardown evidence and mandatory measurement scope",
     "relationship": "no-product-claim",
     "reason": "All guest filesystem, quota, kernel, process and SSH facilities are substituted. Passing tooling checks cannot qualify actual native operations or product owners; real enrolled main-only evidence remains required.",
     "claims": [],
@@ -56,6 +56,8 @@ class Harness:
         self.enrollment, self.boot, self.token = (str(uuid.uuid4()) for _ in range(3))
         self.root = "/run/fhs-" + uuid.UUID(self.enrollment).hex
         self.meta, self.files, self.fds, self.projects = {}, {}, {}, {}
+        self.removed = {}
+        self.mountinfo = ""
         self.events = []
         self.allocations = []
         self.uid = 0
@@ -160,6 +162,8 @@ class Harness:
                     return h.enrollment
                 if str(self).endswith("boot_id"):
                     return h.boot
+                if str(self) == "/proc/self/mountinfo":
+                    return h.mountinfo
                 if str(self) == "/proc/self/status":
                     return "CapEff:\t0000000000000000\n"
                 raise AssertionError(str(self))
@@ -169,14 +173,12 @@ class Harness:
                 return b"fixed-guest-interpreter"
 
             def unlink(self):
-                h.events.append("unlink:" + self.name)
-                del h.meta[str(self)]
-                h.files.pop(str(self), None)
+                h.unlink(self)
 
         return Path(str(value))
 
-    def open(self, path, flags, mode=0o777):
-        path = str(path)
+    def open(self, path, flags, mode=0o777, *, dir_fd=None):
+        path = str(PurePosixPath(self.fds[dir_fd]) / path) if dir_fd is not None else str(path)
         if flags & os.O_CREAT:
             assert path not in self.meta
             dev = self.state["control" if "/control/" in path else "data"]["directory"]["device"]
@@ -198,6 +200,40 @@ class Harness:
         self.next_fd += 1
         self.fds[self.next_fd] = path
         return self.next_fd
+
+    def close(self, fd):
+        path = self.fds.pop(fd)
+        if path in self.removed and path not in self.fds.values():
+            self.removed.pop(path)
+            if self.projects.get(path) == self.c["project_id"]:
+                self.q["inodes"] -= 1
+
+    def fstat(self, fd):
+        path = self.fds[fd]
+        return copy.copy(self.meta[path] if path in self.meta else self.removed[path])
+
+    def listdir(self, fd):
+        path = self.fds[fd]
+        return [PurePosixPath(p).name for p in self.meta if str(PurePosixPath(p).parent) == path]
+
+    def unlink(self, path, *, dir_fd=None):
+        path = str(PurePosixPath(self.fds[dir_fd]) / path) if dir_fd is not None else str(path)
+        value = self.meta.pop(path)
+        value.st_nlink = 0
+        self.events.append("unlink:" + PurePosixPath(path).name)
+        self.files.pop(path, None)
+        if path in self.fds.values():
+            self.removed[path] = value
+        elif self.projects.get(path) == self.c["project_id"]:
+            self.q["inodes"] -= 1
+
+    def rmdir(self, path, *, dir_fd):
+        path = str(PurePosixPath(self.fds[dir_fd]) / path)
+        assert not any(str(PurePosixPath(p).parent) == path for p in self.meta)
+        value = self.meta.pop(path)
+        value.st_nlink = 0
+        self.removed[path] = value
+        self.events.append("rmdir")
 
     def chown(self, path, uid, gid):
         self.meta[str(path)].st_uid = uid
@@ -232,11 +268,19 @@ class Harness:
         self.q["used_bytes"] = 0
 
     def ioctl(self, fd, operation, buffer):
-        assert operation == 0x801C581F and len(buffer) == 28
+        assert operation in (0x801C581F, 0x401C5820) and len(buffer) == 28
         path = self.fds[fd]
+        if operation == 0x401C5820:
+            values = struct.unpack("=5I8s", buffer)
+            assert values[3] == 0 and not values[0] & 0x200
+            assert self.projects[path] == self.c["project_id"]
+            self.projects[path] = 0
+            self.q["inodes"] -= 1
+            self.events.append("project-reset")
+            return buffer
         return struct.pack(
             "=5I8s",
-            0x200 if stat.S_ISDIR(self.meta[path].st_mode) else 0,
+            0x200 if stat.S_ISDIR(self.meta[path].st_mode) and self.projects.get(path, 0) else 0,
             0,
             0,
             self.projects.get(path, 0) + (1 if self.bad_attributes else 0),
@@ -283,8 +327,11 @@ class Harness:
                 self.projects[self.c["target"]] = self.c["project_id"]
                 self.q.update(present=True, inodes=1)
             else:
-                assert command == f"limit -p bhard={exhaustion.CAPACITY} {self.c['project_id']}"
-                self.q["hard_bytes"] = exhaustion.CAPACITY
+                assert command in (
+                    f"limit -p bhard={exhaustion.CAPACITY} {self.c['project_id']}",
+                    f"limit -p bhard=0 {self.c['project_id']}",
+                )
+                self.q["hard_bytes"] = 0 if "bhard=0 " in command else exhaustion.CAPACITY
             return SimpleNamespace(stdout="")
         cfg = json.loads(args[-1])
         if args[-2] == exhaustion.STORAGE_PROGRAM:
@@ -319,9 +366,12 @@ class Harness:
         operating_system.getgroups = lambda: []
         operating_system.getpid = lambda: self.pid
         operating_system.open = self.open
-        operating_system.close = lambda fd: self.fds.pop(fd)
+        operating_system.close = self.close
+        operating_system.listdir = self.listdir
+        operating_system.unlink = self.unlink
+        operating_system.rmdir = self.rmdir
         operating_system.chown = self.chown
-        operating_system.fstat = lambda fd: copy.copy(self.meta[self.fds[fd]])
+        operating_system.fstat = self.fstat
         operating_system.posix_fallocate = self.allocate
         operating_system.ftruncate = self.truncate
         operating_system.pwrite = lambda fd, data, offset: len(data)
@@ -362,6 +412,8 @@ class Harness:
 
     def invoke(self, mode):
         self.c["mode"] = mode
+        if mode in ("cleanup", "inspect-cleanup"):
+            self.pid += 1
         return execute(exhaustion.PROGRAM, self.namespace(self.c))
 
     def prepare(self):
@@ -940,3 +992,238 @@ def test_release_requires_current_verified_exhaustion_and_preserves_failed_stati
     with pytest.raises(exhaustion.GuestExhaustionError, match="exhaustion-not-verified"):
         exhaustion.qualify_release_reuse(h.guest, lambda name: nullcontext(), tmp_path, report)
     assert not h.events and valid_stats(report["statistics"]) and report["status"] == "failed"
+
+
+def released_allocation(h):
+    h.prepare()
+    h.fill()
+    return h.invoke("release")
+
+
+def test_known_cleanup_destroys_only_empty_owned_resources_and_retries_without_effects():
+    h = Harness()
+    released_allocation(h)
+    before = copy.deepcopy(h.c["identity"])
+    value = h.invoke("cleanup")
+    assert value["identity"] == before and value["already_absent"] is False
+    assert value["cleanup_effects"] == dict.fromkeys(
+        ("unlink", "project_reset", "limit_reset", "rmdir"), True
+    )
+    assert value["refusals_verified"] == list(exhaustion.CLEANUP_REFUSALS)
+    assert value["allocation_before"]["inode"] == h.c["allocation"]["inode"]
+    assert value["unlinked_allocation_links"] == value["removed_directory_links"] == 0
+    assert h.c["target"] not in h.meta and h.c["target"] + "/allocation" not in h.meta
+    assert (
+        value["quota"]["hard_bytes"]
+        == value["quota"]["used_bytes"]
+        == value["quota"]["inodes"]
+        == 0
+    )
+    h.events.clear()
+    observed = h.invoke("inspect-cleanup")
+    repeated = h.invoke("cleanup")
+    for result in (observed, repeated):
+        assert result["identity"] == before and result["already_absent"] is True
+        assert result["target_absent"] is result["allocation_absent"] is True
+        assert not any(result["cleanup_effects"].values()) and result["allocation_before"] is None
+    assert observed["observer"]["pid"] != repeated["observer"]["pid"] != value["observer"]["pid"]
+    assert set(h.events) == {"storage-read"} and not h.fds and not h.removed
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        "inode",
+        "directory",
+        "actor",
+        "boot",
+        "project",
+        "quota",
+        "extra-inode",
+        "size",
+        "blocks",
+        "hardlink",
+        "mode",
+        "extra-entry",
+        "mounted",
+        "directory-bind-mount",
+        "allocation-bind-mount",
+    ],
+)
+def test_known_cleanup_refuses_unowned_or_unreleased_live_state_before_any_effect(change):
+    h = Harness()
+    released_allocation(h)
+    allocation = h.meta[h.c["target"] + "/allocation"]
+    if change == "inode":
+        h.c["allocation"]["inode"] += 1
+    elif change == "directory":
+        h.meta[h.c["target"]].st_ino += 1
+    elif change == "actor":
+        h.c["actor"] = {"uid": 0, "gid": 0}
+    elif change == "boot":
+        h.c["boot_id"] = str(uuid.uuid4())
+    elif change == "project":
+        h.bad_attributes = True
+    elif change == "quota":
+        h.q["hard_bytes"] += 512
+    elif change == "extra-inode":
+        h.q["inodes"] += 1
+    elif change == "size":
+        allocation.st_size = 1
+    elif change == "blocks":
+        allocation.st_blocks = 1
+    elif change == "hardlink":
+        allocation.st_nlink = 2
+    elif change == "mode":
+        allocation.st_mode = stat.S_IFREG | 0o644
+    elif change == "extra-entry":
+        h.close(h.open(h.c["target"] + "/foreign", os.O_CREAT | os.O_EXCL, 0o600))
+    elif change == "mounted":
+        h.mounted = True
+    else:
+        target = h.c["target"] + ("/allocation" if change == "allocation-bind-mount" else "")
+        h.mountinfo = "42 1 0:1 / " + target + " rw - xfs /dev/vdc rw\n"
+    before = copy.deepcopy(h.meta)
+    h.events.clear()
+    with pytest.raises((ValueError, subprocess.CalledProcessError)):
+        h.invoke("cleanup")
+    assert h.meta == before
+    assert not any(
+        e.startswith(("unlink:", "quota-mutate", "project-reset", "rmdir", "create:", "truncate"))
+        for e in h.events
+    )
+    assert not h.fds
+
+
+@pytest.mark.parametrize("mode", ["cleanup", "inspect-cleanup"])
+def test_absent_target_with_unreleased_limits_cannot_be_guessed_as_cleaned(mode):
+    h = Harness()
+    released_allocation(h)
+    h.invoke("cleanup")
+    h.q["hard_bytes"] = exhaustion.CAPACITY
+    h.events.clear()
+    with pytest.raises(ValueError):
+        h.invoke(mode)
+    assert set(h.events) <= {"storage-read"}
+
+
+def test_read_only_cleanup_observer_refuses_a_still_present_resource():
+    h = Harness()
+    released_allocation(h)
+    h.events.clear()
+    with pytest.raises(ValueError):
+        h.invoke("inspect-cleanup")
+    assert set(h.events) <= {"storage-read"}
+
+
+def source_release(h, tmp_path):
+    guest = source_exhaustion(h, tmp_path)
+    source = {}
+    exhaustion.qualify_release_reuse(guest, lambda name: nullcontext(), tmp_path, source)
+    guest.report["allocation_release_reuse"] = source
+    return guest
+
+
+def test_cleanup_controller_recovers_unadmitted_reply_by_independent_absence_and_retry(tmp_path):
+    h = Harness()
+    guest = source_release(h, tmp_path)
+    report = {}
+    exhaustion.qualify_allocation_cleanup(guest, lambda name: nullcontext(), tmp_path, report)
+    assert report["status"] == "passed" and report["per_allocation_destruction_qualified"] is True
+    assert (
+        report["partial_setup_recovery_qualified"]
+        is report["resources_destroyed_with_guest"]
+        is False
+    )
+    assert report["cleanup_outcome"] == "absent-observed-independently"
+    assert report["original_reply_validated_after_independent_observation"] is True
+    assert [c["scenario"] for c in report["cases"]] == [
+        "unadmitted-cleanup-reply",
+        "independent-absence",
+        "repeat-cleanup",
+        "final-absence",
+    ]
+    first = report["cases"][0]
+    assert first["mutation_reply_admitted"] is False and first["cleanup_outcome"] == "unobserved"
+    assert first["observer_interruption_kind"] == "controlled-exception-before-reply-admission"
+    assert first["unadmitted_reply"]["cleanup_effects"]["unlink"] is True
+    assert all(c["status"] == "passed" and valid_stats(c["statistics"]) for c in report["cases"])
+    assert valid_stats(report["statistics"]) and report["unrelated_host_canary_preserved"]
+    assert not list(tmp_path.iterdir())
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        "effect",
+        "inode",
+        "canary",
+        "quota",
+        "observer",
+        "repeat-effect",
+        "repeat-mode",
+        "repeat-pid",
+    ],
+)
+def test_cleanup_controller_rejects_inexact_evidence_and_preserves_failure_statistics(
+    change, tmp_path
+):
+    h = Harness()
+    guest = source_release(h, tmp_path)
+    report = {}
+    original_pid = None
+
+    def alter(value):
+        nonlocal original_pid
+        if value["mode"] == "cleanup" and not value["already_absent"]:
+            original_pid = value["observer"]["pid"]
+            if change == "effect":
+                value["cleanup_effects"]["unlink"] = False
+            elif change == "inode":
+                value["allocation_before"]["inode"] += 1
+            elif change == "canary":
+                value["guest_canaries_preserved"] = 1
+            elif change == "quota":
+                value["quota"]["hard_bytes"] = exhaustion.CAPACITY
+            elif change == "observer":
+                value["observer"]["pid"] = 0
+        elif value["mode"] == "cleanup":
+            if change == "repeat-effect":
+                value["cleanup_effects"]["unlink"] = True
+            elif change == "repeat-mode":
+                value["mode"] = "foreign"
+            elif change == "repeat-pid":
+                value["observer"]["pid"] = original_pid
+
+    controlled_guest(h, alter)
+    with pytest.raises(exhaustion.GuestExhaustionError):
+        exhaustion.qualify_allocation_cleanup(guest, lambda name: nullcontext(), tmp_path, report)
+    assert report["status"] == "failed" and report["cases"][-1]["status"] == "failed"
+    assert report["per_allocation_destruction_qualified"] is False
+    assert valid_stats(report["statistics"]) and all(
+        valid_stats(c["statistics"]) for c in report["cases"]
+    )
+    assert report["unrelated_host_canary_preserved"] and not list(tmp_path.iterdir())
+
+
+def test_cleanup_requires_current_independently_verified_release_before_any_guest_call(tmp_path):
+    h = Harness()
+    guest = source_exhaustion(h, tmp_path)
+    h.events.clear()
+    report = {}
+    with pytest.raises(exhaustion.GuestExhaustionError, match="allocation-release-not-verified"):
+        exhaustion.qualify_allocation_cleanup(guest, lambda name: nullcontext(), tmp_path, report)
+    assert not h.events and valid_stats(report["statistics"]) and report["status"] == "failed"
+
+
+def test_cleanup_missing_required_measurements_cannot_report_qualification(tmp_path, monkeypatch):
+    h = Harness()
+    guest = source_release(h, tmp_path)
+    report = {}
+    monkeypatch.setattr(exhaustion, "RunStats", lambda: SimpleNamespace(finish=lambda: {}))
+    with pytest.raises(ValueError, match="invalid required allocation cleanup statistics"):
+        exhaustion.qualify_allocation_cleanup(guest, lambda name: nullcontext(), tmp_path, report)
+    assert report["status"] == "failed" and report["per_allocation_destruction_qualified"] is False
+    assert report["cases"][0]["status"] == "failed"
+    assert report["statistics"] == report["cases"][0]["statistics"] == {}
+    assert report["unrelated_host_canary_preserved"] and not list(tmp_path.iterdir())

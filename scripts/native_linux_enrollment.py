@@ -21,7 +21,11 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
-from scripts.native_linux_exhaustion import qualify_exhaustion, qualify_release_reuse
+from scripts.native_linux_exhaustion import (
+    qualify_allocation_cleanup,
+    qualify_exhaustion,
+    qualify_release_reuse,
+)
 from scripts.native_linux_guest import GuestBootError, guest_session, provision_tools
 from scripts.native_linux_images import GuestInputError, GuestInputs, guest_inputs
 from scripts.native_linux_processes import qualify_process_kill
@@ -665,6 +669,11 @@ def boot_guest(
                     qualify_release_reuse(
                         guest, stage, temporary, report["allocation_release_reuse"]
                     )
+                report["allocation_cleanup"] = {}
+                with stage("guest-allocation-cleanup"):
+                    qualify_allocation_cleanup(
+                        guest, stage, temporary, report["allocation_cleanup"]
+                    )
 
 
 def endpoint_closed(endpoint: dict[str, Any]) -> None:
@@ -709,6 +718,8 @@ def verify_guest_cleanup(guest: dict[str, Any], inputs: dict[str, Any]) -> None:
         guest["exhaustion"]["resources_destroyed_with_guest"] = True
     if isinstance(guest.get("allocation_release_reuse"), dict):
         guest["allocation_release_reuse"]["resources_destroyed_with_guest"] = True
+    if isinstance(guest.get("allocation_cleanup"), dict):
+        guest["allocation_cleanup"]["resources_destroyed_with_guest"] = True
 
 
 def guest_storage_faults(

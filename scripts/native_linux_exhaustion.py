@@ -28,6 +28,16 @@ REFUSALS = (
     "mounted-target",
 )
 
+CLEANUP_REFUSALS = (
+    "foreign-enrollment",
+    "stale-boot",
+    "foreign-project",
+    "stale-directory",
+    "foreign-actor",
+    "mounted-target",
+    "replaced-allocation",
+)
+
 # Each allocation has a small fail-safe budget even if quota enforcement breaks.
 # A second independent invocation probes the already exhausted allocation.
 WORKER = r"""
@@ -116,7 +126,7 @@ def directory(path):
     v = path.lstat()
     require(stat.S_ISDIR(v.st_mode))
     return {"device": v.st_dev, "inode": v.st_ino, "uid": v.st_uid, "gid": v.st_gid, "mode": stat.S_IMODE(v.st_mode)}
-require(os.geteuid() == 0 and c["mode"] in ("prepare", "fill", "observe", "release", "inspect-release", "reuse"))
+require(os.geteuid() == 0 and c["mode"] in ("prepare", "fill", "observe", "release", "inspect-release", "reuse", "cleanup", "inspect-cleanup"))
 require(str(uuid.UUID(c["task"])) == c["task"])
 root = pathlib.Path("/run/fhs-" + uuid.UUID(c["enrollment"]).hex)
 target = root / "data" / ("exhaustion-" + uuid.UUID(c["task"]).hex)
@@ -137,7 +147,8 @@ def admission(claim, *, fresh=False):
     if fresh:
         require(not target.exists() and not target.is_symlink())
     elif c["mode"] != "prepare":
-        require(directory(target) == c["identity"]["directory"] and not target.is_mount())
+        if c["mode"] not in ("cleanup", "inspect-cleanup") or target.exists() or target.is_symlink():
+            require(directory(target) == c["identity"]["directory"] and not target.is_mount())
     return observed
 claim = {k: c["storage"][k] for k in ("enrollment", "boot_id", "state", "devices", "uuids")}
 claim["target"] = str(target)
@@ -218,6 +229,121 @@ def release_allocation():
     value = check_identity()
     require(value["used_bytes"] <= before["used_bytes"] and value["used_bytes"] + c["chunk_bytes"] <= c["capacity_bytes"])
     return {"identity": c["identity"], "quota_before": before, "quota": value, "allocation_before": original, "allocation_after": after, "already_empty": already_empty, "release_effect": {"syscall": "ftruncate" if c["mode"] == "release" and not already_empty else None, "length": 0 if c["mode"] == "release" and not already_empty else None, "fsynced": c["mode"] == "release" and not already_empty}}
+def empty_quota(value):
+    return all(value[name] == 0 for name in ("hard_bytes", "soft_bytes", "used_bytes", "inodes", "inode_hard", "inode_soft"))
+def descriptor_directory(fd):
+    v = os.fstat(fd)
+    require(stat.S_ISDIR(v.st_mode))
+    return {"device": v.st_dev, "inode": v.st_ino, "uid": v.st_uid, "gid": v.st_gid, "mode": stat.S_IMODE(v.st_mode)}
+def cleanup_preflight(identity, allocation):
+    require(identity == c["identity"] and allocation == c["allocation"])
+    check_identity()
+    require(not target.is_mount())
+    mounts = pathlib.Path("/proc/self/mountinfo").read_text().splitlines()
+    require(not any(row.split()[4] in (str(target), str(target / "allocation")) for row in mounts))
+    descriptor = os.open(target, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        require(descriptor_directory(descriptor) == identity["directory"])
+        require(os.listdir(descriptor) == ["allocation"])
+        fd = os.open("allocation", os.O_RDONLY | os.O_NOFOLLOW, dir_fd=descriptor)
+        try:
+            value = allocation_snapshot(fd)
+            require(value["size"] == value["allocated_bytes"] == 0)
+            q = quota()
+            require(q["used_bytes"] == 0 and q["inodes"] == 2)
+            require(directory(target) == identity["directory"])
+            return value, q
+        finally:
+            os.close(fd)
+    finally:
+        os.close(descriptor)
+def cleanup_challenges():
+    refusals = []
+    for name in c["cleanup_refusals"]:
+        identity, allocation = copy.deepcopy(c["identity"]), copy.deepcopy(c["allocation"])
+        if name in ("foreign-enrollment", "stale-boot"):
+            identity["enrollment" if name == "foreign-enrollment" else "boot_id"] = str(uuid.uuid4())
+        elif name == "foreign-project":
+            identity["project_id"] += 1
+        elif name == "stale-directory":
+            identity["directory"]["inode"] += 1
+        elif name == "foreign-actor":
+            identity["directory"]["uid"] += 1
+        elif name == "mounted-target":
+            identity["target"] = str(root / "data")
+        else:
+            allocation["inode"] += 1
+        try:
+            cleanup_preflight(identity, allocation)
+        except ValueError:
+            cleanup_preflight(c["identity"], c["allocation"])
+            refusals.append(name)
+        else:
+            raise ValueError("foreign-cleanup-claim-accepted")
+    return refusals
+def cleanup_allocation():
+    identity = c["identity"]
+    require(all(identity[k] == c[k] for k in ("enrollment", "boot_id", "task", "project_id", "target")))
+    effects = {"unlink": False, "project_reset": False, "limit_reset": False, "rmdir": False}
+    result = {"identity": identity, "allocation_before": None, "quota_before": quota(), "cleanup_effects": effects, "unlinked_allocation_links": None, "removed_directory_links": None, "refusals_verified": []}
+    if not target.exists() and not target.is_symlink():
+        require(empty_quota(result["quota_before"]))
+        result["already_absent"] = True
+    else:
+        require(c["mode"] == "cleanup")
+        result["refusals_verified"] = cleanup_challenges()
+        value, before = cleanup_preflight(identity, c["allocation"])
+        result.update(allocation_before=value, quota_before=before, already_absent=False)
+        # The disposable fixture is serial and its allocation worker has exited.
+        # Pinned descriptors here do not qualify concurrent product reclamation.
+        parent = os.open(root / "data", os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        descriptor = os.open(target, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        try:
+            require(descriptor_directory(parent) == c["storage"]["state"]["data"]["directory"])
+            require(descriptor_directory(descriptor) == identity["directory"])
+            require(os.listdir(descriptor) == ["allocation"])
+            fd = os.open("allocation", os.O_RDONLY | os.O_NOFOLLOW, dir_fd=descriptor)
+            try:
+                require(allocation_snapshot(fd) == value)
+                os.unlink("allocation", dir_fd=descriptor)
+                effects["unlink"] = True
+                os.fsync(descriptor)
+                result["unlinked_allocation_links"] = os.fstat(fd).st_nlink
+                require(result["unlinked_allocation_links"] == 0)
+            finally:
+                os.close(fd)
+            require(os.listdir(descriptor) == [])
+            attributes_before = list(struct.unpack("=5I8s", fcntl.ioctl(descriptor, 0x801c581f, bytes(28))))
+            require(attributes_before[3] == c["project_id"] and attributes_before[0] & 0x200)
+            attributes_before[0] &= ~0x200
+            attributes_before[3] = 0
+            # Linux x86_64 fs.h FS_IOC_FSSETXATTR, applied to the pinned directory.
+            fcntl.ioctl(descriptor, 0x401c5820, struct.pack("=5I8s", *attributes_before))
+            effects["project_reset"] = True
+            attributes_after = struct.unpack("=5I8s", fcntl.ioctl(descriptor, 0x801c581f, bytes(28)))
+            require(attributes_after[3] == 0 and not attributes_after[0] & 0x200)
+            os.fsync(descriptor)
+            base = ["/usr/sbin/xfs_quota", "-x", "-D", "/dev/null", "-P", "/dev/null"]
+            command([*base, "-c", "limit -p bhard=0 " + str(c["project_id"]), str(root / "data")])
+            effects["limit_reset"] = True
+            require(directory(target) == identity["directory"] and not target.is_mount())
+            os.rmdir(target.name, dir_fd=parent)
+            effects["rmdir"] = True
+            result["removed_directory_links"] = os.fstat(descriptor).st_nlink
+            require(result["removed_directory_links"] == 0)
+            os.fsync(parent)
+        finally:
+            os.close(descriptor)
+            os.close(parent)
+    value = quota()
+    while not empty_quota(value):
+        remaining = end - time.monotonic()
+        require(remaining > 0)
+        time.sleep(min(0.05, remaining))
+        value = quota()
+    require(not target.exists() and not target.is_symlink())
+    result.update(quota=value, target_absent=True, allocation_absent=True, observer={"pid": os.getpid(), "executable": {"path": os.readlink("/proc/self/exe"), "sha256": hashlib.sha256(pathlib.Path("/proc/self/exe").read_bytes()).hexdigest()}})
+    return result
 if c["mode"] == "prepare":
     before = quota()
     require(before["hard_bytes"] == before["soft_bytes"] == before["used_bytes"] == before["inodes"] == before["inode_hard"] == before["inode_soft"] == 0)
@@ -257,6 +383,8 @@ if c["mode"] == "prepare":
     require(value["present"] and value["hard_bytes"] == c["capacity_bytes"] and value["soft_bytes"] == value["used_bytes"] == 0 and value["inodes"] == 1)
     identity = {"enrollment": c["enrollment"], "boot_id": c["boot_id"], "task": c["task"], "target": str(target), "project_id": c["project_id"], "directory": directory(target)}
     result = {"identity": identity, "quota_before": before, "quota": value, "refusals_verified": refusals}
+elif c["mode"] in ("cleanup", "inspect-cleanup"):
+    result = cleanup_allocation()
 elif c["mode"] in ("release", "inspect-release"):
     result = release_allocation()
 else:
@@ -278,7 +406,7 @@ else:
 admission(claim)
 space = os.statvfs(root / "data")
 result["filesystem_space"] = {"device": c["storage"]["state"]["data"]["directory"]["device"], "block_bytes": space.f_frsize, "available_blocks": space.f_bavail, "available_bytes": space.f_frsize * space.f_bavail}
-result.update(mode=c["mode"], guest_canaries_preserved=True, allocation_retained_until_guest_cleanup=True)
+result.update(mode=c["mode"], guest_canaries_preserved=True, allocation_retained_until_guest_cleanup=c["mode"] not in ("cleanup", "inspect-cleanup"))
 print(json.dumps(result, sort_keys=True))
 """
 
@@ -309,6 +437,7 @@ def configuration(guest: Guest) -> dict[str, Any]:
         "capacity_bytes": CAPACITY,
         "chunk_bytes": CHUNK,
         "refusals": list(REFUSALS),
+        "cleanup_refusals": list(CLEANUP_REFUSALS),
         "storage_program": STORAGE_PROGRAM,
         "worker": WORKER,
         "storage": {
@@ -777,3 +906,227 @@ def qualify_release_reuse(
         report["statistics"] = metrics.finish()
         if not valid_stats(report["statistics"]):
             raise ValueError("invalid required allocation release statistics")
+
+
+class CleanupObserverInterrupted(Exception):
+    """An injected controller exception before admitting a completed cleanup reply."""
+
+
+def cleanup_configuration(guest: Guest) -> dict[str, Any]:
+    c = release_configuration(guest)
+    source = guest.report.get("allocation_release_reuse", {})
+    require(
+        source.get("status") == "passed"
+        and source.get("identity") == c["identity"]
+        and len(source.get("cases", [])) == 6,
+        "allocation-release-not-verified",
+    )
+    last = source["cases"][-1]
+    require(
+        last.get("scenario") == "final-observer" and last.get("status") == "passed",
+        "allocation-release-not-verified",
+    )
+    validate_release(last["observation"], c, "inspect-release", already_empty=True)
+    return c
+
+
+def validate_cleanup(value: dict[str, Any], c: dict[str, Any], *, mutated: bool) -> None:
+    require(
+        value.get("mode") == ("cleanup" if mutated else "inspect-cleanup")
+        and value.get("identity") == c["identity"]
+        and value.get("guest_canaries_preserved") is True
+        and value.get("allocation_retained_until_guest_cleanup") is False
+        and value.get("already_absent") is (not mutated)
+        and value.get("target_absent") is value.get("allocation_absent") is True,
+        "cleanup-observation-mismatch",
+    )
+    validate_identity(value, c)
+    expected = dict.fromkeys(("unlink", "project_reset", "limit_reset", "rmdir"), mutated)
+    require(
+        value.get("cleanup_effects") == expected
+        and all(type(v) is bool for v in value["cleanup_effects"].values()),
+        "cleanup-effect-mismatch",
+    )
+    for field in ("quota", "quota_before"):
+        q = value.get(field)
+        if not isinstance(q, dict):
+            raise GuestExhaustionError("cleanup-quota-mismatch")
+        require(type(q.get("present")) is bool, "cleanup-quota-mismatch")
+        require(
+            type(q.get("project_id")) is int and q["project_id"] == c["project_id"],
+            "cleanup-quota-mismatch",
+        )
+        for name in (
+            "hard_bytes",
+            "soft_bytes",
+            "used_bytes",
+            "inodes",
+            "inode_hard",
+            "inode_soft",
+        ):
+            want = (
+                CAPACITY
+                if field == "quota_before" and mutated and name == "hard_bytes"
+                else 2
+                if field == "quota_before" and mutated and name == "inodes"
+                else 0
+            )
+            require(type(q.get(name)) is int and q[name] == want, "cleanup-quota-mismatch")
+    if mutated:
+        before = value.get("allocation_before")
+        if not isinstance(before, dict):
+            raise GuestExhaustionError("cleanup-allocation-mismatch")
+        for name, want in {
+            "device": c["identity"]["directory"]["device"],
+            "inode": c["allocation"]["inode"],
+            "uid": c["actor"]["uid"],
+            "gid": c["actor"]["gid"],
+            "mode": 0o600,
+            "project_id": c["project_id"],
+            "size": 0,
+            "allocated_bytes": 0,
+        }.items():
+            require(
+                type(before.get(name)) is int and before[name] == want,
+                "cleanup-allocation-mismatch",
+            )
+        require(
+            type(value.get("unlinked_allocation_links")) is int
+            and value["unlinked_allocation_links"] == 0
+            and type(value.get("removed_directory_links")) is int
+            and value["removed_directory_links"] == 0
+            and value.get("refusals_verified") == list(CLEANUP_REFUSALS),
+            "cleanup-destruction-not-observed",
+        )
+    else:
+        require(
+            value.get("allocation_before")
+            is value.get("unlinked_allocation_links")
+            is value.get("removed_directory_links")
+            is None
+            and value.get("refusals_verified") == [],
+            "cleanup-retry-had-effects",
+        )
+    observer = value.get("observer")
+    require(
+        isinstance(observer, dict)
+        and type(observer.get("pid")) is int
+        and observer["pid"] > 0
+        and observer.get("executable") == c["allocation"]["executable"],
+        "cleanup-observer-mismatch",
+    )
+
+
+def cleanup_case(
+    guest: Guest,
+    c: dict[str, Any],
+    deadline: Deadline,
+    report: dict[str, Any],
+    scenario: str,
+    mode: str,
+    original: dict[str, Any] | None,
+    observed_pids: set[int],
+) -> dict[str, Any]:
+    case: dict[str, Any] = {"scenario": scenario, "status": "failed"}
+    report["cases"].append(case)
+    metrics = RunStats()
+    try:
+        value = invoke(guest, mode, c, deadline)
+        if scenario == "unadmitted-cleanup-reply":
+            case.update(
+                unadmitted_reply=value, mutation_reply_admitted=False, cleanup_outcome="unobserved"
+            )
+            try:
+                raise CleanupObserverInterrupted()
+            except CleanupObserverInterrupted:
+                case["observer_interruption_kind"] = "controlled-exception-before-reply-admission"
+        else:
+            case["observation"] = value
+            require(value.get("mode") == mode, "cleanup-observation-mismatch")
+            # Retried cleanup against absence must be indistinguishable from a
+            # read-only absence observer except for its explicitly recorded mode.
+            check = {**value, "mode": "inspect-cleanup"} if mode == "cleanup" else value
+            validate_cleanup(check, c, mutated=False)
+            if scenario == "independent-absence":
+                require(original is not None, "cleanup-reply-not-retained")
+                assert original is not None
+                validate_cleanup(original, c, mutated=True)
+                observed_pids.add(original["observer"]["pid"])
+            require(
+                value["observer"]["pid"] not in observed_pids,
+                "independent-cleanup-observer-missing",
+            )
+            observed_pids.add(value["observer"]["pid"])
+            if scenario == "independent-absence":
+                report.update(
+                    cleanup_outcome="absent-observed-independently",
+                    original_reply_validated_after_independent_observation=True,
+                )
+        case["status"] = "passed"
+        return value
+    finally:
+        case["statistics"] = metrics.finish()
+        if not valid_stats(case["statistics"]):
+            case["status"] = "failed"
+            raise ValueError("invalid required allocation cleanup case statistics")
+
+
+def qualify_allocation_cleanup(
+    guest: Guest,
+    progress: Callable[[str], AbstractContextManager[None]],
+    temporary: Path,
+    report: dict[str, Any],
+) -> None:
+    metrics = RunStats()
+    report.update(
+        status="failed",
+        scope="disposable-guest-known-allocation-destruction-only",
+        resources_destroyed_with_guest=False,
+        per_allocation_destruction_qualified=False,
+        partial_setup_recovery_qualified=False,
+        unrelated_host_canary_preserved=False,
+        cleanup_outcome="unobserved",
+        cases=[],
+    )
+    try:
+        c = cleanup_configuration(guest)
+        report.update(
+            enrollment=c["enrollment"], boot_id=c["boot_id"], task=c["task"], identity=c["identity"]
+        )
+        deadline = Deadline.after(240)
+        with tempfile.TemporaryDirectory(prefix="fishhat-cleanup-canary-", dir=temporary) as name:
+            canary = Path(name) / "unrelated"
+            contents = uuid.uuid4().bytes
+            canary.write_bytes(contents)
+            before = canary.lstat()
+            try:
+                observed_pids: set[int] = set()
+                original = None
+                for scenario, mode in (
+                    ("unadmitted-cleanup-reply", "cleanup"),
+                    ("independent-absence", "inspect-cleanup"),
+                    ("repeat-cleanup", "cleanup"),
+                    ("final-absence", "inspect-cleanup"),
+                ):
+                    with progress("allocation-" + scenario):
+                        value = cleanup_case(
+                            guest, c, deadline, report, scenario, mode, original, observed_pids
+                        )
+                        if original is None:
+                            original = value
+            finally:
+                after = canary.lstat()
+                report["unrelated_host_canary_preserved"] = (
+                    before.st_dev,
+                    before.st_ino,
+                    before.st_mode,
+                ) == (after.st_dev, after.st_ino, after.st_mode) and canary.read_bytes() == contents
+                require(report["unrelated_host_canary_preserved"], "unrelated-host-canary-changed")
+        report.update(status="passed", per_allocation_destruction_qualified=True)
+    except OSError:
+        raise GuestExhaustionError("cleanup-observation-unavailable") from None
+    finally:
+        report["statistics"] = metrics.finish()
+        if not valid_stats(report["statistics"]):
+            report.update(status="failed", per_allocation_destruction_qualified=False)
+            raise ValueError("invalid required allocation cleanup statistics")
