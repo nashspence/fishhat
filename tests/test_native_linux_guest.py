@@ -27,7 +27,7 @@ from scripts.run_stats import valid_stats
 CHECK_PURPOSE = {
     "purpose": "validation-tooling",
     "authority": ["scripts/native_linux_guest.py", "scripts/native_linux_enrollment.py"],
-    "scope": "private seed/key custody, exact SSH options, loopback process ownership and guest OS/kernel/boot/enrollment guards with required statistics",
+    "scope": "private seed/key custody, exact SSH options, loopback process ownership and guest OS/kernel/boot/enrollment guards with required statistics and ordered storage/process/transport/exhaustion handoffs",
     "relationship": "no-product-claim",
     "reason": "Controlled tool/SSH observations and execution of the production remote guard against fake filesystem reads challenge tooling only. No image is downloaded, QEMU started or native owner qualified; actual guest behavior requires the separate enrolled main run.",
     "claims": [],
@@ -713,6 +713,14 @@ def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
 
     monkeypatch.setattr(native, "qualify_transport_loss", transport_loss)
 
+    def exhaust(guest, progress, temporary, result):
+        assert guest is fixture["guest"] and result is report["exhaustion"]
+        assert storage_calls == ["storage", "process", "transport"]
+        assert temporary == fixture["temporary"]
+        storage_calls.append("exhaustion")
+
+    monkeypatch.setattr(native, "qualify_exhaustion", exhaust)
+
     @contextmanager
     def owned(temporary, launch, *, enrollment):
         assert enrollment == fixture["inputs"].enrollment
@@ -768,7 +776,11 @@ def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
         assert report["controller_verified"]["instance_uuid"] == fixture["inputs"].enrollment
         assert report["controller_verified"]["unix_peer_verified"]
     assert storage_calls == (
-        [] if refused else ["storage"] if storage_error else ["storage", "process", "transport"]
+        []
+        if refused
+        else ["storage"]
+        if storage_error
+        else ["storage", "process", "transport", "exhaustion"]
     )
     assert events[:3] == ["launch", "identity-verified", "cont"] and events[-1] == "reaped"
     assert report["boot_verified"] is not refused
