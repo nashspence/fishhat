@@ -484,7 +484,7 @@ jobs:
       FISHHAT_VALIDATION_NOMINAL_MINUTES: '25'
       FISHHAT_VALIDATION_TIMEOUT_SCALE: ${{ needs.watchdogs.outputs.scale }}
       CHECK_PURPOSES: validation-tooling
-      CHECK_SCOPE: explicitly enrolled disposable controller dependency, paused TCG/QMP identities and owned-controller fault cleanup and authenticated guest boot/SSH identity and owned disks, isolated guest filesystems/account permissions and partial-storage setup cleanup and owned guest process kill/reaping and independently observed SSH transport loss/retry and isolated real project-quota exhaustion and exact owned allocation release/reuse and known allocation destruction with independent absence/retry after an unadmitted cleanup reply; no native owner qualification
+      CHECK_SCOPE: explicitly enrolled disposable controller dependency, paused TCG/QMP identities and owned-controller fault cleanup and authenticated guest boot/SSH identity and owned disks, isolated guest filesystems/account permissions and partial-storage setup cleanup and owned guest process kill/reaping and independently observed SSH transport loss/retry and isolated real project-quota exhaustion and exact owned allocation release/reuse and known allocation destruction with independent absence/retry after an unadmitted cleanup reply and protected partial quota custody/selected interruption recovery; no native owner qualification
       CHECK_AUTHORITY: scripts/native_linux_enrollment.py
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
