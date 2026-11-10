@@ -131,6 +131,13 @@ class GuestRebootError(GuestBootError):
     stage = "guest-reboot"
 
 
+class RebootObservationInterrupted(GuestRebootError):
+    """The selected fixture fault, never an inference from an arbitrary error."""
+
+    def __init__(self) -> None:
+        super().__init__("injected-before-restart-observation")
+
+
 def require(value: Any, reason: str) -> None:
     if not value:
         raise GuestRebootError(reason)
@@ -182,7 +189,24 @@ def host_custody(guest: Guest, endpoint: Path, deadline: Deadline) -> dict[str, 
         "pid": guest.process.pid,
         "pgid": guest.process.pid,
         "endpoint": {"address": "127.0.0.1", "port": guest.port, "listener_owned": True},
-        "control_socket": {"device": socket.st_dev, "inode": socket.st_ino, "parent": parent},
+        "control_socket": {
+            "path": str(endpoint),
+            "device": socket.st_dev,
+            "inode": socket.st_ino,
+            "parent": parent,
+        },
+        "input_directory": {
+            "path": str(guest.inputs.directory),
+            "identity": guest.inputs.directory_identity,
+        },
+        "private_directory": {
+            "path": str(guest.directory),
+            "identity": guest.directory_identity,
+        },
+        "private_files": {
+            name: {"path": str(guest.path(name)), "identity": value[0]}
+            for name, value in guest.files.items()
+        },
         "disks": {
             name: {"path": str(guest.inputs.path(name, guest.enrollment)), "identity": value}
             for name, value in guest.inputs.files.items()
@@ -380,6 +404,8 @@ def qualify_reboot(
     progress: Callable[[str], AbstractContextManager[None]],
     temporary: Path,
     report: dict[str, Any],
+    *,
+    interrupt_observation: bool = False,
 ) -> None:
     metrics = RunStats()
     report.update(
@@ -392,6 +418,7 @@ def qualify_reboot(
         reboot_continuity_qualified=False,
         failed_restart_cleanup_qualified=False,
         snapshot_restore_qualified=False,
+        fault_injection_verified=False,
     )
     try:
         require(guest.observed is not None, "guest-not-verified")
@@ -429,6 +456,17 @@ def qualify_reboot(
                     else:
                         p.update(observed_exit_status=0, outcome="request-acknowledged")
                 with progress("reboot-independent-boot"), phase(report, "independent-boot") as p:
+                    if interrupt_observation:
+                        require(guest.observed == before, "reboot-admission-changed-early")
+                        p.update(
+                            outcome="unobserved",
+                            interruption_kind="controlled-controller-observer-exception",
+                        )
+                        report.update(
+                            fault_injection_verified=True,
+                            continuity_outcome="unobserved",
+                        )
+                        raise RebootObservationInterrupted()
                     p["identity"] = after = new_boot(guest, before, p, deadline)
                 with (
                     progress("reboot-independent-canary"),
@@ -477,3 +515,54 @@ def qualify_reboot(
         if not valid_stats(report["statistics"]):
             report.update(status="failed", reboot_continuity_qualified=False)
             raise ValueError("invalid required reboot statistics")
+
+
+def observe_removed_resources(custody: dict[str, Any]) -> dict[str, Any]:
+    """Read exact retained paths and IDs after their lifecycle owners cleaned up."""
+    metrics = RunStats()
+    result: dict[str, Any] = {"status": "failed", "paths": [], "process_group_absent": False}
+    try:
+        pid = custody["pid"]
+        require(type(pid) is int and pid > 0 and custody["pgid"] == pid, "invalid-cleanup-process")
+        for observe in (os.kill, os.killpg):
+            try:
+                observe(pid, 0)
+            except ProcessLookupError:
+                pass
+            else:
+                raise GuestRebootError("cleanup-process-still-present")
+        result.update(pid=pid, pgid=pid, process_absent=True, process_group_absent=True)
+        inputs = Path(custody["input_directory"]["path"])
+        private = Path(custody["private_directory"]["path"])
+        endpoint = Path(custody["control_socket"]["path"])
+        require(
+            inputs.is_absolute()
+            and private.is_absolute()
+            and endpoint.is_absolute()
+            and len({inputs, private, endpoint.parent}) == 3,
+            "invalid-cleanup-directories",
+        )
+        files = []
+        require(set(custody["disks"]) == {"base.img", *DISK_BYTES}, "invalid-cleanup-disks")
+        require(bool(custody["private_files"]), "missing-cleanup-private-inputs")
+        for parent, entries in ((inputs, custody["disks"]), (private, custody["private_files"])):
+            for name, value in entries.items():
+                path = Path(value["path"])
+                require(path.parent == parent and path.name == name, "invalid-cleanup-file")
+                files.append(path)
+        for path in (*files, endpoint, inputs, private, endpoint.parent):
+            try:
+                path.lstat()
+            except FileNotFoundError:
+                result["paths"].append({"path": str(path), "absent": True})
+            else:
+                raise GuestRebootError("cleanup-owned-path-still-present")
+        result["status"] = "passed"
+        return result
+    except OSError:
+        raise GuestRebootError("cleanup-observation-unavailable") from None
+    finally:
+        result["statistics"] = metrics.finish()
+        if not valid_stats(result["statistics"]):
+            result["status"] = "failed"
+            raise ValueError("invalid required reboot cleanup statistics")
