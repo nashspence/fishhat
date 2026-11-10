@@ -34,9 +34,11 @@ from scripts.native_linux_reboot import (
     REBOOT,
     GuestRebootError,
     RebootObservationInterrupted,
+    host_custody,
     observe_removed_resources,
     qualify_reboot,
 )
+from scripts.native_linux_snapshots import qualify_capture
 from scripts.native_linux_storage import GuestStorageError, qualify_storage
 from scripts.native_linux_transport import qualify_transport_loss
 from scripts.run_stats import RunStats, valid_stats
@@ -704,6 +706,12 @@ def boot_guest(
                 report["partial_quota"] = {}
                 with stage("guest-partial-quota"):
                     qualify_partial_quota(guest, stage, temporary, report["partial_quota"])
+                with stage("snapshot-source-custody"):
+                    custody = host_custody(guest, endpoint, Deadline.after(30))
+                    report["snapshot_source_custody"] = custody
+            report["snapshot_capture"] = {}
+            with stage("guest-cold-snapshot-capture"):
+                qualify_capture(guest, custody, temporary, stage, report["snapshot_capture"])
 
 
 def endpoint_closed(endpoint: dict[str, Any]) -> None:
@@ -752,6 +760,8 @@ def verify_guest_cleanup(guest: dict[str, Any], inputs: dict[str, Any]) -> None:
         guest["allocation_release_reuse"]["resources_destroyed_with_guest"] = True
     if isinstance(guest.get("allocation_cleanup"), dict):
         guest["allocation_cleanup"]["resources_destroyed_with_guest"] = True
+    if isinstance(guest.get("snapshot_capture"), dict):
+        guest["snapshot_capture"]["resources_destroyed_with_guest"] = True
     if isinstance(guest.get("partial_quota"), dict):
         guest["partial_quota"]["resources_destroyed_with_guest"] = True
 
