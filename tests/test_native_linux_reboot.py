@@ -27,7 +27,7 @@ from scripts import native_linux_guest as guests
 from scripts import native_linux_images as images
 from scripts import native_linux_reboot as reboot
 from scripts.run_stats import RunStats, valid_stats
-from scripts.validation_timeouts import Deadline
+from scripts.validation_timeouts import Deadline, watchdog
 
 CHECK_PURPOSE = {
     "purpose": "validation-tooling",
@@ -897,7 +897,7 @@ def cleanup_custody(tmp_path):
     for directory in folders.values():
         directory.mkdir(mode=0o700)
     child = subprocess.Popen([sys.executable, "-I", "-S", "-c", "pass"], start_new_session=True)
-    child.wait(timeout=reboot.current().seconds(5))
+    child.wait(timeout=watchdog(5))
     files = {}
     for name in ("base.img", *images.DISK_BYTES):
         p = folders["inputs"] / name
@@ -1024,7 +1024,7 @@ def test_live_foreign_process_or_group_is_observed_and_never_signalled(
         assert child.poll() is None
     finally:
         child.terminate()
-        child.wait(timeout=reboot.current().seconds(5))
+        child.wait(timeout=watchdog(5))
 
 
 @pytest.mark.parametrize(
