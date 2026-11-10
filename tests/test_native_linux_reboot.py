@@ -35,7 +35,7 @@ CHECK_PURPOSE = {
         "scripts/native_linux_guest.py",
         "scripts/native_linux_enrollment.py",
     ],
-    "scope": "controlled execution of persistent-root canary admission/readback/fsync and disk identity queries, delayed new-boot observations, exact host custody, original request acknowledgement/loss, stale/foreign command refusal, admission ordering and required scoped statistics",
+    "scope": "controlled execution of persistent-root canary admission/readback/fsync and disk identity queries, delayed new-boot observations with bounded read-only timeout recovery, exact host custody, original request acknowledgement/loss, stale/foreign command refusal, admission ordering and required scoped statistics",
     "relationship": "no-product-claim",
     "reason": "Guest devices/filesystem/boot/SSH and controller observations are substituted. A real unprivileged private socket only challenges host-custody checks; no QEMU, native guest reboot, product continuity or writer authority is qualified.",
     "claims": [],
@@ -423,10 +423,16 @@ class ControlledGuest:
         assert deadline.remaining() > 0
         step = self.sequence.pop(0) if self.sequence else "new"
         self.observations.append(step)
-        if step == "down":
-            raise native.EnrollmentError("guest-ssh", "command-exit-255")
-        if step == "error":
-            raise native.EnrollmentError("guest-ssh", "command-exit-1")
+        failures = {
+            "down": ("guest-ssh", "command-exit-255"),
+            "timeout": ("guest-ssh", "observation-deadline"),
+            "error": ("guest-ssh", "command-exit-1"),
+            "foreign-timeout": ("controller-identity", "observation-deadline"),
+            "ssh-unavailable": ("guest-ssh", "command-unavailable"),
+            "guard-refused": ("guest-ssh", "command-exit-73"),
+        }
+        if step in failures:
+            raise native.EnrollmentError(*failures[step])
         if step not in ("old", "stuck"):
             self.h.boot = self.after_boot
         if step == "stuck":
@@ -454,6 +460,8 @@ class ControlledGuest:
             self.requests.append(action)
             if self.failure == "request":
                 raise native.EnrollmentError("guest-ssh", "command-exit-1")
+            if self.failure == "request-timeout":
+                raise native.EnrollmentError("guest-ssh", "observation-deadline")
             if self.request_loss:
                 raise native.EnrollmentError("guest-ssh", "command-exit-255")
             return ""
@@ -488,7 +496,7 @@ def test_reboot_coordinator_requires_independent_new_boot_canary_custody_and_sco
     controlled, tmp_path, lost
 ):
     guest, calls = controlled
-    guest.sequence = ["old", "down", "incomplete", "new", "new"]
+    guest.sequence = ["timeout", "old", "down", "incomplete", "new", "new"]
     guest.request_loss = lost
     report = {}
     reboot.qualify_reboot(guest, tmp_path / "qmp", lambda name: nullcontext(), tmp_path, report)
@@ -518,6 +526,13 @@ def test_reboot_coordinator_requires_independent_new_boot_canary_custody_and_sco
         and request["observed_exit_status"] == (255 if lost else 0)
         and request["mutation_reissued"] is False
     )
+    boot = report["phases"][2]
+    assert boot["observations"][:3] == [
+        {"transport_outcome": "unobserved", "reason": "observation-deadline"},
+        {"identity": guest.original},
+        {"transport_outcome": "unobserved", "exit_status": 255},
+    ]
+    assert boot["observations"][-1] == {"identity": report["after_identity"]}
     assert report["phases"][4]["refused"] == ["stale-boot", "foreign-enrollment"]
     assert (
         report["unrelated_host_canary_preserved"]
@@ -534,13 +549,34 @@ def test_reboot_coordinator_requires_independent_new_boot_canary_custody_and_sco
 
 
 @pytest.mark.parametrize(
-    "failure", ["request", "error", "foreign", "malformed", "host", "guard-accepted", "stuck"]
+    "failure",
+    [
+        "request",
+        "request-timeout",
+        "error",
+        "foreign",
+        "malformed",
+        "host",
+        "guard-accepted",
+        "stuck",
+        "foreign-timeout",
+        "ssh-unavailable",
+        "guard-refused",
+    ],
 )
 def test_reboot_failures_preserve_old_admission_original_observations_and_stats(
     controlled, tmp_path, monkeypatch, failure
 ):
     guest, _ = controlled
-    if failure in ("error", "foreign", "malformed", "stuck"):
+    if failure in (
+        "error",
+        "foreign",
+        "malformed",
+        "stuck",
+        "foreign-timeout",
+        "ssh-unavailable",
+        "guard-refused",
+    ):
         guest.sequence = [failure]
     else:
         guest.failure = failure
@@ -556,6 +592,46 @@ def test_reboot_failures_preserve_old_admission_original_observations_and_stats(
     assert report["phases"][-1]["status"] == "failed" and valid_stats(report["statistics"])
     assert all(valid_stats(p["statistics"]) for p in report["phases"])
     assert report["unrelated_host_canary_preserved"] and not list(tmp_path.iterdir())
+    if failure in ("request", "request-timeout"):
+        assert not guest.observations and report["phases"][-1]["phase"] == "request"
+    elif failure in ("error", "foreign-timeout", "ssh-unavailable", "guard-refused"):
+        assert guest.observations == [failure]
+
+
+def test_reboot_query_timeouts_exhaust_original_shared_budget_without_replaying_mutation(
+    controlled, tmp_path, monkeypatch
+):
+    guest, calls = controlled
+    guest.sequence = ["timeout", "timeout"]
+    budget = reboot.current().seconds(2)
+    remaining, sleeps, budgets = [budget], [], []
+    deadline = SimpleNamespace(remaining=lambda: remaining[0])
+
+    def after(nominal):
+        budgets.append(nominal)
+        return deadline
+
+    def sleep(seconds):
+        sleeps.append(seconds)
+        remaining[0] -= seconds
+
+    monkeypatch.setattr(reboot, "Deadline", SimpleNamespace(after=after))
+    monkeypatch.setattr(reboot.time, "sleep", sleep)
+    report = {}
+    with pytest.raises(reboot.GuestRebootError, match="new-boot-not-observed"):
+        reboot.qualify_reboot(guest, tmp_path / "qmp", lambda name: nullcontext(), tmp_path, report)
+    assert budgets == [300] and sum(sleeps) == budget and remaining[0] == 0
+    assert guest.observations == ["timeout", "timeout"]
+    assert guest.observed == guest.original and len(guest.requests) == 1 and len(calls) == 1
+    assert report["status"] == "failed" and report["reboot_continuity_qualified"] is False
+    assert "after_identity" not in report and report["phases"][-1]["status"] == "failed"
+    assert report["phases"][-1]["observations"] == [
+        {"transport_outcome": "unobserved", "reason": "observation-deadline"},
+        {"transport_outcome": "unobserved", "reason": "observation-deadline"},
+    ]
+    assert report["unrelated_host_canary_preserved"] and not list(tmp_path.iterdir())
+    assert valid_stats(report["statistics"])
+    assert all(valid_stats(p["statistics"]) for p in report["phases"])
 
 
 @pytest.mark.parametrize(
