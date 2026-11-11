@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from scripts.native_linux_guest import Guest, GuestBootError
-from scripts.native_linux_images import DISK_BYTES, identity
+from scripts.native_linux_images import DISK_BYTES, BootInputs, identity
 from scripts.native_linux_reboot import (
     host_custody,
     invoke,
@@ -114,7 +114,14 @@ class RetainedBootInputs:
         require(self.active and self.source.boot_inputs_borrowed, "boot-input-handle-expired")
         require(boot_closure(self.source) == self.expected, "boot-input-closure-changed")
 
-    def guest(self, enrollment: str, report: dict[str, Any]) -> Guest:
+    def guest(
+        self,
+        enrollment: str,
+        report: dict[str, Any],
+        *,
+        inputs: BootInputs | None = None,
+        guest_type: type[Guest] = Guest,
+    ) -> Guest:
         self.verify()
         require(enrollment == self.expected["enrollment"], "foreign-boot-input-enrollment")
         require(self.borrowed is None, "boot-input-handle-already-borrowed")
@@ -125,8 +132,17 @@ class RetainedBootInputs:
         source = self.source
         # The enclosing guest_session remains the sole owner of these files.
         # A fresh Guest receives no old process, callback or boot admission.
-        child = Guest(
-            source.inputs,
+        selected = source.inputs if inputs is None else inputs
+        selected.verify(enrollment)
+        if inputs is not None:
+            require(set(selected.files) == set(DISK_BYTES), "incomplete-replacement-disks")
+            require(
+                selected.directory != source.inputs.directory
+                and all(v not in source.inputs.files.values() for v in selected.files.values()),
+                "source-disk-reused",
+            )
+        child = guest_type(
+            selected,
             source.directory,
             source.command,
             copy.deepcopy(source.tools),

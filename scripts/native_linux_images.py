@@ -81,6 +81,17 @@ def identity(path: Path, *, directory: bool = False) -> tuple[int, int]:
     return value.st_dev, value.st_ino
 
 
+class BootInputs(Protocol):
+    enrollment: str
+    directory: Path
+    directory_identity: tuple[int, int]
+    files: dict[str, tuple[int, int]]
+
+    def path(self, name: str, enrollment: str) -> Path: ...
+
+    def verify(self, enrollment: str) -> None: ...
+
+
 @dataclass
 class GuestInputs:
     enrollment: str

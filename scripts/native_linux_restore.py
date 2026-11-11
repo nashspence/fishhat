@@ -96,6 +96,10 @@ class RestoredDisks:
     files: dict[str, tuple[tuple[int, int], str]] = field(default_factory=dict)
     active: bool = False
     _admitted: tuple[Any, ...] | None = field(default=None, repr=False)
+    _writer: object | None = field(default=None, repr=False)
+    _written_files: tuple[tuple[str, tuple[tuple[int, int], str]], ...] | None = field(
+        default=None, repr=False
+    )
 
     def closure(self) -> tuple[Any, ...]:
         return (
@@ -114,6 +118,7 @@ class RestoredDisks:
 
     def path(self, name: str, enrollment: str) -> Path:
         require(self.active and enrollment == self.enrollment, "restore-not-admitted")
+        require(self._writer is None, "restored-writer-active")
         require(self.closure() == self._admitted, "restored-input-custody-changed")
         require(set(self.files) == set(DISK_BYTES), "incomplete-restored-inputs")
         require(
@@ -122,8 +127,9 @@ class RestoredDisks:
         )
         require(name in self.files, "unenrolled-restored-input")
         path = self.directory / name
+        expected = self.files if self._written_files is None else dict(self._written_files)
         require(
-            (identity(path), digest(path)) == self.files[name]
+            (identity(path), digest(path)) == expected[name]
             and stat.S_IMODE(path.lstat().st_mode) == 0o600,
             "restored-input-changed",
         )
@@ -155,6 +161,7 @@ def remove_owned(
 ) -> None:
     owner.active = False
     with phase(report, "cleanup") as item:
+        require(owner._writer is None, "restored-writer-still-active")
         require(
             identity(directory, directory=True) == enrolled,
             "restore-directory-replaced",
@@ -243,7 +250,9 @@ def private_restored_disks(
                 source.verify()
                 owner.verify()
                 item["observation"] = copy.deepcopy(source.expected)
-                item["restored_files"] = copy.deepcopy(owner.files)
+                item["restored_files"] = copy.deepcopy(
+                    owner.files if owner._written_files is None else dict(owner._written_files)
+                )
                 report["originals_preserved"] = True
         complete = True
     except BaseException as error:

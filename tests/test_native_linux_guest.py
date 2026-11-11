@@ -828,6 +828,9 @@ def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
     monkeypatch.setattr(
         native, "qualify_restore", private_restore_witness(fixture, report, events, restore_error)
     )
+    monkeypatch.setattr(
+        native, "qualify_restored_boot", restored_boot_witness(fixture, report, events)
+    )
     monkeypatch.setattr(native, "host_custody", custody)
     monkeypatch.setattr(native, "qualify_capture", capture)
 
@@ -926,11 +929,23 @@ def private_restore_witness(fixture, report, events, restore_error):
     return restored
 
 
+def restored_boot_witness(fixture, report, events):
+    def restored_boot(guest, admitted, disks, captured, temporary, progress, launch, result):
+        assert guest is fixture["guest"] and guest.process.returncode == 0
+        assert admitted == {"enrollment": guest.enrollment}
+        assert disks == "controlled-sealed-disks" and captured is report["snapshot_capture"]
+        assert result is report["restored_boot"] and temporary == fixture["temporary"]
+        assert callable(launch) and events[-1] == "restored"
+        events.append("restored-boot")
+
+    return restored_boot
+
+
 def retained_restart_witness(fixture, report, events, snapshot_error, restart_error):
     def retained_restart(guest, admitted, temporary, progress, launch, result):
         assert guest is fixture["guest"] and guest.process.returncode == 0
         assert admitted == {"enrollment": guest.enrollment} and not snapshot_error
-        assert events[-1] == "restored" and temporary == fixture["temporary"]
+        assert events[-1] == "restored-boot" and temporary == fixture["temporary"]
         assert callable(launch) and result is report["retained_restart"]
         events.append("restarted")
         if restart_error:
@@ -1015,7 +1030,14 @@ def assert_capture_restore_events(
     elif restore_error:
         assert events[-4:] == ["capture-custody", "reaped", "captured", "restored"]
     else:
-        assert events[-5:] == ["capture-custody", "reaped", "captured", "restored", "restarted"]
+        assert events[-6:] == [
+            "capture-custody",
+            "reaped",
+            "captured",
+            "restored",
+            "restored-boot",
+            "restarted",
+        ]
 
 
 @pytest.mark.parametrize(
@@ -1095,3 +1117,22 @@ def test_expired_storage_deadline_refuses_before_dispatch(fixture):
         finally:
             fixture["process"].returncode = 0
     assert report["status"] == "passed" and valid_stats(report["statistics"])
+
+
+def test_captured_restored_boot_failure_propagates_without_restart_or_acceptance(monkeypatch):
+    events = []
+    report = {"snapshot_capture": {}, "private_restore": {}}
+    guest, custody, snapshots, temporary = object(), {}, object(), Path("/controlled")
+
+    def prepared(*args):
+        events.append("prepared")
+
+    def failed(*args):
+        assert events == ["prepared"] and args[-1] is report["restored_boot"]
+        raise guests.GuestBootError("controlled-restored-boot-failure")
+
+    monkeypatch.setattr(native, "qualify_restore", prepared)
+    monkeypatch.setattr(native, "qualify_restored_boot", failed)
+    with pytest.raises(guests.GuestBootError, match="controlled-restored-boot-failure"):
+        native.captured_guest_checks(guest, custody, snapshots, temporary, "c" * 64, report)
+    assert "retained_restart" not in report

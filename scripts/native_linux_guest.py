@@ -24,7 +24,7 @@ from typing import Any
 import psutil
 import yaml
 
-from scripts.native_linux_images import Command, GuestInputs, digest, identity
+from scripts.native_linux_images import BootInputs, Command, GuestInputs, digest, identity
 from scripts.run_stats import RunStats, valid_stats
 from scripts.validation_timeouts import Deadline, current, watchdog
 
@@ -173,7 +173,7 @@ def public_key(text: str) -> tuple[str, str]:
 
 @dataclass
 class Guest:
-    inputs: GuestInputs
+    inputs: BootInputs
     directory: Path
     command: Command
     tools: dict[str, Any]
