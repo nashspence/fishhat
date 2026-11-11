@@ -517,7 +517,9 @@ def qualify_reboot(
             raise ValueError("invalid required reboot statistics")
 
 
-def observe_removed_resources(custody: dict[str, Any]) -> dict[str, Any]:
+def observe_removed_resources(
+    custody: dict[str, Any], *, standalone: bool = False
+) -> dict[str, Any]:
     """Read exact retained paths and IDs after their lifecycle owners cleaned up."""
     metrics = RunStats()
     result: dict[str, Any] = {"status": "failed", "paths": [], "process_group_absent": False}
@@ -543,7 +545,14 @@ def observe_removed_resources(custody: dict[str, Any]) -> dict[str, Any]:
             "invalid-cleanup-directories",
         )
         files = []
-        require(set(custody["disks"]) == {"base.img", *DISK_BYTES}, "invalid-cleanup-disks")
+        expected_disks = set(DISK_BYTES) if standalone else {"base.img", *DISK_BYTES}
+        require(set(custody["disks"]) == expected_disks, "invalid-cleanup-disks")
+        if standalone:
+            require(
+                custody.get("base_image_verified") is False
+                and custody.get("private_inputs_verified") is True,
+                "unverified-cleanup-profile",
+            )
         require(bool(custody["private_files"]), "missing-cleanup-private-inputs")
         for parent, entries in ((inputs, custody["disks"]), (private, custody["private_files"])):
             for name, value in entries.items():

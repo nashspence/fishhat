@@ -11979,159 +11979,219 @@
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_changed_live_controller_binding_is_refused[arguments]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_changed_live_controller_binding_is_refused[controller]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_changed_live_controller_binding_is_refused[inputs]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_changed_live_controller_binding_is_refused[process]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_cleanup_refuses_a_still_bound_writer_and_preserves_its_images",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
+    },
+    {
+      "node": "tests/test_native_linux_restored_boot.py::test_default_observer_retains_complete_original_base_overlay_profile",
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_failed_restored_boot_is_never_qualified_and_owned_controller_and_disks_are_removed[accounts-changed]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_failed_restored_boot_is_never_qualified_and_owned_controller_and_disks_are_removed[canary-changed]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_failed_restored_boot_is_never_qualified_and_owned_controller_and_disks_are_removed[canary-enrollment-changed]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_failed_restored_boot_is_never_qualified_and_owned_controller_and_disks_are_removed[changed-final]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_failed_restored_boot_is_never_qualified_and_owned_controller_and_disks_are_removed[foreign-profile]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_failed_restored_boot_is_never_qualified_and_owned_controller_and_disks_are_removed[legitimate-source-writes]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_failed_restored_boot_is_never_qualified_and_owned_controller_and_disks_are_removed[prelaunch-refused]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_failed_restored_boot_is_never_qualified_and_owned_controller_and_disks_are_removed[private-changed-after-read]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_failed_restored_boot_is_never_qualified_and_owned_controller_and_disks_are_removed[readiness-error]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_failed_restored_boot_is_never_qualified_and_owned_controller_and_disks_are_removed[stale-accepted]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_final_guest_teardown_records_independent_original_resource_absence",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_final_guest_teardown_refuses_missing_restored_boot_proofs[boot]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_final_guest_teardown_refuses_missing_restored_boot_proofs[custody]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_final_guest_teardown_refuses_missing_restored_boot_proofs[inputs]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_final_guest_teardown_refuses_missing_restored_boot_proofs[status]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_final_guest_teardown_refuses_missing_restored_boot_proofs[writer]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
+    },
+    {
+      "node": "tests/test_native_linux_restored_boot.py::test_final_restored_teardown_uses_real_standalone_absence_observer",
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_fresh_private_boot_preserves_originals_and_closes_exact_writable_lifetime[incomplete-then-ready]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_fresh_private_boot_preserves_originals_and_closes_exact_writable_lifetime[normal]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_fresh_private_boot_preserves_originals_and_closes_exact_writable_lifetime[old-then-new]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_fresh_private_boot_preserves_originals_and_closes_exact_writable_lifetime[read-timeout]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_fresh_private_boot_preserves_originals_and_closes_exact_writable_lifetime[restored-writes]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_invalid_writable_input_handles_refuse_before_controller_creation[directory-rebound]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_invalid_writable_input_handles_refuse_before_controller_creation[expired]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_invalid_writable_input_handles_refuse_before_controller_creation[extra]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_invalid_writable_input_handles_refuse_before_controller_creation[files-rebound]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_invalid_writable_input_handles_refuse_before_controller_creation[foreign]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_invalid_writable_input_handles_refuse_before_controller_creation[missing]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_invalid_writable_input_handles_refuse_before_controller_creation[mode]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_invalid_writable_input_handles_refuse_before_controller_creation[owner-rebound]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_invalid_writable_input_handles_refuse_before_controller_creation[replaced-disk]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_invalid_writable_input_handles_refuse_before_controller_creation[written-before-launch]",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_live_owned_controller_blocks_input_closure_and_deletion_until_reaped",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_missing_required_writable_statistics_fails_without_claiming_success",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
+    },
+    {
+      "node": "tests/test_native_linux_restored_boot.py::test_original_profile_refuses_standalone_missing_base",
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
+    },
+    {
+      "node": "tests/test_native_linux_restored_boot.py::test_real_standalone_observer_refuses_a_live_owned_process",
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
+    },
+    {
+      "node": "tests/test_native_linux_restored_boot.py::test_real_standalone_observer_refuses_a_remaining_owned_path[disk]",
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
+    },
+    {
+      "node": "tests/test_native_linux_restored_boot.py::test_real_standalone_observer_refuses_a_remaining_owned_path[endpoint]",
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
+    },
+    {
+      "node": "tests/test_native_linux_restored_boot.py::test_real_standalone_observer_refuses_a_remaining_owned_path[private-input]",
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
+    },
+    {
+      "node": "tests/test_native_linux_restored_boot.py::test_standalone_observer_refuses_incomplete_or_foreign_disk_custody[base-proof-missing]",
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
+    },
+    {
+      "node": "tests/test_native_linux_restored_boot.py::test_standalone_observer_refuses_incomplete_or_foreign_disk_custody[base-proof-true]",
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
+    },
+    {
+      "node": "tests/test_native_linux_restored_boot.py::test_standalone_observer_refuses_incomplete_or_foreign_disk_custody[extra-base]",
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
+    },
+    {
+      "node": "tests/test_native_linux_restored_boot.py::test_standalone_observer_refuses_incomplete_or_foreign_disk_custody[foreign-parent]",
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
+    },
+    {
+      "node": "tests/test_native_linux_restored_boot.py::test_standalone_observer_refuses_incomplete_or_foreign_disk_custody[missing-disk]",
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
+    },
+    {
+      "node": "tests/test_native_linux_restored_boot.py::test_standalone_observer_refuses_incomplete_or_foreign_disk_custody[private-proof-false]",
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
+    },
+    {
+      "node": "tests/test_native_linux_restored_boot.py::test_standalone_observer_refuses_incomplete_or_foreign_disk_custody[private-proof-missing]",
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
+    },
+    {
+      "node": "tests/test_native_linux_restored_boot.py::test_standalone_observer_refuses_incomplete_or_foreign_disk_custody[unknown-disk]",
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_restored_boot.py::test_writable_handle_expires_without_starting_a_controller",
-      "purpose_sha256": "32a7aff96d06bda48c069935318adebcb83e9665b2fa755e415a0e0fa108b35b"
+      "purpose_sha256": "386060976cd8eeff960def84caec7023a6e75bd04709ebcd3b03cb87fceb1cab"
     },
     {
       "node": "tests/test_native_linux_snapshots.py::test_cold_capture_checks_exact_extents_complete_logical_contents_seals_and_cleans",

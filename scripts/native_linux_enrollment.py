@@ -804,7 +804,7 @@ def verify_restored_boot_cleanup(restored: dict[str, Any]) -> None:
         or not isinstance(restored.get("controller_custody"), dict)
     ):
         raise GuestBootError("restored-boot-proof-incomplete")
-    restored["cleanup"] = observe_removed_resources(restored["controller_custody"])
+    restored["cleanup"] = observe_removed_resources(restored["controller_custody"], standalone=True)
     restored["resources_destroyed_with_guest"] = True
 
 
