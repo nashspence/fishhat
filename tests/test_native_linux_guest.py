@@ -27,7 +27,7 @@ from scripts.run_stats import valid_stats
 CHECK_PURPOSE = {
     "purpose": "validation-tooling",
     "authority": ["scripts/native_linux_guest.py", "scripts/native_linux_enrollment.py"],
-    "scope": "private seed/key custody, exact SSH options, loopback process ownership and guest OS/kernel/boot/enrollment guards with required statistics and ordered reboot/storage/process/transport/exhaustion/release/cleanup/partial-quota handoffs and controller-reap-before-cold-snapshot handoff",
+    "scope": "private seed/key custody, exact SSH options, loopback process ownership and guest OS/kernel/boot/enrollment guards with required statistics and ordered reboot/storage/process/transport/exhaustion/release/cleanup/partial-quota handoffs and controller-reap-before-cold-snapshot and separately reported retained-input cold-controller-replacement handoffs",
     "relationship": "no-product-claim",
     "reason": "Controlled tool/SSH observations and execution of the production remote guard against fake filesystem reads challenge tooling only. No image is downloaded, QEMU started or native owner qualified; actual guest behavior requires the separate enrolled main run.",
     "claims": [],
@@ -690,18 +690,26 @@ def test_missing_or_foreign_private_root_preserves_failure_stats_and_foreign_dat
 
 
 @pytest.mark.parametrize(
-    ("refused", "storage_error", "reboot_error", "snapshot_error"),
+    ("refused", "storage_error", "reboot_error", "snapshot_error", "restart_error"),
     [
-        (False, False, False, False),
-        (True, False, False, False),
-        (False, True, False, False),
-        (False, False, True, False),
-        (False, False, False, True),
+        (False, False, False, False, False),
+        (True, False, False, False, False),
+        (False, True, False, False, False),
+        (False, False, True, False, False),
+        (False, False, False, True, False),
+        (False, False, False, False, True),
     ],
-    ids=["started", "refused", "storage-refused", "reboot-interrupted", "snapshot-failed"],
+    ids=[
+        "started",
+        "refused",
+        "storage-refused",
+        "reboot-interrupted",
+        "snapshot-failed",
+        "restart-failed",
+    ],
 )
 def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
-    fixture, monkeypatch, refused, storage_error, reboot_error, snapshot_error
+    fixture, monkeypatch, refused, storage_error, reboot_error, snapshot_error, restart_error
 ):
     events = []
     report = {}
@@ -803,6 +811,12 @@ def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
     monkeypatch.setattr(native, "host_custody", custody)
     monkeypatch.setattr(native, "qualify_capture", capture)
 
+    monkeypatch.setattr(
+        native,
+        "qualify_restart",
+        retained_restart_witness(fixture, report, events, snapshot_error, restart_error),
+    )
+
     @contextmanager
     def owned(temporary, launch, *, enrollment):
         assert enrollment == fixture["inputs"].enrollment
@@ -847,20 +861,59 @@ def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
             reboot_failure=reboot_error,
         )
 
-    if refused or storage_error or reboot_error or snapshot_error:
-        reason = (
-            "guest-start-rejected"
-            if refused
-            else "controlled-storage-refusal"
-            if storage_error
-            else "injected-before-restart-observation"
-            if reboot_error
-            else "controlled-snapshot-failure"
+    if refused or storage_error or reboot_error or snapshot_error or restart_error:
+        reason = next(
+            label
+            for failed, label in (
+                (refused, "guest-start-rejected"),
+                (storage_error, "controlled-storage-refusal"),
+                (reboot_error, "injected-before-restart-observation"),
+                (snapshot_error, "controlled-snapshot-failure"),
+                (restart_error, "controlled-restart-failure"),
+            )
+            if failed
         )
         with pytest.raises(guests.GuestBootError, match=reason):
             invoke()
     else:
         invoke()
+    assert_boot_coordinator_outcome(
+        fixture,
+        report,
+        events,
+        storage_calls,
+        refused,
+        storage_error,
+        reboot_error,
+        snapshot_error,
+        restart_error,
+    )
+
+
+def retained_restart_witness(fixture, report, events, snapshot_error, restart_error):
+    def retained_restart(guest, admitted, temporary, progress, launch, result):
+        assert guest is fixture["guest"] and guest.process.returncode == 0
+        assert admitted == {"enrollment": guest.enrollment} and not snapshot_error
+        assert events[-1] == "captured" and temporary == fixture["temporary"]
+        assert callable(launch) and result is report["retained_restart"]
+        events.append("restarted")
+        if restart_error:
+            raise guests.GuestBootError("controlled-restart-failure")
+
+    return retained_restart
+
+
+def assert_boot_coordinator_outcome(
+    fixture,
+    report,
+    events,
+    storage_calls,
+    refused,
+    storage_error,
+    reboot_error,
+    snapshot_error,
+    restart_error,
+):
     if refused:
         assert not any(call[1] == "guest-ssh" for call in fixture["calls"])
     else:
@@ -883,17 +936,24 @@ def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
     )
     assert events[:3] == ["launch", "identity-verified", "cont"]
     assert (
-        events[-3:] == ["capture-custody", "reaped", "captured"]
-        if not (refused or storage_error or reboot_error)
+        events[-4:] == ["capture-custody", "reaped", "captured", "restarted"]
+        if not (refused or storage_error or reboot_error or snapshot_error)
+        else events[-3:] == ["capture-custody", "reaped", "captured"]
+        if snapshot_error
         else events[-1] == "reaped"
     )
     assert ("snapshot_capture" in report) is (
         not refused and not storage_error and not reboot_error
     )
     assert ("reboot" in events) is (not refused and not storage_error)
+    assert ("retained_restart" in report) is (
+        not refused and not storage_error and not reboot_error and not snapshot_error
+    )
     assert report["boot_verified"] is not refused
     assert report["status"] == (
-        "failed" if refused or storage_error or reboot_error or snapshot_error else "passed"
+        "failed"
+        if refused or storage_error or reboot_error or snapshot_error or restart_error
+        else "passed"
     )
     assert not reboot_error or "storage" not in report
     assert (

@@ -185,6 +185,7 @@ class Guest:
     observed: dict[str, Any] | None = None
     process: subprocess.Popen[bytes] | None = None
     verify_process: Callable[[Deadline], None] | None = None
+    boot_inputs_borrowed: bool = False
 
     @property
     def enrollment(self) -> str:
