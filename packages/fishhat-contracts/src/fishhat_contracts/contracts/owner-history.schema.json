@@ -103,7 +103,9 @@
             "Workflow",
             "WorkflowTransferRecord",
             "WorkflowPhaseAttestation",
-            "WorkflowJournalRecord"
+            "WorkflowJournalRecord",
+            "ResourceAdmission",
+            "ResourceAdmissionCancellation"
           ]
         },
         "resource": {
@@ -145,7 +147,7 @@
         "limit"
       ],
       "additionalProperties": false,
-      "description": "Enumerate original immutable record references under one verified custody descriptor, using current principal permission. Native filtering retains terminal work with unresolved effects or holds, and non-effectful prepared workflow capsules. active_only is false for Plans, WorkflowTransferRecords and WorkflowPhaseAttestations. WorkflowTransferRecord enumeration returns the latest retained custody for every original transfer identity, including in-progress and completed transfers, with a workflow resource filter matched to record.resource. WorkflowPhaseAttestation enumeration returns every retained original attestation identity under the same exact workflow resource filter, including expired proofs. Its original request, authenticated attribution, issuer epoch, observed generation, signed proofs and expiry remain immutable; historical inspection never renews protection or authorizes current phase progress. Both record kinds retain their original schema closures and require independently installed historical readers when the installed closure differs. Original epochs, generation, accepted input, phase witnesses and completion receipts remain unchanged across restoration; later transfers or attestations never hide earlier identities. A page is not a total collection cap; permission, exact filters and custody remain pinned across continuation. References disclose no execution authority. WorkflowJournalRecord enumeration includes every original immutable event, including initialization, retained projections, bindings, permits, outcomes, transfer and recovery events. active_only is false. A null resource discovers all authorized journal events and their workflow identities without saved client IDs; a workflow resource filters exactly that workflow. Pagination pins a stable high-water event boundary, current custodian, custody descriptor, actual principal and exact filters. New retained events cannot replace or rebind a cursor prefix. Expired cursors fail explicitly and a fresh traversal rediscovers all retained events. The owner uses retained indexes and bounded scan windows, including denied entries, rather than rescanning a complete journal per page. Original accepted inputs are discovered from each event reference through history.input and read through history.content.",
+      "description": "Enumerate original immutable record references under one verified custody descriptor, using current principal permission. Native filtering retains terminal work with unresolved effects or holds, and non-effectful prepared workflow capsules. active_only is false for Plans, WorkflowTransferRecords and WorkflowPhaseAttestations. WorkflowTransferRecord enumeration returns the latest retained custody for every original transfer identity, including in-progress and completed transfers, with a workflow resource filter matched to record.resource. WorkflowPhaseAttestation enumeration returns every retained original attestation identity under the same exact workflow resource filter, including expired proofs. Its original request, authenticated attribution, issuer epoch, observed generation, signed proofs and expiry remain immutable; historical inspection never renews protection or authorizes current phase progress. Both record kinds retain their original schema closures and require independently installed historical readers when the installed closure differs. Original epochs, generation, accepted input, phase witnesses and completion receipts remain unchanged across restoration; later transfers or attestations never hide earlier identities. A page is not a total collection cap; permission, exact filters and custody remain pinned across continuation. References disclose no execution authority. WorkflowJournalRecord enumeration includes every original immutable event, including initialization, retained projections, bindings, permits, outcomes, transfer and recovery events. active_only is false. A null resource discovers all authorized journal events and their workflow identities without saved client IDs; a workflow resource filters exactly that workflow. Pagination pins a stable high-water event boundary, current custodian, custody descriptor, actual principal and exact filters. New retained events cannot replace or rebind a cursor prefix. Expired cursors fail explicitly and a fresh traversal rediscovers all retained events. The owner uses retained indexes and bounded scan windows, including denied entries, rather than rescanning a complete journal per page. Original accepted inputs are discovered from each event reference through history.input and read through history.content. ResourceAdmission enumerates original host-owned queue records, including closed eligibility with unresolved grants or execution; ResourceAdmissionCancellation enumerates every immutable stop-intent receipt with active_only false. Both require their exact host resource filter and original owner epoch, inputs and retained scheduler evidence. Historical inspection never re-enables scheduling, changes an accepted Operation or establishes resource release.",
       "allOf": [
         {
           "if": {
@@ -155,7 +157,8 @@
                   "Plan",
                   "WorkflowTransferRecord",
                   "WorkflowPhaseAttestation",
-                  "WorkflowJournalRecord"
+                  "WorkflowJournalRecord",
+                  "ResourceAdmissionCancellation"
                 ]
               }
             }
@@ -214,7 +217,7 @@
           "$ref": "common.schema.json#/$defs/UUID"
         },
         "reference": {
-          "$ref": "common.schema.json#/$defs/RecordReference"
+          "$ref": "common.schema.json#/$defs/CurrentRecordReference"
         },
         "offset": {
           "type": "integer",
@@ -332,7 +335,7 @@
         "items": {
           "type": "array",
           "items": {
-            "$ref": "common.schema.json#/$defs/RecordReference"
+            "$ref": "common.schema.json#/$defs/CurrentRecordReference"
           },
           "maxItems": 128
         },

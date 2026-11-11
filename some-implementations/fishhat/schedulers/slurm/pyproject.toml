@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools==84.1.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "a-fishhat-slurm-adapter"
+version = "0.1.0.dev0"
+description = "slurm scheduler reference projections; no native execution claim"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+dependencies = ["fishhat-contracts==0.1.0.dev0", "fishhat-adapter-protocol==0.1.0.dev0", "fishhat-adapter-support==0.1.0.dev0"]
+
+[project.scripts]
+a-fishhat-slurm-adapter = "a_fishhat_slurm_adapter.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+a_fishhat_slurm_adapter = ["py.typed", "descriptor.json"]
+
+[tool.uv.sources]
+fishhat-contracts = { workspace = true }
+fishhat-adapter-protocol = { workspace = true }
+fishhat-adapter-support = { workspace = true }
+
+[tool.fishhat.component]
+id = "slurm-adapter"
+module = "a_fishhat_slurm_adapter"
+role = "adapter-implementation"

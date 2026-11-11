@@ -11,6 +11,7 @@ from fishhat_adapters.process import validate_process_launch
 from fishhat_contracts.validation import ContractError, canonical, digest
 
 from tests.linear_support import assert_linear, measure
+from tests.process_admission_support import process_admission
 from tests.test_adapter_handoffs import installed, invocation_for, response_for
 from tests.test_adapter_invocations import recovered
 from tests.test_adapter_quantities import counter, limit, observe, request
@@ -119,6 +120,7 @@ def process_case(registry, executor, payload, *, mode="query"):
             "size_bytes": 0,
             "media_type": "application/x-ndjson",
         },
+        "execution_admission": process_admission(executor, (artifact(payload))["digest"]),
         "private_inputs": None,
     }
     return (
@@ -128,6 +130,9 @@ def process_case(registry, executor, payload, *, mode="query"):
             "descriptor": descriptor,
             "approved_installation": installation,
             "expected_executor": executor,
+            "expected_execution_admission": process_admission(
+                executor, manifest["request"]["digest"]
+            ),
             "expected_private_use": None,
         },
     )

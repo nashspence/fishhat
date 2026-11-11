@@ -88,6 +88,18 @@ def resource_observation_params(data: bytes) -> dict[str, Any]:
     return _read_envelope(data, "resources.observe")
 
 
+def admission_params(data: bytes, method: str, expected_owner: dict[str, Any]) -> dict[str, Any]:
+    """Decode a host queue envelope for the same protected native guard as SSH."""
+    if method not in {
+        "resources.admission." + verb for verb in ("submit", "get", "list", "cancel")
+    }:
+        raise ContractError("expected a resource admission request")
+    params = _read_envelope(data, method)
+    if expected_owner["tool"] != "host-ops" or params["owner"] != expected_owner:
+        raise ContractError("resource admission requires the exact local host owner epoch")
+    return params
+
+
 def close_request_params(data: bytes, expected_owner: dict[str, Any]) -> dict[str, Any]:
     """Decode explicit standalone withdrawal for the pinned local owner epoch."""
     params = _read_envelope(data, "operation.close")

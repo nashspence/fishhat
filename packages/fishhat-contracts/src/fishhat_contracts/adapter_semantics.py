@@ -16,6 +16,7 @@ from .bounds import Bounds, bounds
 from .dns import _rrset_identity, validate_changes, validate_generation, validate_rrsets
 from .protected_values import check_value_request, check_value_response, require_value_custody
 from .publication import require_bootstrap_ref_target, validate_publication_intent
+from .resource_admission import check_scheduler_request, check_scheduler_response
 from .targets import check_target_request, check_target_response
 from .validation import ROOT, ContractError, canonical, digest, validate
 
@@ -67,6 +68,8 @@ def check_request(role: str, value: dict[str, Any]) -> None:
         )
         return
     check_target_request(role, value)
+    if role == "scheduler":
+        check_scheduler_request(value)
     if role == "backup" and method != "observe":
         require(inputs["repository"] == inputs["scope"]["handle"], "BACKUP_REPOSITORY_SCOPE")
     if role == "compute":
@@ -185,6 +188,11 @@ def check_invocation(role: str, value: dict[str, Any]) -> None:
     )
     binding = _handoff_binding(role, request)
     require(binding is None or binding == executor, "INVOCATION_EXECUTOR_IDENTITY")
+    if role == "scheduler":
+        require(
+            request["input"]["request"]["domain"]["owner"] == attempt["owner"],
+            "SCHEDULER_DOMAIN_OWNER",
+        )
     if role == "dns":
         require(
             request["input"]["change"]["custodian"] == attempt["owner"],
@@ -203,6 +211,8 @@ def check_invocation(role: str, value: dict[str, Any]) -> None:
 
 def _handoff_binding(role: str, request: dict[str, Any]) -> dict[str, Any] | None:
     method, inputs = request["method"], request["input"]
+    if role == "scheduler" and method != "reconcile":
+        return cast(dict[str, Any], inputs["request"]["domain"]["scheduler"])
     if role == "compute" and method != "reconcile":
         return cast(dict[str, Any], inputs["target"]["executor"])
     if role == "storage" and method == "observe":
@@ -342,7 +352,10 @@ def check_response(
         check_result(invocation["attempt"], response["effect"])
     _check_handoff_response(role, request, response)
     check_value_response(role, request, response, invocation)
-    _check_observation_page(request, response)
+    if role == "scheduler":
+        check_scheduler_response(request, response)
+    else:
+        _check_observation_page(request, response)
     _check_observed_quantities(role, response["output"])
     _observation_keys(role, request, response)
     if role == "dns":

@@ -87,6 +87,10 @@ def validate_host_resources(host: dict[str, Any]) -> None:
 
     for pool in pools.values():
         selection(pool["instance"], "storage", pool["pool"])
+    admission = resources["admission"]
+    if admission is not None:
+        selection(admission["instance"], "scheduler", admission["allocation"])
+        _validate_host_admission(admission, resources)
     control = resources["control"]
     selection(control["instance"], "storage", control["pool"])
     pool_selections = {(p["instance"], p["pool"]) for p in pools.values()}
@@ -183,6 +187,53 @@ def validate_host_resources(host: dict[str, Any]) -> None:
         "invalid pressure hysteresis",
     )
     require(p["gc_jitter_seconds"] < p["gc_interval_seconds"], "GC jitter exceeds interval")
+
+
+def _validate_host_admission(admission: dict[str, Any], resources: dict[str, Any]) -> None:
+    """Join declared scheduling budgets without manufacturing native capacity."""
+    capacity = admission["capacity"]
+    control, resident = admission["control_reserve"], admission["resident_reserve"]
+    for quantity in ("cpu_millis", "memory_bytes"):
+        require(
+            control[quantity] + resident[quantity] <= capacity[quantity],
+            "compute reserves exceed approved capacity",
+        )
+    for device in control["devices"].keys() | resident["devices"].keys():
+        require(
+            control["devices"].get(device, 0) + resident["devices"].get(device, 0)
+            <= capacity["devices"].get(device, 0),
+            "device reserves exceed approved capacity",
+        )
+    require(
+        control["cpu_millis"] > 0
+        and control["memory_bytes"] >= resources["control"]["host_memory_reserve_bytes"],
+        "admission lacks protected host control reserve",
+    )
+    require(
+        admission["accounts"].keys() == resources["accounts"].keys(),
+        "admission account coverage differs from approved resource accounts",
+    )
+    for account_id, account in admission["accounts"].items():
+        maximum, compute = account["maximum"], resources["accounts"][account_id]["compute"]
+        require(
+            maximum["cpu_millis"] <= compute["cpu_millis"]
+            and maximum["memory_bytes"] <= compute["memory_max_bytes"],
+            "admission account exceeds approved compute envelope",
+        )
+        require(
+            maximum["cpu_millis"]
+            <= capacity["cpu_millis"] - control["cpu_millis"] - resident["cpu_millis"]
+            and maximum["memory_bytes"]
+            <= capacity["memory_bytes"] - control["memory_bytes"] - resident["memory_bytes"]
+            and all(
+                count
+                <= capacity["devices"].get(device, 0)
+                - control["devices"].get(device, 0)
+                - resident["devices"].get(device, 0)
+                for device, count in maximum["devices"].items()
+            ),
+            "admission account exceeds approved capacity",
+        )
 
 
 def validate_requirements(

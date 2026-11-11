@@ -12,6 +12,7 @@ from fishhat_contracts.validation import ContractError, canonical, digest
 
 from tests.adapter_support import identifier
 from tests.linear_support import assert_linear, measure
+from tests.process_admission_support import process_admission
 from tests.test_adapter_handoffs import installed, invocation_for, response_for
 from tests.test_adapter_process import identity
 from tests.test_adapter_routing_identity import generation_digest, query
@@ -182,6 +183,9 @@ def test_routing_query_requires_independent_target_approval(role, changed):
         "request": identity(canonical(request)),
         "configuration": identity(canonical(instance["configuration"])),
         "inputs": identity(b"", "application/x-ndjson"),
+        "execution_admission": process_admission(
+            executor, (identity(canonical(request)))["digest"]
+        ),
         "private_inputs": None,
     }
     with pytest.raises(ContractError, match="publication target is not approved"):
@@ -192,6 +196,9 @@ def test_routing_query_requires_independent_target_approval(role, changed):
             descriptor=descriptor,
             approved_installation=installation,
             expected_executor=executor,
+            expected_execution_admission=process_admission(
+                manifest["executor"], manifest["request"]["digest"]
+            ),
             expected_private_use=None,
             expected_publication_target=target,
         )

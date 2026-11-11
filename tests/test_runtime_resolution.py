@@ -17,6 +17,7 @@ from fishhat_contracts.validation import ContractError, canonical, digest, stric
 
 from tests.adapter_support import observation_target
 from tests.linear_support import assert_linear, measure
+from tests.process_admission_support import process_admission
 from tests.support import FIXTURES
 from tests.test_adapter_handoffs import installed
 from tests.test_adapter_process import identity
@@ -94,6 +95,7 @@ def launch_case(registry, query):
         "request": identity(canonical(query)),
         "configuration": identity(canonical(configuration)),
         "inputs": identity(b"", "application/x-ndjson"),
+        "execution_admission": process_admission(executor, (identity(canonical(query)))["digest"]),
         "private_inputs": None,
     }
     return manifest, configuration, installation, descriptor
@@ -120,6 +122,9 @@ def test_resolution_supplies_complete_context_before_any_mutation():
         descriptor=descriptor,
         approved_installation=installation,
         expected_executor=wire["input"]["binding"],
+        expected_execution_admission=process_admission(
+            manifest["executor"], manifest["request"]["digest"]
+        ),
         expected_private_use=None,
         expected_runtime_binding=target,
         approved_release=release,
@@ -152,6 +157,9 @@ def test_resolution_supplies_complete_context_before_any_mutation():
                 descriptor=descriptor,
                 approved_installation=installation,
                 expected_executor=wire["input"]["binding"],
+                expected_execution_admission=process_admission(
+                    changed_manifest["executor"], changed_manifest["request"]["digest"]
+                ),
                 expected_private_use=None,
                 expected_runtime_binding=approved_target,
                 approved_release=release,
@@ -205,6 +213,9 @@ def test_resolution_cannot_approve_its_own_target(changed):
             descriptor=descriptor,
             approved_installation=installation,
             expected_executor=query["input"]["binding"],
+            expected_execution_admission=process_admission(
+                manifest["executor"], manifest["request"]["digest"]
+            ),
             expected_private_use=None,
             expected_runtime_binding=target,
         )

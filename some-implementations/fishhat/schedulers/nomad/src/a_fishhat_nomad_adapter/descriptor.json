@@ -1,0 +1,123 @@
+{
+  "format": "deployment-ops/adapter/v1",
+  "id": "fishhat.nomad",
+  "roles": [
+    "scheduler"
+  ],
+  "entrypoint": "bin/a-fishhat-nomad-adapter",
+  "configuration_schema": {
+    "type": "object",
+    "properties": {
+      "endpoint_handle": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[a-z][a-z0-9._-]*(?![\\s\\S])"
+      },
+      "region": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[a-z][a-z0-9._-]*(?![\\s\\S])"
+      },
+      "namespace": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[a-z][a-z0-9._-]*(?![\\s\\S])"
+      },
+      "datacenter": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[a-z][a-z0-9._-]*(?![\\s\\S])"
+      },
+      "target_host": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[a-z][a-z0-9._-]*(?![\\s\\S])"
+      },
+      "node_id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "worker_executable": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 4096,
+        "pattern": "^/",
+        "allOf": [
+          {
+            "not": {
+              "pattern": "[\\\\\\u0000-\\u001f]"
+            }
+          },
+          {
+            "not": {
+              "pattern": "(?:^|/)\\.\\.?(?:/|(?![\\s\\S]))"
+            }
+          },
+          {
+            "not": {
+              "pattern": "//"
+            }
+          },
+          {
+            "not": {
+              "pattern": "/(?![\\s\\S])"
+            }
+          }
+        ],
+        "description": "Owner-installed worker executable available inside the selected exec driver environment."
+      },
+      "driver": {
+        "const": "exec"
+      },
+      "cpu_unit": {
+        "const": "logical-cpu"
+      }
+    },
+    "required": [
+      "endpoint_handle",
+      "region",
+      "namespace",
+      "datacenter",
+      "target_host",
+      "node_id",
+      "worker_executable",
+      "driver",
+      "cpu_unit"
+    ],
+    "additionalProperties": false,
+    "description": "Owner-approved host binding for pure request projection only; configuration does not establish native enforcement, custody, or dispatch authority."
+  },
+  "component_schema": {
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+  },
+  "implemented": [],
+  "native_qualified": false,
+  "source_schema": {
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+  },
+  "process_protocol": "fishhat.adapter-process/v1",
+  "role_contracts": {
+    "scheduler": {
+      "request": {
+        "uri": "https://fishhat.invalid/contracts/scheduler-adapter.schema.json",
+        "digest": "sha256:015f65f225ca0c797a84076010f435ab3efa4ed3bce522af0086d35e5d66a378"
+      },
+      "response": {
+        "uri": "https://fishhat.invalid/contracts/scheduler-adapter.schema.json#/$defs/Response",
+        "digest": "sha256:1a6816f96eaf3e82ba543bc087044268baa6d8430cc69e293effd52db2b266e0"
+      }
+    }
+  },
+  "process_schema_digest": "sha256:21ba253d1c6b06a85c1d44daa67a5a43fc38b047f8daafedd7ccea96c3b63d2f"
+}

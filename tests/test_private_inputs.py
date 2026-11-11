@@ -19,6 +19,7 @@ from fishhat_contracts.validation import ContractError, canonical, digest, valid
 
 from tests.adapter_support import identifier
 from tests.linear_support import assert_linear, measure
+from tests.process_admission_support import process_admission
 from tests.test_adapter_invocations import recovered
 from tests.test_adapter_process import identity, invocation, launch
 from tests.test_protected_values import value_fixture
@@ -46,6 +47,9 @@ def private_fixture(kind="mutation", *, count=1, value=b"private-value"):
             "input": {"scope": call["request"]["input"]["scope"], "cursor": None, "limit": 2},
         }
         manifest["request"] = identity(canonical(payload))
+        manifest["execution_admission"] = process_admission(
+            manifest["executor"], manifest["request"]["digest"]
+        )
     original = {
         "attempt": {
             key: field
@@ -125,6 +129,9 @@ def seal_operation_inputs(data):
         data["payload"] = original if use["kind"] == "mutation" else recovered(original)
     use["request_digest"] = digest(data["payload"])
     data["manifest"]["request"] = identity(canonical(data["payload"]))
+    data["manifest"]["execution_admission"] = process_admission(
+        data["manifest"]["executor"], data["manifest"]["request"]["digest"]
+    )
     data["rows"] = b"".join(canonical(item) + b"\n" for item in data["bindings"])
     data["manifest"]["private_inputs"] = {
         "use": copy.deepcopy(use),
@@ -140,6 +147,9 @@ def validate_launch(data):
         descriptor=data["descriptor"],
         approved_installation=data["installation"],
         expected_executor=data["call"]["attempt"]["executor"],
+        expected_execution_admission=process_admission(
+            data["manifest"]["executor"], data["manifest"]["request"]["digest"]
+        ),
         expected_private_use=data["use"],
         retained_invocation=data["call"],
     )
@@ -220,6 +230,9 @@ def test_accepted_attempt_commits_private_operation_values_and_cannot_omit_the_c
             descriptor=data["descriptor"],
             approved_installation=data["installation"],
             expected_executor=data["call"]["attempt"]["executor"],
+            expected_execution_admission=process_admission(
+                data["manifest"]["executor"], data["manifest"]["request"]["digest"]
+            ),
             expected_private_use=None,
         )
 

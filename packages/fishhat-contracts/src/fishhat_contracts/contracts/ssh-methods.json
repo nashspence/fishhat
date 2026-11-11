@@ -102,6 +102,30 @@
     },
     {
       "name": "operation.close"
+    },
+    {
+      "name": "resources.admission.submit",
+      "owners": [
+        "host-ops"
+      ]
+    },
+    {
+      "name": "resources.admission.get",
+      "owners": [
+        "host-ops"
+      ]
+    },
+    {
+      "name": "resources.admission.list",
+      "owners": [
+        "host-ops"
+      ]
+    },
+    {
+      "name": "resources.admission.cancel",
+      "owners": [
+        "host-ops"
+      ]
     }
   ],
   "max_frame_bytes": 1048576,
@@ -116,7 +140,9 @@
       "content.commit",
       "lifecycle.evidence.prepare",
       "workflow.journal.submit",
-      "operation.close"
+      "operation.close",
+      "resources.admission.submit",
+      "resources.admission.cancel"
     ],
     "field": "admission_contract",
     "commitment": "SHA-256 of the JCS encoding of the complete contract_schemas object in Info, with its request, response, cli and source SchemaIdentity values. The caller derives this digest from independently approved identities. Do not substitute live discovery as approval. The receiver derives its own digest from its active installed revision.",

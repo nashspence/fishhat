@@ -795,6 +795,60 @@
       ],
       "use_case": "operation.close",
       "description": "Read the closed operation.close request envelope from stdin and require the exact local owner epoch. Explicitly withdraw an uncertain standalone submission with the same atomic decision and authorization as SSH. A race that already accepted returns the original Operation; this command cannot start or stop execution."
+    },
+    {
+      "name": "resource-admission-submit",
+      "tokens": [
+        "host-ops",
+        "resources",
+        "admission",
+        "submit",
+        "--request-stdin",
+        "--confirm",
+        "--json"
+      ],
+      "use_case": "resources.admission.submit",
+      "description": "Read the complete closed resources.admission.submit request envelope from stdin and use the same exact host owner epoch, current permission and resource scope checks as SSH. New custody or stop intent requires the independently approved admission contract; exact retained replay does not readmit work. Queue and cancellation results are observed records, never accepted Operation execution states. Grant, Plan acceptance, launch authorization and resource release remain distinct."
+    },
+    {
+      "name": "resource-admission-get",
+      "tokens": [
+        "host-ops",
+        "resources",
+        "admission",
+        "get",
+        "--request-stdin",
+        "--json"
+      ],
+      "use_case": "resources.admission.get",
+      "description": "Read the complete closed resources.admission.get request envelope from stdin and use the same exact host owner epoch, current permission and resource scope checks as SSH. Queue and cancellation results are observed records, never accepted Operation execution states. Grant, Plan acceptance, launch authorization and resource release remain distinct."
+    },
+    {
+      "name": "resource-admission-list",
+      "tokens": [
+        "host-ops",
+        "resources",
+        "admission",
+        "list",
+        "--request-stdin",
+        "--json"
+      ],
+      "use_case": "resources.admission.list",
+      "description": "Read the complete closed resources.admission.list request envelope from stdin and use the same exact host owner epoch, current permission and resource scope checks as SSH. Queue and cancellation results are observed records, never accepted Operation execution states. Grant, Plan acceptance, launch authorization and resource release remain distinct."
+    },
+    {
+      "name": "resource-admission-cancel",
+      "tokens": [
+        "host-ops",
+        "resources",
+        "admission",
+        "cancel",
+        "--request-stdin",
+        "--confirm",
+        "--json"
+      ],
+      "use_case": "resources.admission.cancel",
+      "description": "Read the complete closed resources.admission.cancel request envelope from stdin and use the same exact host owner epoch, current permission and resource scope checks as SSH. New custody or stop intent requires the independently approved admission contract; exact retained replay does not readmit work. Queue and cancellation results are observed records, never accepted Operation execution states. Grant, Plan acceptance, launch authorization and resource release remain distinct."
     }
   ],
   "parser": "bounded tokens; no shell evaluation",

@@ -1,0 +1,114 @@
+{
+  "format": "deployment-ops/adapter/v1",
+  "id": "fishhat.slurm",
+  "roles": [
+    "scheduler"
+  ],
+  "entrypoint": "bin/a-fishhat-slurm-adapter",
+  "configuration_schema": {
+    "type": "object",
+    "properties": {
+      "cluster": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[a-z][a-z0-9._-]*(?![\\s\\S])"
+      },
+      "partition": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[a-z][a-z0-9._-]*(?![\\s\\S])"
+      },
+      "account": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[a-z][a-z0-9._-]*(?![\\s\\S])"
+      },
+      "node": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[a-z][a-z0-9._-]*(?![\\s\\S])"
+      },
+      "target_host": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 160,
+        "pattern": "^[a-z][a-z0-9._-]*(?![\\s\\S])"
+      },
+      "worker_script": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 4096,
+        "pattern": "^/",
+        "allOf": [
+          {
+            "not": {
+              "pattern": "[\\\\\\u0000-\\u001f]"
+            }
+          },
+          {
+            "not": {
+              "pattern": "(?:^|/)\\.\\.?(?:/|(?![\\s\\S]))"
+            }
+          },
+          {
+            "not": {
+              "pattern": "//"
+            }
+          },
+          {
+            "not": {
+              "pattern": "/(?![\\s\\S])"
+            }
+          }
+        ],
+        "description": "Owner-installed batch bootstrap script; requests cannot choose a script or append native options."
+      },
+      "cpu_unit": {
+        "const": "logical-cpu"
+      }
+    },
+    "required": [
+      "cluster",
+      "partition",
+      "account",
+      "node",
+      "target_host",
+      "worker_script",
+      "cpu_unit"
+    ],
+    "additionalProperties": false,
+    "description": "Owner-approved host binding for pure request projection only; configuration does not establish native enforcement, custody, or dispatch authority."
+  },
+  "component_schema": {
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+  },
+  "implemented": [],
+  "native_qualified": false,
+  "source_schema": {
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+  },
+  "process_protocol": "fishhat.adapter-process/v1",
+  "role_contracts": {
+    "scheduler": {
+      "request": {
+        "uri": "https://fishhat.invalid/contracts/scheduler-adapter.schema.json",
+        "digest": "sha256:015f65f225ca0c797a84076010f435ab3efa4ed3bce522af0086d35e5d66a378"
+      },
+      "response": {
+        "uri": "https://fishhat.invalid/contracts/scheduler-adapter.schema.json#/$defs/Response",
+        "digest": "sha256:1a6816f96eaf3e82ba543bc087044268baa6d8430cc69e293effd52db2b266e0"
+      }
+    }
+  },
+  "process_schema_digest": "sha256:21ba253d1c6b06a85c1d44daa67a5a43fc38b047f8daafedd7ccea96c3b63d2f"
+}

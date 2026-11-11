@@ -21,6 +21,7 @@ from fishhat_contracts.adapter_semantics import (
 from fishhat_contracts.artifact_custody import CHUNK_BYTES, verify_artifact_stream
 from fishhat_contracts.bounds import Bounds, bounds
 from fishhat_contracts.protected_values import require_value_custody
+from fishhat_contracts.resource_admission import validate_process_admission
 from fishhat_contracts.validation import ContractError, canonical, digest, strict_json, validate
 
 from .protocol import (
@@ -83,6 +84,7 @@ def validate_process_launch(
     approved_installation: dict[str, Any],
     expected_executor: dict[str, Any],
     expected_private_use: dict[str, Any] | None,
+    expected_execution_admission: dict[str, Any],
     expected_runtime_binding: dict[str, Any] | None = None,
     approved_release: dict[str, Any] | None = None,
     approved_deployment: dict[str, Any] | None = None,
@@ -101,6 +103,10 @@ def validate_process_launch(
     including on a fresh process with no preceding mutation or shared state.
     Every compute launch binds the independently approved allocation incarnation;
     reconciliation preserves the exact original target from retained custody.
+    Every process also requires an independently current host admission record.
+    The owner selects a bounded control budget or consumes an exact workload grant
+    under its native launch fence. Neither the manifest nor this pure comparison
+    establishes a live grant, native containment, or permission to launch twice.
     """
     validate("adapter-process.schema.json", manifest)
     validate("adapter.schema.json", approved_installation, "Installation")
@@ -200,6 +206,12 @@ def validate_process_launch(
         role, request, expected_capture_identity, expected_prune_target, executor
     )
     _check_private_use(manifest, payload, expected_private_use)
+    validate_process_admission(
+        manifest["execution_admission"],
+        expected=expected_execution_admission,
+        executor=executor,
+        payload=payload,
+    )
 
 
 def _invocation_digest(invocation: dict[str, Any]) -> str:

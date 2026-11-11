@@ -65,6 +65,8 @@ ALLOWED_DOMAINS = {
     "komo.do",
     "coolify.io",
     "doc.yunohost.org",
+    "slurm.schedmd.com",
+    "developer.hashicorp.com",
 }
 
 

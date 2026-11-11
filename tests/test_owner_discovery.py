@@ -127,6 +127,8 @@ def test_upgrade_between_discovery_and_stop_intent_preserves_only_original_repla
             "content.commit",
             "workflow.journal.submit",
             "lifecycle.evidence.prepare",
+            "resources.admission.submit",
+            "resources.admission.cancel",
         }
     )
     approved = owner_contract_schemas()

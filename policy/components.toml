@@ -249,6 +249,14 @@ role = "adapter-implementation"
 internal_dependencies = ["fishhat-adapter-support"]
 
 [[components]]
+id = "nomad-adapter"
+distribution = "a-fishhat-nomad-adapter"
+path = "some-implementations/fishhat/schedulers/nomad"
+module = "a_fishhat_nomad_adapter"
+role = "adapter-implementation"
+internal_dependencies = ["fishhat-adapter-protocol", "fishhat-adapter-support", "fishhat-contracts"]
+
+[[components]]
 id = "openbao-database-adapter"
 distribution = "a-fishhat-openbao-database-adapter"
 path = "some-implementations/fishhat/credentials/openbao-database"
@@ -335,6 +343,14 @@ path = "some-implementations/fishhat/backup/sealed-archive"
 module = "a_fishhat_sealed_archive_adapter"
 role = "adapter-implementation"
 internal_dependencies = ["fishhat-adapter-support"]
+
+[[components]]
+id = "slurm-adapter"
+distribution = "a-fishhat-slurm-adapter"
+path = "some-implementations/fishhat/schedulers/slurm"
+module = "a_fishhat_slurm_adapter"
+role = "adapter-implementation"
+internal_dependencies = ["fishhat-adapter-protocol", "fishhat-adapter-support", "fishhat-contracts"]
 
 [[components]]
 id = "systemd-adapter"

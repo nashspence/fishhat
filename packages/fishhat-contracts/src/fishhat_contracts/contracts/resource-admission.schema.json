@@ -1,0 +1,1060 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fishhat.invalid/contracts/resource-admission.schema.json",
+  "$defs": {
+    "ResourceVector": {
+      "type": "object",
+      "properties": {
+        "cpu_millis": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "memory_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "devices": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "common.schema.json#/$defs/Id"
+          },
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        }
+      },
+      "required": [
+        "cpu_millis",
+        "memory_bytes",
+        "devices"
+      ],
+      "additionalProperties": false,
+      "description": "Scheduling quantities, separate from execution limits. cpu_millis is thousandths of one configured CPU allocation unit, not a CPUQuota setting, MHz, weight or throughput guarantee. The approved domain defines its native CPU topology and conversion. Memory is bytes. Device keys are approved logical resource classes, never native paths. Zero scalar quantities are permitted for reserves; a workload demand requires positive CPU and memory. No collection-count ceiling is imposed."
+    },
+    "ExecutionLimits": {
+      "type": "object",
+      "properties": {
+        "cpu_max_millis": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "memory_max_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "tasks_max": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "walltime_seconds": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "cpu_max_millis",
+        "memory_max_bytes",
+        "tasks_max",
+        "walltime_seconds"
+      ],
+      "additionalProperties": false,
+      "description": "Required finite execution ceilings on the entire workload descendant scope. CPU is maximum CPU bandwidth in thousandths of one CPU, distinct from requested scheduling units. Native mappings must establish equivalent semantics or report unsupported; CPU allocation, relative weight or Nomad MHz cannot silently substitute. Null walltime is permitted only for an explicitly admitted resident lifetime. A transient or control process has a finite walltime. Limits never waive existing account, storage, I/O or tmpfs envelopes."
+    },
+    "DomainIdentity": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "allOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Owner"
+            },
+            {
+              "properties": {
+                "tool": {
+                  "const": "host-ops"
+                }
+              }
+            }
+          ]
+        },
+        "host": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "capacity_domain": {
+          "$ref": "adapter.schema.json#/$defs/Handle"
+        },
+        "incarnation": {
+          "$ref": "adapter.schema.json#/$defs/Handle"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "scheduler": {
+          "allOf": [
+            {
+              "$ref": "adapter.schema.json#/$defs/InstanceReference"
+            },
+            {
+              "properties": {
+                "role": {
+                  "const": "scheduler"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "owner",
+        "host",
+        "capacity_domain",
+        "incarnation",
+        "generation",
+        "scheduler"
+      ],
+      "additionalProperties": false,
+      "description": "Independently accepted host resource authority and its exact scheduler executor. Scheduler scope is allocation, authority equals owner.id and handle equals capacity_domain. The canonical capacity_domain identifies shared physical capacity across aliases and implementations. Its authority must prove non-overlap or an explicit hierarchy; separate instance names cannot double-count a host. Recreated native domains or changed bindings require a new incarnation/generation and independent approval. A source or adapter response cannot establish this identity."
+    },
+    "ControlDomainIdentity": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "allOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Owner"
+            },
+            {
+              "properties": {
+                "tool": {
+                  "const": "host-ops"
+                }
+              }
+            }
+          ]
+        },
+        "host": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "capacity_domain": {
+          "$ref": "adapter.schema.json#/$defs/Handle"
+        },
+        "incarnation": {
+          "$ref": "adapter.schema.json#/$defs/Handle"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "owner",
+        "host",
+        "capacity_domain",
+        "incarnation",
+        "generation"
+      ],
+      "additionalProperties": false,
+      "description": "Independently accepted host control resource authority. It deliberately has no scheduler dependency: finite bootstrap, recovery, observation and scheduling-control processes remain available when queued workload admission is unavailable. Native owner-held control accounting and enforcement remain required; this identity does not permit unlimited work or turn control purposes into workload authority."
+    },
+    "Capabilities": {
+      "type": "object",
+      "properties": {
+        "cpu_quantum_millis": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "memory_quantum_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "lifetimes": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "transient",
+              "resident"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "limits": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "cpu-reservation",
+              "memory-reservation",
+              "cpu-max",
+              "memory-max",
+              "tasks-max",
+              "walltime",
+              "device-isolation",
+              "host-affinity",
+              "resident-lifetime",
+              "supervision",
+              "quantities"
+            ]
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "host_affinity": {
+          "enum": [
+            "enforced",
+            "unsupported",
+            "unknown"
+          ]
+        },
+        "supervision": {
+          "enum": [
+            "verified",
+            "unsupported",
+            "unknown"
+          ]
+        }
+      },
+      "required": [
+        "cpu_quantum_millis",
+        "memory_quantum_bytes",
+        "lifetimes",
+        "limits",
+        "host_affinity",
+        "supervision"
+      ],
+      "additionalProperties": false,
+      "description": "Owner-accepted capability observations, not installation or native qualification claims. Quantum rounding is charged explicitly in ResourceGrant; never silently reinterpret units or weaken a required limit. Unknown or unsupported host affinity, supervision, lifetime or limits blocks launch. Native owners verify these facts for the exact selected backend and worker, and refresh them when identity or configuration changes."
+    },
+    "AccountAdmission": {
+      "type": "object",
+      "properties": {
+        "maximum": {
+          "$ref": "resource-admission.schema.json#/$defs/ResourceVector"
+        },
+        "classes": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/Id"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "maximum",
+        "classes"
+      ],
+      "additionalProperties": false,
+      "description": "Host-approved per-account scheduling ceiling and permitted logical queue classes. Class names do not grant administrator, native mutation or preemption authority. Individual resource requests and their limits must fit this ceiling; maxima are not simultaneous reservations."
+    },
+    "AdmissionPolicy": {
+      "type": "object",
+      "properties": {
+        "domain": {
+          "$ref": "resource-admission.schema.json#/$defs/DomainIdentity"
+        },
+        "capacity": {
+          "$ref": "resource-admission.schema.json#/$defs/ResourceVector"
+        },
+        "control_reserve": {
+          "$ref": "resource-admission.schema.json#/$defs/ResourceVector"
+        },
+        "resident_reserve": {
+          "$ref": "resource-admission.schema.json#/$defs/ResourceVector"
+        },
+        "accounts": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "common.schema.json#/$defs/Id"
+          },
+          "additionalProperties": {
+            "$ref": "resource-admission.schema.json#/$defs/AccountAdmission"
+          }
+        },
+        "capabilities": {
+          "$ref": "resource-admission.schema.json#/$defs/Capabilities"
+        }
+      },
+      "required": [
+        "domain",
+        "capacity",
+        "control_reserve",
+        "resident_reserve",
+        "accounts",
+        "capabilities"
+      ],
+      "additionalProperties": false,
+      "description": "Current independently accepted host policy. Capacity is the verified allocatable domain extent, not free-memory telemetry. Subtract protected control capacity, baseline resident capacity not already charged to any live grant, and all live grants before admitting new work; the same resident is never counted twice. Per-account maxima are ceilings, not simultaneous grants; maxima need not sum to capacity. Account weights/queue policy do not establish native enforcement. Existing untracked host workloads require an independently justified reserve or an explicit unsupported coverage result. Queued requests are retained under owner custody; none acquires a resource claim until a separate exact grant is committed. This value does not implement a scheduler or a native accounting transaction."
+    },
+    "AdmissionContext": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "operation_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "stage_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "stage": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "work_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "target_host": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "subject": {
+          "$ref": "adapter.schema.json#/$defs/Scope"
+        },
+        "authorization": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "enum": [
+                "reviewed-proposal",
+                "accepted-continuation"
+              ]
+            },
+            "digest": {
+              "$ref": "common.schema.json#/$defs/Digest"
+            }
+          },
+          "required": [
+            "kind",
+            "digest"
+          ],
+          "additionalProperties": false
+        },
+        "admission_generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "owner",
+        "operation_id",
+        "stage_id",
+        "stage",
+        "work_digest",
+        "target_host",
+        "subject",
+        "authorization",
+        "admission_generation"
+      ],
+      "additionalProperties": false,
+      "description": "Exact independently approved work context. work_digest commits the immutable executable/input closure selected by the owner; a caller-selected digest supplies no authority. Authorization is either the exact reviewed proposal or retained accepted continuation; waiting does not turn accepted work into a fresh request and does not change its original identity. Current owner permission and the runtime admission fence must be checked again at actual launch. stage_id identifies one bounded execution stage; parent workflows cannot hold all resources while requiring children to reacquire those same resources. Native owners either subdivide an existing grant explicitly or independently admit successive stages. Target host is mandatory: arbitrary scheduler placement is not relocation authority."
+    },
+    "StorageRequestReference": {
+      "type": "object",
+      "properties": {
+        "operation_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "request_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        }
+      },
+      "required": [
+        "operation_id",
+        "request_digest"
+      ],
+      "additionalProperties": false,
+      "description": "Reference to the complete exact existing CapacityRequest and its separately retained CapacityReservation. All storage prerequisites must be verified before guarded launch. This reference does not create an atomic transaction across independent scheduler and storage owners, consume a storage reservation or authorize release. A blocked prerequisite must not lead to native effects; unused compute grants are relinquished only with positive no-start/cessation evidence."
+    },
+    "ResourceRequest": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "fishhat.resource-admission/v1"
+        },
+        "kind": {
+          "const": "ResourceRequest"
+        },
+        "id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "context": {
+          "$ref": "resource-admission.schema.json#/$defs/AdmissionContext"
+        },
+        "domain": {
+          "$ref": "resource-admission.schema.json#/$defs/DomainIdentity"
+        },
+        "account": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "lifetime": {
+          "enum": [
+            "transient",
+            "resident"
+          ]
+        },
+        "demand": {
+          "$ref": "resource-admission.schema.json#/$defs/ResourceVector"
+        },
+        "limits": {
+          "$ref": "resource-admission.schema.json#/$defs/ExecutionLimits"
+        },
+        "storage_requests": {
+          "type": "array",
+          "items": {
+            "$ref": "resource-admission.schema.json#/$defs/StorageRequestReference"
+          },
+          "minItems": 0
+        },
+        "queue": {
+          "type": "object",
+          "properties": {
+            "class": {
+              "$ref": "common.schema.json#/$defs/Id"
+            },
+            "deadline": {
+              "anyOf": [
+                {
+                  "$ref": "common.schema.json#/$defs/Time"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "class",
+            "deadline"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "id",
+        "context",
+        "domain",
+        "account",
+        "lifetime",
+        "demand",
+        "limits",
+        "storage_requests",
+        "queue"
+      ],
+      "additionalProperties": false,
+      "description": "One immutable request to wait for capacity for an exact accepted stage. Request identity and payload remain retained after cancellation or completion; changed demand/stage requires a new exact request. Queue deadline limits new launch eligibility, never proves a submitted task absent or releases an existing grant. Demand and limits have distinct units and purposes. V1 memory demand equals its hard memory ceiling; explicit quantum rounding is separately charged in the grant. Automatic memory overcommit is not admitted. Restart, requeue, reschedule and replacement execution require a fresh owner-authorized execution incarnation, never replay of a mutating stage under this same grant. Resident lifetimes retain capacity until verified cessation; idle usage is not free capacity. A request cannot enroll its scheduler, approve policy, choose another host or grant itself execution."
+    },
+    "SubmissionIdentity": {
+      "type": "object",
+      "properties": {
+        "executor": {
+          "allOf": [
+            {
+              "$ref": "adapter.schema.json#/$defs/InstanceReference"
+            },
+            {
+              "properties": {
+                "role": {
+                  "const": "scheduler"
+                }
+              }
+            }
+          ]
+        },
+        "handle": {
+          "$ref": "adapter.schema.json#/$defs/Handle"
+        },
+        "incarnation": {
+          "$ref": "adapter.schema.json#/$defs/Handle"
+        }
+      },
+      "required": [
+        "executor",
+        "handle",
+        "incarnation"
+      ],
+      "additionalProperties": false,
+      "description": "Exact backend submission identity. The opaque handle may name a batch job or desired-state job; incarnation distinguishes reuse, replacement and changed native intent. It is separate from scheduler evaluation, allocation and actual execution. A job name, numeric job ID or current alias alone is insufficient. Native provider identities and compare-and-update rules remain adapter-owned."
+    },
+    "ExecutionIdentity": {
+      "type": "object",
+      "properties": {
+        "submission": {
+          "$ref": "resource-admission.schema.json#/$defs/SubmissionIdentity"
+        },
+        "handle": {
+          "$ref": "adapter.schema.json#/$defs/Handle"
+        },
+        "incarnation": {
+          "$ref": "adapter.schema.json#/$defs/Handle"
+        },
+        "attempt": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        }
+      },
+      "required": [
+        "submission",
+        "handle",
+        "incarnation",
+        "attempt"
+      ],
+      "additionalProperties": false,
+      "description": "One exact native allocation/execution incarnation under the original submission. A Slurm restart/requeue or Nomad replacement allocation is not the same execution merely because its logical submission name is unchanged. The host must fence stale workers and independently authorize any new execution. Scheduler state changes cannot rewrite already retained effect identity."
+    },
+    "ResourceGrant": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "fishhat.resource-admission/v1"
+        },
+        "kind": {
+          "const": "ResourceGrant"
+        },
+        "id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "request_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "context_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "policy_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "domain": {
+          "$ref": "resource-admission.schema.json#/$defs/DomainIdentity"
+        },
+        "account": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "host": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "lifetime": {
+          "enum": [
+            "transient",
+            "resident"
+          ]
+        },
+        "execution": {
+          "$ref": "resource-admission.schema.json#/$defs/ExecutionIdentity"
+        },
+        "charged": {
+          "$ref": "resource-admission.schema.json#/$defs/ResourceVector"
+        },
+        "limits": {
+          "$ref": "resource-admission.schema.json#/$defs/ExecutionLimits"
+        },
+        "state": {
+          "enum": [
+            "allocated",
+            "running",
+            "stopping",
+            "released",
+            "unknown"
+          ]
+        },
+        "admission_generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "issued_at": {
+          "$ref": "common.schema.json#/$defs/Time"
+        },
+        "expires_at": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "id",
+        "generation",
+        "request_digest",
+        "context_digest",
+        "policy_digest",
+        "domain",
+        "account",
+        "host",
+        "lifetime",
+        "execution",
+        "charged",
+        "limits",
+        "state",
+        "admission_generation",
+        "issued_at",
+        "expires_at"
+      ],
+      "additionalProperties": false,
+      "description": "Owner-retained allocation for one immutable resource request. Charged resources explicitly include approved CPU/memory quantum rounding and equal the actual resource debit; limits remain exactly requested. The owner atomically debits current capacity and consumes a one-use launch authorization under exclusion, rechecks the current scope fence and enforced placement before releasing executable work. Schema validation and an adapter response do not supply those native facts. A grant is not a bearer token. Expiry blocks a new launch but never establishes cessation or returns capacity. Backend submission success and native task completion are independent of Fishhat effect/result success. Release can free verified ceased compute while retaining unresolved application effects, storage claims and output-custody obligations."
+    },
+    "ReleaseAuthorization": {
+      "type": "object",
+      "properties": {
+        "request_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "grant_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "grant_generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "execution": {
+          "$ref": "resource-admission.schema.json#/$defs/ExecutionIdentity"
+        },
+        "fence_generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "no_future_starts": {
+          "type": "boolean"
+        },
+        "descendants_stopped": {
+          "type": "boolean"
+        },
+        "observed_at": {
+          "$ref": "common.schema.json#/$defs/Time"
+        },
+        "evidence_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        }
+      },
+      "required": [
+        "request_digest",
+        "grant_id",
+        "grant_generation",
+        "execution",
+        "fence_generation",
+        "no_future_starts",
+        "descendants_stopped",
+        "observed_at",
+        "evidence_digest"
+      ],
+      "additionalProperties": false,
+      "description": "Independent owner authorization to ask the scheduler to release this exact unused or ceased allocation. Positive exclusion of future starts and descendant cessation is mandatory. This record deliberately does not assert that the native allocation is already released or that capacity accounting has committed; those are separate postconditions in ReleaseEvidence. A bare caller record is not authenticated native evidence."
+    },
+    "ReleaseEvidence": {
+      "type": "object",
+      "properties": {
+        "request_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "grant_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "grant_generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "execution": {
+          "$ref": "resource-admission.schema.json#/$defs/ExecutionIdentity"
+        },
+        "fence_generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "no_future_starts": {
+          "type": "boolean"
+        },
+        "descendants_stopped": {
+          "type": "boolean"
+        },
+        "native_resources_released": {
+          "type": "boolean"
+        },
+        "accounting_verified": {
+          "type": "boolean"
+        },
+        "observed_at": {
+          "$ref": "common.schema.json#/$defs/Time"
+        },
+        "evidence_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        }
+      },
+      "required": [
+        "request_digest",
+        "grant_id",
+        "grant_generation",
+        "execution",
+        "fence_generation",
+        "no_future_starts",
+        "descendants_stopped",
+        "native_resources_released",
+        "accounting_verified",
+        "observed_at",
+        "evidence_digest"
+      ],
+      "additionalProperties": false,
+      "description": "Exact authenticated native cessation and accounting evidence supplied independently by the receiving owner. All four booleans must be verified true before capacity release. For desired-state backends no_future_starts requires stopping/revoking the original scheduling intent and excluding replacement allocations; stopping one allocation is insufficient. For batch backends it includes excluded delayed launch/requeue. Cancellation acknowledgment, expiry, a missing queue row or a terminal parent process does not prove this evidence. Positive compute release never erases prior effects, accepted identities or independent storage/output custody."
+    },
+    "SubmissionClosure": {
+      "type": "object",
+      "properties": {
+        "request_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "submission": {
+          "$ref": "resource-admission.schema.json#/$defs/SubmissionIdentity"
+        },
+        "no_future_starts": {
+          "type": "boolean"
+        },
+        "allocations_absent": {
+          "type": "boolean"
+        },
+        "observed_at": {
+          "$ref": "common.schema.json#/$defs/Time"
+        },
+        "evidence_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        }
+      },
+      "required": [
+        "request_digest",
+        "submission",
+        "no_future_starts",
+        "allocations_absent",
+        "observed_at",
+        "evidence_digest"
+      ],
+      "additionalProperties": false,
+      "description": "Positive independently authenticated closure of a submitted request for which no grant was accepted. The exact scheduling intent cannot create future work and a complete protected observation establishes no allocation remains. Missing queue rows, job expiry and an acknowledged cancellation request cannot supply these facts. If any grant was retained, its separate exact release evidence remains required; this closure never erases that grant."
+    },
+    "AdmissionObservation": {
+      "type": "object",
+      "properties": {
+        "request_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "domain": {
+          "$ref": "resource-admission.schema.json#/$defs/DomainIdentity"
+        },
+        "state": {
+          "enum": [
+            "queued",
+            "allocated",
+            "running",
+            "stop-requested",
+            "cancelled",
+            "released",
+            "rejected",
+            "unknown"
+          ]
+        },
+        "submission": {
+          "anyOf": [
+            {
+              "$ref": "resource-admission.schema.json#/$defs/SubmissionIdentity"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "grant": {
+          "anyOf": [
+            {
+              "$ref": "resource-admission.schema.json#/$defs/ResourceGrant"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "release": {
+          "anyOf": [
+            {
+              "$ref": "resource-admission.schema.json#/$defs/ReleaseEvidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "closure": {
+          "anyOf": [
+            {
+              "$ref": "resource-admission.schema.json#/$defs/SubmissionClosure"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "capacity",
+              "priority",
+              "dependency",
+              "unavailable",
+              "unsupported",
+              "fenced",
+              "deadline",
+              "unknown"
+            ]
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "unsupported": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "cpu-reservation",
+              "memory-reservation",
+              "cpu-max",
+              "memory-max",
+              "tasks-max",
+              "walltime",
+              "device-isolation",
+              "host-affinity",
+              "resident-lifetime",
+              "supervision",
+              "quantities"
+            ]
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "request_digest",
+        "domain",
+        "state",
+        "submission",
+        "grant",
+        "release",
+        "closure",
+        "reasons",
+        "unsupported"
+      ],
+      "additionalProperties": false,
+      "description": "One complete scalar status for the exact original request, not a list or scheduling authorization. Known submission, allocation and execution identities remain distinct. Unknown coverage supplies no grant, release or absence clearance, while any separately retained prior facts survive unchanged. A known submission/previous grant may not be silently replaced. Queued means durable backend acceptance with no granted allocation; it does not mean running. stop-requested confirms only cancellation-intent acceptance and may have no known grant; it is never cessation. cancelled without a grant requires positive SubmissionClosure; any previously retained grant still needs its own release. A released grant requires positive ReleaseEvidence and does not imply workload success. Pending reason codes are observations and never exact queue-position or start-time promises."
+    },
+    "GrantReference": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        }
+      },
+      "required": [
+        "id",
+        "generation",
+        "digest"
+      ],
+      "additionalProperties": false,
+      "description": "Exact owner-held ResourceGrant snapshot selected for this one launch use; the complete original grant/request must be retained and independently checked. A matching digest alone grants no authority."
+    },
+    "ControlBudget": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maximum": {
+          "$ref": "resource-admission.schema.json#/$defs/ResourceVector"
+        },
+        "limits": {
+          "$ref": "resource-admission.schema.json#/$defs/ExecutionLimits"
+        }
+      },
+      "required": [
+        "id",
+        "generation",
+        "maximum",
+        "limits"
+      ],
+      "additionalProperties": false,
+      "description": "Finite owner-approved control capacity, charged within the independently reserved host control envelope. Scheduler submission/observation, fencing and recovery use this path to avoid recursively waiting on their own workload queue. It is not an unlimited bypass and does not authorize ordinary workload execution; the owner independently approves purpose, exact input, budgets and current aggregate availability. A finite walltime is mandatory."
+    },
+    "ProcessAdmission": {
+      "type": "object",
+      "properties": {
+        "use_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "owner": {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        "executor": {
+          "$ref": "adapter.schema.json#/$defs/InstanceReference"
+        },
+        "request_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "host": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "domain": {
+          "oneOf": [
+            {
+              "$ref": "resource-admission.schema.json#/$defs/DomainIdentity"
+            },
+            {
+              "$ref": "resource-admission.schema.json#/$defs/ControlDomainIdentity"
+            }
+          ]
+        },
+        "policy_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "class": {
+          "enum": [
+            "control",
+            "workload"
+          ]
+        },
+        "admission_generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "control_budget": {
+          "anyOf": [
+            {
+              "$ref": "resource-admission.schema.json#/$defs/ControlBudget"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "grant": {
+          "anyOf": [
+            {
+              "$ref": "resource-admission.schema.json#/$defs/GrantReference"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "use_id",
+        "owner",
+        "executor",
+        "request_digest",
+        "host",
+        "domain",
+        "policy_digest",
+        "class",
+        "admission_generation",
+        "control_budget",
+        "grant"
+      ],
+      "additionalProperties": false,
+      "description": "Protected receiving-owner ledger evidence for one exact process launch. Required for queries, mutations and reconciliation. request_digest identifies the exact process payload, avoiding a digest cycle with its containing manifest. The receiving owner separately loads and verifies this same current record, exact owner/executor/payload, host, policy, aggregate budget and scope fence, and atomically consumes use_id before native launch. Reusing a use or stale grant cannot launch again. Fresh mutations retain exact owner identity. A reconciliation control launch may use an independently approved current recovery epoch for the same owner tool and ID, while the complete original invocation and private-input ownership retain their historical epoch. The receiving owner independently authorizes that recovery; schema equality does not do so. A manifest or caller-selected record cannot authorize itself. Workload requires its exact approved grant; control requires an explicit finite protected budget and may not recursively acquire workload capacity. Pure validation establishes only data joins, not native authority, enforcement, durable consumption or cessation.",
+      "oneOf": [
+        {
+          "properties": {
+            "class": {
+              "const": "control"
+            },
+            "domain": {
+              "$ref": "resource-admission.schema.json#/$defs/ControlDomainIdentity"
+            },
+            "grant": {
+              "type": "null"
+            },
+            "control_budget": {
+              "allOf": [
+                {
+                  "$ref": "resource-admission.schema.json#/$defs/ControlBudget"
+                },
+                {
+                  "properties": {
+                    "limits": {
+                      "properties": {
+                        "walltime_seconds": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "properties": {
+            "class": {
+              "const": "workload"
+            },
+            "domain": {
+              "$ref": "resource-admission.schema.json#/$defs/DomainIdentity"
+            },
+            "control_budget": {
+              "type": "null"
+            },
+            "grant": {
+              "$ref": "resource-admission.schema.json#/$defs/GrantReference"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "description": "Portable host resource admission, queue custody and guarded execution. This contract separates permission, scheduling allocation, enforcement, execution and effect/result custody. Its reference validators do not implement a native scheduler, durable owner ledger or enforcement profile."
+}

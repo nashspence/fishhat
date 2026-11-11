@@ -767,8 +767,9 @@ class DirectOwner(unittest.TestCase):
         }
         for form in FORMS:
             command = " ".join(tokens.get(t, t) for t in form["tokens"])
+            receiver = "host-ops" if form["tokens"][0] == "host-ops" else "app-ops"
             with self.subTest(form=form["name"]):
-                self.assertEqual(parse_command(command, "app-ops")["form"], form["name"])
+                self.assertEqual(parse_command(command, receiver)["form"], form["name"])
 
     def test_wrong_receiver(self):
         with self.assertRaises(ContractError):

@@ -105,7 +105,7 @@ def test_map_exhaustively_tracks_current_surfaces_and_native_gaps():
     coverage = check()
     rows = {row["id"]: row for row in coverage["operations"]}
     assert len([key for key in rows if key.startswith("action:")]) == 35
-    assert len([key for key in rows if key.startswith("rpc:")]) == 34
+    assert len([key for key in rows if key.startswith("rpc:")]) == 38
     assert {
         "rpc:workflow.list",
         "rpc:workflow.journal.submit",
@@ -124,8 +124,20 @@ def test_map_exhaustively_tracks_current_surfaces_and_native_gaps():
         "rpc:history.refusal",
         "rpc:operation.close",
         "rpc:lifecycle.evidence.prepare",
+        "rpc:resources.admission.submit",
+        "rpc:resources.admission.get",
+        "rpc:resources.admission.list",
+        "rpc:resources.admission.cancel",
     } <= rows.keys()
     assert rows["action:operation.recover"]["tools"] == ["app-ops", "host-ops"]
+    for method in ("submit", "get", "list", "cancel"):
+        for identity in (
+            f"rpc:resources.admission.{method}",
+            f"owner-form:resource-admission-{method}",
+        ):
+            assert rows[identity]["tools"] == ["host-ops"]
+            assert rows[identity]["status"] == "unimplemented"
+            assert rows[identity]["implementation"] is None
     assert all(
         row["status"] == "unimplemented" and row["implementation"] is None
         for key, row in rows.items()

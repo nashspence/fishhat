@@ -164,6 +164,8 @@ def validate_history_result(
                         "WorkflowTransferRecord",
                         "WorkflowPhaseAttestation",
                         "WorkflowJournalRecord",
+                        "ResourceAdmission",
+                        "ResourceAdmissionCancellation",
                     }
                     and request["resource"] is not None
                 ):

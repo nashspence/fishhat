@@ -395,5 +395,32 @@
       "repeat": "read-only",
       "admission": "any"
     }
+  },
+  "scheduler": {
+    "submit": {
+      "effect": true,
+      "repeat": "reconcile-before-repeat",
+      "admission": "any"
+    },
+    "observe": {
+      "effect": false,
+      "repeat": "read-only",
+      "admission": "any"
+    },
+    "cancel": {
+      "effect": true,
+      "repeat": "reconcile-before-repeat",
+      "admission": "any"
+    },
+    "release": {
+      "effect": true,
+      "repeat": "reconcile-before-repeat",
+      "admission": "any"
+    },
+    "reconcile": {
+      "effect": false,
+      "repeat": "read-only",
+      "admission": "any"
+    }
   }
 }
