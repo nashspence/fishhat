@@ -57,7 +57,7 @@
       ],
       "requiredness_authority": "release.toml#/governance/required_checks",
       "result_authority": "GitHub job conclusion; classification supplies no execution proof",
-      "scope": "explicitly enrolled disposable controller dependency, paused TCG/QMP identities and owned-controller fault cleanup and authenticated guest boot/SSH identity and owned disks, isolated guest filesystems/account permissions and partial-storage setup cleanup and owned guest process kill/reaping and independently observed SSH transport loss/retry and isolated real project-quota exhaustion and exact owned allocation release/reuse and known allocation destruction with independent absence/retry after an unadmitted cleanup reply and protected partial quota custody/selected interruption recovery and independently observed graceful same-controller reboot/persisted root canary and separately interrupted reboot observation with exact whole-guest cleanup and verified offline standalone snapshots of stopped owned guest disks and exact protected boot-input borrowing across an original-disk cold controller replacement; no native owner qualification; no restored boot qualification",
+      "scope": "explicitly enrolled disposable controller dependency, paused TCG/QMP identities and owned-controller fault cleanup and authenticated guest boot/SSH identity and owned disks, isolated guest filesystems/account permissions and partial-storage setup cleanup and owned guest process kill/reaping and independently observed SSH transport loss/retry and isolated real project-quota exhaustion and exact owned allocation release/reuse and known allocation destruction with independent absence/retry after an unadmitted cleanup reply and protected partial quota custody/selected interruption recovery and independently observed graceful same-controller reboot/persisted root canary and separately interrupted reboot observation with exact whole-guest cleanup and verified offline standalone snapshots of stopped owned guest disks and exact protected boot-input borrowing across an original-disk cold controller replacement and complete independently owned private restored disk inputs from verified sealed snapshots; no native owner qualification; no restored boot qualification",
       "work_sha256": "b3bae2df1cf8bf3af0c8ecc6c1792ff1186c7ab78655cd30e7b14f19ff3257b7"
     },
     ".github/workflows/ci.yml:native-prerequisites": {
@@ -146,7 +146,7 @@
       "requiredness_authority": "release.toml#/governance/required_checks",
       "result_authority": "GitHub job conclusion; classification supplies no execution proof",
       "scope": "watchdog propagation and negative progress/cleanup regressions and workflow safety",
-      "work_sha256": "a10d341abe4f30e3d8b9ff075a839d1b4d194013c0e22df9edf7136303af20cb"
+      "work_sha256": "0177dcd4e81a4a7cad187c3c60ef70c21732f5c8a7da21911a3d2911df8bb855"
     },
     ".github/workflows/ci.yml:watchdogs": {
       "authority": ".github/workflows/ci.yml",
@@ -10654,6 +10654,10 @@
       "purpose_sha256": "5191093e08d436930c797fac576ba26ceff4501f3929b01de2d6e4a18d5818e3"
     },
     {
+      "node": "tests/test_native_linux_guest.py::test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps[restore-failed]",
+      "purpose_sha256": "5191093e08d436930c797fac576ba26ceff4501f3929b01de2d6e4a18d5818e3"
+    },
+    {
       "node": "tests/test_native_linux_guest.py::test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps[snapshot-failed]",
       "purpose_sha256": "5191093e08d436930c797fac576ba26ceff4501f3929b01de2d6e4a18d5818e3"
     },
@@ -11792,6 +11796,182 @@
     {
       "node": "tests/test_native_linux_restart.py::test_unknown_reaping_expires_the_handle_and_prevents_reborrowing",
       "purpose_sha256": "ab4e5e92321b6516b320aa1f971a6f3e7493abe202e331d4a45694dfce84ff15"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_admitted_handle_refuses_rebinding_and_cleanup_preserves_foreign_neighbors[extra-file]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_admitted_handle_refuses_rebinding_and_cleanup_preserves_foreign_neighbors[foreign-name]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_admitted_handle_refuses_rebinding_and_cleanup_preserves_foreign_neighbors[missing-disk]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_admitted_handle_refuses_rebinding_and_cleanup_preserves_foreign_neighbors[rebound-directory]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_admitted_handle_refuses_rebinding_and_cleanup_preserves_foreign_neighbors[rebound-file]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_caller_failure_is_preserved_if_final_preservation_also_fails",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_capture_composes_private_restore_only_during_its_verified_sealed_lifetime[complete]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_capture_composes_private_restore_only_during_its_verified_sealed_lifetime[restore-failure]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_complete_private_restore_admits_only_three_verified_independent_disks_then_expires",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_failed_restore_never_yields_partial_inputs_preserves_originals_and_cleans[check-failed]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_failed_restore_never_yields_partial_inputs_preserves_originals_and_cleans[compare-failed]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_failed_restore_never_yields_partial_inputs_preserves_originals_and_cleans[convert-failed]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_failed_restore_never_yields_partial_inputs_preserves_originals_and_cleans[create-failed]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_failed_restore_never_yields_partial_inputs_preserves_originals_and_cleans[internal-snapshot]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_failed_restore_never_yields_partial_inputs_preserves_originals_and_cleans[malformed-info]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_failed_restore_never_yields_partial_inputs_preserves_originals_and_cleans[output-backing]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_failed_restore_never_yields_partial_inputs_preserves_originals_and_cleans[output-corrupt]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_failed_restore_never_yields_partial_inputs_preserves_originals_and_cleans[output-data]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_failed_restore_never_yields_partial_inputs_preserves_originals_and_cleans[replaced-output]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_failed_restore_never_yields_partial_inputs_preserves_originals_and_cleans[resource-failure]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_failed_restore_never_yields_partial_inputs_preserves_originals_and_cleans[source-backing]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_failed_restore_never_yields_partial_inputs_preserves_originals_and_cleans[tool-changed]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_failed_restore_never_yields_partial_inputs_preserves_originals_and_cleans[wrong-extent]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_failed_restore_never_yields_partial_inputs_preserves_originals_and_cleans[wrong-format]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_failed_restore_never_yields_partial_inputs_preserves_originals_and_cleans[wrong-version]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_final_fixture_cleanup_requires_actual_complete_private_restore_proof[failed]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_final_fixture_cleanup_requires_actual_complete_private_restore_proof[passed]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_final_fixture_cleanup_requires_actual_complete_private_restore_proof[resources-left]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_invalid_capture_or_source_is_refused_before_any_restore_effect[expired]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_invalid_capture_or_source_is_refused_before_any_restore_effect[foreign]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_invalid_capture_or_source_is_refused_before_any_restore_effect[incomplete]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_invalid_capture_or_source_is_refused_before_any_restore_effect[missing-anchor]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_invalid_capture_or_source_is_refused_before_any_restore_effect[rebound-registry]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_invalid_capture_or_source_is_refused_before_any_restore_effect[source-changed]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_invalid_capture_or_source_is_refused_before_any_restore_effect[wrong-custody]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_invalid_capture_or_source_is_refused_before_any_restore_effect[wrong-tool]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_new_target_layout_is_observed_before_any_conversion_write[output-backing]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_new_target_layout_is_observed_before_any_conversion_write[output-corrupt]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_new_target_layout_is_observed_before_any_conversion_write[output-data]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_new_target_layout_is_observed_before_any_conversion_write[wrong-extent]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_restore_qualification_keeps_refusals_canary_statistics_and_actual_failure[caller-failed]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_restore_qualification_keeps_refusals_canary_statistics_and_actual_failure[complete]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_restore_qualification_keeps_refusals_canary_statistics_and_actual_failure[missing-stats]",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
+    },
+    {
+      "node": "tests/test_native_linux_restore.py::test_substituted_restore_root_is_not_deleted_and_primary_and_cleanup_outcomes_are_retained",
+      "purpose_sha256": "9dbe6fd2f74f06c27195d7840f6453e38fe2b9f52ce7bd0367609c659ffafa0e"
     },
     {
       "node": "tests/test_native_linux_snapshots.py::test_cold_capture_checks_exact_extents_complete_logical_contents_seals_and_cleans",

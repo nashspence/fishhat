@@ -39,6 +39,7 @@ from scripts.native_linux_reboot import (
     qualify_reboot,
 )
 from scripts.native_linux_restart import qualify_restart
+from scripts.native_linux_restore import qualify_restore
 from scripts.native_linux_snapshots import qualify_capture
 from scripts.native_linux_storage import GuestStorageError, qualify_storage
 from scripts.native_linux_transport import qualify_transport_loss
@@ -720,8 +721,24 @@ def boot_guest(
                     custody = host_custody(guest, endpoint, Deadline.after(30))
                     report["snapshot_source_custody"] = custody
             report["snapshot_capture"] = {}
+            report["private_restore"] = {}
             with stage("guest-cold-snapshot-capture"):
-                qualify_capture(guest, custody, temporary, stage, report["snapshot_capture"])
+                qualify_capture(
+                    guest,
+                    custody,
+                    temporary,
+                    stage,
+                    report["snapshot_capture"],
+                    consume=lambda snapshots: qualify_restore(
+                        guest,
+                        custody,
+                        snapshots,
+                        report["snapshot_capture"],
+                        temporary,
+                        stage,
+                        report["private_restore"],
+                    ),
+                )
             report["retained_restart"] = {}
             with stage("guest-retained-input-cold-restart"):
                 qualify_restart(
@@ -770,6 +787,14 @@ def verify_guest_cleanup(guest: dict[str, Any], inputs: dict[str, Any]) -> None:
     guest["storage"]["resources_destroyed_with_guest"] = True
     if isinstance(guest.get("reboot"), dict):
         guest["reboot"]["resources_destroyed_with_guest"] = True
+    if isinstance(guest.get("private_restore"), dict):
+        restore = guest["private_restore"]
+        if (
+            restore.get("status") != "passed"
+            or restore.get("temporary_resources_removed") is not True
+        ):
+            raise GuestBootError("private-restore-proof-incomplete")
+        restore["resources_destroyed_with_guest"] = True
     if isinstance(guest.get("retained_restart"), dict):
         restart = guest["retained_restart"]
         if restart.get("status") != "passed" or not isinstance(

@@ -690,14 +690,22 @@ def test_missing_or_foreign_private_root_preserves_failure_stats_and_foreign_dat
 
 
 @pytest.mark.parametrize(
-    ("refused", "storage_error", "reboot_error", "snapshot_error", "restart_error"),
+    (
+        "refused",
+        "storage_error",
+        "reboot_error",
+        "snapshot_error",
+        "restart_error",
+        "restore_error",
+    ),
     [
-        (False, False, False, False, False),
-        (True, False, False, False, False),
-        (False, True, False, False, False),
-        (False, False, True, False, False),
-        (False, False, False, True, False),
-        (False, False, False, False, True),
+        (False, False, False, False, False, False),
+        (True, False, False, False, False, False),
+        (False, True, False, False, False, False),
+        (False, False, True, False, False, False),
+        (False, False, False, True, False, False),
+        (False, False, False, False, True, False),
+        (False, False, False, False, False, True),
     ],
     ids=[
         "started",
@@ -706,10 +714,18 @@ def test_missing_or_foreign_private_root_preserves_failure_stats_and_foreign_dat
         "reboot-interrupted",
         "snapshot-failed",
         "restart-failed",
+        "restore-failed",
     ],
 )
 def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
-    fixture, monkeypatch, refused, storage_error, reboot_error, snapshot_error, restart_error
+    fixture,
+    monkeypatch,
+    refused,
+    storage_error,
+    reboot_error,
+    snapshot_error,
+    restart_error,
+    restore_error,
 ):
     events = []
     report = {}
@@ -799,7 +815,7 @@ def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
         events.append("capture-custody")
         return {"enrollment": guest.enrollment}
 
-    def capture(guest, admitted, temporary, progress, result):
+    def capture(guest, admitted, temporary, progress, result, *, consume):
         assert guest is fixture["guest"] and guest.process.returncode == 0
         assert admitted == {"enrollment": guest.enrollment}
         assert events[-1] == "reaped" and temporary == fixture["temporary"]
@@ -807,7 +823,11 @@ def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
         events.append("captured")
         if snapshot_error:
             raise guests.GuestBootError("controlled-snapshot-failure")
+        consume("controlled-sealed-disks")
 
+    monkeypatch.setattr(
+        native, "qualify_restore", private_restore_witness(fixture, report, events, restore_error)
+    )
     monkeypatch.setattr(native, "host_custody", custody)
     monkeypatch.setattr(native, "qualify_capture", capture)
 
@@ -861,7 +881,7 @@ def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
             reboot_failure=reboot_error,
         )
 
-    if refused or storage_error or reboot_error or snapshot_error or restart_error:
+    if refused or storage_error or reboot_error or snapshot_error or restart_error or restore_error:
         reason = next(
             label
             for failed, label in (
@@ -870,6 +890,7 @@ def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
                 (reboot_error, "injected-before-restart-observation"),
                 (snapshot_error, "controlled-snapshot-failure"),
                 (restart_error, "controlled-restart-failure"),
+                (restore_error, "controlled-restore-failure"),
             )
             if failed
         )
@@ -887,14 +908,29 @@ def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
         reboot_error,
         snapshot_error,
         restart_error,
+        restore_error,
     )
+
+
+def private_restore_witness(fixture, report, events, restore_error):
+    def restored(guest, admitted, disks, captured, temporary, progress, result):
+        assert guest is fixture["guest"] and guest.process.returncode == 0
+        assert admitted == {"enrollment": guest.enrollment}
+        assert disks == "controlled-sealed-disks" and captured is report["snapshot_capture"]
+        assert result is report["private_restore"] and temporary == fixture["temporary"]
+        assert events[-1] == "captured"
+        events.append("restored")
+        if restore_error:
+            raise guests.GuestBootError("controlled-restore-failure")
+
+    return restored
 
 
 def retained_restart_witness(fixture, report, events, snapshot_error, restart_error):
     def retained_restart(guest, admitted, temporary, progress, launch, result):
         assert guest is fixture["guest"] and guest.process.returncode == 0
         assert admitted == {"enrollment": guest.enrollment} and not snapshot_error
-        assert events[-1] == "captured" and temporary == fixture["temporary"]
+        assert events[-1] == "restored" and temporary == fixture["temporary"]
         assert callable(launch) and result is report["retained_restart"]
         events.append("restarted")
         if restart_error:
@@ -913,6 +949,7 @@ def assert_boot_coordinator_outcome(
     reboot_error,
     snapshot_error,
     restart_error,
+    restore_error,
 ):
     if refused:
         assert not any(call[1] == "guest-ssh" for call in fixture["calls"])
@@ -935,24 +972,29 @@ def assert_boot_coordinator_outcome(
         ]
     )
     assert events[:3] == ["launch", "identity-verified", "cont"]
-    assert (
-        events[-4:] == ["capture-custody", "reaped", "captured", "restarted"]
-        if not (refused or storage_error or reboot_error or snapshot_error)
-        else events[-3:] == ["capture-custody", "reaped", "captured"]
-        if snapshot_error
-        else events[-1] == "reaped"
+    assert_capture_restore_events(
+        events, refused, storage_error, reboot_error, snapshot_error, restore_error
     )
     assert ("snapshot_capture" in report) is (
         not refused and not storage_error and not reboot_error
     )
     assert ("reboot" in events) is (not refused and not storage_error)
     assert ("retained_restart" in report) is (
-        not refused and not storage_error and not reboot_error and not snapshot_error
+        not refused
+        and not storage_error
+        and not reboot_error
+        and not snapshot_error
+        and not restore_error
     )
     assert report["boot_verified"] is not refused
     assert report["status"] == (
         "failed"
-        if refused or storage_error or reboot_error or snapshot_error or restart_error
+        if refused
+        or storage_error
+        or reboot_error
+        or snapshot_error
+        or restart_error
+        or restore_error
         else "passed"
     )
     assert not reboot_error or "storage" not in report
@@ -961,6 +1003,19 @@ def assert_boot_coordinator_outcome(
         and report["temporary_resources_removed"]
         and valid_stats(report["statistics"])
     )
+
+
+def assert_capture_restore_events(
+    events, refused, storage_error, reboot_error, snapshot_error, restore_error
+):
+    if refused or storage_error or reboot_error:
+        assert events[-1] == "reaped"
+    elif snapshot_error:
+        assert events[-3:] == ["capture-custody", "reaped", "captured"]
+    elif restore_error:
+        assert events[-4:] == ["capture-custody", "reaped", "captured", "restored"]
+    else:
+        assert events[-5:] == ["capture-custody", "reaped", "captured", "restored", "restarted"]
 
 
 @pytest.mark.parametrize(
