@@ -149,13 +149,41 @@ class DiskSnapshots:
     directory_identity: tuple[int, int]
     files: dict[str, tuple[tuple[int, int], str]] = field(default_factory=dict)
     active: bool = False
+    _admitted: tuple[Any, ...] | None = field(default=None, repr=False)
+
+    def closure(self) -> tuple[Any, ...]:
+        return (
+            self.enrollment,
+            self.directory,
+            self.directory_identity,
+            tuple(sorted(self.files.items())),
+        )
+
+    def admit(self) -> None:
+        require(self._admitted is None and not self.active, "snapshot-already-admitted")
+        require(set(self.files) == set(DISK_BYTES), "incomplete-snapshot")
+        self._admitted = self.closure()
+        self.active = True
+        try:
+            self.verify()
+        except BaseException:
+            self.active = False
+            raise
 
     def path(self, name: str, enrollment: str) -> Path:
-        require(self.active and enrollment == self.enrollment, "snapshot-not-admitted")
+        require(
+            self.active and self._admitted is not None and enrollment == self.enrollment,
+            "snapshot-not-admitted",
+        )
+        require(self.closure() == self._admitted, "snapshot-input-custody-changed")
         require(set(self.files) == set(DISK_BYTES), "incomplete-snapshot")
         require(
             identity(self.directory, directory=True) == self.directory_identity,
             "snapshot-directory-replaced",
+        )
+        require(
+            {p.name for p in self.directory.iterdir()} == set(DISK_BYTES),
+            "unexpected-snapshot-input",
         )
         require(name in self.files, "unenrolled-snapshot")
         path = self.directory / name
@@ -307,6 +335,7 @@ def cold_snapshots(
         temporary_resources_removed=False,
     )
     snapshots: DiskSnapshots | None = None
+    created_identity: tuple[int, int] | None = None
     complete = False
     try:
         with phase(report, "stopped-source") as item:
@@ -317,7 +346,8 @@ def cold_snapshots(
             tool = digest(QEMU_IMG)
             report["image_tool"] = {"version": "8.2.2", "binary_sha256": tool}
         directory = Path(tempfile.mkdtemp(prefix="fhs-", dir=temporary))
-        snapshots = DiskSnapshots(guest.enrollment, directory, identity(directory, directory=True))
+        created_identity = identity(directory, directory=True)
+        snapshots = DiskSnapshots(guest.enrollment, directory, created_identity)
         report["directory"] = {"path": str(directory), "identity": snapshots.directory_identity}
         for name in DISK_BYTES:
             with progress("snapshot-" + name), phase(report, name) as item:
@@ -334,8 +364,7 @@ def cold_snapshots(
             os.fsync(descriptor)
         finally:
             os.close(descriptor)
-        snapshots.active = True
-        snapshots.verify()
+        snapshots.admit()
         report["capture_verified"] = True
         try:
             yield snapshots
@@ -353,12 +382,13 @@ def cold_snapshots(
         try:
             if snapshots is not None:
                 snapshots.active = False
+                assert created_identity is not None
                 require(
-                    identity(snapshots.directory, directory=True) == snapshots.directory_identity,
+                    identity(directory, directory=True) == created_identity,
                     "snapshot-directory-replaced",
                 )
-                shutil.rmtree(snapshots.directory)
-                report["temporary_resources_removed"] = not snapshots.directory.exists()
+                shutil.rmtree(directory)
+                report["temporary_resources_removed"] = not directory.exists()
             if complete and report["temporary_resources_removed"]:
                 report["status"] = "passed"
         finally:

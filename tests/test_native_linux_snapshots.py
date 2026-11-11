@@ -26,7 +26,7 @@ from scripts.validation_timeouts import watchdog
 CHECK_PURPOSE = {
     "purpose": "validation-tooling",
     "authority": ["scripts/native_linux_snapshots.py", "scripts/native_linux_enrollment.py"],
-    "scope": "stopped enrolled disk custody, standalone complete logical capture, sealed handle lifetime, source preservation and partial failure cleanup with required statistics",
+    "scope": "stopped enrolled disk custody, standalone complete logical capture, immutable admitted sealed-handle custody, complete input membership, one-time admission, original directory cleanup anchoring, source preservation and partial failure cleanup with required statistics",
     "relationship": "no-product-claim",
     "reason": "Image conversion/profile results are substituted. Real unprivileged files, loopback probes and short child processes challenge ownership and absence checks only. No QEMU, guest restore, native owner or product authority is qualified.",
     "claims": [],
@@ -496,3 +496,134 @@ def test_native_capture_coordinator_retains_refusals_unrelated_state_and_actual_
     assert report["unrelated_canary_preserved"] and not list(f.temporary.iterdir())
     assert valid_stats(report["statistics"]) and valid_stats(report["qualification_statistics"])
     assert report["snapshot_restore_qualified"] is report["product_authority_qualified"] is False
+
+
+@pytest.mark.parametrize(
+    "mode",
+    [
+        "enrollment",
+        "directory",
+        "directory-identity",
+        "file-identity",
+        "file-hash",
+        "partial",
+        "extra",
+    ],
+)
+def test_admitted_capture_records_cannot_be_rewritten_to_adopt_new_custody(fixture, mode):
+    f = fixture
+    neighbor = f.temporary.parent / "unrelated-capture"
+    neighbor.mkdir(mode=0o700)
+    report = {}
+    with pytest.raises(snapshots.SnapshotError, match="snapshot-input-custody-changed"):
+        with capture(f, report) as owned:
+            original_directory = owned.directory
+            enrollment = owned.enrollment
+            path = owned.path("root.qcow2", enrollment)
+            for name in images.DISK_BYTES:
+                target = neighbor / name
+                target.write_bytes((owned.directory / name).read_bytes())
+                target.chmod(0o400)
+            preserved = {p.name: (p.read_bytes(), p.lstat()) for p in neighbor.iterdir()}
+            before_calls = len(f.state["calls"])
+            if mode == "enrollment":
+                owned.enrollment = enrollment = str(uuid.uuid4())
+            elif mode == "directory":
+                owned.directory = neighbor
+                owned.directory_identity = images.identity(neighbor, directory=True)
+                owned.files = {
+                    name: (images.identity(neighbor / name), images.digest(neighbor / name))
+                    for name in images.DISK_BYTES
+                }
+            elif mode == "directory-identity":
+                owned.directory_identity = images.identity(neighbor, directory=True)
+            elif mode == "file-identity":
+                replacement = path.with_name("replacement")
+                replacement.write_bytes(path.read_bytes())
+                replacement.chmod(0o400)
+                replacement.replace(path)
+                owned.files[path.name] = images.identity(path), images.digest(path)
+            elif mode == "file-hash":
+                path.chmod(0o600)
+                path.write_bytes(b"different-sealed-bytes")
+                path.chmod(0o400)
+                owned.files[path.name] = images.identity(path), images.digest(path)
+            elif mode == "partial":
+                del owned.files["data.qcow2"]
+            else:
+                owned.files["extra.qcow2"] = owned.files["root.qcow2"]
+            try:
+                owned.path("root.qcow2", enrollment)
+            finally:
+                assert len(f.state["calls"]) == before_calls
+    assert report["status"] == "failed" and not owned.active
+    assert report["temporary_resources_removed"] and not original_directory.exists()
+    assert {p.name: (p.read_bytes(), p.lstat()) for p in neighbor.iterdir()} == preserved
+    assert valid_stats(report["statistics"]) and not list(f.temporary.iterdir())
+
+
+def test_an_active_flag_does_not_admit_an_unsealed_capture_handle(fixture):
+    f = fixture
+    report = {}
+    with capture(f, report) as owned:
+        unsealed = snapshots.DiskSnapshots(
+            owned.enrollment,
+            owned.directory,
+            owned.directory_identity,
+            files=copy.deepcopy(owned.files),
+            active=True,
+        )
+        before_calls = len(f.state["calls"])
+        with pytest.raises(snapshots.SnapshotError, match="snapshot-not-admitted"):
+            unsealed.path("root.qcow2", f.guest.enrollment)
+        assert len(f.state["calls"]) == before_calls
+        owned.verify()
+    assert report["status"] == "passed" and report["temporary_resources_removed"]
+
+
+def test_sealed_capture_cannot_be_readmitted_after_record_replacement(fixture):
+    f = fixture
+    report = {}
+    with capture(f, report) as owned:
+        original = copy.deepcopy(owned.files)
+        with pytest.raises(snapshots.SnapshotError, match="snapshot-already-admitted"):
+            owned.admit()
+        owned.files["root.qcow2"] = owned.files["control.qcow2"]
+        with pytest.raises(snapshots.SnapshotError, match="snapshot-already-admitted"):
+            owned.admit()
+        owned.files = original
+        owned.verify()
+    assert report["status"] == "passed" and report["temporary_resources_removed"]
+
+
+@pytest.mark.parametrize("names", [[], ["root.qcow2"], [*images.DISK_BYTES, "extra.qcow2"]])
+def test_incomplete_or_extra_capture_sets_are_not_admitted(fixture, names):
+    f = fixture
+    report = {}
+    with capture(f, report) as owned:
+        candidate = snapshots.DiskSnapshots(
+            owned.enrollment,
+            owned.directory,
+            owned.directory_identity,
+            files={name: owned.files.get(name, owned.files["root.qcow2"]) for name in names},
+        )
+        with pytest.raises(snapshots.SnapshotError, match="incomplete-snapshot"):
+            candidate.admit()
+        assert not candidate.active
+        owned.verify()
+    assert report["status"] == "passed" and report["temporary_resources_removed"]
+
+
+def test_unrecorded_files_in_sealed_capture_are_refused_before_use(fixture):
+    f = fixture
+    report = {}
+    with pytest.raises(snapshots.SnapshotError, match="unexpected-snapshot-input"):
+        with capture(f, report) as owned:
+            (owned.directory / "unrecorded").write_bytes(b"unrecorded-owned-file")
+            before_calls = len(f.state["calls"])
+            try:
+                owned.path("root.qcow2", f.guest.enrollment)
+            finally:
+                assert len(f.state["calls"]) == before_calls
+    assert report["status"] == "failed" and report["temporary_resources_removed"]
+    assert valid_stats(report["statistics"]) and not list(f.temporary.iterdir())
