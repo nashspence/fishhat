@@ -61,6 +61,64 @@ class EnrollmentError(RuntimeError):
         super().__init__(f"{stage}: {reason}")
 
 
+def package_failure_classes(output: str) -> tuple[str, ...]:
+    markers = {
+        "package-authentication-failure": (
+            "NO_PUBKEY",
+            "EXPKEYSIG",
+            "is not signed",
+            "signatures couldn't be verified",
+            "unauthenticated packages",
+        ),
+        "pinned-package-unavailable": (
+            "was not found",
+            "has no installation candidate",
+            "Unable to locate package",
+        ),
+        "package-transport-failure": (
+            "Temporary failure resolving",
+            "Could not resolve",
+            "Could not connect",
+            "Connection timed out",
+            "Certificate verification failed",
+            "TLS handshake",
+            "Network is unreachable",
+        ),
+        "package-content-mismatch": ("Hash Sum mismatch", "File has unexpected size"),
+        "package-fetch-failure": (
+            "Failed to fetch",
+            "Some index files failed to download",
+            "Failed to download",
+        ),
+        "package-state-conflict": (
+            "Could not get lock",
+            "Unable to acquire",
+            "dpkg was interrupted",
+            "Unable to lock",
+        ),
+        "package-dependency-failure": (
+            "unmet dependencies",
+            "held broken packages",
+            "dependency problems",
+        ),
+        "package-resource-failure": (
+            "No space left on device",
+            "Read-only file system",
+            "Permission denied",
+        ),
+    }
+    found = tuple(
+        sorted(name for name, values in markers.items() if any(value in output for value in values))
+    )
+    return found or ("unclassified-package-failure",)
+
+
+class PackageCommandError(EnrollmentError):
+    def __init__(self, stage: str, status: int, stderr: str) -> None:
+        super().__init__(stage, f"command-exit-{status}")
+        self.classifications = package_failure_classes(stderr)
+
+
 @contextmanager
 def stage(name: str) -> Iterator[None]:
     started = time.perf_counter()
@@ -135,14 +193,16 @@ def enroll(environment: Mapping[str, str], *, confirmed: bool) -> dict[str, Any]
 
 
 def run(command: list[str], name: str, nominal: float, *, capture: bool = False) -> str:
+    package = name in ("package-update", "package-install")
     try:
         result = subprocess.run(
             command,
             env=COMMAND_ENV,
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE if capture else subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+            stderr=subprocess.PIPE if package else subprocess.DEVNULL,
             text=True,
+            errors="replace" if package else None,
             timeout=watchdog(nominal),
             check=False,
         )
@@ -151,6 +211,8 @@ def run(command: list[str], name: str, nominal: float, *, capture: bool = False)
     except OSError:
         raise EnrollmentError(name, "command-unavailable") from None
     if result.returncode != 0:
+        if package:
+            raise PackageCommandError(name, result.returncode, result.stderr or "")
         raise EnrollmentError(name, f"command-exit-{result.returncode}")
     return result.stdout or ""
 
@@ -1116,6 +1178,8 @@ def main(argv: list[str] | None = None) -> int:
     except (EnrollmentError, GuestInputError, GuestBootError) as error:
         status = 1
         report.update(status="failed", problem={"stage": error.stage, "reason": error.reason})
+        if isinstance(error, PackageCommandError):
+            report["problem"]["classifications"] = list(error.classifications)
     report["guest_booted"] = report.get("guest", {}).get("boot_verified") is True
     report["source_after"] = source_identity()
     if status == 0 and report["source_after"] != before:

@@ -18,9 +18,9 @@ from scripts.validation_timeouts import Policy, using
 CHECK_PURPOSE = {
     "purpose": "validation-tooling",
     "authority": ["scripts/native_linux_enrollment.py", "scripts/validation_timeouts.py"],
-    "scope": "enrollment refusal, exact controller identities, maintained watchdogs, sanitized provisioning failures and source/statistics receipts",
+    "scope": "enrollment refusal, exact controller identities, maintained watchdogs, allowlisted secret-safe package failure observations, sanitized provisioning failures and source/statistics receipts",
     "relationship": "no-product-claim",
-    "reason": "Controlled package/tool responses never install packages. A real unprivileged child exercises timeout/reaping. Only the separate admitted disposable-runner job can establish actual controller prerequisites; no guest or native owner is qualified here.",
+    "reason": "Controlled package/tool responses never install packages. Real unprivileged children exercise timeout/reaping and stderr classification without exposing their output. Only the separate admitted disposable-runner job can establish actual controller prerequisites; no guest or native owner is qualified here.",
     "claims": [],
 }
 
@@ -208,7 +208,9 @@ def test_ordinary_invocation_creates_no_artifacts_or_native_commands(tmp_path, m
     assert not output.parent.exists()
 
 
-@pytest.mark.parametrize("failure", ["none", "provisioning", "dirty-source", "changed-source"])
+@pytest.mark.parametrize(
+    "failure", ["none", "provisioning", "package-classified", "dirty-source", "changed-source"]
+)
 def test_selected_run_records_failure_source_scope_and_required_statistics(
     tmp_path, monkeypatch, tools, failure, capsys
 ):
@@ -238,6 +240,14 @@ def test_selected_run_records_failure_source_scope_and_required_statistics(
             raise native.EnrollmentError("package-install", "command-exit-19")
 
         monkeypatch.setattr(native, "provision", failed)
+    elif failure == "package-classified":
+
+        def package_failed():
+            raise native.PackageCommandError(
+                "package-install", 100, "Version 'fixture-private-value' was not found"
+            )
+
+        monkeypatch.setattr(native, "provision", package_failed)
     status = native.main(["--github-hosted-only", "--output", str(output)])
     report = json.loads(output.read_text())
     assert status == (0 if failure == "none" else 1)
@@ -249,6 +259,12 @@ def test_selected_run_records_failure_source_scope_and_required_statistics(
     assert report["statistics"]["scope"] == "process-excludes-children"
     if failure == "provisioning":
         assert report["problem"] == {"stage": "package-install", "reason": "command-exit-19"}
+    if failure == "package-classified":
+        assert report["problem"] == {
+            "stage": "package-install",
+            "reason": "command-exit-100",
+            "classifications": ["pinned-package-unavailable"],
+        }
     if failure == "dirty-source":
         assert not tools[1]
     logs = capsys.readouterr()
@@ -293,3 +309,96 @@ def test_real_held_command_expires_and_is_reaped(tmp_path):
 def test_missing_command_is_a_required_failure(tmp_path):
     with pytest.raises(native.EnrollmentError, match="command-unavailable"):
         native.run([str(tmp_path / "absent-command")], "identity", 10)
+
+
+@pytest.mark.parametrize("stage", ["package-update", "package-install"])
+@pytest.mark.parametrize(
+    "message,classes",
+    [
+        pytest.param(
+            "Version 'fixture-private-value' was not found",
+            ("pinned-package-unavailable",),
+            id="pin",
+        ),
+        pytest.param(
+            "NO_PUBKEY fixture-private-value",
+            ("package-authentication-failure",),
+            id="authentication",
+        ),
+        pytest.param(
+            "Temporary failure resolving fixture-private-value",
+            ("package-transport-failure",),
+            id="transport",
+        ),
+        pytest.param(
+            "Failed to fetch fixture-private-value", ("package-fetch-failure",), id="fetch"
+        ),
+        pytest.param(
+            "Hash Sum mismatch fixture-private-value", ("package-content-mismatch",), id="content"
+        ),
+        pytest.param(
+            "Could not get lock fixture-private-value", ("package-state-conflict",), id="state"
+        ),
+        pytest.param(
+            "unmet dependencies fixture-private-value",
+            ("package-dependency-failure",),
+            id="dependency",
+        ),
+        pytest.param(
+            "No space left on device fixture-private-value",
+            ("package-resource-failure",),
+            id="resource",
+        ),
+        pytest.param("fixture-private-value", ("unclassified-package-failure",), id="unknown"),
+        pytest.param(
+            "Failed to fetch fixture-private-value: Temporary failure resolving",
+            ("package-fetch-failure", "package-transport-failure"),
+            id="multiple",
+        ),
+    ],
+)
+def test_package_command_failure_keeps_original_exit_and_only_allowlisted_classes(
+    stage, message, classes, capsys
+):
+    code = (
+        "import sys; print('fixture-private-value'); sys.stderr.write(sys.argv[1]); sys.exit(100)"
+    )
+    with pytest.raises(native.EnrollmentError) as caught:
+        native.run([sys.executable, "-I", "-S", "-c", code, message], stage, 10, capture=True)
+    assert caught.value.stage == stage and caught.value.reason == "command-exit-100"
+    assert getattr(caught.value, "classifications", None) == classes
+    assert "fixture-private-value" not in str(caught.value) + repr(caught.value.__dict__)
+    logs = capsys.readouterr()
+    assert logs.out == logs.err == ""
+
+
+@pytest.mark.parametrize("stage", ["package-update", "package-install"])
+def test_successful_package_command_does_not_publish_stderr_diagnostics(stage, capsys):
+    code = "import sys; print('fixture-private-value'); sys.stderr.write('Failed to fetch fixture-private-value')"
+    assert native.run([sys.executable, "-I", "-S", "-c", code], stage, 10) == ""
+    logs = capsys.readouterr()
+    assert logs.out == logs.err == ""
+
+
+def test_unrelated_command_does_not_acquire_package_diagnostics(capsys):
+    code = "import sys; sys.stderr.write('NO_PUBKEY fixture-private-value'); sys.exit(23)"
+    with pytest.raises(native.EnrollmentError) as caught:
+        native.run([sys.executable, "-I", "-S", "-c", code], "identity", 10, capture=True)
+    assert type(caught.value) is native.EnrollmentError
+    assert caught.value.reason == "command-exit-23"
+    assert not hasattr(caught.value, "classifications")
+    assert "fixture-private-value" not in str(caught.value) + repr(caught.value.__dict__)
+    logs = capsys.readouterr()
+    assert logs.out == logs.err == ""
+
+
+@pytest.mark.parametrize("stage", ["package-update", "package-install"])
+def test_malformed_package_stderr_cannot_mask_original_exit(stage, capsys):
+    code = "import sys; sys.stderr.buffer.write(b'fixture-private-\\xff'); sys.exit(100)"
+    with pytest.raises(native.PackageCommandError) as caught:
+        native.run([sys.executable, "-I", "-S", "-c", code], stage, 10)
+    assert caught.value.reason == "command-exit-100"
+    assert caught.value.classifications == ("unclassified-package-failure",)
+    assert "fixture-private" not in str(caught.value) + repr(caught.value.__dict__)
+    logs = capsys.readouterr()
+    assert logs.out == logs.err == ""
