@@ -27,7 +27,7 @@ from scripts.native_linux_exhaustion import (
     qualify_partial_quota,
     qualify_release_reuse,
 )
-from scripts.native_linux_guest import GuestBootError, guest_session, provision_tools
+from scripts.native_linux_guest import Guest, GuestBootError, guest_session, provision_tools
 from scripts.native_linux_images import GuestInputError, GuestInputs, guest_inputs
 from scripts.native_linux_processes import qualify_process_kill
 from scripts.native_linux_reboot import (
@@ -38,6 +38,7 @@ from scripts.native_linux_reboot import (
     observe_removed_resources,
     qualify_reboot,
 )
+from scripts.native_linux_restart import qualify_restart
 from scripts.native_linux_snapshots import qualify_capture
 from scripts.native_linux_storage import GuestStorageError, qualify_storage
 from scripts.native_linux_transport import qualify_transport_loss
@@ -622,6 +623,38 @@ def controller_faults(binary_sha256: str, temporary: Path, results: list[dict[st
                 raise ValueError("invalid required controller fault statistics")
 
 
+@contextmanager
+def admitted_guest_controller(guest: Guest, binary_sha256: str, temporary: Path) -> Iterator[Path]:
+    with owned_controller(temporary, guest.launch, enrollment=guest.enrollment) as (
+        process,
+        endpoint,
+        identity,
+    ):
+        guest.report["control_endpoint"] = str(endpoint)
+        with stage("guest-controller"):
+            with controller_channel(
+                process, endpoint, identity, binary_sha256, Deadline.after(30)
+            ) as qmp:
+                guest.listener()
+                if qmp.command("cont") != {}:
+                    raise GuestBootError("guest-start-rejected")
+                guest.report["controller_verified"] = {
+                    "instance_uuid": identity,
+                    "qmp_version": {"major": 8, "minor": 2, "micro": 2},
+                    "executable_sha256": binary_sha256,
+                    "unix_peer_verified": True,
+                    "machine": "pc-q35-8.2",
+                    "accelerator": "tcg",
+                    "memory_mib": 2048,
+                    "vcpus": 2,
+                    "started_from_verified_prelaunch": True,
+                }
+        guest.verify_process = lambda deadline: controller_executable(
+            process, binary_sha256, deadline
+        )
+        yield endpoint
+
+
 def boot_guest(
     inputs: GuestInputs,
     tools: dict[str, Any],
@@ -636,33 +669,10 @@ def boot_guest(
         raise GuestRebootError("conflicting-guest-faults")
     with stage("guest-session"):
         with guest_session(inputs, temporary, run, tools, QEMU, report) as guest:
-            with owned_controller(temporary, guest.launch, enrollment=inputs.enrollment) as (
-                process,
-                endpoint,
-                identity,
-            ):
-                with stage("guest-controller"):
-                    with controller_channel(
-                        process, endpoint, identity, binary_sha256, Deadline.after(30)
-                    ) as qmp:
-                        guest.listener()
-                        if qmp.command("cont") != {}:
-                            raise GuestBootError("guest-start-rejected")
-                        report["controller_verified"] = {
-                            "instance_uuid": identity,
-                            "qmp_version": {"major": 8, "minor": 2, "micro": 2},
-                            "executable_sha256": binary_sha256,
-                            "unix_peer_verified": True,
-                            "machine": "pc-q35-8.2",
-                            "accelerator": "tcg",
-                            "memory_mib": 2048,
-                            "vcpus": 2,
-                            "started_from_verified_prelaunch": True,
-                        }
+            with admitted_guest_controller(guest, binary_sha256, temporary) as endpoint:
                 with stage("guest-readiness"):
-                    guest.ready(
-                        lambda deadline: controller_executable(process, binary_sha256, deadline)
-                    )
+                    assert guest.verify_process is not None
+                    guest.ready(guest.verify_process)
                 with stage("guest-refusals"):
                     guest.refusals()
                 if not storage_failure:
@@ -712,6 +722,16 @@ def boot_guest(
             report["snapshot_capture"] = {}
             with stage("guest-cold-snapshot-capture"):
                 qualify_capture(guest, custody, temporary, stage, report["snapshot_capture"])
+            report["retained_restart"] = {}
+            with stage("guest-retained-input-cold-restart"):
+                qualify_restart(
+                    guest,
+                    custody,
+                    temporary,
+                    stage,
+                    lambda child: admitted_guest_controller(child, binary_sha256, temporary),
+                    report["retained_restart"],
+                )
 
 
 def endpoint_closed(endpoint: dict[str, Any]) -> None:
@@ -750,6 +770,14 @@ def verify_guest_cleanup(guest: dict[str, Any], inputs: dict[str, Any]) -> None:
     guest["storage"]["resources_destroyed_with_guest"] = True
     if isinstance(guest.get("reboot"), dict):
         guest["reboot"]["resources_destroyed_with_guest"] = True
+    if isinstance(guest.get("retained_restart"), dict):
+        restart = guest["retained_restart"]
+        if restart.get("status") != "passed" or not isinstance(
+            restart.get("controller_custody"), dict
+        ):
+            raise GuestBootError("restart-proof-incomplete")
+        restart["cleanup"] = observe_removed_resources(restart["controller_custody"])
+        restart["resources_destroyed_with_guest"] = True
     if isinstance(guest.get("process_kill"), dict):
         guest["process_kill"]["resources_destroyed_with_guest"] = True
     if isinstance(guest.get("transport_loss"), dict):
