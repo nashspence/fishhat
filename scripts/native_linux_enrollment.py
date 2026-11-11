@@ -40,7 +40,8 @@ from scripts.native_linux_reboot import (
 )
 from scripts.native_linux_restart import qualify_restart
 from scripts.native_linux_restore import qualify_restore
-from scripts.native_linux_snapshots import qualify_capture
+from scripts.native_linux_restored_boot import qualify_restored_boot
+from scripts.native_linux_snapshots import DiskSnapshots, qualify_capture
 from scripts.native_linux_storage import GuestStorageError, qualify_storage
 from scripts.native_linux_transport import qualify_transport_loss
 from scripts.run_stats import RunStats, valid_stats
@@ -656,6 +657,36 @@ def admitted_guest_controller(guest: Guest, binary_sha256: str, temporary: Path)
         yield endpoint
 
 
+def captured_guest_checks(
+    guest: Guest,
+    custody: dict[str, Any],
+    snapshots: DiskSnapshots,
+    temporary: Path,
+    binary_sha256: str,
+    report: dict[str, Any],
+) -> None:
+    qualify_restore(
+        guest,
+        custody,
+        snapshots,
+        report["snapshot_capture"],
+        temporary,
+        stage,
+        report["private_restore"],
+    )
+    report["restored_boot"] = {}
+    qualify_restored_boot(
+        guest,
+        custody,
+        snapshots,
+        report["snapshot_capture"],
+        temporary,
+        stage,
+        lambda child: admitted_guest_controller(child, binary_sha256, temporary),
+        report["restored_boot"],
+    )
+
+
 def boot_guest(
     inputs: GuestInputs,
     tools: dict[str, Any],
@@ -729,14 +760,8 @@ def boot_guest(
                     temporary,
                     stage,
                     report["snapshot_capture"],
-                    consume=lambda snapshots: qualify_restore(
-                        guest,
-                        custody,
-                        snapshots,
-                        report["snapshot_capture"],
-                        temporary,
-                        stage,
-                        report["private_restore"],
+                    consume=lambda snapshots: captured_guest_checks(
+                        guest, custody, snapshots, temporary, binary_sha256, report
                     ),
                 )
             report["retained_restart"] = {}
@@ -770,6 +795,19 @@ def endpoint_closed(endpoint: dict[str, Any]) -> None:
         raise GuestStorageError("cleanup-endpoint-still-available")
 
 
+def verify_restored_boot_cleanup(restored: dict[str, Any]) -> None:
+    if (
+        restored.get("status") != "passed"
+        or restored.get("restored_boot_verified") is not True
+        or restored.get("private_inputs", {}).get("temporary_resources_removed") is not True
+        or restored.get("writable_inputs", {}).get("writer_absence_verified") is not True
+        or not isinstance(restored.get("controller_custody"), dict)
+    ):
+        raise GuestBootError("restored-boot-proof-incomplete")
+    restored["cleanup"] = observe_removed_resources(restored["controller_custody"])
+    restored["resources_destroyed_with_guest"] = True
+
+
 def verify_guest_cleanup(guest: dict[str, Any], inputs: dict[str, Any]) -> None:
     # Destroy the whole owned guest, not a guessed set of mounts or descendants.
     # Context owners verify their directory identities before removing resources.
@@ -795,6 +833,8 @@ def verify_guest_cleanup(guest: dict[str, Any], inputs: dict[str, Any]) -> None:
         ):
             raise GuestBootError("private-restore-proof-incomplete")
         restore["resources_destroyed_with_guest"] = True
+    if isinstance(guest.get("restored_boot"), dict):
+        verify_restored_boot_cleanup(guest["restored_boot"])
     if isinstance(guest.get("retained_restart"), dict):
         restart = guest["retained_restart"]
         if restart.get("status") != "passed" or not isinstance(

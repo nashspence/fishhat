@@ -212,7 +212,7 @@ def host_custody(guest: Guest, endpoint: Path, deadline: Deadline) -> dict[str, 
             for name, value in guest.inputs.files.items()
         },
         "private_inputs_verified": True,
-        "base_image_verified": True,
+        "base_image_verified": "base.img" in guest.inputs.files,
     }
 
 
