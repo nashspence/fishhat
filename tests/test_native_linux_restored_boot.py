@@ -18,9 +18,11 @@ import pytest
 from scripts import native_linux_enrollment as native
 from scripts import native_linux_guest as guests
 from scripts import native_linux_images as images
+from scripts import native_linux_reboot as reboot
 from scripts import native_linux_restore as restore
 from scripts import native_linux_restored_boot as restored
 from scripts import native_linux_snapshots as snapshots
+from scripts.native_linux_restart import PRIVATE_FILES
 from scripts.run_stats import valid_stats
 from scripts.validation_timeouts import watchdog
 from tests.test_native_linux_restart import ControlledSSH, private_inputs
@@ -37,8 +39,9 @@ CHECK_PURPOSE = {
         "scripts/native_linux_restart.py",
         "scripts/native_linux_guest.py",
         "scripts/native_linux_enrollment.py",
+        "scripts/native_linux_reboot.py",
     ],
-    "scope": "exact retained protected inputs, complete independent restored-disk admission to a fresh controller, explicit writable lifetime and reaped-controller closure, unchanged originals, stale/foreign/substituted/expired refusal, failure cleanup and valid real process statistics",
+    "scope": "exact retained protected inputs, complete independent restored-disk admission to a fresh controller, explicit writable lifetime and reaped-controller closure, unchanged originals, stale/foreign/substituted/expired refusal, failure cleanup and valid real process statistics, including actual three-disk standalone final absence probes",
     "relationship": "no-product-claim",
     "reason": "QEMU/image tools, SSH/guest observations and verified prelaunch are substituted. Real private files, sockets and short unprivileged Python children test custody and lifecycle only; no native restored boot, full canary timeline or product authority is qualified.",
     "claims": [],
@@ -447,10 +450,215 @@ def test_final_guest_teardown_records_independent_original_resource_absence(monk
     }
     observation = {"paths": [{"path": "/controlled/owned", "absent": True}]}
 
-    def inspect(value):
-        assert value is report["controller_custody"]
+    def inspect(value, *, standalone):
+        assert value is report["controller_custody"] and standalone is True
         return observation
 
     monkeypatch.setattr(native, "observe_removed_resources", inspect)
     native.verify_restored_boot_cleanup(report)
     assert report["cleanup"] is observation and report["resources_destroyed_with_guest"]
+
+
+@pytest.fixture
+def cleanup_case(tmp_path_factory):
+    def make(*, standalone=True):
+        root = tmp_path_factory.mktemp("fhrco")
+        inputs, private, controller_dir = [root / name for name in ("disks", "private", "control")]
+        for directory in (inputs, private, controller_dir):
+            directory.mkdir(mode=0o700)
+        disks = {}
+        private_files = {}
+        for directory, names, registry in (
+            (inputs, list(images.DISK_BYTES) + ([] if standalone else ["base.img"]), disks),
+            (private, sorted(PRIVATE_FILES), private_files),
+        ):
+            for name in names:
+                path = directory / name
+                path.write_bytes(b"controlled-owned-input")
+                path.chmod(0o400 if name == "base.img" else 0o600)
+                registry[name] = {"path": str(path), "identity": images.identity(path)}
+        endpoint = controller_dir / "qmp"
+        with socket.socket(socket.AF_UNIX) as channel:
+            channel.bind(str(endpoint))
+        endpoint.chmod(0o700)
+        process = subprocess.Popen(
+            [sys.executable, "-I", "-S", "-c", "pass"], start_new_session=True
+        )
+        process.wait(timeout=watchdog(5))
+        custody = {
+            "pid": process.pid,
+            "pgid": process.pid,
+            "input_directory": {
+                "path": str(inputs),
+                "identity": images.identity(inputs, directory=True),
+            },
+            "private_directory": {
+                "path": str(private),
+                "identity": images.identity(private, directory=True),
+            },
+            "control_socket": {"path": str(endpoint)},
+            "disks": disks,
+            "private_files": private_files,
+            "base_image_verified": not standalone,
+            "private_inputs_verified": True,
+        }
+        owned = [
+            *(Path(v["path"]) for v in disks.values()),
+            *(Path(v["path"]) for v in private_files.values()),
+            endpoint,
+        ]
+        canary = root / "unrelated"
+        canary.write_bytes(b"preserve-unrelated-neighbor")
+        canary.chmod(0o600)
+        original = canary.read_bytes(), images.identity(canary), canary.stat().st_mtime_ns
+
+        def remove():
+            for path in owned:
+                path.unlink()
+            for path in (inputs, private, controller_dir):
+                path.rmdir()
+
+        report = {
+            "status": "passed",
+            "restored_boot_verified": True,
+            "private_inputs": {"temporary_resources_removed": True},
+            "writable_inputs": {"writer_absence_verified": True},
+            "controller_custody": custody,
+        }
+        return SimpleNamespace(
+            custody=custody,
+            report=report,
+            remove=remove,
+            owned=owned,
+            directories=(inputs, private, controller_dir),
+            canary=canary,
+            original=original,
+        )
+
+    return make
+
+
+def test_final_restored_teardown_uses_real_standalone_absence_observer(cleanup_case):
+    case = cleanup_case()
+    case.remove()
+    native.verify_restored_boot_cleanup(case.report)
+    observed = case.report["cleanup"]
+    assert case.report["resources_destroyed_with_guest"] and observed["status"] == "passed"
+    assert observed["pid"] == observed["pgid"] == case.custody["pid"]
+    assert observed["process_absent"] and observed["process_group_absent"]
+    assert len(observed["paths"]) == 18
+    assert {row["path"] for row in observed["paths"]} == {
+        str(p) for p in [*case.owned, *case.directories]
+    }
+    assert all(row["absent"] for row in observed["paths"]) and valid_stats(observed["statistics"])
+    assert (
+        case.canary.read_bytes(),
+        images.identity(case.canary),
+        case.canary.stat().st_mtime_ns,
+    ) == case.original
+
+
+def test_default_observer_retains_complete_original_base_overlay_profile(cleanup_case):
+    case = cleanup_case(standalone=False)
+    case.remove()
+    observed = reboot.observe_removed_resources(case.custody)
+    assert observed["status"] == "passed" and len(observed["paths"]) == 19
+    assert all(row["absent"] for row in observed["paths"]) and valid_stats(observed["statistics"])
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        "missing-disk",
+        "extra-base",
+        "unknown-disk",
+        "base-proof-true",
+        "base-proof-missing",
+        "private-proof-false",
+        "private-proof-missing",
+        "foreign-parent",
+    ],
+)
+def test_standalone_observer_refuses_incomplete_or_foreign_disk_custody(cleanup_case, change):
+    case = cleanup_case()
+    case.remove()
+    custody = case.custody
+    if change == "missing-disk":
+        custody["disks"].pop("data.qcow2")
+    elif change in ("extra-base", "unknown-disk"):
+        name = "base.img" if change == "extra-base" else "foreign.qcow2"
+        custody["disks"][name] = {"path": str(case.directories[0] / name)}
+    elif change == "base-proof-true":
+        custody["base_image_verified"] = True
+    elif change == "base-proof-missing":
+        custody.pop("base_image_verified")
+    elif change == "private-proof-false":
+        custody["private_inputs_verified"] = False
+    elif change == "private-proof-missing":
+        custody.pop("private_inputs_verified")
+    else:
+        custody["disks"]["root.qcow2"]["path"] = str(case.canary)
+    with pytest.raises(guests.GuestBootError):
+        native.verify_restored_boot_cleanup(case.report)
+    assert not case.report.get("resources_destroyed_with_guest") and "cleanup" not in case.report
+    assert (
+        case.canary.read_bytes(),
+        images.identity(case.canary),
+        case.canary.stat().st_mtime_ns,
+    ) == case.original
+
+
+def test_original_profile_refuses_standalone_missing_base(cleanup_case):
+    case = cleanup_case()
+    case.remove()
+    with pytest.raises(reboot.GuestRebootError, match="invalid-cleanup-disks"):
+        reboot.observe_removed_resources(case.custody)
+
+
+@pytest.mark.parametrize("remaining", ["disk", "private-input", "endpoint"])
+def test_real_standalone_observer_refuses_a_remaining_owned_path(cleanup_case, remaining):
+    case = cleanup_case()
+    case.remove()
+    if remaining == "disk":
+        path = Path(case.custody["disks"]["root.qcow2"]["path"])
+    elif remaining == "private-input":
+        path = Path(case.custody["private_files"]["seed.iso"]["path"])
+    else:
+        path = Path(case.custody["control_socket"]["path"])
+    path.parent.mkdir(mode=0o700)
+    path.write_bytes(b"still-owned")
+    path.chmod(0o600)
+    with pytest.raises(reboot.GuestRebootError, match="cleanup-owned-path-still-present"):
+        native.verify_restored_boot_cleanup(case.report)
+    assert not case.report.get("resources_destroyed_with_guest")
+    path.unlink()
+    path.parent.rmdir()
+    native.verify_restored_boot_cleanup(case.report)
+    assert (
+        case.report["resources_destroyed_with_guest"] and len(case.report["cleanup"]["paths"]) == 18
+    )
+
+
+def test_real_standalone_observer_refuses_a_live_owned_process(cleanup_case):
+    case = cleanup_case()
+    case.remove()
+    process = subprocess.Popen(
+        [sys.executable, "-I", "-S", "-c", "import sys;sys.stdin.buffer.read()"],
+        stdin=subprocess.PIPE,
+        start_new_session=True,
+    )
+    case.custody.update(pid=process.pid, pgid=process.pid)
+    try:
+        with pytest.raises(reboot.GuestRebootError, match="cleanup-process-still-present"):
+            native.verify_restored_boot_cleanup(case.report)
+        assert not case.report.get("resources_destroyed_with_guest")
+    finally:
+        process.stdin.close()
+        try:
+            process.wait(timeout=watchdog(5))
+        finally:
+            if process.poll() is None:
+                process.kill()
+                process.wait(timeout=watchdog(5))
+    native.verify_restored_boot_cleanup(case.report)
+    assert case.report["resources_destroyed_with_guest"]
