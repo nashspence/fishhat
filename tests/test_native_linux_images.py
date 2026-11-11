@@ -1,4 +1,4 @@
-"""Image identity and disk custody tooling; no real download, QEMU or guest."""
+"""Image identity and custody checks with controlled local HTTP; no QEMU or guest."""
 
 from __future__ import annotations
 
@@ -13,16 +13,21 @@ from pathlib import Path
 
 import pytest
 
+from scripts import native_linux_download as download
 from scripts import native_linux_enrollment as native
 from scripts import native_linux_images as images
 from scripts.run_stats import valid_stats
 
 CHECK_PURPOSE = {
     "purpose": "validation-tooling",
-    "authority": ["scripts/native_linux_images.py", "scripts/native_linux_enrollment.py"],
-    "scope": "pinned image bytes, enrollment-bound owned file identity, immutable backing and partial setup cleanup with required measurement records",
+    "authority": [
+        "scripts/native_linux_images.py",
+        "scripts/native_linux_enrollment.py",
+        "scripts/native_linux_download.py",
+    ],
+    "scope": "pinned image bytes, enrollment-bound owned file identity, immutable backing, isolated local HTTP failure observations and partial setup cleanup with required measurement records",
     "relationship": "no-product-claim",
-    "reason": "Controlled image bytes and qemu-img observations exercise tooling refusals only. No image is downloaded or QEMU run here; the separate disposable main job must establish actual guest-input behavior. No guest boots or native owner is qualified.",
+    "reason": "Controlled image bytes, loopback HTTP and qemu-img observations exercise tooling behavior only. No external image is downloaded or QEMU run here; the separate disposable main job must establish actual guest-input behavior. No guest boots or native owner is qualified.",
     "claims": [],
 }
 
@@ -46,9 +51,10 @@ def fixture(tmp_path, monkeypatch):
         state["calls"].append((arguments, name, nominal, capture))
         mode = state["mode"]
         if arguments[0] == sys.executable:
-            assert arguments[1:4] == ["-I", "-S", "-c"]
-            assert arguments[4] == images.DOWNLOAD and arguments[6] == images.IMAGE_URL
-            base = Path(arguments[5])
+            assert arguments[1:3] == ["-I", "-S"]
+            assert arguments[3] == str(images.DOWNLOAD_WORKER)
+            assert arguments[5] == images.IMAGE_URL
+            base = Path(arguments[4])
             assert stat.S_IMODE(base.parent.stat().st_mode) == 0o700
             assert not base.exists()
             state["directories"].append(base.parent)
@@ -61,6 +67,10 @@ def fixture(tmp_path, monkeypatch):
                 base.chmod(0o600)
                 if mode == "wrong-hash":
                     base.write_bytes(b"x" * len(payload))
+            if mode == "classified-download-failure":
+                raise native.ImageDownloadCommandError(
+                    "guest-image-download", 40, '{"http_status":503}'
+                )
             if mode == "download-failure":
                 raise images.GuestInputError("controlled-download-failure")
             return ""
@@ -345,11 +355,14 @@ def test_download_worker_refuses_redirects_proxies_and_wrong_extent(tmp_path, mo
     monkeypatch.setattr(urllib.request, "build_opener", build)
     monkeypatch.setattr(sys, "argv", ["worker", str(destination), images.IMAGE_URL, "7.5", "3"])
     if mode == "complete":
-        exec(images.DOWNLOAD, {})
+        assert download.main() == 0
         assert destination.read_bytes() == b"abc"
     else:
-        with pytest.raises(ValueError, match=r"unexpected image extent|incomplete image"):
-            exec(images.DOWNLOAD, {})
+        expected = {
+            "oversized": download.Failure.EXCESSIVE_CONTENT,
+            "truncated": download.Failure.INCOMPLETE_CONTENT,
+        }[mode]
+        assert download.main() == expected
     assert calls == [(images.IMAGE_URL, 7.5)]
     assert stat.S_IMODE(destination.stat().st_mode) == 0o600
 
@@ -374,6 +387,341 @@ def test_download_worker_never_overwrites_existing_or_foreign_destination(
 
     monkeypatch.setattr(urllib.request, "build_opener", lambda *args: Opener())
     monkeypatch.setattr(sys, "argv", ["worker", str(destination), images.IMAGE_URL, "7.5", "3"])
-    with pytest.raises(FileExistsError):
-        exec(images.DOWNLOAD, {})
+    assert download.main() == download.Failure.DESTINATION_REFUSED
     assert target.read_bytes() == destination.read_bytes() == b"keep"
+
+
+def test_http_response_failure_keeps_safe_status_and_original_exit(tmp_path, capsys):
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+    from threading import Thread
+
+    from scripts.validation_timeouts import watchdog
+
+    observed = []
+
+    class Unavailable(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(503)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            observed.append(503)
+
+        def log_message(self, *args):
+            pass
+
+    destination = tmp_path / "download"
+    with HTTPServer(("127.0.0.1", 0), Unavailable) as server:
+        server.timeout = watchdog(1)
+        worker = Thread(target=server.handle_request)
+        worker.start()
+        try:
+            with pytest.raises(native.EnrollmentError) as caught:
+                native.run(
+                    [
+                        sys.executable,
+                        "-I",
+                        "-S",
+                        str(images.DOWNLOAD_WORKER),
+                        str(destination),
+                        f"http://127.0.0.1:{server.server_port}/image",
+                        str(watchdog(1)),
+                        "3",
+                    ],
+                    "guest-image-download",
+                    10,
+                )
+        finally:
+            worker.join(watchdog(5))
+        assert not worker.is_alive()
+    assert observed == [503]
+    assert caught.value.stage == "guest-image-download"
+    assert caught.value.reason == "command-exit-40"
+    assert getattr(caught.value, "classifications", None) == ("image-http-response-failure",)
+    assert getattr(caught.value, "http_status", None) == 503
+    captured = capsys.readouterr()
+    assert captured.out == captured.err == ""
+
+
+@pytest.mark.parametrize(
+    "error,expected",
+    [
+        ("dns", download.Failure.TRANSPORT_FAILURE),
+        ("wrapped-tls", download.Failure.TLS_FAILURE),
+        ("wrapped-timeout", download.Failure.NETWORK_TIMEOUT),
+        ("tls", download.Failure.TLS_FAILURE),
+        ("timeout", download.Failure.NETWORK_TIMEOUT),
+        ("incomplete", download.Failure.INCOMPLETE_CONTENT),
+        ("protocol", download.Failure.TRANSPORT_FAILURE),
+        ("unexpected", download.Failure.UNEXPECTED_WORKER_FAILURE),
+    ],
+)
+@pytest.mark.parametrize("phase", ["open", "read"])
+def test_download_worker_closes_destination_and_classifies_safe_failures(
+    tmp_path, monkeypatch, capsys, error, expected, phase
+):
+    import ssl
+    import urllib.error
+    from http.client import HTTPException, IncompleteRead
+
+    failures = {
+        "dns": urllib.error.URLError(OSError("fixture-private-value")),
+        "wrapped-tls": urllib.error.URLError(ssl.SSLError("fixture-private-value")),
+        "wrapped-timeout": urllib.error.URLError(TimeoutError("fixture-private-value")),
+        "tls": ssl.SSLError("fixture-private-value"),
+        "timeout": TimeoutError("fixture-private-value"),
+        "incomplete": IncompleteRead(b"fixture-private-value", 3),
+        "protocol": HTTPException("fixture-private-value"),
+        "unexpected": RuntimeError("fixture-private-value"),
+    }
+
+    class Response:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def read(self, size):
+            raise failures[error]
+
+    class Opener:
+        def open(self, *args, **kwargs):
+            if phase == "open":
+                raise failures[error]
+            return Response()
+
+    destination = tmp_path / "owned-download"
+    monkeypatch.setattr(download.urllib.request, "build_opener", lambda *args: Opener())
+    assert download.main([str(destination), images.IMAGE_URL, "7.5", "3"]) == expected
+    assert destination.read_bytes() == b"" and stat.S_IMODE(destination.stat().st_mode) == 0o600
+    captured = capsys.readouterr()
+    assert captured.out == captured.err == ""
+
+
+@pytest.mark.parametrize("timeout", ["nan", "inf", "0", "-1", "not-a-number"])
+def test_download_worker_rejects_invalid_budget_before_destination_or_network(
+    tmp_path, monkeypatch, capsys, timeout
+):
+    def forbidden(*args):
+        pytest.fail("invalid budget reached the network")
+
+    monkeypatch.setattr(download.urllib.request, "build_opener", forbidden)
+    destination = tmp_path / "download"
+    assert (
+        download.main([str(destination), images.IMAGE_URL, timeout, "3"])
+        == download.Failure.UNEXPECTED_WORKER_FAILURE
+    )
+    assert not destination.exists()
+    captured = capsys.readouterr()
+    assert captured.out == captured.err == ""
+
+
+@pytest.mark.parametrize("payload,expected", [(b"abc", 0), (b"abcd", 45), (b"ab", 44)])
+def test_isolated_worker_real_local_transfer_preserves_extent_and_private_output(
+    tmp_path, payload, expected, capsys
+):
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+    from threading import Thread
+
+    from scripts.validation_timeouts import watchdog
+
+    observed = []
+
+    class Image(BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(200)
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+            observed.append(self.path)
+
+        def log_message(self, *args):
+            pass
+
+    destination = tmp_path / "download"
+    with HTTPServer(("127.0.0.1", 0), Image) as server:
+        server.timeout = watchdog(2)
+        worker = Thread(target=server.handle_request)
+        worker.start()
+        command = [
+            sys.executable,
+            "-I",
+            "-S",
+            str(images.DOWNLOAD_WORKER),
+            str(destination),
+            f"http://127.0.0.1:{server.server_port}/image",
+            str(watchdog(2)),
+            "3",
+        ]
+        try:
+            if expected:
+                with pytest.raises(native.ImageDownloadCommandError) as caught:
+                    native.run(command, "guest-image-download", 10)
+                assert caught.value.reason == f"command-exit-{expected}"
+                assert caught.value.classifications == (
+                    "image-excessive-content" if expected == 45 else "image-incomplete-content",
+                )
+                assert caught.value.http_status is None
+            else:
+                assert native.run(command, "guest-image-download", 10) == ""
+                assert destination.read_bytes() == payload
+        finally:
+            worker.join(watchdog(5))
+        assert not worker.is_alive()
+    assert observed == ["/image"]
+    assert stat.S_IMODE(destination.stat().st_mode) == 0o600
+    captured = capsys.readouterr()
+    assert captured.out == captured.err == ""
+
+
+def test_download_worker_write_failure_remains_destination_refusal(tmp_path, monkeypatch, capsys):
+    import errno
+
+    class Response:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def read(self, size):
+            return b"abc"
+
+    class Opener:
+        def open(self, *args, **kwargs):
+            return Response()
+
+    class Full:
+        def write(self, content):
+            raise OSError(errno.ENOSPC, "fixture-private-value")
+
+    monkeypatch.setattr(download.urllib.request, "build_opener", lambda *args: Opener())
+    args = download.Inputs(tmp_path / "download", images.IMAGE_URL, 7.5, 3)
+    assert download._receive(Full(), args) == download.Failure.DESTINATION_REFUSED
+    captured = capsys.readouterr()
+    assert captured.out == captured.err == ""
+
+
+def test_classified_download_failure_preserves_partial_cleanup_and_statistics(fixture):
+    state, _, temporary, foreign = fixture
+    state["mode"] = "classified-download-failure"
+    report = {}
+    with pytest.raises(native.ImageDownloadCommandError) as caught:
+        with prepare(fixture, report):
+            pytest.fail("failed download admitted guest inputs")
+    assert caught.value.stage == "guest-image-download"
+    assert caught.value.reason == "command-exit-40"
+    assert caught.value.classifications == ("image-http-response-failure",)
+    assert caught.value.http_status == 503
+    assert report["status"] == "failed" and report["temporary_resources_removed"]
+    assert valid_stats(report["statistics"]) and not list(temporary.iterdir())
+    assert foreign.read_bytes() == b"controlled-authenticated-image"
+    assert not any(call[1] == "guest-image-create" for call in state["calls"])
+
+
+def test_download_worker_close_failure_cannot_report_transfer_success(
+    tmp_path, monkeypatch, capsys
+):
+    import errno
+
+    real_fdopen = download.os.fdopen
+    chunks = iter([b"abc", b""])
+
+    class Response:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def read(self, size):
+            return next(chunks)
+
+    class Opener:
+        def open(self, *args, **kwargs):
+            return Response()
+
+    class FailedClose:
+        def __init__(self, fd, mode):
+            self.file = real_fdopen(fd, mode)
+
+        def __enter__(self):
+            return self.file
+
+        def __exit__(self, *args):
+            self.file.close()
+            raise OSError(errno.ENOSPC, "fixture-private-value")
+
+    monkeypatch.setattr(download.os, "fdopen", FailedClose)
+    monkeypatch.setattr(download.urllib.request, "build_opener", lambda *args: Opener())
+    destination = tmp_path / "download"
+    assert (
+        download.main([str(destination), images.IMAGE_URL, "7.5", "3"])
+        == download.Failure.DESTINATION_REFUSED
+    )
+    assert destination.read_bytes() == b"abc"
+    captured = capsys.readouterr()
+    assert captured.out == captured.err == ""
+
+
+def test_isolated_download_refuses_actual_redirect_before_foreign_request(tmp_path, capsys):
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+    from threading import Thread
+
+    from scripts.validation_timeouts import watchdog
+
+    observed = []
+
+    class Redirect(BaseHTTPRequestHandler):
+        def do_GET(self):
+            observed.append(self.path)
+            self.send_response(302 if self.path == "/image" else 200)
+            if self.path == "/image":
+                self.send_header("Location", "/foreign")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+
+        def log_message(self, *args):
+            pass
+
+    destination = tmp_path / "download"
+    with HTTPServer(("127.0.0.1", 0), Redirect) as server:
+        server.timeout = watchdog(0.5)
+
+        def serve():
+            for _ in range(2):
+                server.handle_request()
+
+        worker = Thread(target=serve)
+        worker.start()
+        try:
+            with pytest.raises(native.ImageDownloadCommandError) as caught:
+                native.run(
+                    [
+                        sys.executable,
+                        "-I",
+                        "-S",
+                        str(images.DOWNLOAD_WORKER),
+                        str(destination),
+                        f"http://127.0.0.1:{server.server_port}/image",
+                        str(watchdog(2)),
+                        "3",
+                    ],
+                    "guest-image-download",
+                    10,
+                )
+        finally:
+            worker.join(watchdog(5))
+        assert not worker.is_alive()
+    assert observed == ["/image"]
+    assert caught.value.reason == "command-exit-40"
+    assert caught.value.classifications == ("image-http-response-failure",)
+    assert caught.value.http_status == 302 and destination.read_bytes() == b""
+    captured = capsys.readouterr()
+    assert captured.out == captured.err == ""

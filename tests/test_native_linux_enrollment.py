@@ -18,9 +18,9 @@ from scripts.validation_timeouts import Policy, using
 CHECK_PURPOSE = {
     "purpose": "validation-tooling",
     "authority": ["scripts/native_linux_enrollment.py", "scripts/validation_timeouts.py"],
-    "scope": "enrollment refusal, exact controller identities, maintained watchdogs, allowlisted secret-safe package failure observations, sanitized provisioning failures and source/statistics receipts",
+    "scope": "enrollment refusal, exact controller identities, maintained watchdogs, allowlisted secret-safe package/image failure observations, sanitized provisioning failures and source/statistics receipts",
     "relationship": "no-product-claim",
-    "reason": "Controlled package/tool responses never install packages. Real unprivileged children exercise timeout/reaping and stderr classification without exposing their output. Only the separate admitted disposable-runner job can establish actual controller prerequisites; no guest or native owner is qualified here.",
+    "reason": "Controlled package/tool responses never install packages. Real unprivileged children exercise timeout/reaping and closed stdout/stderr classification without exposing their output. Only the separate admitted disposable-runner job can establish actual controller prerequisites; no guest or native owner is qualified here.",
     "claims": [],
 }
 
@@ -209,7 +209,16 @@ def test_ordinary_invocation_creates_no_artifacts_or_native_commands(tmp_path, m
 
 
 @pytest.mark.parametrize(
-    "failure", ["none", "provisioning", "package-classified", "dirty-source", "changed-source"]
+    "failure",
+    [
+        "none",
+        "provisioning",
+        "package-classified",
+        "image-http-classified",
+        "image-malformed",
+        "dirty-source",
+        "changed-source",
+    ],
 )
 def test_selected_run_records_failure_source_scope_and_required_statistics(
     tmp_path, monkeypatch, tools, failure, capsys
@@ -248,6 +257,18 @@ def test_selected_run_records_failure_source_scope_and_required_statistics(
             )
 
         monkeypatch.setattr(native, "provision", package_failed)
+    elif failure in ("image-http-classified", "image-malformed"):
+
+        def image_failed(*args):
+            raise native.ImageDownloadCommandError(
+                "guest-image-download",
+                40,
+                '{"http_status":503}'
+                if failure == "image-http-classified"
+                else "fixture-private-value",
+            )
+
+        monkeypatch.setattr(native, "guest_inputs", image_failed)
     status = native.main(["--github-hosted-only", "--output", str(output)])
     report = json.loads(output.read_text())
     assert status == (0 if failure == "none" else 1)
@@ -265,6 +286,15 @@ def test_selected_run_records_failure_source_scope_and_required_statistics(
             "reason": "command-exit-100",
             "classifications": ["pinned-package-unavailable"],
         }
+    if failure in ("image-http-classified", "image-malformed"):
+        expected = {
+            "stage": "guest-image-download",
+            "reason": "command-exit-40",
+            "classifications": ["image-http-response-failure"],
+        }
+        if failure == "image-http-classified":
+            expected["http_status"] = 503
+        assert report["problem"] == expected
     if failure == "dirty-source":
         assert not tools[1]
     logs = capsys.readouterr()
@@ -402,3 +432,59 @@ def test_malformed_package_stderr_cannot_mask_original_exit(stage, capsys):
     assert "fixture-private" not in str(caught.value) + repr(caught.value.__dict__)
     logs = capsys.readouterr()
     assert logs.out == logs.err == ""
+
+
+@pytest.mark.parametrize(
+    "status,output,expected,http_status",
+    [
+        (40, b'{"http_status":503}', "image-http-response-failure", 503),
+        (41, b"fixture-private-value", "image-transport-failure", None),
+        (42, b"fixture-private-value", "image-tls-failure", None),
+        (43, b"fixture-private-value", "image-network-timeout", None),
+        (44, b"fixture-private-value", "image-incomplete-content", None),
+        (45, b"fixture-private-value", "image-excessive-content", None),
+        (46, b"fixture-private-value", "image-destination-refused", None),
+        (47, b"fixture-private-value", "image-unexpected-worker-failure", None),
+        (19, b'{"http_status":503}', "image-unexpected-worker-failure", None),
+        (40, b"\xfffixture-private-value", "image-http-response-failure", None),
+        (40, b'{"http_status":true}', "image-http-response-failure", None),
+        (40, b'{"http_status":503.0}', "image-http-response-failure", None),
+        (40, b'{"http_status":99}', "image-http-response-failure", None),
+        (40, b'{"http_status":600}', "image-http-response-failure", None),
+        (
+            40,
+            b'{"http_status":503,"url":"fixture-private-value"}',
+            "image-http-response-failure",
+            None,
+        ),
+    ],
+    ids=[
+        "http",
+        "transport",
+        "tls",
+        "timeout",
+        "short",
+        "excessive",
+        "destination",
+        "worker",
+        "unknown-exit",
+        "malformed-encoding",
+        "boolean-status",
+        "float-status",
+        "low-status",
+        "high-status",
+        "additional-field",
+    ],
+)
+def test_real_download_child_retains_exit_and_only_closed_safe_metadata(
+    status, output, expected, http_status, capsys
+):
+    code = f"import sys; sys.stdout.buffer.write({output!r}); sys.stderr.write('fixture-private-value'); sys.exit({status})"
+    with pytest.raises(native.ImageDownloadCommandError) as caught:
+        native.run([sys.executable, "-I", "-S", "-c", code], "guest-image-download", 10)
+    assert caught.value.stage == "guest-image-download"
+    assert caught.value.reason == f"command-exit-{status}"
+    assert caught.value.classifications == (expected,) and caught.value.http_status == http_status
+    assert "fixture-private-value" not in str(caught.value)
+    captured = capsys.readouterr()
+    assert captured.out == captured.err == ""

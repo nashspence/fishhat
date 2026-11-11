@@ -382,3 +382,21 @@ def test_shell_guard_requires_stage_and_force_kill_policy(command):
 """
     errors = shell_errors(prefix + command, "scripts/ci/native_smoke.sh")
     assert bool(errors) == (command != 'timeout -k "$kill_timeout" "$remaining_timeout" tool')
+
+
+@pytest.mark.parametrize(
+    "name,function,expression,accepted",
+    [
+        ("scripts/native_linux_download.py", "_receive", "args.watchdog_seconds", True),
+        ("scripts/native_linux_download.py", "_receive", "30", False),
+        ("scripts/native_linux_download.py", "main", "args.watchdog_seconds", False),
+        ("scripts/unrelated.py", "_receive", "args.watchdog_seconds", False),
+        ("scripts/native_linux_download.py", "_receive", "args.other_seconds", False),
+    ],
+    ids=["isolated-cli-boundary", "raw-constant", "other-function", "other-source", "other-value"],
+)
+def test_isolated_download_watchdog_boundary_cannot_authorize_other_raw_waits(
+    name, function, expression, accepted
+):
+    source = f"def {function}(args):\n    opener.open(args.url, timeout={expression})\n"
+    assert bool(python_errors(source, name)) is not accepted
