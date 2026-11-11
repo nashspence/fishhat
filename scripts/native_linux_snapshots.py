@@ -171,24 +171,48 @@ class DiskSnapshots:
             self.path(name, self.enrollment)
 
 
-def convert_disk(guest: Guest, snapshots: DiskSnapshots, name: str) -> dict[str, Any]:
-    source = guest.inputs.path(name, guest.enrollment)
-    source_info = inspect_disk(guest, source, name, standalone=False)
-    require(
-        identity(snapshots.directory, directory=True) == snapshots.directory_identity,
-        "snapshot-directory-replaced",
-    )
-    target = snapshots.directory / name
+def copy_disk(
+    guest: Guest,
+    source: Path,
+    directory: Path,
+    directory_identity: tuple[int, int],
+    name: str,
+    *,
+    standalone: bool,
+    read_only: bool,
+    purpose: str,
+    verify: Callable[[], None],
+) -> dict[str, Any]:
+    require(name in DISK_BYTES and purpose in {"snapshot", "restore"}, "unexpected-copy")
+    verify()
+    source_info = inspect_disk(guest, source, name, standalone=standalone)
+    verify()
+    require(identity(directory, directory=True) == directory_identity, "copy-directory-replaced")
+    target = directory / name
     fd = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
     os.close(fd)
     enrolled = identity(target)
-    guest.command(
+
+    def verify_output() -> None:
+        verify()
+        require(
+            identity(directory, directory=True) == directory_identity, "copy-directory-replaced"
+        )
+        require(identity(target) == enrolled, "copy-file-replaced")
+
+    def command(arguments: list[str], action: str, nominal: float) -> None:
+        verify_output()
+        guest.command(arguments, purpose + "-" + action, nominal)
+        verify_output()
+
+    command(
         [str(QEMU_IMG), "create", "-q", "-f", "qcow2", str(target), str(DISK_BYTES[name])],
-        "snapshot-create",
+        "create",
         30,
     )
-    require(identity(target) == enrolled, "snapshot-file-replaced")
-    guest.command(
+    initialized = inspect_disk(guest, target, name, standalone=True)
+    verify_output()
+    command(
         [
             str(QEMU_IMG),
             "convert",
@@ -203,43 +227,61 @@ def convert_disk(guest: Guest, snapshots: DiskSnapshots, name: str) -> dict[str,
             str(source),
             str(target),
         ],
-        "snapshot-convert",
+        "convert",
         600,
     )
-    require(identity(target) == enrolled, "snapshot-file-replaced")
+    verify_output()
     observed = inspect_disk(guest, target, name, standalone=True)
-    guest.command([str(QEMU_IMG), "check", "-q", "-f", "qcow2", str(target)], "snapshot-check", 120)
-    guest.command(
+    verify_output()
+    command([str(QEMU_IMG), "check", "-q", "-f", "qcow2", str(target)], "check", 120)
+    command(
         [str(QEMU_IMG), "compare", "-q", "-f", "qcow2", "-F", "qcow2", str(source), str(target)],
-        "snapshot-compare",
+        "compare",
         300,
     )
-    require(identity(target) == enrolled, "snapshot-file-replaced")
     descriptor = os.open(target, os.O_RDONLY | os.O_NOFOLLOW)
     try:
         require(
             (os.fstat(descriptor).st_dev, os.fstat(descriptor).st_ino) == enrolled,
-            "snapshot-file-replaced",
+            "copy-file-replaced",
         )
-        os.fchmod(descriptor, 0o400)
+        os.fchmod(descriptor, 0o400 if read_only else 0o600)
         os.fsync(descriptor)
     finally:
         os.close(descriptor)
-    snapshots.files[name] = enrolled, digest(target)
+    verify_output()
     return {
         "name": name,
         "virtual_bytes": observed["virtual-size"],
         "source_image_observation": source_info,
-        "captured_image_observation": observed,
+        "initialized_image_observation": initialized,
+        "copied_image_observation": observed,
         "bytes": target.stat().st_size,
-        "sha256": snapshots.files[name][1],
+        "sha256": digest(target),
         "identity": enrolled,
         "standalone": True,
         "logical_contents_equal": True,
         "structure_checked": True,
         "synced": True,
-        "read_only": True,
+        "read_only": read_only,
     }
+
+
+def convert_disk(guest: Guest, snapshots: DiskSnapshots, name: str) -> dict[str, Any]:
+    value = copy_disk(
+        guest,
+        guest.inputs.path(name, guest.enrollment),
+        snapshots.directory,
+        snapshots.directory_identity,
+        name,
+        standalone=False,
+        read_only=True,
+        purpose="snapshot",
+        verify=guest.verify_tools,
+    )
+    snapshots.files[name] = value["identity"], value["sha256"]
+    value["captured_image_observation"] = value.pop("copied_image_observation")
+    return value
 
 
 @contextmanager
@@ -332,6 +374,8 @@ def qualify_capture(
     temporary: Path,
     progress: Callable[[str], AbstractContextManager[None]],
     report: dict[str, Any],
+    *,
+    consume: Callable[[DiskSnapshots], None] | None = None,
 ) -> None:
     metrics = RunStats()
     try:
@@ -353,6 +397,8 @@ def qualify_capture(
                     else:
                         raise SnapshotError("foreign-snapshot-handle-accepted")
                     report["foreign_enrollment_refused"] = True
+                    if consume is not None:
+                        consume(snapshots)
                 try:
                     snapshots.path("root.qcow2", guest.enrollment)
                 except SnapshotError as error:
