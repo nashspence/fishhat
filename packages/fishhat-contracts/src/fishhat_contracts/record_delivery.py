@@ -38,15 +38,19 @@ RECORD_SCHEMAS = {
     "WorkflowTransferRecord": ("workflow-transfer-history.schema.json", "WorkflowTransferRecord"),
     "WorkflowPhaseAttestation": ("workflow-evidence.schema.json", "WorkflowPhaseAttestation"),
     "WorkflowJournalRecord": ("workflow-journal.schema.json", "JournalRecord"),
+    "ResourceAdmission": ("resource-queue.schema.json", "Record"),
+    "ResourceAdmissionCancellation": ("resource-queue.schema.json", "CancellationReceipt"),
 }
 SNAPSHOT_ID_KINDS = {"Discovery", "ResourceReport", "Observation", "ProblemEvidence"}
-IMMUTABLE_KINDS = {"Plan", "WorkflowJournalRecord"}
+IMMUTABLE_KINDS = {"Plan", "WorkflowJournalRecord", "ResourceAdmissionCancellation"}
 SCOPED_KINDS = {
     "Observation",
     "ProblemEvidence",
     "WorkflowTransferRecord",
     "WorkflowPhaseAttestation",
     "WorkflowJournalRecord",
+    "ResourceAdmission",
+    "ResourceAdmissionCancellation",
 }
 
 
@@ -103,6 +107,10 @@ def _validate_record(
         from .workflow_transfer_history import validate_transfer_record
 
         validate_transfer_record(record)
+    elif kind in {"ResourceAdmission", "ResourceAdmissionCancellation"}:
+        from .resource_queue import validate_admission_record
+
+        validate_admission_record(record)
     else:
         schema, definition = RECORD_SCHEMAS[kind]
         validate(schema, record, definition)
@@ -121,7 +129,7 @@ def validate_record_reference(
     Without independent expectations this checks shape and schema only, never origin
     or permission. A newer record generation cannot silently replace a pinned one.
     """
-    validate("common.schema.json", reference, "RecordReference")
+    validate("common.schema.json", reference, "CurrentRecordReference")
     kind = reference["record"]["kind"]
     uri = _schema_uri(kind)
     if kind in SNAPSHOT_ID_KINDS:
@@ -205,7 +213,7 @@ class RecordSnapshot:
             "digest": "sha256:" + hashlib.sha256(self._data).hexdigest(),
             "size": len(self._data),
         }
-        validate("common.schema.json", self._reference, "RecordReference")
+        validate("common.schema.json", self._reference, "CurrentRecordReference")
 
     @classmethod
     def restore(

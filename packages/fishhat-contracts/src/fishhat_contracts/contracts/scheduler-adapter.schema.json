@@ -1,0 +1,763 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fishhat.invalid/contracts/scheduler-adapter.schema.json",
+  "$defs": {
+    "submit": {
+      "type": "object",
+      "properties": {
+        "scope": {
+          "$ref": "adapter.schema.json#/$defs/Scope"
+        },
+        "request": {
+          "$ref": "resource-admission.schema.json#/$defs/ResourceRequest"
+        }
+      },
+      "required": [
+        "scope",
+        "request"
+      ],
+      "additionalProperties": false,
+      "description": "Submit the exact retained resource request to this approved scheduler. Success establishes only durable submission/queue custody; no workload effect or guarded launch is implied. Persist the submission intent before native dispatch. A lost reply requires observation/reconciliation of this original identity, never a blind second submission."
+    },
+    "observe": {
+      "type": "object",
+      "properties": {
+        "scope": {
+          "$ref": "adapter.schema.json#/$defs/Scope"
+        },
+        "request": {
+          "$ref": "resource-admission.schema.json#/$defs/ResourceRequest"
+        },
+        "submission": {
+          "anyOf": [
+            {
+              "$ref": "resource-admission.schema.json#/$defs/SubmissionIdentity"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "grant": {
+          "anyOf": [
+            {
+              "$ref": "resource-admission.schema.json#/$defs/ResourceGrant"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "scope",
+        "request",
+        "submission",
+        "grant"
+      ],
+      "additionalProperties": false,
+      "description": "Observe one exact retained request and any independently retained submission/grant. This scalar result is complete or unknown and never paginated. A native name or missing queue row cannot establish absence. Preserve previous execution identity; replacement allocation/requeue requires a separate approved execution, not a rewritten grant."
+    },
+    "cancel": {
+      "type": "object",
+      "properties": {
+        "scope": {
+          "$ref": "adapter.schema.json#/$defs/Scope"
+        },
+        "request": {
+          "$ref": "resource-admission.schema.json#/$defs/ResourceRequest"
+        },
+        "submission": {
+          "$ref": "resource-admission.schema.json#/$defs/SubmissionIdentity"
+        }
+      },
+      "required": [
+        "scope",
+        "request",
+        "submission"
+      ],
+      "additionalProperties": false,
+      "description": "Request cancellation of the exact scheduling intent, including prevention of delayed/replacement starts. A successful cancellation request establishes only accepted stop intent (stop-requested), not that every running descendant stopped or any resource claim was released. Final no-grant cancellation requires positive SubmissionClosure; existing grants require separate ReleaseEvidence. An uncertain cancellation submission stays unresolved."
+    },
+    "release": {
+      "type": "object",
+      "properties": {
+        "scope": {
+          "$ref": "adapter.schema.json#/$defs/Scope"
+        },
+        "request": {
+          "$ref": "resource-admission.schema.json#/$defs/ResourceRequest"
+        },
+        "grant": {
+          "$ref": "resource-admission.schema.json#/$defs/ResourceGrant"
+        },
+        "authorization": {
+          "$ref": "resource-admission.schema.json#/$defs/ReleaseAuthorization"
+        }
+      },
+      "required": [
+        "scope",
+        "request",
+        "grant",
+        "authorization"
+      ],
+      "additionalProperties": false,
+      "description": "Ask the scheduler to release only this exact grant after independently authenticated exclusion of future starts and descendant cessation. Authorization does not assert that the native allocation is already released. Successful output must separately establish native release and committed accounting through ReleaseEvidence. This mutation does not cancel arbitrary jobs or erase retained effects, and is never inferred from timeout, job exit or cancellation acknowledgment."
+    },
+    "reconcile": {
+      "type": "object",
+      "properties": {
+        "scope": {
+          "$ref": "adapter.schema.json#/$defs/Scope"
+        },
+        "invocation": {
+          "$ref": "adapter.schema.json#/$defs/Invocation"
+        }
+      },
+      "required": [
+        "scope",
+        "invocation"
+      ],
+      "additionalProperties": false,
+      "description": "Observe and settle the exact original owner-retained submission, cancellation or release invocation. Keep its executor, scope and immutable request; never resubmit, retarget, relaunch, cancel or release as an observational retry. Original method result obligations apply."
+    },
+    "Output": {
+      "type": "object",
+      "properties": {
+        "observation": {
+          "anyOf": [
+            {
+              "$ref": "resource-admission.schema.json#/$defs/AdmissionObservation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "observation"
+      ],
+      "additionalProperties": false
+    },
+    "Response": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "const": "fishhat.scheduler"
+            },
+            "method": {
+              "const": "submit"
+            },
+            "request_digest": {
+              "$ref": "common.schema.json#/$defs/Digest"
+            },
+            "scope": {
+              "$ref": "adapter.schema.json#/$defs/Scope"
+            },
+            "coverage": {
+              "enum": [
+                "complete",
+                "unknown"
+              ]
+            },
+            "continuation": {
+              "type": "null"
+            },
+            "proposal": {
+              "type": "null"
+            },
+            "output": {
+              "$ref": "#/$defs/Output"
+            },
+            "effect": {
+              "$ref": "adapter.schema.json#/$defs/EffectResult"
+            },
+            "problem": {
+              "anyOf": [
+                {
+                  "allOf": [
+                    {
+                      "$ref": "adapter.schema.json#/$defs/Problem"
+                    },
+                    {
+                      "properties": {
+                        "retry": {
+                          "const": "none"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "contract",
+            "method",
+            "request_digest",
+            "scope",
+            "coverage",
+            "continuation",
+            "proposal",
+            "output",
+            "effect",
+            "problem"
+          ],
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "effect": {
+                    "properties": {
+                      "task_state": {
+                        "const": "terminal"
+                      },
+                      "effect_certainty": {
+                        "const": "known"
+                      },
+                      "postcondition": {
+                        "const": "satisfied"
+                      }
+                    },
+                    "required": [
+                      "task_state",
+                      "effect_certainty",
+                      "postcondition"
+                    ]
+                  }
+                },
+                "required": [
+                  "effect"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "coverage": {
+                    "const": "complete"
+                  },
+                  "output": {
+                    "properties": {
+                      "observation": {
+                        "$ref": "resource-admission.schema.json#/$defs/AdmissionObservation"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "const": "fishhat.scheduler"
+            },
+            "method": {
+              "const": "observe"
+            },
+            "request_digest": {
+              "$ref": "common.schema.json#/$defs/Digest"
+            },
+            "scope": {
+              "$ref": "adapter.schema.json#/$defs/Scope"
+            },
+            "coverage": {
+              "enum": [
+                "complete",
+                "unknown"
+              ]
+            },
+            "continuation": {
+              "type": "null"
+            },
+            "proposal": {
+              "type": "null"
+            },
+            "output": {
+              "$ref": "#/$defs/Output"
+            },
+            "problem": {
+              "anyOf": [
+                {
+                  "$ref": "adapter.schema.json#/$defs/Problem"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "contract",
+            "method",
+            "request_digest",
+            "scope",
+            "coverage",
+            "continuation",
+            "proposal",
+            "output",
+            "problem"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "const": "fishhat.scheduler"
+            },
+            "method": {
+              "const": "cancel"
+            },
+            "request_digest": {
+              "$ref": "common.schema.json#/$defs/Digest"
+            },
+            "scope": {
+              "$ref": "adapter.schema.json#/$defs/Scope"
+            },
+            "coverage": {
+              "enum": [
+                "complete",
+                "unknown"
+              ]
+            },
+            "continuation": {
+              "type": "null"
+            },
+            "proposal": {
+              "type": "null"
+            },
+            "output": {
+              "$ref": "#/$defs/Output"
+            },
+            "effect": {
+              "$ref": "adapter.schema.json#/$defs/EffectResult"
+            },
+            "problem": {
+              "anyOf": [
+                {
+                  "allOf": [
+                    {
+                      "$ref": "adapter.schema.json#/$defs/Problem"
+                    },
+                    {
+                      "properties": {
+                        "retry": {
+                          "const": "none"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "contract",
+            "method",
+            "request_digest",
+            "scope",
+            "coverage",
+            "continuation",
+            "proposal",
+            "output",
+            "effect",
+            "problem"
+          ],
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "effect": {
+                    "properties": {
+                      "task_state": {
+                        "const": "terminal"
+                      },
+                      "effect_certainty": {
+                        "const": "known"
+                      },
+                      "postcondition": {
+                        "const": "satisfied"
+                      }
+                    },
+                    "required": [
+                      "task_state",
+                      "effect_certainty",
+                      "postcondition"
+                    ]
+                  }
+                },
+                "required": [
+                  "effect"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "coverage": {
+                    "const": "complete"
+                  },
+                  "output": {
+                    "properties": {
+                      "observation": {
+                        "$ref": "resource-admission.schema.json#/$defs/AdmissionObservation"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "const": "fishhat.scheduler"
+            },
+            "method": {
+              "const": "release"
+            },
+            "request_digest": {
+              "$ref": "common.schema.json#/$defs/Digest"
+            },
+            "scope": {
+              "$ref": "adapter.schema.json#/$defs/Scope"
+            },
+            "coverage": {
+              "enum": [
+                "complete",
+                "unknown"
+              ]
+            },
+            "continuation": {
+              "type": "null"
+            },
+            "proposal": {
+              "type": "null"
+            },
+            "output": {
+              "$ref": "#/$defs/Output"
+            },
+            "effect": {
+              "$ref": "adapter.schema.json#/$defs/EffectResult"
+            },
+            "problem": {
+              "anyOf": [
+                {
+                  "allOf": [
+                    {
+                      "$ref": "adapter.schema.json#/$defs/Problem"
+                    },
+                    {
+                      "properties": {
+                        "retry": {
+                          "const": "none"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "contract",
+            "method",
+            "request_digest",
+            "scope",
+            "coverage",
+            "continuation",
+            "proposal",
+            "output",
+            "effect",
+            "problem"
+          ],
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "effect": {
+                    "properties": {
+                      "task_state": {
+                        "const": "terminal"
+                      },
+                      "effect_certainty": {
+                        "const": "known"
+                      },
+                      "postcondition": {
+                        "const": "satisfied"
+                      }
+                    },
+                    "required": [
+                      "task_state",
+                      "effect_certainty",
+                      "postcondition"
+                    ]
+                  }
+                },
+                "required": [
+                  "effect"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "coverage": {
+                    "const": "complete"
+                  },
+                  "output": {
+                    "properties": {
+                      "observation": {
+                        "$ref": "resource-admission.schema.json#/$defs/AdmissionObservation"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "const": "fishhat.scheduler"
+            },
+            "method": {
+              "const": "reconcile"
+            },
+            "request_digest": {
+              "$ref": "common.schema.json#/$defs/Digest"
+            },
+            "scope": {
+              "$ref": "adapter.schema.json#/$defs/Scope"
+            },
+            "coverage": {
+              "enum": [
+                "complete",
+                "unknown"
+              ]
+            },
+            "continuation": {
+              "type": "null"
+            },
+            "proposal": {
+              "type": "null"
+            },
+            "output": {
+              "$ref": "#/$defs/Output"
+            },
+            "effect": {
+              "$ref": "adapter.schema.json#/$defs/EffectResult"
+            },
+            "problem": {
+              "anyOf": [
+                {
+                  "$ref": "adapter.schema.json#/$defs/Problem"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "contract",
+            "method",
+            "request_digest",
+            "scope",
+            "coverage",
+            "continuation",
+            "proposal",
+            "output",
+            "effect",
+            "problem"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "MutationRequest": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "const": "fishhat.scheduler"
+            },
+            "method": {
+              "const": "submit"
+            },
+            "input": {
+              "$ref": "#/$defs/submit"
+            }
+          },
+          "required": [
+            "contract",
+            "method",
+            "input"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "const": "fishhat.scheduler"
+            },
+            "method": {
+              "const": "cancel"
+            },
+            "input": {
+              "$ref": "#/$defs/cancel"
+            }
+          },
+          "required": [
+            "contract",
+            "method",
+            "input"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "const": "fishhat.scheduler"
+            },
+            "method": {
+              "const": "release"
+            },
+            "input": {
+              "$ref": "#/$defs/release"
+            }
+          },
+          "required": [
+            "contract",
+            "method",
+            "input"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "const": "fishhat.scheduler"
+        },
+        "method": {
+          "const": "submit"
+        },
+        "input": {
+          "$ref": "#/$defs/submit"
+        }
+      },
+      "required": [
+        "contract",
+        "method",
+        "input"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "const": "fishhat.scheduler"
+        },
+        "method": {
+          "const": "observe"
+        },
+        "input": {
+          "$ref": "#/$defs/observe"
+        }
+      },
+      "required": [
+        "contract",
+        "method",
+        "input"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "const": "fishhat.scheduler"
+        },
+        "method": {
+          "const": "cancel"
+        },
+        "input": {
+          "$ref": "#/$defs/cancel"
+        }
+      },
+      "required": [
+        "contract",
+        "method",
+        "input"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "const": "fishhat.scheduler"
+        },
+        "method": {
+          "const": "release"
+        },
+        "input": {
+          "$ref": "#/$defs/release"
+        }
+      },
+      "required": [
+        "contract",
+        "method",
+        "input"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "const": "fishhat.scheduler"
+        },
+        "method": {
+          "const": "reconcile"
+        },
+        "input": {
+          "$ref": "#/$defs/reconcile"
+        }
+      },
+      "required": [
+        "contract",
+        "method",
+        "input"
+      ],
+      "additionalProperties": false
+    }
+  ],
+  "description": "Resource scheduling backend, independent of existing compute limit mutation and application runtime lifecycle. All effects retain normal Invocation identity, observational reconciliation, current owner permission and typed output custody. Neither submission acknowledgment nor scheduler completion proves Fishhat workload success. Queued workers remain inert until independently current owner resource and runtime launch guards permit the exact execution. Control work is admitted from a finite protected budget rather than recursively through this workload queue."
+}

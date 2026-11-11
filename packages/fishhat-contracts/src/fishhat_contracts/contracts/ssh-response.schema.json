@@ -660,7 +660,11 @@
             "workflow.journal.events",
             "workflow.journal.input",
             "history.refusal",
-            "operation.close"
+            "operation.close",
+            "resources.admission.submit",
+            "resources.admission.get",
+            "resources.admission.list",
+            "resources.admission.cancel"
           ]
         },
         "ok": {
@@ -1311,6 +1315,126 @@
               ]
             }
           ]
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "ok",
+        "result"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "resources.admission.submit"
+        },
+        "ok": {
+          "const": true
+        },
+        "result": {
+          "$ref": "resource-queue.schema.json#/$defs/AdmissionReference"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "ok",
+        "result"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "resources.admission.get"
+        },
+        "ok": {
+          "const": true
+        },
+        "result": {
+          "$ref": "resource-queue.schema.json#/$defs/RecordReference"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "ok",
+        "result"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "resources.admission.list"
+        },
+        "ok": {
+          "const": true
+        },
+        "result": {
+          "$ref": "resource-queue.schema.json#/$defs/Page"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "ok",
+        "result"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "resources.admission.cancel"
+        },
+        "ok": {
+          "const": true
+        },
+        "result": {
+          "$ref": "resource-queue.schema.json#/$defs/CancellationReference"
         }
       },
       "required": [

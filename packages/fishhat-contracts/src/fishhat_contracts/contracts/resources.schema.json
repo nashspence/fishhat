@@ -473,6 +473,17 @@
             "gc_jitter_seconds"
           ],
           "additionalProperties": false
+        },
+        "admission": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AdmissionSelection"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Required explicit scheduling configuration. Null means resource-queued workload admission is unavailable, never unlimited capacity or a legacy direct-execution path. Every native adapter process still needs a separately approved finite control admission or a current workload grant. This source selection is resolved by the existing local host owner; it creates no additional network authority or per-account daemon."
         }
       },
       "required": [
@@ -480,7 +491,8 @@
         "control",
         "pools",
         "accounts",
-        "policy"
+        "policy",
+        "admission"
       ],
       "additionalProperties": false,
       "description": "Portable capacity and isolation requirements selecting receiving-owner-approved storage and compute instances. Source cannot enroll adapters or prove enforcement. The receiving owner must resolve provider aliases, verify independent control capacity, native isolation and accounting coverage for the chosen platform/profile, or refuse growth. No filesystem, service manager or provider is selected by this contract."
@@ -870,6 +882,63 @@
         "incarnation"
       ],
       "additionalProperties": false
+    },
+    "AdmissionSelection": {
+      "type": "object",
+      "properties": {
+        "instance": {
+          "$ref": "common.schema.json#/$defs/Id"
+        },
+        "allocation": {
+          "$ref": "adapter.schema.json#/$defs/Handle"
+        },
+        "capacity": {
+          "$ref": "resource-admission.schema.json#/$defs/ResourceVector"
+        },
+        "control_reserve": {
+          "$ref": "resource-admission.schema.json#/$defs/ResourceVector"
+        },
+        "resident_reserve": {
+          "$ref": "resource-admission.schema.json#/$defs/ResourceVector"
+        },
+        "accounts": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "common.schema.json#/$defs/Id"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "maximum": {
+                "$ref": "resource-admission.schema.json#/$defs/ResourceVector"
+              },
+              "classes": {
+                "type": "array",
+                "items": {
+                  "$ref": "common.schema.json#/$defs/Id"
+                },
+                "minItems": 1,
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "maximum",
+              "classes"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "instance",
+        "allocation",
+        "capacity",
+        "control_reserve",
+        "resident_reserve",
+        "accounts"
+      ],
+      "additionalProperties": false,
+      "description": "Host-approved scheduling selection and conservative compute budgets. Provider endpoints, native node identities, capacity-domain incarnations and observed capabilities remain private owner/adapter state. The host resolves this exact approved selection to a resource-admission AdmissionPolicy under current native authority; configuration alone never proves physical capacity or enforcement. One authority owns each canonical capacity domain, including across adapter aliases. Control reserve remains available to bounded owner control/reconciliation under an explicit ProcessAdmission; it is not an unlimited bypass. Resident reserve accounts for baseline workloads outside the live grant ledger, never the same workload twice. Newly admitted resident grants remain charged until verified cessation, including after deployment completion and while idle. Account maxima bound admission commitments beneath the enrolled compute envelope; classes cannot increase that envelope or select another scheduler. Capacity includes control and baseline resident reserves; this v1 selection does not authorize overcommit."
     }
   }
 }

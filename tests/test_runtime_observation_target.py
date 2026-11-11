@@ -26,6 +26,7 @@ from tests.adapter_support import (
     runtime_registry,
     runtime_sources,
 )
+from tests.process_admission_support import process_admission
 from tests.test_adapter_process import identity
 
 CHECK_PURPOSE = {
@@ -177,6 +178,9 @@ def test_runtime_request_target_cannot_supply_its_own_approval(method, changed):
         "request": identity(canonical(query)),
         "configuration": identity(canonical(instance["configuration"])),
         "inputs": identity(b"", "application/x-ndjson"),
+        "execution_admission": process_admission(
+            query["input"]["binding"], (identity(canonical(query)))["digest"]
+        ),
         "private_inputs": None,
     }
     with pytest.raises(ContractError, match="runtime observation target is not approved"):
@@ -187,6 +191,9 @@ def test_runtime_request_target_cannot_supply_its_own_approval(method, changed):
             descriptor=descriptor,
             approved_installation=installation,
             expected_executor=query["input"]["binding"],
+            expected_execution_admission=process_admission(
+                manifest["executor"], manifest["request"]["digest"]
+            ),
             expected_private_use=None,
             expected_runtime_binding=expected,
         )
@@ -197,6 +204,9 @@ def test_runtime_request_target_cannot_supply_its_own_approval(method, changed):
         descriptor=descriptor,
         approved_installation=installation,
         expected_executor=query["input"]["binding"],
+        expected_execution_admission=process_admission(
+            manifest["executor"], manifest["request"]["digest"]
+        ),
         expected_private_use=None,
         expected_runtime_binding=target,
     )

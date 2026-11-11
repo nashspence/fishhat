@@ -21,6 +21,7 @@ CONTRASTS = {
     "bootstrap-source": {"forgejo-restic", "git-bundle"},
     "runtime": {"podman-quadlet", "docker-compose", "systemd-native"},
     "compute": {"systemd-cgroup", "delegated-cgroup"},
+    "scheduler": {"slurm", "nomad"},
     "storage": {"xfs-project", "ext4-filesystem"},
     "capture": {"quiesced-files", "postgresql-capture"},
     "backup": {"restic", "sealed-archive"},

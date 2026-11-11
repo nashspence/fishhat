@@ -4446,6 +4446,7 @@
             "secret-candidate",
             "workflow-input",
             "plan-input",
+            "resource-admission",
             "lifecycle-input"
           ]
         },

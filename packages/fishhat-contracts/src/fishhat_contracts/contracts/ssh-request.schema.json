@@ -618,6 +618,7 @@
                 "secret-candidate",
                 "workflow-input",
                 "plan-input",
+                "resource-admission",
                 "lifecycle-input"
               ]
             },
@@ -971,7 +972,7 @@
           "type": "object",
           "properties": {
             "reference": {
-              "$ref": "common.schema.json#/$defs/RecordReference"
+              "$ref": "common.schema.json#/$defs/CurrentRecordReference"
             },
             "offset": {
               "type": "integer",
@@ -1386,6 +1387,116 @@
         },
         "params": {
           "$ref": "records.schema.json#/$defs/SubmissionClose"
+        },
+        "admission_contract": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "params"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "resources.admission.submit"
+        },
+        "params": {
+          "$ref": "resource-queue.schema.json#/$defs/InputReference"
+        },
+        "admission_contract": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "params"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "resources.admission.get"
+        },
+        "params": {
+          "$ref": "resource-queue.schema.json#/$defs/LookupRequest"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "params"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "resources.admission.list"
+        },
+        "params": {
+          "$ref": "resource-queue.schema.json#/$defs/ListRequest"
+        }
+      },
+      "required": [
+        "format",
+        "message_id",
+        "method",
+        "params"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/owner/v1"
+        },
+        "message_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?![\\s\\S])"
+        },
+        "method": {
+          "const": "resources.admission.cancel"
+        },
+        "params": {
+          "$ref": "resource-queue.schema.json#/$defs/CancelRequest"
         },
         "admission_contract": {
           "$ref": "common.schema.json#/$defs/Digest"

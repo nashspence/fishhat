@@ -16,6 +16,7 @@ from fishhat_adapters.process import validate_process_launch
 from fishhat_client.bootstrap import prepare_request
 from fishhat_contracts.validation import ContractError, digest
 
+from tests.process_admission_support import process_admission
 from tests.test_adapter_handoffs import artifact, attempt_for, response_for
 from tests.test_adapter_invocations import recovered
 from tests.test_adapter_process import launch
@@ -163,6 +164,9 @@ def test_exact_bootstrap_selection_survives_initial_dispatch_and_lost_reply(
             descriptor=value["descriptor"],
             approved_installation=value["installation"],
             expected_executor=executor,
+            expected_execution_admission=process_admission(
+                manifest["executor"], manifest["request"]["digest"]
+            ),
             expected_private_use=None,
             retained_invocation=call,
             approved_bootstrap_request_digest=digest(request),

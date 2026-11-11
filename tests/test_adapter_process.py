@@ -24,6 +24,7 @@ from fishhat_contracts.validation import ContractError, canonical
 
 from scripts.validation_timeouts import Deadline, watchdog
 from tests.linear_support import assert_linear, measure
+from tests.process_admission_support import process_admission
 from tests.test_adapter_handoffs import installed, invocation_for, response_for
 from tests.test_adapter_invocations import recovered
 
@@ -82,6 +83,9 @@ def launch(call, configuration, mode="mutation", inputs=b""):
         "request": identity(canonical(payload)),
         "configuration": identity(canonical(configuration)),
         "inputs": identity(inputs, "application/x-ndjson"),
+        "execution_admission": process_admission(
+            call["attempt"]["executor"], (identity(canonical(payload)))["digest"]
+        ),
         "private_inputs": None,
     }, payload
 
@@ -119,6 +123,9 @@ def run_peer(
         approved_installation=installation,
         expected_executor=call["attempt"]["executor"],
         retained_invocation=call,
+        expected_execution_admission=process_admission(
+            manifest["executor"], manifest["request"]["digest"]
+        ),
         expected_private_use=None,
     )
     verify_process_inputs(
@@ -372,6 +379,9 @@ def test_launch_rejects_substituted_inputs_and_query_mutation(change):
             descriptor=descriptor,
             approved_installation=installation,
             expected_executor=call["attempt"]["executor"],
+            expected_execution_admission=process_admission(
+                manifest["executor"], manifest["request"]["digest"]
+            ),
             expected_private_use=None,
         )
 
@@ -549,6 +559,9 @@ def growth_case(count):
             descriptor=descriptor,
             approved_installation=installation,
             expected_executor=executor,
+            expected_execution_admission=process_admission(
+                manifest["executor"], manifest["request"]["digest"]
+            ),
             expected_private_use=None,
         )
         verify_process_inputs(

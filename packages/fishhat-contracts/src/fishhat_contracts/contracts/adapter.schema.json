@@ -18,6 +18,7 @@
         "enum": [
           "runtime",
           "compute",
+          "scheduler",
           "storage",
           "capture",
           "backup",
@@ -77,6 +78,7 @@
         "enum": [
           "runtime",
           "compute",
+          "scheduler",
           "storage",
           "capture",
           "backup",
@@ -373,6 +375,7 @@
           "enum": [
             "runtime",
             "compute",
+            "scheduler",
             "storage",
             "capture",
             "backup",
@@ -2088,6 +2091,7 @@
           "enum": [
             "runtime",
             "compute",
+            "scheduler",
             "storage",
             "capture",
             "backup",
@@ -2188,6 +2192,9 @@
         },
         {
           "$ref": "compute-adapter.schema.json#/$defs/MutationRequest"
+        },
+        {
+          "$ref": "scheduler-adapter.schema.json#/$defs/MutationRequest"
         },
         {
           "$ref": "storage-adapter.schema.json#/$defs/MutationRequest"

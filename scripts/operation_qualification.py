@@ -48,7 +48,11 @@ def inventory(root: Path = ROOT) -> tuple[dict[str, dict[str, Any]], set[str]]:
             schema=item["arguments_schema"]["$ref"],
         )
     for item in load("ssh-methods.json")["methods"]:
-        add("rpc:" + item["name"], "declared-rpc", tools=["host-ops", "app-ops"])
+        add(
+            "rpc:" + item["name"],
+            "declared-rpc",
+            tools=item.get("owners", ["host-ops", "app-ops"]),
+        )
     for item in load("owner-cli.json")["forms"]:
         tool = item["tokens"][0]
         add(

@@ -30,6 +30,7 @@ members = [
     "a-fishhat-launchd-adapter",
     "a-fishhat-nftables-adapter",
     "a-fishhat-nginx-adapter",
+    "a-fishhat-nomad-adapter",
     "a-fishhat-openbao-database-adapter",
     "a-fishhat-openbao-kv-adapter",
     "a-fishhat-podman-quadlet-runtime",
@@ -39,6 +40,7 @@ members = [
     "a-fishhat-quiesced-files-adapter",
     "a-fishhat-restic-adapter",
     "a-fishhat-sealed-archive-adapter",
+    "a-fishhat-slurm-adapter",
     "a-fishhat-systemd-adapter",
     "a-fishhat-systemd-cgroup-adapter",
     "a-fishhat-systemd-native-runtime",
@@ -331,6 +333,23 @@ dependencies = [
 requires-dist = [{ name = "fishhat-adapter-support", editable = "packages/fishhat-adapter-support" }]
 
 [[package]]
+name = "a-fishhat-nomad-adapter"
+version = "0.1.0.dev0"
+source = { editable = "some-implementations/fishhat/schedulers/nomad" }
+dependencies = [
+    { name = "fishhat-adapter-protocol" },
+    { name = "fishhat-adapter-support" },
+    { name = "fishhat-contracts" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "fishhat-adapter-protocol", editable = "packages/fishhat-adapter-protocol" },
+    { name = "fishhat-adapter-support", editable = "packages/fishhat-adapter-support" },
+    { name = "fishhat-contracts", editable = "packages/fishhat-contracts" },
+]
+
+[[package]]
 name = "a-fishhat-openbao-database-adapter"
 version = "0.1.0.dev0"
 source = { editable = "some-implementations/fishhat/credentials/openbao-database" }
@@ -434,6 +453,23 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [{ name = "fishhat-adapter-support", editable = "packages/fishhat-adapter-support" }]
+
+[[package]]
+name = "a-fishhat-slurm-adapter"
+version = "0.1.0.dev0"
+source = { editable = "some-implementations/fishhat/schedulers/slurm" }
+dependencies = [
+    { name = "fishhat-adapter-protocol" },
+    { name = "fishhat-adapter-support" },
+    { name = "fishhat-contracts" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "fishhat-adapter-protocol", editable = "packages/fishhat-adapter-protocol" },
+    { name = "fishhat-adapter-support", editable = "packages/fishhat-adapter-support" },
+    { name = "fishhat-contracts", editable = "packages/fishhat-contracts" },
+]
 
 [[package]]
 name = "a-fishhat-systemd-adapter"

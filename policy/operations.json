@@ -1740,6 +1740,74 @@
       "use_case": "record.read"
     },
     {
+      "id": "owner-form:resource-admission-cancel",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-owner-form",
+      "tests": {
+        "failure": [],
+        "growth": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops"
+      ],
+      "use_case": "resources.admission.cancel"
+    },
+    {
+      "id": "owner-form:resource-admission-get",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-owner-form",
+      "tests": {
+        "failure": [],
+        "growth": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops"
+      ],
+      "use_case": "resources.admission.get"
+    },
+    {
+      "id": "owner-form:resource-admission-list",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-owner-form",
+      "tests": {
+        "failure": [],
+        "growth": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops"
+      ],
+      "use_case": "resources.admission.list"
+    },
+    {
+      "id": "owner-form:resource-admission-submit",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-owner-form",
+      "tests": {
+        "failure": [],
+        "growth": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops"
+      ],
+      "use_case": "resources.admission.submit"
+    },
+    {
       "id": "owner-form:resources",
       "implementation": null,
       "recovery": "required",
@@ -2632,6 +2700,70 @@
       ]
     },
     {
+      "id": "rpc:resources.admission.cancel",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-rpc",
+      "tests": {
+        "failure": [],
+        "growth": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops"
+      ]
+    },
+    {
+      "id": "rpc:resources.admission.get",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-rpc",
+      "tests": {
+        "failure": [],
+        "growth": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops"
+      ]
+    },
+    {
+      "id": "rpc:resources.admission.list",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-rpc",
+      "tests": {
+        "failure": [],
+        "growth": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops"
+      ]
+    },
+    {
+      "id": "rpc:resources.admission.submit",
+      "implementation": null,
+      "recovery": "required",
+      "status": "unimplemented",
+      "surface": "declared-rpc",
+      "tests": {
+        "failure": [],
+        "growth": [],
+        "recovery": [],
+        "success": []
+      },
+      "tools": [
+        "host-ops"
+      ]
+    },
+    {
       "id": "rpc:resources.observe",
       "implementation": null,
       "recovery": "required",
@@ -2779,10 +2911,10 @@
     "fishhat/host-ops/src/fishhat_host/cli.py": "d8457ca822e6d01be0b1301fb439ef9f5ed74b6224aca2d85feb189dadeb611c",
     "packages/fishhat-contracts/src/fishhat_contracts/contracts/actions.json": "d2139b4286ed2f531e4a71a8a1ab38293e2de00197a9560ee37d9c43509cb1bc",
     "packages/fishhat-contracts/src/fishhat_contracts/contracts/client-commands.json": "5b3e29df1fb1fecd18ef5699f8dc89da22c2f2dd6154f9d18a30f18d26db7f3e",
-    "packages/fishhat-contracts/src/fishhat_contracts/contracts/owner-cli.json": "b4dc758b46410697d3d451d1623ca9ea9a11bd7b84cf2254378090fe2e3be62a",
-    "packages/fishhat-contracts/src/fishhat_contracts/contracts/ssh-methods.json": "18e6b8664d0c8134b760bc0aa48e804992f7c547de02e59659f170fee5573637",
-    "policy/components.toml": "d83506dc63602aec3932e1ac35244efca0db494a38a5d4cd9ec94c68476b235c",
-    "policy/interfaces.json": "8077224b0f294b6bf2c1e1589590f1870d929a327af737390c4404f23081cdfa",
+    "packages/fishhat-contracts/src/fishhat_contracts/contracts/owner-cli.json": "f8d17432379d9141fcd45d49c3f59b693e7d44f150fb6c222b804c2314886757",
+    "packages/fishhat-contracts/src/fishhat_contracts/contracts/ssh-methods.json": "dad4dd72e90d18efb57be9617a5a990c62d3b448e4aebb3bf0f35cf1e768a1a3",
+    "policy/components.toml": "854e911c9e5c3e5605ef14319e43fad90f692b79fa2438a7feb2b69f5390b48c",
+    "policy/interfaces.json": "219b0b73e7bece9c4962f7366057d5850a0794c65df922d7fa7a5a633c682012",
     "policy/operation-coverage.toml": "a4f3f76cdbb755ea03ba39eb36ccc5ebcd682f6aabaacaa5fb88f849d42c54c4",
     "release.toml": "7057aceac0232f24bb962384c27058c2f1899bd81fa6bcf49f476ba1eb777631",
     "some-implementations/fishhat/backup/restic/pyproject.toml": "665f88e34c00d431e829678503ae3bb7075294d0db3f303c318f87dbdab651e8",
@@ -2810,6 +2942,8 @@
     "some-implementations/fishhat/runtimes/docker-compose/pyproject.toml": "0aa6b8d10f54dc715f71d0d950e79e6049e436d81cbade13d386f8a5ff360275",
     "some-implementations/fishhat/runtimes/podman-quadlet/pyproject.toml": "e655e2d2ab3ebff3f614718c79c4987ea5a2f7cfc3a18edbcd9a081682d80a99",
     "some-implementations/fishhat/runtimes/systemd-native/pyproject.toml": "aed3215ba71bec6fbe71ce405d89b25d6292bb3f00f6f5e25f6a405bd515cfd6",
+    "some-implementations/fishhat/schedulers/nomad/pyproject.toml": "84587bdb8d11ee4a85ac297b543ef506f038d44af5b65243a58b8005a5ed638b",
+    "some-implementations/fishhat/schedulers/slurm/pyproject.toml": "23c6631b17b1ef22a1760830694aba8fb8f8af8d680b3e4125730b5b4052e3a9",
     "some-implementations/fishhat/secrets/forgejo-age/pyproject.toml": "5bea0f8ba1749699814b6cf81c9f62a64a798c6b5f6670adcdc62f2e9fec1b94",
     "some-implementations/fishhat/secrets/openbao-kv/pyproject.toml": "dd4cb6e9280dbab7e45d38cc02b71e481a2ecb3cf9e855c8109c6e42f728303f",
     "some-implementations/fishhat/services/launchd/pyproject.toml": "0c49504a73f8df355c0af4aad57577e75c12bbcdf86d41f9fd218a04c48c564e",

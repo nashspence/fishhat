@@ -710,6 +710,17 @@ def _validate_record_result(
         validate_record_chunk(
             result, result["reference"], offset=result["offset"], length=CHUNK_BYTES
         )
+    elif result["kind"] in {
+        "ResourceAdmission",
+        "ResourceAdmissionCancellation",
+        "ResourceAdmissionPage",
+    }:
+        from .resource_queue import validate_admission_page, validate_admission_record
+
+        if result["kind"] == "ResourceAdmissionPage":
+            validate_admission_page(result, retained_readers=retained_readers)
+        else:
+            validate_admission_record(result)
     else:
         validate_log_page(result, expected_owner=result["owner"], resource=result["resource"])
 
@@ -851,7 +862,14 @@ def validate_cli_result(
         from .history import validate_history_result
 
         validate_history_result(result, retained_readers=retained_readers)
-    elif kind in ("RecordReference", "RecordChunk", "EventPage"):
+    elif kind in (
+        "RecordReference",
+        "RecordChunk",
+        "EventPage",
+        "ResourceAdmission",
+        "ResourceAdmissionCancellation",
+        "ResourceAdmissionPage",
+    ):
         _validate_record_result(result, retained_readers=retained_readers)
     elif kind in ("OperationPage", "WorkflowPage"):
         validate("records.schema.json", result, kind)

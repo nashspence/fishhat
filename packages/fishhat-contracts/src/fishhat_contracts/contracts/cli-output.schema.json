@@ -117,7 +117,7 @@
               "$ref": "resource-records.schema.json#/$defs/ResourceReport"
             },
             {
-              "$ref": "common.schema.json#/$defs/RecordReference"
+              "$ref": "common.schema.json#/$defs/CurrentRecordReference"
             },
             {
               "$ref": "common.schema.json#/$defs/RecordChunk"
@@ -181,6 +181,15 @@
             },
             {
               "$ref": "owner-history.schema.json#/$defs/HistoricalSubmissionRefusal"
+            },
+            {
+              "$ref": "resource-queue.schema.json#/$defs/Record"
+            },
+            {
+              "$ref": "resource-queue.schema.json#/$defs/CancellationReceipt"
+            },
+            {
+              "$ref": "resource-queue.schema.json#/$defs/Page"
             }
           ]
         },

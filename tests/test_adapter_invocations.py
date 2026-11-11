@@ -7,6 +7,7 @@ from fishhat_adapters import check_invocation, check_request, check_response
 from fishhat_contracts.validation import ContractError, digest
 
 from tests.adapter_support import OWNER, identifier
+from tests.process_admission_support import process_admission
 from tests.test_adapter_dns import change, generation, rrset
 from tests.test_adapter_effects import coordinator, prepare, result
 from tests.test_adapter_handoffs import (
@@ -421,6 +422,9 @@ def test_backup_success_has_method_specific_custody_and_noop_deletion_identity(m
                 "descriptor": descriptor,
                 "approved_installation": installation,
                 "expected_executor": executor,
+                "expected_execution_admission": process_admission(
+                    executor, manifest["request"]["digest"]
+                ),
                 "expected_private_use": None,
                 "retained_invocation": invocation,
             }

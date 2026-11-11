@@ -1,0 +1,521 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fishhat.invalid/contracts/resource-queue.schema.json",
+  "description": "Owner-facing resource admission and queue inspection. The receiving host owns shared capacity policy and retained queue custody across application owners. These declarations and pure validators do not implement native persistence, permissions, dispatch, scheduling or resource isolation.",
+  "x-fishhat-contract-dependencies": [
+    "#/$defs/Record",
+    "#/$defs/CancellationReceipt",
+    "resource-admission.schema.json#/$defs/ResourceRequest"
+  ],
+  "$defs": {
+    "Owner": {
+      "allOf": [
+        {
+          "$ref": "common.schema.json#/$defs/Owner"
+        },
+        {
+          "properties": {
+            "tool": {
+              "const": "host-ops"
+            }
+          }
+        }
+      ]
+    },
+    "Resource": {
+      "allOf": [
+        {
+          "$ref": "common.schema.json#/$defs/Resource"
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "host"
+            }
+          }
+        }
+      ]
+    },
+    "InputReference": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "#/$defs/Owner"
+        },
+        "request_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "input": {
+          "allOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Handle"
+            },
+            {
+              "properties": {
+                "purpose": {
+                  "const": "resource-admission"
+                },
+                "binding": {
+                  "properties": {
+                    "kind": {
+                      "const": "staging"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "owner",
+        "request_id",
+        "input"
+      ],
+      "additionalProperties": false,
+      "description": "One bounded reference to the complete canonical ResourceRequest already in content custody. The host owner validates exact owner epoch, request ID, staged bytes, current principal, host resource and resource-admission purpose before retaining the intent. The request domain and work context must independently match installed host policy and the requesting workload owner's exact reviewed proposal or accepted continuation. Account/class, owner and authorization digests in caller input do not authorize themselves. After current disclosure authorization, an exact retained request ID and input digest replay its original queue custody before new-input expiry or freshness checks; changed bytes conflict. New submission uses the fresh admission_contract guard and atomically pins complete input custody before acknowledgment. A queue record is not an accepted Operation, a mutation hold, a grant or permission to execute. Large input collections use content chunks without a total count cap."
+    },
+    "LookupRequest": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "#/$defs/Owner"
+        },
+        "record_kind": {
+          "enum": [
+            "ResourceAdmission",
+            "ResourceAdmissionCancellation"
+          ]
+        },
+        "id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        }
+      },
+      "required": [
+        "owner",
+        "record_kind",
+        "id"
+      ],
+      "additionalProperties": false,
+      "description": "Read the exact queue record or immutable cancellation receipt in this host owner epoch after current permission checks for its protected host and workload context. Missing or undisclosable records leave submission/cancellation acceptance unknown. Lookup cannot create a request, establish absence, authorize execution or release capacity. Historical owner epochs use the existing owner.history/history.list/history.read routes and exact retained readers."
+    },
+    "ListRequest": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "#/$defs/Owner"
+        },
+        "record_kind": {
+          "enum": [
+            "ResourceAdmission",
+            "ResourceAdmissionCancellation"
+          ]
+        },
+        "resource": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Resource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "active_only": {
+          "type": "boolean"
+        },
+        "cursor": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Cursor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        }
+      },
+      "required": [
+        "owner",
+        "record_kind",
+        "resource",
+        "active_only",
+        "cursor",
+        "limit"
+      ],
+      "additionalProperties": false,
+      "description": "Begin or continue a stable permission-filtered traversal with the same host owner epoch, actual principal, record kind, resource and active filter. Native indexes bound scan work even for denied entries. Active ResourceAdmission records include pending/review-required work and every retained uncertain execution, unreleased grant or recovery obligation even when launch eligibility is closed. Cancellation receipts are immutable retained history and require active_only false. An empty page may have continuation; neither page size nor scan window caps total accepted work. Expired cursors fail explicitly and a fresh traversal rediscovers complete retained custody.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "record_kind": {
+                "const": "ResourceAdmissionCancellation"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "active_only": {
+                "const": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "CancelRequest": {
+      "type": "object",
+      "properties": {
+        "owner": {
+          "$ref": "#/$defs/Owner"
+        },
+        "cancellation_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "request_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "request_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "confirmed": {
+          "const": true
+        }
+      },
+      "required": [
+        "owner",
+        "cancellation_id",
+        "request_id",
+        "request_digest",
+        "confirmed"
+      ],
+      "additionalProperties": false,
+      "description": "Request durable stop intent for one exact retained ResourceRequest. The cancellation_id is independent of the target request ID and replays only this same canonical command. Current host owner authority, actual principal and workload scope are rechecked under the fresh-admission guard before new intent; exact retained replay remains a read. The receiver closes future launch eligibility and drives native scheduler cancellation through its original retained submission. This request cannot submit arbitrary backend identifiers, grant itself capacity, cancel an accepted Operation or release mutation/resource holds. Acknowledgment is an immutable stop-intent receipt; native cessation and no-future-start evidence remain separate."
+    },
+    "Record": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "fishhat.resource-queue/v1"
+        },
+        "kind": {
+          "const": "ResourceAdmission"
+        },
+        "id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "owner": {
+          "$ref": "#/$defs/Owner"
+        },
+        "resource": {
+          "$ref": "#/$defs/Resource"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "request": {
+          "$ref": "resource-admission.schema.json#/$defs/ResourceRequest"
+        },
+        "eligibility": {
+          "enum": [
+            "pending",
+            "eligible",
+            "review-required",
+            "closed"
+          ]
+        },
+        "last_known": {
+          "anyOf": [
+            {
+              "$ref": "resource-admission.schema.json#/$defs/AdmissionObservation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "observation": {
+          "anyOf": [
+            {
+              "$ref": "resource-admission.schema.json#/$defs/AdmissionObservation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "id",
+        "owner",
+        "resource",
+        "generation",
+        "request",
+        "eligibility",
+        "last_known",
+        "observation"
+      ],
+      "additionalProperties": false,
+      "description": "Host-owned resource queue custody for one immutable ResourceRequest. id equals request.id; owner equals request.domain.owner; resource names that exact host. generation advances only through the owning host journal and never grants caller write authority. Launch eligibility is independent of observed scheduler state: review-required preserves stale pending work for explicit review under a new request identity; closed prevents new launches but does not release capacity. last_known preserves the last complete observation, including exact submission/grant and positive release/closure evidence. A later missing or unknown observation cannot erase or replace those facts. A complete latest observation equals last_known. Native transition checks preserve exact request and execution identities, monotonic grant state and terminal evidence. Queue custody never constitutes operation acceptance. A reviewed proposal still needs normal fresh Plan acceptance; an accepted continuation keeps original custody and expiry semantics. Current permissions, policy, grants and generations are independently checked at grant and actual launch. A scheduler grant cannot bypass or weaken mutation exclusion."
+    },
+    "CancellationReceipt": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "fishhat.resource-queue/v1"
+        },
+        "kind": {
+          "const": "ResourceAdmissionCancellation"
+        },
+        "id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "owner": {
+          "$ref": "#/$defs/Owner"
+        },
+        "resource": {
+          "$ref": "#/$defs/Resource"
+        },
+        "request_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "request_digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "observed_generation": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "disposition": {
+          "enum": [
+            "stop-requested",
+            "already-closed"
+          ]
+        },
+        "recorded_at": {
+          "$ref": "common.schema.json#/$defs/Time"
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "id",
+        "owner",
+        "resource",
+        "request_id",
+        "request_digest",
+        "observed_generation",
+        "disposition",
+        "recorded_at"
+      ],
+      "additionalProperties": false,
+      "description": "Immutable host acknowledgment of one exact cancellation command, retained before reply and independently discoverable by its cancellation ID. request_id/request_digest identify the unchanged ResourceRequest; observed_generation reports the queue record observed when the intent was retained. stop-requested records stop intent only; already-closed records that launch eligibility was already revoked. Neither disposition proves submitted work absent, descendants stopped, grant release, rollback or accepted Operation cancellation. Replay retains the original receipt and attribution. The owner independently checks current disclosure permission; later queue progress cannot overwrite this receipt. Contextual intake independently loads the original ResourceRequest and compares its exact ID, digest, domain owner and host resource; a caller-supplied cancellation command alone cannot establish that target. Context-free historical shape validation makes no target-authorization claim."
+    },
+    "RecordReference": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "deployment-ops/record-reference/v1"
+        },
+        "kind": {
+          "const": "RecordReference"
+        },
+        "snapshot_id": {
+          "$ref": "common.schema.json#/$defs/UUID"
+        },
+        "owner": {
+          "$ref": "#/$defs/Owner"
+        },
+        "record": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "enum": [
+                "ResourceAdmission",
+                "ResourceAdmissionCancellation"
+              ]
+            },
+            "id": {
+              "$ref": "common.schema.json#/$defs/UUID"
+            },
+            "generation": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "resource": {
+              "$ref": "#/$defs/Resource"
+            }
+          },
+          "required": [
+            "kind",
+            "id",
+            "generation",
+            "resource"
+          ],
+          "additionalProperties": false
+        },
+        "schema": {
+          "$ref": "common.schema.json#/$defs/SchemaIdentity"
+        },
+        "digest": {
+          "$ref": "common.schema.json#/$defs/Digest"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "snapshot_id",
+        "owner",
+        "record",
+        "schema",
+        "digest",
+        "size"
+      ],
+      "additionalProperties": false,
+      "description": "One complete immutable host-owned queue or cancellation record snapshot. ResourceAdmission uses its queue generation and ResourceAdmissionCancellation has null generation. Both require the exact protected host resource. The complete payload is read through bounded record.read chunks and verified against exact schema, owner, record identity, byte length and digest. Current principal and workload/host disclosure permission apply to lookup and every chunk; possession supplies no authority. Large records remain complete, and later snapshots never rewrite these bytes. A retained historical reader must be independently installed for the exact payload schema closure. Queue custody, stop intent, scheduler allocation and accepted Operation execution remain distinct.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "record": {
+                "properties": {
+                  "kind": {
+                    "const": "ResourceAdmissionCancellation"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "record": {
+                "properties": {
+                  "generation": {
+                    "type": "null"
+                  }
+                }
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "record": {
+                "properties": {
+                  "generation": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "AdmissionReference": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordReference"
+        },
+        {
+          "properties": {
+            "record": {
+              "properties": {
+                "kind": {
+                  "const": "ResourceAdmission"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "CancellationReference": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/RecordReference"
+        },
+        {
+          "properties": {
+            "record": {
+              "properties": {
+                "kind": {
+                  "const": "ResourceAdmissionCancellation"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Page": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "fishhat.resource-queue-page/v1"
+        },
+        "kind": {
+          "const": "ResourceAdmissionPage"
+        },
+        "request": {
+          "$ref": "#/$defs/ListRequest"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RecordReference"
+          },
+          "maxItems": 64
+        },
+        "next_cursor": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/Cursor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "history_complete": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "request",
+        "items",
+        "next_cursor",
+        "history_complete"
+      ],
+      "additionalProperties": false,
+      "description": "One bounded page of exact immutable record snapshots for the original ListRequest. Every item has the same host owner, selected kind and any exact resource filter; no logical record is repeated in a traversal. Current authorization precedes disclosure and is checked again for every record.read chunk. The complete original records, including all requested resources and retained evidence, are retrievable through existing chunked record delivery. history_complete false exposes unavailable retained history and cannot prove absence; continuation and frame bounds never truncate complete extent. history_complete describes retained-history availability, independently of whether this is the final page: true may accompany next_cursor, and false may accompany null next_cursor. Neither flag proves an individual request absent, an Operation unaccepted or resource capacity released."
+    }
+  }
+}
