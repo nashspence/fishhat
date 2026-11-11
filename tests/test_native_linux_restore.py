@@ -349,6 +349,7 @@ def test_admitted_handle_refuses_rebinding_and_cleanup_preserves_foreign_neighbo
     foreign.mkdir(mode=0o700)
     canary = foreign / "canary"
     canary.write_bytes(b"unrelated")
+    canary.chmod(0o600)
     original = observed_files([canary])
     with capture(f, captured) as sealed:
         with pytest.raises(restore.RestoreError):
