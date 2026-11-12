@@ -18,7 +18,7 @@ from scripts.validation_timeouts import Policy, using
 CHECK_PURPOSE = {
     "purpose": "validation-tooling",
     "authority": ["scripts/native_linux_enrollment.py", "scripts/validation_timeouts.py"],
-    "scope": "enrollment refusal, exact controller identities, maintained watchdogs, allowlisted secret-safe package/image failure observations, sanitized provisioning failures, mandatory separate observed-successor composition and source/statistics receipts",
+    "scope": "enrollment refusal, exact controller identities, maintained watchdogs, allowlisted secret-safe package/image failure observations, sanitized provisioning failures, mandatory observed-successor proof in its selected composition profile and source/statistics receipts",
     "relationship": "no-product-claim",
     "reason": "Controlled package/tool responses never install packages. Real unprivileged children exercise timeout/reaping and closed stdout/stderr classification without exposing their output. Only the separate admitted disposable-runner job can establish actual controller prerequisites; no guest or native owner is qualified here.",
     "claims": [],
@@ -509,24 +509,19 @@ def test_selected_main_requires_the_successor_timeline_before_success(
     monkeypatch.setattr(native, "provision_tools", lambda *a: {"controlled": True})
     monkeypatch.setattr(native, "probe_controller", lambda *a: {"controlled": True})
     monkeypatch.setattr(native, "controller_faults", lambda *a: None)
-    monkeypatch.setattr(
-        native, "guest_storage_faults", lambda *a: a[-1].append({"controlled_storage_fault": True})
-    )
-    monkeypatch.setattr(
-        native, "guest_reboot_faults", lambda *a: a[-1].append({"controlled_reboot_fault": True})
-    )
-    monkeypatch.setattr(native, "verify_guest_cleanup", lambda *a: None)
-    monkeypatch.setattr(
-        native, "boot_guest", lambda *a: a[-1].update(controlled_original_guest=True)
-    )
-    monkeypatch.setattr(native, "guest_inputs", lambda *a: nullcontext(SimpleNamespace()))
     observed = []
 
-    def timeline(tools, binary, temporary, report):
+    def timeline(tools, binary, temporary, report, *, restored_successor):
         assert tools == {"controlled": True} and binary == "c" * 64 and temporary == tmp_path
+        assert restored_successor is True
         observed.append("successor-timeline")
         if result == "raises":
             raise native.SnapshotError("controlled-timeline-failure")
+        report["restored_successor"] = {
+            "status": "passed",
+            "comparison_verified": True,
+            "resources_destroyed_with_guest": True,
+        }
         if result != "missing-status":
             report["status"] = "failed" if result == "failed" else "passed"
         if result != "missing-observation":
@@ -534,15 +529,19 @@ def test_selected_main_requires_the_successor_timeline_before_success(
 
     monkeypatch.setattr(native, "qualify_source_successor", timeline)
     output = tmp_path / "report.json"
-    assert native.main(["--github-hosted-only", "--output", str(output)]) == (
-        0 if result == "complete" else 1
-    )
+    assert native.main(
+        [
+            "--github-hosted-only",
+            "--profile",
+            "restored-successor",
+            "--output",
+            str(output),
+        ]
+    ) == (0 if result == "complete" else 1)
     actual = json.loads(output.read_text())
     assert observed == ["successor-timeline"]
     assert actual["status"] == ("passed" if result == "complete" else "failed")
-    assert actual["guest"] == {"controlled_original_guest": True}
-    assert actual["guest_storage_faults"] == [{"controlled_storage_fault": True}]
-    assert actual["guest_reboot_faults"] == [{"controlled_reboot_fault": True}]
+    assert actual["profile"] == "restored-successor"
     if result != "complete":
         assert actual["problem"]["stage"] == "guest-snapshot"
         assert actual["problem"]["reason"] == (
