@@ -35,9 +35,10 @@ CHECK_PURPOSE = {
         "scripts/native_linux_roundtrip.py",
         "scripts/native_linux_enrollment.py",
         "scripts/native_linux_restored_boot.py",
+        "scripts/native_linux_restore_interruption.py",
         ".github/workflows/ci.yml",
     ],
-    "scope": "composed original capture, independently witnessed later source and private restored comparison; distinct original/later/restored evidence, incomplete-proof refusal, actual owned-path/process/endpoint absence, failure propagation, scoped statistics and complementary explicitly enrolled main-only profiles retaining complete baseline controls without redundant successor execution",
+    "scope": "composed original capture, independently witnessed later source and private restored comparison with mandatory separately typed partial-restore qualification; distinct original/later/restored evidence, incomplete-proof refusal, actual owned-path/process/endpoint absence, failure propagation, scoped statistics and complementary explicitly enrolled main-only profiles retaining complete baseline controls without redundant successor execution",
     "relationship": "no-product-claim",
     "reason": "Image conversion, initial guest/reboot, native prelaunch and SSH observations are substituted. Actual unprivileged files, sockets and short Python children exercise the maintained capture, successor and restore owners together. Native fixture execution and product checkpoint authority require independent evidence.",
     "claims": [],
@@ -308,7 +309,20 @@ def test_actual_restored_remnant_blocks_final_acceptance(fixture, monkeypatch, k
 
 
 @pytest.mark.parametrize(
-    "result", ["complete", "missing", "failed", "unobserved", "uncleaned", "raises"]
+    "result",
+    [
+        "complete",
+        "missing",
+        "failed",
+        "unobserved",
+        "uncleaned",
+        "raises",
+        "partial-missing",
+        "partial-failed",
+        "partial-unobserved",
+        "partial-writer",
+        "partial-uncleaned",
+    ],
 )
 def test_enrolled_profile_requires_complete_comparison_and_preserves_scope(
     tmp_path, monkeypatch, result
@@ -340,6 +354,22 @@ def test_enrolled_profile_requires_complete_comparison_and_preserves_scope(
         )
         if result == "raises":
             raise comparison.RestoredSuccessorError("controlled-comparison-failure")
+        report["partial_restore"] = {
+            "status": "passed",
+            "interruption_verified": True,
+            "no_writer_admitted": True,
+            "resources_destroyed_with_guest": True,
+        }
+        if result == "partial-missing":
+            report.pop("partial_restore")
+        elif result == "partial-failed":
+            report["partial_restore"]["status"] = "failed"
+        elif result == "partial-unobserved":
+            report["partial_restore"]["interruption_verified"] = False
+        elif result == "partial-writer":
+            report["partial_restore"]["no_writer_admitted"] = False
+        elif result == "partial-uncleaned":
+            report["partial_restore"]["resources_destroyed_with_guest"] = False
         if result != "missing":
             report["restored_successor"] = {
                 "status": "failed" if result == "failed" else "passed",
@@ -357,6 +387,8 @@ def test_enrolled_profile_requires_complete_comparison_and_preserves_scope(
     assert code == (0 if result == "complete" else 1)
     assert report["status"] == ("passed" if result == "complete" else "failed")
     assert report["profile"] == "restored-successor" and report["guest_booted"]
+    if result.startswith("partial-"):
+        assert report["problem"]["reason"] == "required-partial-restore-proof-missing"
     assert report["source_before"] == report["source_after"] == before
     assert valid_stats(report["statistics"])
     assert report["native_tools_qualified"] is report["production_qualified"] is False
@@ -449,3 +481,55 @@ def test_comparison_job_uses_same_enrollment_pins_budget_and_early_controls_as_b
     assert upload["with"]["path"] == "artifacts/native-roundtrip/restored-successor.json"
     assert upload["with"]["if-no-files-found"] == "error"
     assert "tests/test_native_linux_roundtrip.py" in str(workflow["jobs"]["watchdog-regressions"])
+
+
+def test_selected_comparison_profile_requires_the_typed_partial_restore_before_success(
+    fixture, monkeypatch
+):
+    f = fixture
+    called = []
+    actual = getattr(native, "qualify_restore_interruption", None)
+
+    def observed(*args):
+        called.append("typed-partial-restore")
+        assert actual is not None
+        return actual(*args)
+
+    monkeypatch.setattr(native, "qualify_restore_interruption", observed, raising=False)
+    report = {}
+    qualify(f, report)
+    assert called == ["typed-partial-restore"]
+    assert report["partial_restore"]["status"] == "passed"
+    assert report["partial_restore"]["resources_destroyed_with_guest"]
+    assert len(f.controllers) == 3
+    assert_destroyed(f)
+
+
+@pytest.mark.parametrize("failure", ["raises", "missing-statistics"])
+def test_partial_qualification_failure_cannot_accept_the_normal_comparison(
+    fixture, monkeypatch, failure
+):
+    from scripts import native_linux_restore_interruption as interruption
+
+    f = fixture
+    original = native.qualify_restore_interruption
+
+    def qualify_partial(*args):
+        original(*args)
+        if failure == "raises":
+            raise interruption.RestoreInterruptionError("controlled-followup-failure")
+        args[-1]["statistics"] = None
+
+    monkeypatch.setattr(native, "qualify_restore_interruption", qualify_partial)
+    report = {}
+    with pytest.raises(native.GuestBootError):
+        qualify(f, report)
+    assert report["status"] == "failed" and not report["resources_destroyed_with_guest"]
+    assert report["restored_successor"]["comparison_verified"]
+    assert (
+        report["partial_restore"]["private_inputs"]["problem"]["type"]
+        == "PartialRestoreInterrupted"
+    )
+    assert valid_stats(report["statistics"])
+    assert len(f.controllers) == 3
+    assert_destroyed(f)

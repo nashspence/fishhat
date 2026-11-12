@@ -8,13 +8,15 @@ import hashlib
 import json
 import shutil
 import uuid
-from contextlib import nullcontext
+from contextlib import contextmanager, nullcontext
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
 from scripts import native_linux_images as images
 from scripts import native_linux_restore as restore
+from scripts import native_linux_restore_interruption as interruption
 from scripts import native_linux_snapshots as snapshots
 from scripts.run_stats import valid_stats
 from tests.test_native_linux_snapshots import ControlledImages
@@ -27,10 +29,11 @@ CHECK_PURPOSE = {
     "purpose": "validation-tooling",
     "authority": [
         "scripts/native_linux_restore.py",
+        "scripts/native_linux_restore_interruption.py",
         "scripts/native_linux_snapshots.py",
         "scripts/native_linux_enrollment.py",
     ],
-    "scope": "active sealed-capture lineage, exact stopped source and tool custody, complete exclusive standalone private restore input admission, no partial handles, foreign/stale/substituted input refusal, original preservation and actual failure/cleanup outcomes with required scoped statistics",
+    "scope": "active sealed-capture lineage, exact stopped source and tool custody, complete exclusive standalone private restore input admission, no partial handles, foreign/stale/substituted input refusal, original preservation and actual failure/cleanup outcomes, fixed typed partial preparation before admission, real partial candidate/writer-gate refusals, unexpected-failure rejection and independent remnant checks with required scoped statistics",
     "relationship": "no-product-claim",
     "reason": "Image conversion/check/compare results are substituted over real unprivileged private files. No QEMU, native guest restore, product writer/checkpoint authority or production deployment is qualified.",
     "claims": [],
@@ -553,3 +556,200 @@ def test_capture_composes_private_restore_only_during_its_verified_sealed_lifeti
     assert len(handles) == 1 and not handles[0].active
     assert not list(f.temporary.iterdir())
     assert valid_stats(report["statistics"]) and valid_stats(captured["statistics"])
+
+
+def interrupted_restore(f, owned, captured, report, progress=lambda _: nullcontext()):
+    interruption.qualify_restore_interruption(
+        f.guest, f.custody, owned, captured, f.temporary, progress, report
+    )
+
+
+def test_typed_partial_restore_uses_one_real_private_disk_and_preserves_failed_admission(fixture):
+    f = fixture
+    captured, report = {}, {}
+    original = observed_files([*f.inputs.iterdir(), *f.private.iterdir()])
+    with capture(f, captured) as owned:
+        frozen = copy.deepcopy(captured)
+        sealed = observed_files(owned.directory.iterdir())
+        interrupted_restore(f, owned, captured, report)
+        assert report["status"] == "observed" and report["interruption_verified"]
+        assert report["no_writer_admitted"] and not report["resources_destroyed_with_guest"]
+        private = report["private_inputs"]
+        assert private["status"] == "failed" and not private["restored_inputs_admitted"]
+        assert (
+            private["problem"]
+            == report["expected_failure"]
+            == {
+                "type": "PartialRestoreInterrupted",
+                "stage": "guest-restore-interruption",
+                "reason": "controlled-after-first-private-disk-before-admission",
+            }
+        )
+        assert [p["phase"] for p in private["phases"]] == [
+            "input-admission",
+            "root.qcow2",
+            "cleanup",
+        ]
+        assert len(f.state["restore_paths"]) == 1
+        assert f.state["restore_paths"][0].name == "root.qcow2"
+        assert all(not p.exists() for p in f.state["restore_paths"])
+        assert report["writer_admission_failure"] == {
+            "type": "RestoreError",
+            "stage": "guest-restore",
+            "reason": "restore-not-admitted",
+        }
+        assert (
+            report["writer_gate"]["lifetime_ended"] and report["writer_gate"]["status"] == "failed"
+        )
+        assert set(report["refusals"]) == {
+            "partial-admission",
+            "partial-path",
+            "foreign-enrollment",
+            "substituted-directory",
+            "expired-partial",
+        }
+        assert observed_files(original) == original and observed_files(sealed) == sealed
+        assert captured == frozen and report["source_before"] == report["source_after"]
+        assert list(f.temporary.iterdir()) == [owned.directory]
+    interruption.finish_restore_interruption(report)
+    assert report["status"] == "passed" and report["resources_destroyed_with_guest"]
+    assert all(p["absent"] for p in report["phases"][-1]["paths"])
+    for value in (report, private, report["writer_gate"]):
+        assert valid_stats(value["statistics"])
+    assert report["snapshot_restore_qualified"] is report["product_authority_qualified"] is False
+
+
+@pytest.mark.parametrize(
+    "mode",
+    [
+        "unexpected-error",
+        "lookalike-interruption",
+        "cleanup-error",
+        "missing-cleanup",
+        "missing-statistics",
+        "boundary-skipped",
+    ],
+)
+def test_unexpected_partial_restore_outcomes_cannot_qualify_and_keep_original_failure(
+    fixture, monkeypatch, mode
+):
+    f = fixture
+    captured, report = {}, {}
+    actual_cleanup = restore.remove_owned
+
+    def cleanup(*args):
+        actual_cleanup(*args)
+        if mode == "cleanup-error":
+            raise restore.RestoreError("controlled-cleanup-error")
+        args[-1]["temporary_resources_removed"] = False
+
+    if mode in {"cleanup-error", "missing-cleanup"}:
+        monkeypatch.setattr(restore, "remove_owned", cleanup)
+    if mode == "missing-statistics":
+        monkeypatch.setattr(interruption, "RunStats", lambda: SimpleNamespace(finish=lambda: None))
+    if mode == "boundary-skipped":
+        actual_restore = interruption.private_restored_disks
+
+        def skipped(*args):
+            values = list(args)
+            expected = args[5]
+            values[5] = lambda _: expected("unexpected-boundary")
+            return actual_restore(*values)
+
+        monkeypatch.setattr(interruption, "private_restored_disks", skipped)
+
+    @contextmanager
+    def progress(name):
+        yield
+        if name == "restore-root.qcow2":
+            if mode == "unexpected-error":
+                raise RuntimeError("controlled-unrelated-failure")
+            if mode == "lookalike-interruption":
+                raise interruption.PartialRestoreInterrupted()
+
+    with capture(f, captured) as owned:
+        original = observed_files(
+            [*f.inputs.iterdir(), *f.private.iterdir(), *owned.directory.iterdir()]
+        )
+        with pytest.raises((RuntimeError, ValueError)):
+            interrupted_restore(f, owned, captured, report, progress)
+        assert report["status"] == "failed" and not report["resources_destroyed_with_guest"]
+        assert all(not p.exists() for p in f.state["restore_paths"])
+        assert observed_files(original) == original
+        if mode == "cleanup-error":
+            assert report["private_inputs"]["problem"]["type"] == "PartialRestoreInterrupted"
+            assert (
+                report["private_inputs"]["cleanup_problem"]["reason"] == "controlled-cleanup-error"
+            )
+        if mode == "lookalike-interruption":
+            assert report["problem"]["reason"] == "unobserved-partial-interruption"
+            assert not report["interruption_verified"]
+        if mode == "boundary-skipped":
+            assert report["private_inputs"]["restored_inputs_admitted"] is True
+            assert report["problem"]["reason"] == "complete-inputs-unexpectedly-admitted"
+        if mode != "missing-statistics":
+            assert valid_stats(report["statistics"])
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        "failure-type",
+        "failure-reason",
+        "writer-gate",
+        "writer-statistics",
+        "partial-admission",
+        "cleanup-observation",
+        "refusal",
+        "phase",
+        "statistics",
+        "source",
+        "partial-record",
+        "private-remnant",
+        "unrelated-remnant",
+    ],
+)
+def test_missing_partial_failure_or_actual_cleanup_evidence_blocks_final_success(fixture, change):
+    f = fixture
+    captured, report = {}, {}
+    with capture(f, captured) as owned:
+        interrupted_restore(f, owned, captured, report)
+    private = report["private_inputs"]
+    remnant = None
+    try:
+        if change == "failure-type":
+            private["problem"]["type"] = "RuntimeError"
+        elif change == "failure-reason":
+            report["expected_failure"]["reason"] = "unclassified"
+        elif change == "writer-gate":
+            report["writer_gate"]["status"] = "passed"
+        elif change == "writer-statistics":
+            report["writer_gate"]["statistics"] = None
+        elif change == "partial-admission":
+            private["restored_inputs_admitted"] = True
+        elif change == "cleanup-observation":
+            private["phases"][-1]["paths"] = []
+        elif change == "refusal":
+            report["refusals"].pop("foreign-enrollment")
+        elif change == "phase":
+            report["phases"].pop(2)
+        elif change == "statistics":
+            report["statistics"] = None
+        elif change == "source":
+            report["source_after"] = {}
+        elif change == "partial-record":
+            report["partial_candidate"]["files"] = {}
+        else:
+            remnant = (
+                (Path(private["directory"]["path"]) / "root.qcow2")
+                if change == "private-remnant"
+                else Path(report["unrelated_canary"]["path"])
+            )
+            remnant.parent.mkdir(mode=0o700)
+            remnant.write_bytes(b"controlled-leftover")
+        with pytest.raises(interruption.RestoreInterruptionError):
+            interruption.finish_restore_interruption(report)
+        assert report["status"] == "failed" and not report["resources_destroyed_with_guest"]
+    finally:
+        if remnant is not None:
+            shutil.rmtree(remnant.parent)

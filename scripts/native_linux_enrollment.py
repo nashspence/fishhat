@@ -42,6 +42,10 @@ from scripts.native_linux_reboot import (
 )
 from scripts.native_linux_restart import phase, problem, qualify_restart
 from scripts.native_linux_restore import capture_projection, qualify_restore
+from scripts.native_linux_restore_interruption import (
+    finish_restore_interruption,
+    qualify_restore_interruption,
+)
 from scripts.native_linux_restored_boot import qualify_restored_boot
 from scripts.native_linux_roundtrip import compare_restored_successor, finish_restored_successor
 from scripts.native_linux_snapshots import DiskSnapshots, SnapshotError, qualify_capture, require
@@ -1365,6 +1369,16 @@ def qualify_source_successor(
                             launch,
                             report["restored_successor"],
                         )
+                        report["partial_restore"] = {}
+                        qualify_restore_interruption(
+                            guest,
+                            custody,
+                            owned,
+                            report["capture"],
+                            temporary,
+                            stage,
+                            report["partial_restore"],
+                        )
 
                 qualify_capture(
                     guest, custody, temporary, stage, report["capture"], consume=consume
@@ -1385,6 +1399,7 @@ def qualify_source_successor(
         if restored_successor:
             verify_restored_boot_cleanup(report["restored_successor"]["restored_boot"])
             finish_restored_successor(report["restored_successor"])
+            finish_restore_interruption(report["partial_restore"])
         complete = True
     except BaseException as error:
         report.setdefault("problem", problem(error))
@@ -1493,6 +1508,14 @@ def main(argv: list[str] | None = None) -> int:
                     and comparison.get("comparison_verified") is True
                     and comparison.get("resources_destroyed_with_guest") is True,
                     "required-restored-successor-proof-missing",
+                )
+                partial = report["source_successor"].get("partial_restore", {})
+                require(
+                    partial.get("status") == "passed"
+                    and partial.get("interruption_verified") is True
+                    and partial.get("no_writer_admitted") is True
+                    and partial.get("resources_destroyed_with_guest") is True,
+                    "required-partial-restore-proof-missing",
                 )
                 require(
                     report["source_successor"].get("status") == "passed"
