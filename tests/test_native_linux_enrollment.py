@@ -18,7 +18,7 @@ from scripts.validation_timeouts import Policy, using
 CHECK_PURPOSE = {
     "purpose": "validation-tooling",
     "authority": ["scripts/native_linux_enrollment.py", "scripts/validation_timeouts.py"],
-    "scope": "enrollment refusal, exact controller identities, maintained watchdogs, allowlisted secret-safe package/image failure observations, sanitized provisioning failures, mandatory observed-successor proof in its selected composition profile and source/statistics receipts",
+    "scope": "enrollment refusal, exact controller identities, maintained watchdogs, allowlisted secret-safe package/image failure observations, sanitized provisioning failures, mandatory observed-successor and independently typed partial-restore proof in the selected composition profile and source/statistics receipts",
     "relationship": "no-product-claim",
     "reason": "Controlled package/tool responses never install packages. Real unprivileged children exercise timeout/reaping and closed stdout/stderr classification without exposing their output. Only the separate admitted disposable-runner job can establish actual controller prerequisites; no guest or native owner is qualified here.",
     "claims": [],
@@ -517,6 +517,12 @@ def test_selected_main_requires_the_successor_timeline_before_success(
         observed.append("successor-timeline")
         if result == "raises":
             raise native.SnapshotError("controlled-timeline-failure")
+        report["partial_restore"] = {
+            "status": "passed",
+            "interruption_verified": True,
+            "no_writer_admitted": True,
+            "resources_destroyed_with_guest": True,
+        }
         report["restored_successor"] = {
             "status": "passed",
             "comparison_verified": True,
