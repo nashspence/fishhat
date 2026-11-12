@@ -43,6 +43,7 @@ from scripts.native_linux_reboot import (
 from scripts.native_linux_restart import phase, problem, qualify_restart
 from scripts.native_linux_restore import capture_projection, qualify_restore
 from scripts.native_linux_restored_boot import qualify_restored_boot
+from scripts.native_linux_roundtrip import compare_restored_successor, finish_restored_successor
 from scripts.native_linux_snapshots import DiskSnapshots, SnapshotError, qualify_capture, require
 from scripts.native_linux_storage import GuestStorageError, qualify_storage
 from scripts.native_linux_transport import qualify_transport_loss
@@ -892,6 +893,9 @@ def verify_restored_boot_cleanup(restored: dict[str, Any]) -> None:
     ):
         raise GuestBootError("restored-boot-proof-incomplete")
     restored["cleanup"] = observe_removed_resources(restored["controller_custody"], standalone=True)
+    endpoint = restored["controller_custody"].get("endpoint", {})
+    endpoint_closed({**endpoint, "owned_listener": endpoint.get("listener_owned")})
+    restored["cleanup"]["ssh_endpoint_closed"] = True
     restored["resources_destroyed_with_guest"] = True
 
 
@@ -1251,7 +1255,12 @@ def verify_source_successor_cleanup(report: dict[str, Any]) -> None:
 
 
 def qualify_source_successor(
-    tools: dict[str, Any], binary_sha256: str, temporary: Path, report: dict[str, Any]
+    tools: dict[str, Any],
+    binary_sha256: str,
+    temporary: Path,
+    report: dict[str, Any],
+    *,
+    restored_successor: bool = False,
 ) -> None:
     metrics = RunStats()
     report.update(
@@ -1343,6 +1352,19 @@ def qualify_source_successor(
                         )
                         item["sealed_capture_unchanged"] = True
                         item["later_source"] = copy.deepcopy(after)
+                    if restored_successor:
+                        report["restored_successor"] = {}
+                        compare_restored_successor(
+                            guest,
+                            custody,
+                            owned,
+                            report["capture"],
+                            report["transition"],
+                            temporary,
+                            stage,
+                            launch,
+                            report["restored_successor"],
+                        )
 
                 qualify_capture(
                     guest, custody, temporary, stage, report["capture"], consume=consume
@@ -1360,6 +1382,9 @@ def qualify_source_successor(
                     else:
                         raise SnapshotError("expired-source-handle-accepted")
         verify_source_successor_cleanup(report)
+        if restored_successor:
+            verify_restored_boot_cleanup(report["restored_successor"]["restored_boot"])
+            finish_restored_successor(report["restored_successor"])
         complete = True
     except BaseException as error:
         report.setdefault("problem", problem(error))
@@ -1382,6 +1407,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--github-hosted-only", action="store_true")
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--profile", choices=("baseline", "restored-successor"), default="baseline")
     args = parser.parse_args(argv)
     try:
         facts = enroll(os.environ, confirmed=args.github_hosted_only)
@@ -1393,6 +1419,7 @@ def main(argv: list[str] | None = None) -> int:
     report: dict[str, Any] = {
         "format": "fishhat-native-controller-enrollment/v1",
         "scope": "disposable-authenticated-guest-fixture-only",
+        "profile": args.profile,
         "fixture_enrollment": str(uuid.uuid4()),
         "guest_booted": False,
         "native_tools_qualified": False,
@@ -1416,47 +1443,64 @@ def main(argv: list[str] | None = None) -> int:
             report["controller_faults"],
         )
         report["guest_tools"] = provision_tools(run, root_run, stage)
-        report["guest_inputs"] = {}
-        with stage("guest-inputs"):
-            with guest_inputs(
-                report["fixture_enrollment"],
-                Path(os.environ["RUNNER_TEMP"]),
-                run,
-                stage,
-                report["guest_inputs"],
-            ) as inputs:
-                report["guest"] = {}
-                boot_guest(
-                    inputs,
-                    report["guest_tools"],
-                    report["controller"]["binary_sha256"],
+        if args.profile == "baseline":
+            report["guest_inputs"] = {}
+            with stage("guest-inputs"):
+                with guest_inputs(
+                    report["fixture_enrollment"],
                     Path(os.environ["RUNNER_TEMP"]),
-                    report["guest"],
-                )
-        with stage("guest-cleanup-observation"):
-            verify_guest_cleanup(report["guest"], report["guest_inputs"])
-        report["guest_storage_faults"] = []
-        guest_storage_faults(
-            report["guest_tools"],
-            report["controller"]["binary_sha256"],
-            Path(os.environ["RUNNER_TEMP"]),
-            report["guest_storage_faults"],
-        )
-        report["guest_reboot_faults"] = []
-        guest_reboot_faults(
-            report["guest_tools"],
-            report["controller"]["binary_sha256"],
-            Path(os.environ["RUNNER_TEMP"]),
-            report["guest_reboot_faults"],
-        )
-        report["source_successor"] = {}
-        with stage("guest-source-successor-timeline"):
-            qualify_source_successor(
+                    run,
+                    stage,
+                    report["guest_inputs"],
+                ) as inputs:
+                    report["guest"] = {}
+                    boot_guest(
+                        inputs,
+                        report["guest_tools"],
+                        report["controller"]["binary_sha256"],
+                        Path(os.environ["RUNNER_TEMP"]),
+                        report["guest"],
+                    )
+            with stage("guest-cleanup-observation"):
+                verify_guest_cleanup(report["guest"], report["guest_inputs"])
+            report["guest_storage_faults"] = []
+            guest_storage_faults(
                 report["guest_tools"],
                 report["controller"]["binary_sha256"],
                 Path(os.environ["RUNNER_TEMP"]),
-                report["source_successor"],
+                report["guest_storage_faults"],
             )
+            report["guest_reboot_faults"] = []
+            guest_reboot_faults(
+                report["guest_tools"],
+                report["controller"]["binary_sha256"],
+                Path(os.environ["RUNNER_TEMP"]),
+                report["guest_reboot_faults"],
+            )
+        report["source_successor"] = {}
+        with stage("guest-source-successor-timeline"):
+            if args.profile == "restored-successor":
+                qualify_source_successor(
+                    report["guest_tools"],
+                    report["controller"]["binary_sha256"],
+                    Path(os.environ["RUNNER_TEMP"]),
+                    report["source_successor"],
+                    restored_successor=True,
+                )
+                comparison = report["source_successor"].get("restored_successor", {})
+                require(
+                    comparison.get("status") == "passed"
+                    and comparison.get("comparison_verified") is True
+                    and comparison.get("resources_destroyed_with_guest") is True,
+                    "required-restored-successor-proof-missing",
+                )
+            else:
+                qualify_source_successor(
+                    report["guest_tools"],
+                    report["controller"]["binary_sha256"],
+                    Path(os.environ["RUNNER_TEMP"]),
+                    report["source_successor"],
+                )
             require(
                 report["source_successor"].get("status") == "passed"
                 and report["source_successor"].get("observed_successor_verified") is True,
@@ -1470,7 +1514,12 @@ def main(argv: list[str] | None = None) -> int:
             report["problem"]["classifications"] = list(error.classifications)
         if isinstance(error, ImageDownloadCommandError) and error.http_status is not None:
             report["problem"]["http_status"] = error.http_status
-    report["guest_booted"] = report.get("guest", {}).get("boot_verified") is True
+    guest_report = (
+        report.get("source_successor", {}).get("original_guest", {})
+        if args.profile == "restored-successor"
+        else report.get("guest", {})
+    )
+    report["guest_booted"] = guest_report.get("boot_verified") is True
     report["source_after"] = source_identity()
     if status == 0 and report["source_after"] != before:
         status = 1
