@@ -547,6 +547,11 @@ def test_main_reports_verified_boot_without_promoting_native_qualification(
     monkeypatch.setattr(native, "controller_faults", lambda *a: None)
     monkeypatch.setattr(native, "guest_storage_faults", lambda *a: None)
     monkeypatch.setattr(native, "guest_reboot_faults", lambda *a: None)
+    monkeypatch.setattr(
+        native,
+        "qualify_source_successor",
+        lambda *a: a[-1].update(status="passed", observed_successor_verified=True),
+    )
     monkeypatch.setattr(native, "verify_guest_cleanup", lambda *a: None)
     monkeypatch.setattr(native, "provision_tools", lambda *a: {})
     monkeypatch.setattr(native, "guest_inputs", lambda *a: nullcontext(fixture["inputs"]))

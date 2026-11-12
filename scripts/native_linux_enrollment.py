@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import errno
 import hashlib
 import json
@@ -17,7 +18,7 @@ import tempfile
 import time
 import uuid
 from collections.abc import Callable, Iterator, Mapping
-from contextlib import contextmanager
+from contextlib import AbstractContextManager, contextmanager
 from pathlib import Path
 from typing import Any
 
@@ -39,10 +40,10 @@ from scripts.native_linux_reboot import (
     observe_removed_resources,
     qualify_reboot,
 )
-from scripts.native_linux_restart import qualify_restart
-from scripts.native_linux_restore import qualify_restore
+from scripts.native_linux_restart import phase, problem, qualify_restart
+from scripts.native_linux_restore import capture_projection, qualify_restore
 from scripts.native_linux_restored_boot import qualify_restored_boot
-from scripts.native_linux_snapshots import DiskSnapshots, qualify_capture
+from scripts.native_linux_snapshots import DiskSnapshots, SnapshotError, qualify_capture, require
 from scripts.native_linux_storage import GuestStorageError, qualify_storage
 from scripts.native_linux_transport import qualify_transport_loss
 from scripts.run_stats import RunStats, valid_stats
@@ -1126,6 +1127,256 @@ def guest_reboot_faults(
             raise ValueError("invalid required reboot fault statistics")
 
 
+def source_successor_refusals(
+    snapshots: DiskSnapshots,
+    enrollment: str,
+    launch: Callable[[Guest], AbstractContextManager[Path]],
+    report: dict[str, Any],
+) -> None:
+    with phase(report, "input-refusals") as item:
+        refused = item["refused"] = []
+        foreign = str(uuid.uuid4())
+        empty: dict[str, Any] = {}
+        try:
+            snapshots.advance_source(foreign, stage, launch, empty)
+        except SnapshotError as error:
+            require(error.reason == "foreign-capture-source-enrollment", "wrong-source-refusal")
+            refused.append(
+                {"kind": "foreign-enrollment", "reason": error.reason, "enrollment": foreign}
+            )
+        else:
+            raise SnapshotError("foreign-source-successor-accepted")
+        require(not empty, "foreign-successor-started")
+        original = snapshots.files["root.qcow2"]
+        try:
+            snapshots.files["root.qcow2"] = original[0], "0" * 64
+            try:
+                snapshots.advance_source(enrollment, stage, launch, empty)
+            except SnapshotError as error:
+                require(error.reason == "capture-sealed-custody-changed", "wrong-source-refusal")
+                refused.append({"kind": "substituted-sealed-metadata", "reason": error.reason})
+            else:
+                raise SnapshotError("substituted-source-successor-accepted")
+        finally:
+            snapshots.files["root.qcow2"] = original
+        forged = snapshots.source_observation(enrollment)
+        forged["disks"]["root.qcow2"]["sha256"] = "0" * 64
+        try:
+            snapshots.advance_source(enrollment, stage, launch, {"later_source": forged})
+        except SnapshotError as error:
+            require(error.reason == "successor-report-not-empty", "wrong-source-refusal")
+            refused.append({"kind": "prepopulated-successor-report", "reason": error.reason})
+        else:
+            raise SnapshotError("unobserved-successor-report-accepted")
+        require(not empty, "substituted-successor-started")
+        item["source_after_refusals"] = snapshots.source_observation(enrollment)
+
+
+def verify_source_successor_cleanup(report: dict[str, Any]) -> None:
+    original, inputs = report["original_guest"], report["guest_inputs"]
+    capture, transition = report["capture"], report["transition"]
+    require(
+        original.get("status") == "passed"
+        and original.get("boot_verified") is True
+        and original.get("process_reaped") is True
+        and original.get("temporary_resources_removed") is True
+        and inputs.get("status") == "passed"
+        and inputs.get("base_preserved") is True
+        and inputs.get("temporary_resources_removed") is True
+        and capture.get("status") == "passed"
+        and capture.get("source_preserved") is False
+        and capture.get("observed_successor_preserved") is True
+        and capture.get("snapshots_preserved_until_cleanup") is True
+        and capture.get("temporary_resources_removed") is True
+        and transition.get("status") == "passed",
+        "source-successor-lifecycle-incomplete",
+    )
+    require(
+        capture["phases"][0]["observation"] == report["original_capture"]["source"]
+        and capture["phases"][-1]["source_after"] == report["later_source"]
+        and transition["later_source"] == report["later_source"]
+        and transition["after_identity"] == report["later_source"]["boot_identity"]
+        and original["reboot"]["after_identity"]
+        == report["original_capture"]["source"]["boot_identity"],
+        "source-successor-lineage-changed",
+    )
+    receipts = (
+        original,
+        inputs,
+        original["reboot"],
+        capture,
+        transition,
+        transition["boot_inputs"],
+        transition["canary_advance"],
+    )
+    require(
+        all(valid_stats(value.get("statistics")) for value in receipts)
+        and valid_stats(capture.get("qualification_statistics")),
+        "source-successor-statistics-missing",
+    )
+    for value in (report, original["reboot"], capture, transition, transition["canary_advance"]):
+        phases = value.get("phases")
+        require(
+            isinstance(phases, list)
+            and phases
+            and all(
+                p.get("status") == "passed" and valid_stats(p.get("statistics")) for p in phases
+            ),
+            "source-successor-phase-evidence-incomplete",
+        )
+    require(
+        original["reboot"].get("status") == "passed"
+        and original["reboot"].get("reboot_continuity_qualified") is True
+        and transition["boot_inputs"].get("status") == "passed"
+        and transition["boot_inputs"].get("lifetime_ended") is True
+        and transition["boot_inputs"].get("shared_private_inputs_preserved") is True
+        and transition["canary_advance"].get("status") == "passed",
+        "source-successor-owner-proof-incomplete",
+    )
+    with phase(report, "cleanup") as item:
+        cleanup = report["cleanup"] = {
+            "original_guest": observe_removed_resources(report["source_custody"]),
+            "successor": observe_removed_resources(transition["controller_custody"]),
+        }
+        endpoint_closed(original["endpoint"])
+        original["endpoint"]["closed_after_cleanup"] = True
+        directory = Path(capture["directory"]["path"])
+        require(not directory.exists() and not directory.is_symlink(), "capture-directory-remains")
+        item["capture_directory"] = {"path": str(directory), "absent": True}
+        item["original_guest_paths"] = len(cleanup["original_guest"]["paths"])
+        item["successor_paths"] = len(cleanup["successor"]["paths"])
+    original["reboot"]["resources_destroyed_with_guest"] = True
+    capture["resources_destroyed_with_guest"] = True
+    transition["resources_destroyed_with_guest"] = True
+
+
+def qualify_source_successor(
+    tools: dict[str, Any], binary_sha256: str, temporary: Path, report: dict[str, Any]
+) -> None:
+    metrics = RunStats()
+    report.update(
+        status="failed",
+        scope="owned-disposable-source-successor-timeline-only",
+        enrollment=str(uuid.uuid4()),
+        consistency="cold-bytes-after-controller-termination",
+        snapshot_restore_qualified=False,
+        product_authority_qualified=False,
+        observed_successor_verified=False,
+        resources_destroyed_with_guest=False,
+        phases=[],
+        guest_inputs={},
+        original_guest={},
+        capture={},
+        transition={},
+    )
+    snapshots: DiskSnapshots | None = None
+    complete = False
+    try:
+        with guest_inputs(
+            report["enrollment"], temporary, run, stage, report["guest_inputs"]
+        ) as inputs:
+            with guest_session(
+                inputs, temporary, run, tools, QEMU, report["original_guest"]
+            ) as guest:
+                with admitted_guest_controller(guest, binary_sha256, temporary) as endpoint:
+                    with phase(report, "original-guest-admission"):
+                        assert guest.verify_process is not None
+                        guest.ready(guest.verify_process)
+                        guest.refusals()
+                    report["original_guest"]["reboot"] = {}
+                    qualify_reboot(
+                        guest, endpoint, stage, temporary, report["original_guest"]["reboot"]
+                    )
+                    guest.refusals()
+                    with phase(report, "original-source-custody") as item:
+                        custody = host_custody(guest, endpoint, Deadline.after(30))
+                        item["observation"] = report["source_custody"] = copy.deepcopy(custody)
+
+                def consume(owned: DiskSnapshots) -> None:
+                    nonlocal snapshots
+                    snapshots = owned
+                    with phase(report, "capture-admission") as item:
+                        original = capture_projection(report["capture"])
+                        require(
+                            owned.source_observation(guest.enrollment) == original["source"],
+                            "capture-source-mismatch",
+                        )
+                        report["original_capture"] = copy.deepcopy(original)
+                        item["observation"] = copy.deepcopy(original)
+
+                    def launch(child: Guest) -> AbstractContextManager[Path]:
+                        return admitted_guest_controller(child, binary_sha256, temporary)
+
+                    source_successor_refusals(owned, guest.enrollment, launch, report)
+                    require(
+                        report["phases"][-1]["source_after_refusals"] == original["source"],
+                        "refusal-changed-source",
+                    )
+                    with phase(report, "observed-successor") as item:
+                        after = owned.advance_source(
+                            guest.enrollment, stage, launch, report["transition"]
+                        )
+                        require(
+                            owned.source_observation(guest.enrollment) == after,
+                            "later-source-changed",
+                        )
+                        report["later_source"] = copy.deepcopy(after)
+                        item["observation"] = copy.deepcopy(after)
+                    with phase(report, "preservation-and-repeat-refusal") as item:
+                        require(
+                            capture_projection(report["capture"]) == original,
+                            "original-capture-evidence-changed",
+                        )
+                        try:
+                            owned.advance_source(guest.enrollment, stage, launch, {})
+                        except SnapshotError as error:
+                            require(
+                                error.reason == "capture-source-already-attempted",
+                                "wrong-source-refusal",
+                            )
+                            item["repeat_refusal"] = {"reason": error.reason}
+                        else:
+                            raise SnapshotError("repeated-source-successor-accepted")
+                        require(
+                            owned.source_observation(guest.enrollment) == after,
+                            "later-source-changed",
+                        )
+                        item["sealed_capture_unchanged"] = True
+                        item["later_source"] = copy.deepcopy(after)
+
+                qualify_capture(
+                    guest, custody, temporary, stage, report["capture"], consume=consume
+                )
+                require(snapshots is not None, "successor-capture-never-admitted")
+                assert snapshots is not None
+                with phase(report, "expired-source-refusal") as item:
+                    try:
+                        snapshots.source_observation(guest.enrollment)
+                    except SnapshotError as error:
+                        require(
+                            error.reason == "capture-source-handle-expired", "wrong-source-refusal"
+                        )
+                        item["reason"] = error.reason
+                    else:
+                        raise SnapshotError("expired-source-handle-accepted")
+        verify_source_successor_cleanup(report)
+        complete = True
+    except BaseException as error:
+        report.setdefault("problem", problem(error))
+        raise
+    finally:
+        report["statistics"] = metrics.finish()
+        if not valid_stats(report["statistics"]):
+            report["status"] = "failed"
+            raise ValueError("invalid required successor timeline statistics")
+        if complete:
+            report.update(
+                status="passed",
+                observed_successor_verified=True,
+                resources_destroyed_with_guest=True,
+            )
+
+
 @invocation
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -1198,6 +1449,19 @@ def main(argv: list[str] | None = None) -> int:
             Path(os.environ["RUNNER_TEMP"]),
             report["guest_reboot_faults"],
         )
+        report["source_successor"] = {}
+        with stage("guest-source-successor-timeline"):
+            qualify_source_successor(
+                report["guest_tools"],
+                report["controller"]["binary_sha256"],
+                Path(os.environ["RUNNER_TEMP"]),
+                report["source_successor"],
+            )
+            require(
+                report["source_successor"].get("status") == "passed"
+                and report["source_successor"].get("observed_successor_verified") is True,
+                "required-source-successor-proof-missing",
+            )
         report["status"] = "passed"
     except (EnrollmentError, GuestInputError, GuestBootError) as error:
         status = 1
