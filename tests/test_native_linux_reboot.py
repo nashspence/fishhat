@@ -36,9 +36,9 @@ CHECK_PURPOSE = {
         "scripts/native_linux_guest.py",
         "scripts/native_linux_enrollment.py",
     ],
-    "scope": "controlled execution of persistent-root canary admission/readback/fsync and disk identity queries, delayed new-boot observations with bounded read-only timeout recovery and deterministic shared observation-budget exhaustion, exact host custody, original request acknowledgement/loss, stale/foreign command refusal, admission ordering, selected pre-admission observer interruption, independent whole-resource absence and required scoped statistics",
+    "scope": "controlled execution of persistent-root canary admission, guarded prior-byte comparison and different-byte persistence/readback/fsync, exact disk identity queries, delayed new-boot observations with bounded read-only timeout recovery and deterministic shared observation-budget exhaustion, exact host custody, original request acknowledgement/loss, stale/foreign command refusal, admission ordering, selected pre-admission observer interruption, independent whole-resource absence and required scoped statistics",
     "relationship": "no-product-claim",
-    "reason": "Guest devices/filesystem/boot/SSH and controller observations are substituted. Unprivileged temporary paths, private sockets and short child processes challenge custody/absence guards only; no QEMU, native guest reboot, product continuity or writer authority is qualified.",
+    "reason": "Guest devices/filesystem/boot/SSH and controller observations are substituted. Actual embedded canary I/O also runs against unprivileged temporary file descriptors; private sockets and short child processes challenge custody/absence guards. No QEMU, native canary advance/reboot, product continuity or writer authority is qualified.",
     "claims": [],
 }
 
@@ -173,7 +173,9 @@ class Facilities:
 
     def write(self, fd, content):
         path, offset = self.fds[fd], self.offsets[fd]
-        self.files[path] = self.files[path][:offset] + bytes(content)
+        self.files[path] = (
+            self.files[path][:offset] + bytes(content) + self.files[path][offset + len(content) :]
+        )
         self.meta[path].st_size = len(self.files[path])
         self.offsets[fd] += len(content)
         self.events.append("write:" + path)
@@ -1198,3 +1200,408 @@ def test_conflicting_guest_faults_refuse_before_creating_or_starting_resources(
             reboot_failure=True,
         )
     assert report == {} and not list(tmp_path.iterdir())
+
+
+def test_guarded_canary_advance_keeps_exact_prior_and_same_file_custody():
+    h = Facilities()
+    prepared = h.prepare()
+    prior = copy.deepcopy(prepared["identity"])
+    before_metadata = copy.deepcopy(h.meta)
+    desired = str(uuid.uuid4())
+    assert desired != h.c["nonce"]
+    request = {
+        **{k: v for k, v in h.c.items() if k != "identity"},
+        "mode": "advance",
+        "nonce": desired,
+        "prior_nonce": h.c["nonce"],
+        "prior_identity": copy.deepcopy(prior),
+        "probe": str(uuid.uuid4()),
+        "seconds": 60,
+    }
+    original_request = copy.deepcopy(request)
+    assert h.files[h.root + "/canary"] == prior["content"].encode()
+    h.events.clear()
+    advanced = h.execute(request)
+    expected = ("reboot:" + h.enrollment + "\n" + desired + "\n").encode()
+    assert advanced["previous_identity"] == prior
+    assert advanced["identity"]["content"].encode() == h.files[h.root + "/canary"] == expected
+    assert advanced["identity"]["sha256"] == hashlib.sha256(expected).hexdigest()
+    assert advanced["identity"]["file"] == prior["file"]
+    assert advanced["canary_fsynced"] is True and advanced["probe"] == request["probe"]
+    assert advanced["observer"]["executable"] == prepared["observer"]["executable"]
+    assert h.meta == before_metadata and not h.fds
+    assert h.events == ["write:" + h.root + "/canary", "fsync:" + h.root + "/canary"]
+    assert request == original_request and prepared["identity"] == prior
+    h.c.update(nonce=desired, identity=copy.deepcopy(advanced["identity"]))
+    h.events.clear()
+    inspected = h.invoke("inspect")
+    assert inspected["identity"] == advanced["identity"] and inspected["canary_fsynced"] is False
+    assert inspected["probe"] != advanced["probe"] and not h.events and not h.fds
+
+
+def advance_request(h):
+    return {
+        **{k: copy.deepcopy(v) for k, v in h.c.items() if k != "identity"},
+        "mode": "advance",
+        "nonce": str(uuid.uuid4()),
+        "prior_nonce": h.c["nonce"],
+        "prior_identity": copy.deepcopy(h.c["identity"]),
+        "probe": str(uuid.uuid4()),
+        "seconds": 60,
+    }
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        "same-nonce",
+        "invalid-prior-nonce",
+        "missing-prior",
+        "prior-content",
+        "prior-hash",
+        "prior-inode",
+        "prior-boolean",
+        "prior-directory",
+        "prior-disk",
+        "current-bytes",
+        "current-inode",
+        "current-owner",
+        "current-links",
+        "current-mode",
+        "directory",
+        "filesystem",
+        "disk",
+        "denied",
+        "interpreter",
+        "enrollment",
+        "boot",
+        "symlink",
+        "excessive",
+        "truncated",
+    ],
+)
+def test_guarded_canary_advance_refuses_inexact_prior_before_writes(change):
+    h = Facilities()
+    h.prepare()
+    request = advance_request(h)
+    path = h.root + "/canary"
+    if change == "same-nonce":
+        request["nonce"] = request["prior_nonce"]
+    elif change == "invalid-prior-nonce":
+        request["prior_nonce"] = "not-a-nonce"
+    elif change == "missing-prior":
+        request.pop("prior_identity")
+    elif change == "prior-content":
+        request["prior_identity"]["content"] = "foreign"
+    elif change == "prior-hash":
+        request["prior_identity"]["sha256"] = "0" * 64
+    elif change == "prior-inode":
+        request["prior_identity"]["file"]["inode"] += 1
+    elif change == "prior-boolean":
+        request["prior_identity"]["file"]["uid"] = False
+    elif change == "prior-directory":
+        request["prior_identity"]["directory"]["inode"] += 1
+    elif change == "prior-disk":
+        request["prior_identity"]["disks"]["root"]["device"] += 1
+    elif change == "current-bytes":
+        h.files[path] = b"x" * len(h.files[path])
+    elif change in ("current-inode", "current-owner", "current-links", "current-mode", "symlink"):
+        field, value = {
+            "current-inode": ("st_ino", h.meta[path].st_ino + 1),
+            "current-owner": ("st_uid", 1000),
+            "current-links": ("st_nlink", 2),
+            "current-mode": ("st_mode", stat.S_IFREG | 0o644),
+            "symlink": ("st_mode", stat.S_IFLNK | 0o777),
+        }[change]
+        setattr(h.meta[path], field, value)
+    elif change == "directory":
+        h.meta[h.root].st_ino += 1
+    elif change == "filesystem":
+        h.mount["uuid"] = h.partition["uuid"] = str(uuid.uuid4())
+    elif change == "disk":
+        h.disk_rows["/dev/vdc"]["size"] += 1
+    elif change == "denied":
+        h.meta[h.root + "/denied"] = h.metadata(stat.S_IFREG | 0o600, os.makedev(8, 1), 999)
+    elif change == "interpreter":
+        request["image"]["sha256"] = "0" * 64
+    elif change == "enrollment":
+        request["enrollment"] = str(uuid.uuid4())
+    elif change == "boot":
+        request["boot_id"] = str(uuid.uuid4())
+    else:
+        h.files[path] = h.files[path] + b"x" if change == "excessive" else h.files[path][:-1]
+        h.meta[path].st_size = len(h.files[path])
+    original = copy.deepcopy((h.meta, h.files))
+    h.events.clear()
+    with pytest.raises((ValueError, OSError, KeyError)):
+        h.execute(request)
+    assert (h.meta, h.files) == original and not h.events and not h.fds
+
+
+def canary_io(os_owner=os):
+    tree = ast.parse(reboot.PROGRAM)
+    selected = [
+        n
+        for n in tree.body
+        if isinstance(n, ast.FunctionDef) and n.name in {"require", "canary_contents"}
+    ]
+    assert {n.name for n in selected} == {"require", "canary_contents"}
+    namespace = {"os": os_owner}
+    exec(
+        compile(ast.Module(body=selected, type_ignores=[]), "<actual-canary-io>", "exec"), namespace
+    )
+    return namespace["canary_contents"]
+
+
+@pytest.mark.parametrize("mode", ["prepare", "inspect", "advance", "partial-write"])
+def test_actual_canary_io_uses_unprivileged_fd_with_exact_bytes_and_custody(tmp_path, mode):
+    path = tmp_path / "canary"
+    expected = None if mode == "prepare" else b"old"
+    replacement = None if mode == "inspect" else b"new"
+    path.write_bytes(b"" if expected is None else expected)
+    path.chmod(0o600)
+    before = path.stat()
+    writes = []
+
+    def write(fd, data):
+        part = data[:1] if mode == "partial-write" else data
+        writes.append(part)
+        return os.write(fd, part)
+
+    owner = SimpleNamespace(
+        lseek=os.lseek, read=os.read, write=write, fsync=os.fsync, SEEK_SET=os.SEEK_SET
+    )
+    with path.open("r+b", buffering=0) as file:
+        actual = canary_io(owner)(file.fileno(), expected, replacement)
+    assert actual == path.read_bytes() == (expected if replacement is None else replacement)
+    after = path.stat()
+    assert (before.st_dev, before.st_ino, before.st_mode) == (
+        after.st_dev,
+        after.st_ino,
+        after.st_mode,
+    )
+    assert b"".join(writes) == (replacement or b"")
+
+
+@pytest.mark.parametrize(
+    "contents,expected,replacement",
+    [
+        (b"old", b"bad", b"new"),
+        (b"ol", b"old", b"new"),
+        (b"oldx", b"old", b"new"),
+        (b"old", b"old", b"old"),
+        (b"old", b"old", b"long"),
+        (b"old", None, b"new"),
+    ],
+    ids=["wrong-prior", "short", "excessive", "identical", "extent", "occupied-prepare"],
+)
+def test_actual_canary_io_refuses_wrong_prior_without_kernel_write(
+    tmp_path, contents, expected, replacement
+):
+    path = tmp_path / "canary"
+    path.write_bytes(contents)
+    before = path.stat()
+    events = []
+    owner = SimpleNamespace(
+        lseek=os.lseek,
+        read=os.read,
+        write=lambda *a: events.append("write"),
+        fsync=lambda *a: events.append("fsync"),
+        SEEK_SET=os.SEEK_SET,
+    )
+    with path.open("r+b", buffering=0) as file:
+        with pytest.raises(ValueError):
+            canary_io(owner)(file.fileno(), expected, replacement)
+    assert not events and path.read_bytes() == contents
+    after = path.stat()
+    fields = (
+        "st_dev",
+        "st_ino",
+        "st_mode",
+        "st_uid",
+        "st_gid",
+        "st_nlink",
+        "st_size",
+        "st_mtime_ns",
+        "st_ctime_ns",
+    )
+    assert tuple(getattr(before, name) for name in fields) == tuple(
+        getattr(after, name) for name in fields
+    )
+
+
+@pytest.mark.parametrize("failure", ["zero-write", "write-error", "fsync-error", "readback"])
+def test_actual_canary_io_failure_cannot_report_success(tmp_path, failure):
+    path = tmp_path / "canary"
+    path.write_bytes(b"old")
+    synced = False
+
+    def write(fd, content):
+        if failure == "zero-write":
+            return 0
+        if failure == "write-error":
+            raise OSError(errno.ENOSPC, "controlled-private-error")
+        return os.write(fd, content)
+
+    def sync(fd):
+        nonlocal synced
+        if failure == "fsync-error":
+            raise OSError(errno.EIO, "controlled-private-error")
+        os.fsync(fd)
+        synced = True
+
+    def read(fd, size):
+        return b"corrupt" if failure == "readback" and synced else os.read(fd, size)
+
+    owner = SimpleNamespace(
+        lseek=os.lseek, read=read, write=write, fsync=sync, SEEK_SET=os.SEEK_SET
+    )
+    with path.open("r+b", buffering=0) as file:
+        with pytest.raises((ValueError, OSError)):
+            canary_io(owner)(file.fileno(), b"old", b"new")
+
+
+class CanaryAdvanceGuest:
+    def __init__(self, facilities, failure=None):
+        self.h, self.failure = facilities, failure
+        self.enrollment = facilities.enrollment
+        self.observed = {"boot_id": facilities.boot}
+        self.requests = []
+
+    def validate_profile(self, value):
+        reboot.require(value == self.observed, "controlled-foreign-profile")
+
+    def remote(self, observed, arguments):
+        self.validate_profile(observed)
+        assert arguments[:5] == ["/usr/bin/python3", "-I", "-S", "-c", reboot.PROGRAM]
+        return arguments
+
+    def ssh(self, arguments, *, deadline, nominal):
+        assert deadline.remaining() > 0 and nominal == 75
+        c = json.loads(arguments[-1])
+        self.requests.append(c)
+        result = self.h.execute(c)
+        number = len(self.requests)
+        if self.failure == "malformed" and number == 1:
+            return "controlled-private-reply"
+        if self.failure == "array" and number == 1:
+            return "[]"
+        if self.failure == "unobserved-write" and number == 2:
+            raise native.EnrollmentError("guest-ssh", "command-exit-19")
+        if number == 2:
+            if self.failure == "fsync-lie":
+                result["canary_fsynced"] = False
+            elif self.failure == "prior-lie":
+                result["previous_identity"] = {}
+            elif self.failure == "prior-boolean":
+                result["previous_identity"]["file"]["uid"] = False
+            elif self.failure == "observer-string":
+                result["observer"] = "controlled-private-reply"
+            elif self.failure == "custody":
+                result["identity"]["file"]["inode"] += 1
+            elif self.failure == "probe":
+                result["probe"] = str(uuid.uuid4())
+            elif self.failure == "boot":
+                result["boot_id"] = str(uuid.uuid4())
+            elif self.failure == "enrollment":
+                result["enrollment"] = str(uuid.uuid4())
+        if self.failure == "readback" and number == 3:
+            result["identity"]["sha256"] = "0" * 64
+        return json.dumps(result)
+
+
+def test_canary_advance_coordinator_preserves_original_witnesses_and_measured_readback():
+    h = Facilities()
+    prepared = h.prepare()
+    before = copy.deepcopy(h.c)
+    guest = CanaryAdvanceGuest(h)
+    report = {}
+    accepted = reboot.qualify_canary_advance(guest, guest.observed, h.c, Deadline.after(30), report)
+    assert report["status"] == "passed" and valid_stats(report["statistics"])
+    assert report["snapshot_restore_qualified"] is report["product_authority_qualified"] is False
+    assert [x["phase"] for x in report["phases"]] == [
+        "prior-observation",
+        "persist-different-bytes",
+        "independent-readback",
+    ]
+    assert all(p["status"] == "passed" and valid_stats(p["statistics"]) for p in report["phases"])
+    assert [x["mode"] for x in guest.requests] == ["inspect", "advance", "inspect"]
+    assert len({x["probe"] for x in guest.requests}) == 3
+    assert report["phases"][1]["request"] == guest.requests[1]
+    for phase in report["phases"]:
+        assert json.loads(phase["original_reply"]) == phase["observation"]
+        assert phase["request"]["probe"] == phase["observation"]["probe"]
+    assert report["prior_canary"] == prepared["identity"] == before["identity"]
+    assert report["written_canary"] == report["observed_canary"] == accepted["identity"]
+    assert accepted["nonce"] != before["nonce"] and h.c == before
+    assert h.files[h.root + "/canary"] == accepted["identity"]["content"].encode() and not h.fds
+
+
+@pytest.mark.parametrize(
+    "failure",
+    [
+        "malformed",
+        "array",
+        "unobserved-write",
+        "fsync-lie",
+        "prior-lie",
+        "observer-string",
+        "prior-boolean",
+        "custody",
+        "probe",
+        "boot",
+        "enrollment",
+        "readback",
+        "missing-identity",
+        "missing-image",
+    ],
+)
+def test_canary_advance_coordinator_refuses_missing_uncertain_or_forged_evidence(failure):
+    h = Facilities()
+    h.prepare()
+    c = copy.deepcopy(h.c)
+    if failure.startswith("missing-"):
+        c.pop(failure.removeprefix("missing-"))
+    original = copy.deepcopy(c)
+    guest = CanaryAdvanceGuest(h, failure)
+    report = {}
+    with pytest.raises((reboot.GuestRebootError, native.EnrollmentError)) as caught:
+        reboot.qualify_canary_advance(guest, guest.observed, c, Deadline.after(30), report)
+    assert report["status"] == "failed" and valid_stats(report["statistics"]) and not h.fds
+    assert all(valid_stats(p["statistics"]) for p in report["phases"])
+    assert (
+        c == original
+        and report["snapshot_restore_qualified"] is report["product_authority_qualified"] is False
+    )
+    if failure.startswith("missing-"):
+        assert not guest.requests
+    if failure == "unobserved-write":
+        assert caught.value.stage == "guest-ssh" and caught.value.reason == "command-exit-19"
+        assert len(guest.requests) == 2
+
+
+def test_canary_advance_invalid_measurement_cannot_qualify(monkeypatch):
+    h = Facilities()
+    h.prepare()
+    guest = CanaryAdvanceGuest(h)
+    report = {}
+    monkeypatch.setattr(reboot, "valid_stats", lambda _: False)
+    with pytest.raises(ValueError, match="invalid required"):
+        reboot.qualify_canary_advance(guest, guest.observed, h.c, Deadline.after(30), report)
+    assert report["status"] == "failed" and len(guest.requests) == 1 and not h.fds
+
+
+@pytest.mark.parametrize("collision", ["nonce", "challenge"])
+def test_canary_advance_cannot_adopt_repeated_nonce_or_challenges(monkeypatch, collision):
+    h = Facilities()
+    h.prepare()
+    guest = CanaryAdvanceGuest(h)
+    report = {}
+    fixed = uuid.UUID(h.c["nonce"]) if collision == "nonce" else uuid.uuid4()
+    reason = "canary-nonce-not-distinct" if collision == "nonce" else "canary-challenge-reused"
+    with monkeypatch.context() as patch:
+        patch.setattr(reboot.uuid, "uuid4", lambda: fixed)
+        with pytest.raises(reboot.GuestRebootError, match=reason):
+            reboot.qualify_canary_advance(guest, guest.observed, h.c, Deadline.after(30), report)
+    assert report["status"] == "failed" and valid_stats(report["statistics"]) and not h.fds
+    assert len(guest.requests) == (1 if collision == "nonce" else 3)
