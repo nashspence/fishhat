@@ -25,8 +25,12 @@ from scripts.validation_timeouts import watchdog
 
 CHECK_PURPOSE = {
     "purpose": "validation-tooling",
-    "authority": ["scripts/native_linux_snapshots.py", "scripts/native_linux_enrollment.py"],
-    "scope": "stopped enrolled disk custody, standalone complete logical capture, immutable admitted sealed-handle custody, complete input membership, one-time admission, original directory cleanup anchoring, source preservation and partial failure cleanup with required statistics",
+    "authority": [
+        "scripts/native_linux_snapshots.py",
+        "scripts/native_linux_successor.py",
+        "scripts/native_linux_enrollment.py",
+    ],
+    "scope": "stopped enrolled disk custody, standalone complete logical capture, immutable admitted sealed-handle custody, complete input membership, one-time admission, original directory cleanup anchoring, frozen source evidence independent of mutable reports, source preservation and partial failure cleanup with required statistics",
     "relationship": "no-product-claim",
     "reason": "Image conversion/profile results are substituted. Real unprivileged files, loopback probes and short child processes challenge ownership and absence checks only. No QEMU, guest restore, native owner or product authority is qualified.",
     "claims": [],
@@ -627,3 +631,18 @@ def test_unrecorded_files_in_sealed_capture_are_refused_before_use(fixture):
                 assert len(f.state["calls"]) == before_calls
     assert report["status"] == "failed" and report["temporary_resources_removed"]
     assert valid_stats(report["statistics"]) and not list(f.temporary.iterdir())
+
+
+def test_editing_report_cannot_authorize_changed_original_source_bytes(fixture):
+    f = fixture
+    report = {}
+    with pytest.raises(
+        snapshots.SnapshotError, match=r"source-changed|original-capture-evidence-changed"
+    ):
+        with capture(f, report):
+            target = f.inputs / "root.qcow2"
+            target.write_bytes(target.read_bytes() + b"unwitnessed-byte-drift")
+            shown = report["phases"][0]["observation"]["disks"]["root.qcow2"]
+            shown.update(bytes=target.stat().st_size, sha256=images.digest(target))
+    assert report["status"] == "failed" and report["source_preserved"] is False
+    assert report["temporary_resources_removed"] and valid_stats(report["statistics"])
