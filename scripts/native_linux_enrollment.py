@@ -21,6 +21,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
+from scripts.native_linux_download import Failure, classification
 from scripts.native_linux_exhaustion import (
     qualify_allocation_cleanup,
     qualify_exhaustion,
@@ -119,6 +120,26 @@ class PackageCommandError(EnrollmentError):
         self.classifications = package_failure_classes(stderr)
 
 
+class ImageDownloadCommandError(EnrollmentError):
+    def __init__(self, stage: str, status: int, stdout: str) -> None:
+        super().__init__(stage, f"command-exit-{status}")
+        self.classifications = (classification(status),)
+        self.http_status: int | None = None
+        if status != Failure.HTTP_RESPONSE_FAILURE or len(stdout) > 128:
+            return
+        try:
+            value = json.loads(stdout)
+        except (ValueError, RecursionError):
+            return
+        if (
+            isinstance(value, dict)
+            and set(value) == {"http_status"}
+            and type(value["http_status"]) is int
+            and 100 <= value["http_status"] <= 599
+        ):
+            self.http_status = value["http_status"]
+
+
 @contextmanager
 def stage(name: str) -> Iterator[None]:
     started = time.perf_counter()
@@ -194,15 +215,16 @@ def enroll(environment: Mapping[str, str], *, confirmed: bool) -> dict[str, Any]
 
 def run(command: list[str], name: str, nominal: float, *, capture: bool = False) -> str:
     package = name in ("package-update", "package-install")
+    download = name == "guest-image-download"
     try:
         result = subprocess.run(
             command,
             env=COMMAND_ENV,
             stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE if capture else subprocess.DEVNULL,
+            stdout=subprocess.PIPE if capture or download else subprocess.DEVNULL,
             stderr=subprocess.PIPE if package else subprocess.DEVNULL,
             text=True,
-            errors="replace" if package else None,
+            errors="replace" if package or download else None,
             timeout=watchdog(nominal),
             check=False,
         )
@@ -213,8 +235,10 @@ def run(command: list[str], name: str, nominal: float, *, capture: bool = False)
     if result.returncode != 0:
         if package:
             raise PackageCommandError(name, result.returncode, result.stderr or "")
+        if download:
+            raise ImageDownloadCommandError(name, result.returncode, result.stdout or "")
         raise EnrollmentError(name, f"command-exit-{result.returncode}")
-    return result.stdout or ""
+    return (result.stdout or "") if capture else ""
 
 
 def root_run(command: list[str], name: str, nominal: float) -> None:
@@ -1178,8 +1202,10 @@ def main(argv: list[str] | None = None) -> int:
     except (EnrollmentError, GuestInputError, GuestBootError) as error:
         status = 1
         report.update(status="failed", problem={"stage": error.stage, "reason": error.reason})
-        if isinstance(error, PackageCommandError):
+        if isinstance(error, (PackageCommandError, ImageDownloadCommandError)):
             report["problem"]["classifications"] = list(error.classifications)
+        if isinstance(error, ImageDownloadCommandError) and error.http_status is not None:
+            report["problem"]["http_status"] = error.http_status
     report["guest_booted"] = report.get("guest", {}).get("boot_verified") is True
     report["source_after"] = source_identity()
     if status == 0 and report["source_after"] != before:

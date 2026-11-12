@@ -27,26 +27,7 @@ QEMU_IMG = Path("/usr/bin/qemu-img")
 
 # A bounded isolated child owns the network read; it cannot inherit proxy or
 # authentication state, follow redirects, or overwrite an existing destination.
-DOWNLOAD = r"""
-import os, sys, urllib.request
-class NoRedirect(urllib.request.HTTPRedirectHandler):
-    def redirect_request(self, *args, **kwargs):
-        return None
-limit = int(sys.argv[4])
-total = 0
-opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
-with os.fdopen(os.open(sys.argv[1], os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600), "wb") as output:
-    with opener.open(sys.argv[2], timeout=float(sys.argv[3])) as response:
-        if response.status != 200:
-            raise ValueError("unexpected image response")
-        while chunk := response.read(1024 * 1024):
-            total += len(chunk)
-            if total > limit:
-                raise ValueError("unexpected image extent")
-            output.write(chunk)
-        if total != limit:
-            raise ValueError("incomplete image")
-"""
+DOWNLOAD_WORKER = Path(__file__).with_name("native_linux_download.py")
 
 
 class GuestInputError(RuntimeError):
@@ -207,8 +188,7 @@ def guest_inputs(
                     sys.executable,
                     "-I",
                     "-S",
-                    "-c",
-                    DOWNLOAD,
+                    str(DOWNLOAD_WORKER),
                     str(base),
                     IMAGE_URL,
                     str(watchdog(30)),

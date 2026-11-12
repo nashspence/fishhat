@@ -10023,235 +10023,303 @@
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_enrollment_requires_confirmation_and_accepts_selected_host",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_host_facts_cannot_be_replaced_by_runner_labels[root]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_host_facts_cannot_be_replaced_by_runner_labels[wrong-abi]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_host_facts_cannot_be_replaced_by_runner_labels[wrong-cgroup]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_host_facts_cannot_be_replaced_by_runner_labels[wrong-distribution]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_host_facts_cannot_be_replaced_by_runner_labels[wrong-init]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_host_facts_cannot_be_replaced_by_runner_labels[wrong-platform]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_host_facts_cannot_be_replaced_by_runner_labels[wrong-version]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_malformed_package_stderr_cannot_mask_original_exit[package-install]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_malformed_package_stderr_cannot_mask_original_exit[package-update]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_missing_command_is_a_required_failure",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_ordinary_invocation_creates_no_artifacts_or_native_commands",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_package_command_failure_keeps_original_exit_and_only_allowlisted_classes[authentication-package-install]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_package_command_failure_keeps_original_exit_and_only_allowlisted_classes[authentication-package-update]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_package_command_failure_keeps_original_exit_and_only_allowlisted_classes[content-package-install]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_package_command_failure_keeps_original_exit_and_only_allowlisted_classes[content-package-update]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_package_command_failure_keeps_original_exit_and_only_allowlisted_classes[dependency-package-install]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_package_command_failure_keeps_original_exit_and_only_allowlisted_classes[dependency-package-update]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_package_command_failure_keeps_original_exit_and_only_allowlisted_classes[fetch-package-install]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_package_command_failure_keeps_original_exit_and_only_allowlisted_classes[fetch-package-update]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_package_command_failure_keeps_original_exit_and_only_allowlisted_classes[multiple-package-install]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_package_command_failure_keeps_original_exit_and_only_allowlisted_classes[multiple-package-update]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_package_command_failure_keeps_original_exit_and_only_allowlisted_classes[pin-package-install]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_package_command_failure_keeps_original_exit_and_only_allowlisted_classes[pin-package-update]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_package_command_failure_keeps_original_exit_and_only_allowlisted_classes[resource-package-install]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_package_command_failure_keeps_original_exit_and_only_allowlisted_classes[resource-package-update]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_package_command_failure_keeps_original_exit_and_only_allowlisted_classes[state-package-install]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_package_command_failure_keeps_original_exit_and_only_allowlisted_classes[state-package-update]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_package_command_failure_keeps_original_exit_and_only_allowlisted_classes[transport-package-install]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_package_command_failure_keeps_original_exit_and_only_allowlisted_classes[transport-package-update]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_package_command_failure_keeps_original_exit_and_only_allowlisted_classes[unknown-package-install]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_package_command_failure_keeps_original_exit_and_only_allowlisted_classes[unknown-package-update]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_real_command_failure_discards_private_output_and_inherited_environment",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_real_download_child_retains_exit_and_only_closed_safe_metadata[additional-field]",
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_real_download_child_retains_exit_and_only_closed_safe_metadata[boolean-status]",
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_real_download_child_retains_exit_and_only_closed_safe_metadata[destination]",
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_real_download_child_retains_exit_and_only_closed_safe_metadata[excessive]",
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_real_download_child_retains_exit_and_only_closed_safe_metadata[float-status]",
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_real_download_child_retains_exit_and_only_closed_safe_metadata[high-status]",
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_real_download_child_retains_exit_and_only_closed_safe_metadata[http]",
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_real_download_child_retains_exit_and_only_closed_safe_metadata[low-status]",
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_real_download_child_retains_exit_and_only_closed_safe_metadata[malformed-encoding]",
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_real_download_child_retains_exit_and_only_closed_safe_metadata[short]",
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_real_download_child_retains_exit_and_only_closed_safe_metadata[timeout]",
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_real_download_child_retains_exit_and_only_closed_safe_metadata[tls]",
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_real_download_child_retains_exit_and_only_closed_safe_metadata[transport]",
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_real_download_child_retains_exit_and_only_closed_safe_metadata[unknown-exit]",
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_real_download_child_retains_exit_and_only_closed_safe_metadata[worker]",
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_real_held_command_expires_and_is_reaped",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_selected_packages_root_watchdogs_and_binary_identity[1]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_selected_packages_root_watchdogs_and_binary_identity[4]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_selected_run_records_failure_source_scope_and_required_statistics[changed-source]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_selected_run_records_failure_source_scope_and_required_statistics[dirty-source]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_selected_run_records_failure_source_scope_and_required_statistics[image-http-classified]",
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_selected_run_records_failure_source_scope_and_required_statistics[image-malformed]",
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_selected_run_records_failure_source_scope_and_required_statistics[none]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_selected_run_records_failure_source_scope_and_required_statistics[package-classified]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_selected_run_records_failure_source_scope_and_required_statistics[provisioning]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_successful_package_command_does_not_publish_stderr_diagnostics[package-install]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_successful_package_command_does_not_publish_stderr_diagnostics[package-update]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_unrelated_command_does_not_acquire_package_diagnostics",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_unverified_tool_identity_never_passes[duplicate]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_unverified_tool_identity_never_passes[foreign]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_unverified_tool_identity_never_passes[malformed]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_unverified_tool_identity_never_passes[missing-binary]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_unverified_tool_identity_never_passes[missing]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_unverified_tool_identity_never_passes[wrong-abi]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_unverified_tool_identity_never_passes[wrong-binary]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_unverified_tool_identity_never_passes[wrong-version]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_wrong_enrollment_rejects_before_host_inspection[ordinary]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_wrong_enrollment_rejects_before_host_inspection[persistent]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_wrong_enrollment_rejects_before_host_inspection[pull-request-event]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_wrong_enrollment_rejects_before_host_inspection[pull-request-ref]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_wrong_enrollment_rejects_before_host_inspection[wrong-image]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_enrollment.py::test_wrong_enrollment_rejects_before_host_inspection[wrong-temporary-root]",
-      "purpose_sha256": "06dd7336d90c04e6559f9427e11269ca7750c13d4123b8acba975ebbc0dc5f0a"
+      "purpose_sha256": "83cb5ad3f11e004ef6ac33ad371aed6187511c0af3aa60f260b05099c7aa17d9"
     },
     {
       "node": "tests/test_native_linux_exhaustion.py::test_absent_target_with_unreleased_limits_cannot_be_guessed_as_cleaned[cleanup]",
@@ -11107,127 +11175,243 @@
     },
     {
       "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[base-backing]",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[base-changed]",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[create-failure]",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[disk-replaced]",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[download-failure]",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[external-data]",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[float-extent]",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[foreign-backing]",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[hardlink]",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[malformed-info]",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[symlink]",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[tool-changed]",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[wrong-extent]",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[wrong-format]",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[wrong-hash]",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[wrong-size]",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_images.py::test_changed_foreign_and_partial_inputs_never_pass_or_change_unrelated_files[wrong-tool]",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_classified_download_failure_preserves_partial_cleanup_and_statistics",
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_images.py::test_cleanup_failure_keeps_failed_status_and_required_statistics",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_download_worker_close_failure_cannot_report_transfer_success",
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_download_worker_closes_destination_and_classifies_safe_failures[open-dns-41]",
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_download_worker_closes_destination_and_classifies_safe_failures[open-incomplete-44]",
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_download_worker_closes_destination_and_classifies_safe_failures[open-protocol-41]",
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_download_worker_closes_destination_and_classifies_safe_failures[open-timeout-43]",
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_download_worker_closes_destination_and_classifies_safe_failures[open-tls-42]",
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_download_worker_closes_destination_and_classifies_safe_failures[open-unexpected-47]",
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_download_worker_closes_destination_and_classifies_safe_failures[open-wrapped-timeout-43]",
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_download_worker_closes_destination_and_classifies_safe_failures[open-wrapped-tls-42]",
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_download_worker_closes_destination_and_classifies_safe_failures[read-dns-41]",
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_download_worker_closes_destination_and_classifies_safe_failures[read-incomplete-44]",
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_download_worker_closes_destination_and_classifies_safe_failures[read-protocol-41]",
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_download_worker_closes_destination_and_classifies_safe_failures[read-timeout-43]",
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_download_worker_closes_destination_and_classifies_safe_failures[read-tls-42]",
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_download_worker_closes_destination_and_classifies_safe_failures[read-unexpected-47]",
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_download_worker_closes_destination_and_classifies_safe_failures[read-wrapped-timeout-43]",
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_download_worker_closes_destination_and_classifies_safe_failures[read-wrapped-tls-42]",
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_images.py::test_download_worker_never_overwrites_existing_or_foreign_destination[file]",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_images.py::test_download_worker_never_overwrites_existing_or_foreign_destination[symlink]",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_images.py::test_download_worker_refuses_redirects_proxies_and_wrong_extent[complete]",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_images.py::test_download_worker_refuses_redirects_proxies_and_wrong_extent[oversized]",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_images.py::test_download_worker_refuses_redirects_proxies_and_wrong_extent[truncated]",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_download_worker_rejects_invalid_budget_before_destination_or_network[-1]",
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_download_worker_rejects_invalid_budget_before_destination_or_network[0]",
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_download_worker_rejects_invalid_budget_before_destination_or_network[inf]",
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_download_worker_rejects_invalid_budget_before_destination_or_network[nan]",
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_download_worker_rejects_invalid_budget_before_destination_or_network[not-a-number]",
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_download_worker_write_failure_remains_destination_refusal",
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_http_response_failure_keeps_safe_status_and_original_exit",
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_images.py::test_interrupted_use_preserves_base_and_records_cleanup_without_success",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_images.py::test_invalid_enrollment_is_refused_before_files_or_commands[empty]",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_images.py::test_invalid_enrollment_is_refused_before_files_or_commands[invalid]",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_images.py::test_invalid_enrollment_is_refused_before_files_or_commands[noncanonical]",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_isolated_download_refuses_actual_redirect_before_foreign_request",
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_isolated_worker_real_local_transfer_preserves_extent_and_private_output[ab-44]",
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_isolated_worker_real_local_transfer_preserves_extent_and_private_output[abc-0]",
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
+    },
+    {
+      "node": "tests/test_native_linux_images.py::test_isolated_worker_real_local_transfer_preserves_extent_and_private_output[abcd-45]",
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_images.py::test_main_retains_exact_source_scope_and_guest_input_failure[accepted]",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_images.py::test_main_retains_exact_source_scope_and_guest_input_failure[rejected]",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_images.py::test_owned_inputs_preserve_base_bind_enrollment_and_remove_all_disks",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_images.py::test_substituted_directory_cannot_be_removed_as_owned",
-      "purpose_sha256": "72b1d1055f9bfb469e913604be9d52e053b746efb5e939033e1d417f64173d76"
+      "purpose_sha256": "f89b9edf6c64aa4687e6d003039b21f8b44bbbfc77c1fe6369f5670125dc028b"
     },
     {
       "node": "tests/test_native_linux_processes.py::test_complete_controlled_helper_preserves_host_canary_and_never_claims_guest_cleanup",
@@ -19623,6 +19807,26 @@
     },
     {
       "node": "tests/test_validation_timeouts.py::test_invocation_captures_policy_before_environment_changes",
+      "purpose_sha256": "ae4211b47e8886b4cd2e9c6f7080f8e52ba4d8b3fe011793614c1bb9b53379b6"
+    },
+    {
+      "node": "tests/test_validation_timeouts.py::test_isolated_download_watchdog_boundary_cannot_authorize_other_raw_waits[isolated-cli-boundary]",
+      "purpose_sha256": "ae4211b47e8886b4cd2e9c6f7080f8e52ba4d8b3fe011793614c1bb9b53379b6"
+    },
+    {
+      "node": "tests/test_validation_timeouts.py::test_isolated_download_watchdog_boundary_cannot_authorize_other_raw_waits[other-function]",
+      "purpose_sha256": "ae4211b47e8886b4cd2e9c6f7080f8e52ba4d8b3fe011793614c1bb9b53379b6"
+    },
+    {
+      "node": "tests/test_validation_timeouts.py::test_isolated_download_watchdog_boundary_cannot_authorize_other_raw_waits[other-source]",
+      "purpose_sha256": "ae4211b47e8886b4cd2e9c6f7080f8e52ba4d8b3fe011793614c1bb9b53379b6"
+    },
+    {
+      "node": "tests/test_validation_timeouts.py::test_isolated_download_watchdog_boundary_cannot_authorize_other_raw_waits[other-value]",
+      "purpose_sha256": "ae4211b47e8886b4cd2e9c6f7080f8e52ba4d8b3fe011793614c1bb9b53379b6"
+    },
+    {
+      "node": "tests/test_validation_timeouts.py::test_isolated_download_watchdog_boundary_cannot_authorize_other_raw_waits[raw-constant]",
       "purpose_sha256": "ae4211b47e8886b4cd2e9c6f7080f8e52ba4d8b3fe011793614c1bb9b53379b6"
     },
     {

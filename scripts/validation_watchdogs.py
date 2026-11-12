@@ -76,14 +76,22 @@ class PythonGuard:
 
     def owned(self, value: ast.expr, function: str) -> bool:
         return (
-            self.name == "tests/test_adapter_process.py"
-            and function == "expiry_probe"
-            and isinstance(value, ast.Constant)
-            and value.value == 0.1
-        ) or (
-            self.name == "scripts/smoke_installed.py"
-            and function == "main"
-            and ast.unparse(value) == "args.watchdog_seconds"
+            (
+                self.name == "tests/test_adapter_process.py"
+                and function == "expiry_probe"
+                and isinstance(value, ast.Constant)
+                and value.value == 0.1
+            )
+            or (
+                self.name == "scripts/smoke_installed.py"
+                and function == "main"
+                and ast.unparse(value) == "args.watchdog_seconds"
+            )
+            or (
+                self.name == "scripts/native_linux_download.py"
+                and function == "_receive"
+                and ast.unparse(value) == "args.watchdog_seconds"
+            )
         )
 
     def error(self, node: ast.AST, message: str) -> None:
