@@ -21,7 +21,6 @@ from scripts.native_linux_restart import (
     observe_replacement,
     phase,
     problem,
-    retained_boot_inputs,
     stopped_replacement,
 )
 from scripts.native_linux_restore import (
@@ -210,16 +209,14 @@ def boot_restored(
     source: Guest,
     custody: dict[str, Any],
     restored: RestoredDisks,
+    snapshots: DiskSnapshots,
     capture: dict[str, Any],
     progress: Callable[[str], AbstractContextManager[None]],
     launch: Callable[[Guest], AbstractContextManager[Path]],
     report: dict[str, Any],
 ) -> None:
-    with retained_boot_inputs(
-        source,
-        custody,
-        report["boot_inputs"],
-        expected_source=capture_projection(capture)["source"],
+    with snapshots.restore_boot_inputs(
+        source, custody, capture_projection(capture), report["boot_inputs"]
     ) as retained:
         with writable_inputs(restored, report["writable_inputs"]) as disks:
             with phase(report, "input-admission") as item:
@@ -248,7 +245,9 @@ def boot_restored(
                         "restored-controller-profile-changed",
                     )
                     item["controller"] = copy.deepcopy(child.report["controller_verified"])
-                observe_replacement(child, source, endpoint, canary_configuration(source), report)
+                observe_replacement(
+                    child, retained.source, endpoint, canary_configuration(source), report
+                )
                 retained.verify()
                 disks.verify(source.enrollment)
             require(child.observed is not None, "restored-boot-never-admitted")
@@ -314,7 +313,9 @@ def qualify_restored_boot(
                     progress,
                     report["private_inputs"],
                 ) as restored:
-                    boot_restored(source, custody, restored, capture, progress, launch, report)
+                    boot_restored(
+                        source, custody, restored, snapshots, capture, progress, launch, report
+                    )
             finally:
                 require(
                     canary.read_bytes() == content

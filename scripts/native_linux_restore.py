@@ -17,7 +17,7 @@ from typing import Any
 from scripts.native_linux_guest import Guest
 from scripts.native_linux_images import DISK_BYTES, QEMU_IMG, digest, identity
 from scripts.native_linux_restart import phase, problem
-from scripts.native_linux_snapshots import DiskSnapshots, SnapshotError, copy_disk, stopped_source
+from scripts.native_linux_snapshots import DiskSnapshots, SnapshotError, copy_disk
 from scripts.run_stats import RunStats, valid_stats
 
 
@@ -65,6 +65,7 @@ class RestoreSource:
     custody: dict[str, Any]
     snapshots: DiskSnapshots
     expected: dict[str, Any]
+    current: dict[str, Any] | None = field(default=None, init=False, repr=False)
 
     def verify(self) -> None:
         snapshots, expected = self.snapshots, self.expected
@@ -80,7 +81,10 @@ class RestoreSource:
             {p.name for p in snapshots.directory.iterdir()} == set(DISK_BYTES),
             "unexpected-snapshot-input",
         )
-        require(stopped_source(self.guest, self.custody) == expected["source"], "source-changed")
+        observed = snapshots.restore_observation(self.guest, self.custody, expected)
+        if self.current is None:
+            self.current = copy.deepcopy(observed)
+        require(observed == self.current, "restore-source-anchor-changed")
         require(
             expected["image_tool"]["version"] == "8.2.2"
             and digest(QEMU_IMG) == expected["image_tool"]["binary_sha256"],
@@ -211,6 +215,7 @@ def private_restored_disks(
             require(version.split()[:3] == ["qemu-img", "version", "8.2.2"], "image-tool-mismatch")
             source.verify()
             item["observation"] = copy.deepcopy(source.expected)
+            item["source_before"] = copy.deepcopy(source.current)
         directory = Path(tempfile.mkdtemp(prefix="fhri-", dir=temporary))
         created_identity = identity(directory, directory=True)
         owner = RestoredDisks(guest.enrollment, directory, created_identity)
@@ -250,6 +255,7 @@ def private_restored_disks(
                 source.verify()
                 owner.verify()
                 item["observation"] = copy.deepcopy(source.expected)
+                item["source_after"] = copy.deepcopy(source.current)
                 item["restored_files"] = copy.deepcopy(
                     owner.files if owner._written_files is None else dict(owner._written_files)
                 )

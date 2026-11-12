@@ -23,6 +23,7 @@ from scripts.run_stats import RunStats, valid_stats
 from scripts.validation_timeouts import watchdog
 
 if TYPE_CHECKING:
+    from scripts.native_linux_restart import RetainedBootInputs
     from scripts.native_linux_successor import CaptureLifetime
 
 
@@ -173,6 +174,26 @@ class DiskSnapshots:
         assert self._source_owner is not None
         require(self._source_owner.bound_to(self), "foreign-capture-source-handle")
         return self._source_owner.advance(enrollment, progress, launch, report)
+
+    def restore_observation(
+        self, guest: Guest, custody: dict[str, Any], expected: dict[str, Any]
+    ) -> dict[str, Any]:
+        require(self._source_owner is not None, "capture-source-not-admitted")
+        assert self._source_owner is not None
+        require(self._source_owner.bound_to(self), "foreign-capture-source-handle")
+        return self._source_owner.restore_observation(guest, custody, expected)
+
+    def restore_boot_inputs(
+        self,
+        guest: Guest,
+        custody: dict[str, Any],
+        expected: dict[str, Any],
+        report: dict[str, Any],
+    ) -> AbstractContextManager[RetainedBootInputs]:
+        require(self._source_owner is not None, "capture-source-not-admitted")
+        assert self._source_owner is not None
+        require(self._source_owner.bound_to(self), "foreign-capture-source-handle")
+        return self._source_owner.restore_boot_inputs(guest, custody, expected, report)
 
     def closure(self) -> tuple[Any, ...]:
         return (
