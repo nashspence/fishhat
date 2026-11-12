@@ -822,6 +822,12 @@ def test_main_cannot_pass_storage_cleanup_or_fault_failure_and_preserves_statist
             raise native.GuestBootError("required-reboot-interruption-missing")
 
     monkeypatch.setattr(native, "guest_reboot_faults", reboot_faults)
+
+    def successor(*args):
+        events.append("successor-timeline")
+        args[-1].update(status="passed", observed_successor_verified=True)
+
+    monkeypatch.setattr(native, "qualify_source_successor", successor)
     assert native.main(["--github-hosted-only", "--output", str(output)]) == int(failure != "none")
     report = json.loads(output.read_text())
     assert report["status"] == ("passed" if failure == "none" else "failed")
@@ -833,6 +839,7 @@ def test_main_cannot_pass_storage_cleanup_or_fault_failure_and_preserves_statist
         and report["statistics"]["scope"] == "process-excludes-children"
     )
     assert events[:3] == ["boot-storage", "input-cleanup", "cleanup-observation"]
+    assert ("successor-timeline" in events) is (failure == "none")
     assert ("fault-observation" in events) is (failure != "cleanup")
     assert ("reboot-fault-observation" in events) is (failure not in ("cleanup", "fault"))
 
