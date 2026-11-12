@@ -5,8 +5,8 @@ from __future__ import annotations
 import copy
 import tempfile
 import uuid
-from collections.abc import Callable
-from contextlib import AbstractContextManager
+from collections.abc import Callable, Iterator
+from contextlib import AbstractContextManager, contextmanager
 from pathlib import Path
 from typing import Any
 
@@ -14,6 +14,7 @@ from scripts.native_linux_guest import Guest
 from scripts.native_linux_images import digest, identity
 from scripts.native_linux_reboot import host_custody, qualify_canary_advance
 from scripts.native_linux_restart import (
+    RetainedBootInputs,
     canary_configuration,
     observe_replacement,
     phase,
@@ -69,6 +70,9 @@ class CaptureLifetime:
         self._capture = capture
         self._capture_keys = tuple(k for k, v in source.report.items() if v is capture)
         self._original_capture = copy.deepcopy(capture)
+        from scripts.native_linux_restore import capture_projection
+
+        self._capture_projection = capture_projection(capture)
         # Empty result slots and later reports carry no original accepted evidence.
         self._original_report = copy.deepcopy(
             {k: v for k, v in source.report.items() if v is not capture and v != {}}
@@ -131,6 +135,47 @@ class CaptureLifetime:
         observed = stopped_source(guest, custody)
         require(observed == accepted, "source-changed")
         return copy.deepcopy(observed)
+
+    def restore_observation(
+        self, guest: Guest, custody: dict[str, Any], expected: dict[str, Any]
+    ) -> dict[str, Any]:
+        require(guest is self._source, "foreign-restore-source-guest")
+        require(custody == self._custody, "restore-source-custody-changed")
+        require(expected == self._capture_projection, "original-restore-capture-changed")
+        return self.observation(guest.enrollment)
+
+    @contextmanager
+    def restore_boot_inputs(
+        self,
+        guest: Guest,
+        custody: dict[str, Any],
+        expected: dict[str, Any],
+        report: dict[str, Any],
+    ) -> Iterator[RetainedBootInputs]:
+        try:
+            accepted = self.restore_observation(guest, custody, expected)
+            source, current, _ = self._anchor
+            with retained_boot_inputs(
+                source, current, report, expected_source=accepted
+            ) as retained:
+                try:
+                    yield retained
+                except BaseException as error:
+                    report["problem"] = problem(error)
+                    raise
+                finally:
+                    try:
+                        require(
+                            self.restore_observation(guest, custody, expected) == accepted,
+                            "restore-source-anchor-changed",
+                        )
+                    except BaseException as error:
+                        report["preservation_problem"] = problem(error)
+                        raise
+        except BaseException as error:
+            report["status"] = "failed"
+            report.setdefault("problem", problem(error))
+            raise
 
     def advance(
         self,

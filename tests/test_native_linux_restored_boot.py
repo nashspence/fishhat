@@ -356,8 +356,8 @@ def test_live_owned_controller_blocks_input_closure_and_deletion_until_reaped(fi
     report = {}
     writable = {}
     with capture(f, captured) as sealed, prepared(f, sealed, captured, report) as owner:
-        with restored.retained_boot_inputs(
-            f.guest, f.custody, {}, expected_source=restore.capture_projection(captured)["source"]
+        with sealed.restore_boot_inputs(
+            f.guest, f.custody, restore.capture_projection(captured), {}
         ) as retained:
             with restored.writable_inputs(owner, writable) as handle:
                 child = retained.guest(
@@ -383,8 +383,8 @@ def test_changed_live_controller_binding_is_refused(fixture, field):
     report = {}
     writable = {}
     with capture(f, captured) as sealed, prepared(f, sealed, captured, report) as owner:
-        with restored.retained_boot_inputs(
-            f.guest, f.custody, {}, expected_source=restore.capture_projection(captured)["source"]
+        with sealed.restore_boot_inputs(
+            f.guest, f.custody, restore.capture_projection(captured), {}
         ) as retained:
             with restored.writable_inputs(owner, writable) as handle:
                 child = retained.guest(
