@@ -3943,8 +3943,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/resource_admission.py": "e36c14e87e05562c630f16efa7b49ad6592c9744522f330eb261f50594e93802",
-        "tests/test_resource_admission.py": "f942026837c83a5e1ec784edb1c570f47c3509b9b205adb18bbd0d506ac2ff72"
+        "packages/fishhat-contracts/src/fishhat_contracts/resource_admission.py": "7de2c23b3fef5c21e15aeb0603326408237234e47fc65cb7aadeab20b45f0eee",
+        "tests/test_resource_admission.py": "ae8758202f713a5c9431bd7c7140eb809c53442a510aad5c90c8311a1ac9d5db"
       },
       "symbol": "fishhat_contracts.resource_admission:check_scheduler_request",
       "work": "O(B) complete selected policy, request, grant and evidence bytes"
@@ -3967,8 +3967,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/resource_admission.py": "e36c14e87e05562c630f16efa7b49ad6592c9744522f330eb261f50594e93802",
-        "tests/test_resource_admission.py": "f942026837c83a5e1ec784edb1c570f47c3509b9b205adb18bbd0d506ac2ff72"
+        "packages/fishhat-contracts/src/fishhat_contracts/resource_admission.py": "7de2c23b3fef5c21e15aeb0603326408237234e47fc65cb7aadeab20b45f0eee",
+        "tests/test_resource_admission.py": "ae8758202f713a5c9431bd7c7140eb809c53442a510aad5c90c8311a1ac9d5db"
       },
       "symbol": "fishhat_contracts.resource_admission:check_scheduler_response",
       "work": "O(B) complete selected policy, request, grant and evidence bytes"
@@ -3991,8 +3991,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/resource_admission.py": "e36c14e87e05562c630f16efa7b49ad6592c9744522f330eb261f50594e93802",
-        "tests/test_resource_admission.py": "f942026837c83a5e1ec784edb1c570f47c3509b9b205adb18bbd0d506ac2ff72"
+        "packages/fishhat-contracts/src/fishhat_contracts/resource_admission.py": "7de2c23b3fef5c21e15aeb0603326408237234e47fc65cb7aadeab20b45f0eee",
+        "tests/test_resource_admission.py": "ae8758202f713a5c9431bd7c7140eb809c53442a510aad5c90c8311a1ac9d5db"
       },
       "symbol": "fishhat_contracts.resource_admission:require_resource_launch",
       "work": "O(B) complete selected policy, request, grant and evidence bytes"
@@ -4015,8 +4015,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/resource_admission.py": "e36c14e87e05562c630f16efa7b49ad6592c9744522f330eb261f50594e93802",
-        "tests/test_resource_admission.py": "f942026837c83a5e1ec784edb1c570f47c3509b9b205adb18bbd0d506ac2ff72"
+        "packages/fishhat-contracts/src/fishhat_contracts/resource_admission.py": "7de2c23b3fef5c21e15aeb0603326408237234e47fc65cb7aadeab20b45f0eee",
+        "tests/test_resource_admission.py": "ae8758202f713a5c9431bd7c7140eb809c53442a510aad5c90c8311a1ac9d5db"
       },
       "symbol": "fishhat_contracts.resource_admission:validate_admission_policy",
       "work": "O(B) complete selected policy, request, grant and evidence bytes"
@@ -4039,8 +4039,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/resource_admission.py": "e36c14e87e05562c630f16efa7b49ad6592c9744522f330eb261f50594e93802",
-        "tests/test_resource_admission.py": "f942026837c83a5e1ec784edb1c570f47c3509b9b205adb18bbd0d506ac2ff72"
+        "packages/fishhat-contracts/src/fishhat_contracts/resource_admission.py": "7de2c23b3fef5c21e15aeb0603326408237234e47fc65cb7aadeab20b45f0eee",
+        "tests/test_resource_admission.py": "ae8758202f713a5c9431bd7c7140eb809c53442a510aad5c90c8311a1ac9d5db"
       },
       "symbol": "fishhat_contracts.resource_admission:validate_process_admission",
       "work": "O(B) complete selected policy, request, grant and evidence bytes"
@@ -4063,8 +4063,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/resource_admission.py": "e36c14e87e05562c630f16efa7b49ad6592c9744522f330eb261f50594e93802",
-        "tests/test_resource_admission.py": "f942026837c83a5e1ec784edb1c570f47c3509b9b205adb18bbd0d506ac2ff72"
+        "packages/fishhat-contracts/src/fishhat_contracts/resource_admission.py": "7de2c23b3fef5c21e15aeb0603326408237234e47fc65cb7aadeab20b45f0eee",
+        "tests/test_resource_admission.py": "ae8758202f713a5c9431bd7c7140eb809c53442a510aad5c90c8311a1ac9d5db"
       },
       "symbol": "fishhat_contracts.resource_admission:validate_release_authorization",
       "work": "O(B) complete selected policy, request, grant and evidence bytes"
@@ -4087,8 +4087,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/resource_admission.py": "e36c14e87e05562c630f16efa7b49ad6592c9744522f330eb261f50594e93802",
-        "tests/test_resource_admission.py": "f942026837c83a5e1ec784edb1c570f47c3509b9b205adb18bbd0d506ac2ff72"
+        "packages/fishhat-contracts/src/fishhat_contracts/resource_admission.py": "7de2c23b3fef5c21e15aeb0603326408237234e47fc65cb7aadeab20b45f0eee",
+        "tests/test_resource_admission.py": "ae8758202f713a5c9431bd7c7140eb809c53442a510aad5c90c8311a1ac9d5db"
       },
       "symbol": "fishhat_contracts.resource_admission:validate_release_evidence",
       "work": "O(B) complete selected policy, request, grant and evidence bytes"
@@ -4111,8 +4111,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/resource_admission.py": "e36c14e87e05562c630f16efa7b49ad6592c9744522f330eb261f50594e93802",
-        "tests/test_resource_admission.py": "f942026837c83a5e1ec784edb1c570f47c3509b9b205adb18bbd0d506ac2ff72"
+        "packages/fishhat-contracts/src/fishhat_contracts/resource_admission.py": "7de2c23b3fef5c21e15aeb0603326408237234e47fc65cb7aadeab20b45f0eee",
+        "tests/test_resource_admission.py": "ae8758202f713a5c9431bd7c7140eb809c53442a510aad5c90c8311a1ac9d5db"
       },
       "symbol": "fishhat_contracts.resource_admission:validate_resource_grant",
       "work": "O(B) complete selected policy, request, grant and evidence bytes"
@@ -4135,8 +4135,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/resource_admission.py": "e36c14e87e05562c630f16efa7b49ad6592c9744522f330eb261f50594e93802",
-        "tests/test_resource_admission.py": "f942026837c83a5e1ec784edb1c570f47c3509b9b205adb18bbd0d506ac2ff72"
+        "packages/fishhat-contracts/src/fishhat_contracts/resource_admission.py": "7de2c23b3fef5c21e15aeb0603326408237234e47fc65cb7aadeab20b45f0eee",
+        "tests/test_resource_admission.py": "ae8758202f713a5c9431bd7c7140eb809c53442a510aad5c90c8311a1ac9d5db"
       },
       "symbol": "fishhat_contracts.resource_admission:validate_resource_request",
       "work": "O(B) complete selected policy, request, grant and evidence bytes"
@@ -4160,7 +4160,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/resource_queue.py": "364cccb5aa2274c2c5b23cd2bf1ba2f84828482dacdec471966c7abf94565eee",
-        "tests/test_resource_queue.py": "8452ed41ad8103950794140fbd13070d4d01fe9be274291ef3c281ff0c7cfb9f"
+        "tests/test_resource_queue.py": "6257bceaea6b3ec6f30a05cfdc86da8dccca6d881046a04e30f186940638d307"
       },
       "symbol": "fishhat_contracts.resource_queue:decode_admission_input",
       "work": "O(B) complete selected input, record, previous facts and bounded page bytes"
@@ -4184,7 +4184,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/resource_queue.py": "364cccb5aa2274c2c5b23cd2bf1ba2f84828482dacdec471966c7abf94565eee",
-        "tests/test_resource_queue.py": "8452ed41ad8103950794140fbd13070d4d01fe9be274291ef3c281ff0c7cfb9f"
+        "tests/test_resource_queue.py": "6257bceaea6b3ec6f30a05cfdc86da8dccca6d881046a04e30f186940638d307"
       },
       "symbol": "fishhat_contracts.resource_queue:validate_admission_input_custody",
       "work": "O(B) complete selected input, record, previous facts and bounded page bytes"
@@ -4213,7 +4213,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/resource_queue.py": "364cccb5aa2274c2c5b23cd2bf1ba2f84828482dacdec471966c7abf94565eee",
-        "tests/test_resource_queue.py": "8452ed41ad8103950794140fbd13070d4d01fe9be274291ef3c281ff0c7cfb9f"
+        "tests/test_resource_queue.py": "6257bceaea6b3ec6f30a05cfdc86da8dccca6d881046a04e30f186940638d307"
       },
       "symbol": "fishhat_contracts.resource_queue:validate_admission_page",
       "work": "O(B) complete selected input, record, previous facts and bounded page bytes"
@@ -4237,7 +4237,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/resource_queue.py": "364cccb5aa2274c2c5b23cd2bf1ba2f84828482dacdec471966c7abf94565eee",
-        "tests/test_resource_queue.py": "8452ed41ad8103950794140fbd13070d4d01fe9be274291ef3c281ff0c7cfb9f"
+        "tests/test_resource_queue.py": "6257bceaea6b3ec6f30a05cfdc86da8dccca6d881046a04e30f186940638d307"
       },
       "symbol": "fishhat_contracts.resource_queue:validate_admission_record",
       "work": "O(B) complete selected input, record, previous facts and bounded page bytes"
@@ -4266,7 +4266,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/resource_queue.py": "364cccb5aa2274c2c5b23cd2bf1ba2f84828482dacdec471966c7abf94565eee",
-        "tests/test_resource_queue.py": "8452ed41ad8103950794140fbd13070d4d01fe9be274291ef3c281ff0c7cfb9f"
+        "tests/test_resource_queue.py": "6257bceaea6b3ec6f30a05cfdc86da8dccca6d881046a04e30f186940638d307"
       },
       "symbol": "fishhat_contracts.resource_queue:validate_admission_response",
       "work": "O(B) complete selected input, record, previous facts and bounded page bytes"

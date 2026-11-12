@@ -38,6 +38,7 @@ def request() -> dict[str, Any]:
         "id": _REQUEST_ID,
         "context": {
             "owner": owner,
+            "account": "app-demo",
             "operation_id": "44444444-4444-4444-8444-444444444444",
             "stage_id": "55555555-5555-4555-8555-555555555555",
             "stage": "build",
@@ -299,6 +300,23 @@ def test_slurm_repeated_execution_and_cleanup_are_not_resource_release(state):
     assert slurm.normalize_state("COMPLETED", ("COMPLETING",)).phase == "stopping"
     assert slurm.normalize_state("SUSPENDED").phase == "unknown"
     assert slurm.normalize_state("COMPLETED").outcome == "backend-exit-zero"
+
+
+@pytest.mark.parametrize(
+    ("state", "flags", "phase"),
+    [
+        ("PREEMPTED", ("COMPLETING",), "stopping"),
+        ("PREEMPTED", ("CONFIGURING",), "allocated"),
+        ("PREEMPTED", ("UNRECOGNIZED",), "unknown"),
+        ("RUNNING", ("SPECIAL_EXIT",), "unknown"),
+        ("SPECIAL_EXIT", (), "unknown"),
+        ("REQUEUED", ("COMPLETING",), "stopping"),
+        ("REQUEUE_FED", ("CONFIGURING",), "allocated"),
+        ("RUNNING", ("COMPLETING", "REQUEUE_HOLD"), "unknown"),
+    ],
+)
+def test_slurm_phase_flags_preserve_preemption_and_requeue_risk(state, flags, phase):
+    assert slurm.normalize_state(state, flags) == slurm.JobState(phase, may_repeat=True)
 
 
 def test_nomad_timeout_complete_and_replacement_cannot_become_success_or_release():

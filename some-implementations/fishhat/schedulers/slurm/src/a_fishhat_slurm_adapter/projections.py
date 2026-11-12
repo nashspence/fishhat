@@ -4,6 +4,11 @@ Provider semantics: https://slurm.schedmd.com/sbatch.html and
 https://slurm.schedmd.com/job_state_codes.html. The configured worker script is
 owner-installed. Its request reference is correlation data, never authorization.
 Slurm cgroup configuration and a fenced worker remain separate prerequisites.
+The argument tuple is not a complete native invocation: an approved profile must
+pin the client/configuration/plugins, replace the inherited client environment,
+and verify the immutable bootstrap's submission directives. --export=NIL controls
+the workload environment; it does not disable sbatch's environment option inputs
+or script directives, and it still propagates SLURM_* and SPANK variables.
 """
 
 from __future__ import annotations
@@ -18,6 +23,9 @@ from fishhat_contracts.validation import ContractError, digest, strict_json, val
 
 _MIB = 1024 * 1024
 _EXACT_INTEGER = 9_007_199_254_740_991
+_REPEAT_INDICATORS = frozenset(
+    {"PREEMPTED", "REQUEUED", "REQUEUE_HOLD", "REQUEUE_FED", "SPECIAL_EXIT"}
+)
 
 
 @dataclass(frozen=True)
@@ -37,7 +45,11 @@ class BatchProjection:
 
 @dataclass(frozen=True)
 class JobState:
-    """Provider state only; even terminal state cannot release a Fishhat grant."""
+    """Provider state only; even terminal state cannot release a Fishhat grant.
+
+    may_repeat reports a detected preemption/requeue indicator. False means no
+    such indicator was detected, never proof that future execution is impossible.
+    """
 
     phase: Literal["queued", "allocated", "running", "stopping", "terminal", "unknown"]
     outcome: str | None = None
@@ -150,21 +162,23 @@ def parse_submission(stdout: str, *, cluster: str) -> SubmissionReceipt:
 
 def normalize_state(state: str, flags: tuple[str, ...] = ()) -> JobState:
     """Keep preemption/requeue and cleanup visible instead of inventing success."""
-    if any(flag in {"REQUEUED", "REQUEUE_HOLD", "REQUEUE_FED"} for flag in flags):
+    repeat_flag = any(flag in _REPEAT_INDICATORS for flag in flags)
+    may_repeat = state in _REPEAT_INDICATORS or repeat_flag
+    if repeat_flag:
         return JobState("unknown", may_repeat=True)
     if "COMPLETING" in flags:
-        return JobState("stopping")
+        return JobState("stopping", may_repeat=may_repeat)
     if "CONFIGURING" in flags:
-        return JobState("allocated")
+        return JobState("allocated", may_repeat=may_repeat)
     if flags:
-        return JobState("unknown")
+        return JobState("unknown", may_repeat=may_repeat)
     if state == "PENDING":
         return JobState("queued")
     if state == "RUNNING":
         return JobState("running")
     if state == "COMPLETING":
         return JobState("stopping")
-    if state in {"PREEMPTED", "REQUEUED", "REQUEUE_HOLD", "REQUEUE_FED"}:
+    if may_repeat:
         return JobState("unknown", may_repeat=True)
     outcomes = {
         "COMPLETED": "backend-exit-zero",

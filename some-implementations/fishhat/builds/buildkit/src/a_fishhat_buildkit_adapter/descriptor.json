@@ -53,7 +53,7 @@
     "build": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/build-adapter.schema.json",
-        "digest": "sha256:da57d7c8e27f26350f2bda48f57b0791ba0e70295d7f34213ba9c9d319c701f3"
+        "digest": "sha256:6a4b54ea3ba21c3aab010367a8f5c82294f33af80167eeefceee78fb43165fe2"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/build-adapter.schema.json#/$defs/Response",

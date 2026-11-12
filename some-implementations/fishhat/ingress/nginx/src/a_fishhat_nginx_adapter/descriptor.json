@@ -46,7 +46,7 @@
     "ingress": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/ingress-adapter.schema.json",
-        "digest": "sha256:8d872b8111fb312147a65c142c4b28434fb4573a68633cb02ea3491063cdcc87"
+        "digest": "sha256:d50a0b8974989ca79d6c9e9da228f849ee347d596a01f83b56a5125c7c50c68f"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/ingress-adapter.schema.json#/$defs/Response",

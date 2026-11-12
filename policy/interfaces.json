@@ -505,7 +505,7 @@
     },
     "resource-admission.schema.json": {
       "id": "https://fishhat.invalid/contracts/resource-admission.schema.json",
-      "sha256": "f3f3d84ee307f050674b34c13c09d3d84f27c4f5f88443444ab04af8292a2b42"
+      "sha256": "210cbeee65dc4e329d898d03197a8fff4cc9a64bb082fdb7011565739d902dea"
     },
     "resource-queue.schema.json": {
       "id": "https://fishhat.invalid/contracts/resource-queue.schema.json",

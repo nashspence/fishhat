@@ -326,6 +326,10 @@
         "target_host": {
           "$ref": "common.schema.json#/$defs/Id"
         },
+        "account": {
+          "$ref": "common.schema.json#/$defs/Id",
+          "description": "The host resource account independently approved for this exact workload context. The request account must equal this value; another account's presence in host policy supplies no permission to charge it."
+        },
         "subject": {
           "$ref": "adapter.schema.json#/$defs/Scope"
         },
@@ -361,12 +365,13 @@
         "stage",
         "work_digest",
         "target_host",
+        "account",
         "subject",
         "authorization",
         "admission_generation"
       ],
       "additionalProperties": false,
-      "description": "Exact independently approved work context. work_digest commits the immutable executable/input closure selected by the owner; a caller-selected digest supplies no authority. Authorization is either the exact reviewed proposal or retained accepted continuation; waiting does not turn accepted work into a fresh request and does not change its original identity. Current owner permission and the runtime admission fence must be checked again at actual launch. stage_id identifies one bounded execution stage; parent workflows cannot hold all resources while requiring children to reacquire those same resources. Native owners either subdivide an existing grant explicitly or independently admit successive stages. Target host is mandatory: arbitrary scheduler placement is not relocation authority."
+      "description": "Exact independently approved work context, including the host resource account selected for this workload owner and subject. The receiving host resolves that account from current authority independently of the submitted request; an account ceiling or caller-supplied account name does not establish membership. work_digest commits the immutable executable/input closure selected by the owner; a caller-selected digest supplies no authority. Authorization is either the exact reviewed proposal or retained accepted continuation; waiting does not turn accepted work into a fresh request and does not change its original identity. Current owner permission and the runtime admission fence must be checked again at actual launch. stage_id identifies one bounded execution stage; parent workflows cannot hold all resources while requiring children to reacquire those same resources. Native owners either subdivide an existing grant explicitly or independently admit successive stages. Target host is mandatory: arbitrary scheduler placement is not relocation authority."
     },
     "StorageRequestReference": {
       "type": "object",
@@ -873,7 +878,7 @@
         "unsupported"
       ],
       "additionalProperties": false,
-      "description": "One complete scalar status for the exact original request, not a list or scheduling authorization. Known submission, allocation and execution identities remain distinct. Unknown coverage supplies no grant, release or absence clearance, while any separately retained prior facts survive unchanged. A known submission/previous grant may not be silently replaced. Queued means durable backend acceptance with no granted allocation; it does not mean running. stop-requested confirms only cancellation-intent acceptance and may have no known grant; it is never cessation. cancelled without a grant requires positive SubmissionClosure; any previously retained grant still needs its own release. A released grant requires positive ReleaseEvidence and does not imply workload success. Pending reason codes are observations and never exact queue-position or start-time promises."
+      "description": "One complete scalar status for the exact original request, not a list or scheduling authorization. Known submission, allocation and execution identities remain distinct. Unknown coverage supplies no grant, release or absence clearance, while any separately retained prior facts survive unchanged. A known submission/previous grant may not be silently replaced. Rejected means refusal before backend acceptance and carries no submission; an already accepted submission cannot become rejected. Queued means durable backend acceptance with no granted allocation; it does not mean running. stop-requested confirms only cancellation-intent acceptance and may have no known grant; it is never cessation. cancelled without a grant requires positive SubmissionClosure; any previously retained grant still needs its own release. A released grant requires positive ReleaseEvidence and does not imply workload success. Pending reason codes are observations and never exact queue-position or start-time promises."
     },
     "GrantReference": {
       "type": "object",

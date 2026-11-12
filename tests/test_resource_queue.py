@@ -78,8 +78,8 @@ CHECK_OVERRIDES = {
 }
 
 
-def staged(count=0):
-    value = records()
+def staged(count=0, *, value=None):
+    value = records() if value is None else value
     payload = value["request"]
     payload["storage_requests"] = [
         {"operation_id": uid(1000 + index), "request_digest": DIGEST} for index in range(count)
@@ -226,6 +226,53 @@ def test_staged_admission_requires_independently_current_authority_and_exact_byt
         queue.decode_admission_input(reference, data, **context)
 
 
+@pytest.mark.parametrize("replace_context", [False, True])
+def test_staged_account_substitution_cannot_reuse_independently_approved_work(replace_context):
+    value = records()
+    value["policy"]["accounts"]["other-app"] = deepcopy(value["policy"]["accounts"]["demo-app"])
+    expected = deepcopy(input_context(value))
+    value["request"]["account"] = "other-app"
+    if replace_context:
+        value["request"]["context"]["account"] = "other-app"
+    value, reference, data, staging = staged(value=value)
+    error = "ADMISSION_CURRENT_CONTEXT" if replace_context else "ADMISSION_WORK_ACCOUNT"
+    with pytest.raises(ContractError, match=error):
+        queue.decode_admission_input(reference, data, **expected)
+    with pytest.raises(ContractError, match=error):
+        queue.validate_admission_input_custody(
+            reference,
+            value["request"],
+            staging,
+            **expected,
+            principal="ops-app-operate",
+            now=NOW,
+        )
+
+
+def test_staged_account_change_accepts_a_new_independently_approved_request():
+    original = records()
+    value = deepcopy(original)
+    value["policy"]["accounts"]["other-app"] = deepcopy(value["policy"]["accounts"]["demo-app"])
+    expected = deepcopy(input_context(value))
+    expected["context"]["account"] = "other-app"
+    expected["context"]["authorization"]["digest"] = "sha256:" + "b" * 64
+    value["request"].update(id=uid(99), account="other-app", context=deepcopy(expected["context"]))
+    value, reference, data, staging = staged(value=value)
+    payload = queue.decode_admission_input(reference, data, **expected)
+    queue.validate_admission_input_custody(
+        reference,
+        payload,
+        staging,
+        **expected,
+        principal="ops-app-operate",
+        now=NOW,
+    )
+    assert payload == value["request"]
+    assert payload["id"] != original["request"]["id"]
+    assert payload["context"] == expected["context"]
+    assert original["request"]["context"]["account"] == "demo-app"
+
+
 @pytest.mark.parametrize("change", ["principal", "resource", "expired", "uncommitted", "handle"])
 def test_resource_admission_staging_custody_cannot_be_rebound(change):
     value, reference, _, staging = staged()
@@ -355,11 +402,57 @@ def test_queue_eligibility_cannot_silently_reopen_original_work(eligibility):
         queue.validate_admission_record(changed, previous=original)
 
 
-def test_unknown_scheduler_observation_preserves_last_known_grant_and_capacity_claim():
+@pytest.mark.parametrize("retain_submission", [False, True])
+def test_rejection_cannot_erase_a_queued_records_accepted_submission(retain_submission):
+    value = records()
+    original = admission_record(value["request"])
+    queued = response_for(value, role_request(value, "observe"))["output"]["observation"]
+    original.update(eligibility="eligible", last_known=queued, observation=queued)
+    queue.validate_admission_record(original)
+    rejected = response_for(value, role_request(value, "observe"), state="rejected")["output"][
+        "observation"
+    ]
+    if not retain_submission:
+        rejected["submission"] = None
+    changed = {
+        **deepcopy(original),
+        "generation": 1,
+        "eligibility": "closed",
+        "last_known": rejected,
+        "observation": rejected,
+    }
+    with pytest.raises(ContractError, match="SCHEDULER_ACCEPTED_SUBMISSION_REJECTED"):
+        queue.validate_admission_record(changed, previous=original)
+    assert original["last_known"]["submission"] == value["submission"]
+
+
+def test_initial_queue_rejection_has_no_accepted_submission_or_allocation():
+    value = records()
+    original = admission_record(value["request"])
+    rejected = response_for(value, role_request(value, "observe"), state="rejected")["output"][
+        "observation"
+    ]
+    rejected["submission"] = None
+    changed = {
+        **deepcopy(original),
+        "generation": 1,
+        "eligibility": "closed",
+        "last_known": rejected,
+        "observation": rejected,
+    }
+    queue.validate_admission_record(changed, previous=original)
+    assert all(rejected[field] is None for field in ("submission", "grant", "release", "closure"))
+
+
+@pytest.mark.parametrize("known_grant", [False, True])
+def test_unknown_scheduler_observation_preserves_last_known_submission_and_grant(known_grant):
     value = records()
     original = admission_record(value["request"])
     observed = response_for(
-        value, role_request(value, "observe"), state="allocated", grant=value["grant"]
+        value,
+        role_request(value, "observe"),
+        state="allocated" if known_grant else "queued",
+        grant=value["grant"] if known_grant else None,
     )["output"]["observation"]
     original.update(eligibility="eligible", last_known=observed, observation=observed)
     queue.validate_admission_record(original)
@@ -368,9 +461,15 @@ def test_unknown_scheduler_observation_preserves_last_known_grant_and_capacity_c
     changed["observation"] = response_for(value, role_request(value, "observe"), state="unknown")[
         "output"
     ]["observation"]
+    changed["observation"]["submission"] = None
     queue.validate_admission_record(changed, previous=original)
-    assert changed["last_known"]["grant"] == value["grant"]
-    for erase in [None, {**observed, "state": "queued", "grant": None}]:
+    assert changed["last_known"] == observed
+    assert changed["last_known"]["submission"] == value["submission"]
+    erasures = [None]
+    if known_grant:
+        assert changed["last_known"]["grant"] == value["grant"]
+        erasures.append({**observed, "state": "queued", "grant": None})
+    for erase in erasures:
         bad = {**deepcopy(changed), "last_known": erase}
         with pytest.raises(ContractError):
             queue.validate_admission_record(bad, previous=original)

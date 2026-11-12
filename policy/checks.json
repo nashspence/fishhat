@@ -16378,6 +16378,10 @@
       "purpose_sha256": "0501889d7356c87df0c3f8d26861f08df351bb7432a285dec4843abeef19949f"
     },
     {
+      "node": "tests/test_resource_admission.py::test_account_change_requires_a_new_independently_approved_work_context",
+      "purpose_sha256": "7f9617382b05fabe0c425d9fcc9889fb55b8b85578c77d201b33165722186b25"
+    },
+    {
       "node": "tests/test_resource_admission.py::test_current_reconciliation_admission_can_use_a_separately_approved_recovery_epoch",
       "purpose_sha256": "7f9617382b05fabe0c425d9fcc9889fb55b8b85578c77d201b33165722186b25"
     },
@@ -16399,6 +16403,14 @@
     },
     {
       "node": "tests/test_resource_admission.py::test_expiry_or_partial_cessation_never_releases_capacity[no_future_starts]",
+      "purpose_sha256": "7f9617382b05fabe0c425d9fcc9889fb55b8b85578c77d201b33165722186b25"
+    },
+    {
+      "node": "tests/test_resource_admission.py::test_initial_rejection_has_no_accepted_backend_submission",
+      "purpose_sha256": "7f9617382b05fabe0c425d9fcc9889fb55b8b85578c77d201b33165722186b25"
+    },
+    {
+      "node": "tests/test_resource_admission.py::test_integer_valued_float_quantities_keep_exact_quantum_charges",
       "purpose_sha256": "7f9617382b05fabe0c425d9fcc9889fb55b8b85578c77d201b33165722186b25"
     },
     {
@@ -16427,6 +16439,14 @@
     },
     {
       "node": "tests/test_resource_admission.py::test_reconciliation_retains_submission_instead_of_dispatching_again",
+      "purpose_sha256": "7f9617382b05fabe0c425d9fcc9889fb55b8b85578c77d201b33165722186b25"
+    },
+    {
+      "node": "tests/test_resource_admission.py::test_rejection_cannot_erase_a_retained_scheduler_submission[False]",
+      "purpose_sha256": "7f9617382b05fabe0c425d9fcc9889fb55b8b85578c77d201b33165722186b25"
+    },
+    {
+      "node": "tests/test_resource_admission.py::test_rejection_cannot_erase_a_retained_scheduler_submission[True]",
       "purpose_sha256": "7f9617382b05fabe0c425d9fcc9889fb55b8b85578c77d201b33165722186b25"
     },
     {
@@ -16482,6 +16502,10 @@
       "purpose_sha256": "7f9617382b05fabe0c425d9fcc9889fb55b8b85578c77d201b33165722186b25"
     },
     {
+      "node": "tests/test_resource_admission.py::test_unbound_work_context_is_not_an_admission_request",
+      "purpose_sha256": "7f9617382b05fabe0c425d9fcc9889fb55b8b85578c77d201b33165722186b25"
+    },
+    {
       "node": "tests/test_resource_admission.py::test_unknown_observation_preserves_original_grant_and_cannot_supply_clearance",
       "purpose_sha256": "7f9617382b05fabe0c425d9fcc9889fb55b8b85578c77d201b33165722186b25"
     },
@@ -16511,6 +16535,14 @@
     },
     {
       "node": "tests/test_resource_admission.py::test_waiting_request_needs_independently_current_exact_context[work_digest]",
+      "purpose_sha256": "7f9617382b05fabe0c425d9fcc9889fb55b8b85578c77d201b33165722186b25"
+    },
+    {
+      "node": "tests/test_resource_admission.py::test_work_cannot_select_another_approved_accounts_capacity[False]",
+      "purpose_sha256": "7f9617382b05fabe0c425d9fcc9889fb55b8b85578c77d201b33165722186b25"
+    },
+    {
+      "node": "tests/test_resource_admission.py::test_work_cannot_select_another_approved_accounts_capacity[True]",
       "purpose_sha256": "7f9617382b05fabe0c425d9fcc9889fb55b8b85578c77d201b33165722186b25"
     },
     {
@@ -16686,6 +16718,10 @@
       "purpose_sha256": "36c20612b79fb27814d293a602997cf8be2375ddca4c0eb2e4a26213c6db0f04"
     },
     {
+      "node": "tests/test_resource_queue.py::test_initial_queue_rejection_has_no_accepted_submission_or_allocation",
+      "purpose_sha256": "36c20612b79fb27814d293a602997cf8be2375ddca4c0eb2e4a26213c6db0f04"
+    },
+    {
       "node": "tests/test_resource_queue.py::test_new_queue_writes_require_fresh_contract_pins_without_granting_execution",
       "purpose_sha256": "36c20612b79fb27814d293a602997cf8be2375ddca4c0eb2e4a26213c6db0f04"
     },
@@ -16762,6 +16798,14 @@
       "purpose_sha256": "36c20612b79fb27814d293a602997cf8be2375ddca4c0eb2e4a26213c6db0f04"
     },
     {
+      "node": "tests/test_resource_queue.py::test_rejection_cannot_erase_a_queued_records_accepted_submission[False]",
+      "purpose_sha256": "36c20612b79fb27814d293a602997cf8be2375ddca4c0eb2e4a26213c6db0f04"
+    },
+    {
+      "node": "tests/test_resource_queue.py::test_rejection_cannot_erase_a_queued_records_accepted_submission[True]",
+      "purpose_sha256": "36c20612b79fb27814d293a602997cf8be2375ddca4c0eb2e4a26213c6db0f04"
+    },
+    {
       "node": "tests/test_resource_queue.py::test_resource_admission_cli_is_closed_host_only_stdin[cancel]",
       "purpose_sha256": "36c20612b79fb27814d293a602997cf8be2375ddca4c0eb2e4a26213c6db0f04"
     },
@@ -16806,6 +16850,18 @@
       "purpose_sha256": "80e86f4cf0f5cf42ae5f1f81f8c97af25c0f14f72fe72431e179944b9dd9115b"
     },
     {
+      "node": "tests/test_resource_queue.py::test_staged_account_change_accepts_a_new_independently_approved_request",
+      "purpose_sha256": "36c20612b79fb27814d293a602997cf8be2375ddca4c0eb2e4a26213c6db0f04"
+    },
+    {
+      "node": "tests/test_resource_queue.py::test_staged_account_substitution_cannot_reuse_independently_approved_work[False]",
+      "purpose_sha256": "36c20612b79fb27814d293a602997cf8be2375ddca4c0eb2e4a26213c6db0f04"
+    },
+    {
+      "node": "tests/test_resource_queue.py::test_staged_account_substitution_cannot_reuse_independently_approved_work[True]",
+      "purpose_sha256": "36c20612b79fb27814d293a602997cf8be2375ddca4c0eb2e4a26213c6db0f04"
+    },
+    {
       "node": "tests/test_resource_queue.py::test_staged_admission_preserves_complete_request_larger_than_the_wire_frame",
       "purpose_sha256": "36c20612b79fb27814d293a602997cf8be2375ddca4c0eb2e4a26213c6db0f04"
     },
@@ -16834,7 +16890,11 @@
       "purpose_sha256": "36c20612b79fb27814d293a602997cf8be2375ddca4c0eb2e4a26213c6db0f04"
     },
     {
-      "node": "tests/test_resource_queue.py::test_unknown_scheduler_observation_preserves_last_known_grant_and_capacity_claim",
+      "node": "tests/test_resource_queue.py::test_unknown_scheduler_observation_preserves_last_known_submission_and_grant[False]",
+      "purpose_sha256": "36c20612b79fb27814d293a602997cf8be2375ddca4c0eb2e4a26213c6db0f04"
+    },
+    {
+      "node": "tests/test_resource_queue.py::test_unknown_scheduler_observation_preserves_last_known_submission_and_grant[True]",
       "purpose_sha256": "36c20612b79fb27814d293a602997cf8be2375ddca4c0eb2e4a26213c6db0f04"
     },
     {
@@ -18359,6 +18419,38 @@
     },
     {
       "node": "tests/test_scheduler_projections.py::test_slurm_does_not_substitute_whole_cpu_allocation_for_a_fractional_bandwidth_cap",
+      "purpose_sha256": "e074fd29e97b51c9bfb434264492c0089156ea722dce65ee46bde79a4c01a6c6"
+    },
+    {
+      "node": "tests/test_scheduler_projections.py::test_slurm_phase_flags_preserve_preemption_and_requeue_risk[PREEMPTED-flags0-stopping]",
+      "purpose_sha256": "e074fd29e97b51c9bfb434264492c0089156ea722dce65ee46bde79a4c01a6c6"
+    },
+    {
+      "node": "tests/test_scheduler_projections.py::test_slurm_phase_flags_preserve_preemption_and_requeue_risk[PREEMPTED-flags1-allocated]",
+      "purpose_sha256": "e074fd29e97b51c9bfb434264492c0089156ea722dce65ee46bde79a4c01a6c6"
+    },
+    {
+      "node": "tests/test_scheduler_projections.py::test_slurm_phase_flags_preserve_preemption_and_requeue_risk[PREEMPTED-flags2-unknown]",
+      "purpose_sha256": "e074fd29e97b51c9bfb434264492c0089156ea722dce65ee46bde79a4c01a6c6"
+    },
+    {
+      "node": "tests/test_scheduler_projections.py::test_slurm_phase_flags_preserve_preemption_and_requeue_risk[REQUEUED-flags5-stopping]",
+      "purpose_sha256": "e074fd29e97b51c9bfb434264492c0089156ea722dce65ee46bde79a4c01a6c6"
+    },
+    {
+      "node": "tests/test_scheduler_projections.py::test_slurm_phase_flags_preserve_preemption_and_requeue_risk[REQUEUE_FED-flags6-allocated]",
+      "purpose_sha256": "e074fd29e97b51c9bfb434264492c0089156ea722dce65ee46bde79a4c01a6c6"
+    },
+    {
+      "node": "tests/test_scheduler_projections.py::test_slurm_phase_flags_preserve_preemption_and_requeue_risk[RUNNING-flags3-unknown]",
+      "purpose_sha256": "e074fd29e97b51c9bfb434264492c0089156ea722dce65ee46bde79a4c01a6c6"
+    },
+    {
+      "node": "tests/test_scheduler_projections.py::test_slurm_phase_flags_preserve_preemption_and_requeue_risk[RUNNING-flags7-unknown]",
+      "purpose_sha256": "e074fd29e97b51c9bfb434264492c0089156ea722dce65ee46bde79a4c01a6c6"
+    },
+    {
+      "node": "tests/test_scheduler_projections.py::test_slurm_phase_flags_preserve_preemption_and_requeue_risk[SPECIAL_EXIT-flags4-unknown]",
       "purpose_sha256": "e074fd29e97b51c9bfb434264492c0089156ea722dce65ee46bde79a4c01a6c6"
     },
     {

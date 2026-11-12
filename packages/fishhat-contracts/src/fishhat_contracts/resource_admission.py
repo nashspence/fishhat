@@ -111,6 +111,7 @@ def _request(request: dict[str, Any]) -> None:
         and context["subject"]["authority"] == context["owner"]["id"],
         "ADMISSION_WORK_LOCALITY",
     )
+    _require(request["account"] == context["account"], "ADMISSION_WORK_ACCOUNT")
     _require(
         demand["cpu_millis"] > 0
         and demand["cpu_millis"] <= limits["cpu_max_millis"]
@@ -215,8 +216,9 @@ def validate_resource_grant(
         ("cpu_millis", "cpu_quantum_millis"),
         ("memory_bytes", "memory_quantum_bytes"),
     ):
-        quantum = capabilities[key]
-        expected = ((request["demand"][quantity] + quantum - 1) // quantum) * quantum
+        # Ceiling intermediates can exceed the safe scalar range of validated JSON numbers.
+        amount, quantum = int(request["demand"][quantity]), int(capabilities[key])
+        expected = ((amount + quantum - 1) // quantum) * quantum
         _require(grant["charged"][quantity] == expected, "ADMISSION_QUANTUM_CHARGE")
     _require(
         _fits(grant["charged"], _available(policy))
@@ -453,6 +455,13 @@ def _observation(observation: dict[str, Any], inputs: dict[str, Any], coverage: 
         )
         return
     _require(state != "unknown", "SCHEDULER_STATUS_UNKNOWN")
+    _require(
+        state != "rejected"
+        or (
+            submission is None and inputs.get("submission") is None and _known_grant(inputs) is None
+        ),
+        "SCHEDULER_ACCEPTED_SUBMISSION_REJECTED",
+    )
     _require(state == "rejected" or submission is not None, "SCHEDULER_SUBMISSION_REQUIRED")
     _observation_grant(observation, inputs)
     if state == "cancelled":
