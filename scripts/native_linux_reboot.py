@@ -1,4 +1,4 @@
-"""Observe one graceful reboot only inside the enrolled disposable guest."""
+"""Observe guarded canary bytes and graceful reboot in an enrolled disposable guest."""
 
 from __future__ import annotations
 
@@ -31,6 +31,36 @@ end = time.monotonic() + c["seconds"]
 def require(value):
     if not value:
         raise ValueError("guest-reboot-custody-refused")
+def canary_contents(fd, expected, replacement=None):
+    require(isinstance(expected, bytes) or expected is None)
+    require(isinstance(replacement, bytes) or replacement is None)
+    require(expected is not None or replacement is not None)
+    limit = len(expected if expected is not None else replacement)
+    require(limit > 0)
+    def read():
+        os.lseek(fd, 0, os.SEEK_SET)
+        actual = bytearray()
+        while len(actual) <= limit:
+            block = os.read(fd, limit + 1 - len(actual))
+            if not block:
+                break
+            actual.extend(block)
+        return bytes(actual)
+    before = read()
+    require(before == (expected if expected is not None else b""))
+    if replacement is None:
+        return before
+    require(expected is None or (len(expected) == len(replacement) and expected != replacement))
+    os.lseek(fd, 0, os.SEEK_SET)
+    position = 0
+    while position < len(replacement):
+        count = os.write(fd, replacement[position:])
+        require(0 < count <= len(replacement) - position)
+        position += count
+    os.fsync(fd)
+    actual = read()
+    require(actual == replacement)
+    return actual
 def command(arguments):
     remaining = end - time.monotonic()
     require(remaining > 0)
@@ -39,7 +69,7 @@ def row(arguments):
     value = json.loads(command(arguments))["blockdevices"]
     require(len(value) == 1 and not value[0].get("children"))
     return value[0]
-require(os.geteuid() == 0 and c["mode"] in ("prepare", "inspect"))
+require(os.geteuid() == 0 and c["mode"] in ("prepare", "inspect", "advance"))
 require(str(uuid.UUID(c["enrollment"])) == c["enrollment"] and str(uuid.UUID(c["nonce"])) == c["nonce"] and str(uuid.UUID(c["probe"])) == c["probe"])
 require(pathlib.Path("/etc/fishhat-fixture-enrollment").read_text().strip() == c["enrollment"])
 require(pathlib.Path("/proc/sys/kernel/random/boot_id").read_text().strip() == c["boot_id"])
@@ -70,6 +100,11 @@ require(os.makedev(major, minor) == v.st_rdev)
 filesystem = {"path":str(source),"device":v.st_rdev,"uuid":m["uuid"],"filesystem":"ext4"}
 root = pathlib.Path("/var/lib/fhr-" + uuid.UUID(c["enrollment"]).hex)
 content = ("reboot:" + c["enrollment"] + "\n" + c["nonce"] + "\n").encode()
+if c["mode"] == "advance":
+    require("identity" not in c and str(uuid.UUID(c["prior_nonce"])) == c["prior_nonce"] and c["prior_nonce"] != c["nonce"])
+    require({"path":os.readlink("/proc/self/exe"),"sha256":hashlib.sha256(pathlib.Path("/proc/self/exe").read_bytes()).hexdigest()} == c["image"])
+    prior_content = ("reboot:" + c["enrollment"] + "\n" + c["prior_nonce"] + "\n").encode()
+require(not (root / "denied").exists() and not (root / "denied").is_symlink())
 mountpoints = [line.split()[4] for line in pathlib.Path("/proc/self/mountinfo").read_text().splitlines()]
 require(not any(p == str(root) or p.startswith(str(root) + "/") for p in mountpoints))
 def metadata(v, directory=False):
@@ -88,26 +123,23 @@ try:
     try:
         directory = metadata(os.fstat(parent), True)
         require(directory == metadata(root.lstat(), True))
-        flags = os.O_NOFOLLOW | (os.O_RDWR | os.O_CREAT | os.O_EXCL if c["mode"] == "prepare" else os.O_RDONLY)
+        flags = os.O_NOFOLLOW | (os.O_RDWR | os.O_CREAT | os.O_EXCL if c["mode"] == "prepare" else os.O_RDWR if c["mode"] == "advance" else os.O_RDONLY)
         fd = os.open("canary", flags, 0o600, dir_fd=parent)
         try:
-            if c["mode"] == "prepare":
-                position = 0
-                while position < len(content):
-                    count = os.write(fd, content[position:])
-                    require(count > 0)
-                    position += count
-                os.fsync(fd)
-                os.lseek(fd, 0, os.SEEK_SET)
+            if c["mode"] == "advance":
+                prior_file = metadata(os.fstat(fd))
+                require(prior_file == metadata((root / "canary").lstat()))
+                previous = canary_contents(fd, prior_content)
+                previous_identity = {"disks":disks,"root_filesystem":filesystem,"directory":directory,"file":prior_file,"content":previous.decode(),"sha256":hashlib.sha256(previous).hexdigest()}
+                require(json.dumps(previous_identity, sort_keys=True) == json.dumps(c["prior_identity"], sort_keys=True) and metadata(os.fstat(fd)) == prior_file)
+                actual = canary_contents(fd, prior_content, content)
+            else:
+                actual = canary_contents(fd, None, content) if c["mode"] == "prepare" else canary_contents(fd, content)
             file = metadata(os.fstat(fd))
             require(file["size"] == len(content) and file == metadata((root / "canary").lstat()))
-            actual = bytearray()
-            while len(actual) <= len(content):
-                block = os.read(fd, len(content) + 1 - len(actual))
-                if not block:
-                    break
-                actual.extend(block)
             require(actual == content and metadata(os.fstat(fd)) == file)
+            if c["mode"] == "advance":
+                require(file == prior_file)
         finally:
             os.close(fd)
         if c["mode"] == "prepare":
@@ -123,7 +155,7 @@ value = {"disks":disks,"root_filesystem":filesystem,"directory":directory,"file"
 if c["mode"] == "inspect":
     require(value == c["identity"])
 require(not (root / "denied").exists() and not (root / "denied").is_symlink())
-print(json.dumps({"mode":c["mode"],"probe":c["probe"],"enrollment":c["enrollment"],"boot_id":c["boot_id"],"identity":value,"canary_fsynced":c["mode"] == "prepare","denied_canary_absent":True,"observer":{"pid":os.getpid(),"executable":{"path":os.readlink("/proc/self/exe"),"sha256":hashlib.sha256(pathlib.Path("/proc/self/exe").read_bytes()).hexdigest()}}},sort_keys=True))
+print(json.dumps({"mode":c["mode"],"probe":c["probe"],"enrollment":c["enrollment"],"boot_id":c["boot_id"],"identity":value,"canary_fsynced":c["mode"] in ("prepare", "advance"),**({"previous_identity":previous_identity} if c["mode"] == "advance" else {}),"denied_canary_absent":True,"observer":{"pid":os.getpid(),"executable":{"path":os.readlink("/proc/self/exe"),"sha256":hashlib.sha256(pathlib.Path("/proc/self/exe").read_bytes()).hexdigest()}}},sort_keys=True))
 """
 
 
@@ -224,6 +256,7 @@ def invoke(
     deadline: Deadline,
     evidence: dict[str, Any],
 ) -> dict[str, Any]:
+    require(mode in ("prepare", "inspect", "advance"), "invalid-canary-mode")
     c = {
         **c,
         "mode": mode,
@@ -233,6 +266,13 @@ def invoke(
     }
     require(c["seconds"] > 0, "canary-observation-deadline")
     evidence["request"] = {k: c[k] for k in ("mode", "probe", "enrollment", "boot_id")}
+    if mode == "advance":
+        evidence["request"].update(
+            {
+                k: copy.deepcopy(c[k])
+                for k in ("nonce", "prior_nonce", "prior_identity", "image", "sizes", "seconds")
+            }
+        )
     raw = guest.ssh(
         guest.remote(observed, ["/usr/bin/python3", "-I", "-S", "-c", PROGRAM, json.dumps(c)]),
         deadline=deadline,
@@ -251,10 +291,20 @@ def invoke(
         and value.get("probe") == c["probe"]
         and value.get("enrollment") == guest.enrollment
         and value.get("boot_id") == observed["boot_id"]
-        and value.get("canary_fsynced") is (mode == "prepare")
+        and value.get("canary_fsynced") is (mode in ("prepare", "advance"))
         and value.get("denied_canary_absent") is True,
         "canary-observation-mismatch",
     )
+    if mode == "advance":
+        observer = value.get("observer")
+        require(
+            isinstance(value.get("previous_identity"), dict)
+            and json.dumps(value["previous_identity"], sort_keys=True)
+            == json.dumps(c.get("prior_identity"), sort_keys=True)
+            and isinstance(observer, dict)
+            and observer.get("executable") == c.get("image"),
+            "canary-prior-identity-mismatch",
+        )
     return value
 
 
@@ -339,8 +389,89 @@ def validate_canary(value: dict[str, Any], c: dict[str, Any]) -> dict[str, Any]:
         "canary-observer-image-mismatch",
     )
     if "identity" in c:
-        require(v == c["identity"] and image == c["image"], "retained-canary-changed")
+        require(
+            json.dumps(v, sort_keys=True) == json.dumps(c["identity"], sort_keys=True)
+            and image == c["image"],
+            "retained-canary-changed",
+        )
     return v
+
+
+def qualify_canary_advance(
+    guest: Guest,
+    observed: dict[str, Any],
+    c: dict[str, Any],
+    deadline: Deadline,
+    report: dict[str, Any],
+) -> dict[str, Any]:
+    metrics = RunStats()
+    report.update(
+        status="failed",
+        scope="owned-disposable-canary-byte-advance-only",
+        phases=[],
+        snapshot_restore_qualified=False,
+        product_authority_qualified=False,
+    )
+    original = copy.deepcopy(c)
+    complete = False
+    try:
+        guest.validate_profile(observed)
+        require(c.get("enrollment") == guest.enrollment, "foreign-canary-enrollment")
+        require(
+            isinstance(c.get("identity"), dict) and isinstance(c.get("image"), dict),
+            "admitted-prior-canary-required",
+        )
+        with phase(report, "prior-observation") as item:
+            previous = invoke(guest, observed, c, "inspect", deadline, item)
+            prior = validate_canary(previous, c)
+        nonce = str(uuid.uuid4())
+        require(nonce != c["nonce"], "canary-nonce-not-distinct")
+        request = {
+            "enrollment": c["enrollment"],
+            "sizes": copy.deepcopy(c["sizes"]),
+            "nonce": nonce,
+            "prior_nonce": c["nonce"],
+            "prior_identity": copy.deepcopy(prior),
+            "image": copy.deepcopy(c["image"]),
+        }
+        with phase(report, "persist-different-bytes") as item:
+            written = invoke(guest, observed, request, "advance", deadline, item)
+            resulting = validate_canary(written, request)
+            require(
+                {k: v for k, v in resulting.items() if k not in ("content", "sha256")}
+                == {k: v for k, v in prior.items() if k not in ("content", "sha256")}
+                and resulting["content"] != prior["content"],
+                "canary-advance-custody-changed",
+            )
+        accepted = {
+            "enrollment": c["enrollment"],
+            "sizes": copy.deepcopy(c["sizes"]),
+            "nonce": nonce,
+            "identity": copy.deepcopy(resulting),
+            "image": copy.deepcopy(c["image"]),
+        }
+        with phase(report, "independent-readback") as item:
+            after = invoke(guest, observed, accepted, "inspect", deadline, item)
+            validate_canary(after, accepted)
+        require(
+            len({p["request"]["probe"] for p in report["phases"]}) == 3,
+            "canary-challenge-reused",
+        )
+        require(c == original, "prior-canary-configuration-changed")
+        report.update(
+            prior_canary=copy.deepcopy(prior),
+            written_canary=copy.deepcopy(resulting),
+            observed_canary=copy.deepcopy(after["identity"]),
+        )
+        complete = True
+        return accepted
+    finally:
+        report["statistics"] = metrics.finish()
+        if not valid_stats(report["statistics"]):
+            report["status"] = "failed"
+            raise ValueError("invalid required canary advance statistics")
+        if complete:
+            report["status"] = "passed"
 
 
 def new_boot(
