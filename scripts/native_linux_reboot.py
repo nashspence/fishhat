@@ -255,6 +255,8 @@ def invoke(
     mode: str,
     deadline: Deadline,
     evidence: dict[str, Any],
+    *,
+    used_probes: set[str] | None = None,
 ) -> dict[str, Any]:
     require(mode in ("prepare", "inspect", "advance"), "invalid-canary-mode")
     c = {
@@ -264,6 +266,9 @@ def invoke(
         "probe": str(uuid.uuid4()),
         "seconds": min(current().seconds(60), deadline.remaining()),
     }
+    if used_probes is not None:
+        require(c["probe"] not in used_probes, "canary-challenge-reused")
+        used_probes.add(c["probe"])
     require(c["seconds"] > 0, "canary-observation-deadline")
     evidence["request"] = {k: c[k] for k in ("mode", "probe", "enrollment", "boot_id")}
     if mode == "advance":
@@ -403,6 +408,8 @@ def qualify_canary_advance(
     c: dict[str, Any],
     deadline: Deadline,
     report: dict[str, Any],
+    *,
+    prior_probes: frozenset[str] = frozenset(),
 ) -> dict[str, Any]:
     metrics = RunStats()
     report.update(
@@ -413,6 +420,7 @@ def qualify_canary_advance(
         product_authority_qualified=False,
     )
     original = copy.deepcopy(c)
+    used_probes = set(prior_probes)
     complete = False
     try:
         guest.validate_profile(observed)
@@ -422,7 +430,9 @@ def qualify_canary_advance(
             "admitted-prior-canary-required",
         )
         with phase(report, "prior-observation") as item:
-            previous = invoke(guest, observed, c, "inspect", deadline, item)
+            previous = invoke(
+                guest, observed, c, "inspect", deadline, item, used_probes=used_probes
+            )
             prior = validate_canary(previous, c)
         nonce = str(uuid.uuid4())
         require(nonce != c["nonce"], "canary-nonce-not-distinct")
@@ -435,7 +445,9 @@ def qualify_canary_advance(
             "image": copy.deepcopy(c["image"]),
         }
         with phase(report, "persist-different-bytes") as item:
-            written = invoke(guest, observed, request, "advance", deadline, item)
+            written = invoke(
+                guest, observed, request, "advance", deadline, item, used_probes=used_probes
+            )
             resulting = validate_canary(written, request)
             require(
                 {k: v for k, v in resulting.items() if k not in ("content", "sha256")}
@@ -451,7 +463,9 @@ def qualify_canary_advance(
             "image": copy.deepcopy(c["image"]),
         }
         with phase(report, "independent-readback") as item:
-            after = invoke(guest, observed, accepted, "inspect", deadline, item)
+            after = invoke(
+                guest, observed, accepted, "inspect", deadline, item, used_probes=used_probes
+            )
             validate_canary(after, accepted)
         require(
             len({p["request"]["probe"] for p in report["phases"]}) == 3,

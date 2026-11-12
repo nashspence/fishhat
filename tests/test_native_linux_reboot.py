@@ -1604,4 +1604,6 @@ def test_canary_advance_cannot_adopt_repeated_nonce_or_challenges(monkeypatch, c
         with pytest.raises(reboot.GuestRebootError, match=reason):
             reboot.qualify_canary_advance(guest, guest.observed, h.c, Deadline.after(30), report)
     assert report["status"] == "failed" and valid_stats(report["statistics"]) and not h.fds
-    assert len(guest.requests) == (1 if collision == "nonce" else 3)
+    assert len(guest.requests) == 1
+    assert guest.requests[0]["mode"] == "inspect"
+    assert h.files[h.root + "/canary"] == h.c["identity"]["content"].encode()

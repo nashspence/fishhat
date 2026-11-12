@@ -14,13 +14,16 @@ from collections.abc import Callable, Iterator
 from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from scripts.native_linux_guest import Guest, GuestBootError
 from scripts.native_linux_images import DISK_BYTES, QEMU_IMG, digest, identity, image_info
 from scripts.native_linux_reboot import phase
 from scripts.run_stats import RunStats, valid_stats
 from scripts.validation_timeouts import watchdog
+
+if TYPE_CHECKING:
+    from scripts.native_linux_successor import CaptureLifetime
 
 
 class SnapshotError(GuestBootError):
@@ -150,6 +153,26 @@ class DiskSnapshots:
     files: dict[str, tuple[tuple[int, int], str]] = field(default_factory=dict)
     active: bool = False
     _admitted: tuple[Any, ...] | None = field(default=None, repr=False)
+
+    _source_owner: CaptureLifetime | None = field(default=None, repr=False)
+
+    def source_observation(self, enrollment: str) -> dict[str, Any]:
+        require(self._source_owner is not None, "capture-source-not-admitted")
+        assert self._source_owner is not None
+        require(self._source_owner.bound_to(self), "foreign-capture-source-handle")
+        return self._source_owner.observation(enrollment)
+
+    def advance_source(
+        self,
+        enrollment: str,
+        progress: Callable[[str], AbstractContextManager[None]],
+        launch: Callable[[Guest], AbstractContextManager[Path]],
+        report: dict[str, Any],
+    ) -> dict[str, Any]:
+        require(self._source_owner is not None, "capture-source-not-admitted")
+        assert self._source_owner is not None
+        require(self._source_owner.bound_to(self), "foreign-capture-source-handle")
+        return self._source_owner.advance(enrollment, progress, launch, report)
 
     def closure(self) -> tuple[Any, ...]:
         return (
@@ -337,10 +360,11 @@ def cold_snapshots(
     snapshots: DiskSnapshots | None = None
     created_identity: tuple[int, int] | None = None
     complete = False
+    owner: CaptureLifetime | None = None
     try:
         with phase(report, "stopped-source") as item:
             before = stopped_source(guest, custody)
-            item["observation"] = before
+            item["observation"] = copy.deepcopy(before)
             version = guest.command([str(QEMU_IMG), "--version"], "snapshot-tool", 10, capture=True)
             require(version.split()[:3] == ["qemu-img", "version", "8.2.2"], "image-tool-mismatch")
             tool = digest(QEMU_IMG)
@@ -366,20 +390,43 @@ def cold_snapshots(
             os.close(descriptor)
         snapshots.admit()
         report["capture_verified"] = True
+        from scripts.native_linux_successor import CaptureLifetime
+
+        owner = CaptureLifetime(guest, custody, snapshots, before, temporary, report, QEMU_IMG)
+        snapshots._source_owner = owner
+        body_error: BaseException | None = None
         try:
             yield snapshots
+        except BaseException as error:
+            body_error = error
+            raise
         finally:
-            with phase(report, "preservation") as item:
-                snapshots.verify()
-                require(stopped_source(guest, custody) == before, "source-changed")
-                require(digest(QEMU_IMG) == tool, "image-tool-changed")
-                item["source_after"] = stopped_source(guest, custody)
-                report.update(source_preserved=True, snapshots_preserved_until_cleanup=True)
+            try:
+                after = owner.observation(guest.enrollment)
+                with phase(report, "preservation") as item:
+                    snapshots.verify()
+                    require(digest(QEMU_IMG) == tool, "image-tool-changed")
+                    item["source_after"] = after
+                    report.update(
+                        source_preserved=not owner.advanced,
+                        snapshots_preserved_until_cleanup=True,
+                    )
+                    if owner.advanced:
+                        report["observed_successor_preserved"] = True
+            except BaseException as error:
+                report["preservation_problem"] = {
+                    "type": type(error).__name__,
+                    "reason": getattr(error, "reason", "unclassified"),
+                }
+                if body_error is None:
+                    raise
         complete = True
     except OSError:
         raise SnapshotError("snapshot-resource-unavailable") from None
     finally:
         try:
+            if owner is not None:
+                owner.expire()
             if snapshots is not None:
                 snapshots.active = False
                 assert created_identity is not None
