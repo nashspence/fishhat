@@ -41,7 +41,7 @@ CHECK_PURPOSE = {
         "scripts/native_linux_enrollment.py",
         "scripts/native_linux_reboot.py",
     ],
-    "scope": "exact retained protected inputs, complete independent restored-disk admission to a fresh controller, explicit writable lifetime and reaped-controller closure, unchanged originals, stale/foreign/substituted/expired refusal, failure cleanup and valid real process statistics, including actual three-disk standalone final absence probes",
+    "scope": "exact retained protected inputs, complete independent restored-disk admission to a fresh controller, explicit writable lifetime and reaped-controller closure, unchanged originals, stale/foreign/substituted/expired refusal, failure cleanup and valid real process statistics, including actual three-disk standalone final absence probes and final SSH endpoint closure",
     "relationship": "no-product-claim",
     "reason": "QEMU/image tools, SSH/guest observations and verified prelaunch are substituted. Real private files, sockets and short unprivileged Python children test custody and lifecycle only; no native restored boot, full canary timeline or product authority is qualified.",
     "claims": [],
@@ -446,7 +446,10 @@ def test_final_guest_teardown_records_independent_original_resource_absence(monk
         "restored_boot_verified": True,
         "private_inputs": {"temporary_resources_removed": True},
         "writable_inputs": {"writer_absence_verified": True},
-        "controller_custody": {"owned": "original"},
+        "controller_custody": {
+            "owned": "original",
+            "endpoint": {"address": "127.0.0.1", "port": 1234, "listener_owned": True},
+        },
     }
     observation = {"paths": [{"path": "/controlled/owned", "absent": True}]}
 
@@ -455,7 +458,12 @@ def test_final_guest_teardown_records_independent_original_resource_absence(monk
         return observation
 
     monkeypatch.setattr(native, "observe_removed_resources", inspect)
+    endpoints = []
+    monkeypatch.setattr(native, "endpoint_closed", endpoints.append)
     native.verify_restored_boot_cleanup(report)
+    assert endpoints == [
+        {"address": "127.0.0.1", "port": 1234, "listener_owned": True, "owned_listener": True}
+    ]
     assert report["cleanup"] is observation and report["resources_destroyed_with_guest"]
 
 
@@ -485,7 +493,11 @@ def cleanup_case(tmp_path_factory):
             [sys.executable, "-I", "-S", "-c", "pass"], start_new_session=True
         )
         process.wait(timeout=watchdog(5))
+        with socket.socket() as reserve:
+            reserve.bind(("127.0.0.1", 0))
+            port = reserve.getsockname()[1]
         custody = {
+            "endpoint": {"address": "127.0.0.1", "port": port, "listener_owned": True},
             "pid": process.pid,
             "pgid": process.pid,
             "input_directory": {
@@ -546,6 +558,7 @@ def test_final_restored_teardown_uses_real_standalone_absence_observer(cleanup_c
     assert case.report["resources_destroyed_with_guest"] and observed["status"] == "passed"
     assert observed["pid"] == observed["pgid"] == case.custody["pid"]
     assert observed["process_absent"] and observed["process_group_absent"]
+    assert observed["ssh_endpoint_closed"]
     assert len(observed["paths"]) == 18
     assert {row["path"] for row in observed["paths"]} == {
         str(p) for p in [*case.owned, *case.directories]
