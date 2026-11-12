@@ -1477,9 +1477,9 @@ def main(argv: list[str] | None = None) -> int:
                 Path(os.environ["RUNNER_TEMP"]),
                 report["guest_reboot_faults"],
             )
-        report["source_successor"] = {}
-        with stage("guest-source-successor-timeline"):
-            if args.profile == "restored-successor":
+        else:
+            report["source_successor"] = {}
+            with stage("guest-source-successor-timeline"):
                 qualify_source_successor(
                     report["guest_tools"],
                     report["controller"]["binary_sha256"],
@@ -1494,18 +1494,11 @@ def main(argv: list[str] | None = None) -> int:
                     and comparison.get("resources_destroyed_with_guest") is True,
                     "required-restored-successor-proof-missing",
                 )
-            else:
-                qualify_source_successor(
-                    report["guest_tools"],
-                    report["controller"]["binary_sha256"],
-                    Path(os.environ["RUNNER_TEMP"]),
-                    report["source_successor"],
+                require(
+                    report["source_successor"].get("status") == "passed"
+                    and report["source_successor"].get("observed_successor_verified") is True,
+                    "required-source-successor-proof-missing",
                 )
-            require(
-                report["source_successor"].get("status") == "passed"
-                and report["source_successor"].get("observed_successor_verified") is True,
-                "required-source-successor-proof-missing",
-            )
         report["status"] = "passed"
     except (EnrollmentError, GuestInputError, GuestBootError) as error:
         status = 1

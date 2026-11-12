@@ -839,7 +839,7 @@ def test_main_cannot_pass_storage_cleanup_or_fault_failure_and_preserves_statist
         and report["statistics"]["scope"] == "process-excludes-children"
     )
     assert events[:3] == ["boot-storage", "input-cleanup", "cleanup-observation"]
-    assert ("successor-timeline" in events) is (failure == "none")
+    assert "successor-timeline" not in events
     assert ("fault-observation" in events) is (failure != "cleanup")
     assert ("reboot-fault-observation" in events) is (failure not in ("cleanup", "fault"))
 

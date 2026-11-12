@@ -7,8 +7,9 @@ import json
 import shutil
 import socket
 import uuid
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 import yaml
@@ -36,7 +37,7 @@ CHECK_PURPOSE = {
         "scripts/native_linux_restored_boot.py",
         ".github/workflows/ci.yml",
     ],
-    "scope": "composed original capture, independently witnessed later source and private restored comparison; distinct original/later/restored evidence, incomplete-proof refusal, actual owned-path/process/endpoint absence, failure propagation, scoped statistics and separate explicitly enrolled main-only profile",
+    "scope": "composed original capture, independently witnessed later source and private restored comparison; distinct original/later/restored evidence, incomplete-proof refusal, actual owned-path/process/endpoint absence, failure propagation, scoped statistics and complementary explicitly enrolled main-only profiles retaining complete baseline controls without redundant successor execution",
     "relationship": "no-product-claim",
     "reason": "Image conversion, initial guest/reboot, native prelaunch and SSH observations are substituted. Actual unprivileged files, sockets and short Python children exercise the maintained capture, successor and restore owners together. Native fixture execution and product checkpoint authority require independent evidence.",
     "claims": [],
@@ -359,6 +360,68 @@ def test_enrolled_profile_requires_complete_comparison_and_preserves_scope(
     assert report["source_before"] == report["source_after"] == before
     assert valid_stats(report["statistics"])
     assert report["native_tools_qualified"] is report["production_qualified"] is False
+
+
+def test_baseline_keeps_all_unadvanced_controls_without_repeating_the_source_timeline(
+    tmp_path, monkeypatch
+):
+    before = {"commit": "a" * 40, "clean": True, "fingerprint": "b" * 64}
+    monkeypatch.setattr(native, "source_identity", lambda: before)
+    monkeypatch.setattr(native, "enroll", lambda *a, **k: {"machine": "x86_64"})
+    monkeypatch.setenv("RUNNER_TEMP", str(tmp_path))
+    monkeypatch.setattr(native, "provision", lambda: {"binary_sha256": "c" * 64})
+    monkeypatch.setattr(native, "provision_tools", lambda *a: {"controlled": True})
+    observed = []
+
+    def probe(*args):
+        observed.append("controller-probe")
+        return {"controlled": True}
+
+    monkeypatch.setattr(native, "probe_controller", probe)
+    monkeypatch.setattr(
+        native, "controller_faults", lambda *a: observed.append("controller-faults")
+    )
+    monkeypatch.setattr(native, "guest_inputs", lambda *a: nullcontext(SimpleNamespace()))
+
+    def guest(*args):
+        observed.append("original-guest")
+        args[-1].update(controlled_original_guest=True)
+
+    def storage(*args):
+        observed.append("storage-faults")
+        args[-1].append({"controlled_storage_fault": True})
+
+    def reboot(*args):
+        observed.append("reboot-faults")
+        args[-1].append({"controlled_reboot_fault": True})
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("baseline repeated the independently required source-successor timeline")
+
+    monkeypatch.setattr(native, "boot_guest", guest)
+    monkeypatch.setattr(native, "verify_guest_cleanup", lambda *a: observed.append("guest-cleanup"))
+    monkeypatch.setattr(native, "guest_storage_faults", storage)
+    monkeypatch.setattr(native, "guest_reboot_faults", reboot)
+    monkeypatch.setattr(native, "qualify_source_successor", forbidden)
+    output = tmp_path / "report.json"
+    assert native.main(["--github-hosted-only", "--output", str(output)]) == 0
+    actual = json.loads(output.read_text())
+    assert observed == [
+        "controller-probe",
+        "controller-faults",
+        "original-guest",
+        "guest-cleanup",
+        "storage-faults",
+        "reboot-faults",
+    ]
+    assert actual["profile"] == "baseline" and actual["status"] == "passed"
+    assert actual["guest"] == {"controlled_original_guest": True}
+    assert actual["guest_storage_faults"] == [{"controlled_storage_fault": True}]
+    assert actual["guest_reboot_faults"] == [{"controlled_reboot_fault": True}]
+    assert "source_successor" not in actual
+    assert actual["source_before"] == actual["source_after"] == before
+    assert valid_stats(actual["statistics"])
+    assert actual["native_tools_qualified"] is actual["production_qualified"] is False
 
 
 def test_comparison_job_uses_same_enrollment_pins_budget_and_early_controls_as_baseline():
