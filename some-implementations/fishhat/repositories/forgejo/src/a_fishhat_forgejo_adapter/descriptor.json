@@ -53,7 +53,7 @@
     "repository": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/repository-adapter.schema.json",
-        "digest": "sha256:67411bec5cbd709d730f5ecee3549a8a1dcdbe3810cc5a3be72000988d21de17"
+        "digest": "sha256:2debce6120f462c12fd93d2828ac929fd19477e5ca894c9fb0e1c8d1c6ba3b54"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/repository-adapter.schema.json#/$defs/Response",

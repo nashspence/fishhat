@@ -105,6 +105,7 @@ def records(count=0):
         "stage": "backup",
         "work_digest": DIGEST,
         "target_host": "node-a",
+        "account": "demo-app",
         "subject": {"authority": app_owner["id"], "kind": "application", "handle": "demo-app"},
         "authorization": {"kind": "accepted-continuation", "digest": DIGEST},
         "admission_generation": 7,
@@ -378,6 +379,40 @@ def test_waiting_request_needs_independently_current_exact_context(field):
         )
 
 
+@pytest.mark.parametrize("replace_context", [False, True])
+def test_work_cannot_select_another_approved_accounts_capacity(replace_context):
+    value = records()
+    expected = deepcopy(value["context"])
+    value["policy"]["accounts"]["other-app"] = deepcopy(value["policy"]["accounts"]["demo-app"])
+    request = deepcopy(value["request"])
+    request["account"] = "other-app"
+    if replace_context:
+        request["context"]["account"] = "other-app"
+    error = "ADMISSION_CURRENT_CONTEXT" if replace_context else "ADMISSION_WORK_ACCOUNT"
+    with pytest.raises(ContractError, match=error):
+        admission.validate_resource_request(request, policy=value["policy"], context=expected)
+
+
+def test_account_change_requires_a_new_independently_approved_work_context():
+    value = records()
+    value["policy"]["accounts"]["other-app"] = deepcopy(value["policy"]["accounts"]["demo-app"])
+    expected = deepcopy(value["context"])
+    expected["account"] = "other-app"
+    expected["authorization"]["digest"] = "sha256:" + "b" * 64
+    request = deepcopy(value["request"])
+    request.update(id=uid(99), account="other-app", context=deepcopy(expected))
+    admission.validate_resource_request(request, policy=value["policy"], context=expected)
+
+
+def test_unbound_work_context_is_not_an_admission_request():
+    value = records()
+    del value["request"]["context"]["account"]
+    with pytest.raises(ContractError):
+        admission.validate_resource_request(
+            value["request"], policy=value["policy"], context=value["context"]
+        )
+
+
 @pytest.mark.parametrize("field", ["host_affinity", "supervision", "limits"])
 def test_unknown_or_unsupported_enforcement_cannot_admit_work(field):
     value = records()
@@ -409,6 +444,24 @@ def test_demands_limits_reserves_and_rounding_are_distinct():
     changed["resident_reserve"]["memory_bytes"] = 8 * GIB
     with pytest.raises(ContractError, match="ADMISSION_RESERVES_EXCEED_CAPACITY"):
         admission.validate_admission_policy(changed)
+
+
+def test_integer_valued_float_quantities_keep_exact_quantum_charges():
+    value = records()
+    amount = 9_007_199_254_740_990.0
+    policy, request, grant = value["policy"], value["request"], value["grant"]
+    policy["capacity"]["memory_bytes"] = 9_007_199_254_740_991
+    policy["control_reserve"]["memory_bytes"] = 1
+    policy["resident_reserve"]["memory_bytes"] = 0
+    policy["accounts"]["demo-app"]["maximum"]["memory_bytes"] = amount
+    policy["capabilities"]["memory_quantum_bytes"] = 10.0
+    request["demand"]["memory_bytes"] = amount
+    request["limits"]["memory_max_bytes"] = amount
+    grant["charged"]["memory_bytes"] = 9_007_199_254_740_990
+    grant["limits"]["memory_max_bytes"] = amount
+    grant["request_digest"] = digest(request)
+    grant["policy_digest"] = digest(policy)
+    admission.validate_resource_grant(grant, request=request, policy=policy)
 
 
 def test_release_authorization_does_not_preclaim_native_release():
@@ -464,6 +517,28 @@ def test_queued_cancellation_has_no_grant_or_invented_release():
         check_response("scheduler", query, finished, invocation=invocation)
 
 
+@pytest.mark.parametrize("retain_submission", [False, True])
+def test_rejection_cannot_erase_a_retained_scheduler_submission(retain_submission):
+    value = records()
+    query = role_request(value, "observe")
+    response = response_for(value, query, "rejected")
+    if not retain_submission:
+        response["output"]["observation"]["submission"] = None
+    with pytest.raises(ContractError, match="SCHEDULER_ACCEPTED_SUBMISSION_REJECTED"):
+        check_response("scheduler", query, response)
+
+
+def test_initial_rejection_has_no_accepted_backend_submission():
+    value = records()
+    query = role_request(value, "observe")
+    query["input"]["submission"] = None
+    response = response_for(value, query, "rejected")
+    with pytest.raises(ContractError, match="SCHEDULER_ACCEPTED_SUBMISSION_REJECTED"):
+        check_response("scheduler", query, response)
+    response["output"]["observation"]["submission"] = None
+    check_response("scheduler", query, response)
+
+
 @pytest.mark.parametrize("field", ["incarnation", "attempt", "handle"])
 def test_requeued_or_replaced_execution_cannot_reuse_a_retained_grant(field):
     value = records()
@@ -481,6 +556,7 @@ def test_unknown_observation_preserves_original_grant_and_cannot_supply_clearanc
     query = role_request(value, "observe", known_grant=True)
     original = deepcopy(query)
     response = response_for(value, query, "unknown")
+    response["output"]["observation"]["submission"] = None
     check_response("scheduler", query, response)
     assert query == original
     response["output"]["observation"]["grant"] = {**value["grant"], "state": "released"}

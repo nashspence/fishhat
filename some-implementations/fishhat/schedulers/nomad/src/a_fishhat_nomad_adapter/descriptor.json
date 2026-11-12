@@ -111,11 +111,11 @@
     "scheduler": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/scheduler-adapter.schema.json",
-        "digest": "sha256:015f65f225ca0c797a84076010f435ab3efa4ed3bce522af0086d35e5d66a378"
+        "digest": "sha256:c82b65a622842ff35b8a7b3faf52a6d2949e2df3532b4ec2b759e62e1b1c4281"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/scheduler-adapter.schema.json#/$defs/Response",
-        "digest": "sha256:1a6816f96eaf3e82ba543bc087044268baa6d8430cc69e293effd52db2b266e0"
+        "digest": "sha256:38e5a864d34aac0571e7e7fab94366a2fca98edb21408a66ec4bcfb233c628a1"
       }
     }
   },

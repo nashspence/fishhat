@@ -52,7 +52,7 @@
     "storage": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/storage-adapter.schema.json",
-        "digest": "sha256:30e84732b186d6a9ce75c54ff76fc1f55235d1c7bbb78af85f3604179f71d5f9"
+        "digest": "sha256:b7579efe7a4e23cc545d5ab2379e20a2cfdf8e1bd956f4db902639158eb0ab4a"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/storage-adapter.schema.json#/$defs/Response",

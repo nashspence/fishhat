@@ -2914,7 +2914,7 @@
     "packages/fishhat-contracts/src/fishhat_contracts/contracts/owner-cli.json": "f8d17432379d9141fcd45d49c3f59b693e7d44f150fb6c222b804c2314886757",
     "packages/fishhat-contracts/src/fishhat_contracts/contracts/ssh-methods.json": "dad4dd72e90d18efb57be9617a5a990c62d3b448e4aebb3bf0f35cf1e768a1a3",
     "policy/components.toml": "854e911c9e5c3e5605ef14319e43fad90f692b79fa2438a7feb2b69f5390b48c",
-    "policy/interfaces.json": "219b0b73e7bece9c4962f7366057d5850a0794c65df922d7fa7a5a633c682012",
+    "policy/interfaces.json": "6767e2636363ae2b69e997f64ca0a45f0cb26a0a12b57ff0e75d836c061ee57f",
     "policy/operation-coverage.toml": "a4f3f76cdbb755ea03ba39eb36ccc5ebcd682f6aabaacaa5fb88f849d42c54c4",
     "release.toml": "7057aceac0232f24bb962384c27058c2f1899bd81fa6bcf49f476ba1eb777631",
     "some-implementations/fishhat/backup/restic/pyproject.toml": "665f88e34c00d431e829678503ae3bb7075294d0db3f303c318f87dbdab651e8",
