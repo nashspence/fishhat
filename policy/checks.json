@@ -14276,6 +14276,10 @@
       "purpose_sha256": "11d920adc9969e71bd8da559a7e8f68d78f10f93f9c7ad0a352802d31cc794e6"
     },
     {
+      "node": "tests/test_native_smoke.py::test_failed_package_stage_records_failure_and_runs_cleanup[update-acquisition-failure-100-package-update]",
+      "purpose_sha256": "11d920adc9969e71bd8da559a7e8f68d78f10f93f9c7ad0a352802d31cc794e6"
+    },
+    {
       "node": "tests/test_native_smoke.py::test_failed_package_stage_records_failure_and_runs_cleanup[update-failure-17-package-update]",
       "purpose_sha256": "11d920adc9969e71bd8da559a7e8f68d78f10f93f9c7ad0a352802d31cc794e6"
     },
