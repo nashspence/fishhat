@@ -13,6 +13,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from scripts import native_smoke_cleanup as cleanup_observation
 from scripts import native_smoke_observation as observation
 from scripts.validation_timeouts import VARIABLE, watchdog
 from tests.support import ROOT
@@ -22,11 +23,12 @@ CHECK_PURPOSE = {
     "authority": [
         "scripts/ci/native_smoke.sh",
         "scripts/native_smoke_observation.py",
+        "scripts/native_smoke_cleanup.py",
         "scripts/validation_timeouts.py",
     ],
-    "scope": "owned executable-generator placement, first account transition and selected manager-service environment identity, numeric metadata and fixed safe observations, real shell deadline/failure/cleanup controls with isolated unprivileged external tools",
+    "scope": "owned executable-generator placement, first account transition and selected manager-service environment identity, numeric metadata, independent exact account cleanup through typed facility/process/filesystem observations, shared deadlines and real shell failure controls with isolated unprivileged tools",
     "relationship": "no-product-claim",
-    "reason": "Real GNU timeout kills controlled hung children. Fake package/account tools exercise script failures without privileged native actions or native owner qualification.",
+    "reason": "Real GNU timeout kills controlled hung children. Fake package/account tools and isolated facility/filesystem observations exercise failures and leftover-state refusal without privileged native actions or native owner qualification.",
     "claims": [],
 }
 
@@ -64,7 +66,11 @@ exit 0
     }
     scripts.update(
         {
-            "python3": r"""if [[ "$1" == */native_smoke_observation.py ]]; then
+            "python3": r"""if [[ "$1" == -m && "$2" == scripts.native_smoke_cleanup ]]; then
+  printf '%s\n' 'native-prerequisite cleanup-observation={"complete_absence_verified": true, "native_qualified": false, "scope": "owned-smoke-cleanup-observation-only", "status": "absent"}'
+  exit 0
+fi
+if [[ "$1" == */native_smoke_observation.py ]]; then
   [[ "${2##*/}" == 99-fishhat-probe-2000 ]] || exit 98
   printf '%s\n' 'native-prerequisite generator-observation={"native_qualified": false, "scope": "owned-smoke-generator-observation-only", "status": "observed"}'
   exit 0
@@ -72,7 +78,8 @@ fi
 exec "$NATIVE_PYTHON" "$@"
 """,
             "id": r"""if [[ "$1" == -u && "$#" == 1 ]]; then echo 1000; exit 0; fi
-if [[ "$1" == -u && "$2" == dtci1000 && -f "$NATIVE_FIXTURE/account-present" ]]; then echo 2000; exit 0; fi
+if [[ ( "$1" == -u || "$1" == -g ) && "$2" == dtci1000 && -f "$NATIVE_FIXTURE/account-present" ]]; then echo 2000; exit 0; fi
+if [[ "$1" == -gn && "$2" == dtci1000 && -f "$NATIVE_FIXTURE/account-present" ]]; then echo dtci1000; exit 0; fi
 exit 1
 """,
             "useradd": r"""echo useradd >> "$NATIVE_TRACE"
@@ -186,7 +193,7 @@ exec /bin/rm "$@"
     return tools
 
 
-def run_smoke(tmp_path, tools, mode, scale="0.01"):
+def run_smoke(tmp_path, tools, mode, scale="0.01", *, code=None):
     environment = {
         "PATH": f"{tools}:/usr/bin:/bin",
         "GITHUB_ACTIONS": "true",
@@ -201,7 +208,11 @@ def run_smoke(tmp_path, tools, mode, scale="0.01"):
         "NATIVE_TEST_SECRET": "inherited-value-must-stay-private",
     }
     result = subprocess.run(
-        ["bash", str(ROOT / "scripts/ci/native_smoke.sh"), "--github-hosted-only"],
+        (
+            ["bash", "-c", code]
+            if code is not None
+            else ["bash", str(ROOT / "scripts/ci/native_smoke.sh"), "--github-hosted-only"]
+        ),
         env=environment,
         text=True,
         capture_output=True,
@@ -500,3 +511,731 @@ def test_missing_generator_lookup_directory_refuses_without_shared_directory_cha
     assert "control=generator-write" not in result.stderr
     assert "generator-execute" not in (tmp_path / "trace").read_text().splitlines()
     assert "stage=rootless-runtime" not in result.stdout
+
+
+@pytest.mark.parametrize("observation_status", ["absent", "present", "unavailable"])
+def test_cleanup_requires_independent_observation_without_masking_primary_failure(
+    tmp_path, fixture_tools, observation_status
+):
+    executable = fixture_tools / "python3"
+    original = executable.read_text()
+    status = 0 if observation_status == "absent" else 1
+    output = json.dumps(
+        {
+            "scope": "owned-smoke-cleanup-observation-only",
+            "status": observation_status,
+            "complete_absence_verified": observation_status == "absent",
+            "native_qualified": False,
+        },
+        sort_keys=True,
+    )
+    body = (
+        'if [[ "$1" == -m && "$2" == scripts.native_smoke_cleanup ]]; then\n'
+        '  echo independent-cleanup-observer >> "$NATIVE_TRACE"\n'
+        f"  printf '%s\\n' {shlex.quote('native-prerequisite cleanup-observation=' + output)}\n"
+        f"  exit {status}\nfi\n"
+    )
+    executable.write_text(original.replace("#!/bin/bash\n", "#!/bin/bash\n" + body, 1))
+    unrelated = tmp_path / "unrelated"
+    unrelated.write_text("keep")
+    result = run_smoke(tmp_path, fixture_tools, "generator-denied", "0.1")
+    assert result.returncode == 1
+    assert "control=generator-execute status=failed exit=1" in result.stderr
+    assert "independent-cleanup-observer" in (tmp_path / "trace").read_text().splitlines()
+    outcome = "passed exit=0" if observation_status == "absent" else "failed exit=1"
+    assert f"control=cleanup-observation status={outcome}" in result.stderr
+    assert f"stage=cleanup status={outcome}" in result.stdout
+    assert "cleanup-observation=" + output in result.stdout
+    assert unrelated.read_text() == "keep"
+
+
+@pytest.fixture
+def cleanup_system(tmp_path, monkeypatch):
+    paths = cleanup_observation.Paths(
+        **{
+            name: tmp_path / name
+            for name in ("proc", "etc", "run", "home", "var", "usr", "sys", "tmp")
+        }
+    )
+    for path in vars(paths).values():
+        path.mkdir()
+    for path in (
+        paths.proc / "self",
+        paths.var / "lib/systemd",
+        paths.usr / "lib/systemd/user-environment-generators",
+        paths.sys / "fs/cgroup",
+    ):
+        path.mkdir(parents=True, exist_ok=True)
+    (paths.proc / "self/status").write_text("Uid:\t0 0 0 0\nGid:\t0 0 0 0\n")
+    (paths.sys / "fs/cgroup/cgroup.controllers").write_text("cpu memory pids\n")
+    for name in ("subuid", "subgid"):
+        (paths.etc / name).write_text("unrelated:400000:65536\n")
+    identity = cleanup_observation.Identity(
+        "dtci1000", 2000, 2000, Path("/tmp/fishhat-native.ABCD1234")
+    )
+
+    def query(command, end):
+        if command[0] == "/usr/bin/getent":
+            database, key = command[1:]
+            if key == "0":
+                return (
+                    0,
+                    "root:x:0:0:root:/root:/bin/sh\n" if database == "passwd" else "root:x:0:\n",
+                )
+            return 2, ""
+        if command[0] == "/usr/bin/busctl":
+            return 0, json.dumps({"type": "a(uso)", "data": [[]]})
+        assert command[0] == "/usr/bin/systemctl"
+        return 0, "LoadState=loaded\nActiveState=inactive\n"
+
+    monkeypatch.setattr(cleanup_observation, "query", query)
+    return SimpleNamespace(paths=paths, identity=identity, query=query)
+
+
+def cleanup_once(system):
+    return cleanup_observation.observe_once(
+        system.identity, cleanup_observation.Deadline.after(10).end, system.paths
+    )
+
+
+def test_cleanup_observer_checks_actual_empty_owned_state_and_preserves_unrelated_files(
+    cleanup_system,
+):
+    system = cleanup_system
+    canary = system.paths.home / "unrelated"
+    canary.write_text("private-fixture-value")
+    result = cleanup_once(system)
+    assert result["status"] == "absent" and result["complete_absence_verified"] is True
+    assert result["native_qualified"] is False
+    roles = [r["role"] for r in result["observations"]]
+    assert len(roles) == len(set(roles)) == 19
+    assert all(r["status"] == "absent" for r in result["observations"])
+    assert canary.read_text() == "private-fixture-value"
+    assert "private-fixture-value" not in json.dumps(result)
+    assert (system.paths.etc / "subuid").read_text() == "unrelated:400000:65536\n"
+
+
+@pytest.mark.parametrize(
+    "role",
+    [
+        "home",
+        "runtime-directory",
+        "linger",
+        "generator",
+        "work",
+        "user-cgroup",
+        "runtime-properties",
+        "transient-slice",
+        "transient-slice-properties",
+        "broken-owned-link",
+    ],
+)
+def test_cleanup_observer_refuses_each_leftover_owned_path(cleanup_system, role):
+    system = cleanup_system
+    paths = cleanup_observation.owned_paths(system.identity, system.paths)
+    path = paths["work" if role == "broken-owned-link" else role]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if role == "broken-owned-link":
+        path.symlink_to("private-fixture-value")
+    else:
+        path.write_text("private-fixture-value")
+    result = cleanup_once(system)
+    assert result["status"] == "present" and result["complete_absence_verified"] is False
+    assert (
+        next(
+            r
+            for r in result["observations"]
+            if r["role"] == ("work" if role == "broken-owned-link" else role)
+        )["status"]
+        == "present"
+    )
+    assert "private-fixture-value" not in json.dumps(result)
+    assert (
+        path.is_symlink()
+        if role == "broken-owned-link"
+        else path.read_text() == "private-fixture-value"
+    )
+
+
+@pytest.mark.parametrize("kind", ["Uid", "Gid"])
+@pytest.mark.parametrize("index", [0, 1, 2, 3])
+def test_cleanup_observer_checks_real_effective_saved_and_filesystem_credentials(
+    cleanup_system, kind, index
+):
+    system = cleanup_system
+    process = system.paths.proc / "42"
+    process.mkdir()
+    rows = {"Uid": [3000] * 4, "Gid": [3000] * 4}
+    rows[kind][index] = 2000
+    (process / "status").write_text(
+        "\n".join(k + ": " + " ".join(map(str, v)) for k, v in rows.items()) + "\n"
+    )
+    result = cleanup_once(system)
+    assert result["status"] == "present" and result["complete_absence_verified"] is False
+    assert (
+        next(r for r in result["observations"] if r["role"] == "process-credentials")["status"]
+        == "present"
+    )
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {},
+        {"type": "v", "data": [[]]},
+        {"type": "a(uso)", "data": []},
+        {"type": "a(uso)", "data": [[None]]},
+        {"type": "a(uso)", "data": [[[True, "private-fixture-value", "/x"]]]},
+        {"type": "a(uso)", "data": [[[3000, "private-fixture-value", "invalid"]]]},
+        {
+            "type": "a(uso)",
+            "data": [
+                [[3000, "private-fixture-value", "/x"], [3000, "private-fixture-value", "/x"]]
+            ],
+        },
+    ],
+)
+def test_cleanup_observer_refuses_malformed_typed_login_observations(
+    cleanup_system, monkeypatch, payload
+):
+    system = cleanup_system
+    monkeypatch.setattr(
+        cleanup_observation,
+        "query",
+        lambda command, end: (
+            (0, json.dumps(payload))
+            if command[0] == "/usr/bin/busctl"
+            else system.query(command, end)
+        ),
+    )
+    result = cleanup_once(system)
+    assert result["status"] == "unavailable" and result["complete_absence_verified"] is False
+    assert (
+        next(r for r in result["observations"] if r["role"] == "login-user")["status"]
+        == "unavailable"
+    )
+    assert "private-fixture-value" not in json.dumps(result)
+
+
+@pytest.mark.parametrize(
+    "kind",
+    [
+        "name-service",
+        "login-manager",
+        "system-manager",
+        "process-status",
+        "process-permission",
+        "process-self",
+        "cgroup-controllers",
+        "generator-parent",
+        "subuid",
+        "subgid",
+    ],
+)
+def test_cleanup_observer_missing_facility_is_never_absence(cleanup_system, monkeypatch, kind):
+    system = cleanup_system
+    if kind in {"name-service", "login-manager", "system-manager"}:
+        executable = {
+            "name-service": "getent",
+            "login-manager": "busctl",
+            "system-manager": "systemctl",
+        }[kind]
+        monkeypatch.setattr(
+            cleanup_observation,
+            "query",
+            lambda command, end: (
+                (9, "private-fixture-value")
+                if command[0] == "/usr/bin/" + executable
+                else system.query(command, end)
+            ),
+        )
+    elif kind in {"process-status", "process-permission"}:
+        process = system.paths.proc / "42"
+        process.mkdir()
+        (process / "status").write_text("Uid: 3000\nGid: 3000 3000 3000 3000\n")
+        if kind == "process-permission":
+            real = cleanup_observation.credentials
+
+            def denied(path):
+                if path == process / "status":
+                    raise PermissionError("private-fixture-value")
+                return real(path)
+
+            monkeypatch.setattr(cleanup_observation, "credentials", denied)
+    elif kind == "process-self":
+        (system.paths.proc / "self/status").unlink()
+    elif kind == "cgroup-controllers":
+        (system.paths.sys / "fs/cgroup/cgroup.controllers").unlink()
+    elif kind == "generator-parent":
+        (system.paths.usr / "lib/systemd/user-environment-generators").rmdir()
+    else:
+        (system.paths.etc / kind).unlink()
+    result = cleanup_once(system)
+    assert result["status"] == "unavailable" and result["complete_absence_verified"] is False
+    assert "private-fixture-value" not in json.dumps(result)
+
+
+@pytest.mark.parametrize("directory_remains", [False, True])
+def test_cleanup_observer_distinguishes_process_exit_race_from_missing_status(
+    cleanup_system, monkeypatch, directory_remains
+):
+    system = cleanup_system
+    directory = system.paths.proc / "42"
+    directory.mkdir()
+    original = cleanup_observation.credentials
+
+    def disappeared(path):
+        if path == directory / "status":
+            if not directory_remains:
+                directory.rmdir()
+            raise FileNotFoundError("private-fixture-value")
+        return original(path)
+
+    monkeypatch.setattr(cleanup_observation, "credentials", disappeared)
+    result = cleanup_once(system)
+    assert result["status"] == ("unavailable" if directory_remains else "absent")
+    assert result["complete_absence_verified"] is (not directory_remains)
+
+
+@pytest.mark.parametrize(
+    "database,key",
+    [("passwd", "dtci1000"), ("passwd", "2000"), ("group", "dtci1000"), ("group", "2000")],
+)
+def test_cleanup_observer_checks_both_name_and_numeric_resolution(
+    cleanup_system, monkeypatch, database, key
+):
+    system = cleanup_system
+    reply = (
+        "dtci1000:x:2000:2000:private-fixture-value:/home/dtci1000:/bin/sh\n"
+        if database == "passwd"
+        else "dtci1000:x:2000:private-fixture-value\n"
+    )
+    monkeypatch.setattr(
+        cleanup_observation,
+        "query",
+        lambda command, end: (
+            (0, reply)
+            if command == ["/usr/bin/getent", database, key]
+            else system.query(command, end)
+        ),
+    )
+    result = cleanup_once(system)
+    assert result["status"] == "present" and result["complete_absence_verified"] is False
+    assert "private-fixture-value" not in json.dumps(result)
+
+
+@pytest.mark.parametrize(
+    "kind", ["mode", "account", "uid", "gid", "work", "expired", "infinite", "huge", "missing"]
+)
+def test_cleanup_observer_cli_refuses_invalid_identity_before_reading_native_state(
+    monkeypatch, capsys, kind
+):
+    arguments = [
+        "observe",
+        "dtci1000",
+        "2000",
+        "2000",
+        "/tmp/fishhat-native.ABCD1234",
+        str(cleanup_observation.Deadline.after(10).end),
+    ]
+    changes = {
+        "mode": (0, "private-fixture-value"),
+        "account": (1, "private-fixture-value"),
+        "uid": (2, "0"),
+        "gid": (3, "0"),
+        "work": (4, "/tmp/private-fixture-value"),
+        "expired": (5, "0"),
+        "infinite": (5, "inf"),
+        "huge": (5, "1e300"),
+    }
+    if kind == "missing":
+        arguments.pop()
+    else:
+        index, value = changes[kind]
+        arguments[index] = value
+    monkeypatch.setattr(cleanup_observation.os, "geteuid", lambda: 0)
+    monkeypatch.setattr(
+        cleanup_observation,
+        "observe",
+        lambda *_: pytest.fail("invalid identity reached native observation"),
+    )
+    assert cleanup_observation.main(arguments) == 1
+    logs = capsys.readouterr()
+    assert logs.err == "" and "private-fixture-value" not in logs.out
+    assert json.loads(logs.out.split("=", 1)[1])["complete_absence_verified"] is False
+
+
+def test_cleanup_observer_settlement_reuses_one_deadline_and_never_retries_unavailable(monkeypatch):
+    identity = cleanup_observation.Identity(
+        "dtci1000", 2000, 2000, Path("/tmp/fishhat-native.ABCD1234")
+    )
+    values = iter([{"status": "present"}, {"status": "absent"}])
+    calls = []
+    sleeps = []
+
+    def observed(actual, end):
+        calls.append((actual, end))
+        return next(values)
+
+    monkeypatch.setattr(cleanup_observation, "observe_once", observed)
+    monkeypatch.setattr(cleanup_observation, "time", SimpleNamespace(sleep=sleeps.append))
+    end = cleanup_observation.Deadline.after(10).end
+    assert cleanup_observation.observe(identity, end)["status"] == "absent"
+    assert calls == [(identity, end), (identity, end)] and sleeps == [0.25]
+    calls.clear()
+    monkeypatch.setattr(
+        cleanup_observation,
+        "observe_once",
+        lambda actual, end: calls.append((actual, end)) or {"status": "unavailable"},
+    )
+    assert cleanup_observation.observe(identity, end)["status"] == "unavailable"
+    assert calls == [(identity, end)] and sleeps == [0.25]
+
+
+@pytest.mark.parametrize("owned_match", ["uid", "name", "neither"])
+def test_cleanup_observer_filters_valid_login_records_without_disclosing_them(
+    cleanup_system, monkeypatch, owned_match
+):
+    system = cleanup_system
+    row = [
+        2000 if owned_match == "uid" else 3000,
+        "dtci1000" if owned_match == "name" else "private-fixture-value",
+        "/org/freedesktop/login1/user/_3000",
+    ]
+    monkeypatch.setattr(
+        cleanup_observation,
+        "query",
+        lambda command, end: (
+            (0, json.dumps({"type": "a(uso)", "data": [[row]]}))
+            if command[0] == "/usr/bin/busctl"
+            else system.query(command, end)
+        ),
+    )
+    result = cleanup_once(system)
+    assert result["status"] == ("absent" if owned_match == "neither" else "present")
+    assert result["complete_absence_verified"] is (owned_match == "neither")
+    assert "private-fixture-value" not in json.dumps(result)
+
+
+@pytest.mark.parametrize(
+    "unit",
+    ["user" + "@" + "2000.service", "user-runtime-dir" + "@" + "2000.service"],
+    ids=["user-manager", "runtime-manager"],
+)
+@pytest.mark.parametrize("state", ["active", "activating", "deactivating", "failed"])
+def test_cleanup_observer_requires_both_user_units_to_be_inactive(
+    cleanup_system, monkeypatch, unit, state
+):
+    system = cleanup_system
+    monkeypatch.setattr(
+        cleanup_observation,
+        "query",
+        lambda command, end: (
+            (0, "LoadState=loaded\nActiveState=" + state + "\n")
+            if command[0] == "/usr/bin/systemctl" and unit in command
+            else system.query(command, end)
+        ),
+    )
+    result = cleanup_once(system)
+    assert result["status"] == "present" and result["complete_absence_verified"] is False
+
+
+@pytest.mark.parametrize("name", ["subuid", "subgid"])
+def test_cleanup_observer_refuses_leftover_subordinate_mapping_without_changing_neighbors(
+    cleanup_system, name
+):
+    system = cleanup_system
+    file = system.paths.etc / name
+    text = file.read_text() + "dtci1000:500000:65536\n"
+    file.write_text(text)
+    result = cleanup_once(system)
+    assert result["status"] == "present" and result["complete_absence_verified"] is False
+    assert file.read_text() == text
+
+
+@pytest.mark.parametrize("reply", [(0, ""), (0, "private-fixture-value"), (2, "")])
+def test_cleanup_observer_requires_valid_name_service_health_control(
+    cleanup_system, monkeypatch, reply
+):
+    system = cleanup_system
+    monkeypatch.setattr(
+        cleanup_observation,
+        "query",
+        lambda command, end: (
+            reply
+            if command[:3] == ["/usr/bin/getent", "passwd", "0"]
+            else system.query(command, end)
+        ),
+    )
+    result = cleanup_once(system)
+    assert result["status"] == "unavailable" and result["complete_absence_verified"] is False
+    assert "private-fixture-value" not in json.dumps(result)
+
+
+def test_cleanup_observer_cli_emits_only_observed_exact_scope(cleanup_system, monkeypatch, capsys):
+    system = cleanup_system
+    end = cleanup_observation.Deadline.after(10).end
+    seen = []
+
+    def observed(identity, actual_end):
+        seen.append((identity, actual_end))
+        return cleanup_observation.observe_once(identity, actual_end, system.paths)
+
+    monkeypatch.setattr(cleanup_observation.os, "geteuid", lambda: 0)
+    monkeypatch.setattr(cleanup_observation, "observe", observed)
+    assert (
+        cleanup_observation.main(
+            ["observe", "dtci1000", "2000", "2000", "/tmp/fishhat-native.ABCD1234", str(end)]
+        )
+        == 0
+    )
+    assert seen == [(system.identity, end)]
+    output = capsys.readouterr()
+    value = json.loads(output.out.split("=", 1)[1])
+    assert output.err == "" and value["complete_absence_verified"] is True
+    assert value["native_qualified"] is False and len(value["observations"]) == 19
+    assert "dtci1000" not in output.out and "ABCD1234" not in output.out
+
+
+def test_cleanup_observer_uses_only_read_only_noninteractive_facility_calls(
+    cleanup_system, monkeypatch
+):
+    system = cleanup_system
+    calls = []
+
+    def observed(command, end):
+        calls.append(command)
+        return system.query(command, end)
+
+    monkeypatch.setattr(cleanup_observation, "query", observed)
+    assert cleanup_once(system)["complete_absence_verified"] is True
+    assert len(calls) == 9
+    for command in calls:
+        if command[0] == "/usr/bin/getent":
+            assert command[1] in {"passwd", "group"}
+            assert command[2] in {"0", "dtci1000", "2000"} and len(command) == 3
+        elif command[0] == "/usr/bin/busctl":
+            assert command[-1] == "ListUsers" and "call" in command
+            assert "--system" in command and "--json=short" in command
+            assert (
+                "--auto-start=no" in command and "--allow-interactive-authorization=no" in command
+            )
+        else:
+            assert command[:4] == ["/usr/bin/systemctl", "--no-pager", "--no-ask-password", "show"]
+            assert command[4] in {
+                "user" + "@" + "2000.service",
+                "user-runtime-dir" + "@" + "2000.service",
+            }
+
+
+def test_cleanup_query_reconstructs_shared_end_without_rescaling_or_launching_after_expiry(
+    monkeypatch,
+):
+    constructed = []
+    calls = []
+    remaining = [1.25]
+
+    class SuppliedDeadline:
+        def __init__(self, end):
+            constructed.append(end)
+
+        def remaining(self):
+            return remaining[0]
+
+    def run(command, **kwargs):
+        calls.append((command, kwargs))
+        return SimpleNamespace(returncode=0, stdout="captured-only")
+
+    monkeypatch.setattr(cleanup_observation, "Deadline", SuppliedDeadline)
+    monkeypatch.setattr(cleanup_observation.subprocess, "run", run)
+    assert cleanup_observation.query(["read-only-fixture"], 98765.25) == (0, "captured-only")
+    assert constructed == [98765.25]
+    assert calls == [
+        (["read-only-fixture"], {"capture_output": True, "text": True, "timeout": 1.25})
+    ]
+    remaining[0] = 0
+    with pytest.raises(ValueError, match="observation-deadline-expired"):
+        cleanup_observation.query(["read-only-fixture"], 98765.25)
+    assert len(calls) == 1
+
+
+@pytest.mark.parametrize(
+    "owned,revert_status",
+    [(False, 0), (True, 0), (True, 37)],
+    ids=["foreign-untouched", "owned-reverted", "revert-failed"],
+)
+def test_normal_cleanup_reverts_only_claimed_slice_properties_and_keeps_failure(
+    tmp_path, fixture_tools, owned, revert_status
+):
+    tool = fixture_tools / "systemctl"
+    text = tool.read_text()
+    stub = """while [[ "${1:-}" == --quiet ]]; do shift; done
+if [[ "$1" == revert ]]; then
+  [[ "$#" == 2 && "$2" == user-2000.slice ]] || exit 98
+  echo owned-slice-revert >> "$NATIVE_TRACE"
+  [[ "$NATIVE_MODE" == slice-revert-failure ]] && exit 37
+  /bin/rm -f "$NATIVE_FIXTURE/slice-properties"
+  exit 0
+fi
+"""
+    tool.write_text(text.replace("#!/bin/bash\n", "#!/bin/bash\n" + stub, 1))
+    source = (ROOT / "scripts/ci/native_smoke.sh").read_text()
+    functions = source[source.index("probe_stage=") : source.index("trap cleanup EXIT")]
+    code = (
+        "set -euo pipefail\n"
+        + "timeout_helper="
+        + shlex.quote(str(ROOT / "scripts/validation_timeouts.py"))
+        + "\n"
+        + "kill_timeout=1\n"
+        + functions
+        + '\nwork="$NATIVE_FIXTURE/work"; mkdir "$work"\n'
+        + "account_created=1; saved_uid=2000; saved_gid=2000; uid=2000\n"
+        + f"slice_properties_owned={int(owned)}\n"
+        + "trap cleanup EXIT\nexit 0\n"
+    )
+    (tmp_path / "account-present").touch()
+    properties = tmp_path / "slice-properties"
+    properties.write_text("owned" if owned else "foreign")
+    unrelated = tmp_path / "unrelated"
+    unrelated.write_text("keep")
+    result = run_smoke(
+        tmp_path,
+        fixture_tools,
+        "slice-revert-failure" if revert_status else "generator-denied",
+        "0.1",
+        code=code,
+    )
+    assert result.returncode == (1 if revert_status else 0)
+    trace = (tmp_path / "trace").read_text().splitlines()
+    assert ("owned-slice-revert" in trace) is owned
+    assert properties.exists() is (not owned or revert_status != 0)
+    assert unrelated.read_text() == "keep"
+    if revert_status:
+        assert "control=cleanup-slice-properties status=failed exit=37" in result.stderr
+        assert "stage=cleanup status=failed exit=1" in result.stdout
+
+
+@pytest.fixture
+def slice_system(cleanup_system, monkeypatch):
+    system = cleanup_system
+    for root in (system.paths.etc / "systemd", system.paths.run / "systemd"):
+        root.mkdir(parents=True, exist_ok=True)
+    previous = system.query
+
+    def query(command, end):
+        if command[0] == "/usr/bin/systemctl" and "--property=Id" in command:
+            assert command[:4] == ["/usr/bin/systemctl", "--no-pager", "--no-ask-password", "show"]
+            assert command[4] == "user-2000.slice"
+            return 0, "Id=user-2000.slice\n"
+        return previous(command, end)
+
+    monkeypatch.setattr(cleanup_observation, "query", query)
+    system.query = query
+    return system
+
+
+@pytest.mark.parametrize(
+    "role",
+    [
+        "persistent-unit",
+        "persistent-dropins",
+        "persistent-control-unit",
+        "persistent-control-dropins",
+        "runtime-unit",
+        "runtime-dropins",
+        "runtime-control-unit",
+        "runtime-control-dropins",
+        "broken-config-link",
+    ],
+)
+def test_slice_configuration_custody_refuses_every_foreign_override_and_preserves_it(
+    slice_system, role
+):
+    system = slice_system
+    files = cleanup_observation.configuration_paths(system.identity, system.paths)
+    path = files["runtime-control-dropins" if role == "broken-config-link" else role]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if role == "broken-config-link":
+        path.symlink_to("private-fixture-value")
+    else:
+        path.write_text("private-fixture-value")
+    result = cleanup_observation.configuration_clear(
+        system.identity, cleanup_observation.Deadline.after(10).end, system.paths
+    )
+    assert result["status"] == "present" and result["complete_absence_verified"] is False
+    assert result["canonical_unit_verified"] is True
+    assert (
+        path.is_symlink()
+        if role == "broken-config-link"
+        else path.read_text() == "private-fixture-value"
+    )
+    assert "private-fixture-value" not in json.dumps(result)
+
+
+@pytest.mark.parametrize(
+    "reply",
+    [(9, "private-fixture-value"), (0, "Id=other.slice\n"), (0, "")],
+    ids=["unavailable", "alias", "missing-identity"],
+)
+def test_slice_configuration_custody_requires_exact_canonical_unit(
+    slice_system, monkeypatch, reply
+):
+    system = slice_system
+    monkeypatch.setattr(cleanup_observation, "query", lambda *_: reply)
+    result = cleanup_observation.configuration_clear(
+        system.identity, cleanup_observation.Deadline.after(10).end, system.paths
+    )
+    assert result["status"] == "unavailable" and result["complete_absence_verified"] is False
+    assert result["canonical_unit_verified"] is False
+    assert "private-fixture-value" not in json.dumps(result)
+
+
+def test_slice_configuration_custody_preserves_unrelated_instance_and_template_files(slice_system):
+    system = slice_system
+    other = system.paths.run / "systemd/system.control/user-3000.slice.d/control.conf"
+    template = system.paths.etc / "systemd/system/user-.slice.d/control.conf"
+    for path in (other, template):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("keep")
+    result = cleanup_observation.configuration_clear(
+        system.identity, cleanup_observation.Deadline.after(10).end, system.paths
+    )
+    assert result["complete_absence_verified"] is True and result["canonical_unit_verified"] is True
+    assert result["native_qualified"] is False and len(result["observations"]) == 8
+    assert all(r["status"] == "absent" for r in result["observations"])
+    assert all(path.read_text() == "keep" for path in (other, template))
+
+
+def test_slice_configuration_cli_keeps_custody_observer_read_only(
+    slice_system, monkeypatch, capsys
+):
+    system = slice_system
+    end = cleanup_observation.Deadline.after(10).end
+    original = cleanup_observation.configuration_clear
+    monkeypatch.setattr(cleanup_observation.os, "geteuid", lambda: 0)
+    monkeypatch.setattr(
+        cleanup_observation,
+        "configuration_clear",
+        lambda identity, actual_end: original(identity, actual_end, system.paths),
+    )
+    assert (
+        cleanup_observation.main(
+            [
+                "configuration-clear",
+                "dtci1000",
+                "2000",
+                "2000",
+                "/tmp/fishhat-native.ABCD1234",
+                str(end),
+            ]
+        )
+        == 0
+    )
+    output = capsys.readouterr()
+    assert output.err == "" and output.out.startswith(
+        "native-prerequisite slice-configuration-observation="
+    )
+    value = json.loads(output.out.split("=", 1)[1])
+    assert value["complete_absence_verified"] is True and value["canonical_unit_verified"] is True
+    assert value["native_qualified"] is False and value["observer_uid"] == 0
+    assert len(value["observations"]) == 8 and "dtci1000" not in output.out

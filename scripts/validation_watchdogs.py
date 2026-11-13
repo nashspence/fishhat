@@ -50,10 +50,10 @@ class PythonGuard:
             and isinstance(node.func.value, ast.Name)
         ):
             source = self.values.get(node.func.value.id)
-            return (
-                isinstance(source, ast.Call)
-                and self.qualified(source.func) == "scripts.validation_timeouts.Deadline.after"
-            )
+            return isinstance(source, ast.Call) and self.qualified(source.func) in {
+                "scripts.validation_timeouts.Deadline.after",
+                "scripts.validation_timeouts.Deadline",
+            }
         return False
 
     def timing(self, node: ast.AST, seen: frozenset[str] = frozenset()) -> bool:
