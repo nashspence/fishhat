@@ -26,7 +26,7 @@ CHECK_PURPOSE = {
         "scripts/native_smoke_cleanup.py",
         "scripts/validation_timeouts.py",
     ],
-    "scope": "owned executable-generator placement, first account transition and selected manager-service environment identity, numeric metadata, independent exact account cleanup through typed facility/process/filesystem observations, shared deadlines and real shell failure controls with isolated unprivileged tools",
+    "scope": "owned executable-generator placement, first account transition and selected manager-service environment identity, numeric metadata, independent exact account cleanup and fresh identity/state-guided conditional owned teardown through typed facility/process/filesystem observations, failure preservation and shared deadlines and real shell failure controls with isolated unprivileged tools",
     "relationship": "no-product-claim",
     "reason": "Real GNU timeout kills controlled hung children. Fake package/account tools and isolated facility/filesystem observations exercise failures and leftover-state refusal without privileged native actions or native owner qualification.",
     "claims": [],
@@ -66,7 +66,23 @@ exit 0
     }
     scripts.update(
         {
-            "python3": r"""if [[ "$1" == -m && "$2" == scripts.native_smoke_cleanup ]]; then
+            "python3": r"""if [[ "$1" == -m && "$2" == scripts.native_smoke_cleanup && "$3" == teardown-state ]]; then
+  echo teardown-state >> "$NATIVE_TRACE"
+  if [[ ! -f "$NATIVE_FIXTURE/account-present" ]]; then
+    echo 'absent absent absent absent absent absent absent'; exit 0
+  fi
+  manager=absent; login=absent; linger=absent
+  case "$NATIVE_MODE" in
+    executable-generator|manager-context-mismatch|manager-start-failure)
+      if [[ ! -f "$NATIVE_FIXTURE/managers-stopped" ]]; then
+        manager=present; login=present; linger=present
+      fi ;;
+    generator-denied-cleanup-failure) login=present ;;
+  esac
+  echo "owned $manager $manager $login $linger absent absent"
+  exit 0
+fi
+if [[ "$1" == -m && "$2" == scripts.native_smoke_cleanup ]]; then
   printf '%s\n' 'native-prerequisite cleanup-observation={"complete_absence_verified": true, "native_qualified": false, "scope": "owned-smoke-cleanup-observation-only", "status": "absent"}'
   exit 0
 fi
@@ -171,6 +187,7 @@ if [[ "$1" == terminate-user && "$NATIVE_MODE" == generator-denied-cleanup-failu
 exit 0
 """,
             "systemctl": r"""echo "systemctl-$1" >> "$NATIVE_TRACE"
+[[ "$1" == stop ]] && : > "$NATIVE_FIXTURE/managers-stopped"
 if [[ "$1" == start && "$NATIVE_MODE" == manager-start-failure ]]; then exit 27; fi
 exit 0
 """,
@@ -316,8 +333,12 @@ def test_partial_account_setup_keeps_named_failure_and_cleanup_evidence(
     assert (
         f"generator-access role=generator read=allowed execute={observed_execute}" in result.stderr
     )
-    assert "control=cleanup-user-service-stop status=failed exit=7" in result.stderr
-    assert "control=cleanup-account-remove status=passed exit=0" in result.stderr
+    assert "control=cleanup-user-service-stop" not in result.stderr
+    assert "control=cleanup-state-initial status=passed exit=0" in result.stderr
+    if mode == "generator-denied-cleanup-failure":
+        assert "control=cleanup-account-remove" not in result.stderr
+    else:
+        assert "control=cleanup-account-remove status=passed exit=0" in result.stderr
     assert "control=cleanup-generator-remove status=passed exit=0" in result.stderr
     assert "control=cleanup-work-remove status=passed exit=0" in result.stderr
     assert f"stage=cleanup status={cleanup_status}" in result.stdout
@@ -326,7 +347,7 @@ def test_partial_account_setup_keeps_named_failure_and_cleanup_evidence(
     assert "stage=rootless-runtime" not in result.stdout
     assert not (tmp_path / "work").exists()
     assert not (tmp_path / "generator").exists()
-    assert not (tmp_path / "account-present").exists()
+    assert (tmp_path / "account-present").exists() is (mode == "generator-denied-cleanup-failure")
     assert unrelated.read_text() == "keep"
 
 
@@ -530,7 +551,7 @@ def test_cleanup_requires_independent_observation_without_masking_primary_failur
         sort_keys=True,
     )
     body = (
-        'if [[ "$1" == -m && "$2" == scripts.native_smoke_cleanup ]]; then\n'
+        'if [[ "$1" == -m && "$2" == scripts.native_smoke_cleanup && "$3" == observe ]]; then\n'
         '  echo independent-cleanup-observer >> "$NATIVE_TRACE"\n'
         f"  printf '%s\\n' {shlex.quote('native-prerequisite cleanup-observation=' + output)}\n"
         f"  exit {status}\nfi\n"
@@ -1239,3 +1260,565 @@ def test_slice_configuration_cli_keeps_custody_observer_read_only(
     assert value["complete_absence_verified"] is True and value["canonical_unit_verified"] is True
     assert value["native_qualified"] is False and value["observer_uid"] == 0
     assert len(value["observations"]) == 8 and "dtci1000" not in output.out
+
+
+def install_teardown_state_stub(tools, words, *, status=0, settle=False):
+    executable = tools / "python3"
+    original = executable.read_text()
+    settled = "owned absent absent absent absent absent absent"
+    branch = (
+        'if [[ "$1" == -m && "$2" == scripts.native_smoke_cleanup && "$3" == teardown-state ]]; then\n'
+        '  echo teardown-state >> "$NATIVE_TRACE"\n'
+        f"  result={shlex.quote(words)}\n"
+        + (
+            f'  [[ -f "$NATIVE_FIXTURE/managers-stopped" ]] && result={shlex.quote(settled)}\n'
+            if settle
+            else ""
+        )
+        + '  printf "%s\\n" "$result"\n'
+        + f"  exit {status}\nfi\n"
+    )
+    executable.write_text(original.replace("#!/bin/bash\n", "#!/bin/bash\n" + branch, 1))
+
+
+def test_state_aware_partial_cleanup_never_opens_absent_user_bus(tmp_path, fixture_tools):
+    install_teardown_state_stub(fixture_tools, "owned absent absent absent absent absent absent")
+    canary = tmp_path / "unrelated"
+    canary.write_text("keep")
+    result = run_smoke(tmp_path, fixture_tools, "generator-denied", "0.1")
+    assert result.returncode == 1
+    trace = (tmp_path / "trace").read_text().splitlines()
+    assert "control=cleanup-user-service-stop" not in result.stderr
+    assert "loginctl-terminate-user" not in trace and "systemctl-stop" not in trace
+    assert "loginctl-disable-linger" not in trace
+    assert trace.count("teardown-state") >= 2
+    assert "userdel" in trace and "stage=cleanup status=passed exit=0" in result.stdout
+    assert not (tmp_path / "account-present").exists()
+    assert not (tmp_path / "generator").exists() and not (tmp_path / "work").exists()
+    assert canary.read_text() == "keep"
+
+
+def test_state_aware_unavailable_facility_cannot_authorize_account_removal(tmp_path, fixture_tools):
+    install_teardown_state_stub(fixture_tools, "", status=41)
+    result = run_smoke(tmp_path, fixture_tools, "generator-denied", "0.1")
+    assert result.returncode == 1
+    assert "control=generator-execute status=failed exit=1" in result.stderr
+    assert "stage=cleanup status=failed exit=1" in result.stdout
+    trace = (tmp_path / "trace").read_text().splitlines()
+    assert "userdel" not in trace and (tmp_path / "account-present").is_file()
+    assert not (tmp_path / "generator").exists() and not (tmp_path / "work").exists()
+    assert "control=cleanup-observation" in result.stderr
+
+
+def test_state_aware_owned_service_stop_failure_remains_blocking(tmp_path, fixture_tools):
+    install_teardown_state_stub(
+        fixture_tools, "owned present present present present present absent", settle=True
+    )
+    systemctl = fixture_tools / "systemctl"
+    systemctl.write_text(
+        systemctl.read_text().replace(
+            "#!/bin/bash\n",
+            '#!/bin/bash\n[[ "$1" == stop ]] && : > "$NATIVE_FIXTURE/managers-stopped"\n',
+            1,
+        )
+    )
+    source = (ROOT / "scripts/ci/native_smoke.sh").read_text()
+    functions = source[source.index("probe_stage=") : source.index("trap cleanup EXIT")]
+    code = (
+        "set -euo pipefail\n"
+        + "timeout_helper="
+        + shlex.quote(str(ROOT / "scripts/validation_timeouts.py"))
+        + "\nkill_timeout=1\n"
+        + functions
+        + '\nwork="$NATIVE_FIXTURE/work"; mkdir "$work"\n'
+        + "account_created=1; saved_uid=2000; saved_gid=2000; uid=2000\n"
+        + "user_service_attempted=1; podman_attempted=0\n"
+        + "trap cleanup EXIT\nexit 0\n"
+    )
+    (tmp_path / "account-present").touch()
+    result = run_smoke(tmp_path, fixture_tools, "generator-denied", "0.1", code=code)
+    assert "control=cleanup-user-service-stop status=failed exit=7" in result.stderr
+    assert result.returncode == 1
+    assert "stage=cleanup status=failed exit=1" in result.stdout
+    assert "control=cleanup-account-remove status=passed exit=0" in result.stderr
+    assert not (tmp_path / "account-present").exists() and not (tmp_path / "work").exists()
+
+
+@pytest.fixture
+def teardown_system(cleanup_system, monkeypatch):
+    system = cleanup_system
+    previous = system.query
+    calls = []
+
+    def query(command, end):
+        calls.append((command, end))
+        if command[0] == "/usr/bin/getent" and command[2] != "0":
+            return (
+                0,
+                "dtci1000:x:2000:2000::/home/dtci1000:/bin/bash\n"
+                if command[1] == "passwd"
+                else "dtci1000:x:2000:\n",
+            )
+        if command[0] == "/usr/sbin/runuser":
+            assert "-i" in command and "--no-ask-password" in command
+            if command[-1] == "--property=Version":
+                return 0, "Version=255\n"
+            return (
+                0,
+                "LoadState=loaded\nActiveState=inactive\nFragmentPath=/run/user/2000/systemd/generator/ci-probe.service\n",
+            )
+        return previous(command, end)
+
+    monkeypatch.setattr(cleanup_observation, "query", query)
+    system.query, system.calls = query, calls
+    return system
+
+
+@pytest.mark.parametrize("manager", [False, True], ids=["absent-manager", "present-manager"])
+@pytest.mark.parametrize(
+    "attempted", [False, True], ids=["unattempted-service", "attempted-service"]
+)
+def test_teardown_state_queries_user_service_only_with_owned_attempt_and_live_manager(
+    teardown_system, monkeypatch, manager, attempted
+):
+    system = teardown_system
+
+    def query(command, end):
+        if command[0] == "/usr/bin/systemctl" and command[4].startswith("user@"):
+            system.calls.append((command, end))
+            return 0, "LoadState=loaded\nActiveState=" + (
+                "active" if manager else "inactive"
+            ) + "\n"
+        return system.query(command, end)
+
+    monkeypatch.setattr(cleanup_observation, "query", query)
+    end = cleanup_observation.Deadline.after(10).end
+    result = cleanup_observation.teardown_state(system.identity, end, attempted, system.paths)
+    assert result["state_verified"] is True and result["account"] == "owned"
+    assert result["states"]["manager"] is manager
+    assert result["states"]["service_stop_required"] is False
+    assert any(c[0][0] == "/usr/sbin/runuser" for c in system.calls) is (manager and attempted)
+    assert all(actual_end == end for _, actual_end in system.calls)
+    assert result["native_qualified"] is False
+    assert "dtci1000" not in json.dumps(result) and "2000" not in json.dumps(result)
+
+
+@pytest.mark.parametrize(
+    "conflict",
+    [
+        "uid",
+        "gid",
+        "home",
+        "shell",
+        "group",
+        "members",
+        "numeric-account",
+        "numeric-group",
+        "missing-account",
+        "missing-group",
+    ],
+)
+def test_teardown_state_refuses_conflicting_identity_before_other_facilities(
+    teardown_system, monkeypatch, conflict
+):
+    system = teardown_system
+    replacements = {
+        "uid": ("passwd", "dtci1000", 2, "2001"),
+        "gid": ("passwd", "dtci1000", 3, "2001"),
+        "home": ("passwd", "dtci1000", 5, "/home/unrelated"),
+        "shell": ("passwd", "dtci1000", 6, "/bin/sh"),
+        "group": ("group", "dtci1000", 2, "2001"),
+        "members": ("group", "dtci1000", 3, "unrelated"),
+        "numeric-account": ("passwd", "2000", 0, "unrelated"),
+        "numeric-group": ("group", "2000", 0, "unrelated"),
+    }
+
+    def query(command, end):
+        status, text = system.query(command, end)
+        if command[0] == "/usr/bin/getent":
+            if conflict == "missing-account" and command[1:] == ["passwd", "dtci1000"]:
+                return 2, ""
+            if conflict == "missing-group" and command[1:] == ["group", "dtci1000"]:
+                return 2, ""
+            if conflict in replacements:
+                database, key, position, value = replacements[conflict]
+                if command[1:] == [database, key]:
+                    fields = text.strip().split(":")
+                    fields[position] = value
+                    return status, ":".join(fields) + "\n"
+        return status, text
+
+    monkeypatch.setattr(cleanup_observation, "query", query)
+    result = cleanup_observation.teardown_state(
+        system.identity, cleanup_observation.Deadline.after(10).end, True, system.paths
+    )
+    assert result["state_verified"] is False and result["failed_role"] == "account-custody"
+    assert all(command[0] == "/usr/bin/getent" for command, _ in system.calls)
+    assert "unrelated" not in json.dumps(result) and "dtci1000" not in json.dumps(result)
+
+
+@pytest.mark.parametrize("kind", ["account-absent", "process-present", "process-unavailable"])
+def test_teardown_state_distinguishes_absence_owned_processes_and_unavailable_observer(
+    teardown_system, monkeypatch, kind
+):
+    system = teardown_system
+    if kind == "account-absent":
+        monkeypatch.setattr(cleanup_observation, "owned_account_state", lambda *_: "absent")
+    elif kind == "process-present":
+        proc = system.paths.proc / "1234"
+        proc.mkdir()
+        (proc / "status").write_text("Uid:\t0 0 0 2000\nGid:\t0 0 0 0\n")
+    else:
+        (system.paths.proc / "self/status").write_text("private-fixture-value")
+    result = cleanup_observation.teardown_state(
+        system.identity, cleanup_observation.Deadline.after(10).end, False, system.paths
+    )
+    if kind == "process-unavailable":
+        assert result["state_verified"] is False and result["failed_role"] == "process-credentials"
+    else:
+        assert result["state_verified"] is True
+        assert result["account"] == ("absent" if kind == "account-absent" else "owned")
+        assert result["states"]["processes"] is (kind == "process-present")
+    assert "private-fixture-value" not in json.dumps(result)
+
+
+@pytest.mark.parametrize("conflict", ["numeric", "name"])
+def test_teardown_state_refuses_conflicting_registered_login_identity(
+    teardown_system, monkeypatch, conflict
+):
+    system = teardown_system
+
+    def query(command, end):
+        if command[0] == "/usr/bin/busctl":
+            row = (
+                [2000, "unrelated", "/user/_2000"]
+                if conflict == "numeric"
+                else [2001, "dtci1000", "/user/_2001"]
+            )
+            return 0, json.dumps({"type": "a(uso)", "data": [[row]]})
+        return system.query(command, end)
+
+    monkeypatch.setattr(cleanup_observation, "query", query)
+    result = cleanup_observation.teardown_state(
+        system.identity, cleanup_observation.Deadline.after(10).end, False, system.paths
+    )
+    assert result["state_verified"] is False and result["failed_role"] == "login-user"
+    assert "unrelated" not in json.dumps(result)
+
+
+@pytest.mark.parametrize(
+    "case,reply,expected",
+    [
+        (
+            "active",
+            (
+                0,
+                "LoadState=loaded\nActiveState=active\nFragmentPath=/run/user/2000/systemd/generator/ci-probe.service\n",
+            ),
+            True,
+        ),
+        (
+            "failed",
+            (
+                0,
+                "LoadState=loaded\nActiveState=failed\nFragmentPath=/run/user/2000/systemd/generator/ci-probe.service\n",
+            ),
+            True,
+        ),
+        (
+            "inactive",
+            (
+                0,
+                "LoadState=loaded\nActiveState=inactive\nFragmentPath=/run/user/2000/systemd/generator/ci-probe.service\n",
+            ),
+            False,
+        ),
+        ("missing-zero", (0, "LoadState=not-found\nActiveState=inactive\nFragmentPath=\n"), False),
+        ("missing-one", (1, "LoadState=not-found\nActiveState=inactive\nFragmentPath=\n"), False),
+        ("missing-error", (9, "LoadState=not-found\nActiveState=inactive\nFragmentPath=\n"), None),
+        (
+            "foreign",
+            (0, "LoadState=loaded\nActiveState=active\nFragmentPath=/unrelated/unit\n"),
+            None,
+        ),
+        ("malformed", (0, "private-fixture-value"), None),
+        ("duplicate", (0, "LoadState=loaded\nLoadState=loaded\nFragmentPath=\n"), None),
+        ("masked", (0, "LoadState=masked\nActiveState=inactive\nFragmentPath=\n"), None),
+    ],
+    ids=lambda value: value if isinstance(value, str) else None,
+)
+def test_teardown_service_requires_healthy_manager_and_exact_owned_fragment(
+    teardown_system, monkeypatch, case, reply, expected
+):
+    system = teardown_system
+
+    def query(command, end):
+        if command[0] == "/usr/sbin/runuser" and command[-1] != "--property=Version":
+            return reply
+        return system.query(command, end)
+
+    monkeypatch.setattr(cleanup_observation, "query", query)
+    end = cleanup_observation.Deadline.after(10).end
+    if expected is None:
+        with pytest.raises(ValueError, match="user-service-observation-unavailable"):
+            cleanup_observation.user_service_present(system.identity, end)
+    else:
+        assert cleanup_observation.user_service_present(system.identity, end) is expected
+    assert "unrelated" not in json.dumps({"case": case, "required": expected})
+
+
+@pytest.mark.parametrize(
+    "reply",
+    [
+        (7, "private-fixture-value"),
+        (0, ""),
+        (0, "Version=\n"),
+        (0, "Version=255\nExtra=private-fixture-value\n"),
+    ],
+    ids=["error", "missing", "empty", "extra"],
+)
+def test_teardown_service_never_treats_missing_user_bus_as_absence(
+    teardown_system, monkeypatch, reply
+):
+    calls = []
+
+    def query(command, end):
+        calls.append(command)
+        return reply
+
+    monkeypatch.setattr(cleanup_observation, "query", query)
+    with pytest.raises(ValueError, match="user-manager-unavailable"):
+        cleanup_observation.user_service_present(
+            teardown_system.identity, cleanup_observation.Deadline.after(10).end
+        )
+    assert len(calls) == 1
+
+
+@pytest.mark.parametrize(
+    "words",
+    [
+        "owned absent",
+        "owned absent absent absent absent absent absent extra",
+        "unknown absent absent absent absent absent absent",
+        "owned unknown absent absent absent absent absent",
+        "owned absent absent absent absent absent absent\nextra",
+    ],
+    ids=["missing", "extra", "unknown-identity", "unknown-state", "multiline"],
+)
+def test_teardown_shell_refuses_malformed_state_before_destructive_actions(
+    tmp_path, fixture_tools, words
+):
+    install_teardown_state_stub(fixture_tools, words)
+    result = run_smoke(tmp_path, fixture_tools, "generator-denied", "0.1")
+    assert result.returncode == 1 and "stage=cleanup status=failed exit=1" in result.stdout
+    trace = (tmp_path / "trace").read_text().splitlines()
+    assert "userdel" not in trace and "systemctl-stop" not in trace
+    assert "loginctl-terminate-user" not in trace
+    assert not (tmp_path / "work").exists() and not (tmp_path / "generator").exists()
+
+
+@pytest.mark.parametrize("attempted", [False, True])
+def test_teardown_cli_separates_fixed_action_words_from_safe_observation(
+    teardown_system, monkeypatch, capsys, attempted
+):
+    system = teardown_system
+    end = cleanup_observation.Deadline.after(10).end
+    seen = []
+    original = cleanup_observation.teardown_state
+
+    def observed(identity, actual_end, service):
+        seen.append((identity, actual_end, service))
+        return original(identity, actual_end, service, system.paths)
+
+    monkeypatch.setattr(cleanup_observation, "teardown_state", observed)
+    monkeypatch.setattr(cleanup_observation.os, "geteuid", lambda: 0)
+    assert (
+        cleanup_observation.main(
+            [
+                "teardown-state",
+                "dtci1000",
+                "2000",
+                "2000",
+                "/tmp/fishhat-native.ABCD1234",
+                str(end),
+                str(int(attempted)),
+            ]
+        )
+        == 0
+    )
+    output = capsys.readouterr()
+    assert output.out == "owned absent absent absent absent absent absent\n"
+    value = json.loads(output.err.split("=", 1)[1])
+    assert (
+        value["state_verified"] is True
+        and value["observer_uid"] == 0
+        and value["native_qualified"] is False
+    )
+    assert seen == [(system.identity, end, attempted)]
+    assert "dtci1000" not in output.err and "2000" not in output.err
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [[], ["private-fixture-value"], ["0", "extra"]],
+    ids=["missing-flag", "invalid-flag", "extra-field"],
+)
+def test_teardown_cli_rejects_invalid_selection_without_observation(monkeypatch, capsys, extra):
+    monkeypatch.setattr(cleanup_observation.os, "geteuid", lambda: 0)
+
+    def forbidden(*_):
+        pytest.fail("invalid selection reached native observation")
+
+    monkeypatch.setattr(cleanup_observation, "teardown_state", forbidden)
+    end = cleanup_observation.Deadline.after(10).end
+    assert (
+        cleanup_observation.main(
+            [
+                "teardown-state",
+                "dtci1000",
+                "2000",
+                "2000",
+                "/tmp/fishhat-native.ABCD1234",
+                str(end),
+                *extra,
+            ]
+        )
+        == 1
+    )
+    output = capsys.readouterr()
+    assert output.out == "" and "private-fixture-value" not in output.err
+    assert json.loads(output.err.split("=", 1)[1])["state_verified"] is False
+
+
+@pytest.mark.parametrize("role", ["user-manager", "runtime-manager", "login-user", "linger"])
+def test_teardown_state_fails_when_required_facility_observation_is_unavailable(
+    teardown_system, monkeypatch, role
+):
+    system = teardown_system
+
+    def query(command, end):
+        if (
+            role == "user-manager"
+            and command[0] == "/usr/bin/systemctl"
+            and command[4].startswith("user@")
+        ):
+            return 9, "private-fixture-value"
+        if (
+            role == "runtime-manager"
+            and command[0] == "/usr/bin/systemctl"
+            and command[4].startswith("user-runtime-dir@")
+        ):
+            return 0, "LoadState=not-found\nActiveState=inactive\n"
+        if role == "login-user" and command[0] == "/usr/bin/busctl":
+            return 9, "private-fixture-value"
+        return system.query(command, end)
+
+    if role == "linger":
+        (system.paths.var / "lib/systemd").rmdir()
+    monkeypatch.setattr(cleanup_observation, "query", query)
+    result = cleanup_observation.teardown_state(
+        system.identity, cleanup_observation.Deadline.after(10).end, False, system.paths
+    )
+    assert result["state_verified"] is False and result["failed_role"] == role
+    assert "private-fixture-value" not in json.dumps(result)
+
+
+@pytest.mark.parametrize(
+    "failure",
+    [
+        "disable-linger",
+        "terminate-user",
+        "manager-stop",
+        "runtime-stop",
+        "account-remove",
+        "busy-once",
+    ],
+)
+def test_teardown_each_actual_failure_stays_failed_after_later_absence(
+    tmp_path, fixture_tools, failure
+):
+    install_teardown_state_stub(
+        fixture_tools, "owned present present present present absent absent", settle=True
+    )
+    loginctl = fixture_tools / "loginctl"
+    loginctl.write_text(
+        loginctl.read_text().replace(
+            "#!/bin/bash\n",
+            "#!/bin/bash\n"
+            + (
+                f'[[ "$1" == {shlex.quote(failure)} ]] && exit 37\n'
+                if failure in {"disable-linger", "terminate-user"}
+                else ""
+            ),
+            1,
+        )
+    )
+    systemctl = fixture_tools / "systemctl"
+    branch = 'if [[ "$1" == stop ]]; then\n  : > "$NATIVE_FIXTURE/managers-stopped"\n'
+    if failure == "manager-stop":
+        branch += '  [[ "$2" == user@* ]] && exit 37\n'
+    elif failure == "runtime-stop":
+        branch += '  [[ "$2" == user-runtime-dir@* ]] && exit 37\n'
+    branch += "fi\n"
+    systemctl.write_text(
+        systemctl.read_text().replace("#!/bin/bash\n", "#!/bin/bash\n" + branch, 1)
+    )
+    if failure in {"account-remove", "busy-once"}:
+        userdel = fixture_tools / "userdel"
+        if failure == "account-remove":
+            branch = "echo private-fixture-value >&2\nexit 37\n"
+        else:
+            branch = 'if [[ ! -f "$NATIVE_FIXTURE/busy-seen" ]]; then\n : > "$NATIVE_FIXTURE/busy-seen"\n echo busy-refusal >> "$NATIVE_TRACE"\n exit 8\nfi\n'
+        userdel.write_text(
+            userdel.read_text().replace("#!/bin/bash\n", "#!/bin/bash\n" + branch, 1)
+        )
+    canary = tmp_path / "unrelated"
+    canary.write_text("keep")
+    result = run_smoke(tmp_path, fixture_tools, "generator-denied", "0.1")
+    assert result.returncode == 1
+    assert "control=generator-execute status=failed exit=1" in result.stderr
+    assert "stage=cleanup status=failed exit=1" in result.stdout
+    assert "control=cleanup-observation status=passed exit=0" in result.stderr
+    assert "private-fixture-value" not in result.stdout + result.stderr
+    assert not (tmp_path / "generator").exists() and not (tmp_path / "work").exists()
+    assert (tmp_path / "account-present").exists() is (failure == "account-remove")
+    assert canary.read_text() == "keep"
+    control = {
+        "disable-linger": "cleanup-disable-linger",
+        "terminate-user": "cleanup-terminate-user",
+        "manager-stop": "cleanup-manager-stop",
+        "runtime-stop": "cleanup-runtime-manager-stop",
+        "account-remove": "cleanup-account-remove",
+        "busy-once": "cleanup-account-remove",
+    }[failure]
+    assert (
+        f"control={control} status=failed exit={8 if failure == 'busy-once' else 37}"
+        in result.stderr
+    )
+    if failure == "busy-once":
+        assert "control=cleanup-account-remove status=passed exit=0" in result.stderr
+
+
+def test_teardown_observes_asynchronous_process_settlement_before_account_deletion(
+    tmp_path, fixture_tools
+):
+    python = fixture_tools / "python3"
+    branch = """if [[ "$1" == -m && "$2" == scripts.native_smoke_cleanup && "$3" == teardown-state ]]; then
+  n=0
+  [[ -f "$NATIVE_FIXTURE/state-count" ]] && n=$(cat "$NATIVE_FIXTURE/state-count")
+  n=$((n + 1)); echo "$n" > "$NATIVE_FIXTURE/state-count"
+  echo state-observed >> "$NATIVE_TRACE"
+  if [[ "$n" == 3 ]]; then
+    echo 'owned absent absent absent absent absent present'
+  else
+    echo 'owned absent absent absent absent absent absent'
+  fi
+  exit 0
+fi
+"""
+    python.write_text(python.read_text().replace("#!/bin/bash\n", "#!/bin/bash\n" + branch, 1))
+    result = run_smoke(tmp_path, fixture_tools, "generator-denied", "0.1")
+    assert result.returncode == 1 and "stage=cleanup status=passed exit=0" in result.stdout
+    trace = (tmp_path / "trace").read_text().splitlines()
+    assert trace[: trace.index("userdel")].count("state-observed") == 4
+    assert not (tmp_path / "account-present").exists()

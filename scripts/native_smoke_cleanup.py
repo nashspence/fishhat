@@ -86,7 +86,7 @@ def name_service(identity: Identity, end: float) -> dict[str, bool]:
     }
 
 
-def login_user_present(identity: Identity, end: float) -> bool:
+def login_user_present(identity: Identity, end: float, *, exact: bool = False) -> bool:
     status, text = query(
         [
             "/usr/bin/busctl",
@@ -130,6 +130,12 @@ def login_user_present(identity: Identity, end: float) -> bool:
         ):
             raise ValueError("login-manager-unavailable")
         seen.add(row[0])
+        if (
+            exact
+            and (row[0] == identity.uid or row[1] == identity.account)
+            and (row[0] != identity.uid or row[1] != identity.account)
+        ):
+            raise ValueError("login-user-identity-unavailable")
         present = present or row[0] == identity.uid or row[1] == identity.account
     return present
 
@@ -360,6 +366,141 @@ def configuration_clear(
     }
 
 
+def owned_account_state(identity: Identity, end: float) -> str:
+    names = name_service(identity, end)
+    if not names["account-name"] and not names["account-uid"]:
+        return "absent"
+    if not all(names.values()):
+        raise ValueError("owned-account-identity-unavailable")
+    account = lookup("passwd", identity.account, end)
+    group = lookup("group", identity.account, end)
+    numeric_account = lookup("passwd", str(identity.uid), end)
+    numeric_group = lookup("group", str(identity.gid), end)
+    if (
+        account is None
+        or group is None
+        or account[0] != identity.account
+        or int(account[2]) != identity.uid
+        or int(account[3]) != identity.gid
+        or account[5] != f"/home/{identity.account}"
+        or account[6] != "/bin/bash"
+        or numeric_account != account
+        or group[0] != identity.account
+        or int(group[2]) != identity.gid
+        or numeric_group != group
+        or group[3] not in {"", identity.account}
+    ):
+        raise ValueError("owned-account-identity-unavailable")
+    return "owned"
+
+
+def user_service_present(identity: Identity, end: float) -> bool:
+    prefix = [
+        "/usr/sbin/runuser",
+        "-u",
+        identity.account,
+        "--",
+        "/usr/bin/env",
+        "-i",
+        f"HOME=/home/{identity.account}",
+        "PATH=/usr/bin:/bin",
+        f"XDG_RUNTIME_DIR=/run/user/{identity.uid}",
+        "/usr/bin/systemctl",
+        "--user",
+        "--no-pager",
+        "--no-ask-password",
+        "show",
+    ]
+    status, text = query([*prefix, "--property=Version"], end)
+    if (
+        status != 0
+        or len(text.splitlines()) != 1
+        or not text.startswith("Version=")
+        or not text[8:].strip()
+    ):
+        raise ValueError("user-manager-unavailable")
+    status, text = query(
+        [
+            *prefix,
+            "ci-probe.service",
+            "--property=LoadState",
+            "--property=ActiveState",
+            "--property=FragmentPath",
+        ],
+        end,
+    )
+    rows = text.splitlines()
+    if len(rows) != 3 or any("=" not in row for row in rows):
+        raise ValueError("user-service-observation-unavailable")
+    values = dict(row.split("=", 1) for row in rows)
+    if set(values) != {"LoadState", "ActiveState", "FragmentPath"}:
+        raise ValueError("user-service-observation-unavailable")
+    if values == {
+        "LoadState": "not-found",
+        "ActiveState": "inactive",
+        "FragmentPath": "",
+    } and status in {0, 1}:
+        return False
+    if (
+        status != 0
+        or values["LoadState"] != "loaded"
+        or values["FragmentPath"] != f"/run/user/{identity.uid}/systemd/generator/ci-probe.service"
+        or values["ActiveState"]
+        not in {
+            "active",
+            "reloading",
+            "inactive",
+            "failed",
+            "activating",
+            "deactivating",
+            "maintenance",
+            "refreshing",
+        }
+    ):
+        raise ValueError("user-service-observation-unavailable")
+    return values["ActiveState"] != "inactive"
+
+
+def teardown_state(
+    identity: Identity, end: float, service_attempted: bool, paths: Paths | None = None
+) -> dict[str, Any]:
+    paths = Paths() if paths is None else paths
+    result: dict[str, Any] = {
+        "scope": "owned-smoke-teardown-state-only",
+        "observer_uid": os.geteuid(),
+        "status": "unavailable",
+        "state_verified": False,
+        "native_qualified": False,
+    }
+    role = "account-custody"
+    try:
+        account = owned_account_state(identity, end)
+        states = {}
+        role = "user-manager"
+        states["manager"] = unit_present(f"user@{identity.uid}.service", end)
+        role = "runtime-manager"
+        states["runtime"] = unit_present(f"user-runtime-dir@{identity.uid}.service", end)
+        role = "login-user"
+        states["login"] = login_user_present(identity, end, exact=True)
+        role = "linger"
+        if not (paths.var / "lib/systemd").is_dir():
+            raise ValueError("linger-observation-unavailable")
+        states["linger"] = path_present(paths.var / "lib/systemd/linger" / identity.account)
+        role = "owned-user-service"
+        states["service_stop_required"] = (
+            user_service_present(identity, end)
+            if account == "owned" and states["manager"] and service_attempted
+            else False
+        )
+        role = "process-credentials"
+        states["processes"] = bool(owned_processes(identity, paths))
+    except (OSError, ValueError, subprocess.SubprocessError):
+        result["failed_role"] = role
+        return result
+    result.update(status="observed", state_verified=True, account=account, states=states)
+    return result
+
+
 def observe(identity: Identity, end: float) -> dict[str, Any]:
     result = observe_once(identity, end)
     while result["status"] == "present" and Deadline(end).remaining() > 0:
@@ -377,10 +518,19 @@ def main(argv: list[str] | None = None) -> int:
         "complete_absence_verified": False,
         "native_qualified": False,
     }
+    state_mode = arguments[:1] == ["teardown-state"]
+    if state_mode:
+        value = {
+            "scope": "owned-smoke-teardown-state-only",
+            "status": "unavailable",
+            "state_verified": False,
+            "native_qualified": False,
+        }
     try:
         if (
-            len(arguments) != 6
-            or arguments[0] not in {"observe", "configuration-clear"}
+            len(arguments) != (7 if state_mode else 6)
+            or arguments[0] not in {"observe", "configuration-clear", "teardown-state"}
+            or (state_mode and arguments[6] not in {"0", "1"})
             or os.geteuid() != 0
         ):
             raise ValueError("owned-identity-and-deadline-required")
@@ -393,12 +543,31 @@ def main(argv: list[str] | None = None) -> int:
         ):
             raise ValueError("owned-identity-and-deadline-required")
         value = (
-            configuration_clear(identity, end)
+            teardown_state(identity, end, arguments[6] == "1")
+            if state_mode
+            else configuration_clear(identity, end)
             if arguments[0] == "configuration-clear"
             else observe(identity, end)
         )
     except (OSError, ValueError, subprocess.SubprocessError):
         pass
+    if state_mode:
+        print(
+            "native-prerequisite teardown-state-observation=" + json.dumps(value, sort_keys=True),
+            file=sys.stderr,
+        )
+        if value["state_verified"]:
+            roles = ("manager", "runtime", "login", "linger", "service_stop_required", "processes")
+            print(
+                " ".join(
+                    [
+                        value["account"],
+                        *("present" if value["states"][role] else "absent" for role in roles),
+                    ]
+                )
+            )
+            return 0
+        return 1
     label = (
         "slice-configuration-observation"
         if arguments[:1] == ["configuration-clear"]
