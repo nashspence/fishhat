@@ -113,6 +113,33 @@ class WorkflowSafety(unittest.TestCase):
         )
         self.assertEqual(artifact["with"]["if-no-files-found"], "error")
 
+    def test_native_smoke_keeps_complete_normal_before_required_interruption_witness(self):
+        job = self.workflow["jobs"]["native-prerequisites"]
+        steps = job["steps"]
+        normal = [
+            index
+            for index, step in enumerate(steps)
+            if step.get("run") == "bash scripts/ci/native_smoke.sh --github-hosted-only"
+        ]
+        selected = [
+            index
+            for index, step in enumerate(steps)
+            if "scripts.native_smoke_interruption --github-hosted-only" in step.get("run", "")
+        ]
+        self.assertEqual(len(normal), 1)
+        self.assertEqual(len(selected), 1)
+        self.assertLess(normal[0], selected[0])
+        receipt = next(
+            step
+            for step in steps
+            if step.get("with", {}).get("name") == "native-smoke-interruption"
+        )
+        self.assertEqual(receipt["with"]["path"], "artifacts/native-smoke-interruption.json")
+        self.assertEqual(receipt["with"]["if-no-files-found"], "error")
+        self.assertEqual(receipt["if"], "${{ always() }}")
+        self.assertIn("validation-tooling", job["env"]["CHECK_PURPOSES"])
+        self.assertIn("pre-manager interruption", job["env"]["CHECK_SCOPE"])
+
     def test_native_script_refuses_ordinary_machine(self):
         proc = subprocess.run(
             ["bash", str(ROOT / "scripts/ci/native_smoke.sh")],
