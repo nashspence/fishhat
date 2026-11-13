@@ -4,17 +4,19 @@ import errno
 import json
 import shutil
 import subprocess
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
 
 from scripts import validation
 from scripts.project_policy import ROOT
+from scripts.run_stats import valid_stats
 
 CHECK_PURPOSE = {
     "purpose": "validation-tooling",
     "authority": ["scripts/validation.py"],
-    "scope": "receipt runner",
+    "scope": "receipt runner and owned temporary-directory isolation for concurrent synthetic subprocess suites",
     "relationship": "no-product-claim",
     "reason": "Actual child executions and synthetic repositories verify source, selection, outcomes and retention; no deployment effect is established.",
     "claims": [],
@@ -26,6 +28,7 @@ def checkout(tmp_path, monkeypatch):
     for key in validation.OVERRIDES:
         monkeypatch.delenv(key, raising=False)
     (tmp_path / ".gitignore").write_text("artifacts/\n__pycache__/\n.pytest_cache/\n")
+    (tmp_path / "pytest.ini").write_text("[pytest]\naddopts = --basetemp=artifacts/pytest-tmp\n")
     (tmp_path / "scripts").mkdir()
     (tmp_path / "scripts/__init__.py").touch()
     shutil.copyfile(
@@ -352,3 +355,46 @@ def test_parallel_distribution_flags_preserve_selection_but_filtering_and_duplic
         assert not validation.selection("unit", [*validation.CANONICAL["unit"], *flags])[
             "canonical"
         ]
+
+
+def test_concurrent_synthetic_pytest_runs_keep_owned_temporary_directories(tmp_path, monkeypatch):
+    roots = [tmp_path / name for name in ("left", "right")]
+    unrelated = tmp_path / "unrelated"
+    unrelated.write_text("preserve")
+    for root in roots:
+        root.mkdir()
+        checkout.__wrapped__(root, monkeypatch)
+        (root / "artifacts").mkdir()
+        (root / "artifacts/unrelated").write_text("preserve")
+        (root / "tests/test_example.py").write_text(
+            """from pathlib import Path
+import time
+from scripts.validation_timeouts import watchdog
+
+def test_pass(tmp_path):
+    root = Path.cwd()
+    coordinator = root.parent
+    (coordinator / (root.name + '-ready')).touch()
+    deadline = time.monotonic() + watchdog(10)
+    while not all((coordinator / (name + '-ready')).exists() for name in ('left', 'right')):
+        assert time.monotonic() < deadline, 'concurrent peer unavailable'
+        time.sleep(0.01)
+    actual = tmp_path.resolve()
+    (root / 'artifacts/observed-temp.txt').write_text(str(actual))
+    assert actual.is_relative_to(root / 'artifacts/pytest-tmp')
+"""
+        )
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        tasks = [
+            pool.submit(validation.run, "unit", validation.CANONICAL["unit"], root)
+            for root in roots
+        ]
+        assert [task.result() for task in tasks] == [0, 0]
+    for root in roots:
+        actual = Path((root / "artifacts/observed-temp.txt").read_text())
+        assert actual.is_relative_to(root / "artifacts/pytest-tmp")
+        assert (root / "artifacts/unrelated").read_text() == "preserve"
+        receipt = latest(root)
+        assert receipt["exit_status"] == 0 and valid_stats(receipt["tests"]["stats"])
+        assert receipt["tests"]["outcomes"] == {"tests/test_example.py::test_pass": "passed"}
+    assert unrelated.read_text() == "preserve"
