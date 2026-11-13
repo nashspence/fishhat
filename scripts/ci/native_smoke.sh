@@ -13,7 +13,7 @@ observation_helper="$(dirname "$timeout_helper")/native_smoke_observation.py"
 # Shared deadlines bound the complete stage, including successive commands.
 kill_timeout="$(python3 "$timeout_helper" seconds 5)"
 contact_timeout="$(python3 "$timeout_helper" units 30)"
-probe_stage=''; stage_started=0; stage_deadline=''
+probe_stage=''; stage_started=0; stage_deadline=''; saved_uid=''; saved_gid=''; slice_properties_owned=0
 begin_stage() {
   finish_stage 0
   probe_stage="$1"; stage_started=$SECONDS
@@ -49,6 +49,12 @@ observe_control() {
 }
 
 
+observe_owned_cleanup() {
+  (cd "$(dirname "$timeout_helper")/.." && root_run python3 -m scripts.native_smoke_cleanup observe "$account" "$saved_uid" "$saved_gid" "$work" "$stage_deadline")
+}
+observe_owned_slice_configuration() {
+  (cd "$(dirname "$timeout_helper")/.." && root_run python3 -m scripts.native_smoke_cleanup configuration-clear "$account" "$saved_uid" "$saved_gid" "$work" "$stage_deadline")
+}
 remove_owned_account() {
   root_run userdel -r "$account" 2>"$work/userdel.stderr"
 }
@@ -97,6 +103,9 @@ cleanup() {
       cleanup_failed=1
     fi
   fi
+  if ((slice_properties_owned)); then
+    observe_control cleanup-slice-properties root_run systemctl --quiet revert "user-$saved_uid.slice" || cleanup_failed=1
+  fi
   if [[ -n "$manager_environment" ]]; then
     observe_control cleanup-generator-remove root_run rm -f -- "$manager_environment" || cleanup_failed=1
   fi
@@ -104,6 +113,9 @@ cleanup() {
   # Keep no private keys/logs as CI artifacts. The VM is discarded after this job.
   if [[ -n "$work" ]]; then
     observe_control cleanup-work-remove root_run rm -rf -- "$work" || cleanup_failed=1
+  fi
+  if ((account_created)); then
+    observe_control cleanup-observation observe_owned_cleanup || cleanup_failed=1
   fi
   if ((cleanup_failed)); then
     echo 'Native prerequisite cleanup failed' >&2
@@ -125,6 +137,9 @@ work="$(mktemp -d /tmp/fishhat-native.XXXXXXXX)"
 if id "$account" >/dev/null 2>&1; then echo 'Refusing existing test account' >&2; exit 2; fi
 observe_control account-create root_run useradd -m -s /bin/bash "$account"; account_created=1
 uid="$(id -u "$account")"
+saved_uid="$uid"
+saved_gid="$(id -g "$account")"
+[[ "$(id -gn "$account")" == "$account" ]]
 grep -q "^$account:" /etc/subuid
 grep -q "^$account:" /etc/subgid
 # Run after the image's environment import, and affect only the probe account.
@@ -207,6 +222,8 @@ user_run podman build --network=none --pull=never --layers=false -t localhost/fi
 [[ "$(user_run podman run --rm --network=none --cap-drop=all --security-opt=no-new-privileges localhost/fishhat-ci:local echo rootless-ok)" == rootless-ok ]]
 begin_stage cgroup-controls 120
 # Verify real ancestor settings; this is not OOM/pressure qualification.
+observe_control slice-configuration-custody observe_owned_slice_configuration
+slice_properties_owned=1
 root_run systemctl set-property --runtime "user-$uid.slice" MemoryHigh=384M MemoryMax=512M TasksMax=256 CPUQuota=100%
 [[ "$(cat "/sys/fs/cgroup/user.slice/user-$uid.slice/memory.max")" == 536870912 ]]
 [[ "$(cat "/sys/fs/cgroup/user.slice/user-$uid.slice/pids.max")" == 256 ]]

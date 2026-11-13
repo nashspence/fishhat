@@ -400,3 +400,18 @@ def test_isolated_download_watchdog_boundary_cannot_authorize_other_raw_waits(
 ):
     source = f"def {function}(args):\n    opener.open(args.url, timeout={expression})\n"
     assert bool(python_errors(source, name)) is not accepted
+
+
+@pytest.mark.parametrize(
+    "module,expected", [("scripts.validation_timeouts", []), ("foreign", ["unmanaged watchdog"])]
+)
+def test_shared_absolute_deadline_retains_watchdog_source_ownership(module, expected):
+    source = (
+        f"from {module} import Deadline\n"
+        "import subprocess\n"
+        "def observe(end):\n"
+        "    deadline = Deadline(end)\n"
+        "    return subprocess.run(['read-only-fixture'], timeout=deadline.remaining())\n"
+    )
+    errors = python_errors(source, "scripts/owned_observer.py")
+    assert [error.split(": ", 1)[1] for error in errors] == expected
