@@ -5,6 +5,15 @@ if [[ "${1:-}" != --github-hosted-only || "${GITHUB_ACTIONS:-}" != true || "${RU
   echo 'Refusing: requires explicit GitHub-hosted Ubuntu 24 VM enrollment.' >&2
   exit 2
 fi
+interruption_enrollment=''; interruption_descriptor=''
+if (($# == 1)); then
+  :
+elif (($# == 4)) && [[ "$2" == --interrupt-before-manager && "$3" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ && "$4" =~ ^([3-9]|[1-9][0-9]+)$ && -S "/proc/self/fd/$4" ]]; then
+  interruption_enrollment="$3"; interruption_descriptor="$4"
+else
+  echo 'Refusing: selected interruption requires fresh enrolled socket custody.' >&2
+  exit 2
+fi
 [[ -d "${RUNNER_TEMP:?}" && "$(ps -p 1 -o comm= | xargs)" == systemd ]]
 [[ "$(stat -fc %T /sys/fs/cgroup)" == cgroup2fs ]]
 sudo -n true
@@ -48,6 +57,13 @@ observe_control() {
   fi
 }
 
+
+interruption_checkpoint() {
+  PYTHONPATH="$(dirname "$timeout_helper")/.." python3 -m scripts.native_smoke_interruption checkpoint "$interruption_enrollment" "$interruption_descriptor" "$account" "$saved_uid" "$saved_gid" "$work" "$stage_deadline"
+}
+interrupt_before_manager() {
+  return 73
+}
 
 observe_owned_cleanup() {
   (cd "$(dirname "$timeout_helper")/.." && root_run python3 -m scripts.native_smoke_cleanup observe "$account" "$saved_uid" "$saved_gid" "$work" "$stage_deadline")
@@ -217,6 +233,10 @@ EOF
 observe_control generator-mode root_run chmod 0755 "$manager_environment"
 root_run install -d -m 0700 -o "$account" -g "$account" "/home/$account/tmp"
 observe_control generator-metadata root_run python3 "$observation_helper" "$manager_environment"
+if [[ -n "$interruption_enrollment" ]]; then
+  observe_control pre-manager-custody interruption_checkpoint
+  observe_control pre-manager-injection interrupt_before_manager
+fi
 generator_status=0
 probe_context_text="$(observe_control generator-execute root_run runuser -u "$account" -- "$manager_environment")" || generator_status=$?
 if ((generator_status == 0)) && [[ -z "$probe_context_text" ]]; then generator_status=1; fi

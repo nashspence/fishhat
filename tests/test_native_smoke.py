@@ -6,14 +6,17 @@ import json
 import os
 import re
 import shlex
+import socket
 import subprocess
 import sys
+import uuid
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
 from scripts import native_smoke_cleanup as cleanup_observation
+from scripts import native_smoke_interruption as interruption
 from scripts import native_smoke_observation as observation
 from scripts.validation_timeouts import VARIABLE, watchdog
 from tests.support import ROOT
@@ -24,9 +27,10 @@ CHECK_PURPOSE = {
         "scripts/ci/native_smoke.sh",
         "scripts/native_smoke_observation.py",
         "scripts/native_smoke_cleanup.py",
+        "scripts/native_smoke_interruption.py",
         "scripts/validation_timeouts.py",
     ],
-    "scope": "owned executable-generator placement, first account transition and selected manager-service environment identity, numeric metadata, independent exact account cleanup and fresh identity/state-guided conditional owned teardown through typed facility/process/filesystem observations, failure preservation and shared deadlines and real shell failure controls with isolated unprivileged tools",
+    "scope": "owned executable-generator placement, first account transition and selected manager-service environment identity, numeric metadata, independent exact account cleanup and fresh identity/state-guided conditional owned teardown through typed facility/process/filesystem observations, fresh private supervisor enrollment before injection, independent pre-manager and final absence observations, unrelated canaries, original interruption/cleanup outcomes, failure preservation and shared deadlines and real shell failure controls with isolated unprivileged tools",
     "relationship": "no-product-claim",
     "reason": "Real GNU timeout kills controlled hung children. Fake package/account tools and isolated facility/filesystem observations exercise failures and leftover-state refusal without privileged native actions or native owner qualification.",
     "claims": [],
@@ -79,6 +83,7 @@ exit 0
       fi ;;
     generator-denied-cleanup-failure) login=present ;;
   esac
+  [[ -f "$NATIVE_FIXTURE/pre-manager-pause" ]] && { manager=absent; login=absent; linger=absent; }
   echo "owned $manager $manager $login $linger absent absent"
   exit 0
 fi
@@ -210,7 +215,7 @@ exec /bin/rm "$@"
     return tools
 
 
-def run_smoke(tmp_path, tools, mode, scale="0.01", *, code=None):
+def run_smoke(tmp_path, tools, mode, scale="0.01", *, code=None, pass_fds=()):
     environment = {
         "PATH": f"{tools}:/usr/bin:/bin",
         "GITHUB_ACTIONS": "true",
@@ -234,6 +239,7 @@ def run_smoke(tmp_path, tools, mode, scale="0.01", *, code=None):
         text=True,
         capture_output=True,
         timeout=watchdog(30),
+        pass_fds=pass_fds,
     )
     assert environment["NATIVE_TEST_SECRET"] not in result.stdout + result.stderr
     return result
@@ -1822,3 +1828,853 @@ fi
     trace = (tmp_path / "trace").read_text().splitlines()
     assert trace[: trace.index("userdel")].count("state-observed") == 4
     assert not (tmp_path / "account-present").exists()
+
+
+def test_selected_pre_manager_interruption_preserves_primary_and_independent_cleanup(
+    tmp_path, fixture_tools
+):
+    python = fixture_tools / "python3"
+    original = python.read_text()
+    python.write_text(
+        '#!/bin/bash\nif [[ "$1" == -m && "$2" == scripts.native_smoke_interruption && "$3" == checkpoint ]]; then\n'
+        '  echo interruption-custody >> "$NATIVE_TRACE"\n  : > "$NATIVE_FIXTURE/pre-manager-pause"\n  exit 0\nfi\n'
+        + original.removeprefix("#!/bin/bash\n")
+    )
+    parent, child = socket.socketpair()
+    try:
+        command = (
+            "exec bash "
+            + shlex.quote(str(ROOT / "scripts/ci/native_smoke.sh"))
+            + " --github-hosted-only --interrupt-before-manager 4273fb66-e903-4ff6-983b-35c178167a26 "
+            + str(child.fileno())
+        )
+        result = run_smoke(
+            tmp_path,
+            fixture_tools,
+            "executable-generator",
+            "0.1",
+            code=command,
+            pass_fds=(child.fileno(),),
+        )
+    finally:
+        parent.close()
+        child.close()
+    assert result.returncode == 73
+    assert "control=pre-manager-custody status=passed exit=0" in result.stderr
+    assert "control=pre-manager-injection status=failed exit=73" in result.stderr
+    assert "stage=account status=failed exit=73" in result.stdout
+    assert "stage=cleanup status=passed exit=0" in result.stdout
+    trace = (tmp_path / "trace").read_text().splitlines()
+    assert "interruption-custody" in trace and "userdel" in trace
+    assert not {
+        "generator-execute",
+        "generator-access",
+        "loginctl-enable-linger",
+        "systemctl-start",
+    } & set(trace)
+    assert not (tmp_path / "account-present").exists()
+    assert not (tmp_path / "generator").exists()
+    assert not (tmp_path / "work").exists()
+
+
+@pytest.mark.parametrize(
+    "arguments",
+    ["--interrupt-before-manager", "--interrupt-before-manager stale 3"],
+    ids=["missing-custody", "invalid-enrollment"],
+)
+def test_pre_manager_interruption_refuses_unbound_selection_before_mutation(
+    tmp_path, fixture_tools, arguments
+):
+    command = (
+        "exec bash "
+        + shlex.quote(str(ROOT / "scripts/ci/native_smoke.sh"))
+        + " --github-hosted-only "
+        + arguments
+    )
+    result = run_smoke(tmp_path, fixture_tools, "executable-generator", "0.1", code=command)
+    assert result.returncode == 2
+    assert not (tmp_path / "trace").exists()
+
+
+def interruption_events():
+    events = []
+
+    def stage(name, budget, status=0):
+        events.append(
+            f"native-prerequisite stage={name} status=started budget_nominal_seconds={budget}"
+        )
+        events.append(
+            f"native-prerequisite stage={name} status={'failed' if status else 'passed'} exit={status} elapsed_seconds=1"
+        )
+
+    def control(name, status=0):
+        events.extend(
+            (
+                f"native-prerequisite control={name} status=started",
+                f"native-prerequisite control={name} status={'failed' if status else 'passed'} exit={status}",
+            )
+        )
+
+    stage("package-update", 300)
+    stage("package-install", 600)
+    events.append("native-prerequisite stage=account status=started budget_nominal_seconds=120")
+    for name in (
+        "account-create",
+        "generator-directory-check",
+        "generator-write",
+        "generator-mode",
+        "generator-metadata",
+        "pre-manager-custody",
+    ):
+        control(name)
+    control("pre-manager-injection", 73)
+    events.append("native-prerequisite stage=account status=failed exit=73 elapsed_seconds=1")
+    events.append("native-prerequisite stage=cleanup status=started budget_nominal_seconds=120")
+    for name in (
+        "cleanup-state-initial",
+        "cleanup-state-before-stop",
+        "cleanup-state-settlement",
+        "cleanup-account-remove",
+        "cleanup-generator-remove",
+        "cleanup-work-remove",
+        "cleanup-observation",
+    ):
+        control(name)
+    events.append("native-prerequisite stage=cleanup status=passed exit=0 elapsed_seconds=1")
+    return events
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "masked-primary",
+        "missing-injection",
+        "cleanup-error",
+        "duplicate-injection",
+        "wrong-budget",
+        "missing-cleanup",
+        "wrong-phase",
+    ],
+)
+def test_interruption_transcript_rejects_incomplete_or_masked_original_outcomes(mutation):
+    events = interruption_events()
+    status = 73
+    if mutation == "masked-primary":
+        status = 0
+    elif mutation == "missing-injection":
+        events = [line for line in events if "control=pre-manager-injection " not in line]
+    elif mutation == "cleanup-error":
+        events = [
+            line.replace(
+                "control=cleanup-account-remove status=passed exit=0",
+                "control=cleanup-account-remove status=failed exit=8",
+            )
+            for line in events
+        ]
+    elif mutation == "duplicate-injection":
+        events.insert(5, "native-prerequisite control=pre-manager-injection status=started")
+    elif mutation == "wrong-budget":
+        events[0] += "0"
+    elif mutation == "missing-cleanup":
+        events.pop()
+    else:
+        events.insert(
+            0, events.pop(events.index("native-prerequisite control=account-create status=started"))
+        )
+    with pytest.raises(ValueError):
+        interruption.validate_events(events, status)
+
+
+def test_interruption_transcript_preserves_actual_fixed_events_and_ignores_unrelated_output():
+    events = interruption_events()
+    raw = ("private fixture text must not enter the receipt\n" + "\n".join(events) + "\n").encode()
+    collected = interruption.transcript_events(raw)
+    assert collected == events
+    interruption.validate_events(collected, 73)
+
+
+def test_interruption_channel_collects_complete_fragmented_message_without_total_cap():
+    payload = json.dumps({"payload": "x" * 20000}).encode() + b"\n"
+    chunks = [payload[i : i + 7] for i in range(0, len(payload), 7)]
+    received = iter(chunks)
+    waits = []
+    channel = SimpleNamespace(settimeout=waits.append, recv=lambda chunk: next(received))
+    end = interruption.Deadline.after(5).end
+    assert interruption.receive(channel, end) == {"payload": "x" * 20000}
+    assert len(waits) == len(chunks) and all(0 < value <= waits[0] for value in waits)
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [b"{}\n{}\n", b"{}\ntrailing", b"", b"not-json\n"],
+    ids=["two-records", "trailing-data", "closed", "not-json"],
+)
+def test_interruption_channel_refuses_ambiguous_or_incomplete_framing(raw):
+    channel = SimpleNamespace(settimeout=lambda value: None, recv=lambda chunk: raw)
+    with pytest.raises(ValueError):
+        interruption.receive(channel, interruption.Deadline.after(1).end)
+
+
+@pytest.mark.parametrize("changed", ["none", "enrollment", "identity", "permission", "extra"])
+def test_checkpoint_requires_exact_fresh_supervisor_permission(monkeypatch, changed):
+    from concurrent.futures import ThreadPoolExecutor
+
+    identity = cleanup_observation.Identity(
+        "dtci1000", 2000, 2000, Path("/tmp/fishhat-native.ABCD1234")
+    )
+    token = str(uuid.uuid4())
+    monkeypatch.setattr(interruption.os, "geteuid", lambda: 1000)
+    monkeypatch.setattr(interruption.os, "getppid", lambda: 4242)
+    parent, child = socket.socketpair()
+    descriptor = os.dup(child.fileno())
+    end = interruption.Deadline.after(5).end
+    try:
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            future = pool.submit(interruption.checkpoint, token, descriptor, identity, end)
+            request = interruption.receive(parent, end)
+            assert request == {
+                "enrollment": token,
+                "shell_pid": 4242,
+                "identity": interruption.identity_record(identity),
+                "end": end,
+            }
+            reply = {
+                "enrollment": token,
+                "identity_sha256": interruption.digest(request["identity"]),
+                "permit": "inject-before-manager",
+            }
+            if changed == "enrollment":
+                reply["enrollment"] = "b071f5bd-4cf8-4ddd-aa12-18dc97942267"
+            elif changed == "identity":
+                reply["identity_sha256"] = "0" * 64
+            elif changed == "permission":
+                reply["permit"] = "continue-normal"
+            elif changed == "extra":
+                reply["unrequested"] = True
+            interruption.send(parent, reply, end)
+            if changed == "none":
+                assert future.result(timeout=watchdog(5)) is None
+            else:
+                with pytest.raises(ValueError):
+                    future.result(timeout=watchdog(5))
+    finally:
+        parent.close()
+        child.close()
+        try:
+            os.close(descriptor)
+        except OSError:
+            pass
+
+
+@pytest.fixture
+def interruption_system(cleanup_system, monkeypatch):
+    system = cleanup_system
+    system.present = True
+    paths, identity = system.paths, system.identity
+    owned = cleanup_observation.owned_paths(identity, paths)
+    owned["home"].mkdir()
+    (owned["home"] / "tmp").mkdir(mode=0o700)
+    owned["generator"].write_text("#!/bin/sh\nexit 0\n")
+    owned["generator"].chmod(0o755)
+    owned["work"].mkdir(mode=0o700)
+    account = f"{identity.account}:x:2000:2000::/home/{identity.account}:/bin/bash\n"
+    group = f"{identity.account}:x:2000:\n"
+
+    def query(command, end):
+        if command[0] == "/usr/bin/getent":
+            database, key = command[1:]
+            if system.present and key in {identity.account, "2000"}:
+                return 0, account if database == "passwd" else group
+            if key == "1000":
+                return (
+                    0,
+                    "runner:x:1000:1000::/home/runner:/bin/bash\n"
+                    if database == "passwd"
+                    else "runner:x:1000:\n",
+                )
+        return system.query(command, end)
+
+    metadata = {
+        owned["generator"]: {"st_uid": 0, "st_gid": 0},
+        owned["home"]: {"st_uid": 2000, "st_gid": 2000},
+        owned["home"] / "tmp": {"st_uid": 2000, "st_gid": 2000},
+        owned["work"]: {"st_uid": 1000, "st_gid": 1000},
+    }
+    original = Path.lstat
+
+    def lstat(path):
+        record = original(path)
+        if path not in metadata:
+            return record
+        return SimpleNamespace(
+            **{
+                "st_uid": record.st_uid,
+                "st_gid": record.st_gid,
+                "st_mode": record.st_mode,
+                **metadata[path],
+            }
+        )
+
+    monkeypatch.setattr(cleanup_observation, "query", query)
+    monkeypatch.setattr(interruption.os, "geteuid", lambda: 0)
+    monkeypatch.setattr(Path, "lstat", lstat)
+    system.metadata = metadata
+    system.owned = owned
+    return system
+
+
+def test_outer_observer_sees_owned_pre_manager_state_and_independent_final_absence(
+    interruption_system,
+):
+    import shutil
+
+    system = interruption_system
+    end = interruption.Deadline.after(10).end
+    initial = interruption.observe("before", system.identity, end, system.paths)
+    assert initial["status"] == "observed" and initial["observer_uid"] == 0
+    assert initial["state"]["account"] == "owned" and not any(initial["state"]["states"].values())
+    assert initial["generator_owned"] and initial["home_owned"] and initial["work_owned"]
+    assert set(initial["protected_accounts"]) == {"root", "runner"}
+    assert initial["native_qualified"] is False
+    system.present = False
+    system.owned["generator"].unlink()
+    shutil.rmtree(system.owned["home"])
+    system.owned["work"].rmdir()
+    final = interruption.observe("after", system.identity, end, system.paths)
+    assert final["status"] == "observed"
+    assert interruption.absence(final["cleanup"], system.identity)
+    assert initial["identity_sha256"] == final["identity_sha256"]
+    assert initial["protected_accounts"] == final["protected_accounts"]
+
+
+@pytest.mark.parametrize(
+    "role,field,value",
+    [
+        ("generator", "st_uid", 99),
+        ("generator", "st_gid", 99),
+        ("generator", "st_mode", 0o100700),
+        ("generator", "st_mode", 0o120755),
+        ("home", "st_uid", 99),
+        ("home", "st_gid", 99),
+        ("work", "st_uid", 99),
+        ("work", "st_mode", 0o40755),
+    ],
+)
+def test_outer_before_observer_refuses_unowned_or_substituted_setup(
+    interruption_system, role, field, value
+):
+    system = interruption_system
+    system.metadata[system.owned[role]][field] = value
+    result = interruption.observe(
+        "before", system.identity, interruption.Deadline.after(5).end, system.paths
+    )
+    assert result["status"] == "unavailable" and result["native_qualified"] is False
+
+
+def test_outer_after_observer_does_not_adopt_present_resources_as_cleanup(interruption_system):
+    system = interruption_system
+    result = interruption.observe(
+        "after", system.identity, interruption.Deadline.after(5).end, system.paths
+    )
+    assert result["status"] == "unavailable" and "cleanup" not in result
+
+
+@pytest.fixture
+def interruption_child(tmp_path, monkeypatch):
+    directory = tmp_path / "child-source"
+    scripts = directory / "scripts/ci"
+    scripts.mkdir(parents=True)
+    program = directory / "child.py"
+    program.write_text("""import hashlib,json,os,socket,sys,time
+mode=os.environ["CHILD_MODE"]
+token=sys.argv[3]
+identity={"account":"dtci"+str(os.geteuid()),"uid":os.geteuid()+1000,"gid":os.geteuid()+1000,"work":"/tmp/fishhat-native.ABCD1234"}
+channel=socket.socket(fileno=int(sys.argv[4]))
+request={"enrollment":token,"shell_pid":os.getpid(),"identity":identity,"end":time.monotonic()+5}
+if mode=="foreign-enrollment":request["enrollment"]="b071f5bd-4cf8-4ddd-aa12-18dc97942267"
+if mode=="wrong-shell":request["shell_pid"]+=1
+if mode=="wrong-identity":request["identity"]["uid"]=True
+if mode=="expired":request["end"]=time.monotonic()-1
+channel.sendall(json.dumps(request).encode()+b"\\n")
+reply=channel.makefile("rb").readline()
+if not reply:sys.exit(2)
+events=json.loads(os.environ["CHILD_EVENTS"])
+if mode=="missing-injection":events=[line for line in events if "control=pre-manager-injection " not in line]
+if mode=="cleanup-error":events=[line.replace("control=cleanup-account-remove status=passed exit=0","control=cleanup-account-remove status=failed exit=8") for line in events]
+print("\\n".join(events),flush=True)
+sys.exit(0 if mode=="masked-primary" else 73)
+""")
+    (scripts / "native_smoke.sh").write_text(
+        "#!/bin/bash\nexec "
+        + shlex.quote(sys.executable)
+        + " "
+        + shlex.quote(str(program))
+        + ' "$@"\n'
+    )
+    monkeypatch.setattr(interruption, "ROOT", directory)
+    monkeypatch.setenv("CHILD_EVENTS", json.dumps(interruption_events()))
+    return tmp_path / "witness"
+
+
+@pytest.mark.parametrize(
+    "mode",
+    [
+        "passed",
+        "foreign-enrollment",
+        "wrong-shell",
+        "wrong-identity",
+        "expired",
+        "before-unavailable",
+        "missing-injection",
+        "cleanup-error",
+        "masked-primary",
+        "leaked-account",
+        "after-unavailable",
+        "changed-canary",
+        "changed-protected-account",
+        "missing-state-role",
+    ],
+)
+def test_supervisor_requires_independent_before_after_original_failure_and_canaries(
+    interruption_child, monkeypatch, mode
+):
+    from scripts.run_stats import valid_stats
+
+    directory = interruption_child
+    directory.mkdir()
+    monkeypatch.setenv("CHILD_MODE", mode)
+    calls = []
+
+    def root_observation(phase, identity, end):
+        calls.append(phase)
+        if mode == phase + "-unavailable":
+            raise ValueError("unavailable")
+        value = {
+            "scope": interruption.SCOPE,
+            "observer_uid": 0,
+            "identity_sha256": interruption.digest(interruption.identity_record(identity)),
+            "status": "observed",
+            "native_qualified": False,
+            "protected_accounts": {"root": "a" * 64, "runner": "b" * 64},
+        }
+        if phase == "before":
+            value.update(
+                generator_owned=True,
+                home_owned=True,
+                work_owned=True,
+                state={
+                    "scope": "owned-smoke-teardown-state-only",
+                    "observer_uid": 0,
+                    "status": "observed",
+                    "state_verified": True,
+                    "native_qualified": False,
+                    "account": "owned",
+                    "states": {
+                        name: False
+                        for name in (
+                            "manager",
+                            "runtime",
+                            "login",
+                            "linger",
+                            "service_stop_required",
+                            "processes",
+                        )
+                    },
+                },
+            )
+            if mode == "missing-state-role":
+                del value["state"]["states"]["runtime"]
+        else:
+            roles = [
+                "account-name",
+                "account-uid",
+                "group-name",
+                "group-gid",
+                "login-user",
+                "user-manager",
+                "runtime-manager",
+                "process-credentials",
+                *cleanup_observation.owned_paths(identity, cleanup_observation.Paths()),
+                "subuid",
+                "subgid",
+            ]
+            value["cleanup"] = {
+                "scope": "owned-smoke-cleanup-observation-only",
+                "observer_uid": 0,
+                "status": "absent",
+                "complete_absence_verified": True,
+                "native_qualified": False,
+                "measurement_scope": "exact owned identity and read-only system/process/filesystem observations",
+                "observations": [{"role": role, "status": "absent"} for role in roles],
+            }
+            if mode == "leaked-account":
+                value["cleanup"]["observations"][0]["status"] = "present"
+            elif mode == "changed-protected-account":
+                value["protected_accounts"]["root"] = "c" * 64
+            elif mode == "changed-canary":
+                (directory / "unrelated").write_bytes(b"changed")
+        return value
+
+    monkeypatch.setattr(interruption, "root_observation", root_observation)
+    result = interruption.run(interruption.Deadline.after(10).end, directory)
+    assert (
+        valid_stats(result["statistics"])
+        and result["statistics"]["scope"] == "process-excludes-children"
+    )
+    assert result["native_product_qualified"] is False
+    if mode == "passed":
+        assert result["status"] == "passed" and calls == ["before", "after"]
+        assert result["original_exit_status"] == 73
+        assert result["canary_before"] == result["canary_after"] == result["canary_before_removal"]
+        assert (
+            result["original_primary_failure_preserved"]
+            is result["original_cleanup_passed"]
+            is True
+        )
+        assert (
+            result["unrelated_canary_preserved"]
+            and result["protected_accounts_preserved"]
+            and result["owned_canary_removed"]
+        )
+    else:
+        assert result["status"] == "failed"
+        assert result["original_exit_status"] in {0, 2, 73}
+        assert "reason" in result
+    assert result["original_events_sha256"] == interruption.digest(result["original_events"])
+
+
+def test_interruption_channel_rejects_duplicate_identity_fields():
+    raw = b'{"enrollment":"old","enrollment":"new"}\n'
+    channel = SimpleNamespace(settimeout=lambda value: None, recv=lambda chunk: raw)
+    with pytest.raises(ValueError, match="ambiguous"):
+        interruption.receive(channel, interruption.Deadline.after(1).end)
+
+
+@pytest.mark.parametrize("phase", ["before", "after"])
+def test_independent_root_observer_refuses_nonroot_before_reading_facilities(monkeypatch, phase):
+    identity = cleanup_observation.Identity(
+        "dtci1000", 2000, 2000, Path("/tmp/fishhat-native.ABCD1234")
+    )
+    monkeypatch.setattr(interruption.os, "geteuid", lambda: 1000)
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("refused observer must not read privileged facilities")
+
+    monkeypatch.setattr(cleanup_observation, "teardown_state", forbidden)
+    monkeypatch.setattr(cleanup_observation, "observe_once", forbidden)
+    result = interruption.observe(phase, identity, interruption.Deadline.after(1).end)
+    assert result["status"] == "unavailable" and result["observer_uid"] == 1000
+
+
+@pytest.mark.parametrize(
+    "changed", ["none", "scope", "observer", "identity", "extra", "missing", "status", "qualified"]
+)
+def test_root_observation_backend_binds_exact_identity_and_safe_schema(monkeypatch, changed):
+    identity = cleanup_observation.Identity(
+        "dtci1000", 2000, 2000, Path("/tmp/fishhat-native.ABCD1234")
+    )
+    value = {
+        "scope": interruption.SCOPE,
+        "observer_uid": 0,
+        "identity_sha256": interruption.digest(interruption.identity_record(identity)),
+        "status": "observed",
+        "native_qualified": False,
+        "protected_accounts": {"root": "a" * 64, "runner": "b" * 64},
+        "state": {},
+        "generator_owned": True,
+        "home_owned": True,
+        "work_owned": True,
+    }
+    if changed == "scope":
+        value["scope"] = "other"
+    elif changed == "observer":
+        value["observer_uid"] = False
+    elif changed == "identity":
+        value["identity_sha256"] = "0" * 64
+    elif changed == "extra":
+        value["unrequested"] = "must-not-enter-the-receipt"
+    elif changed == "missing":
+        del value["protected_accounts"]
+    elif changed == "status":
+        value["status"] = "unavailable"
+    elif changed == "qualified":
+        value["native_qualified"] = True
+    calls = []
+
+    def invoke(command, **kwargs):
+        calls.append((command, kwargs))
+        return SimpleNamespace(returncode=0, stdout=json.dumps(value))
+
+    monkeypatch.setattr(interruption.subprocess, "run", invoke)
+    end = interruption.Deadline.after(5).end
+    if changed == "none":
+        assert interruption.root_observation("before", identity, end) == value
+    else:
+        with pytest.raises(ValueError):
+            interruption.root_observation("before", identity, end)
+    command, options = calls[0]
+    assert command == [
+        "sudo",
+        "-n",
+        "/usr/bin/python3",
+        "-m",
+        "scripts.native_smoke_interruption",
+        "observe-before",
+        "dtci1000",
+        "2000",
+        "2000",
+        "/tmp/fishhat-native.ABCD1234",
+        str(end),
+    ]
+    assert 0 < options["timeout"] <= watchdog(5)
+    assert options["capture_output"] is True
+
+
+@pytest.mark.parametrize(
+    "failure",
+    ["selection", "self-hosted", "image", "pull-request", "ref", "job", "dirty", "budget"],
+)
+def test_interruption_entrypoint_refuses_missing_enrollment_before_launch(
+    tmp_path, monkeypatch, capsys, failure
+):
+    from scripts import check_evidence, validation
+
+    for key, value in {
+        "GITHUB_ACTIONS": "true",
+        "RUNNER_ENVIRONMENT": "github-hosted",
+        "ImageOS": "ubuntu24",
+        "GITHUB_REF": "refs/heads/main",
+        "GITHUB_EVENT_NAME": "push",
+        "RUNNER_TEMP": str(tmp_path),
+    }.items():
+        monkeypatch.setenv(key, value)
+    monkeypatch.setattr(interruption.os, "geteuid", lambda: 1000)
+    monkeypatch.setattr(
+        check_evidence,
+        "execution_origin",
+        lambda: {
+            "kind": "github-actions",
+            "run_id": "1",
+            "attempt": "1",
+            "job": "unit-shards" if failure == "job" else "native-prerequisites",
+        },
+    )
+    monkeypatch.setattr(
+        validation,
+        "source_identity",
+        lambda root: {"commit": "a" * 40, "fingerprint": "b" * 64, "clean": failure != "dirty"},
+    )
+    monkeypatch.setattr(
+        interruption,
+        "execution_conditions",
+        lambda: {"job_watchdog": None if failure == "budget" else {"effective_minutes": 25}},
+    )
+
+    def forbidden(*args):
+        pytest.fail("refused entrypoint must not launch a native child")
+
+    monkeypatch.setattr(interruption, "run", forbidden)
+    output = tmp_path / "result.json"
+    args = ["--github-hosted-only", "--output", str(output)]
+    if failure == "selection":
+        args = []
+    elif failure == "self-hosted":
+        monkeypatch.setenv("RUNNER_ENVIRONMENT", "self-hosted")
+    elif failure == "image":
+        monkeypatch.setenv("ImageOS", "ubuntu22")
+    elif failure == "pull-request":
+        monkeypatch.setenv("GITHUB_EVENT_NAME", "pull_request")
+    elif failure == "ref":
+        monkeypatch.setenv("GITHUB_REF", "refs/pull/1/merge")
+    assert interruption.main(args) == 2
+    assert "Refusing" in capsys.readouterr().err
+    assert not output.exists()
+
+
+def test_interruption_report_rejects_source_change_and_proves_outer_temp_cleanup(
+    tmp_path, monkeypatch
+):
+    from scripts import check_evidence, validation
+
+    for key, value in {
+        "GITHUB_ACTIONS": "true",
+        "RUNNER_ENVIRONMENT": "github-hosted",
+        "ImageOS": "ubuntu24",
+        "GITHUB_REF": "refs/heads/main",
+        "GITHUB_EVENT_NAME": "push",
+        "RUNNER_TEMP": str(tmp_path),
+    }.items():
+        monkeypatch.setenv(key, value)
+    monkeypatch.setattr(interruption.os, "geteuid", lambda: 1000)
+    monkeypatch.setattr(
+        check_evidence,
+        "execution_origin",
+        lambda: {
+            "kind": "github-actions",
+            "run_id": "1",
+            "attempt": "1",
+            "job": "native-prerequisites",
+        },
+    )
+    sources = iter(
+        (
+            {"commit": "a" * 40, "fingerprint": "b" * 64, "clean": True},
+            {"commit": "c" * 40, "fingerprint": "b" * 64, "clean": True},
+        )
+    )
+    monkeypatch.setattr(validation, "source_identity", lambda root: next(sources))
+    monkeypatch.setattr(
+        interruption, "execution_conditions", lambda: {"job_watchdog": {"effective_minutes": 25}}
+    )
+    temporary = []
+
+    def run(end, directory):
+        temporary.append(directory)
+        assert directory.is_dir()
+        return {"status": "passed", "owned_canary_removed": True}
+
+    monkeypatch.setattr(interruption, "run", run)
+    output = tmp_path / "result.json"
+    assert interruption.main(["--github-hosted-only", "--output", str(output)]) == 1
+    report = json.loads(output.read_text())
+    assert report["status"] == "failed" and report["reason"] == "source-changed"
+    assert report["outer_directory_absent"] is True and not temporary[0].exists()
+    assert report["source_before"] != report["source_after"]
+
+
+def interruption_root_record(phase, identity):
+    value = {
+        "scope": interruption.SCOPE,
+        "observer_uid": 0,
+        "identity_sha256": interruption.digest(interruption.identity_record(identity)),
+        "status": "observed",
+        "native_qualified": False,
+        "protected_accounts": {"root": "a" * 64, "runner": "b" * 64},
+    }
+    if phase == "before":
+        value.update(
+            generator_owned=True,
+            home_owned=True,
+            work_owned=True,
+            state={
+                "scope": "owned-smoke-teardown-state-only",
+                "observer_uid": 0,
+                "status": "observed",
+                "state_verified": True,
+                "native_qualified": False,
+                "account": "owned",
+                "states": {
+                    name: False
+                    for name in (
+                        "manager",
+                        "runtime",
+                        "login",
+                        "linger",
+                        "service_stop_required",
+                        "processes",
+                    )
+                },
+            },
+        )
+    else:
+        roles = [
+            "account-name",
+            "account-uid",
+            "group-name",
+            "group-gid",
+            "login-user",
+            "user-manager",
+            "runtime-manager",
+            "process-credentials",
+            *cleanup_observation.owned_paths(identity, cleanup_observation.Paths()),
+            "subuid",
+            "subgid",
+        ]
+        value["cleanup"] = {
+            "scope": "owned-smoke-cleanup-observation-only",
+            "observer_uid": 0,
+            "status": "absent",
+            "complete_absence_verified": True,
+            "native_qualified": False,
+            "measurement_scope": "exact owned identity and read-only system/process/filesystem observations",
+            "observations": [{"role": role, "status": "absent"} for role in roles],
+        }
+    return value
+
+
+def test_supervisor_qualifies_actual_shell_checkpoint_and_trap_with_isolated_tools(
+    tmp_path, fixture_tools, monkeypatch
+):
+    import shutil
+    import uuid
+
+    from scripts.run_stats import valid_stats
+
+    runner_uid = os.geteuid()
+    owned_uid = runner_uid + 1000
+    work = Path("/tmp") / ("fishhat-native." + uuid.uuid4().hex[:8])
+    work.mkdir(mode=0o700)
+    try:
+        for tool in fixture_tools.iterdir():
+            text = (
+                tool.read_text()
+                .replace("dtci1000", f"dtci{runner_uid}")
+                .replace("echo 1000", f"echo {runner_uid}")
+                .replace("2000", str(owned_uid))
+            )
+            tool.write_text(text)
+        (fixture_tools / "mktemp").write_text(
+            "#!/bin/bash\nprintf '%s\\n' " + shlex.quote(str(work)) + "\n"
+        )
+        for key, value in {
+            "PATH": f"{fixture_tools}:/usr/bin:/bin",
+            "GITHUB_ACTIONS": "true",
+            "RUNNER_ENVIRONMENT": "github-hosted",
+            "ImageOS": "ubuntu24",
+            "RUNNER_TEMP": str(tmp_path),
+            VARIABLE: "0.1",
+            "NATIVE_FIXTURE": str(tmp_path),
+            "NATIVE_TRACE": str(tmp_path / "trace"),
+            "NATIVE_MODE": "executable-generator",
+            "NATIVE_PYTHON": sys.executable,
+        }.items():
+            monkeypatch.setenv(key, value)
+        calls = []
+
+        def root_observation(phase, identity, end):
+            calls.append((phase, identity, end))
+            assert identity == cleanup_observation.Identity(
+                f"dtci{runner_uid}", owned_uid, owned_uid, work
+            )
+            if phase == "before":
+                assert (
+                    (tmp_path / "account-present").exists()
+                    and (tmp_path / "generator").exists()
+                    and work.is_dir()
+                )
+                (tmp_path / "pre-manager-pause").touch()
+            else:
+                assert (
+                    not (tmp_path / "account-present").exists()
+                    and not (tmp_path / "generator").exists()
+                    and not work.exists()
+                )
+            return interruption_root_record(phase, identity)
+
+        monkeypatch.setattr(interruption, "root_observation", root_observation)
+        directory = tmp_path / "outer"
+        directory.mkdir()
+        result = interruption.run(interruption.Deadline.after(300).end, directory)
+        assert result["status"] == "passed", result
+        assert result["original_exit_status"] == 73 and result["original_cleanup_passed"] is True
+        assert [call[0] for call in calls] == ["before", "after"] and calls[0][1:] == calls[1][1:]
+        assert valid_stats(result["statistics"]) and result["native_product_qualified"] is False
+        trace = (tmp_path / "trace").read_text().splitlines()
+        assert (
+            "userdel" in trace
+            and "generator-execute" not in trace
+            and "systemctl-start" not in trace
+        )
+    finally:
+        if work.exists():
+            shutil.rmtree(work)

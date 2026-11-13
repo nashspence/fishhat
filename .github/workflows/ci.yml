@@ -454,8 +454,8 @@ jobs:
       FISHHAT_VALIDATION_JOB_MINUTES: ${{ fromJSON(needs.watchdogs.outputs.budgets)['native-prerequisites'] }}
       FISHHAT_VALIDATION_NOMINAL_MINUTES: '25'
       FISHHAT_VALIDATION_TIMEOUT_SCALE: ${{ needs.watchdogs.outputs.scale }}
-      CHECK_PURPOSES: implementation
-      CHECK_SCOPE: disposable-runner prerequisites only; not deployment qualification
+      CHECK_PURPOSES: implementation,validation-tooling
+      CHECK_SCOPE: disposable-runner prerequisites and independently witnessed pre-manager interruption cleanup only; not deployment qualification
       CHECK_AUTHORITY: release.toml
     needs: watchdogs
     name: Native Linux prerequisite smoke (not deployment qualification)
@@ -466,7 +466,19 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           persist-credentials: false
+      - uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9 # v7
+        with:
+          version: '0.11.24'
+      - run: uv sync --locked --all-packages --group dev --python 3.12
       - run: bash scripts/ci/native_smoke.sh --github-hosted-only
+      - run: uv run --locked --all-packages --group dev --python 3.12 python -m scripts.native_smoke_interruption --github-hosted-only --output artifacts/native-smoke-interruption.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: ${{ always() }}
+        with:
+          name: native-smoke-interruption
+          path: artifacts/native-smoke-interruption.json
+          retention-days: 7
+          if-no-files-found: error
       - name: Record the qualification boundary
         if: ${{ always() }}
         run: |
