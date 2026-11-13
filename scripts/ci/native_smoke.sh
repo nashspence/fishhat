@@ -9,6 +9,7 @@ fi
 [[ "$(stat -fc %T /sys/fs/cgroup)" == cgroup2fs ]]
 sudo -n true
 timeout_helper="$(cd "$(dirname "$0")/.." && pwd)/validation_timeouts.py"
+observation_helper="$(dirname "$timeout_helper")/native_smoke_observation.py"
 # Shared deadlines bound the complete stage, including successive commands.
 kill_timeout="$(python3 "$timeout_helper" seconds 5)"
 contact_timeout="$(python3 "$timeout_helper" units 30)"
@@ -33,6 +34,24 @@ root_run() {
   remaining_timeout="$(python3 "$timeout_helper" remaining "$stage_deadline")" || return "$?"
   sudo -n timeout -k "$kill_timeout" "$remaining_timeout" "$@"
 }
+observe_control() {
+  local control_name="$1" control_status
+  shift
+  printf 'native-prerequisite control=%s status=started\n' "$control_name" >&2
+  if "$@"; then
+    printf 'native-prerequisite control=%s status=passed exit=0\n' "$control_name" >&2
+    return 0
+  else
+    control_status=$?
+    printf 'native-prerequisite control=%s status=failed exit=%s\n' "$control_name" "$control_status" >&2
+    return "$control_status"
+  fi
+}
+
+
+remove_owned_account() {
+  root_run userdel -r "$account" 2>"$work/userdel.stderr"
+}
 bounded_run() {
   local remaining_timeout
   remaining_timeout="$(python3 "$timeout_helper" remaining "$stage_deadline")" || return "$?"
@@ -52,18 +71,18 @@ cleanup() {
   if [[ -n "$ssh_pid" ]]; then root_run kill "$ssh_pid" || cleanup_failed=1; fi
   if ((account_created)); then
     uid="$(id -u "$account")"
-    root_run runuser -u "$account" -- env -i HOME="/home/$account" PATH=/usr/bin:/bin XDG_RUNTIME_DIR="/run/user/$uid" systemctl --user stop ci-probe.service
+    observe_control cleanup-user-service-stop root_run runuser -u "$account" -- env -i HOME="/home/$account" PATH=/usr/bin:/bin XDG_RUNTIME_DIR="/run/user/$uid" systemctl --user stop ci-probe.service
     if declare -F user_run >/dev/null; then
-      user_run podman system reset --force || cleanup_failed=1
+      observe_control cleanup-runtime-reset user_run podman system reset --force || cleanup_failed=1
     fi
     # Prevent manager respawn, then wait for its stop and pending session teardown.
-    root_run loginctl disable-linger "$account" || cleanup_failed=1
-    root_run loginctl terminate-user "$account" || cleanup_failed=1
-    root_run systemctl stop "user@$uid.service" || cleanup_failed=1
+    observe_control cleanup-disable-linger root_run loginctl disable-linger "$account" || cleanup_failed=1
+    observe_control cleanup-terminate-user root_run loginctl terminate-user "$account" || cleanup_failed=1
+    observe_control cleanup-manager-stop root_run systemctl stop "user@$uid.service" || cleanup_failed=1
     account_removed=0
     cleanup_deadline="$(python3 "$timeout_helper" deadline 10)"
     while python3 "$timeout_helper" pending "$cleanup_deadline"; do
-      root_run userdel -r "$account" 2>"$work/userdel.stderr"
+      observe_control cleanup-account-remove remove_owned_account
       account_remove_status=$?
       if ((account_remove_status == 0)); then
         account_removed=1
@@ -79,12 +98,12 @@ cleanup() {
     fi
   fi
   if [[ -n "$manager_environment" ]]; then
-    root_run rm -f -- "$manager_environment" || cleanup_failed=1
+    observe_control cleanup-generator-remove root_run rm -f -- "$manager_environment" || cleanup_failed=1
   fi
-  if ((mounted)); then root_run umount "$work/xfs" || cleanup_failed=1; fi
+  if ((mounted)); then observe_control cleanup-filesystem-unmount root_run umount "$work/xfs" || cleanup_failed=1; fi
   # Keep no private keys/logs as CI artifacts. The VM is discarded after this job.
   if [[ -n "$work" ]]; then
-    root_run rm -rf -- "$work" || cleanup_failed=1
+    observe_control cleanup-work-remove root_run rm -rf -- "$work" || cleanup_failed=1
   fi
   if ((cleanup_failed)); then
     echo 'Native prerequisite cleanup failed' >&2
@@ -104,7 +123,7 @@ begin_stage account 120
 # Shared probe paths must be traversable outside the runner's private home.
 work="$(mktemp -d /tmp/fishhat-native.XXXXXXXX)"
 if id "$account" >/dev/null 2>&1; then echo 'Refusing existing test account' >&2; exit 2; fi
-root_run useradd -m -s /bin/bash "$account"; account_created=1
+observe_control account-create root_run useradd -m -s /bin/bash "$account"; account_created=1
 uid="$(id -u "$account")"
 grep -q "^$account:" /etc/subuid
 grep -q "^$account:" /etc/subgid
@@ -112,8 +131,8 @@ grep -q "^$account:" /etc/subgid
 probe_environment="/run/systemd/user-environment-generators/99-fishhat-probe-$uid"
 [[ ! -e "$probe_environment" && ! -L "$probe_environment" ]]
 manager_environment="$probe_environment"
-root_run install -d -m 0755 "$(dirname "$manager_environment")"
-cat <<EOF | root_run tee "$manager_environment" >/dev/null
+observe_control generator-directory-create root_run install -d -m 0755 "$(dirname "$manager_environment")"
+cat <<EOF | observe_control generator-write root_run tee "$manager_environment" >/dev/null
 #!/bin/sh
 [ "\$(/usr/bin/id -u)" = "$uid" ] || exit 0
 /usr/bin/cat <<'PROBE_ENV'
@@ -130,13 +149,31 @@ DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$uid/bus
 TMPDIR=/home/$account/tmp
 PROBE_ENV
 EOF
-root_run chmod 0755 "$manager_environment"
+observe_control generator-mode root_run chmod 0755 "$manager_environment"
 root_run install -d -m 0700 -o "$account" -g "$account" "/home/$account/tmp"
-probe_context_text="$(root_run runuser -u "$account" -- "$manager_environment")"
+observe_control generator-metadata root_run python3 "$observation_helper" "$manager_environment"
+observe_control generator-access root_run runuser -u "$account" -- /bin/sh -c '
+probe_index=0
+for probe_path do
+  case "$probe_index" in
+    0) probe_role=runtime ;;
+    1) probe_role=manager-runtime ;;
+    2) probe_role=generator-directory ;;
+    3) probe_role=generator ;;
+    4) probe_role=interpreter ;;
+  esac
+  if [ -r "$probe_path" ]; then probe_read=allowed; else probe_read=denied; fi
+  if [ -x "$probe_path" ]; then probe_execute=allowed; else probe_execute=denied; fi
+  printf "native-prerequisite generator-access role=%s read=%s execute=%s\n" "$probe_role" "$probe_read" "$probe_execute" >&2
+  probe_index=$((probe_index + 1))
+done
+' sh /run /run/systemd "$(dirname "$manager_environment")" "$manager_environment" /bin/sh
+
+probe_context_text="$(observe_control generator-execute root_run runuser -u "$account" -- "$manager_environment")"
 [[ -n "$probe_context_text" ]]
 mapfile -t probe_context <<< "$probe_context_text"
-root_run loginctl enable-linger "$account"
-root_run systemctl start "user@$uid.service"
+observe_control linger-enable root_run loginctl enable-linger "$account"
+observe_control manager-start root_run systemctl start "user@$uid.service"
 user_run() {
   root_run runuser -u "$account" -- env -i "${probe_context[@]}" "$@"
 }
