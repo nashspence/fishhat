@@ -284,7 +284,11 @@ def provision() -> dict[str, Any]:
         f"DPkg::Lock::Timeout={contact}",
     ]
     with stage("package-update"):
-        root_run(["/usr/bin/apt-get", *options, "update", "-qq"], "package-update", 300)
+        root_run(
+            ["/usr/bin/apt-get", *options, "update", "--error-on=any", "-qq"],
+            "package-update",
+            300,
+        )
     with stage("package-install"):
         root_run(
             [

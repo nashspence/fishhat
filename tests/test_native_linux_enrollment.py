@@ -18,7 +18,7 @@ from scripts.validation_timeouts import Policy, using
 CHECK_PURPOSE = {
     "purpose": "validation-tooling",
     "authority": ["scripts/native_linux_enrollment.py", "scripts/validation_timeouts.py"],
-    "scope": "enrollment refusal, exact controller identities, maintained watchdogs, allowlisted secret-safe package/image failure observations, sanitized provisioning failures, mandatory observed-successor and independently typed partial-restore proof in the selected composition profile and source/statistics receipts",
+    "scope": "enrollment refusal, exact controller identities, maintained watchdogs, allowlisted secret-safe package/image failure observations, strict acquisition-error failure before installation, sanitized provisioning failures, mandatory observed-successor and independently typed partial-restore proof in the selected composition profile and source/statistics receipts",
     "relationship": "no-product-claim",
     "reason": "Controlled package/tool responses never install packages. Real unprivileged children exercise timeout/reaping and closed stdout/stderr classification without exposing their output. Only the separate admitted disposable-runner job can establish actual controller prerequisites; no guest or native owner is qualified here.",
     "claims": [],
@@ -155,6 +155,7 @@ def test_selected_packages_root_watchdogs_and_binary_identity(tools, factor):
         assert f"DPkg::Lock::Timeout={30 * factor}" in command
         assert "Acquire::Retries=0" in command
         assert nominal in {310, 610}
+    assert update[0][-3:] == ["update", "--error-on=any", "-qq"]
     assert update[0][5] == str(300 * factor)
     assert install[0][5] == str(600 * factor)
     assert all(f"{name}={native.VERSION}" in install[0] for name in native.PACKAGES)
@@ -556,3 +557,66 @@ def test_selected_main_requires_the_successor_timeline_before_success(
             else "required-source-successor-proof-missing"
         )
     assert actual["native_tools_qualified"] is actual["production_qualified"] is False
+
+
+@pytest.mark.parametrize("factor", [1, 4])
+@pytest.mark.parametrize("profile", ["baseline", "restored-successor"])
+def test_strict_acquisition_failure_prevents_installation_and_preserves_failed_report(
+    tmp_path, monkeypatch, capsys, factor, profile
+):
+    output = tmp_path / "report.json"
+    source = {"commit": "a" * 40, "clean": True, "fingerprint": "b" * 64}
+    monkeypatch.setattr(native, "source_identity", lambda: dict(source))
+    monkeypatch.setattr(native, "enroll", lambda *args, **kwargs: {"machine": "x86_64"})
+    monkeypatch.setenv("RUNNER_TEMP", str(tmp_path))
+    monkeypatch.setenv("NATIVE_TEST_SECRET", "fixture-private-value")
+    original_run = native.run
+    calls = []
+    code = (
+        "import sys; print('fixture-private-value'); "
+        "sys.stderr.write('Failed to fetch fixture-private-value: Temporary failure resolving'); "
+        "sys.exit(100 if '--error-on=any' in sys.argv[1:] else 0)"
+    )
+
+    def controlled(command, name, nominal, *, capture=False):
+        calls.append((command, name, nominal, capture))
+        assert name == "package-update", "acquisition failure reached installation or native setup"
+        return original_run(
+            [sys.executable, "-I", "-S", "-c", code, *command],
+            name,
+            nominal,
+            capture=capture,
+        )
+
+    monkeypatch.setattr(native, "run", controlled)
+    monkeypatch.setenv("FISHHAT_VALIDATION_TIMEOUT_SCALE", str(factor))
+    status = native.main(["--github-hosted-only", "--profile", profile, "--output", str(output)])
+    report = json.loads(output.read_text())
+    assert status == 1 and report["status"] == "failed"
+    assert report["problem"] == {
+        "stage": "package-update",
+        "reason": "command-exit-100",
+        "classifications": ["package-fetch-failure", "package-transport-failure"],
+    }
+    assert len(calls) == 1
+    command, name, nominal, capture = calls[0]
+    assert command[-3:] == ["update", "--error-on=any", "-qq"]
+    assert name == "package-update" and nominal == 310 and capture is False
+    assert command[4:6] == [str(5 * factor), str(300 * factor)]
+    assert report["profile"] == profile
+    assert report["source_before"] == report["source_after"] == source
+    assert report["guest_booted"] is False
+    assert report["native_tools_qualified"] is report["production_qualified"] is False
+    assert (
+        not {"controller", "controller_probe", "guest_tools", "guest", "source_successor"}
+        & report.keys()
+    )
+    assert valid_stats(report["statistics"])
+    assert report["statistics"]["scope"] == "process-excludes-children"
+    assert report["watchdogs"]["scale"] == factor
+    logs = capsys.readouterr()
+    assert "stage=package-update status=started" in logs.out
+    assert "stage=package-update status=failed" in logs.out
+    assert "stage=package-install" not in logs.out
+    assert "fixture-private-value" not in output.read_text() + logs.out + logs.err
+    assert logs.err == ""
