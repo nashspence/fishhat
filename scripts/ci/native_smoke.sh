@@ -128,10 +128,10 @@ uid="$(id -u "$account")"
 grep -q "^$account:" /etc/subuid
 grep -q "^$account:" /etc/subgid
 # Run after the image's environment import, and affect only the probe account.
-probe_environment="/run/systemd/user-environment-generators/99-fishhat-probe-$uid"
+probe_environment="/usr/lib/systemd/user-environment-generators/99-fishhat-probe-$uid"
 [[ ! -e "$probe_environment" && ! -L "$probe_environment" ]]
 manager_environment="$probe_environment"
-observe_control generator-directory-create root_run install -d -m 0755 "$(dirname "$manager_environment")"
+observe_control generator-directory-check root_run test -d "$(dirname "$manager_environment")"
 cat <<EOF | observe_control generator-write root_run tee "$manager_environment" >/dev/null
 #!/bin/sh
 [ "\$(/usr/bin/id -u)" = "$uid" ] || exit 0
@@ -152,24 +152,30 @@ EOF
 observe_control generator-mode root_run chmod 0755 "$manager_environment"
 root_run install -d -m 0700 -o "$account" -g "$account" "/home/$account/tmp"
 observe_control generator-metadata root_run python3 "$observation_helper" "$manager_environment"
+generator_status=0
+probe_context_text="$(observe_control generator-execute root_run runuser -u "$account" -- "$manager_environment")" || generator_status=$?
+if ((generator_status == 0)) && [[ -z "$probe_context_text" ]]; then generator_status=1; fi
+access_status=0
 observe_control generator-access root_run runuser -u "$account" -- /bin/sh -c '
 probe_index=0
 for probe_path do
   case "$probe_index" in
-    0) probe_role=runtime ;;
-    1) probe_role=manager-runtime ;;
-    2) probe_role=generator-directory ;;
-    3) probe_role=generator ;;
-    4) probe_role=interpreter ;;
+    0) probe_role=prefix ;;
+    1) probe_role=library ;;
+    2) probe_role=manager-library ;;
+    3) probe_role=generator-directory ;;
+    4) probe_role=generator ;;
+    5) probe_role=interpreter ;;
   esac
   if [ -r "$probe_path" ]; then probe_read=allowed; else probe_read=denied; fi
   if [ -x "$probe_path" ]; then probe_execute=allowed; else probe_execute=denied; fi
   printf "native-prerequisite generator-access role=%s read=%s execute=%s\n" "$probe_role" "$probe_read" "$probe_execute" >&2
   probe_index=$((probe_index + 1))
 done
-' sh /run /run/systemd "$(dirname "$manager_environment")" "$manager_environment" /bin/sh
+' sh /usr /usr/lib /usr/lib/systemd "$(dirname "$manager_environment")" "$manager_environment" /bin/sh || access_status=$?
 
-probe_context_text="$(observe_control generator-execute root_run runuser -u "$account" -- "$manager_environment")"
+if ((generator_status != 0)); then exit "$generator_status"; fi
+if ((access_status != 0)); then exit "$access_status"; fi
 [[ -n "$probe_context_text" ]]
 mapfile -t probe_context <<< "$probe_context_text"
 observe_control linger-enable root_run loginctl enable-linger "$account"
@@ -177,6 +183,18 @@ observe_control manager-start root_run systemctl start "user@$uid.service"
 user_run() {
   root_run runuser -u "$account" -- env -i "${probe_context[@]}" "$@"
 }
+verify_manager_context() {
+  local binding manager_values expected_values
+  local -a context_keys=() context_values=()
+  for binding in "${probe_context[@]}"; do
+    context_keys+=("${binding%%=*}")
+    context_values+=("${binding#*=}")
+  done
+  manager_values="$(user_run systemd-run --user --quiet --wait --pipe --collect /usr/bin/printenv "${context_keys[@]}")" || return "$?"
+  expected_values="$(printf '%s\n' "${context_values[@]}")"
+  [[ "$manager_values" == "$expected_values" ]]
+}
+observe_control manager-environment-check verify_manager_context
 begin_stage rootless-runtime 180
 [[ "$(user_run podman info --format '{{.Host.Security.Rootless}}')" == true ]]
 [[ "$(user_run podman info --format '{{.Host.CgroupsVersion}}')" == v2 ]]

@@ -14265,91 +14265,111 @@
     },
     {
       "node": "tests/test_native_smoke.py::test_account_failure_preserves_primary_exit_and_reports_cleanup[cleanup-failure]",
-      "purpose_sha256": "8b3b11226961523cb1caeba03de5c577bba4ddeed877be631057c16ba2f059a1"
+      "purpose_sha256": "3eeef3ea15019cfc32d26993273379c4f899d28d5d329da09becd580faa9edb9"
     },
     {
       "node": "tests/test_native_smoke.py::test_account_failure_preserves_primary_exit_and_reports_cleanup[cleanup-success]",
-      "purpose_sha256": "8b3b11226961523cb1caeba03de5c577bba4ddeed877be631057c16ba2f059a1"
+      "purpose_sha256": "3eeef3ea15019cfc32d26993273379c4f899d28d5d329da09becd580faa9edb9"
     },
     {
       "node": "tests/test_native_smoke.py::test_all_owned_roles_are_observed_once_without_inventing_missing_evidence",
-      "purpose_sha256": "8b3b11226961523cb1caeba03de5c577bba4ddeed877be631057c16ba2f059a1"
+      "purpose_sha256": "3eeef3ea15019cfc32d26993273379c4f899d28d5d329da09becd580faa9edb9"
     },
     {
       "node": "tests/test_native_smoke.py::test_cli_refuses_unowned_paths_before_inspection[arguments0]",
-      "purpose_sha256": "8b3b11226961523cb1caeba03de5c577bba4ddeed877be631057c16ba2f059a1"
+      "purpose_sha256": "3eeef3ea15019cfc32d26993273379c4f899d28d5d329da09becd580faa9edb9"
     },
     {
       "node": "tests/test_native_smoke.py::test_cli_refuses_unowned_paths_before_inspection[arguments1]",
-      "purpose_sha256": "8b3b11226961523cb1caeba03de5c577bba4ddeed877be631057c16ba2f059a1"
+      "purpose_sha256": "3eeef3ea15019cfc32d26993273379c4f899d28d5d329da09becd580faa9edb9"
     },
     {
       "node": "tests/test_native_smoke.py::test_cli_refuses_unowned_paths_before_inspection[arguments2]",
-      "purpose_sha256": "8b3b11226961523cb1caeba03de5c577bba4ddeed877be631057c16ba2f059a1"
+      "purpose_sha256": "3eeef3ea15019cfc32d26993273379c4f899d28d5d329da09becd580faa9edb9"
     },
     {
       "node": "tests/test_native_smoke.py::test_cli_refuses_unowned_paths_before_inspection[arguments3]",
-      "purpose_sha256": "8b3b11226961523cb1caeba03de5c577bba4ddeed877be631057c16ba2f059a1"
+      "purpose_sha256": "3eeef3ea15019cfc32d26993273379c4f899d28d5d329da09becd580faa9edb9"
     },
     {
       "node": "tests/test_native_smoke.py::test_cli_retains_observation_status_without_native_claim[observed]",
-      "purpose_sha256": "8b3b11226961523cb1caeba03de5c577bba4ddeed877be631057c16ba2f059a1"
+      "purpose_sha256": "3eeef3ea15019cfc32d26993273379c4f899d28d5d329da09becd580faa9edb9"
     },
     {
       "node": "tests/test_native_smoke.py::test_cli_retains_observation_status_without_native_claim[unavailable]",
-      "purpose_sha256": "8b3b11226961523cb1caeba03de5c577bba4ddeed877be631057c16ba2f059a1"
+      "purpose_sha256": "3eeef3ea15019cfc32d26993273379c4f899d28d5d329da09becd580faa9edb9"
     },
     {
       "node": "tests/test_native_smoke.py::test_failed_package_stage_records_failure_and_runs_cleanup[install-failure-19-package-install]",
-      "purpose_sha256": "8b3b11226961523cb1caeba03de5c577bba4ddeed877be631057c16ba2f059a1"
+      "purpose_sha256": "3eeef3ea15019cfc32d26993273379c4f899d28d5d329da09becd580faa9edb9"
     },
     {
       "node": "tests/test_native_smoke.py::test_failed_package_stage_records_failure_and_runs_cleanup[update-acquisition-failure-100-package-update]",
-      "purpose_sha256": "8b3b11226961523cb1caeba03de5c577bba4ddeed877be631057c16ba2f059a1"
+      "purpose_sha256": "3eeef3ea15019cfc32d26993273379c4f899d28d5d329da09becd580faa9edb9"
     },
     {
       "node": "tests/test_native_smoke.py::test_failed_package_stage_records_failure_and_runs_cleanup[update-failure-17-package-update]",
-      "purpose_sha256": "8b3b11226961523cb1caeba03de5c577bba4ddeed877be631057c16ba2f059a1"
+      "purpose_sha256": "3eeef3ea15019cfc32d26993273379c4f899d28d5d329da09becd580faa9edb9"
+    },
+    {
+      "node": "tests/test_native_smoke.py::test_first_generator_transition_keeps_primary_failure_after_follow_on_observation[generator-denied-access-failure]",
+      "purpose_sha256": "3eeef3ea15019cfc32d26993273379c4f899d28d5d329da09becd580faa9edb9"
+    },
+    {
+      "node": "tests/test_native_smoke.py::test_first_generator_transition_keeps_primary_failure_after_follow_on_observation[generator-denied]",
+      "purpose_sha256": "3eeef3ea15019cfc32d26993273379c4f899d28d5d329da09becd580faa9edb9"
+    },
+    {
+      "node": "tests/test_native_smoke.py::test_generator_uses_executable_lookup_storage_and_first_account_transition",
+      "purpose_sha256": "3eeef3ea15019cfc32d26993273379c4f899d28d5d329da09becd580faa9edb9"
+    },
+    {
+      "node": "tests/test_native_smoke.py::test_manager_environment_mismatch_refuses_before_rootless_work",
+      "purpose_sha256": "3eeef3ea15019cfc32d26993273379c4f899d28d5d329da09becd580faa9edb9"
     },
     {
       "node": "tests/test_native_smoke.py::test_metadata_records_mode_owner_type_and_mount_fact[False]",
-      "purpose_sha256": "8b3b11226961523cb1caeba03de5c577bba4ddeed877be631057c16ba2f059a1"
+      "purpose_sha256": "3eeef3ea15019cfc32d26993273379c4f899d28d5d329da09becd580faa9edb9"
     },
     {
       "node": "tests/test_native_smoke.py::test_metadata_records_mode_owner_type_and_mount_fact[True]",
-      "purpose_sha256": "8b3b11226961523cb1caeba03de5c577bba4ddeed877be631057c16ba2f059a1"
+      "purpose_sha256": "3eeef3ea15019cfc32d26993273379c4f899d28d5d329da09becd580faa9edb9"
+    },
+    {
+      "node": "tests/test_native_smoke.py::test_missing_generator_lookup_directory_refuses_without_shared_directory_changes",
+      "purpose_sha256": "3eeef3ea15019cfc32d26993273379c4f899d28d5d329da09becd580faa9edb9"
     },
     {
       "node": "tests/test_native_smoke.py::test_partial_account_setup_keeps_named_failure_and_cleanup_evidence[generator-denied-cleanup-failure]",
-      "purpose_sha256": "8b3b11226961523cb1caeba03de5c577bba4ddeed877be631057c16ba2f059a1"
+      "purpose_sha256": "3eeef3ea15019cfc32d26993273379c4f899d28d5d329da09becd580faa9edb9"
     },
     {
       "node": "tests/test_native_smoke.py::test_partial_account_setup_keeps_named_failure_and_cleanup_evidence[generator-denied]",
-      "purpose_sha256": "8b3b11226961523cb1caeba03de5c577bba4ddeed877be631057c16ba2f059a1"
+      "purpose_sha256": "3eeef3ea15019cfc32d26993273379c4f899d28d5d329da09becd580faa9edb9"
     },
     {
       "node": "tests/test_native_smoke.py::test_partial_account_setup_keeps_named_failure_and_cleanup_evidence[manager-start-failure]",
-      "purpose_sha256": "8b3b11226961523cb1caeba03de5c577bba4ddeed877be631057c16ba2f059a1"
+      "purpose_sha256": "3eeef3ea15019cfc32d26993273379c4f899d28d5d329da09becd580faa9edb9"
     },
     {
       "node": "tests/test_native_smoke.py::test_stage_deadline_kills_term_ignoring_command_and_keeps_failure",
-      "purpose_sha256": "8b3b11226961523cb1caeba03de5c577bba4ddeed877be631057c16ba2f059a1"
+      "purpose_sha256": "3eeef3ea15019cfc32d26993273379c4f899d28d5d329da09becd580faa9edb9"
     },
     {
       "node": "tests/test_native_smoke.py::test_symlink_and_target_metadata_stay_distinct",
-      "purpose_sha256": "8b3b11226961523cb1caeba03de5c577bba4ddeed877be631057c16ba2f059a1"
+      "purpose_sha256": "3eeef3ea15019cfc32d26993273379c4f899d28d5d329da09becd580faa9edb9"
     },
     {
       "node": "tests/test_native_smoke.py::test_unavailable_metadata_is_explicit_and_never_exposes_payload[denied]",
-      "purpose_sha256": "8b3b11226961523cb1caeba03de5c577bba4ddeed877be631057c16ba2f059a1"
+      "purpose_sha256": "3eeef3ea15019cfc32d26993273379c4f899d28d5d329da09becd580faa9edb9"
     },
     {
       "node": "tests/test_native_smoke.py::test_unavailable_metadata_is_explicit_and_never_exposes_payload[malformed]",
-      "purpose_sha256": "8b3b11226961523cb1caeba03de5c577bba4ddeed877be631057c16ba2f059a1"
+      "purpose_sha256": "3eeef3ea15019cfc32d26993273379c4f899d28d5d329da09becd580faa9edb9"
     },
     {
       "node": "tests/test_native_smoke.py::test_unavailable_metadata_is_explicit_and_never_exposes_payload[missing]",
-      "purpose_sha256": "8b3b11226961523cb1caeba03de5c577bba4ddeed877be631057c16ba2f059a1"
+      "purpose_sha256": "3eeef3ea15019cfc32d26993273379c4f899d28d5d329da09becd580faa9edb9"
     },
     {
       "node": "tests/test_observation_delivery.py::test_error_reference_requires_the_exact_non_null_problem_owner_and_resource[kind]",
