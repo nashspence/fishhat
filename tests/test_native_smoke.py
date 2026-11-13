@@ -24,7 +24,7 @@ CHECK_PURPOSE = {
         "scripts/native_smoke_observation.py",
         "scripts/validation_timeouts.py",
     ],
-    "scope": "numeric owned-generator metadata and fixed safe CLI observations, real shell stage and named account/cleanup control diagnostics, deadline termination, refusal propagation and cleanup with isolated unprivileged external-tool fixtures",
+    "scope": "owned executable-generator placement, first account transition and selected manager-service environment identity, numeric metadata and fixed safe observations, real shell deadline/failure/cleanup controls with isolated unprivileged external tools",
     "relationship": "no-product-claim",
     "reason": "Real GNU timeout kills controlled hung children. Fake package/account tools exercise script failures without privileged native actions or native owner qualification.",
     "claims": [],
@@ -64,18 +64,119 @@ exit 0
     }
     scripts.update(
         {
-            "python3": 'if [[ "$1" == */native_smoke_observation.py ]]; then\n  [[ "$2" == /run/systemd/user-environment-generators/99-fishhat-probe-2000 ]] || exit 98\n  printf \'%s\\n\' \'native-prerequisite generator-observation={"native_qualified": false, "scope": "owned-smoke-generator-observation-only", "status": "observed"}\'\n  exit 0\nfi\nexec "$NATIVE_PYTHON" "$@"\n',
-            "id": 'if [[ "$1" == -u && "$#" == 1 ]]; then echo 1000; exit 0; fi\nif [[ "$1" == -u && "$2" == dtci1000 && -f "$NATIVE_FIXTURE/account-present" ]]; then echo 2000; exit 0; fi\nexit 1\n',
-            "useradd": 'echo useradd >> "$NATIVE_TRACE"\ncase "$NATIVE_MODE" in\n  generator-denied|generator-denied-cleanup-failure|manager-start-failure)\n    : > "$NATIVE_FIXTURE/account-present"; exit 0 ;;\nesac\nexit 23\n',
-            "grep": 'for value in "$@"; do\n  case "$value" in /etc/subuid|/etc/subgid) exit 0 ;; esac\ndone\nexec /usr/bin/grep "$@"\n',
+            "python3": r"""if [[ "$1" == */native_smoke_observation.py ]]; then
+  [[ "${2##*/}" == 99-fishhat-probe-2000 ]] || exit 98
+  printf '%s\n' 'native-prerequisite generator-observation={"native_qualified": false, "scope": "owned-smoke-generator-observation-only", "status": "observed"}'
+  exit 0
+fi
+exec "$NATIVE_PYTHON" "$@"
+""",
+            "id": r"""if [[ "$1" == -u && "$#" == 1 ]]; then echo 1000; exit 0; fi
+if [[ "$1" == -u && "$2" == dtci1000 && -f "$NATIVE_FIXTURE/account-present" ]]; then echo 2000; exit 0; fi
+exit 1
+""",
+            "useradd": r"""echo useradd >> "$NATIVE_TRACE"
+case "$NATIVE_MODE" in
+  generator-denied|generator-denied-cleanup-failure|manager-start-failure|executable-generator|generator-denied-access-failure|manager-context-mismatch|generator-directory-unavailable)
+    : > "$NATIVE_FIXTURE/account-present"; exit 0 ;;
+esac
+exit 23
+""",
+            "grep": r"""for value in "$@"; do
+  case "$value" in /etc/subuid|/etc/subgid) exit 0 ;; esac
+done
+exec /usr/bin/grep "$@"
+""",
             "install": 'echo install >> "$NATIVE_TRACE"\nexit 0\n',
-            "tee": '[[ "$1" == /run/systemd/user-environment-generators/99-fishhat-probe-2000 ]] || exit 98\n/bin/cat > "$NATIVE_FIXTURE/generator"\n',
-            "chmod": '[[ "$1" == 0755 && "$2" == /run/systemd/user-environment-generators/99-fishhat-probe-2000 ]] || exit 98\nexec /bin/chmod "$1" "$NATIVE_FIXTURE/generator"\n',
-            "runuser": 'while [[ "$#" -gt 0 && "$1" != -- ]]; do shift; done\n[[ "$1" == -- ]] || exit 98\nshift\ncase "$1" in\n  /bin/sh)\n    for role in runtime manager-runtime generator-directory generator interpreter; do\n      printf \'native-prerequisite generator-access role=%s read=allowed execute=denied\\n\' "$role" >&2\n    done\n    exit 0 ;;\n  /run/systemd/user-environment-generators/99-fishhat-probe-2000)\n    echo generator-execute >> "$NATIVE_TRACE"\n    if [[ "$NATIVE_MODE" == manager-start-failure ]]; then\n      printf \'%s\\n\' HOME=/home/dtci1000 USER=dtci1000 LOGNAME=dtci1000 PATH=/usr/bin:/bin XDG_RUNTIME_DIR=/run/user/2000\n      exit 0\n    fi\n    exit 1 ;;\n  env) exit 7 ;;\nesac\nexit 98\n',
-            "loginctl": 'echo "loginctl-$1" >> "$NATIVE_TRACE"\nif [[ "$1" == terminate-user && "$NATIVE_MODE" == generator-denied-cleanup-failure ]]; then exit 29; fi\nexit 0\n',
-            "systemctl": 'echo "systemctl-$1" >> "$NATIVE_TRACE"\nif [[ "$1" == start && "$NATIVE_MODE" == manager-start-failure ]]; then exit 27; fi\nexit 0\n',
+            "test": r"""if [[ "$1" == -d && "$2" == /usr/lib/systemd/user-environment-generators ]]; then
+  [[ "$NATIVE_MODE" != generator-directory-unavailable ]]; exit "$?"
+fi
+exec /usr/bin/test "$@"
+""",
+            "tee": r"""[[ "${1##*/}" == 99-fishhat-probe-2000 ]] || exit 98
+printf '%s\n' "$1" > "$NATIVE_FIXTURE/generator-path"
+/bin/cat > "$NATIVE_FIXTURE/generator"
+""",
+            "chmod": r"""[[ "$1" == 0755 && "${2##*/}" == 99-fishhat-probe-2000 ]] || exit 98
+exec /bin/chmod "$1" "$NATIVE_FIXTURE/generator"
+""",
+            "runuser": r"""[[ "$1" == -u && "$2" == dtci1000 ]] || exit 98
+while [[ "$#" -gt 0 && "$1" != -- ]]; do shift; done
+[[ "$1" == -- ]] || exit 98
+shift
+case "$1" in
+  /bin/sh)
+    echo generator-access >> "$NATIVE_TRACE"
+    for role in prefix library manager-library generator-directory generator interpreter; do
+      probe_execute=allowed
+      if [[ "$role" == generator && "$NATIVE_MODE" == generator-denied* ]]; then probe_execute=denied; fi
+      printf 'native-prerequisite generator-access role=%s read=allowed execute=%s\n' "$role" "$probe_execute" >&2
+    done
+    [[ "$NATIVE_MODE" == generator-denied-access-failure ]] && exit 29
+    exit 0 ;;
+  */99-fishhat-probe-2000)
+    echo generator-execute >> "$NATIVE_TRACE"
+    if [[ "$1" == /run/* && "$NATIVE_MODE" != manager-start-failure ]]; then exit 1; fi
+    case "$NATIVE_MODE" in
+      manager-start-failure|executable-generator|manager-context-mismatch|generator-directory-unavailable)
+        printf '%s\n' HOME=/home/dtci1000 USER=dtci1000 LOGNAME=dtci1000 PATH=/usr/bin:/bin XDG_RUNTIME_DIR=/run/user/2000
+        exit 0 ;;
+    esac
+    exit 1 ;;
+  env)
+    shift
+    [[ "$1" == -i ]] || exit 98
+    shift
+    bindings=()
+    while [[ "$1" == *=* ]]; do bindings+=("$1"); shift; done
+    case "$1" in
+      systemd-run)
+        echo manager-environment >> "$NATIVE_TRACE"
+        while [[ "$#" -gt 0 && "$1" != /usr/bin/printenv ]]; do shift; done
+        [[ "$1" == /usr/bin/printenv ]] || exit 98
+        shift
+        for key do
+          found=0
+          for binding in "${bindings[@]}"; do
+            if [[ "${binding%%=*}" == "$key" ]]; then
+              if [[ "$NATIVE_MODE" == manager-context-mismatch && "$key" == HOME ]]; then
+                printf '%s\n' unexpected-public-fixture-value
+              else
+                printf '%s\n' "${binding#*=}"
+              fi
+              found=1
+              break
+            fi
+          done
+          ((found)) || exit 98
+        done
+        exit 0 ;;
+      podman)
+        [[ "$2" == system && "$3" == reset ]] && exit 0
+        exit 7 ;;
+      systemctl) exit 7 ;;
+    esac ;;
+esac
+exit 98
+""",
+            "loginctl": r"""echo "loginctl-$1" >> "$NATIVE_TRACE"
+if [[ "$1" == terminate-user && "$NATIVE_MODE" == generator-denied-cleanup-failure ]]; then exit 29; fi
+exit 0
+""",
+            "systemctl": r"""echo "systemctl-$1" >> "$NATIVE_TRACE"
+if [[ "$1" == start && "$NATIVE_MODE" == manager-start-failure ]]; then exit 27; fi
+exit 0
+""",
             "userdel": 'echo userdel >> "$NATIVE_TRACE"\nexec /bin/rm -f "$NATIVE_FIXTURE/account-present"\n',
-            "rm": 'echo cleanup-rm >> "$NATIVE_TRACE"\n[[ "$NATIVE_MODE" == cleanup-failure ]] && exit 31\nfor value in "$@"; do\n  case "$value" in\n    /run/systemd/user-environment-generators/99-fishhat-probe-2000)\n      exec /bin/rm -f "$NATIVE_FIXTURE/generator" ;;\n  esac\ndone\nexec /bin/rm "$@"\n',
+            "rm": r"""echo cleanup-rm >> "$NATIVE_TRACE"
+[[ "$NATIVE_MODE" == cleanup-failure ]] && exit 31
+for value in "$@"; do
+  if [[ "${value##*/}" == 99-fishhat-probe-2000 ]]; then
+    exec /bin/rm -f "$NATIVE_FIXTURE/generator"
+  fi
+done
+exec /bin/rm "$@"
+""",
         }
     )
     for name, body in scripts.items():
@@ -200,7 +301,10 @@ def test_partial_account_setup_keeps_named_failure_and_cleanup_evidence(
         'generator-observation={"native_qualified": false, "scope": "owned-smoke-generator-observation-only", "status": "observed"}'
         in result.stdout
     )
-    assert "generator-access role=generator read=allowed execute=denied" in result.stderr
+    observed_execute = "allowed" if mode == "manager-start-failure" else "denied"
+    assert (
+        f"generator-access role=generator read=allowed execute={observed_execute}" in result.stderr
+    )
     assert "control=cleanup-user-service-stop status=failed exit=7" in result.stderr
     assert "control=cleanup-account-remove status=passed exit=0" in result.stderr
     assert "control=cleanup-generator-remove status=passed exit=0" in result.stderr
@@ -287,18 +391,20 @@ def test_all_owned_roles_are_observed_once_without_inventing_missing_evidence(mo
         return {"role": role, "status": "unavailable" if role == "generator" else "observed"}
 
     monkeypatch.setattr(observation, "observe_path", observed)
-    file = Path("/run/systemd/user-environment-generators/99-fishhat-probe-2000")
+    file = Path("/usr/lib/systemd/user-environment-generators/99-fishhat-probe-2000")
     result = observation.observe_generator(file)
     assert [role for role, _ in calls] == [
-        "runtime",
-        "manager-runtime",
+        "prefix",
+        "library",
+        "manager-library",
         "generator-directory",
         "generator",
         "interpreter",
     ]
     assert [path for _, path in calls] == [
-        Path("/run"),
-        Path("/run/systemd"),
+        Path("/usr"),
+        Path("/usr/lib"),
+        Path("/usr/lib/systemd"),
         file.parent,
         file,
         Path("/bin/sh"),
@@ -312,7 +418,7 @@ def test_all_owned_roles_are_observed_once_without_inventing_missing_evidence(mo
         [],
         ["private-fixture-value"],
         ["/tmp/99-fishhat-probe-1"],
-        ["/run/systemd/user-environment-generators/private-fixture-value"],
+        ["/usr/lib/systemd/user-environment-generators/private-fixture-value"],
     ],
 )
 def test_cli_refuses_unowned_paths_before_inspection(arguments, monkeypatch, capsys):
@@ -337,8 +443,60 @@ def test_cli_retains_observation_status_without_native_claim(monkeypatch, capsys
         "native_qualified": False,
     }
     monkeypatch.setattr(observation, "observe_generator", lambda _: dict(value))
-    assert observation.main(["/run/systemd/user-environment-generators/99-fishhat-probe-2000"]) == (
-        0 if status == "observed" else 1
-    )
+    assert observation.main(
+        ["/usr/lib/systemd/user-environment-generators/99-fishhat-probe-2000"]
+    ) == (0 if status == "observed" else 1)
     logs = capsys.readouterr()
     assert logs.err == "" and json.loads(logs.out.split("=", 1)[1]) == value
+
+
+def test_generator_uses_executable_lookup_storage_and_first_account_transition(
+    tmp_path, fixture_tools
+):
+    result = run_smoke(tmp_path, fixture_tools, "executable-generator", "0.1")
+    assert "stage=account status=passed exit=0" in result.stdout
+    assert "stage=rootless-runtime status=failed" in result.stdout
+    assert (tmp_path / "generator-path").read_text().strip() == (
+        "/usr/lib/systemd/user-environment-generators/99-fishhat-probe-2000"
+    )
+    trace = (tmp_path / "trace").read_text().splitlines()
+    assert trace.index("generator-execute") < trace.index("generator-access")
+    assert trace.index("generator-access") < trace.index("manager-environment")
+    assert "control=manager-environment-check status=passed exit=0" in result.stderr
+    assert not (tmp_path / "generator").exists()
+    assert not (tmp_path / "account-present").exists()
+
+
+@pytest.mark.parametrize("mode", ["generator-denied", "generator-denied-access-failure"])
+def test_first_generator_transition_keeps_primary_failure_after_follow_on_observation(
+    tmp_path, fixture_tools, mode
+):
+    result = run_smoke(tmp_path, fixture_tools, mode, "0.1")
+    assert result.returncode == 1
+    trace = (tmp_path / "trace").read_text().splitlines()
+    assert trace.index("generator-execute") < trace.index("generator-access")
+    assert "control=generator-execute status=failed exit=1" in result.stderr
+    if mode == "generator-denied-access-failure":
+        assert "control=generator-access status=failed exit=29" in result.stderr
+    assert "stage=account status=failed exit=1" in result.stdout
+    assert "systemctl-start" not in trace and "manager-environment" not in trace
+
+
+def test_manager_environment_mismatch_refuses_before_rootless_work(tmp_path, fixture_tools):
+    result = run_smoke(tmp_path, fixture_tools, "manager-context-mismatch", "0.1")
+    assert result.returncode == 1
+    assert "control=manager-environment-check status=failed exit=1" in result.stderr
+    assert "stage=account status=failed exit=1" in result.stdout
+    assert "stage=rootless-runtime" not in result.stdout
+    assert "unexpected-public-fixture-value" not in result.stdout + result.stderr
+
+
+def test_missing_generator_lookup_directory_refuses_without_shared_directory_changes(
+    tmp_path, fixture_tools
+):
+    result = run_smoke(tmp_path, fixture_tools, "generator-directory-unavailable", "0.1")
+    assert result.returncode == 1
+    assert "control=generator-directory-check status=failed exit=1" in result.stderr
+    assert "control=generator-write" not in result.stderr
+    assert "generator-execute" not in (tmp_path / "trace").read_text().splitlines()
+    assert "stage=rootless-runtime" not in result.stdout

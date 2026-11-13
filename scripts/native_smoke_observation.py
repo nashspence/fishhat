@@ -41,8 +41,9 @@ def observe_path(role: str, path: Path) -> dict[str, Any]:
 
 def observe_generator(generator: Path) -> dict[str, Any]:
     roles = (
-        ("runtime", Path("/run")),
-        ("manager-runtime", Path("/run/systemd")),
+        ("prefix", Path("/usr")),
+        ("library", Path("/usr/lib")),
+        ("manager-library", Path("/usr/lib/systemd")),
         ("generator-directory", generator.parent),
         ("generator", generator),
         ("interpreter", Path("/bin/sh")),
@@ -67,7 +68,7 @@ def main(argv: list[str] | None = None) -> int:
     valid = (
         valid
         and path.is_absolute()
-        and path.parent == Path("/run/systemd/user-environment-generators")
+        and path.parent == Path("/usr/lib/systemd/user-environment-generators")
         and re.fullmatch(r"99-fishhat-probe-[0-9]+", path.name) is not None
     )
     value = (
