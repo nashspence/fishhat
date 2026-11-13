@@ -42,6 +42,9 @@ for argument in "$@"; do
   if [[ "$argument" == update ]]; then
     case "$NATIVE_MODE" in
       update-failure) exit 17 ;;
+      update-acquisition-failure)
+        [[ " $* " == *" --error-on=any "* ]] && exit 100
+        ;;
       update-hang)
         exec "$NATIVE_PYTHON" -c 'import os,signal,time; from pathlib import Path; signal.signal(signal.SIGTERM,signal.SIG_IGN); Path(os.environ["NATIVE_FIXTURE"],"hung-pid").write_text(str(os.getpid())); time.sleep(60)'
         ;;
@@ -86,7 +89,11 @@ def run_smoke(tmp_path, tools, mode, scale="0.01"):
 
 @pytest.mark.parametrize(
     "mode,status,stage",
-    [("update-failure", 17, "package-update"), ("install-failure", 19, "package-install")],
+    [
+        ("update-failure", 17, "package-update"),
+        ("update-acquisition-failure", 100, "package-update"),
+        ("install-failure", 19, "package-install"),
+    ],
 )
 def test_failed_package_stage_records_failure_and_runs_cleanup(
     tmp_path, fixture_tools, mode, status, stage
@@ -101,10 +108,11 @@ def test_failed_package_stage_records_failure_and_runs_cleanup(
     assert "stage=cleanup status=passed exit=0" in result.stdout
     assert "native_tools_qualified" not in result.stdout
     trace = (tmp_path / "trace").read_text()
+    assert "update --error-on=any -qq" in trace
     assert "Acquire::http::Timeout=1" in trace and "Acquire::https::Timeout=1" in trace
     assert "Acquire::Retries=0" in trace and "DPkg::Lock::Timeout=1" in trace
     assert "useradd" not in trace
-    if mode == "update-failure":
+    if mode in {"update-failure", "update-acquisition-failure"}:
         assert " install " not in trace
 
 
@@ -140,5 +148,6 @@ def test_account_failure_preserves_primary_exit_and_reports_cleanup(
     assert "stage=account status=failed exit=23" in result.stdout
     assert f"stage=cleanup status={cleanup_status}" in result.stdout
     trace = (tmp_path / "trace").read_text()
+    assert "update --error-on=any -qq" in trace
     assert "useradd" in trace and "cleanup-rm" in trace
     assert (tmp_path / "work").exists() == (mode == "cleanup-failure")

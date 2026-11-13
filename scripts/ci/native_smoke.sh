@@ -97,7 +97,7 @@ cleanup() {
 }
 trap cleanup EXIT
 begin_stage package-update 300
-root_run apt-get -o "Acquire::http::Timeout=$contact_timeout" -o "Acquire::https::Timeout=$contact_timeout" -o Acquire::Retries=0 -o "DPkg::Lock::Timeout=$contact_timeout" update -qq
+root_run apt-get -o "Acquire::http::Timeout=$contact_timeout" -o "Acquire::https::Timeout=$contact_timeout" -o Acquire::Retries=0 -o "DPkg::Lock::Timeout=$contact_timeout" update --error-on=any -qq
 begin_stage package-install 600
 root_run apt-get -o "Acquire::http::Timeout=$contact_timeout" -o "Acquire::https::Timeout=$contact_timeout" -o Acquire::Retries=0 -o "DPkg::Lock::Timeout=$contact_timeout" install -y --no-install-recommends podman uidmap fuse-overlayfs slirp4netns passt xfsprogs openssh-server busybox-static
 begin_stage account 120
