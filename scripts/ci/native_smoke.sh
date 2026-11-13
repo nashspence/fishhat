@@ -13,7 +13,7 @@ observation_helper="$(dirname "$timeout_helper")/native_smoke_observation.py"
 # Shared deadlines bound the complete stage, including successive commands.
 kill_timeout="$(python3 "$timeout_helper" seconds 5)"
 contact_timeout="$(python3 "$timeout_helper" units 30)"
-probe_stage=''; stage_started=0; stage_deadline=''; saved_uid=''; saved_gid=''; slice_properties_owned=0
+probe_stage=''; stage_started=0; stage_deadline=''; saved_uid=''; saved_gid=''; slice_properties_owned=0; user_service_attempted=0; podman_attempted=0
 begin_stage() {
   finish_stage 0
   probe_stage="$1"; stage_started=$SECONDS
@@ -55,6 +55,18 @@ observe_owned_cleanup() {
 observe_owned_slice_configuration() {
   (cd "$(dirname "$timeout_helper")/.." && root_run python3 -m scripts.native_smoke_cleanup configuration-clear "$account" "$saved_uid" "$saved_gid" "$work" "$stage_deadline")
 }
+observe_owned_teardown() {
+  (cd "$(dirname "$timeout_helper")/.." && root_run python3 -m scripts.native_smoke_cleanup teardown-state "$account" "$saved_uid" "$saved_gid" "$work" "$stage_deadline" "$1")
+}
+parse_teardown_state() {
+  local extra candidate
+  read -r identity_state manager_state runtime_state login_state linger_state service_state process_state extra <<< "$1"
+  [[ "$identity_state" == owned || "$identity_state" == absent ]] || return 1
+  [[ -z "$extra" && "$1" != *$'\n'* ]] || return 1
+  for candidate in "$manager_state" "$runtime_state" "$login_state" "$linger_state" "$service_state" "$process_state"; do
+    [[ "$candidate" == present || "$candidate" == absent ]] || return 1
+  done
+}
 remove_owned_account() {
   root_run userdel -r "$account" 2>"$work/userdel.stderr"
 }
@@ -76,30 +88,68 @@ cleanup() {
   cleanup_failed=0
   if [[ -n "$ssh_pid" ]]; then root_run kill "$ssh_pid" || cleanup_failed=1; fi
   if ((account_created)); then
-    uid="$(id -u "$account")"
-    observe_control cleanup-user-service-stop root_run runuser -u "$account" -- env -i HOME="/home/$account" PATH=/usr/bin:/bin XDG_RUNTIME_DIR="/run/user/$uid" systemctl --user stop ci-probe.service
-    if declare -F user_run >/dev/null; then
-      observe_control cleanup-runtime-reset user_run podman system reset --force || cleanup_failed=1
+    uid="$saved_uid"
+    if snapshot="$(observe_control cleanup-state-initial observe_owned_teardown "$user_service_attempted")" && parse_teardown_state "$snapshot"; then
+      if [[ "$identity_state" == owned && "$manager_state" == present ]]; then
+        if [[ "$service_state" == present ]] && ((user_service_attempted)); then
+          observe_control cleanup-user-service-stop root_run runuser -u "$account" -- env -i HOME="/home/$account" PATH=/usr/bin:/bin XDG_RUNTIME_DIR="/run/user/$uid" systemctl --user stop ci-probe.service || cleanup_failed=1
+        fi
+        if ((podman_attempted)); then
+          if declare -F user_run >/dev/null; then
+            observe_control cleanup-runtime-reset user_run podman system reset --force || cleanup_failed=1
+          else
+            cleanup_failed=1
+          fi
+        fi
+      fi
+    else
+      cleanup_failed=1
     fi
-    # Prevent manager respawn, then wait for its stop and pending session teardown.
-    observe_control cleanup-disable-linger root_run loginctl disable-linger "$account" || cleanup_failed=1
-    observe_control cleanup-terminate-user root_run loginctl terminate-user "$account" || cleanup_failed=1
-    observe_control cleanup-manager-stop root_run systemctl stop "user@$uid.service" || cleanup_failed=1
+    # User-side cleanup may open a PAM session; observe again before termination.
+    if snapshot="$(observe_control cleanup-state-before-stop observe_owned_teardown 0)" && parse_teardown_state "$snapshot"; then
+      if [[ "$identity_state" == owned ]]; then
+        if [[ "$linger_state" == present ]]; then
+          observe_control cleanup-disable-linger root_run loginctl disable-linger "$account" || cleanup_failed=1
+        fi
+        if [[ "$login_state" == present ]]; then
+          observe_control cleanup-terminate-user root_run loginctl terminate-user "$account" || cleanup_failed=1
+        fi
+        if [[ "$manager_state" == present ]]; then
+          observe_control cleanup-manager-stop root_run systemctl stop "user@$uid.service" || cleanup_failed=1
+        fi
+        if [[ "$runtime_state" == present ]]; then
+          observe_control cleanup-runtime-manager-stop root_run systemctl stop "user-runtime-dir@$uid.service" || cleanup_failed=1
+        fi
+      fi
+    else
+      cleanup_failed=1
+    fi
     account_removed=0
     cleanup_deadline="$(python3 "$timeout_helper" deadline 10)"
     while python3 "$timeout_helper" pending "$cleanup_deadline"; do
-      observe_control cleanup-account-remove remove_owned_account
-      account_remove_status=$?
-      if ((account_remove_status == 0)); then
+      if ! snapshot="$(observe_control cleanup-state-settlement observe_owned_teardown 0)" || ! parse_teardown_state "$snapshot"; then
+        cleanup_failed=1
+        break
+      fi
+      if [[ "$identity_state" == absent ]]; then
         account_removed=1
         break
       fi
-      # Ubuntu userdel reports a still-busy account with exit status 8.
-      if ((account_remove_status != 8)); then break; fi
+      if [[ "$manager_state" == absent && "$runtime_state" == absent && "$login_state" == absent && "$process_state" == absent ]]; then
+        observe_control cleanup-account-remove remove_owned_account
+        account_remove_status=$?
+        if ((account_remove_status == 0)); then
+          account_removed=1
+          break
+        fi
+        cleanup_failed=1
+        # Preserve the existing busy-account wait; a failed action stays failed.
+        if ((account_remove_status != 8)); then break; fi
+      fi
       sleep 0.25
     done
     if ((!account_removed)); then
-      cat "$work/userdel.stderr" >&2
+      echo 'Disposable account removal not verified.' >&2
       cleanup_failed=1
     fi
   fi
@@ -211,6 +261,7 @@ verify_manager_context() {
 }
 observe_control manager-environment-check verify_manager_context
 begin_stage rootless-runtime 180
+podman_attempted=1
 [[ "$(user_run podman info --format '{{.Host.Security.Rootless}}')" == true ]]
 [[ "$(user_run podman info --format '{{.Host.CgroupsVersion}}')" == v2 ]]
 [[ "$(user_run podman info --format '{{.Store.GraphDriverName}}')" == overlay ]]
@@ -249,6 +300,7 @@ EOF
 root_run chown "$account:$account" "/home/$account/.config/containers/systemd/ci-probe.container"
 user_run env "QUADLET_UNIT_DIRS=/home/$account/.config/containers/systemd" /usr/libexec/podman/quadlet --user --dryrun
 user_run systemctl --user daemon-reload
+user_service_attempted=1
 if ! user_run systemctl --user start ci-probe.service; then
   user_run systemctl --user show ci-probe.service -p Result -p ExecMainStatus
   user_run /usr/bin/tail -n 40 "/run/user/$uid/ci-probe.stderr" || true
