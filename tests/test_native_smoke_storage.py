@@ -776,6 +776,7 @@ def test_real_quota_child_failure_keeps_errno_and_safe_command_facts():
         "dimension-type",
         "zero-errno",
         "dimension-mismatch",
+        "deep",
     ],
 )
 def test_real_failed_command_rejects_untrusted_diagnostic_text(change):
@@ -808,6 +809,8 @@ def test_real_failed_command_rejects_untrusted_diagnostic_text(change):
         raw = b"private-diagnostic-token /private/path\n"
     elif change == "duplicate":
         raw = raw[:-1] + b', "errno": 13}'
+    if change == "deep":
+        raw = b"[" * 2000 + b"0" + b"]" * 2000
     code = (
         "import sys;sys.stdout.buffer.write(b'private-output-token');sys.stderr.buffer.write("
         + repr(raw)

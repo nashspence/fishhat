@@ -31,7 +31,7 @@ class CommandFailed(ValueError):
         }
         try:
             detail = json.loads(errors, object_pairs_hook=unique_object)
-        except (ValueError, UnicodeError):
+        except (ValueError, UnicodeError, RecursionError):
             detail = None
         if quota_failure_detail(detail):
             self.observation["quota_failure"] = detail

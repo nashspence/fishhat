@@ -16261,6 +16261,10 @@
       "purpose_sha256": "ed2bd000620622cad4d05709182216258cbc6abc70c5d88c7c1d758f88153c16"
     },
     {
+      "node": "tests/test_native_smoke_storage.py::test_real_failed_command_rejects_untrusted_diagnostic_text[deep]",
+      "purpose_sha256": "ed2bd000620622cad4d05709182216258cbc6abc70c5d88c7c1d758f88153c16"
+    },
+    {
       "node": "tests/test_native_smoke_storage.py::test_real_failed_command_rejects_untrusted_diagnostic_text[dimension-mismatch]",
       "purpose_sha256": "ed2bd000620622cad4d05709182216258cbc6abc70c5d88c7c1d758f88153c16"
     },
