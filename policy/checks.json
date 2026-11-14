@@ -16257,6 +16257,46 @@
       "purpose_sha256": "c519e2dc27583287f4582e1155a77fd3604a4fb205008e42c7b724555fe69e5c"
     },
     {
+      "node": "tests/test_native_smoke_storage.py::test_real_failed_command_rejects_untrusted_diagnostic_text[boolean-errno]",
+      "purpose_sha256": "ed2bd000620622cad4d05709182216258cbc6abc70c5d88c7c1d758f88153c16"
+    },
+    {
+      "node": "tests/test_native_smoke_storage.py::test_real_failed_command_rejects_untrusted_diagnostic_text[dimension-mismatch]",
+      "purpose_sha256": "ed2bd000620622cad4d05709182216258cbc6abc70c5d88c7c1d758f88153c16"
+    },
+    {
+      "node": "tests/test_native_smoke_storage.py::test_real_failed_command_rejects_untrusted_diagnostic_text[dimension-type]",
+      "purpose_sha256": "ed2bd000620622cad4d05709182216258cbc6abc70c5d88c7c1d758f88153c16"
+    },
+    {
+      "node": "tests/test_native_smoke_storage.py::test_real_failed_command_rejects_untrusted_diagnostic_text[duplicate]",
+      "purpose_sha256": "ed2bd000620622cad4d05709182216258cbc6abc70c5d88c7c1d758f88153c16"
+    },
+    {
+      "node": "tests/test_native_smoke_storage.py::test_real_failed_command_rejects_untrusted_diagnostic_text[extra]",
+      "purpose_sha256": "ed2bd000620622cad4d05709182216258cbc6abc70c5d88c7c1d758f88153c16"
+    },
+    {
+      "node": "tests/test_native_smoke_storage.py::test_real_failed_command_rejects_untrusted_diagnostic_text[format]",
+      "purpose_sha256": "ed2bd000620622cad4d05709182216258cbc6abc70c5d88c7c1d758f88153c16"
+    },
+    {
+      "node": "tests/test_native_smoke_storage.py::test_real_failed_command_rejects_untrusted_diagnostic_text[raw]",
+      "purpose_sha256": "ed2bd000620622cad4d05709182216258cbc6abc70c5d88c7c1d758f88153c16"
+    },
+    {
+      "node": "tests/test_native_smoke_storage.py::test_real_failed_command_rejects_untrusted_diagnostic_text[reason-type]",
+      "purpose_sha256": "ed2bd000620622cad4d05709182216258cbc6abc70c5d88c7c1d758f88153c16"
+    },
+    {
+      "node": "tests/test_native_smoke_storage.py::test_real_failed_command_rejects_untrusted_diagnostic_text[reason]",
+      "purpose_sha256": "ed2bd000620622cad4d05709182216258cbc6abc70c5d88c7c1d758f88153c16"
+    },
+    {
+      "node": "tests/test_native_smoke_storage.py::test_real_failed_command_rejects_untrusted_diagnostic_text[zero-errno]",
+      "purpose_sha256": "ed2bd000620622cad4d05709182216258cbc6abc70c5d88c7c1d758f88153c16"
+    },
+    {
       "node": "tests/test_native_smoke_storage.py::test_real_owner_protocol_and_lost_parent_preserve_cleanup[both-fail-17-1]",
       "purpose_sha256": "c519e2dc27583287f4582e1155a77fd3604a4fb205008e42c7b724555fe69e5c"
     },
@@ -16299,6 +16339,38 @@
     {
       "node": "tests/test_native_smoke_storage.py::test_real_owner_protocol_and_lost_parent_preserve_cleanup[type-confused-claim-1-0]",
       "purpose_sha256": "c519e2dc27583287f4582e1155a77fd3604a4fb205008e42c7b724555fe69e5c"
+    },
+    {
+      "node": "tests/test_native_smoke_storage.py::test_real_quota_child_failure_keeps_errno_and_safe_command_facts",
+      "purpose_sha256": "ed2bd000620622cad4d05709182216258cbc6abc70c5d88c7c1d758f88153c16"
+    },
+    {
+      "node": "tests/test_native_smoke_storage.py::test_real_quota_child_reports_unenforced_quota_without_claiming_success[bytes]",
+      "purpose_sha256": "ed2bd000620622cad4d05709182216258cbc6abc70c5d88c7c1d758f88153c16"
+    },
+    {
+      "node": "tests/test_native_smoke_storage.py::test_real_quota_child_reports_unenforced_quota_without_claiming_success[inodes]",
+      "purpose_sha256": "ed2bd000620622cad4d05709182216258cbc6abc70c5d88c7c1d758f88153c16"
+    },
+    {
+      "node": "tests/test_native_smoke_storage.py::test_real_server_propagates_safe_failure_and_preserves_primary_cleanup[both-fail]",
+      "purpose_sha256": "ed2bd000620622cad4d05709182216258cbc6abc70c5d88c7c1d758f88153c16"
+    },
+    {
+      "node": "tests/test_native_smoke_storage.py::test_real_server_propagates_safe_failure_and_preserves_primary_cleanup[category]",
+      "purpose_sha256": "ed2bd000620622cad4d05709182216258cbc6abc70c5d88c7c1d758f88153c16"
+    },
+    {
+      "node": "tests/test_native_smoke_storage.py::test_real_server_propagates_safe_failure_and_preserves_primary_cleanup[command]",
+      "purpose_sha256": "ed2bd000620622cad4d05709182216258cbc6abc70c5d88c7c1d758f88153c16"
+    },
+    {
+      "node": "tests/test_native_smoke_storage.py::test_real_server_propagates_safe_failure_and_preserves_primary_cleanup[errno]",
+      "purpose_sha256": "ed2bd000620622cad4d05709182216258cbc6abc70c5d88c7c1d758f88153c16"
+    },
+    {
+      "node": "tests/test_native_smoke_storage.py::test_real_server_propagates_safe_failure_and_preserves_primary_cleanup[untrusted]",
+      "purpose_sha256": "ed2bd000620622cad4d05709182216258cbc6abc70c5d88c7c1d758f88153c16"
     },
     {
       "node": "tests/test_native_smoke_storage.py::test_retained_arena_refuses_path_or_identity_changes[missing]",

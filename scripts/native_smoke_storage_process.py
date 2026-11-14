@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import select
@@ -19,9 +20,66 @@ from scripts.validation_timeouts import Deadline
 
 
 class CommandFailed(ValueError):
-    def __init__(self, status: int):
+    def __init__(self, status: int, output: bytes = b"", errors: bytes = b""):
         self.status = status if 0 < status < 256 else 1
+        self.observation: dict[str, Any] = {
+            "exit": self.status,
+            "stdout_bytes": len(output),
+            "stdout_sha256": hashlib.sha256(output).hexdigest(),
+            "stderr_bytes": len(errors),
+            "stderr_sha256": hashlib.sha256(errors).hexdigest(),
+        }
+        try:
+            detail = json.loads(errors, object_pairs_hook=unique_object)
+        except (ValueError, UnicodeError):
+            detail = None
+        if quota_failure_detail(detail):
+            self.observation["quota_failure"] = detail
         super().__init__("storage-command-failed")
+
+
+def quota_failure_detail(value: Any) -> bool:
+    if type(value) is not dict or set(value) != {"format", "dimension", "reason", "errno"}:
+        return False
+    if any(type(value[key]) is not str for key in ("format", "dimension", "reason")):
+        return False
+    if value["format"] != "fishhat-smoke-quota-failure/v1" or value["dimension"] not in {
+        "bytes",
+        "inodes",
+    }:
+        return False
+    number = value["errno"]
+    if value["reason"] == "os-error":
+        return number is None or (type(number) is int and number > 0)
+    if (value["reason"] == "byte-quota-not-enforced" and value["dimension"] != "bytes") or (
+        value["reason"] == "inode-quota-not-enforced" and value["dimension"] != "inodes"
+    ):
+        return False
+    return number is None and value["reason"] in {
+        "byte-quota-not-enforced",
+        "inode-quota-not-enforced",
+        "write-no-progress",
+        "quota-assertion-failed",
+    }
+
+
+def failure_observation(error: BaseException) -> dict[str, Any]:
+    if isinstance(error, CommandFailed):
+        category = "storage-command-failed"
+    elif isinstance(error, ParentLost):
+        category = "storage-parent-unavailable"
+    elif isinstance(error, ValueError):
+        category = "storage-validation-failed"
+    else:
+        category = "storage-operation-unavailable"
+    number = error.errno if isinstance(error, OSError) else None
+    result: dict[str, Any] = {
+        "category": category,
+        "errno": number if type(number) is int and number > 0 else None,
+    }
+    if isinstance(error, CommandFailed):
+        result["command"] = error.observation
+    return result
 
 
 class ParentLost(ValueError):
@@ -115,7 +173,9 @@ class Commands:
                     require(handle in ready, "storage-command-deadline")
                     status = process.wait(timeout=timer.remaining())
                     if status:
-                        raise CommandFailed(status)
+                        output.seek(0)
+                        errors.seek(0)
+                        raise CommandFailed(status, output.read(), errors.read())
                     output.seek(0)
                     return output.read()
                 finally:
@@ -239,7 +299,11 @@ def serve(
                 reply = {
                     "status": status,
                     "claim": backend.claim(),
-                    "proof": {"status": "failed", "problem": "storage-request-failed"},
+                    "proof": {
+                        "status": "failed",
+                        "problem": "storage-request-failed",
+                        "failure": failure_observation(error),
+                    },
                 }
                 if isinstance(error, ParentLost):
                     raise

@@ -658,3 +658,275 @@ def test_system_interpreter_refuses_incompatible_workspace_abi(tmp_path):
     assert result.returncode != 0
     assert result.stdout == ""
     assert result.stderr.strip() == "storage-runtime-python-abi-mismatch"
+
+
+@pytest.mark.parametrize("dimension", ["bytes", "inodes"])
+def test_real_quota_child_reports_unenforced_quota_without_claiming_success(tmp_path, dimension):
+    from pathlib import Path
+
+    from scripts import native_smoke_quota
+
+    handles = []
+    try:
+        for role in ("account", "control"):
+            (tmp_path / role).mkdir()
+            handles.append(os.open(tmp_path / role, os.O_RDONLY | os.O_DIRECTORY))
+        result = subprocess.run(
+            [
+                "/usr/bin/python3",
+                "-c",
+                Path(native_smoke_quota.__file__).read_text(),
+                dimension,
+                *map(str, handles),
+            ],
+            pass_fds=handles,
+            cwd="/",
+            capture_output=True,
+            text=True,
+            timeout=watchdog(10),
+        )
+    finally:
+        for descriptor in handles:
+            os.close(descriptor)
+    assert result.returncode == 1 and result.stdout == ""
+    assert json.loads(result.stderr) == {
+        "format": "fishhat-smoke-quota-failure/v1",
+        "dimension": dimension,
+        "reason": ("byte" if dimension == "bytes" else "inode") + "-quota-not-enforced",
+        "errno": None,
+    }
+    assert str(tmp_path) not in result.stderr and "Traceback" not in result.stderr
+    if dimension == "bytes":
+        assert (tmp_path / "control" / "before").stat().st_size == 16 * 1048576
+        assert (tmp_path / "account" / "grow").stat().st_size == 16 * 1048576
+    else:
+        assert len(list((tmp_path / "control").iterdir())) == 256
+        assert len(list((tmp_path / "account").iterdir())) == 256
+
+
+def _real_failed_command(arguments):
+    program = """
+import json,sys
+sys.path.insert(0,sys.argv[1])
+from scripts.native_smoke_storage_process import Commands,CommandFailed
+from scripts.validation_timeouts import Deadline
+try:
+    Commands(None).run(json.loads(sys.argv[2]),Deadline.after(5).end)
+except CommandFailed as error:
+    print(json.dumps({'status':error.status,'message':str(error),'observation':error.observation}))
+else:
+    raise AssertionError('controlled command unexpectedly succeeded')
+"""
+    result = subprocess.run(
+        ["/usr/bin/python3", "-c", program, str(ROOT), json.dumps(arguments)],
+        capture_output=True,
+        text=True,
+        timeout=watchdog(10),
+    )
+    assert result.returncode == 0, result.stderr
+    return json.loads(result.stdout)
+
+
+def test_real_quota_child_failure_keeps_errno_and_safe_command_facts():
+    import errno
+    import hashlib
+    from pathlib import Path
+
+    from scripts import native_smoke_quota
+
+    failure = _real_failed_command(
+        [
+            "/usr/bin/python3",
+            "-c",
+            Path(native_smoke_quota.__file__).read_text(),
+            "bytes",
+            "999999",
+            "999998",
+        ],
+    )
+    assert failure["status"] == 1 and failure["message"] == "storage-command-failed"
+    detail = {
+        "format": "fishhat-smoke-quota-failure/v1",
+        "dimension": "bytes",
+        "reason": "os-error",
+        "errno": errno.ENOENT,
+    }
+    raw = (json.dumps(detail, sort_keys=True) + "\n").encode()
+    assert failure["observation"] == {
+        "exit": 1,
+        "stdout_bytes": 0,
+        "stdout_sha256": hashlib.sha256(b"").hexdigest(),
+        "stderr_bytes": len(raw),
+        "stderr_sha256": hashlib.sha256(raw).hexdigest(),
+        "quota_failure": detail,
+    }
+    assert "/proc/" not in json.dumps(failure["observation"])
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        "raw",
+        "reason",
+        "extra",
+        "boolean-errno",
+        "format",
+        "duplicate",
+        "reason-type",
+        "dimension-type",
+        "zero-errno",
+        "dimension-mismatch",
+    ],
+)
+def test_real_failed_command_rejects_untrusted_diagnostic_text(change):
+    import hashlib
+
+    detail = {
+        "format": "fishhat-smoke-quota-failure/v1",
+        "dimension": "bytes",
+        "reason": "os-error",
+        "errno": 13,
+    }
+    if change == "reason":
+        detail["reason"] = "private-diagnostic-token"
+    elif change == "extra":
+        detail["private"] = "private-diagnostic-token"
+    elif change == "boolean-errno":
+        detail["errno"] = True
+    elif change == "format":
+        detail["format"] = "private-diagnostic-token"
+    elif change == "reason-type":
+        detail["reason"] = []
+    elif change == "dimension-type":
+        detail["dimension"] = []
+    elif change == "zero-errno":
+        detail["errno"] = 0
+    elif change == "dimension-mismatch":
+        detail.update(reason="inode-quota-not-enforced", errno=None)
+    raw = json.dumps(detail).encode()
+    if change == "raw":
+        raw = b"private-diagnostic-token /private/path\n"
+    elif change == "duplicate":
+        raw = raw[:-1] + b', "errno": 13}'
+    code = (
+        "import sys;sys.stdout.buffer.write(b'private-output-token');sys.stderr.buffer.write("
+        + repr(raw)
+        + ");raise SystemExit(23)"
+    )
+    failure = _real_failed_command(["/usr/bin/python3", "-c", code])
+    assert failure["status"] == 23
+    facts = failure["observation"]
+    assert "quota_failure" not in facts
+    assert facts == {
+        "exit": 23,
+        "stdout_bytes": len(b"private-output-token"),
+        "stdout_sha256": hashlib.sha256(b"private-output-token").hexdigest(),
+        "stderr_bytes": len(raw),
+        "stderr_sha256": hashlib.sha256(raw).hexdigest(),
+    }
+    assert "private" not in json.dumps(facts)
+
+
+@pytest.mark.parametrize("mode", ["category", "untrusted", "errno", "command", "both-fail"])
+def test_real_server_propagates_safe_failure_and_preserves_primary_cleanup(mode):
+    import errno
+    import uuid
+
+    from scripts.native_smoke_storage_process import receive, send
+
+    program = r"""
+import errno,json,os,sys
+sys.path.insert(0,sys.argv[1])
+from scripts.native_smoke_storage_process import Commands,Parent,serve
+from scripts.validation_timeouts import Deadline
+mode,token=sys.argv[2:]
+end=Deadline.after(10).end
+class Backend:
+    def claim(self): return {'enrollment':token}
+    def quota(self,*args):
+        if mode=='category': raise ValueError('loop-selected-custody-changed')
+        if mode=='untrusted': raise ValueError('storage-private-exception-token')
+        if mode=='errno': raise OSError(errno.EACCES,'/private/exception-token')
+        Commands(None).run([sys.executable,'-c',"import sys;sys.stderr.write('/private/child-token');raise SystemExit(17)"],end)
+    def cleanup(self,*args):
+        if mode=='both-fail': raise ValueError('/private/cleanup-token')
+        return {'absent':True}
+    def close(self): pass
+parent=Parent.open(os.getppid(),os.getuid(),os.getgid(),end)
+try: result=serve(Backend(),token,parent,0,1,end)
+finally: parent.close()
+print(json.dumps({'primary':result.primary,'cleanup':result.cleanup}),file=sys.stderr)
+raise SystemExit(result.status)
+"""
+    token = str(uuid.uuid4())
+    end = Deadline.after(15).end
+    process = subprocess.Popen(
+        ["/usr/bin/python3", "-c", program, str(ROOT), mode, token],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    assert process.stdin is not None and process.stdout is not None and process.stderr is not None
+    try:
+        for action in ("bytes", "cleanup"):
+            send(
+                process.stdin.fileno(),
+                {
+                    "enrollment": token,
+                    "action": action,
+                    "claim": {"enrollment": token},
+                    "end": Deadline.after(5).end,
+                    "primary": 0,
+                },
+                end,
+            )
+            reply = receive(process.stdout.fileno(), end)
+            if action == "bytes":
+                primary = reply
+            else:
+                cleanup = reply
+        process.wait(timeout=watchdog(5))
+        original = 17 if mode in {"command", "both-fail"} else 1
+        assert primary["status"] == process.returncode == original
+        failure = primary["proof"]["failure"]
+        assert failure["category"] == (
+            "storage-validation-failed"
+            if mode in {"category", "untrusted"}
+            else "storage-command-failed"
+            if mode in {"command", "both-fail"}
+            else "storage-operation-unavailable"
+        )
+        assert failure["errno"] == (errno.EACCES if mode == "errno" else None)
+        if mode in {"command", "both-fail"}:
+            assert failure["command"]["exit"] == 17 and failure["command"]["stderr_bytes"] > 0
+            assert "quota_failure" not in failure["command"]
+        expected_cleanup = 1 if mode == "both-fail" else 0
+        assert cleanup["status"] == expected_cleanup
+        assert json.loads(process.stderr.read()) == {
+            "primary": original,
+            "cleanup": expected_cleanup,
+        }
+        assert "private" not in json.dumps([primary, cleanup])
+    finally:
+        if process.poll() is None:
+            process.kill()
+            process.wait(timeout=watchdog(5))
+        process.stdin.close()
+        process.stdout.close()
+        process.stderr.close()
+
+
+for _diagnostic_check in (
+    "test_real_quota_child_reports_unenforced_quota_without_claiming_success",
+    "test_real_quota_child_failure_keeps_errno_and_safe_command_facts",
+    "test_real_failed_command_rejects_untrusted_diagnostic_text",
+    "test_real_server_propagates_safe_failure_and_preserves_primary_cleanup",
+):
+    CHECK_OVERRIDES[_diagnostic_check] = {
+        "purpose": "implementation",
+        "authority": ["scripts/native_smoke_storage_process.py", "scripts/native_smoke_quota.py"],
+        "scope": "actual unprivileged quota child, failed subprocess and live server diagnostics: fixed categories, numeric errno, original status, output hashes/counts, rejection of malformed or untrusted details and preserved primary/cleanup failures",
+        "relationship": "no-product-claim",
+        "reason": "Ordinary temporary directories and owned child processes exercise safe failure observability; no native quota, loop, mount, account or namespace operation runs or is qualified.",
+        "claims": [],
+    }
