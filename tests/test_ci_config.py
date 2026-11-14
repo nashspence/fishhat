@@ -140,6 +140,39 @@ class WorkflowSafety(unittest.TestCase):
         self.assertIn("validation-tooling", job["env"]["CHECK_PURPOSES"])
         self.assertIn("pre-manager interruption", job["env"]["CHECK_SCOPE"])
 
+    def test_native_ssh_custody_retains_normal_and_selected_original_receipts(self):
+        job = self.workflow["jobs"]["native-prerequisites"]
+        steps = job["steps"]
+        normal = next(
+            i
+            for i, step in enumerate(steps)
+            if step.get("run") == "bash scripts/ci/native_smoke.sh --github-hosted-only"
+        )
+        account = next(
+            i
+            for i, step in enumerate(steps)
+            if "scripts.native_smoke_interruption --github-hosted-only" in step.get("run", "")
+        )
+        selected = [
+            i
+            for i, step in enumerate(steps)
+            if "scripts.native_smoke_ssh_qualification --github-hosted-only" in step.get("run", "")
+        ]
+        self.assertEqual(len(selected), 1)
+        self.assertLess(normal, account)
+        self.assertLess(account, selected[0])
+        artifact = next(
+            step
+            for step in steps
+            if step.get("with", {}).get("name") == "native-smoke-ssh-interruption"
+        )
+        self.assertEqual(artifact["with"]["path"], "artifacts/native-smoke-ssh-interruption.json")
+        self.assertEqual(artifact["with"]["if-no-files-found"], "error")
+        self.assertEqual(artifact["if"], "${{ always() }}")
+        early = str(self.workflow["jobs"]["watchdog-regressions"])
+        self.assertIn("tests/test_native_smoke_ssh.py", early)
+        self.assertIn("root SSH lifetime/listener custody", job["env"]["CHECK_SCOPE"])
+
     def test_native_script_refuses_ordinary_machine(self):
         proc = subprocess.run(
             ["bash", str(ROOT / "scripts/ci/native_smoke.sh")],

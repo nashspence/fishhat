@@ -30,7 +30,7 @@ CHECK_PURPOSE = {
         "scripts/native_smoke_interruption.py",
         "scripts/validation_timeouts.py",
     ],
-    "scope": "owned executable-generator placement, first account transition and selected manager-service environment identity, numeric metadata, independent exact account cleanup and fresh identity/state-guided conditional owned teardown through typed facility/process/filesystem observations, fresh private supervisor enrollment before injection, independent pre-manager and final absence observations, unrelated canaries, original interruption/cleanup outcomes, failure preservation and shared deadlines and real shell failure controls with isolated unprivileged tools",
+    "scope": "owned executable-generator placement, first account transition and selected manager-service environment identity, numeric metadata, independent exact account cleanup and fresh identity/state-guided conditional owned teardown through typed facility/process/filesystem observations, fresh private supervisor enrollment before injection, independent pre-manager and final absence observations, unrelated canaries, original interruption/cleanup outcomes, refusal of unbound root SSH numeric PID claims, failure preservation and shared deadlines and real shell failure controls with isolated unprivileged tools",
     "relationship": "no-product-claim",
     "reason": "Real GNU timeout kills controlled hung children. Fake package/account tools and isolated facility/filesystem observations exercise failures and leftover-state refusal without privileged native actions or native owner qualification.",
     "claims": [],
@@ -2678,3 +2678,24 @@ def test_supervisor_qualifies_actual_shell_checkpoint_and_trap_with_isolated_too
     finally:
         if work.exists():
             shutil.rmtree(work)
+
+
+def test_cleanup_cannot_signal_an_unbound_numeric_ssh_pid(tmp_path, fixture_tools):
+    foreign = tmp_path / "unrelated-ssh-canary"
+    foreign.write_bytes(b"preserve unrelated state")
+    killer = fixture_tools / "kill"
+    killer.write_text('#!/bin/bash\nprintf "%s\\n" "unbound-signal:$*" >> "$NATIVE_TRACE"\n')
+    killer.chmod(0o700)
+    prefix = (ROOT / "scripts/ci/native_smoke.sh").read_text().split("trap cleanup EXIT", 1)[0]
+    assignment = 'timeout_helper="$(cd "$(dirname "$0")/.." && pwd)/validation_timeouts.py"'
+    assert prefix.count(assignment) == 1
+    prefix = prefix.replace(
+        assignment, "timeout_helper=" + shlex.quote(str(ROOT / "scripts/validation_timeouts.py"))
+    )
+    code = "set -- --github-hosted-only\n" + prefix
+    code += "\nwork=''; account_created=0; ssh_pid=424242; true; cleanup\n"
+    result = run_smoke(tmp_path, fixture_tools, "account-failure", code=code)
+    assert result.returncode == 0, (result.stdout, result.stderr)
+    assert foreign.read_bytes() == b"preserve unrelated state"
+    trace = (tmp_path / "trace").read_text() if (tmp_path / "trace").exists() else ""
+    assert "unbound-signal:" not in trace

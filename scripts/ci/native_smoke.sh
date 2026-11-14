@@ -95,14 +95,13 @@ bounded_run() {
 cd /
 export DEBIAN_FRONTEND=noninteractive
 work=''
-account="dtci$(id -u)"; account_created=0; mounted=0; ssh_pid=''; manager_environment=''
+account="dtci$(id -u)"; account_created=0; mounted=0; manager_environment=''
 cleanup() {
   status=$?
   set +e
   finish_stage "$status"
   begin_stage cleanup 120
   cleanup_failed=0
-  if [[ -n "$ssh_pid" ]]; then root_run kill "$ssh_pid" || cleanup_failed=1; fi
   if ((account_created)); then
     uid="$saved_uid"
     if snapshot="$(observe_control cleanup-state-initial observe_owned_teardown "$user_service_attempted")" && parse_teardown_state "$snapshot"; then
@@ -415,45 +414,7 @@ bounded_run ssh-keygen -q -t ed25519 -N '' -f "$work/server"
 bounded_run ssh-keygen -q -t ed25519 -N '' -f "$work/client"
 root_run install -d -m 0700 -o "$account" -g "$account" "/home/$account/.ssh"
 root_run install -m 0600 -o "$account" -g "$account" "$work/client.pub" "/home/$account/.ssh/authorized_keys"
-cat > "$work/sshd_config" <<EOF
-Port 22229
-ListenAddress 127.0.0.1
-HostKey $work/server
-PidFile $work/sshd.pid
-AuthorizedKeysFile /home/$account/.ssh/authorized_keys
-StrictModes yes
-UsePAM yes
-PubkeyAuthentication yes
-AuthenticationMethods publickey
-PasswordAuthentication no
-KbdInteractiveAuthentication no
-PermitRootLogin no
-AllowUsers $account
-DisableForwarding yes
-PermitTTY no
-PermitUserEnvironment no
-PermitUserRC no
-ForceCommand /usr/bin/printf ssh-fixture-ok
-LogLevel VERBOSE
-EOF
 root_run mkdir -p /run/sshd
-root_run /usr/sbin/sshd -t -f "$work/sshd_config"
-root_run /usr/sbin/sshd -f "$work/sshd_config" -E "$work/sshd.log"
-ssh_pid="$(cat "$work/sshd.pid")"
-printf '[127.0.0.1]:22229 %s\n' "$(cut -d' ' -f1,2 "$work/server.pub")" > "$work/known_hosts"
-if ! result="$(bounded_run ssh -F /dev/null -T -p 22229 -i "$work/client" -o IdentitiesOnly=yes -o BatchMode=yes -o "ConnectTimeout=$contact_timeout" -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$work/known_hosts" "${account}@127.0.0.1" arbitrary-input)"; then
-  root_run /usr/bin/tail -n 40 "$work/sshd.log"
-  exit 1
-fi
-[[ "$result" == ssh-fixture-ok ]]
-if bounded_run ssh -F /dev/null -T -p 22229 -i "$work/client" -o IdentitiesOnly=yes -o BatchMode=yes -o "ConnectTimeout=$contact_timeout" -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/dev/null "${account}@127.0.0.1" info 2>"$work/untrusted-host.stderr"; then
-  echo 'Unknown SSH host key was accepted' >&2; exit 1
-else
-  host_key_status=$?
-  if ((host_key_status != 255)) || ! grep -Fq 'Host key verification failed.' "$work/untrusted-host.stderr"; then
-    echo 'Unknown-host-key check did not establish the expected rejection' >&2
-    exit 1
-  fi
-fi
+(cd "$(dirname "$timeout_helper")/.." && observe_control ssh-owned-probe root_run env GITHUB_ACTIONS=true RUNNER_ENVIRONMENT=github-hosted ImageOS=ubuntu24 FISHHAT_VALIDATION_TIMEOUT_SCALE="${FISHHAT_VALIDATION_TIMEOUT_SCALE:-1}" /usr/bin/python3 -m scripts.native_smoke_ssh --github-hosted-only probe "$account" "$saved_uid" "$saved_gid" "$work" "$stage_deadline" "$contact_timeout")
 finish_stage 0
 printf '%s\n' '{"scope":"hosted-runner-prerequisites-only","systemd_cgroup2":true,"rootless_overlay":true,"quadlet":true,"xfs_byte_inode_quotas":true,"loopback_ssh":true,"native_tools_qualified":false}'
