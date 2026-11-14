@@ -16326,11 +16326,15 @@
     },
     {
       "node": "tests/test_native_smoke_storage.py::test_system_interpreter_receives_locked_workspace_and_dependencies[foreign-search-path]",
-      "purpose_sha256": "473cba3cc5fea605907ac825f301550560e930f15e59c4e68de6f057b7e4470c"
+      "purpose_sha256": "1ca1194cb1914b8f1b9b0f460813ab46ae038bf4f6718998876e8d3eaff8be1d"
     },
     {
       "node": "tests/test_native_smoke_storage.py::test_system_interpreter_receives_locked_workspace_and_dependencies[ordinary]",
-      "purpose_sha256": "473cba3cc5fea605907ac825f301550560e930f15e59c4e68de6f057b7e4470c"
+      "purpose_sha256": "1ca1194cb1914b8f1b9b0f460813ab46ae038bf4f6718998876e8d3eaff8be1d"
+    },
+    {
+      "node": "tests/test_native_smoke_storage.py::test_system_interpreter_refuses_incompatible_workspace_abi",
+      "purpose_sha256": "c519e2dc27583287f4582e1155a77fd3604a4fb205008e42c7b724555fe69e5c"
     },
     {
       "node": "tests/test_observation_delivery.py::test_error_reference_requires_the_exact_non_null_problem_owner_and_resource[kind]",

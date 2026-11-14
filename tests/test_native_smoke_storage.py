@@ -540,12 +540,35 @@ CHECK_OVERRIDES = {
     "test_system_interpreter_receives_locked_workspace_and_dependencies": {
         "purpose": "implementation",
         "authority": ["scripts/ci/native_smoke.sh", "pyproject.toml", "uv.lock"],
-        "scope": "actual unprivileged system-interpreter import of the resolved locked workspace and dependency closure, preserving its standard library and excluding foreign search paths",
+        "scope": "actual unprivileged compatible-ABI system-interpreter import of the resolved locked workspace and dependency closure, preserving its standard library and excluding foreign search paths; incompatible interpreter ABIs are explicitly refused before elevation",
         "relationship": "no-product-claim",
         "reason": "Real Bash and Python subprocesses exercise the fixture runtime handoff; imports alone do not qualify native operations.",
         "claims": [],
     }
 }
+
+
+def _runtime_handoff(source_root, tmp_path, environment):
+    source = (ROOT / "scripts/ci/native_smoke.sh").read_text()
+    assignments = [
+        line.strip()
+        for line in source.splitlines()
+        if line.startswith(("  storage_system_abi=", "  storage_pythonpath="))
+    ]
+    assert assignments
+    code = (
+        'set -euo pipefail\nbounded_run() { "$@"; }\nruntime_path() {\nlocal source_root="$1"\n'
+        + "\n".join(assignments)
+        + '\nprintf "%s" "$storage_pythonpath"\n}\nruntime_path "$1"\n'
+    )
+    return subprocess.run(
+        ["bash", "-c", code, "runtime-path", str(source_root)],
+        cwd=tmp_path,
+        env=environment,
+        capture_output=True,
+        text=True,
+        timeout=watchdog(10),
+    )
 
 
 @pytest.mark.parametrize("foreign_path", [False, True], ids=["ordinary", "foreign-search-path"])
@@ -555,34 +578,17 @@ def test_system_interpreter_receives_locked_workspace_and_dependencies(tmp_path,
     foreign = tmp_path / "foreign"
     foreign.mkdir()
     (foreign / "fishhat_contracts.py").write_text("raise RuntimeError('foreign-import-refused')\n")
-    environment = {"PATH": os.defpath, "PYTHONNOUSERSITE": "1"}
+    clean_environment = {"PATH": os.defpath, "PYTHONNOUSERSITE": "1"}
+    environment = dict(clean_environment)
     if foreign_path:
         environment["PYTHONPATH"] = str(foreign)
-    source = (ROOT / "scripts/ci/native_smoke.sh").read_text()
-    (assignment,) = [
-        line.strip() for line in source.splitlines() if line.startswith("  storage_pythonpath=")
-    ]
-    code = (
-        'set -euo pipefail\nsource_root="$1"\n'
-        + assignment
-        + '\nprintf "%s" "$storage_pythonpath"\n'
-    )
-    handoff = subprocess.run(
-        ["bash", "-c", code, "runtime-path", str(ROOT)],
-        cwd=tmp_path,
-        env=environment,
-        capture_output=True,
-        text=True,
-        timeout=watchdog(10),
-    )
-    assert handoff.returncode == 0, handoff.stderr
-    paths = handoff.stdout.split(os.pathsep)
-    assert paths and all(
-        path and Path(path).resolve().is_relative_to(ROOT.resolve()) for path in paths
-    )
-    clean_environment = {"PATH": os.defpath, "PYTHONNOUSERSITE": "1"}
     baseline = subprocess.run(
-        ["/usr/bin/python3", "-c", "import json; print(json.__file__)"],
+        [
+            "/usr/bin/python3",
+            "-I",
+            "-c",
+            "import json,sysconfig; print(json.dumps({'standard_library':json.__file__, 'abi':sysconfig.get_config_var('SOABI')}))",
+        ],
         cwd=tmp_path,
         env=clean_environment,
         capture_output=True,
@@ -590,6 +596,32 @@ def test_system_interpreter_receives_locked_workspace_and_dependencies(tmp_path,
         timeout=watchdog(5),
     )
     assert baseline.returncode == 0
+    observed_baseline = json.loads(baseline.stdout)
+    workspace = subprocess.run(
+        [
+            str(ROOT / ".venv/bin/python"),
+            "-I",
+            "-c",
+            "import sysconfig; print(sysconfig.get_config_var('SOABI') or '')",
+        ],
+        cwd=tmp_path,
+        env=clean_environment,
+        capture_output=True,
+        text=True,
+        timeout=watchdog(5),
+    )
+    assert workspace.returncode == 0
+    handoff = _runtime_handoff(ROOT, tmp_path, environment)
+    if not observed_baseline["abi"] or workspace.stdout.strip() != observed_baseline["abi"]:
+        assert handoff.returncode != 0
+        assert handoff.stdout == ""
+        assert handoff.stderr.strip() == "storage-runtime-python-abi-mismatch"
+        return
+    assert handoff.returncode == 0, handoff.stderr
+    paths = handoff.stdout.split(os.pathsep)
+    assert paths and all(
+        path and Path(path).resolve().is_relative_to(ROOT.resolve()) for path in paths
+    )
     probe = "import json,os,signal; from fishhat_contracts import canonical; from scripts.check_evidence import execution_origin; from scripts.validation import source_identity; from scripts.run_stats import RunStats; assert callable(canonical) and callable(source_identity) and callable(execution_origin); assert hasattr(os,'pidfd_open') and hasattr(signal,'pidfd_send_signal'); print(json.dumps({'standard_library':json.__file__, 'stats_valid':RunStats().finish()['format']=='fishhat-run-stats/v1'}))"
     result = subprocess.run(
         ["/usr/bin/python3", "-c", probe],
@@ -601,4 +633,28 @@ def test_system_interpreter_receives_locked_workspace_and_dependencies(tmp_path,
     )
     assert result.returncode == 0, result.stderr
     observed = json.loads(result.stdout)
-    assert observed == {"standard_library": baseline.stdout.strip(), "stats_valid": True}
+    assert observed == {
+        "standard_library": observed_baseline["standard_library"],
+        "stats_valid": True,
+    }
+
+
+def test_system_interpreter_refuses_incompatible_workspace_abi(tmp_path):
+    workspace = tmp_path / "workspace"
+    interpreter = workspace / ".venv/bin/python"
+    interpreter.parent.mkdir(parents=True)
+    interpreter.write_text(
+        f"#!{sys.executable}\n"
+        "import sys,sysconfig\n"
+        "code=sys.argv[2]\n"
+        "sys.argv=['-c',*sys.argv[3:]]\n"
+        "sys.path.insert(0,sys.argv[1])\n"
+        "original=sysconfig.get_config_var\n"
+        "sysconfig.get_config_var=lambda name: 'controlled-incompatible-abi' if name=='SOABI' else original(name)\n"
+        "exec(compile(code,'<controlled-venv>','exec'))\n"
+    )
+    interpreter.chmod(0o700)
+    result = _runtime_handoff(workspace, tmp_path, {"PATH": os.defpath, "PYTHONNOUSERSITE": "1"})
+    assert result.returncode != 0
+    assert result.stdout == ""
+    assert result.stderr.strip() == "storage-runtime-python-abi-mismatch"

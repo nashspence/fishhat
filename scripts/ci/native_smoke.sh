@@ -74,10 +74,12 @@ storage_call() {
   return "$storage_status"
 }
 start_storage_owner() {
-  local source_root storage_pythonpath owner_timeout storage_coproc_read storage_coproc_write
+  local source_root storage_pythonpath storage_system_abi owner_timeout storage_coproc_read storage_coproc_write
   source_root="$(dirname "$timeout_helper")/.."
+  # Compiled dependencies require the same interpreter ABI before root handoff.
+  storage_system_abi="$(bounded_run /usr/bin/python3 -I -c 'import sysconfig; print(sysconfig.get_config_var("SOABI") or "")')" || return "$?"
   # Resolve editable workspace paths without replacing the system standard library.
-  storage_pythonpath="$source_root:$("$source_root/.venv/bin/python" -c 'import os,sys; from pathlib import Path; root=Path(sys.argv[1]).resolve(); base=Path(sys.base_prefix).resolve(); paths=[p for p in sys.path if p and Path(p).resolve().is_relative_to(root) and not Path(p).resolve().is_relative_to(base)]; assert paths; print(os.pathsep.join(paths))' "$source_root")"
+  storage_pythonpath="$source_root:$(bounded_run "$source_root/.venv/bin/python" -c 'import os,sys,sysconfig; from pathlib import Path; sys.exit("storage-runtime-python-abi-mismatch") if not sys.argv[2] or sysconfig.get_config_var("SOABI") != sys.argv[2] else None; root=Path(sys.argv[1]).resolve(); base=Path(sys.base_prefix).resolve(); paths=[p for p in sys.path if p and Path(p).resolve().is_relative_to(root) and not Path(p).resolve().is_relative_to(base)]; assert paths; print(os.pathsep.join(paths))' "$source_root" "$storage_system_abi")" || return "$?"
   storage_enrollment="$(python3 -c 'import uuid; print(uuid.uuid4())')"
   if [[ "$interruption_mode" == --interrupt-after-storage ]]; then storage_enrollment="$interruption_enrollment"; fi
   storage_claim="$(python3 -c 'import json,sys; print(json.dumps({"enrollment":sys.argv[1]}))' "$storage_enrollment")"
