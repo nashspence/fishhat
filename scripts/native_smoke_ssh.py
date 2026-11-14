@@ -348,9 +348,10 @@ def childless(child: OwnedChild, end: float) -> None:
 
 
 def identity_record(identity: Any) -> dict[str, Any]:
+    if type(identity) is not dict:
+        raise ValueError("ssh-observer-inventory-unavailable")
     require(
-        type(identity) is dict
-        and set(identity)
+        set(identity)
         == {
             "pid",
             "parent_pid",
@@ -410,8 +411,10 @@ def identity_record(identity: Any) -> dict[str, Any]:
 
 
 def listener_record(listener: Any) -> dict[str, Any]:
+    if type(listener) is not dict:
+        raise ValueError("ssh-observer-inventory-unavailable")
     require(
-        type(listener) is dict and set(listener) == {"port", "inode", "loopback_only"},
+        set(listener) == {"port", "inode", "loopback_only"},
         "ssh-observer-inventory-unavailable",
     )
     require(
@@ -426,8 +429,10 @@ def listener_record(listener: Any) -> dict[str, Any]:
 
 
 def inventory_record(value: Any) -> dict[str, Any]:
+    if type(value) is not dict:
+        raise ValueError("ssh-observer-inventory-unavailable")
     require(
-        type(value) is dict and set(value) == {"identity", "listener", "arena"},
+        set(value) == {"identity", "listener", "arena"},
         "ssh-observer-inventory-unavailable",
     )
     identity_record(value["identity"])
@@ -567,9 +572,10 @@ def independent_observation(inventory: dict[str, Any], phase: str, end: float) -
     )
     require(result.returncode == 0, "ssh-independent-observation-unavailable")
     value = json.loads(result.stdout, object_pairs_hook=unique_object)
+    if type(value) is not dict:
+        raise ValueError("ssh-independent-observation-mismatch")
     require(
-        type(value) is dict
-        and set(value)
+        set(value)
         == {
             "scope",
             "observer_uid",
@@ -748,8 +754,9 @@ def canary_snapshot(path: Path, end: float) -> dict[str, Any]:
 
 
 def refusal_challenges(child: OwnedChild, end: float) -> list[str]:
-    require(child.admitted is not None, "ssh-child-not-admitted")
     original = child.admitted
+    if original is None:
+        raise ValueError("ssh-child-not-admitted")
     changes = {
         "foreign-pid": ("pid", os.getpid()),
         "stale-start-ticks": ("start_ticks", original["start_ticks"] + 1),
@@ -995,10 +1002,8 @@ def _probe(
                     report["cleanup_exit"] = 1
                     report["cleanup_problem"] = "ssh-preservation-unobserved"
         try:
-            require(
-                inventory is not None and before is not None and termination is not None,
-                "ssh-custody-unobserved",
-            )
+            if inventory is None or before is None or termination is None:
+                raise ValueError("ssh-custody-unobserved")
             report["before"] = before
             report["after"] = independent_observation(inventory, "after", end)
             report["termination"] = termination

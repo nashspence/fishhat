@@ -5,11 +5,11 @@ if [[ "${1:-}" != --github-hosted-only || "${GITHUB_ACTIONS:-}" != true || "${RU
   echo 'Refusing: requires explicit GitHub-hosted Ubuntu 24 VM enrollment.' >&2
   exit 2
 fi
-interruption_enrollment=''; interruption_descriptor=''
+interruption_enrollment=''; interruption_descriptor=''; interruption_mode=''
 if (($# == 1)); then
   :
-elif (($# == 4)) && [[ "$2" == --interrupt-before-manager && "$3" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ && "$4" =~ ^([3-9]|[1-9][0-9]+)$ && -S "/proc/self/fd/$4" ]]; then
-  interruption_enrollment="$3"; interruption_descriptor="$4"
+elif (($# == 4)) && [[ ( "$2" == --interrupt-before-manager || "$2" == --interrupt-after-storage ) && "$3" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ && "$4" =~ ^([3-9]|[1-9][0-9]+)$ && -S "/proc/self/fd/$4" ]]; then
+  interruption_enrollment="$3"; interruption_descriptor="$4"; interruption_mode="$2"
 else
   echo 'Refusing: selected interruption requires fresh enrolled socket custody.' >&2
   exit 2
@@ -65,6 +65,37 @@ interrupt_before_manager() {
   return 73
 }
 
+# The pipes retain one root owner; clients cannot select root command arguments.
+storage_call() {
+  local next_claim storage_status=0
+  PYTHONPATH="$(dirname "$timeout_helper")/.." python3 -m scripts.native_smoke_storage request "$storage_enrollment" "$1" "$stage_deadline" "${2:-0}" "$storage_claim" >&"$storage_write" || return "$?"
+  next_claim="$(PYTHONPATH="$(dirname "$timeout_helper")/.." python3 -m scripts.native_smoke_storage reply "$stage_deadline" "$storage_enrollment" <&"$storage_read")" || storage_status=$?
+  if [[ -n "$next_claim" ]]; then storage_claim="$next_claim"; fi
+  return "$storage_status"
+}
+start_storage_owner() {
+  local source_root storage_pythonpath owner_timeout storage_coproc_read storage_coproc_write
+  source_root="$(dirname "$timeout_helper")/.."
+  storage_pythonpath="$source_root:$("$source_root/.venv/bin/python" -c 'import os,site; print(os.pathsep.join(site.getsitepackages()))')"
+  storage_enrollment="$(python3 -c 'import uuid; print(uuid.uuid4())')"
+  if [[ "$interruption_mode" == --interrupt-after-storage ]]; then storage_enrollment="$interruption_enrollment"; fi
+  storage_claim="$(python3 -c 'import json,sys; print(json.dumps({"enrollment":sys.argv[1]}))' "$storage_enrollment")"
+  # The same five remaining 120-second stages bound the owner's whole lifetime.
+  storage_owner_deadline="$(python3 "$timeout_helper" deadline "$((120 + 120 + 120 + 120 + 120))")"
+  owner_timeout="$(python3 "$timeout_helper" remaining "$storage_owner_deadline")"
+  coproc STORAGE {
+    cd "$source_root"
+    exec sudo -n timeout -k "$kill_timeout" "$owner_timeout" env GITHUB_ACTIONS=true RUNNER_ENVIRONMENT=github-hosted ImageOS=ubuntu24 PYTHONPATH="$storage_pythonpath" FISHHAT_VALIDATION_TIMEOUT_SCALE="${FISHHAT_VALIDATION_TIMEOUT_SCALE:-1}" FISHHAT_VALIDATION_NOMINAL_MINUTES="${FISHHAT_VALIDATION_NOMINAL_MINUTES:-}" FISHHAT_VALIDATION_JOB_MINUTES="${FISHHAT_VALIDATION_JOB_MINUTES:-}" GITHUB_RUN_ID="${GITHUB_RUN_ID:-}" GITHUB_RUN_ATTEMPT="${GITHUB_RUN_ATTEMPT:-}" GITHUB_JOB="${GITHUB_JOB:-}" /usr/bin/python3 -m scripts.native_smoke_storage --github-hosted-only owner "$storage_enrollment" "$$" "$saved_uid" "$saved_gid" "$storage_owner_deadline"
+  }
+  storage_pid="$STORAGE_PID"
+  exec {storage_read}<&"${STORAGE[0]}"
+  exec {storage_write}>&"${STORAGE[1]}"
+  # Drop the coproc originals; only the explicit request endpoints stay open.
+  storage_coproc_read="${STORAGE[0]}"; storage_coproc_write="${STORAGE[1]}"
+  exec {storage_coproc_read}<&-
+  exec {storage_coproc_write}>&-
+}
+
 observe_owned_cleanup() {
   (cd "$(dirname "$timeout_helper")/.." && root_run python3 -m scripts.native_smoke_cleanup observe "$account" "$saved_uid" "$saved_gid" "$work" "$stage_deadline")
 }
@@ -95,13 +126,21 @@ bounded_run() {
 cd /
 export DEBIAN_FRONTEND=noninteractive
 work=''
-account="dtci$(id -u)"; account_created=0; mounted=0; manager_environment=''
+account="dtci$(id -u)"; account_created=0; storage_pid=''; storage_read=''; storage_write=''; storage_claim=''; manager_environment=''
 cleanup() {
   status=$?
   set +e
   finish_stage "$status"
   begin_stage cleanup 120
   cleanup_failed=0
+  if [[ -n "$storage_pid" ]]; then
+    observe_control cleanup-filesystem-unmount storage_call cleanup "$status" || cleanup_failed=1
+    exec {storage_write}>&-
+    exec {storage_read}<&-
+    storage_owner_exit=0
+    wait "$storage_pid" || storage_owner_exit=$?
+    if ((storage_owner_exit != status)); then cleanup_failed=1; fi
+  fi
   if ((account_created)); then
     uid="$saved_uid"
     if snapshot="$(observe_control cleanup-state-initial observe_owned_teardown "$user_service_attempted")" && parse_teardown_state "$snapshot"; then
@@ -174,7 +213,7 @@ cleanup() {
   if [[ -n "$manager_environment" ]]; then
     observe_control cleanup-generator-remove root_run rm -f -- "$manager_environment" || cleanup_failed=1
   fi
-  if ((mounted)); then observe_control cleanup-filesystem-unmount root_run umount "$work/xfs" || cleanup_failed=1; fi
+
   # Keep no private keys/logs as CI artifacts. The VM is discarded after this job.
   if [[ -n "$work" ]]; then
     observe_control cleanup-work-remove root_run rm -rf -- "$work" || cleanup_failed=1
@@ -232,7 +271,7 @@ EOF
 observe_control generator-mode root_run chmod 0755 "$manager_environment"
 root_run install -d -m 0700 -o "$account" -g "$account" "/home/$account/tmp"
 observe_control generator-metadata root_run python3 "$observation_helper" "$manager_environment"
-if [[ -n "$interruption_enrollment" ]]; then
+if [[ "$interruption_mode" == --interrupt-before-manager ]]; then
   observe_control pre-manager-custody interruption_checkpoint
   observe_control pre-manager-injection interrupt_before_manager
 fi
@@ -338,76 +377,17 @@ done
 [[ "$(user_run systemctl --user show ci-probe.service -p ExecMainStatus --value)" == 0 ]]
 [[ "$(user_run /usr/bin/cat "/run/user/$uid/ci-probe.stdout")" == quadlet-ok ]]
 begin_stage xfs-setup 120
-# XFS is a disposable loop device only; never format a physical block device.
-truncate -s 768M "$work/xfs.img"
-root_run mkfs.xfs -q -f "$work/xfs.img"
-mkdir "$work/xfs"; chmod 0755 "$work"
-root_run mount -o loop,prjquota,nosuid,nodev "$work/xfs.img" "$work/xfs"; mounted=1
-root_run mkdir "$work/xfs/account" "$work/xfs/control"
-root_run xfs_quota -x -c "project -s -p $work/xfs/account 1001" "$work/xfs"
-root_run chown "$account:$account" "$work/xfs/account" "$work/xfs/control"
+# One root owner retains the exact image, kernel loop and private mount namespace.
+start_storage_owner
+storage_call setup
+if [[ "$interruption_mode" == --interrupt-after-storage ]]; then
+  PYTHONPATH="$(dirname "$timeout_helper")/.." python3 -m scripts.native_smoke_storage_qualification checkpoint "$interruption_enrollment" "$interruption_descriptor" "$storage_claim" "$stage_deadline"
+  exit 75
+fi
 begin_stage xfs-bytes 120
-# Isolate each quota dimension; outside-project controls must still succeed.
-root_run xfs_quota -x -c 'limit -p bhard=8m ihard=0 1001' "$work/xfs"
-user_run /usr/bin/python3 - "$work/xfs/account" "$work/xfs/control" <<'PY'
-import errno, os, pathlib, sys
-p, control = map(pathlib.Path, sys.argv[1:])
-def grow(path):
-    target = 16 * 1048576
-    with path.open('wb', buffering=0) as stream:
-        while stream.tell() < target:
-            written = stream.write(b'x' * min(1048576, target - stream.tell()))
-            assert written and written > 0, 'write made no progress'
-        os.fsync(stream.fileno())
-    assert path.stat().st_size == target
-
-grow(control / 'before')
-try:
-    grow(p / 'grow')
-except OSError as exc:
-    if exc.errno != errno.ENOSPC:
-        raise
-else:
-    raise AssertionError('byte quota not enforced')
-size = (p / 'grow').stat().st_size
-assert 0 < size <= 8 * 1048576
-# A full backing filesystem must fail this independent post-limit control.
-grow(control / 'after')
-for path in (p / 'grow', control / 'before', control / 'after'):
-    path.unlink()
-print('xfs-byte-quota-ok', size)
-PY
+storage_call bytes
 begin_stage xfs-inodes 120
-root_run xfs_quota -x -c 'limit -p bhard=0 ihard=64 1001' "$work/xfs"
-user_run /usr/bin/python3 - "$work/xfs/account" "$work/xfs/control" <<'PY'
-import errno, pathlib, sys
-p, control = map(pathlib.Path, sys.argv[1:])
-def controls(prefix):
-    paths = [control / f'{prefix}-{i}' for i in range(256)]
-    for path in paths:
-        path.touch(exist_ok=False)
-    return paths
-
-before = controls('before')
-created = []
-try:
-    for i in range(256):
-        path = p / str(i)
-        path.touch(exist_ok=False)
-        created.append(path)
-except OSError as exc:
-    if exc.errno != errno.ENOSPC:
-        raise
-else:
-    raise AssertionError('inode quota not enforced')
-# The project directory also consumes one of its 64 admitted inodes.
-assert 0 < len(created) < 64
-# Global inode or block exhaustion must fail this independent control.
-after = controls('after')
-for path in before + created + after:
-    path.unlink()
-print('xfs-inode-quota-ok', len(created))
-PY
+storage_call inodes
 begin_stage loopback-ssh 120
 # Independent loopback sshd fixture; do not alter the runner's global sshd config.
 bounded_run ssh-keygen -q -t ed25519 -N '' -f "$work/server"
