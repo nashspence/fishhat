@@ -311,7 +311,8 @@ def run(directory: Path, end: float) -> dict[str, Any]:
                 },
                 observed_end,
             )
-            status = process.wait(timeout=Deadline(end).remaining())
+            observation_deadline = Deadline(end)
+            status = process.wait(timeout=observation_deadline.remaining())
             report["original_exit_status"] = status
             output.seek(0)
             original = output.read()

@@ -108,11 +108,12 @@ class Commands:
                 try:
                     handle = os.pidfd_open(process.pid)
                     watched = [handle] + ([] if self.parent is None else [self.parent.handle])
-                    ready = select.select(watched, [], [], Deadline(end).remaining())[0]
+                    timer = Deadline(end)
+                    ready = select.select(watched, [], [], timer.remaining())[0]
                     if self.parent is not None and self.parent.handle in ready:
                         raise ParentLost("storage-parent-exited")
                     require(handle in ready, "storage-command-deadline")
-                    status = process.wait(timeout=Deadline(end).remaining())
+                    status = process.wait(timeout=timer.remaining())
                     if status:
                         raise CommandFailed(status)
                     output.seek(0)
@@ -125,7 +126,8 @@ class Commands:
                             process.kill()
                         else:
                             signal.pidfd_send_signal(handle, signal.SIGKILL)
-                        process.wait(timeout=Deadline.after(5).remaining())
+                        grace = Deadline.after(5)
+                        process.wait(timeout=grace.remaining())
                     if handle is not None:
                         os.close(handle)
 

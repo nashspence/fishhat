@@ -454,7 +454,7 @@ def test_shell_clients_retain_the_same_real_unprivileged_owner(tmp_path):
         str(Deadline.after(15).end),
         enrollment,
     ]
-    code += "coproc STORAGE { exec " + shlex.join(command) + "; }\n"
+    code += "coproc STORAGE { exec " + " ".join(shlex.quote(arg) for arg in command) + "; }\n"
     code += 'storage_pid="$STORAGE_PID"\nexec {storage_read}<&"${STORAGE[0]}"\nexec {storage_write}>&"${STORAGE[1]}"\n'
     code += 'original_read="${STORAGE[0]}"; original_write="${STORAGE[1]}"\nexec {original_read}<&-\nexec {original_write}>&-\n'
     code += 'storage_call setup\nstorage_call bytes\nstorage_call inodes\nstorage_call cleanup 0\nexec {storage_write}>&-\nexec {storage_read}<&-\nwait "$storage_pid"\n'
