@@ -16249,6 +16249,34 @@
       "purpose_sha256": "c519e2dc27583287f4582e1155a77fd3604a4fb205008e42c7b724555fe69e5c"
     },
     {
+      "node": "tests/test_native_smoke_storage.py::test_project_and_limit_commands_resolve_retained_source_descriptor[bytes]",
+      "purpose_sha256": "6214af6dd67ca4e2aad5170c043ce6099e78b4ccd103af32245f16452aeebcb9"
+    },
+    {
+      "node": "tests/test_native_smoke_storage.py::test_project_and_limit_commands_resolve_retained_source_descriptor[inodes]",
+      "purpose_sha256": "6214af6dd67ca4e2aad5170c043ce6099e78b4ccd103af32245f16452aeebcb9"
+    },
+    {
+      "node": "tests/test_native_smoke_storage.py::test_project_and_limit_commands_resolve_retained_source_descriptor[project]",
+      "purpose_sha256": "6214af6dd67ca4e2aad5170c043ce6099e78b4ccd103af32245f16452aeebcb9"
+    },
+    {
+      "node": "tests/test_native_smoke_storage.py::test_project_commands_refuse_lost_custody_before_child[closed]",
+      "purpose_sha256": "6214af6dd67ca4e2aad5170c043ce6099e78b4ccd103af32245f16452aeebcb9"
+    },
+    {
+      "node": "tests/test_native_smoke_storage.py::test_project_commands_refuse_lost_custody_before_child[expired]",
+      "purpose_sha256": "6214af6dd67ca4e2aad5170c043ce6099e78b4ccd103af32245f16452aeebcb9"
+    },
+    {
+      "node": "tests/test_native_smoke_storage.py::test_project_commands_refuse_lost_custody_before_child[foreign]",
+      "purpose_sha256": "6214af6dd67ca4e2aad5170c043ce6099e78b4ccd103af32245f16452aeebcb9"
+    },
+    {
+      "node": "tests/test_native_smoke_storage.py::test_project_commands_refuse_lost_custody_before_child[missing]",
+      "purpose_sha256": "6214af6dd67ca4e2aad5170c043ce6099e78b4ccd103af32245f16452aeebcb9"
+    },
+    {
       "node": "tests/test_native_smoke_storage.py::test_quota_directory_admission_failure_closes_earlier_handle",
       "purpose_sha256": "c519e2dc27583287f4582e1155a77fd3604a4fb205008e42c7b724555fe69e5c"
     },

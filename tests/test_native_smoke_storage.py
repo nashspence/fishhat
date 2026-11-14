@@ -517,6 +517,7 @@ def test_quota_directory_admission_failure_closes_earlier_handle(tmp_path, monke
     (tmp_path / "mount" / "account").mkdir(parents=True)
     (tmp_path / "mount" / "control").mkdir()
     monkeypatch.setattr(owner, "check", lambda _end: None)
+    monkeypatch.setattr(owner, "project_command", lambda _command, _end: None)
     original = os.open
     handles = []
 
@@ -931,5 +932,131 @@ for _diagnostic_check in (
         "scope": "actual unprivileged quota child, failed subprocess and live server diagnostics: fixed categories, numeric errno, original status, output hashes/counts, rejection of malformed or untrusted details and preserved primary/cleanup failures",
         "relationship": "no-product-claim",
         "reason": "Ordinary temporary directories and owned child processes exercise safe failure observability; no native quota, loop, mount, account or namespace operation runs or is qualified.",
+        "claims": [],
+    }
+
+
+QUOTA_DESCRIPTOR_PROGRAM = r"""
+import copy,json,os,sys,uuid
+from pathlib import Path
+sys.path.insert(0,sys.argv[1])
+from scripts.native_smoke_loop import ImageLease,LoopLease,kernel_device
+from scripts.native_smoke_storage import NativeStorage
+from scripts.native_smoke_storage_process import Commands
+from scripts.validation_timeouts import Deadline
+arena,mode=Path(sys.argv[2]),sys.argv[3]
+end=Deadline.after(10).end
+arena.mkdir(mode=0o700)
+image=ImageLease.create(arena,end)
+class Kernel:
+    def allocate(self): self.fd=os.dup(image.descriptor(end));return self.fd
+    def configure(self,descriptor,image_descriptor,enrollment):
+        value=image.check(end)
+        self.row={'backing_device':kernel_device(value['device']),'backing_inode':value['inode'],'enrollment':enrollment}
+    def observe(self,descriptor): return copy.deepcopy(self.row)
+    def close(self,descriptor): os.close(descriptor)
+kernel=Kernel()
+lease=LoopLease.acquire(image,kernel,str(uuid.uuid4()),end)
+source_identity=os.fstat(kernel.fd)
+class ProbeCommands:
+    calls=0
+    writer_calls=0
+    descriptor_counts=[]
+    def run(self,arguments,deadline,**options):
+        descriptors=options.get('descriptors',())
+        if arguments[0]=='/usr/sbin/xfs_quota':
+            self.calls+=1
+            self.descriptor_counts.append(len(descriptors))
+            assert arguments[1:3]==['-x','-c'] and arguments[-1]==str(arena/'mount')
+            result=Commands(None).run([sys.executable,'-c',
+                "import json,os,sys;v=os.stat('/proc/self/fd/'+sys.argv[1]);print(json.dumps({'device':v.st_dev,'inode':v.st_ino}))",
+                str(kernel.fd)],deadline,descriptors=descriptors)
+            actual=json.loads(result)
+            assert actual=={'device':source_identity.st_dev,'inode':source_identity.st_ino}
+            assert tuple(descriptors)==(kernel.fd,)
+            return b''
+        self.writer_calls+=1
+        assert arguments[0]=='/usr/bin/python3' and arguments[1]=='-c'
+        assert len(descriptors)==2 and kernel.fd not in descriptors
+        assert options['uid']==os.getuid() and options['gid']==os.getgid()
+        for descriptor,role in zip(descriptors,('account','control')):
+            assert os.fstat(descriptor).st_ino==(arena/'mount'/role).stat().st_ino
+        return b'{"quota_enforced":true}'
+commands=ProbeCommands()
+owner=NativeStorage(str(uuid.uuid4()),(os.getuid(),os.getgid()),commands)
+owner.arena=arena;owner.loop=lease
+# Mount admission is outside this ordinary-file process handoff regression.
+owner.check=lambda deadline: None
+for role in ('account','control'):(arena/'mount'/role).mkdir(parents=True)
+owner.completed=['setup','bytes'] if mode=='inodes' else ['setup']
+if mode=='foreign':kernel.row['backing_inode']+=1
+elif mode=='closed':lease.close()
+elif mode=='missing':owner.loop=None
+try:
+    if mode in ('bytes','inodes'):
+        owner.quota(mode,end)
+    else:
+        owner.project_command('project -s -p '+str(arena/'mount'/'account')+' 1001',0 if mode=='expired' else end)
+except Exception as error:
+    result={'outcome':'refused','exception':type(error).__name__,'commands':commands.calls,'writers':commands.writer_calls,'descriptor_counts':commands.descriptor_counts}
+else:
+    result={'outcome':'passed','commands':commands.calls,'writers':commands.writer_calls,'descriptor_counts':commands.descriptor_counts}
+finally:
+    if not lease._closed:lease.close()
+    image.close()
+print(json.dumps(result))
+"""
+
+
+def _quota_descriptor_probe(tmp_path, mode):
+    result = subprocess.run(
+        [
+            "/usr/bin/python3",
+            "-c",
+            QUOTA_DESCRIPTOR_PROGRAM,
+            str(ROOT),
+            str(tmp_path / "arena"),
+            mode,
+        ],
+        capture_output=True,
+        text=True,
+        timeout=watchdog(15),
+    )
+    assert result.returncode == 0, result.stderr
+    return json.loads(result.stdout)
+
+
+@pytest.mark.parametrize("mode", ["project", "bytes", "inodes"])
+def test_project_and_limit_commands_resolve_retained_source_descriptor(tmp_path, mode):
+    proof = _quota_descriptor_probe(tmp_path, mode)
+    assert proof == {
+        "outcome": "passed",
+        "commands": 1,
+        "writers": 0 if mode == "project" else 1,
+        "descriptor_counts": [1],
+    }
+
+
+@pytest.mark.parametrize("mode", ["foreign", "closed", "expired", "missing"])
+def test_project_commands_refuse_lost_custody_before_child(tmp_path, mode):
+    proof = _quota_descriptor_probe(tmp_path, mode)
+    assert proof["outcome"] == "refused" and proof["exception"] == "ValueError"
+    assert proof["commands"] == proof["writers"] == 0 and proof["descriptor_counts"] == []
+
+
+for _descriptor_check in (
+    "test_project_and_limit_commands_resolve_retained_source_descriptor",
+    "test_project_commands_refuse_lost_custody_before_child",
+):
+    CHECK_OVERRIDES[_descriptor_check] = {
+        "purpose": "implementation",
+        "authority": [
+            "scripts/native_smoke_storage.py",
+            "scripts/native_smoke_loop.py",
+            "scripts/native_smoke_storage_process.py",
+        ],
+        "scope": "actual unprivileged ordinary-image lease and child process-local descriptor resolution for project initialization and both limit paths; only retained loop descriptor in root commands, only admitted directories in controlled quota writer, and no child effect after foreign/closed/missing custody or deadline refusal",
+        "relationship": "no-product-claim",
+        "reason": "Controlled association observations and ordinary files exercise the exact descriptor handoff through the real command runner; no XFS, loop, mount, namespace or account operation runs or is qualified.",
         "claims": [],
     }

@@ -440,20 +440,26 @@ class NativeStorage:
         self.check(end)
         for role in ("account", "control"):
             (target / role).mkdir()
-        self.commands.run(
-            [
-                "/usr/sbin/xfs_quota",
-                "-x",
-                "-c",
-                "project -s -p " + str(target / "account") + " 1001",
-                str(target),
-            ],
-            end,
-        )
+        self.project_command("project -s -p " + str(target / "account") + " 1001", end)
         for role in ("account", "control"):
             os.chown(target / role, *self.actor, follow_symlinks=False)
         self.completed.append("setup")
         return before
+
+    def project_command(self, command: str, end: float) -> None:
+        if self.loop is None or self.arena is None:
+            raise ValueError("storage-loop-unavailable")
+        target = self.arena / "mount"
+        # XFS discovers this mount through its process-local retained source.
+        self.loop.use(
+            self.loop.claim(),
+            end,
+            lambda device: self.commands.run(
+                ["/usr/sbin/xfs_quota", "-x", "-c", command, str(target)],
+                end,
+                descriptors=(device,),
+            ),
+        )
 
     def quota(self, dimension: str, end: float) -> dict[str, Any]:
         self.check(end)
@@ -469,9 +475,7 @@ class NativeStorage:
             raise ValueError("storage-arena-unavailable")
         target = self.arena / "mount"
         limits = "bhard=8m ihard=0" if dimension == "bytes" else "bhard=0 ihard=64"
-        self.commands.run(
-            ["/usr/sbin/xfs_quota", "-x", "-c", "limit -p " + limits + " 1001", str(target)], end
-        )
+        self.project_command("limit -p " + limits + " 1001", end)
         handles: list[int] = []
         try:
             for role in ("account", "control"):
