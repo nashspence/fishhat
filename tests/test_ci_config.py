@@ -171,6 +171,7 @@ class WorkflowSafety(unittest.TestCase):
         self.assertEqual(artifact["if"], "${{ always() }}")
         early = str(self.workflow["jobs"]["watchdog-regressions"])
         self.assertIn("tests/test_native_smoke_ssh.py", early)
+        self.assertIn("tests/test_native_smoke_loop.py", early)
         self.assertIn("root SSH lifetime/listener custody", job["env"]["CHECK_SCOPE"])
 
     def test_native_script_refuses_ordinary_machine(self):
@@ -226,6 +227,7 @@ class SecurityGates(unittest.TestCase):
         config = tomllib.loads((ROOT / "pyproject.toml").read_text())
         self.assertTrue(config["tool"]["mypy"]["strict"])
         self.assertIn("packages", config["tool"]["mypy"]["files"])
+        self.assertIn("scripts/native_smoke_loop.py", config["tool"]["mypy"]["files"])
         workflow = yaml.load(
             (ROOT / ".github/workflows/ci.yml").read_text(), Loader=yaml.BaseLoader
         )
