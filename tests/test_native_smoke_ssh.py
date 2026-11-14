@@ -408,8 +408,13 @@ def test_configuration_cannot_introduce_an_unowned_principal_or_directive(actor)
 
 def test_private_input_reads_reject_symlinks_hardlinks_and_changed_permissions(tmp_path):
     value = tmp_path / "key"
-    value.write_bytes(b"controlled key bytes")
-    value.chmod(0o600)
+    previous_umask = os.umask(0)
+    try:
+        ssh.write(value, b"controlled key bytes", uid=os.geteuid(), gid=os.getegid())
+    finally:
+        os.umask(previous_umask)
+    assert value.stat().st_mode & 0o777 == 0o600
+    assert value.stat().st_uid == os.geteuid() and value.stat().st_gid == os.getegid()
     assert ssh.file_bytes(value, end(), uid=os.geteuid(), mode=0o600) == b"controlled key bytes"
     link = tmp_path / "link"
     link.symlink_to(value)

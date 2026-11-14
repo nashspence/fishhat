@@ -713,12 +713,12 @@ def checked(arguments: list[str], end: float) -> bytes:
     return result.stdout
 
 
-def write(path: Path, raw: bytes, *, uid: int = 0, gid: int = 0, mode: int = 0o600) -> None:
-    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, mode)
+def write(path: Path, raw: bytes, *, uid: int = 0, gid: int = 0) -> None:
+    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
     with os.fdopen(descriptor, "wb") as stream:
         stream.write(raw)
         stream.flush()
-        os.fchmod(stream.fileno(), mode)
+        os.fchmod(stream.fileno(), 0o600)
         os.fchown(stream.fileno(), uid, gid)
 
 
@@ -843,7 +843,6 @@ def _probe(
                         write(
                             arena / (role + ".pub"),
                             file_bytes(source / (role + ".pub"), end, uid=runner),
-                            mode=0o644,
                         )
                 server_public = public_key_fields(
                     checked(["/usr/bin/ssh-keygen", "-y", "-f", str(arena / "server")], end)
