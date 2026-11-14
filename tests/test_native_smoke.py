@@ -2699,3 +2699,58 @@ def test_cleanup_cannot_signal_an_unbound_numeric_ssh_pid(tmp_path, fixture_tool
     assert foreign.read_bytes() == b"preserve unrelated state"
     trace = (tmp_path / "trace").read_text() if (tmp_path / "trace").exists() else ""
     assert "unbound-signal:" not in trace
+
+
+@pytest.mark.parametrize("after_linger", ["absent", "present", "unavailable", "malformed"])
+def test_cleanup_refreshes_identity_after_linger_change(tmp_path, fixture_tools, after_linger):
+    python = fixture_tools / "python3"
+    after = (
+        "owned absent absent absent absent absent absent"
+        if after_linger == "absent"
+        else "owned present present present absent absent absent"
+    )
+    if after_linger == "malformed":
+        after = "owned absent"
+    branch = (
+        'if [[ "$1" == -m && "$2" == scripts.native_smoke_cleanup && "$3" == teardown-state ]]; then\n'
+        '  echo state-observed >> "$NATIVE_TRACE"\n'
+        '  if [[ ! -f "$NATIVE_FIXTURE/account-present" ]]; then echo "absent absent absent absent absent absent absent"; exit 0; fi\n'
+        '  if [[ -f "$NATIVE_FIXTURE/linger-disabled" ]]; then\n'
+        + (
+            "    exit 41\n"
+            if after_linger == "unavailable"
+            else '    if [[ -f "$NATIVE_FIXTURE/managers-stopped" ]]; then echo "owned absent absent absent absent absent absent"; else printf "%s\\n" '
+            + shlex.quote(after)
+            + "; fi\n    exit 0\n"
+        )
+        + '  fi\n  echo "owned present present present present absent absent"; exit 0\nfi\n'
+    )
+    python.write_text(python.read_text().replace("#!/bin/bash\n", "#!/bin/bash\n" + branch, 1))
+    login = fixture_tools / "loginctl"
+    behavior = (
+        'if [[ "$1" == disable-linger ]]; then : > "$NATIVE_FIXTURE/linger-disabled"; fi\n'
+        + (
+            'if [[ "$1" == terminate-user ]]; then echo stale-login-action >> "$NATIVE_TRACE"; exit 37; fi\n'
+            if after_linger != "present"
+            else ""
+        )
+    )
+    login.write_text(login.read_text().replace("#!/bin/bash\n", "#!/bin/bash\n" + behavior, 1))
+    unrelated = tmp_path / "unrelated"
+    unrelated.write_bytes(b"preserved")
+    result = run_smoke(tmp_path, fixture_tools, "generator-denied", "0.1")
+    trace = (tmp_path / "trace").read_text().splitlines()
+    assert (
+        result.returncode == 1 and "control=generator-execute status=failed exit=1" in result.stderr
+    )
+    assert "stale-login-action" not in trace
+    assert unrelated.read_bytes() == b"preserved"
+    if after_linger in {"absent", "present"}:
+        assert "stage=cleanup status=passed exit=0" in result.stdout
+        assert not (tmp_path / "account-present").exists()
+        assert ("loginctl-terminate-user" in trace) is (after_linger == "present")
+        assert ("systemctl-stop" in trace) is (after_linger == "present")
+    else:
+        assert "stage=cleanup status=failed exit=1" in result.stdout
+        assert (tmp_path / "account-present").exists()
+        assert "loginctl-terminate-user" not in trace and "systemctl-stop" not in trace
