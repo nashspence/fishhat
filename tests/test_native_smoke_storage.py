@@ -534,3 +534,71 @@ def test_quota_directory_admission_failure_closes_earlier_handle(tmp_path, monke
     with pytest.raises(OSError) as error:
         os.fstat(handles[0])
     assert error.value.errno == errno.EBADF
+
+
+CHECK_OVERRIDES = {
+    "test_system_interpreter_receives_locked_workspace_and_dependencies": {
+        "purpose": "implementation",
+        "authority": ["scripts/ci/native_smoke.sh", "pyproject.toml", "uv.lock"],
+        "scope": "actual unprivileged system-interpreter import of the resolved locked workspace and dependency closure, preserving its standard library and excluding foreign search paths",
+        "relationship": "no-product-claim",
+        "reason": "Real Bash and Python subprocesses exercise the fixture runtime handoff; imports alone do not qualify native operations.",
+        "claims": [],
+    }
+}
+
+
+@pytest.mark.parametrize("foreign_path", [False, True], ids=["ordinary", "foreign-search-path"])
+def test_system_interpreter_receives_locked_workspace_and_dependencies(tmp_path, foreign_path):
+    from pathlib import Path
+
+    foreign = tmp_path / "foreign"
+    foreign.mkdir()
+    (foreign / "fishhat_contracts.py").write_text("raise RuntimeError('foreign-import-refused')\n")
+    environment = {"PATH": os.defpath, "PYTHONNOUSERSITE": "1"}
+    if foreign_path:
+        environment["PYTHONPATH"] = str(foreign)
+    source = (ROOT / "scripts/ci/native_smoke.sh").read_text()
+    (assignment,) = [
+        line.strip() for line in source.splitlines() if line.startswith("  storage_pythonpath=")
+    ]
+    code = (
+        'set -euo pipefail\nsource_root="$1"\n'
+        + assignment
+        + '\nprintf "%s" "$storage_pythonpath"\n'
+    )
+    handoff = subprocess.run(
+        ["bash", "-c", code, "runtime-path", str(ROOT)],
+        cwd=tmp_path,
+        env=environment,
+        capture_output=True,
+        text=True,
+        timeout=watchdog(10),
+    )
+    assert handoff.returncode == 0, handoff.stderr
+    paths = handoff.stdout.split(os.pathsep)
+    assert paths and all(
+        path and Path(path).resolve().is_relative_to(ROOT.resolve()) for path in paths
+    )
+    clean_environment = {"PATH": os.defpath, "PYTHONNOUSERSITE": "1"}
+    baseline = subprocess.run(
+        ["/usr/bin/python3", "-c", "import json; print(json.__file__)"],
+        cwd=tmp_path,
+        env=clean_environment,
+        capture_output=True,
+        text=True,
+        timeout=watchdog(5),
+    )
+    assert baseline.returncode == 0
+    probe = "import json,os,signal; from fishhat_contracts import canonical; from scripts.check_evidence import execution_origin; from scripts.validation import source_identity; from scripts.run_stats import RunStats; assert callable(canonical) and callable(source_identity) and callable(execution_origin); assert hasattr(os,'pidfd_open') and hasattr(signal,'pidfd_send_signal'); print(json.dumps({'standard_library':json.__file__, 'stats_valid':RunStats().finish()['format']=='fishhat-run-stats/v1'}))"
+    result = subprocess.run(
+        ["/usr/bin/python3", "-c", probe],
+        cwd=tmp_path,
+        env={**clean_environment, "PYTHONPATH": handoff.stdout},
+        capture_output=True,
+        text=True,
+        timeout=watchdog(10),
+    )
+    assert result.returncode == 0, result.stderr
+    observed = json.loads(result.stdout)
+    assert observed == {"standard_library": baseline.stdout.strip(), "stats_valid": True}

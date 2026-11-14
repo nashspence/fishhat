@@ -76,7 +76,8 @@ storage_call() {
 start_storage_owner() {
   local source_root storage_pythonpath owner_timeout storage_coproc_read storage_coproc_write
   source_root="$(dirname "$timeout_helper")/.."
-  storage_pythonpath="$source_root:$("$source_root/.venv/bin/python" -c 'import os,site; print(os.pathsep.join(site.getsitepackages()))')"
+  # Resolve editable workspace paths without replacing the system standard library.
+  storage_pythonpath="$source_root:$("$source_root/.venv/bin/python" -c 'import os,sys; from pathlib import Path; root=Path(sys.argv[1]).resolve(); base=Path(sys.base_prefix).resolve(); paths=[p for p in sys.path if p and Path(p).resolve().is_relative_to(root) and not Path(p).resolve().is_relative_to(base)]; assert paths; print(os.pathsep.join(paths))' "$source_root")"
   storage_enrollment="$(python3 -c 'import uuid; print(uuid.uuid4())')"
   if [[ "$interruption_mode" == --interrupt-after-storage ]]; then storage_enrollment="$interruption_enrollment"; fi
   storage_claim="$(python3 -c 'import json,sys; print(json.dumps({"enrollment":sys.argv[1]}))' "$storage_enrollment")"
@@ -164,15 +165,24 @@ cleanup() {
       if [[ "$identity_state" == owned ]]; then
         if [[ "$linger_state" == present ]]; then
           observe_control cleanup-disable-linger root_run loginctl disable-linger "$account" || cleanup_failed=1
+          # Disabling linger may finish the registered user and both managers.
+          if snapshot="$(observe_control cleanup-state-after-linger observe_owned_teardown 0)" && parse_teardown_state "$snapshot"; then
+            :
+          else
+            cleanup_failed=1
+            identity_state=unavailable
+          fi
         fi
-        if [[ "$login_state" == present ]]; then
-          observe_control cleanup-terminate-user root_run loginctl terminate-user "$account" || cleanup_failed=1
-        fi
-        if [[ "$manager_state" == present ]]; then
-          observe_control cleanup-manager-stop root_run systemctl stop "user@$uid.service" || cleanup_failed=1
-        fi
-        if [[ "$runtime_state" == present ]]; then
-          observe_control cleanup-runtime-manager-stop root_run systemctl stop "user-runtime-dir@$uid.service" || cleanup_failed=1
+        if [[ "$identity_state" == owned ]]; then
+          if [[ "$login_state" == present ]]; then
+            observe_control cleanup-terminate-user root_run loginctl terminate-user "$account" || cleanup_failed=1
+          fi
+          if [[ "$manager_state" == present ]]; then
+            observe_control cleanup-manager-stop root_run systemctl stop "user@$uid.service" || cleanup_failed=1
+          fi
+          if [[ "$runtime_state" == present ]]; then
+            observe_control cleanup-runtime-manager-stop root_run systemctl stop "user-runtime-dir@$uid.service" || cleanup_failed=1
+          fi
         fi
       fi
     else

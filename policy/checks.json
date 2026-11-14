@@ -14593,6 +14593,22 @@
       "purpose_sha256": "56cc9ac6f293e965f08eeb5c5bec1e90fd0cd5cceeca44de6458260d0e807c35"
     },
     {
+      "node": "tests/test_native_smoke.py::test_cleanup_refreshes_identity_after_linger_change[absent]",
+      "purpose_sha256": "56cc9ac6f293e965f08eeb5c5bec1e90fd0cd5cceeca44de6458260d0e807c35"
+    },
+    {
+      "node": "tests/test_native_smoke.py::test_cleanup_refreshes_identity_after_linger_change[malformed]",
+      "purpose_sha256": "56cc9ac6f293e965f08eeb5c5bec1e90fd0cd5cceeca44de6458260d0e807c35"
+    },
+    {
+      "node": "tests/test_native_smoke.py::test_cleanup_refreshes_identity_after_linger_change[present]",
+      "purpose_sha256": "56cc9ac6f293e965f08eeb5c5bec1e90fd0cd5cceeca44de6458260d0e807c35"
+    },
+    {
+      "node": "tests/test_native_smoke.py::test_cleanup_refreshes_identity_after_linger_change[unavailable]",
+      "purpose_sha256": "56cc9ac6f293e965f08eeb5c5bec1e90fd0cd5cceeca44de6458260d0e807c35"
+    },
+    {
       "node": "tests/test_native_smoke.py::test_cleanup_requires_independent_observation_without_masking_primary_failure[absent]",
       "purpose_sha256": "56cc9ac6f293e965f08eeb5c5bec1e90fd0cd5cceeca44de6458260d0e807c35"
     },
@@ -16307,6 +16323,14 @@
     {
       "node": "tests/test_native_smoke_storage.py::test_shell_clients_retain_the_same_real_unprivileged_owner",
       "purpose_sha256": "c519e2dc27583287f4582e1155a77fd3604a4fb205008e42c7b724555fe69e5c"
+    },
+    {
+      "node": "tests/test_native_smoke_storage.py::test_system_interpreter_receives_locked_workspace_and_dependencies[foreign-search-path]",
+      "purpose_sha256": "473cba3cc5fea605907ac825f301550560e930f15e59c4e68de6f057b7e4470c"
+    },
+    {
+      "node": "tests/test_native_smoke_storage.py::test_system_interpreter_receives_locked_workspace_and_dependencies[ordinary]",
+      "purpose_sha256": "473cba3cc5fea605907ac825f301550560e930f15e59c4e68de6f057b7e4470c"
     },
     {
       "node": "tests/test_observation_delivery.py::test_error_reference_requires_the_exact_non_null_problem_owner_and_resource[kind]",
