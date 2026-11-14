@@ -455,7 +455,7 @@ jobs:
       FISHHAT_VALIDATION_NOMINAL_MINUTES: '25'
       FISHHAT_VALIDATION_TIMEOUT_SCALE: ${{ needs.watchdogs.outputs.scale }}
       CHECK_PURPOSES: implementation,validation-tooling
-      CHECK_SCOPE: disposable-runner prerequisites and independently witnessed pre-manager interruption cleanup only; not deployment qualification
+      CHECK_SCOPE: disposable-runner prerequisites, root SSH lifetime/listener custody and independently witnessed pre-manager interruption and SSH setup interruption cleanup only; not deployment qualification
       CHECK_AUTHORITY: release.toml
     needs: watchdogs
     name: Native Linux prerequisite smoke (not deployment qualification)
@@ -477,6 +477,14 @@ jobs:
         with:
           name: native-smoke-interruption
           path: artifacts/native-smoke-interruption.json
+          retention-days: 7
+          if-no-files-found: error
+      - run: uv run --locked --all-packages --group dev --python 3.12 python -m scripts.native_smoke_ssh_qualification --github-hosted-only --output artifacts/native-smoke-ssh-interruption.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: ${{ always() }}
+        with:
+          name: native-smoke-ssh-interruption
+          path: artifacts/native-smoke-ssh-interruption.json
           retention-days: 7
           if-no-files-found: error
       - name: Record the qualification boundary
@@ -580,7 +588,7 @@ jobs:
         with:
           version: '0.11.24'
       - run: uv sync --locked --all-packages --group dev --python 3.12
-      - run: uv run --locked --all-packages --group dev python -m scripts.validation run --target unit -- python -m pytest -q tests/test_ci_config.py tests/test_validation_timeouts.py tests/test_native_smoke.py tests/test_native_linux_enrollment.py tests/test_native_linux_controller.py tests/test_native_linux_images.py tests/test_native_linux_guest.py tests/test_native_linux_storage.py tests/test_native_linux_processes.py tests/test_native_linux_transport.py tests/test_native_linux_exhaustion.py tests/test_native_linux_reboot.py tests/test_native_linux_snapshots.py tests/test_native_linux_successor.py tests/test_native_linux_successor_timeline.py tests/test_native_linux_roundtrip.py tests/test_native_linux_restart.py tests/test_native_linux_restore.py tests/test_native_linux_restore_source.py tests/test_native_linux_restored_boot.py tests/test_journal_concurrency.py tests/test_adapter_process.py -n 2 --dist=worksteal --max-worker-restart=0 --durations=30
+      - run: uv run --locked --all-packages --group dev python -m scripts.validation run --target unit -- python -m pytest -q tests/test_ci_config.py tests/test_validation_timeouts.py tests/test_native_smoke.py tests/test_native_smoke_ssh.py tests/test_native_linux_enrollment.py tests/test_native_linux_controller.py tests/test_native_linux_images.py tests/test_native_linux_guest.py tests/test_native_linux_storage.py tests/test_native_linux_processes.py tests/test_native_linux_transport.py tests/test_native_linux_exhaustion.py tests/test_native_linux_reboot.py tests/test_native_linux_snapshots.py tests/test_native_linux_successor.py tests/test_native_linux_successor_timeline.py tests/test_native_linux_roundtrip.py tests/test_native_linux_restart.py tests/test_native_linux_restore.py tests/test_native_linux_restore_source.py tests/test_native_linux_restored_boot.py tests/test_journal_concurrency.py tests/test_adapter_process.py -n 2 --dist=worksteal --max-worker-restart=0 --durations=30
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: ${{ always() }}
         with:
