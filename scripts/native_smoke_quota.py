@@ -66,7 +66,25 @@ def inode_quota(project: Path, control: Path) -> dict[str, int | bool]:
 def main() -> int:
     assert len(sys.argv) == 4 and sys.argv[1] in {"bytes", "inodes"}
     project, control = (Path("/proc/self/fd") / str(int(value)) for value in sys.argv[2:])
-    result = (byte_quota if sys.argv[1] == "bytes" else inode_quota)(project, control)
+    try:
+        result = (byte_quota if sys.argv[1] == "bytes" else inode_quota)(project, control)
+    except (OSError, AssertionError) as error:
+        reasons = {
+            "byte quota not enforced": "byte-quota-not-enforced",
+            "inode quota not enforced": "inode-quota-not-enforced",
+            "write made no progress": "write-no-progress",
+        }
+        number = error.errno if isinstance(error, OSError) else None
+        diagnostic = {
+            "format": "fishhat-smoke-quota-failure/v1",
+            "dimension": sys.argv[1],
+            "reason": "os-error"
+            if isinstance(error, OSError)
+            else reasons.get(str(error), "quota-assertion-failed"),
+            "errno": number if type(number) is int and number > 0 else None,
+        }
+        print(json.dumps(diagnostic, sort_keys=True), file=sys.stderr)
+        return 1
     print(json.dumps(result, sort_keys=True))
     return 0
 
