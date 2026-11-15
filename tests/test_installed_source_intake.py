@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import subprocess
 import sys
 from pathlib import Path
 
@@ -62,6 +63,10 @@ raise SystemExit(code)
 """
 
 
+def run_command(command: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(command, cwd=cwd, capture_output=True, text=True, timeout=watchdog(15))
+
+
 @pytest.mark.parametrize("tool", ["domain-ops", "host-ops", "app-ops"])
 @pytest.mark.parametrize(
     "mode,case",
@@ -79,14 +84,14 @@ def test_wrong_source_command_cannot_satisfy_installed_witness(tmp_path, tool, m
     fake.write_text(FAKE)
     with pytest.raises(AssertionError, match="installed source witness failed: " + case):
         check_source_validation(
-            [sys.executable, "-I", str(fake), tool, mode], tool, FIXTURES, watchdog(15)
+            [sys.executable, "-I", str(fake), tool, mode], tool, FIXTURES, run_command
         )
 
 
 @pytest.mark.parametrize("tool", ["domain-ops", "host-ops", "app-ops"])
 def test_current_read_only_command_satisfies_complete_witness(tool):
     executable = Path(sys.executable).parent / (tool + ".exe" if sys.platform == "win32" else tool)
-    result = check_source_validation([str(executable)], tool, FIXTURES, watchdog(15))
+    result = check_source_validation([str(executable)], tool, FIXTURES, run_command)
     assert result == {
         "scope": "installed-local-contract-validation-only",
         "tool": tool,

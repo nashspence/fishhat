@@ -13,11 +13,15 @@ import subprocess
 import sys
 import tempfile
 import threading
+from collections.abc import Callable
 from pathlib import Path
 
 
 def check_source_validation(
-    command: list[str], tool: str, fixtures: Path, watchdog_seconds: float
+    command: list[str],
+    tool: str,
+    fixtures: Path,
+    run: Callable[[list[str], Path], subprocess.CompletedProcess[str]],
 ) -> dict[str, object]:
     """Witness the installed read-only boundary, without asserting owner admission."""
     from fishhat_contracts import strict_yaml
@@ -99,9 +103,7 @@ def check_source_validation(
                 cat_path.write_bytes(cat_bytes)
                 expected_inputs[cat_path] = cat_bytes
                 args.extend(["--catalogue", str(cat_path)])
-            result = subprocess.run(
-                args, cwd=root, capture_output=True, text=True, timeout=watchdog_seconds
-            )
+            result = run(args, root)
             expected = (
                 {
                     "tool": tool,
@@ -199,7 +201,12 @@ def main() -> None:
             timeout=args.watchdog_seconds,
         )
         source_validation = check_source_validation(
-            [str(executable)], tool, args.fixtures, args.watchdog_seconds
+            [str(executable)],
+            tool,
+            args.fixtures,
+            lambda command, cwd: subprocess.run(
+                command, cwd=cwd, capture_output=True, text=True, timeout=args.watchdog_seconds
+            ),
         )
         rejected = subprocess.run(
             [str(executable), "apply"], capture_output=True, timeout=args.watchdog_seconds
