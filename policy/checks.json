@@ -15189,6 +15189,10 @@
       "purpose_sha256": "56cc9ac6f293e965f08eeb5c5bec1e90fd0cd5cceeca44de6458260d0e807c35"
     },
     {
+      "node": "tests/test_native_smoke.py::test_teardown_each_actual_failure_stays_failed_after_later_absence[busy-at-expiry]",
+      "purpose_sha256": "56cc9ac6f293e965f08eeb5c5bec1e90fd0cd5cceeca44de6458260d0e807c35"
+    },
+    {
       "node": "tests/test_native_smoke.py::test_teardown_each_actual_failure_stays_failed_after_later_absence[busy-once]",
       "purpose_sha256": "56cc9ac6f293e965f08eeb5c5bec1e90fd0cd5cceeca44de6458260d0e807c35"
     },

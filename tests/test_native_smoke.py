@@ -1738,6 +1738,7 @@ def test_teardown_state_fails_when_required_facility_observation_is_unavailable(
         "runtime-stop",
         "account-remove",
         "busy-once",
+        "busy-at-expiry",
     ],
 )
 def test_teardown_each_actual_failure_stays_failed_after_later_absence(
@@ -1769,7 +1770,7 @@ def test_teardown_each_actual_failure_stays_failed_after_later_absence(
     systemctl.write_text(
         systemctl.read_text().replace("#!/bin/bash\n", "#!/bin/bash\n" + branch, 1)
     )
-    if failure in {"account-remove", "busy-once"}:
+    if failure in {"account-remove", "busy-once", "busy-at-expiry"}:
         userdel = fixture_tools / "userdel"
         if failure == "account-remove":
             branch = "echo private-fixture-value >&2\nexit 37\n"
@@ -1778,6 +1779,25 @@ def test_teardown_each_actual_failure_stays_failed_after_later_absence(
         userdel.write_text(
             userdel.read_text().replace("#!/bin/bash\n", "#!/bin/bash\n" + branch, 1)
         )
+    if failure in {"busy-once", "busy-at-expiry"}:
+        # These cases prove sticky failure across two explicit settlement outcomes.
+        # Keep real stage deadlines and the outer process watchdog unchanged.
+        opportunities = 2 if failure == "busy-once" else 1
+        python = fixture_tools / "python3"
+        branch = f"""if [[ "$1" == */validation_timeouts.py && "$2" == deadline && "$3" == 10 ]]; then
+  echo fixture-settlement-deadline
+  exit 0
+fi
+if [[ "$1" == */validation_timeouts.py && "$2" == pending && "$3" == fixture-settlement-deadline ]]; then
+  n=0
+  [[ -f "$NATIVE_FIXTURE/settlement-ticks" ]] && n=$(cat "$NATIVE_FIXTURE/settlement-ticks")
+  n=$((n + 1)); echo "$n" > "$NATIVE_FIXTURE/settlement-ticks"
+  echo settlement-tick >> "$NATIVE_TRACE"
+  ((n <= {opportunities}))
+  exit "$?"
+fi
+"""
+        python.write_text(python.read_text().replace("#!/bin/bash\n", "#!/bin/bash\n" + branch, 1))
     canary = tmp_path / "unrelated"
     canary.write_text("keep")
     result = run_smoke(tmp_path, fixture_tools, "generator-denied", "0.1")
@@ -1787,7 +1807,9 @@ def test_teardown_each_actual_failure_stays_failed_after_later_absence(
     assert "control=cleanup-observation status=passed exit=0" in result.stderr
     assert "private-fixture-value" not in result.stdout + result.stderr
     assert not (tmp_path / "generator").exists() and not (tmp_path / "work").exists()
-    assert (tmp_path / "account-present").exists() is (failure == "account-remove")
+    assert (tmp_path / "account-present").exists() is (
+        failure in {"account-remove", "busy-at-expiry"}
+    )
     assert canary.read_text() == "keep"
     control = {
         "disable-linger": "cleanup-disable-linger",
@@ -1796,13 +1818,19 @@ def test_teardown_each_actual_failure_stays_failed_after_later_absence(
         "runtime-stop": "cleanup-runtime-manager-stop",
         "account-remove": "cleanup-account-remove",
         "busy-once": "cleanup-account-remove",
+        "busy-at-expiry": "cleanup-account-remove",
     }[failure]
     assert (
-        f"control={control} status=failed exit={8 if failure == 'busy-once' else 37}"
+        f"control={control} status=failed exit={8 if failure in {'busy-once', 'busy-at-expiry'} else 37}"
         in result.stderr
     )
     if failure == "busy-once":
         assert "control=cleanup-account-remove status=passed exit=0" in result.stderr
+
+    if failure in {"busy-once", "busy-at-expiry"}:
+        trace = (tmp_path / "trace").read_text().splitlines()
+        assert trace.count("settlement-tick") == 2 and trace.count("busy-refusal") == 1
+        assert trace.count("userdel") == (1 if failure == "busy-once" else 0)
 
 
 def test_teardown_observes_asynchronous_process_settlement_before_account_deletion(
