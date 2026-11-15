@@ -981,3 +981,98 @@ def test_origin_cleanup_observation_uses_birth_and_kernel_handle_without_signali
     h.events.clear()
     assert h.ns["origin_gone"](saved) is (state != "alive")
     assert not h.events
+
+
+@pytest.mark.parametrize("parent", [1, 951])
+def test_origin_cleanup_accepts_reparented_same_birth_without_signaling(parent):
+    h = Harness()
+    h.start()
+    saved = h.ns["manifest"]()
+    observed = copy.deepcopy(saved["origin"])
+    observed["parent_pid"] = parent
+    h.ns["process"] = lambda _pid: copy.deepcopy(observed)
+    h.events.clear()
+    assert h.ns["origin_gone"](saved) is False
+    assert not h.events
+
+
+@pytest.mark.parametrize(
+    ("field", "replacement"),
+    [
+        ("uids", [1] * 4),
+        ("gids", [1] * 4),
+        ("groups", [1]),
+        ("executable", {"path": "/foreign", "sha256": "b" * 64}),
+        ("arguments_sha256", "b" * 64),
+        ("cgroups", ["0::/foreign"]),
+        ("parent_pid", 0),
+        ("parent_pid", -1),
+        ("parent_pid", True),
+    ],
+    ids=[
+        "actor-uid",
+        "actor-gid",
+        "groups",
+        "executable",
+        "arguments",
+        "cgroup",
+        "zero-parent",
+        "negative-parent",
+        "boolean-parent",
+    ],
+)
+def test_origin_cleanup_refuses_changed_live_custody_without_signaling(field, replacement):
+    h = Harness()
+    h.start()
+    saved = h.ns["manifest"]()
+    observed = copy.deepcopy(saved["origin"])
+    observed[field] = replacement
+    h.ns["process"] = lambda _pid: copy.deepcopy(observed)
+    h.events.clear()
+    with pytest.raises(ValueError, match="guest-transport-refused"):
+        h.ns["origin_gone"](saved)
+    assert not h.events
+
+
+def _completed_transport_with_retiring_cgroup():
+    h = Harness()
+    before = h.start()
+    identity = transport.validate_observation(before, h.c)
+    h.ns["control"]("advance", identity)
+    completed = h.ns["control"]("finish", None)
+    assert completed["outcome"] == "completed-successfully"
+    assert transport.validate_observation(completed, h.c) == identity
+    path = "/sys/fs/cgroup/system.slice/" + h.unit
+    h.directory(path, 22, 99, 0, 0o755)
+    return h, identity, path
+
+
+def test_cleanup_waits_for_owned_cgroup_retirement_without_repeating_stop():
+    h, identity, path = _completed_transport_with_retiring_cgroup()
+    start, end = h.clock, h.ns["end"]
+    original_sleep = h.ns["time"].sleep
+    observations = []
+
+    def settle(seconds):
+        original_sleep(seconds)
+        observations.append(seconds)
+        if h.clock >= start + 0.1:
+            h.meta.pop(path, None)
+
+    h.ns["time"].sleep = settle
+    cleanup = h.ns["control"]("cleanup", identity)
+    assert cleanup == h.ns["control"]("cleanup", identity)
+    assert cleanup["unit_removed"] and cleanup["origin_exited"]
+    assert cleanup["guest_canaries_preserved"]
+    assert path not in h.meta and len(observations) >= 2 and start < h.clock < end
+    assert h.ns["end"] == end and h.events.count("stop") == 1
+
+
+def test_cleanup_deadline_refuses_unsettled_cgroup_without_repeating_stop():
+    h, identity, path = _completed_transport_with_retiring_cgroup()
+    end = h.ns["end"]
+    with pytest.raises(ValueError, match="guest-transport-refused"):
+        h.ns["control"]("cleanup", identity)
+    assert h.clock >= end and h.ns["end"] == end
+    assert path in h.meta and h.events.count("stop") == 1
+    assert h.origin_exited and not h.exists
