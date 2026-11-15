@@ -66,8 +66,11 @@ def check_source_validation(
     shell["hooks"]["health"]["shell"] = "SYNTHETIC_PRIVATE_SENTINEL"
     executor = copy.deepcopy(app)
     executor["hooks"]["health"]["component"] = "unbound-component"
-    secret_value = copy.deepcopy(values["app-catalogue"])
-    next(iter(secret_value["entries"].values()))["value"] = "SYNTHETIC_PRIVATE_SENTINEL"
+    # Public synthetic payload exercises rejection of payload-bearing catalogue entries.
+    catalogue_with_forbidden_field = copy.deepcopy(values["app-catalogue"])
+    next(iter(catalogue_with_forbidden_field["entries"].values()))["value"] = (
+        "SYNTHETIC_PRIVATE_SENTINEL"
+    )
     cases.extend(
         [
             ("host-catalogue-entry", json.dumps(host), "missing-host-entry", False, []),
@@ -78,7 +81,7 @@ def check_source_validation(
             ("escaping-target", json.dumps(escaped), "host-catalogue", False, []),
             ("unsupported-hook-grammar", json.dumps(shell), "app-catalogue", False, []),
             ("hook-executor", json.dumps(executor), "app-catalogue", False, []),
-            ("secret-value", json.dumps(secret_value), None, False, []),
+            ("secret-value", json.dumps(catalogue_with_forbidden_field), None, False, []),
             ("explicit-capacity", json.dumps(domain), None, False, ["--capacity-bytes", "128"]),
         ]
     )
