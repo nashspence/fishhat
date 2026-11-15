@@ -31,6 +31,7 @@ from scripts.native_linux_exhaustion import (
 )
 from scripts.native_linux_guest import Guest, GuestBootError, guest_session, provision_tools
 from scripts.native_linux_images import GuestInputError, GuestInputs, guest_inputs
+from scripts.native_linux_install_inputs import qualify_inputs
 from scripts.native_linux_processes import qualify_process_kill
 from scripts.native_linux_reboot import (
     REBOOT,
@@ -803,6 +804,10 @@ def boot_guest(
                     guest.ready(guest.verify_process)
                 with stage("guest-refusals"):
                     guest.refusals()
+                if not storage_failure and not reboot_failure:
+                    report["protected_inputs"] = {}
+                    with stage("guest-protected-input-custody"):
+                        qualify_inputs(guest, report["protected_inputs"])
                 if not storage_failure:
                     report["reboot"] = {}
                     with stage("guest-reboot"):
