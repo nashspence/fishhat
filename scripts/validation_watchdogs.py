@@ -92,6 +92,11 @@ class PythonGuard:
                 and function == "_receive"
                 and ast.unparse(value) == "args.watchdog_seconds"
             )
+            or (
+                self.name == "scripts/native_owner_python_download.py"
+                and function == "main"
+                and ast.unparse(value) == "args.watchdog_seconds"
+            )
         )
 
     def error(self, node: ast.AST, message: str) -> None:

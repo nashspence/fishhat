@@ -292,9 +292,18 @@ def _regular_source(parent: int, name: str) -> tuple[int, os.stat_result]:
             os.close(pinned)
 
 
-def _copy_regular(source: int, name: str, destination: Path, *, parent: int | None = None) -> None:
+def _copy_regular(
+    source: int,
+    name: str,
+    destination: Path,
+    *,
+    parent: int | None = None,
+    expected_size: int | None = None,
+) -> None:
     descriptor, before = _regular_source(source, name)
     try:
+        if expected_size is not None and before.st_size != expected_size:
+            raise ValueError("runtime archive size mismatch")
         output = os.open(
             destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=parent
         )
@@ -456,6 +465,110 @@ def _stage_verified(bundle: Path, destination: Path, expected: str) -> Path:
     finally:
         if staged is not None:
             os.close(staged)
+        if source is not None:
+            os.close(source)
+        os.close(parent)
+
+
+OWNER_PYTHON_URL = (
+    "https://github.com/astral-sh/python-build-standalone/releases/download/20261026/"
+    "cpython-3.12.16%2B20261026-x86_64-unknown-linux-gnu-install_only.tar.gz"
+)
+OWNER_PYTHON_SHA256 = "6a79e922e50006b601f29e688407659da1c2b86ebcd4e9c7254cf234be8b89de"
+OWNER_PYTHON_BYTES = 67_921_566
+
+
+def _runtime_walk_error(error: OSError) -> None:
+    raise error
+
+
+def _seal_python(root: Path) -> None:
+    """Seal the complete authenticated distribution, including its internal aliases.
+
+    This is called only after the fixed archive identity has been verified. It is
+    not an extractor or validator for arbitrary caller-authored Python layouts.
+    """
+    for directory, directories, files in os.walk(
+        root, topdown=False, followlinks=False, onerror=_runtime_walk_error
+    ):
+        for name in [*directories, *files]:
+            path = Path(directory) / name
+            metadata = path.lstat()
+            if metadata.st_uid != os.geteuid():
+                raise ValueError("foreign runtime member")
+            if stat.S_ISLNK(metadata.st_mode):
+                if not path.resolve(strict=True).is_relative_to(root):
+                    raise ValueError("runtime alias escapes installation")
+            elif stat.S_ISREG(metadata.st_mode):
+                descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+                try:
+                    os.fchmod(descriptor, 0o555 if metadata.st_mode & 0o111 else 0o444)
+                    os.fsync(descriptor)
+                finally:
+                    os.close(descriptor)
+            elif not stat.S_ISDIR(metadata.st_mode):
+                raise ValueError("special runtime member")
+        descriptor = _directory_fd(Path(directory))
+        try:
+            if os.fstat(descriptor).st_uid != os.geteuid():
+                raise ValueError("foreign runtime directory")
+            os.fchmod(descriptor, 0o555)
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
+
+
+def _install_owner_python(archive: Path, destination: Path) -> Path:
+    """Install only the selected Linux runtime into a fresh protected prefix.
+
+    Admission, transfer and durable owner commissioning belong to their callers.
+    Until sealing completes, the destination stays private. A failed or unknown
+    attempt is preserved, and an existing destination is never adopted or erased.
+    No candidate interpreter, package installer or native owner is executed here.
+    """
+    import platform
+    import tarfile
+
+    destination = destination.absolute()
+    parent = _protected_parent(destination)
+    source = None
+    installed = None
+    try:
+        if platform.machine().lower() != "x86_64":
+            raise ValueError("unsupported owner runtime architecture")
+        source = _directory_fd(archive.parent)
+        os.mkdir(destination.name, mode=0o700, dir_fd=parent)
+        installed = _source_directory(parent, (destination.name,))
+        retained = destination / "runtime.tar.gz"
+        _copy_regular(
+            source,
+            archive.name,
+            Path("runtime.tar.gz"),
+            parent=installed,
+            expected_size=OWNER_PYTHON_BYTES,
+        )
+        if sha256(retained) != OWNER_PYTHON_SHA256:
+            raise ValueError("untrusted owner runtime archive")
+        with tarfile.open(retained, "r:gz") as distribution:
+            distribution.extractall(destination, filter="data")
+        runtime = destination / "python"
+        executable = runtime / "bin/python3.12"
+        if not stat.S_ISREG(executable.lstat().st_mode):
+            raise ValueError("missing selected runtime executable")
+        _seal_python(runtime)
+        descriptor = os.open(retained, os.O_RDONLY | os.O_NOFOLLOW)
+        try:
+            os.fchmod(descriptor, 0o400)
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
+        os.fchmod(installed, 0o555)
+        os.fsync(installed)
+        os.fsync(parent)
+        return executable
+    finally:
+        if installed is not None:
+            os.close(installed)
         if source is not None:
             os.close(source)
         os.close(parent)

@@ -14533,6 +14533,210 @@
       "purpose_sha256": "79614379d37729f790d88d7c372acc8303c0dd7197c7a5f24de4d7d92c6710db"
     },
     {
+      "node": "tests/test_native_owner_python.py::test_file_input_removes_ssh_devnull_only_for_that_invocation",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_fixture_programs_parse_and_original_reply_is_retained[1-accepted]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_fixture_programs_parse_and_original_reply_is_retained[1-rejected-original-retained]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_fixture_programs_parse_and_original_reply_is_retained[4-accepted]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_fixture_programs_parse_and_original_reply_is_retained[4-rejected-original-retained]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[aliased-pid]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[boot]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[bootstrap]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[caller-executable]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[caller-prefix]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[caller-search-path]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[changed-inventory]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[cleanup-error]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[enrollment]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[external-sqlite-file]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[foreign-inventory]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[foreign-parent]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[input-digest]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[input-mode]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[input-size]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[interrupted-prefix-exposed]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[interrupted-runtime-present]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[interruption-exit]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[interruption-unjoined]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[missing-cleanup]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[missing-denials]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[missing-refusals]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[nonbuiltin-sqlite-origin]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[observer-pid]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[observer-uid]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[old-python]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[original-input-not-changed]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[peer-capabilities]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[peer-groups]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[primary-error]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[privileged-peer]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[qualification]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[retained-size]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[scope]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[site-enabled]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[sqlite-not-builtin]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[status]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[writable-inventory]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[wrong-sqlite-source]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_regular_owned_input_streams_to_ordinary_python_child",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_unprotected_input_never_starts_a_child[directory]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_unprotected_input_never_starts_a_child[fifo]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_unprotected_input_never_starts_a_child[hardlink]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_unprotected_input_never_starts_a_child[symlink]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_unprotected_input_never_starts_a_child[writable]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_unverified_guest_cannot_download_or_install",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
       "node": "tests/test_native_smoke.py::test_account_failure_preserves_primary_exit_and_reports_cleanup[cleanup-failure]",
       "purpose_sha256": "56cc9ac6f293e965f08eeb5c5bec1e90fd0cd5cceeca44de6458260d0e807c35"
     },
@@ -17437,6 +17641,70 @@
       "purpose_sha256": "7c53fb0b00b07f505c1a2e3f844d34b2930ff12963a05bcdc3caf54c95bc2e39"
     },
     {
+      "node": "tests/test_owner_python_download.py::test_download_preserves_complete_identity_and_closed_failure_output[changed]",
+      "purpose_sha256": "56aa8cf7f983357bea8af69f3bb5f87a25cdee3d7650c8f301eafd61ec967918"
+    },
+    {
+      "node": "tests/test_owner_python_download.py::test_download_preserves_complete_identity_and_closed_failure_output[exact]",
+      "purpose_sha256": "56aa8cf7f983357bea8af69f3bb5f87a25cdee3d7650c8f301eafd61ec967918"
+    },
+    {
+      "node": "tests/test_owner_python_download.py::test_download_preserves_complete_identity_and_closed_failure_output[exception]",
+      "purpose_sha256": "56aa8cf7f983357bea8af69f3bb5f87a25cdee3d7650c8f301eafd61ec967918"
+    },
+    {
+      "node": "tests/test_owner_python_download.py::test_download_preserves_complete_identity_and_closed_failure_output[excessive]",
+      "purpose_sha256": "56aa8cf7f983357bea8af69f3bb5f87a25cdee3d7650c8f301eafd61ec967918"
+    },
+    {
+      "node": "tests/test_owner_python_download.py::test_download_preserves_complete_identity_and_closed_failure_output[truncated]",
+      "purpose_sha256": "56aa8cf7f983357bea8af69f3bb5f87a25cdee3d7650c8f301eafd61ec967918"
+    },
+    {
+      "node": "tests/test_owner_python_download.py::test_invalid_watchdog_rejects_before_destination_or_network[-1]",
+      "purpose_sha256": "56aa8cf7f983357bea8af69f3bb5f87a25cdee3d7650c8f301eafd61ec967918"
+    },
+    {
+      "node": "tests/test_owner_python_download.py::test_invalid_watchdog_rejects_before_destination_or_network[0]",
+      "purpose_sha256": "56aa8cf7f983357bea8af69f3bb5f87a25cdee3d7650c8f301eafd61ec967918"
+    },
+    {
+      "node": "tests/test_owner_python_download.py::test_invalid_watchdog_rejects_before_destination_or_network[inf]",
+      "purpose_sha256": "56aa8cf7f983357bea8af69f3bb5f87a25cdee3d7650c8f301eafd61ec967918"
+    },
+    {
+      "node": "tests/test_owner_python_download.py::test_invalid_watchdog_rejects_before_destination_or_network[nan]",
+      "purpose_sha256": "56aa8cf7f983357bea8af69f3bb5f87a25cdee3d7650c8f301eafd61ec967918"
+    },
+    {
+      "node": "tests/test_owner_python_download.py::test_only_owned_worker_argument_is_a_delegated_watchdog",
+      "purpose_sha256": "56aa8cf7f983357bea8af69f3bb5f87a25cdee3d7650c8f301eafd61ec967918"
+    },
+    {
+      "node": "tests/test_owner_python_download.py::test_redirect_origin_substitutions_are_rejected[credentials]",
+      "purpose_sha256": "56aa8cf7f983357bea8af69f3bb5f87a25cdee3d7650c8f301eafd61ec967918"
+    },
+    {
+      "node": "tests/test_owner_python_download.py::test_redirect_origin_substitutions_are_rejected[file-scheme]",
+      "purpose_sha256": "56aa8cf7f983357bea8af69f3bb5f87a25cdee3d7650c8f301eafd61ec967918"
+    },
+    {
+      "node": "tests/test_owner_python_download.py::test_redirect_origin_substitutions_are_rejected[foreign-host]",
+      "purpose_sha256": "56aa8cf7f983357bea8af69f3bb5f87a25cdee3d7650c8f301eafd61ec967918"
+    },
+    {
+      "node": "tests/test_owner_python_download.py::test_redirect_origin_substitutions_are_rejected[foreign-port]",
+      "purpose_sha256": "56aa8cf7f983357bea8af69f3bb5f87a25cdee3d7650c8f301eafd61ec967918"
+    },
+    {
+      "node": "tests/test_owner_python_download.py::test_redirect_origin_substitutions_are_rejected[http]",
+      "purpose_sha256": "56aa8cf7f983357bea8af69f3bb5f87a25cdee3d7650c8f301eafd61ec967918"
+    },
+    {
+      "node": "tests/test_owner_python_download.py::test_release_asset_redirect_keeps_https_and_destination",
+      "purpose_sha256": "56aa8cf7f983357bea8af69f3bb5f87a25cdee3d7650c8f301eafd61ec967918"
+    },
+    {
       "node": "tests/test_owner_transport_extents.py::test_large_exact_cleanup_selection_uses_one_staged_plan_input",
       "purpose_sha256": "8f2f779bfa0481466bb7b3c3418230bb55e71ebec8214b46c4143e2fbc8fcc7c"
     },
@@ -18147,6 +18415,62 @@
     {
       "node": "tests/test_protected_bundle_staging.py::test_untrusted_staged_manifest_never_invokes_installer",
       "purpose_sha256": "63030fcc74a738825c3930209ed2946c9ab55fc6c9da8d4eb8c7de5cd3ba5f2f"
+    },
+    {
+      "node": "tests/test_protected_owner_python.py::test_archive_identity_is_checked_before_extraction[changed]",
+      "purpose_sha256": "8c6ebe56b90d6e51ccd26dd270da66f93d4fdfab3c749be2618cf9e6c9dbacd1"
+    },
+    {
+      "node": "tests/test_protected_owner_python.py::test_archive_identity_is_checked_before_extraction[truncated]",
+      "purpose_sha256": "8c6ebe56b90d6e51ccd26dd270da66f93d4fdfab3c749be2618cf9e6c9dbacd1"
+    },
+    {
+      "node": "tests/test_protected_owner_python.py::test_complete_runtime_copy_extraction_and_sealing_work_is_linear",
+      "purpose_sha256": "8c6ebe56b90d6e51ccd26dd270da66f93d4fdfab3c749be2618cf9e6c9dbacd1"
+    },
+    {
+      "node": "tests/test_protected_owner_python.py::test_exact_archive_is_retained_and_complete_tree_sealed",
+      "purpose_sha256": "8c6ebe56b90d6e51ccd26dd270da66f93d4fdfab3c749be2618cf9e6c9dbacd1"
+    },
+    {
+      "node": "tests/test_protected_owner_python.py::test_existing_destination_is_never_adopted_or_erased[directory]",
+      "purpose_sha256": "8c6ebe56b90d6e51ccd26dd270da66f93d4fdfab3c749be2618cf9e6c9dbacd1"
+    },
+    {
+      "node": "tests/test_protected_owner_python.py::test_existing_destination_is_never_adopted_or_erased[file]",
+      "purpose_sha256": "8c6ebe56b90d6e51ccd26dd270da66f93d4fdfab3c749be2618cf9e6c9dbacd1"
+    },
+    {
+      "node": "tests/test_protected_owner_python.py::test_existing_destination_is_never_adopted_or_erased[symlink]",
+      "purpose_sha256": "8c6ebe56b90d6e51ccd26dd270da66f93d4fdfab3c749be2618cf9e6c9dbacd1"
+    },
+    {
+      "node": "tests/test_protected_owner_python.py::test_extraction_retains_data_filter_defense[escape]",
+      "purpose_sha256": "8c6ebe56b90d6e51ccd26dd270da66f93d4fdfab3c749be2618cf9e6c9dbacd1"
+    },
+    {
+      "node": "tests/test_protected_owner_python.py::test_extraction_retains_data_filter_defense[special]",
+      "purpose_sha256": "8c6ebe56b90d6e51ccd26dd270da66f93d4fdfab3c749be2618cf9e6c9dbacd1"
+    },
+    {
+      "node": "tests/test_protected_owner_python.py::test_failed_extraction_stays_private_and_fresh_retry_preserves_attempt",
+      "purpose_sha256": "8c6ebe56b90d6e51ccd26dd270da66f93d4fdfab3c749be2618cf9e6c9dbacd1"
+    },
+    {
+      "node": "tests/test_protected_owner_python.py::test_source_substitutions_never_extract_or_execute[directory]",
+      "purpose_sha256": "8c6ebe56b90d6e51ccd26dd270da66f93d4fdfab3c749be2618cf9e6c9dbacd1"
+    },
+    {
+      "node": "tests/test_protected_owner_python.py::test_source_substitutions_never_extract_or_execute[fifo]",
+      "purpose_sha256": "8c6ebe56b90d6e51ccd26dd270da66f93d4fdfab3c749be2618cf9e6c9dbacd1"
+    },
+    {
+      "node": "tests/test_protected_owner_python.py::test_source_substitutions_never_extract_or_execute[symlink]",
+      "purpose_sha256": "8c6ebe56b90d6e51ccd26dd270da66f93d4fdfab3c749be2618cf9e6c9dbacd1"
+    },
+    {
+      "node": "tests/test_protected_owner_python.py::test_unsupported_architecture_creates_no_candidate",
+      "purpose_sha256": "8c6ebe56b90d6e51ccd26dd270da66f93d4fdfab3c749be2618cf9e6c9dbacd1"
     },
     {
       "node": "tests/test_protected_values.py::test_destination_is_bound_before_native_dispatch[authority]",

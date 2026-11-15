@@ -492,6 +492,7 @@ class Guest:
         hosts: str = "known-hosts",
         deadline: Deadline | None = None,
         nominal: float = 15,
+        input_path: Path | None = None,
     ) -> str:
         arguments, deadline = self.ssh_command(
             remote, role=role, hosts=hosts, deadline=deadline, nominal=nominal
@@ -499,6 +500,17 @@ class Guest:
         remaining = deadline.remaining()
         if remaining <= 0:
             raise GuestBootError("guest-readiness-deadline")
+        if input_path is not None:
+            if arguments[1] != "-n":
+                raise GuestBootError("unexpected-ssh-input-configuration")
+            del arguments[1]
+            return self.command(
+                arguments,
+                "guest-ssh",
+                min(nominal, remaining / current().scale),
+                capture=True,
+                input_path=input_path,
+            )
         return self.command(
             arguments, "guest-ssh", min(nominal, remaining / current().scale), capture=True
         )
@@ -618,10 +630,18 @@ class Guest:
         *,
         deadline: Deadline | None = None,
         nominal: float = 15,
+        input_path: Path | None = None,
     ) -> str:
         if self.observed is None or enrollment != self.enrollment:
             raise GuestBootError("fixture-enrollment-mismatch")
         expected = dict(self.observed, boot_id=boot)
+        if input_path is not None:
+            return self.ssh(
+                self.remote(expected, action),
+                deadline=deadline,
+                nominal=nominal,
+                input_path=input_path,
+            )
         return self.ssh(self.remote(expected, action), deadline=deadline, nominal=nominal)
 
     def refusals(self) -> None:

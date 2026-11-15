@@ -11,6 +11,7 @@ import os
 import platform
 import signal
 import socket
+import stat
 import struct
 import subprocess
 import sys
@@ -18,7 +19,7 @@ import tempfile
 import time
 import uuid
 from collections.abc import Callable, Iterator, Mapping
-from contextlib import AbstractContextManager, contextmanager
+from contextlib import AbstractContextManager, ExitStack, contextmanager
 from pathlib import Path
 from typing import Any
 
@@ -32,6 +33,7 @@ from scripts.native_linux_exhaustion import (
 from scripts.native_linux_guest import Guest, GuestBootError, guest_session, provision_tools
 from scripts.native_linux_images import GuestInputError, GuestInputs, guest_inputs
 from scripts.native_linux_install_inputs import qualify_inputs
+from scripts.native_linux_owner_python import qualify_python
 from scripts.native_linux_processes import qualify_process_kill
 from scripts.native_linux_reboot import (
     REBOOT,
@@ -220,21 +222,41 @@ def enroll(environment: Mapping[str, str], *, confirmed: bool) -> dict[str, Any]
     return facts
 
 
-def run(command: list[str], name: str, nominal: float, *, capture: bool = False) -> str:
+def run(
+    command: list[str],
+    name: str,
+    nominal: float,
+    *,
+    capture: bool = False,
+    input_path: Path | None = None,
+) -> str:
     package = name in ("package-update", "package-install")
     download = name == "guest-image-download"
     try:
-        result = subprocess.run(
-            command,
-            env=COMMAND_ENV,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE if capture or download else subprocess.DEVNULL,
-            stderr=subprocess.PIPE if package else subprocess.DEVNULL,
-            text=True,
-            errors="replace" if package or download else None,
-            timeout=watchdog(nominal),
-            check=False,
-        )
+        with ExitStack() as resources:
+            input_descriptor = subprocess.DEVNULL
+            if input_path is not None:
+                input_descriptor = os.open(input_path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+                resources.callback(os.close, input_descriptor)
+                metadata = os.fstat(input_descriptor)
+                if (
+                    not stat.S_ISREG(metadata.st_mode)
+                    or metadata.st_uid != os.geteuid()
+                    or stat.S_IMODE(metadata.st_mode) != 0o600
+                    or metadata.st_nlink != 1
+                ):
+                    raise EnrollmentError(name, "foreign-or-unprotected-command-input")
+            result = subprocess.run(
+                command,
+                env=COMMAND_ENV,
+                stdin=input_descriptor,
+                stdout=subprocess.PIPE if capture or download else subprocess.DEVNULL,
+                stderr=subprocess.PIPE if package else subprocess.DEVNULL,
+                text=True,
+                errors="replace" if package or download else None,
+                timeout=watchdog(nominal),
+                check=False,
+            )
     except subprocess.TimeoutExpired:
         raise EnrollmentError(name, "observation-deadline") from None
     except OSError:
@@ -808,6 +830,8 @@ def boot_guest(
                     report["protected_inputs"] = {}
                     with stage("guest-protected-input-custody"):
                         qualify_inputs(guest, report["protected_inputs"])
+                    report["owner_python"] = {}
+                    qualify_python(guest, temporary, stage, report["owner_python"])
                 if not storage_failure:
                     report["reboot"] = {}
                     with stage("guest-reboot"):

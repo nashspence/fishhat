@@ -12,6 +12,7 @@ import stat
 import sys
 import uuid
 from contextlib import contextmanager, nullcontext
+from functools import partial
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -694,6 +695,15 @@ def test_missing_or_foreign_private_root_preserves_failure_stats_and_foreign_dat
         guests.shutil.rmtree(relocated)
 
 
+def controlled_owner_python(
+    fixture, report, input_calls, events, guest, temporary, progress, result
+):
+    assert guest is fixture["guest"]
+    assert result is report["owner_python"]
+    assert input_calls == ["controlled-input-observation"]
+    assert "reboot" not in events
+
+
 @pytest.mark.parametrize(
     (
         "refused",
@@ -747,6 +757,12 @@ def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
         input_calls.append("controlled-input-observation")
 
     monkeypatch.setattr(native, "qualify_inputs", protected_inputs)
+
+    monkeypatch.setattr(
+        native,
+        "qualify_python",
+        partial(controlled_owner_python, fixture, report, input_calls, events),
+    )
 
     def qualify(guest, progress, result, *, inject_failure):
         assert guest is fixture["guest"] and result is report["storage"]
