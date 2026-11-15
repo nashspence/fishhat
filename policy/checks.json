@@ -14589,6 +14589,10 @@
       "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
     },
     {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[external-sqlite-file]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
       "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[foreign-inventory]",
       "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
     },
@@ -14637,6 +14641,10 @@
       "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
     },
     {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[nonbuiltin-sqlite-origin]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
       "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[observer-pid]",
       "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
     },
@@ -14682,6 +14690,10 @@
     },
     {
       "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[site-enabled]",
+      "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_forged_runtime_observation_is_rejected[sqlite-not-builtin]",
       "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
     },
     {

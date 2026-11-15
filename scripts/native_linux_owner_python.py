@@ -45,7 +45,8 @@ result = {"pid": os.getpid(), "parent_pid": os.getppid(),
           "executable": sys.executable, "prefix": sys.prefix, "base_prefix": sys.base_prefix,
           "version": list(sys.version_info[:3]), "search_paths": sys.path,
           "sqlite_version": sqlite3.sqlite_version, "sqlite_source_id": source_id,
-          "sqlite_extension": _sqlite3.__file__, "mapped_files": libraries,
+          "sqlite_module_origin": _sqlite3.__spec__.origin, "sqlite_module_file": getattr(_sqlite3, "__file__", None),
+          "sqlite_builtin": "_sqlite3" in sys.builtin_module_names, "mapped_files": libraries,
           "flags": {name: getattr(sys.flags, name) for name in ("isolated", "ignore_environment", "no_site", "no_user_site", "safe_path", "dont_write_bytecode")},
           "denied": []}
 if c["peer"]:
@@ -376,7 +377,9 @@ def verify_observation(value: dict[str, Any], guest: Guest, bootstrap: str) -> N
             or row["sqlite_source_id"] != SQLITE_SOURCE
             or not all(row["flags"].values())
             or not all(Path(path).is_relative_to(expected_prefix) for path in row["search_paths"])
-            or not Path(row["sqlite_extension"]).is_relative_to(expected_prefix)
+            or row["sqlite_module_origin"] != "built-in"
+            or row["sqlite_module_file"] is not None
+            or row["sqlite_builtin"] is not True
         ):
             raise GuestBootError("owner-python-runtime-mismatch")
     if value["peer"]["groups"] != [] or int(value["peer"]["capabilities"], 16) != 0:
