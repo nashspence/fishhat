@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import importlib
 import importlib.metadata
 import importlib.util
@@ -13,6 +14,131 @@ import sys
 import tempfile
 import threading
 from pathlib import Path
+
+
+def check_source_validation(
+    command: list[str], tool: str, fixtures: Path, watchdog_seconds: float
+) -> dict[str, object]:
+    """Witness the installed read-only boundary, without asserting owner admission."""
+    from fishhat_contracts import strict_yaml
+
+    paths = {
+        "domain": fixtures / "domain/domain.yaml",
+        "host": fixtures / "host-node-a/host.yaml",
+        "app": fixtures / "demo-app/app.yaml",
+        "host-catalogue": fixtures / "host-node-a/secrets.yaml",
+        "app-catalogue": fixtures / "demo-app/secrets.yaml",
+    }
+    original = {name: path.read_bytes() for name, path in paths.items()}
+    values = {name: strict_yaml(data.decode()) for name, data in original.items()}
+    domain, host, app = (values[name] for name in ("domain", "host", "app"))
+    cases: list[tuple[str, str, str | None, bool, list[str]]] = [
+        ("domain", json.dumps(domain), None, True, []),
+        ("host", json.dumps(host), "host-catalogue", True, []),
+        ("app", json.dumps(app), "app-catalogue", True, []),
+        ("catalogue", json.dumps(values["app-catalogue"]), None, True, []),
+        ("duplicate-key", '{"kind":"Domain",' + json.dumps(domain)[1:], None, False, []),
+    ]
+    unknown = {**domain, "SYNTHETIC_PRIVATE_SENTINEL": "not-a-source-field"}
+    cases.append(("unknown-field", json.dumps(unknown), None, False, []))
+    unjoined = copy.deepcopy(domain)
+    next(iter(unjoined["hosts"].values()))["source"] = "unbound-source"
+    cases.append(("domain-source-join", json.dumps(unjoined), None, False, []))
+    yaml_alias = json.dumps(domain).replace('"id": "', '"id": &blocked "', 1)
+    yaml_alias = yaml_alias.replace('"name": ' + json.dumps(domain["name"]), '"name": *blocked', 1)
+    cases.extend(
+        [
+            ("duplicate-yaml-key", "kind: Domain\n" + original["domain"].decode(), None, False, []),
+            ("yaml-alias", yaml_alias, None, False, []),
+        ]
+    )
+    absent_entry = {**values["host-catalogue"], "entries": {}}
+    app_absent_entry = {**values["app-catalogue"], "entries": {}}
+    escaped = copy.deepcopy(host)
+    escaped["concerns"]["base"]["files"]["motd"]["destination"] = (
+        "/etc/../SYNTHETIC_PRIVATE_SENTINEL"
+    )
+    shell = copy.deepcopy(app)
+    shell["hooks"]["health"]["shell"] = "SYNTHETIC_PRIVATE_SENTINEL"
+    executor = copy.deepcopy(app)
+    executor["hooks"]["health"]["component"] = "unbound-component"
+    secret_value = copy.deepcopy(values["app-catalogue"])
+    next(iter(secret_value["entries"].values()))["value"] = "SYNTHETIC_PRIVATE_SENTINEL"
+    cases.extend(
+        [
+            ("host-catalogue-entry", json.dumps(host), "missing-host-entry", False, []),
+            ("app-catalogue-entry", json.dumps(app), "missing-app-entry", False, []),
+            ("host-missing-catalogue", json.dumps(host), None, False, []),
+            ("app-missing-catalogue", json.dumps(app), None, False, []),
+            ("host-catalogue-type", json.dumps(host), "domain", False, []),
+            ("escaping-target", json.dumps(escaped), "host-catalogue", False, []),
+            ("unsupported-hook-grammar", json.dumps(shell), "app-catalogue", False, []),
+            ("hook-executor", json.dumps(executor), "app-catalogue", False, []),
+            ("secret-value", json.dumps(secret_value), None, False, []),
+            ("explicit-capacity", json.dumps(domain), None, False, ["--capacity-bytes", "128"]),
+        ]
+    )
+    with tempfile.TemporaryDirectory(prefix="fishhat-source-intake-") as temporary:
+        root = Path(temporary)
+        canary = root / "unrelated-canary"
+        canary.write_bytes(b"unrelated-input-preserved")
+        catalogues = {
+            **{name: json.dumps(value) for name, value in values.items()},
+            "missing-host-entry": json.dumps(absent_entry),
+            "missing-app-entry": json.dumps(app_absent_entry),
+        }
+        for name, content, catalogue, valid, extra in cases:
+            suffix = ".yaml" if name in {"duplicate-yaml-key", "yaml-alias"} else ".json"
+            path = root / ("SYNTHETIC_PRIVATE_SOURCE-" + name + suffix)
+            path.write_bytes(content.encode())
+            args = [*command, "validate", str(path), "--json", *extra]
+            expected_inputs = {path: content.encode()}
+            if catalogue is not None:
+                cat_path = root / "SYNTHETIC_PRIVATE_CATALOGUE.json"
+                cat_bytes = catalogues[catalogue].encode()
+                cat_path.write_bytes(cat_bytes)
+                expected_inputs[cat_path] = cat_bytes
+                args.extend(["--catalogue", str(cat_path)])
+            result = subprocess.run(
+                args, cwd=root, capture_output=True, text=True, timeout=watchdog_seconds
+            )
+            expected = (
+                {
+                    "tool": tool,
+                    "status": "valid",
+                    "scope": "local-contracts-only",
+                    "production_qualified": False,
+                }
+                if valid
+                else {"tool": tool, "status": "invalid", "error": "INPUT_REJECTED"}
+            )
+            try:
+                observed = json.loads(result.stdout if valid else result.stderr)
+            except (ValueError, TypeError):
+                raise AssertionError("installed source witness failed: " + name) from None
+            if (
+                result.returncode != (0 if valid else 2)
+                or observed != expected
+                or (result.stderr if valid else result.stdout)
+            ):
+                raise AssertionError("installed source witness failed: " + name)
+            if any(
+                not p.is_file() or p.read_bytes() != data for p, data in expected_inputs.items()
+            ):
+                raise AssertionError("installed source witness failed: input-custody")
+            if not canary.is_file() or canary.read_bytes() != b"unrelated-input-preserved":
+                raise AssertionError("installed source witness failed: canary-custody")
+    if any(path.read_bytes() != original[name] for name, path in paths.items()):
+        raise AssertionError("installed source witness failed: fixture-custody")
+    return {
+        "scope": "installed-local-contract-validation-only",
+        "tool": tool,
+        "valid_cases": 4,
+        "invalid_cases": len(cases) - 4,
+        "input_bytes_preserved": True,
+        "unrelated_canary_preserved": True,
+        "native_qualified": False,
+    }
 
 
 def main() -> None:
@@ -47,6 +173,7 @@ def main() -> None:
     validate("source.schema.json", data)
     assert strict_json(canonical(data)) == data
     assert digest(data).startswith("sha256:")
+    source_validation: dict[str, object] | None = None
     if args.component in {"domain", "host", "app"}:
         tool = {"domain": "domain-ops", "host": "host-ops", "app": "app-ops"}[args.component]
         executable = Path(sys.executable).parent / (
@@ -70,6 +197,9 @@ def main() -> None:
             capture_output=True,
             check=True,
             timeout=args.watchdog_seconds,
+        )
+        source_validation = check_source_validation(
+            [str(executable)], tool, args.fixtures, args.watchdog_seconds
         )
         rejected = subprocess.run(
             [str(executable), "apply"], capture_output=True, timeout=args.watchdog_seconds
@@ -189,7 +319,14 @@ def main() -> None:
             load_directory((args.fixtures / "directory/directory.yaml").read_text())
         )
         assert projection["catalogue"]["authority"].startswith("discovery-only")
-    print(json.dumps({"component": args.component, "passed": True, "production_qualified": False}))
+    result_summary: dict[str, object] = {
+        "component": args.component,
+        "passed": True,
+        "production_qualified": False,
+    }
+    if source_validation is not None:
+        result_summary["source_validation"] = source_validation
+    print(json.dumps(result_summary))
 
 
 if __name__ == "__main__":

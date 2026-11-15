@@ -8801,6 +8801,90 @@
       "purpose_sha256": "ee1b3f8b733d4373815f42d859d19278316ed90a0aba217d429f3ac19083a95a"
     },
     {
+      "node": "tests/test_installed_source_intake.py::test_current_read_only_command_satisfies_complete_witness[app-ops]",
+      "purpose_sha256": "b1905f3d08707f1dc89d109bba24ad3cb3d21d03970b3eecf8ece3be9c6202d2"
+    },
+    {
+      "node": "tests/test_installed_source_intake.py::test_current_read_only_command_satisfies_complete_witness[domain-ops]",
+      "purpose_sha256": "b1905f3d08707f1dc89d109bba24ad3cb3d21d03970b3eecf8ece3be9c6202d2"
+    },
+    {
+      "node": "tests/test_installed_source_intake.py::test_current_read_only_command_satisfies_complete_witness[host-ops]",
+      "purpose_sha256": "b1905f3d08707f1dc89d109bba24ad3cb3d21d03970b3eecf8ece3be9c6202d2"
+    },
+    {
+      "node": "tests/test_installed_source_intake.py::test_wrong_source_command_cannot_satisfy_installed_witness[always-accept-duplicate-key-app-ops]",
+      "purpose_sha256": "b1905f3d08707f1dc89d109bba24ad3cb3d21d03970b3eecf8ece3be9c6202d2"
+    },
+    {
+      "node": "tests/test_installed_source_intake.py::test_wrong_source_command_cannot_satisfy_installed_witness[always-accept-duplicate-key-domain-ops]",
+      "purpose_sha256": "b1905f3d08707f1dc89d109bba24ad3cb3d21d03970b3eecf8ece3be9c6202d2"
+    },
+    {
+      "node": "tests/test_installed_source_intake.py::test_wrong_source_command_cannot_satisfy_installed_witness[always-accept-duplicate-key-host-ops]",
+      "purpose_sha256": "b1905f3d08707f1dc89d109bba24ad3cb3d21d03970b3eecf8ece3be9c6202d2"
+    },
+    {
+      "node": "tests/test_installed_source_intake.py::test_wrong_source_command_cannot_satisfy_installed_witness[always-reject-domain-app-ops]",
+      "purpose_sha256": "b1905f3d08707f1dc89d109bba24ad3cb3d21d03970b3eecf8ece3be9c6202d2"
+    },
+    {
+      "node": "tests/test_installed_source_intake.py::test_wrong_source_command_cannot_satisfy_installed_witness[always-reject-domain-domain-ops]",
+      "purpose_sha256": "b1905f3d08707f1dc89d109bba24ad3cb3d21d03970b3eecf8ece3be9c6202d2"
+    },
+    {
+      "node": "tests/test_installed_source_intake.py::test_wrong_source_command_cannot_satisfy_installed_witness[always-reject-domain-host-ops]",
+      "purpose_sha256": "b1905f3d08707f1dc89d109bba24ad3cb3d21d03970b3eecf8ece3be9c6202d2"
+    },
+    {
+      "node": "tests/test_installed_source_intake.py::test_wrong_source_command_cannot_satisfy_installed_witness[leak-source-duplicate-key-app-ops]",
+      "purpose_sha256": "b1905f3d08707f1dc89d109bba24ad3cb3d21d03970b3eecf8ece3be9c6202d2"
+    },
+    {
+      "node": "tests/test_installed_source_intake.py::test_wrong_source_command_cannot_satisfy_installed_witness[leak-source-duplicate-key-domain-ops]",
+      "purpose_sha256": "b1905f3d08707f1dc89d109bba24ad3cb3d21d03970b3eecf8ece3be9c6202d2"
+    },
+    {
+      "node": "tests/test_installed_source_intake.py::test_wrong_source_command_cannot_satisfy_installed_witness[leak-source-duplicate-key-host-ops]",
+      "purpose_sha256": "b1905f3d08707f1dc89d109bba24ad3cb3d21d03970b3eecf8ece3be9c6202d2"
+    },
+    {
+      "node": "tests/test_installed_source_intake.py::test_wrong_source_command_cannot_satisfy_installed_witness[rewrite-source-input-custody-app-ops]",
+      "purpose_sha256": "b1905f3d08707f1dc89d109bba24ad3cb3d21d03970b3eecf8ece3be9c6202d2"
+    },
+    {
+      "node": "tests/test_installed_source_intake.py::test_wrong_source_command_cannot_satisfy_installed_witness[rewrite-source-input-custody-domain-ops]",
+      "purpose_sha256": "b1905f3d08707f1dc89d109bba24ad3cb3d21d03970b3eecf8ece3be9c6202d2"
+    },
+    {
+      "node": "tests/test_installed_source_intake.py::test_wrong_source_command_cannot_satisfy_installed_witness[rewrite-source-input-custody-host-ops]",
+      "purpose_sha256": "b1905f3d08707f1dc89d109bba24ad3cb3d21d03970b3eecf8ece3be9c6202d2"
+    },
+    {
+      "node": "tests/test_installed_source_intake.py::test_wrong_source_command_cannot_satisfy_installed_witness[schema-only-domain-source-join-app-ops]",
+      "purpose_sha256": "b1905f3d08707f1dc89d109bba24ad3cb3d21d03970b3eecf8ece3be9c6202d2"
+    },
+    {
+      "node": "tests/test_installed_source_intake.py::test_wrong_source_command_cannot_satisfy_installed_witness[schema-only-domain-source-join-domain-ops]",
+      "purpose_sha256": "b1905f3d08707f1dc89d109bba24ad3cb3d21d03970b3eecf8ece3be9c6202d2"
+    },
+    {
+      "node": "tests/test_installed_source_intake.py::test_wrong_source_command_cannot_satisfy_installed_witness[schema-only-domain-source-join-host-ops]",
+      "purpose_sha256": "b1905f3d08707f1dc89d109bba24ad3cb3d21d03970b3eecf8ece3be9c6202d2"
+    },
+    {
+      "node": "tests/test_installed_source_intake.py::test_wrong_source_command_cannot_satisfy_installed_witness[yaml-unchecked-duplicate-yaml-key-app-ops]",
+      "purpose_sha256": "b1905f3d08707f1dc89d109bba24ad3cb3d21d03970b3eecf8ece3be9c6202d2"
+    },
+    {
+      "node": "tests/test_installed_source_intake.py::test_wrong_source_command_cannot_satisfy_installed_witness[yaml-unchecked-duplicate-yaml-key-domain-ops]",
+      "purpose_sha256": "b1905f3d08707f1dc89d109bba24ad3cb3d21d03970b3eecf8ece3be9c6202d2"
+    },
+    {
+      "node": "tests/test_installed_source_intake.py::test_wrong_source_command_cannot_satisfy_installed_witness[yaml-unchecked-duplicate-yaml-key-host-ops]",
+      "purpose_sha256": "b1905f3d08707f1dc89d109bba24ad3cb3d21d03970b3eecf8ece3be9c6202d2"
+    },
+    {
       "node": "tests/test_jcs.py::test_ambiguous_names_and_invalid_unicode_are_rejected[duplicate-name]",
       "purpose_sha256": "0c7c30320c24e30c10a76ec679c51d3939c72012ba98f163d6126f3ac1ffbb31"
     },
