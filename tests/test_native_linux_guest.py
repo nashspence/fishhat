@@ -737,6 +737,16 @@ def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
     monkeypatch.setattr(native, "run", fixture["command"])
     monkeypatch.setattr(native, "QEMU", Path("/controlled/qemu"))
     storage_calls = []
+    input_calls = []
+
+    def protected_inputs(guest, result):
+        assert guest is fixture["guest"] and result is report["protected_inputs"]
+        assert report["boot_verified"] and report["peer_authenticated"]
+        assert not storage_calls and "reboot" not in events
+        assert not storage_error and not reboot_error
+        input_calls.append("controlled-input-observation")
+
+    monkeypatch.setattr(native, "qualify_inputs", protected_inputs)
 
     def qualify(guest, progress, result, *, inject_failure):
         assert guest is fixture["guest"] and result is report["storage"]
@@ -918,6 +928,8 @@ def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
         restart_error,
         restore_error,
     )
+
+    assert len(input_calls) == (0 if refused or storage_error or reboot_error else 1)
 
 
 def private_restore_witness(fixture, report, events, restore_error):
