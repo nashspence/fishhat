@@ -271,13 +271,18 @@ def origin_gone(saved):
             return True
         if observed["start_ticks"] != original["start_ticks"]:
             return True
-        require(observed == original)
+        # SSH loss can reparent this process without changing its pinned birth.
+        require(type(observed["parent_pid"]) is int and observed["parent_pid"] > 0)
+        require({**observed, "parent_pid": original["parent_pid"]} == original)
         return False
     finally:
         os.close(handle)
 def cleanup_result(saved):
     require(not units() and origin_gone(saved))
-    require(not pathlib.Path("/sys/fs/cgroup/system.slice", unit).exists())
+    group = pathlib.Path("/sys/fs/cgroup/system.slice", unit)
+    while group.exists():
+        time.sleep(min(0.05, remaining()))
+        require(not units() and origin_gone(saved))
     return {"identity": saved["identity"], "unit_removed": True, "origin_exited": True, "guest_canaries_preserved": canaries() == saved["canaries"], "task_resources_retained_for_guest_cleanup": True}
 def control(mode, claim):
     saved = manifest()
