@@ -1,7 +1,7 @@
 """Local continuity capabilities at the reference journal boundary, not native qualification."""
 
 import socket
-from contextlib import closing
+from contextlib import closing, contextmanager
 
 import pytest
 from fishhat_contracts.validation import ContractError
@@ -139,3 +139,95 @@ def test_consistent_backup_restore_stays_fenced_without_current_continuity(
             "effect": "unknown",
             "hold": "retained",
         }
+
+
+@pytest.mark.parametrize("tool", ["host-ops", "app-ops"])
+@pytest.mark.parametrize("boundary", ["genesis", "reopen", "guard", "publication"])
+def test_writer_lease_excludes_copies_through_each_journal_transition(
+    tmp_path, disconnected, tool, boundary
+):
+    path, copied = tmp_path / "owner.journal", tmp_path / "copied.journal"
+    canary = tmp_path / "unrelated.bin"
+    canary.write_bytes(b"unrelated native state remains outside journal custody")
+    canary_bytes = canary.read_bytes()
+    owner = {**LogicalWorkload().owner(0), "tool": tool}
+    schema, authority = store_identity(), WorkMeter()
+    phase, probes, comparisons = "genesis", [], []
+
+    def competing_copy():
+        snapshot = custody(path)
+        checkpoint_before = authority.checkpoints.get(path)
+        restore_bytes(copied, snapshot)
+        assert path.stat().st_ino != copied.stat().st_ino
+        with pytest.raises(ContractError, match="independent writer already active"):
+            with closing(
+                WorkflowJournal.open(
+                    copied,
+                    expected_owner=owner,
+                    expected_schema=schema,
+                    writer_lease=authority.writer_lease(path),
+                )
+            ):
+                pytest.fail("a copied journal acquired the active logical writer lease")
+        assert custody(path) == custody(copied) == snapshot
+        assert authority.checkpoints.get(path) == checkpoint_before
+        assert canary.read_bytes() == canary_bytes
+        probes.append((phase, snapshot))
+
+    @contextmanager
+    def commissioned_lease():
+        with authority.writer_lease(path) as retain_head:
+
+            def checkpoint(previous, current):
+                if phase == boundary:
+                    competing_copy()
+                comparisons.append((phase, previous, current))
+                retain_head(previous, current)
+
+            yield checkpoint
+
+    with closing(
+        WorkflowJournal.create(path, owner=owner, schema=schema, writer_lease=commissioned_lease())
+    ) as journal:
+        genesis = journal.head
+        phase = "guard"
+        with journal.guard(genesis):
+            if phase == boundary:
+                competing_copy()
+            phase = "publication"
+            accepted = journal.append(
+                "accepted",
+                {"request": "retained"},
+                {"effect": "unknown", "hold": "retained"},
+                expected_head=genesis,
+            )
+        committed = journal.head
+        assert authority.checkpoints[path] == committed != genesis
+        retained = custody(path)
+
+    phase = "reopen"
+    with closing(
+        WorkflowJournal.open(
+            path,
+            expected_owner=owner,
+            expected_schema=schema,
+            writer_lease=commissioned_lease(),
+        )
+    ) as journal:
+        assert journal.head == authority.checkpoints[path] == committed
+        assert journal.lookup("accepted", read_authorized=True) == accepted
+        assert accepted["outcome"] == {"effect": "unknown", "hold": "retained"}
+        assert custody(path) == retained
+
+    assert [probe[0] for probe in probes] == [boundary]
+    assert custody(copied) == probes[0][1]
+    assert comparisons == [
+        ("genesis", None, genesis),
+        ("publication", genesis, committed),
+        ("reopen", committed, committed),
+    ]
+    with authority.writer_lease(path) as retained_checkpoint:
+        retained_checkpoint(committed, committed)
+    assert custody(path) == retained
+    assert authority.checkpoints[path] == committed
+    assert canary.read_bytes() == canary_bytes
