@@ -40,7 +40,13 @@ class GuestInputError(RuntimeError):
 
 class Command(Protocol):
     def __call__(
-        self, command: list[str], name: str, nominal: float, *, capture: bool = False
+        self,
+        command: list[str],
+        name: str,
+        nominal: float,
+        *,
+        capture: bool = False,
+        input_path: Path | None = None,
     ) -> str: ...
 
 
