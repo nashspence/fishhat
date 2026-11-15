@@ -4369,6 +4369,26 @@
       "purpose_sha256": "7343796e9b8f442c7678151801726535f218d1e3c530a3bf85730eda5b39cfbe"
     },
     {
+      "node": "tests/test_bundle_ordering.py::test_complete_bundle_filename_work_is_linear",
+      "purpose_sha256": "ae2824f022624a8108857cfbe58622201cbd57eb8d377d91df948db0d9b21f9c"
+    },
+    {
+      "node": "tests/test_bundle_ordering.py::test_standalone_filename_order_preserves_canonical_checksum_order[empty]",
+      "purpose_sha256": "ae2824f022624a8108857cfbe58622201cbd57eb8d377d91df948db0d9b21f9c"
+    },
+    {
+      "node": "tests/test_bundle_ordering.py::test_standalone_filename_order_preserves_canonical_checksum_order[prefix-terminals]",
+      "purpose_sha256": "ae2824f022624a8108857cfbe58622201cbd57eb8d377d91df948db0d9b21f9c"
+    },
+    {
+      "node": "tests/test_bundle_ordering.py::test_standalone_filename_order_preserves_canonical_checksum_order[shared-prefixes]",
+      "purpose_sha256": "ae2824f022624a8108857cfbe58622201cbd57eb8d377d91df948db0d9b21f9c"
+    },
+    {
+      "node": "tests/test_bundle_ordering.py::test_standalone_filename_order_preserves_canonical_checksum_order[unicode-and-filesystem-surrogates]",
+      "purpose_sha256": "ae2824f022624a8108857cfbe58622201cbd57eb8d377d91df948db0d9b21f9c"
+    },
+    {
       "node": "tests/test_cancellation.py::test_closed_wire_and_cli_surface_distinguishes_decision_from_execution",
       "purpose_sha256": "b8026aa147393b3995797c737f7c1da878ab287a4eabd8aa5f24233beeb2fe8d"
     },

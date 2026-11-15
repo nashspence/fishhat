@@ -8,6 +8,7 @@ import re
 import subprocess
 import sys
 import venv
+from collections.abc import Iterable
 from pathlib import Path, PurePosixPath
 from typing import Any
 
@@ -18,6 +19,31 @@ def sha256(path: Path) -> str:
         for chunk in iter(lambda: stream.read(1_048_576), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def _ordered_names(names: Iterable[str]) -> list[str]:
+    """Match Python lexical order with work linear in encoded filename bytes.
+
+    A partition contains at most 256 byte values, so ordering that fixed alphabet
+    adds no collection-size factor. Surrogate pass preserves lexical order for
+    filesystem-surrogate spellings as well as ordinary Unicode names. Bootstrap
+    verification stays standard-library-only, before candidate packages are trusted.
+    """
+    pending = [([(name.encode("utf-8", "surrogatepass"), name) for name in names], 0)]
+    result: list[str] = []
+    while pending:
+        group, offset = pending.pop()
+        if len(group) < 2:
+            result.extend(name for _, name in group)
+            continue
+        children: dict[int, list[tuple[bytes, str]]] = {}
+        for encoded, name in group:
+            if offset == len(encoded):
+                result.append(name)
+            else:
+                children.setdefault(encoded[offset], []).append((encoded, name))
+        pending.extend((children[byte], offset + 1) for byte in sorted(children, reverse=True))
+    return result
 
 
 def verify(bundle: Path, expected: str) -> dict[str, Any]:
@@ -82,7 +108,7 @@ def verify(bundle: Path, expected: str) -> dict[str, Any]:
         **{name: metadata["sha256"] for name, metadata in files.items()},
         "manifest.json": expected,
     }
-    expected_sums = "".join(f"{digest}  {name}\n" for name, digest in sorted(sums.items()))
+    expected_sums = "".join(f"{sums[name]}  {name}\n" for name in _ordered_names(sums))
     if (bundle / "SHA256SUMS").read_text() != expected_sums:
         raise ValueError("bundle checksum inventory changed")
     return manifest
