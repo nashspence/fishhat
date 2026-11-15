@@ -9665,6 +9665,38 @@
       "purpose_sha256": "6a7bc705813712c1c8ab8d42d7ecc68f4ae73304f886337fccec88c40655e30b"
     },
     {
+      "node": "tests/test_local_authority.py::test_writer_lease_excludes_copies_through_each_journal_transition[genesis-app-ops]",
+      "purpose_sha256": "6a7bc705813712c1c8ab8d42d7ecc68f4ae73304f886337fccec88c40655e30b"
+    },
+    {
+      "node": "tests/test_local_authority.py::test_writer_lease_excludes_copies_through_each_journal_transition[genesis-host-ops]",
+      "purpose_sha256": "6a7bc705813712c1c8ab8d42d7ecc68f4ae73304f886337fccec88c40655e30b"
+    },
+    {
+      "node": "tests/test_local_authority.py::test_writer_lease_excludes_copies_through_each_journal_transition[guard-app-ops]",
+      "purpose_sha256": "6a7bc705813712c1c8ab8d42d7ecc68f4ae73304f886337fccec88c40655e30b"
+    },
+    {
+      "node": "tests/test_local_authority.py::test_writer_lease_excludes_copies_through_each_journal_transition[guard-host-ops]",
+      "purpose_sha256": "6a7bc705813712c1c8ab8d42d7ecc68f4ae73304f886337fccec88c40655e30b"
+    },
+    {
+      "node": "tests/test_local_authority.py::test_writer_lease_excludes_copies_through_each_journal_transition[publication-app-ops]",
+      "purpose_sha256": "6a7bc705813712c1c8ab8d42d7ecc68f4ae73304f886337fccec88c40655e30b"
+    },
+    {
+      "node": "tests/test_local_authority.py::test_writer_lease_excludes_copies_through_each_journal_transition[publication-host-ops]",
+      "purpose_sha256": "6a7bc705813712c1c8ab8d42d7ecc68f4ae73304f886337fccec88c40655e30b"
+    },
+    {
+      "node": "tests/test_local_authority.py::test_writer_lease_excludes_copies_through_each_journal_transition[reopen-app-ops]",
+      "purpose_sha256": "6a7bc705813712c1c8ab8d42d7ecc68f4ae73304f886337fccec88c40655e30b"
+    },
+    {
+      "node": "tests/test_local_authority.py::test_writer_lease_excludes_copies_through_each_journal_transition[reopen-host-ops]",
+      "purpose_sha256": "6a7bc705813712c1c8ab8d42d7ecc68f4ae73304f886337fccec88c40655e30b"
+    },
+    {
       "node": "tests/test_maintenance_authority.py::test_builtin_maintenance_cannot_inject_a_hook[backup-check]",
       "purpose_sha256": "e2f4160115816e548fc332438f8e3c8d1c7cb74d3311f9c78a9b0190b3873e0b"
     },
