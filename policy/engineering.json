@@ -2926,7 +2926,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/durability.py": "891cae5d954f755ac0562c05ec0c98afebcb0af963a0829fb37a3493210205a9",
-        "tests/test_durability.py": "7f36c32d447ed1d4486551b1b0816eaa74030826480908795c55c3067f6277e7"
+        "tests/test_durability.py": "97da95923d5be39358df24eb6a7b5365b5b1a03a3f65f1bca43494260194d969"
       },
       "symbol": "fishhat_contracts.durability:checkpoint_decision",
       "work": "O(B) for the complete fixed-shape policy; O(1) per scalar decision, O(K) for K candidate boundaries, with no history traversal or I/O"
@@ -2950,7 +2950,7 @@
       "qualification": "reference-model",
       "sources": {
         "packages/fishhat-contracts/src/fishhat_contracts/durability.py": "891cae5d954f755ac0562c05ec0c98afebcb0af963a0829fb37a3493210205a9",
-        "tests/test_durability.py": "7f36c32d447ed1d4486551b1b0816eaa74030826480908795c55c3067f6277e7"
+        "tests/test_durability.py": "97da95923d5be39358df24eb6a7b5365b5b1a03a3f65f1bca43494260194d969"
       },
       "symbol": "fishhat_contracts.durability:recovery_policy",
       "work": "O(B) for the complete fixed-shape policy; O(1) per scalar decision, O(K) for K candidate boundaries, with no history traversal or I/O"

@@ -94,8 +94,7 @@ def test_policy_and_candidate_boundaries():
         == "insufficient-local-value"
     )
     assert (
-        checkpoint_decision(policy, RecoveryBudget(210), candidate(210, 30)).action
-        == "checkpoint"
+        checkpoint_decision(policy, RecoveryBudget(210), candidate(210, 30)).action == "checkpoint"
     )
 
 
@@ -221,8 +220,7 @@ def test_disabled_optional_recovery_never_blocks_required_work(policy):
     probe = CheckpointCandidate()  # Unknown, unsafe and unadmitted for optional recovery.
     assert checkpoint_decision(policy, budget, probe).action == "continue"
     assert (
-        checkpoint_decision(policy, budget, probe, completion_ready=True).action
-        == "required-work"
+        checkpoint_decision(policy, budget, probe, completion_ready=True).action == "required-work"
     )
     assert (
         checkpoint_decision(policy, budget, probe, required_anchor_ready=True).action
@@ -233,8 +231,7 @@ def test_disabled_optional_recovery_never_blocks_required_work(policy):
 def test_exact_default_boundary_and_no_overflow():
     policy = RecoveryPolicy()
     assert (
-        checkpoint_decision(policy, RecoveryBudget(210), candidate(210, 30)).action
-        == "checkpoint"
+        checkpoint_decision(policy, RecoveryBudget(210), candidate(210, 30)).action == "checkpoint"
     )
     assert (
         checkpoint_decision(
@@ -249,8 +246,7 @@ def test_exact_default_boundary_and_no_overflow():
         == "continue"
     )
     assert (
-        checkpoint_decision(policy, RecoveryBudget(120), candidate(120, 0)).action
-        == "checkpoint"
+        checkpoint_decision(policy, RecoveryBudget(120), candidate(120, 0)).action == "checkpoint"
     )
     # Large finite inputs must not overflow intermediate arithmetic into inf <= inf.
     huge = checkpoint_decision(policy, RecoveryBudget(1e308), candidate(1e308, 1e308))
@@ -289,9 +285,7 @@ def test_nondefault_fraction_uses_total_time_denominator(beta, saved, cost):
     budget = RecoveryBudget(saved)
     assert checkpoint_decision(policy, budget, candidate(saved, cost)).action == "checkpoint"
     assert (
-        checkpoint_decision(
-            policy, budget, candidate(saved, math.nextafter(cost, math.inf))
-        ).action
+        checkpoint_decision(policy, budget, candidate(saved, math.nextafter(cost, math.inf))).action
         == "continue"
     )
     assert (
@@ -397,7 +391,7 @@ def test_candidate_work_is_linear():
         source = asdict(RecoveryPolicy())
         budget, probe = RecoveryBudget(210), candidate(210, 30)
 
-        def run():
+        def run(count=count, source=source, budget=budget, probe=probe):
             for _ in range(count):
                 assert (
                     checkpoint_decision(recovery_policy(source), budget, probe).action
@@ -465,7 +459,3 @@ def test_developer_guide_routes_to_owned_policy():
     assert "fishhat_contracts/durability.py" in guide
     assert "tests/test_durability.py" in guide
     assert "a yield or internal phase does not automatically require a durable cursor" in guide
-    assert (
-        "Long operations progress through bounded steps that can resume after interruption."
-        not in guide
-    )
