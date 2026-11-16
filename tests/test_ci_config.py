@@ -59,12 +59,14 @@ class WorkflowSafety(unittest.TestCase):
     def test_no_self_hosted_runners_or_secrets(self):
         text = (ROOT / ".github/workflows/ci.yml").read_text()
         self.assertNotIn("secrets.", text)
+        platform_jobs = {
+            "installed": ["macos-15", "windows-2025"],
+            "installed-linux": ["ubuntu-24.04"],
+        }
         for name, job in self.workflow["jobs"].items():
-            if name == "installed":
+            if name in platform_jobs:
                 self.assertEqual(job["runs-on"], "${{ matrix.os }}")
-                self.assertEqual(
-                    job["strategy"]["matrix"]["os"], ["ubuntu-24.04", "macos-15", "windows-2025"]
-                )
+                self.assertEqual(job["strategy"]["matrix"]["os"], platform_jobs[name])
             else:
                 self.assertEqual(job["runs-on"], "ubuntu-24.04")
 
@@ -112,6 +114,57 @@ class WorkflowSafety(unittest.TestCase):
             artifact["with"]["path"], "artifacts/native-fixture/controller-enrollment.json"
         )
         self.assertEqual(artifact["with"]["if-no-files-found"], "error")
+
+    def test_native_controller_waits_for_its_ubuntu_candidate_producer(self):
+        jobs = self.workflow["jobs"]
+        controller = jobs["native-controller"]
+        self.assertEqual(
+            controller["needs"], ["watchdogs", "watchdog-regressions", "installed-linux"]
+        )
+        producer = jobs["installed-linux"]
+        self.assertEqual(producer["strategy"]["matrix"]["os"], ["ubuntu-24.04"])
+        self.assertEqual(producer["needs"], ["package", "watchdogs"])
+        self.assertNotIn("if", producer)
+        self.assertNotIn("always()", controller["if"])
+        downloads = [
+            step["with"]["name"]
+            for step in controller["steps"]
+            if "download-artifact@" in step.get("uses", "")
+        ]
+        self.assertEqual(downloads, ["scaffold-candidate-ubuntu-24.04"])
+
+    def test_installed_platforms_share_complete_artifact_validation_steps(self):
+        jobs = self.workflow["jobs"]
+        self.assertIn("installed-linux", jobs)
+        platforms = []
+        producer = jobs["installed-linux"]
+        for key in ("installed", "installed-linux"):
+            job = jobs[key]
+            self.assertEqual(job["name"], "Installed distributions (${{ matrix.os }})")
+            platforms.extend(job["strategy"]["matrix"]["os"])
+            self.assertEqual(job["steps"], producer["steps"])
+            self.assertEqual(job["needs"], ["package", "watchdogs"])
+            self.assertEqual(job["env"]["FISHHAT_VALIDATION_NOMINAL_MINUTES"], "25")
+        self.assertCountEqual(platforms, ["ubuntu-24.04", "macos-15", "windows-2025"])
+        commands = [step["run"] for step in producer["steps"] if "run" in step]
+        self.assertEqual(
+            commands,
+            [
+                "uv sync --locked --all-packages --group dev --python 3.12",
+                "uv run --locked --all-packages --group dev python -m scripts.distributions "
+                "prepare --bundle artifacts/scaffold-bundle",
+                "uv run --locked --all-packages --group dev python -m scripts.distributions "
+                "smoke --bundle artifacts/scaffold-bundle",
+                "uv run --locked --all-packages --group dev python -m scripts.distributions "
+                "archive --bundle artifacts/scaffold-bundle",
+            ],
+        )
+        (upload,) = [
+            step for step in producer["steps"] if "upload-artifact@" in step.get("uses", "")
+        ]
+        self.assertEqual(upload["with"]["name"], "scaffold-candidate-${{ matrix.os }}")
+        self.assertEqual(upload["with"]["path"], "artifacts/scaffold-bundle.zip")
+        self.assertEqual(upload["with"]["if-no-files-found"], "error")
 
     def test_native_smoke_keeps_complete_normal_before_required_interruption_witness(self):
         job = self.workflow["jobs"]["native-prerequisites"]

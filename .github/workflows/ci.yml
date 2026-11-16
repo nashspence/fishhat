@@ -371,8 +371,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, macos-15, windows-2025]
-    steps:
+        os: [macos-15, windows-2025]
+    steps: &installed-distribution-steps
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           persist-credentials: false
@@ -397,6 +397,25 @@ jobs:
           path: artifacts/scaffold-bundle.zip
           retention-days: 7
           if-no-files-found: error
+
+  installed-linux:
+    env:
+      UV_HTTP_TIMEOUT: ${{ fromJSON(needs.watchdogs.outputs.contacts)['installed-linux'].uv }}
+      FISHHAT_VALIDATION_JOB_MINUTES: ${{ fromJSON(needs.watchdogs.outputs.budgets)['installed-linux'] }}
+      FISHHAT_VALIDATION_NOMINAL_MINUTES: '25'
+      FISHHAT_VALIDATION_TIMEOUT_SCALE: ${{ needs.watchdogs.outputs.scale }}
+      CHECK_PURPOSES: implementation
+      CHECK_SCOPE: built/installed scaffold packages only; no native activation
+      CHECK_AUTHORITY: release.toml
+    name: Installed distributions (${{ matrix.os }})
+    needs: [package, watchdogs]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: ${{ fromJSON(needs.watchdogs.outputs.budgets)['installed-linux'] }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04]
+    steps: *installed-distribution-steps
 
   dependency-review:
     env:
@@ -501,7 +520,7 @@ jobs:
           printf '%s\n' 'This job probes disposable-runner systemd/cgroup2, rootless Podman/Quadlet, loopback XFS quotas and SSH. It does not qualify the unfinished owner implementations, reboot recovery, hardware or production migration.' >> "$GITHUB_STEP_SUMMARY"
 
   native-controller:
-    needs: [watchdogs, watchdog-regressions, installed]
+    needs: [watchdogs, watchdog-regressions, installed-linux]
     name: Disposable Linux controller prerequisites (not owner qualification)
     if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-24.04
