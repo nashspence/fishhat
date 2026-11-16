@@ -28,6 +28,25 @@ CHECK_PURPOSE = {
 }
 
 
+CHECK_OVERRIDES = {
+    name: {
+        "purpose": "validation-tooling",
+        "authority": [
+            "scripts/native_linux_owner_wheels.py#_prepare_inputs",
+            "scripts/native_linux_enrollment.py#run",
+        ],
+        "scope": "actual prepared ZIP admission and byte-preserving unprivileged transport input, private custody under caller umasks and refusal of existing destinations",
+        "relationship": "no-product-claim",
+        "reason": "Synthetic non-executed candidate/runtime bytes cross the real input admission guard into an ordinary local byte reader. No native runtime, package, account, SSH or privileged operation executes.",
+        "claims": [],
+    }
+    for name in (
+        "test_prepared_input_crosses_real_transport_guard",
+        "test_prepared_input_never_replaces_existing_destination",
+    )
+}
+
+
 def configuration():
     return {
         "enrollment": "fc72c95b-177a-430a-b5db-f313266b0bbb",
@@ -544,3 +563,104 @@ def test_unapproved_candidate_never_downloads_or_transmits_runtime(tmp_path, mon
     guest = SimpleNamespace(command=refused)
     with pytest.raises(GuestBootError, match=r"owner-wheel-candidate"):
         native._prepare_inputs(guest, tmp_path)
+
+
+@pytest.fixture
+def approved_input_preparation(tmp_path, monkeypatch):
+    import io
+    import tarfile
+
+    monkeypatch.chdir(tmp_path)
+    parent = tmp_path / "artifacts/native-owner-candidate"
+    parent.mkdir(parents=True)
+    bundle = parent / "scaffold-bundle.zip"
+    candidate(bundle)
+    stream = io.BytesIO()
+    executable = b"synthetic non-executed runtime bytes"
+    with tarfile.open(fileobj=stream, mode="w:gz") as archive:
+        member = tarfile.TarInfo("python/bin/python3.12")
+        member.size = len(executable)
+        archive.addfile(member, io.BytesIO(executable))
+    runtime = stream.getvalue()
+
+    def download(command, name, nominal):
+        assert name == "owner-wheel-runtime-download" and nominal == 180
+        assert command[1:4] == ["-I", "-S", "-B"]
+        Path(command[5]).write_bytes(runtime)
+
+    monkeypatch.setattr(native, "source_identity", lambda: {"commit": "a" * 40, "clean": True})
+    monkeypatch.setenv("GITHUB_RUN_ID", "123")
+    return SimpleNamespace(command=download), {
+        "bundle.zip": bundle.read_bytes(),
+        "runtime.tar.gz": runtime,
+    }
+
+
+@pytest.mark.parametrize("mask", [0o000, 0o022, 0o077])
+def test_prepared_input_crosses_real_transport_guard(tmp_path, approved_input_preparation, mask):
+    import os
+    import stat
+    import sys
+    import zipfile
+
+    from scripts.native_linux_enrollment import run
+
+    guest, members = approved_input_preparation
+    previous = os.umask(mask)
+    try:
+        path, record = native._prepare_inputs(guest, tmp_path)
+    finally:
+        os.umask(previous)
+    expected = path.read_bytes()
+    received = run(
+        [
+            sys.executable,
+            "-I",
+            "-S",
+            "-B",
+            "-c",
+            "import hashlib,sys; print(hashlib.sha256(sys.stdin.buffer.read()).hexdigest())",
+        ],
+        "local-byte-reader",
+        10,
+        capture=True,
+        input_path=path,
+    )
+    assert received.strip() == hashlib.sha256(expected).hexdigest() == record["input_sha256"]
+    assert record["input_bytes"] == len(expected)
+    metadata = path.stat()
+    assert stat.S_ISREG(metadata.st_mode) and stat.S_IMODE(metadata.st_mode) == 0o600
+    assert metadata.st_uid == os.geteuid() and metadata.st_nlink == 1
+    with zipfile.ZipFile(path) as archive:
+        assert archive.namelist() == ["runtime.tar.gz", "bundle.zip"]
+        assert {name: archive.read(name) for name in archive.namelist()} == members
+    assert record["candidate_sha256"] == hashlib.sha256(members["bundle.zip"]).hexdigest()
+    assert record["candidate_source"] == {"commit": "a" * 40, "clean": True}
+
+
+@pytest.mark.parametrize("kind", ["regular", "symlink", "hardlink"])
+def test_prepared_input_never_replaces_existing_destination(
+    tmp_path, approved_input_preparation, kind
+):
+    import os
+
+    guest, _ = approved_input_preparation
+    existing = tmp_path / "retained"
+    existing.write_bytes(b"retained synthetic bytes")
+    path = tmp_path / "inputs.zip"
+    if kind == "symlink":
+        path.symlink_to(existing)
+    elif kind == "hardlink":
+        os.link(existing, path)
+    else:
+        path.write_bytes(b"retained synthetic bytes")
+    before = path.lstat()
+    with pytest.raises(FileExistsError):
+        native._prepare_inputs(guest, tmp_path)
+    after = path.lstat()
+    assert (after.st_dev, after.st_ino, after.st_mode) == (
+        before.st_dev,
+        before.st_ino,
+        before.st_mode,
+    )
+    assert path.read_bytes() == existing.read_bytes() == b"retained synthetic bytes"
