@@ -46,13 +46,13 @@
     "ingress": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/ingress-adapter.schema.json",
-        "digest": "sha256:d50a0b8974989ca79d6c9e9da228f849ee347d596a01f83b56a5125c7c50c68f"
+        "digest": "sha256:32518bd7ed070370707465d15350f75075ef50075fdd3597d4caceff78642b91"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/ingress-adapter.schema.json#/$defs/Response",
-        "digest": "sha256:a414b8d21ff74ab45d56bda3f93b5f0f4e22270e2194ea5b299184633ed9626c"
+        "digest": "sha256:70aafe6d03f6ec31483e118b1b49aabc84ccf0e9fc26cc32d0abca5a3fe4c2d0"
       }
     }
   },
-  "process_schema_digest": "sha256:21ba253d1c6b06a85c1d44daa67a5a43fc38b047f8daafedd7ccea96c3b63d2f"
+  "process_schema_digest": "sha256:be911c0d4dc6760393c11ea5486e203ffe89818e36fb6b038d4c4f06a7928c65"
 }
