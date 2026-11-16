@@ -13238,7 +13238,7 @@
     },
     {
       "node": "tests/test_native_linux_roundtrip.py::test_comparison_job_uses_same_enrollment_pins_budget_and_early_controls_as_baseline",
-      "purpose_sha256": "8bf8264cab931356b27a144a28bd0bf6639578a5f985d6fc5c856e4a026f013a"
+      "purpose_sha256": "50d1b1c7e32d969315bd640c4ee256783a582745926eac146f2c22eabe843419"
     },
     {
       "node": "tests/test_native_linux_roundtrip.py::test_comparison_profile_still_refuses_without_explicit_runner_enrollment",

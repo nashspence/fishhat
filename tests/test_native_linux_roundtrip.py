@@ -45,6 +45,14 @@ CHECK_PURPOSE = {
 }
 
 
+CHECK_OVERRIDES = {
+    "test_comparison_job_uses_same_enrollment_pins_budget_and_early_controls_as_baseline": {
+        **CHECK_PURPOSE,
+        "scope": "exact common enrollment, action pins, watchdog gates and nominal budgets across complementary native profiles; only baseline additionally waits for and downloads the exact same-run approved Ubuntu candidate for its protected wheel payload probe",
+    }
+}
+
+
 @pytest.fixture
 def fixture(timeline_fixture, monkeypatch):
     f = timeline_fixture
@@ -461,8 +469,10 @@ def test_comparison_job_uses_same_enrollment_pins_budget_and_early_controls_as_b
     workflow = yaml.load((root / ".github/workflows/ci.yml").read_text(), Loader=yaml.BaseLoader)
     baseline = workflow["jobs"]["native-controller"]
     job = workflow["jobs"]["native-restored-successor"]
-    for key in ("needs", "if", "runs-on"):
+    for key in ("if", "runs-on"):
         assert job[key] == baseline[key]
+    assert job["needs"] == ["watchdogs", "watchdog-regressions"]
+    assert baseline["needs"] == [*job["needs"], "installed"]
     assert (
         job["env"]["FISHHAT_VALIDATION_NOMINAL_MINUTES"]
         == baseline["env"]["FISHHAT_VALIDATION_NOMINAL_MINUTES"]
@@ -470,8 +480,18 @@ def test_comparison_job_uses_same_enrollment_pins_budget_and_early_controls_as_b
     )
     assert "['native-restored-successor']" in job["timeout-minutes"]
     assert job["env"]["CHECK_PURPOSES"] == "validation-tooling"
+    candidate = [s for s in baseline["steps"] if "download-artifact@" in s.get("uses", "")]
+    assert candidate == [
+        {
+            "uses": "actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "with": {
+                "name": "scaffold-candidate-ubuntu-24.04",
+                "path": "artifacts/native-owner-candidate",
+            },
+        }
+    ]
     assert [s["uses"] for s in job["steps"] if "uses" in s] == [
-        s["uses"] for s in baseline["steps"] if "uses" in s
+        s["uses"] for s in baseline["steps"] if "uses" in s and s not in candidate
     ]
     command = "\n".join(s.get("run", "") for s in job["steps"])
     assert "--github-hosted-only --profile restored-successor" in command
