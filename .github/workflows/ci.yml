@@ -501,7 +501,7 @@ jobs:
           printf '%s\n' 'This job probes disposable-runner systemd/cgroup2, rootless Podman/Quadlet, loopback XFS quotas and SSH. It does not qualify the unfinished owner implementations, reboot recovery, hardware or production migration.' >> "$GITHUB_STEP_SUMMARY"
 
   native-controller:
-    needs: [watchdogs, watchdog-regressions]
+    needs: [watchdogs, watchdog-regressions, installed]
     name: Disposable Linux controller prerequisites (not owner qualification)
     if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-24.04
@@ -512,7 +512,7 @@ jobs:
       FISHHAT_VALIDATION_NOMINAL_MINUTES: '25'
       FISHHAT_VALIDATION_TIMEOUT_SCALE: ${{ needs.watchdogs.outputs.scale }}
       CHECK_PURPOSES: validation-tooling
-      CHECK_SCOPE: explicitly enrolled disposable controller dependency, paused TCG/QMP identities and owned-controller fault cleanup and authenticated guest boot/SSH identity and owned disks, isolated guest filesystems/account permissions and partial-storage setup cleanup and owned guest process kill/reaping and independently observed SSH transport loss/retry and isolated real project-quota exhaustion and exact owned allocation release/reuse and known allocation destruction with independent absence/retry after an unadmitted cleanup reply and protected partial quota custody/selected interruption recovery and independently observed graceful same-controller reboot/persisted root canary and separately interrupted reboot observation with exact whole-guest cleanup and verified offline standalone snapshots of stopped owned guest disks and exact protected boot-input borrowing across an original-disk cold controller replacement and complete independently owned private restored disk inputs from verified sealed snapshots and independently authenticated fresh boot of private restored disks under an explicitly owned writable lifetime; no native owner qualification; no full pre/post-snapshot roundtrip qualification
+      CHECK_SCOPE: explicitly enrolled disposable controller dependency, paused TCG/QMP identities and owned-controller fault cleanup and authenticated guest boot/SSH identity and owned disks, isolated guest filesystems/account permissions and partial-storage setup cleanup and owned guest process kill/reaping and independently observed SSH transport loss/retry and isolated real project-quota exhaustion and exact owned allocation release/reuse and known allocation destruction with independent absence/retry after an unadmitted cleanup reply and protected partial quota custody/selected interruption recovery and independently observed graceful same-controller reboot/persisted root canary and separately interrupted reboot observation with exact whole-guest cleanup and verified offline standalone snapshots of stopped owned guest disks and exact protected boot-input borrowing across an original-disk cold controller replacement and complete independently owned private restored disk inputs from verified sealed snapshots and independently authenticated fresh boot of private restored disks under an explicitly owned writable lifetime and exact same-run approved host wheel payload custody with isolated root/peer imports and permission/refusal/interruption witnesses; no native owner qualification; no full pre/post-snapshot roundtrip qualification
       CHECK_AUTHORITY: scripts/native_linux_enrollment.py
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
@@ -525,6 +525,10 @@ jobs:
         with:
           version: '0.11.24'
       - run: uv sync --locked --all-packages --group dev --python 3.12
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: scaffold-candidate-ubuntu-24.04
+          path: artifacts/native-owner-candidate
       - run: uv run --locked --all-packages --group dev --python 3.12 python -m scripts.native_linux_enrollment --github-hosted-only --output artifacts/native-fixture/controller-enrollment.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: ${{ always() }}
