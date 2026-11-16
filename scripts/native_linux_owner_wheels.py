@@ -56,8 +56,9 @@ for distribution, name in c["modules"].items():
     assert path.is_relative_to(c["library"])
     modules[distribution] = {"module": name, "path": str(path), "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
 binary_names = ["_cffi_backend", "yaml._yaml", "markupsafe._speedups", "cryptography.hazmat.bindings._rust", "rpds.rpds"]
-for path in (pathlib.Path(c["library"]) / "sqlalchemy/cyextension").glob("*.so"):
-    binary_names.append("sqlalchemy.cyextension." + path.name.split(".")[0])
+for path in (pathlib.Path(c["library"]) / "sqlalchemy").rglob("*.so"):
+    relative = path.relative_to(c["library"])
+    binary_names.append(".".join((*relative.parts[:-1], path.name.split(".")[0])))
 binaries = {}
 for name in binary_names:
     module = importlib.import_module(name)
