@@ -46,9 +46,9 @@ CHECK_PURPOSE = {
 
 
 CHECK_OVERRIDES = {
-    "test_comparison_job_uses_same_enrollment_pins_budget_and_early_controls_as_baseline": {
+    "test_comparison_job_keeps_common_enrollment_controls_with_profile_owned_budgets": {
         **CHECK_PURPOSE,
-        "scope": "exact common enrollment, action pins, watchdog gates and nominal budgets across complementary native profiles; only baseline additionally waits for and downloads the exact same-run approved Ubuntu candidate for its protected wheel payload probe",
+        "scope": "exact common enrollment, action pins and watchdog gates with profile-owned outer job budgets across complementary native profiles; baseline additionally waits for and downloads the exact same-run approved Ubuntu candidate for its protected wheel payload probe",
     }
 }
 
@@ -464,7 +464,7 @@ def test_baseline_keeps_all_unadvanced_controls_without_repeating_the_source_tim
     assert actual["native_tools_qualified"] is actual["production_qualified"] is False
 
 
-def test_comparison_job_uses_same_enrollment_pins_budget_and_early_controls_as_baseline():
+def test_comparison_job_keeps_common_enrollment_controls_with_profile_owned_budgets():
     root = Path(__file__).resolve().parents[1]
     workflow = yaml.load((root / ".github/workflows/ci.yml").read_text(), Loader=yaml.BaseLoader)
     baseline = workflow["jobs"]["native-controller"]
@@ -473,11 +473,8 @@ def test_comparison_job_uses_same_enrollment_pins_budget_and_early_controls_as_b
         assert job[key] == baseline[key]
     assert job["needs"] == ["watchdogs", "watchdog-regressions"]
     assert baseline["needs"] == [*job["needs"], "installed"]
-    assert (
-        job["env"]["FISHHAT_VALIDATION_NOMINAL_MINUTES"]
-        == baseline["env"]["FISHHAT_VALIDATION_NOMINAL_MINUTES"]
-        == "25"
-    )
+    assert baseline["env"]["FISHHAT_VALIDATION_NOMINAL_MINUTES"] == "40"
+    assert job["env"]["FISHHAT_VALIDATION_NOMINAL_MINUTES"] == "25"
     assert "['native-restored-successor']" in job["timeout-minutes"]
     assert job["env"]["CHECK_PURPOSES"] == "validation-tooling"
     candidate = [s for s in baseline["steps"] if "download-artifact@" in s.get("uses", "")]
