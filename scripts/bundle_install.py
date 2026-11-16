@@ -574,6 +574,31 @@ def _install_owner_python(archive: Path, destination: Path) -> Path:
         os.close(parent)
 
 
+def _prepare_owner_state(destination: Path) -> Path:
+    """Create only fresh protected storage; never commission or adopt an owner.
+
+    The administrator selects the destination outside request/source authority.
+    A failed attempt stays private and is never reused implicitly. Empty storage
+    carries no owner identity, journal schema or checkpoint-write authority.
+    """
+    destination = destination.absolute()
+    parent = _protected_parent(destination)
+    child = None
+    try:
+        os.mkdir(destination.name, mode=0o700, dir_fd=parent)
+        child = _source_directory(parent, (destination.name,))
+        if os.fstat(child).st_uid != os.geteuid():
+            raise ValueError("foreign owner state directory")
+        os.fchmod(child, 0o700)
+        os.fsync(child)
+        os.fsync(parent)
+        return destination
+    finally:
+        if child is not None:
+            os.close(child)
+        os.close(parent)
+
+
 def install(
     bundle: Path, destination: Path, component: str, expected: str, *, timeout_seconds: float = 180
 ) -> Path:

@@ -14737,6 +14737,198 @@
       "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
     },
     {
+      "node": "tests/test_native_owner_state.py::test_controlled_complete_observation_is_accepted_without_native_claim",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_guarded_original_reply_and_statistics_are_retained[accepted]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_guarded_original_reply_and_statistics_are_retained[forged]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_guarded_original_reply_and_statistics_are_retained[invalid-json]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_guarded_original_reply_and_statistics_are_retained[transport-error]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_guest_programs_parse_without_local_execution[INTERRUPTED]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_guest_programs_parse_without_local_execution[PEER]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_guest_programs_parse_without_local_execution[REMOTE]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[admin-refusal]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[boot]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[bootstrap]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[changed-canary]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[changed-inode]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[cleanup-alias]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[cleanup-failure]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[cleanup-path]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[cleanup-presence]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[duplicate-child]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[enrollment]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[existing-data]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[interrupted-boot]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[interrupted-content]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[interrupted-parent]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[missing-ancestors]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[missing-denials]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[missing-refusals]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[observer-pid]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[observer-uid]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[peer-caps]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[peer-gid]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[peer-groups]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[peer-parent]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[peer-pid]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[peer-uid]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[primary-failure]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[qualification]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[scope]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[state-mode]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[state-owner]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[status]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[symlink-refusal]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[unexpected-state]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[unjoined]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[wrong-ancestor]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[wrong-denial]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[wrong-exit]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_incomplete_forged_or_failed_observations_are_rejected[wrong-refusal]",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
+      "node": "tests/test_native_owner_state.py::test_unverified_guest_never_executes_observation",
+      "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
+    },
+    {
       "node": "tests/test_native_smoke.py::test_account_failure_preserves_primary_exit_and_reports_cleanup[cleanup-failure]",
       "purpose_sha256": "56cc9ac6f293e965f08eeb5c5bec1e90fd0cd5cceeca44de6458260d0e807c35"
     },
@@ -18471,6 +18663,62 @@
     {
       "node": "tests/test_protected_owner_python.py::test_unsupported_architecture_creates_no_candidate",
       "purpose_sha256": "8c6ebe56b90d6e51ccd26dd270da66f93d4fdfab3c749be2618cf9e6c9dbacd1"
+    },
+    {
+      "node": "tests/test_protected_owner_state.py::test_ancestry_work_remains_linear_over_complete_path_bytes",
+      "purpose_sha256": "e3e708bd5d70c47efe1c144c284344e4f09b3132fb2984efb5d33c4c2521088a"
+    },
+    {
+      "node": "tests/test_protected_owner_state.py::test_existing_state_is_never_adopted_or_erased[directory]",
+      "purpose_sha256": "e3e708bd5d70c47efe1c144c284344e4f09b3132fb2984efb5d33c4c2521088a"
+    },
+    {
+      "node": "tests/test_protected_owner_state.py::test_existing_state_is_never_adopted_or_erased[file]",
+      "purpose_sha256": "e3e708bd5d70c47efe1c144c284344e4f09b3132fb2984efb5d33c4c2521088a"
+    },
+    {
+      "node": "tests/test_protected_owner_state.py::test_existing_state_is_never_adopted_or_erased[symlink]",
+      "purpose_sha256": "e3e708bd5d70c47efe1c144c284344e4f09b3132fb2984efb5d33c4c2521088a"
+    },
+    {
+      "node": "tests/test_protected_owner_state.py::test_failed_provisioning_preserves_private_attempt_and_fresh_retry[chmod]",
+      "purpose_sha256": "e3e708bd5d70c47efe1c144c284344e4f09b3132fb2984efb5d33c4c2521088a"
+    },
+    {
+      "node": "tests/test_protected_owner_state.py::test_failed_provisioning_preserves_private_attempt_and_fresh_retry[open]",
+      "purpose_sha256": "e3e708bd5d70c47efe1c144c284344e4f09b3132fb2984efb5d33c4c2521088a"
+    },
+    {
+      "node": "tests/test_protected_owner_state.py::test_failed_provisioning_preserves_private_attempt_and_fresh_retry[owner]",
+      "purpose_sha256": "e3e708bd5d70c47efe1c144c284344e4f09b3132fb2984efb5d33c4c2521088a"
+    },
+    {
+      "node": "tests/test_protected_owner_state.py::test_failed_provisioning_preserves_private_attempt_and_fresh_retry[sync-child]",
+      "purpose_sha256": "e3e708bd5d70c47efe1c144c284344e4f09b3132fb2984efb5d33c4c2521088a"
+    },
+    {
+      "node": "tests/test_protected_owner_state.py::test_failed_provisioning_preserves_private_attempt_and_fresh_retry[sync-parent]",
+      "purpose_sha256": "e3e708bd5d70c47efe1c144c284344e4f09b3132fb2984efb5d33c4c2521088a"
+    },
+    {
+      "node": "tests/test_protected_owner_state.py::test_fresh_state_is_private_empty_and_synced_without_initialization",
+      "purpose_sha256": "e3e708bd5d70c47efe1c144c284344e4f09b3132fb2984efb5d33c4c2521088a"
+    },
+    {
+      "node": "tests/test_protected_owner_state.py::test_real_administrative_gate_refuses_before_creating[platform]",
+      "purpose_sha256": "e3e708bd5d70c47efe1c144c284344e4f09b3132fb2984efb5d33c4c2521088a"
+    },
+    {
+      "node": "tests/test_protected_owner_state.py::test_real_administrative_gate_refuses_before_creating[unprivileged]",
+      "purpose_sha256": "e3e708bd5d70c47efe1c144c284344e4f09b3132fb2984efb5d33c4c2521088a"
+    },
+    {
+      "node": "tests/test_protected_owner_state.py::test_real_ancestry_traversal_refuses_substitutions[dotdot]",
+      "purpose_sha256": "e3e708bd5d70c47efe1c144c284344e4f09b3132fb2984efb5d33c4c2521088a"
+    },
+    {
+      "node": "tests/test_protected_owner_state.py::test_real_ancestry_traversal_refuses_substitutions[symlink]",
+      "purpose_sha256": "e3e708bd5d70c47efe1c144c284344e4f09b3132fb2984efb5d33c4c2521088a"
     },
     {
       "node": "tests/test_protected_values.py::test_destination_is_bound_before_native_dispatch[authority]",

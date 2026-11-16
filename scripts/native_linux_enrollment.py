@@ -34,6 +34,7 @@ from scripts.native_linux_guest import Guest, GuestBootError, guest_session, pro
 from scripts.native_linux_images import GuestInputError, GuestInputs, guest_inputs
 from scripts.native_linux_install_inputs import qualify_inputs
 from scripts.native_linux_owner_python import qualify_python
+from scripts.native_linux_owner_state import qualify_state
 from scripts.native_linux_processes import qualify_process_kill
 from scripts.native_linux_reboot import (
     REBOOT,
@@ -832,6 +833,9 @@ def boot_guest(
                         qualify_inputs(guest, report["protected_inputs"])
                     report["owner_python"] = {}
                     qualify_python(guest, temporary, stage, report["owner_python"])
+                    report["owner_state"] = {}
+                    with stage("guest-owner-state-custody"):
+                        qualify_state(guest, report["owner_state"])
                 if not storage_failure:
                     report["reboot"] = {}
                     with stage("guest-reboot"):
