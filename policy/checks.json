@@ -15161,6 +15161,30 @@
       "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
     },
     {
+      "node": "tests/test_native_owner_wheels.py::test_prepared_input_crosses_real_transport_guard[0]",
+      "purpose_sha256": "c9214458f91658404307ff8681de60b333efeb90f31df7a65742864c801c8fb5"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_prepared_input_crosses_real_transport_guard[18]",
+      "purpose_sha256": "c9214458f91658404307ff8681de60b333efeb90f31df7a65742864c801c8fb5"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_prepared_input_crosses_real_transport_guard[63]",
+      "purpose_sha256": "c9214458f91658404307ff8681de60b333efeb90f31df7a65742864c801c8fb5"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_prepared_input_never_replaces_existing_destination[hardlink]",
+      "purpose_sha256": "c9214458f91658404307ff8681de60b333efeb90f31df7a65742864c801c8fb5"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_prepared_input_never_replaces_existing_destination[regular]",
+      "purpose_sha256": "c9214458f91658404307ff8681de60b333efeb90f31df7a65742864c801c8fb5"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_prepared_input_never_replaces_existing_destination[symlink]",
+      "purpose_sha256": "c9214458f91658404307ff8681de60b333efeb90f31df7a65742864c801c8fb5"
+    },
+    {
       "node": "tests/test_native_owner_wheels.py::test_unapproved_candidate_never_downloads_or_transmits_runtime[bootstrap]",
       "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
     },

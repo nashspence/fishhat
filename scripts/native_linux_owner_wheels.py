@@ -422,9 +422,13 @@ def _prepare_inputs(guest: Guest, temporary: Path) -> tuple[Path, dict[str, Any]
                 digest.update(chunk)
             executable_hash = digest.hexdigest()
     path = temporary / "inputs.zip"
-    with zipfile.ZipFile(path, "x", compression=zipfile.ZIP_STORED) as output:
-        output.write(runtime, "runtime.tar.gz")
-        output.write(candidate, "bundle.zip")
+    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    with os.fdopen(descriptor, "wb") as stream:
+        with zipfile.ZipFile(stream, "w", compression=zipfile.ZIP_STORED) as output:
+            output.write(runtime, "runtime.tar.gz")
+            output.write(candidate, "bundle.zip")
+        stream.flush()
+        os.fsync(stream.fileno())
     if hashlib.sha256(candidate.read_bytes()).hexdigest() != candidate_hash:
         raise GuestBootError("owner-wheel-candidate-changed")
     return path, {
