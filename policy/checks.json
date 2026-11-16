@@ -7439,6 +7439,26 @@
       "purpose_sha256": "27a5719f3d599bd3a0124cf4dc578fb11ecf0e767e3d46a8479b2ce3b37058ef"
     },
     {
+      "node": "tests/test_durability.py::test_policy_decodes_equivalent_integer_numbers[maximum]",
+      "purpose_sha256": "50b3485113ac4ecb3cf198a337b70e8657584016a96cc533f05baea55cd4d222"
+    },
+    {
+      "node": "tests/test_durability.py::test_policy_decodes_equivalent_integer_numbers[negative-zero]",
+      "purpose_sha256": "50b3485113ac4ecb3cf198a337b70e8657584016a96cc533f05baea55cd4d222"
+    },
+    {
+      "node": "tests/test_durability.py::test_policy_decodes_equivalent_integer_numbers[positive]",
+      "purpose_sha256": "50b3485113ac4ecb3cf198a337b70e8657584016a96cc533f05baea55cd4d222"
+    },
+    {
+      "node": "tests/test_durability.py::test_policy_decodes_equivalent_integer_numbers[unlimited]",
+      "purpose_sha256": "50b3485113ac4ecb3cf198a337b70e8657584016a96cc533f05baea55cd4d222"
+    },
+    {
+      "node": "tests/test_durability.py::test_policy_decodes_equivalent_integer_numbers[zero]",
+      "purpose_sha256": "50b3485113ac4ecb3cf198a337b70e8657584016a96cc533f05baea55cd4d222"
+    },
+    {
       "node": "tests/test_durability.py::test_policy_is_closed_and_never_a_request_permission",
       "purpose_sha256": "50b3485113ac4ecb3cf198a337b70e8657584016a96cc533f05baea55cd4d222"
     },
@@ -7459,11 +7479,19 @@
       "purpose_sha256": "50b3485113ac4ecb3cf198a337b70e8657584016a96cc533f05baea55cd4d222"
     },
     {
+      "node": "tests/test_durability.py::test_policy_rejects_invalid_configuration[fractional-retention]",
+      "purpose_sha256": "50b3485113ac4ecb3cf198a337b70e8657584016a96cc533f05baea55cd4d222"
+    },
+    {
       "node": "tests/test_durability.py::test_policy_rejects_invalid_configuration[inexact-cap]",
       "purpose_sha256": "50b3485113ac4ecb3cf198a337b70e8657584016a96cc533f05baea55cd4d222"
     },
     {
       "node": "tests/test_durability.py::test_policy_rejects_invalid_configuration[infinite-fraction]",
+      "purpose_sha256": "50b3485113ac4ecb3cf198a337b70e8657584016a96cc533f05baea55cd4d222"
+    },
+    {
+      "node": "tests/test_durability.py::test_policy_rejects_invalid_configuration[infinite-retention]",
       "purpose_sha256": "50b3485113ac4ecb3cf198a337b70e8657584016a96cc533f05baea55cd4d222"
     },
     {
@@ -7476,6 +7504,10 @@
     },
     {
       "node": "tests/test_durability.py::test_policy_rejects_invalid_configuration[mode]",
+      "purpose_sha256": "50b3485113ac4ecb3cf198a337b70e8657584016a96cc533f05baea55cd4d222"
+    },
+    {
+      "node": "tests/test_durability.py::test_policy_rejects_invalid_configuration[nan-cap]",
       "purpose_sha256": "50b3485113ac4ecb3cf198a337b70e8657584016a96cc533f05baea55cd4d222"
     },
     {
@@ -7492,6 +7524,14 @@
     },
     {
       "node": "tests/test_durability.py::test_policy_rejects_invalid_configuration[negative-target]",
+      "purpose_sha256": "50b3485113ac4ecb3cf198a337b70e8657584016a96cc533f05baea55cd4d222"
+    },
+    {
+      "node": "tests/test_durability.py::test_policy_rejects_invalid_configuration[out-of-range-float-cap]",
+      "purpose_sha256": "50b3485113ac4ecb3cf198a337b70e8657584016a96cc533f05baea55cd4d222"
+    },
+    {
+      "node": "tests/test_durability.py::test_policy_rejects_invalid_configuration[out-of-range-float-retention]",
       "purpose_sha256": "50b3485113ac4ecb3cf198a337b70e8657584016a96cc533f05baea55cd4d222"
     },
     {

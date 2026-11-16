@@ -17,7 +17,7 @@ from fishhat_contracts.durability import (
     recovery_policy,
 )
 from fishhat_contracts.handoffs import schema_identity
-from fishhat_contracts.validation import SCHEMAS, ContractError, validate
+from fishhat_contracts.validation import SCHEMAS, ContractError, canonical, validate
 
 from tests.linear_support import assert_linear, measure
 from tests.support import ROOT
@@ -115,9 +115,14 @@ def test_policy_and_candidate_boundaries():
         ("max_optional_checkpoints", True),
         ("max_optional_checkpoints", 1.5),
         ("max_optional_checkpoints", 9_007_199_254_740_992),
+        ("max_optional_checkpoints", 9_007_199_254_740_992.0),
+        ("max_optional_checkpoints", float("nan")),
         ("retained_checkpoint_generations", 1),
         ("retained_checkpoint_generations", True),
         ("retained_checkpoint_generations", None),
+        ("retained_checkpoint_generations", 2.5),
+        ("retained_checkpoint_generations", 9_007_199_254_740_992.0),
+        ("retained_checkpoint_generations", float("inf")),
     ],
     ids=[
         "mode",
@@ -134,9 +139,14 @@ def test_policy_and_candidate_boundaries():
         "boolean-cap",
         "fractional-cap",
         "inexact-cap",
+        "out-of-range-float-cap",
+        "nan-cap",
         "missing-predecessor",
         "boolean-retention",
         "unknown-retention",
+        "fractional-retention",
+        "out-of-range-float-retention",
+        "infinite-retention",
     ],
 )
 def test_policy_rejects_invalid_configuration(key, value):
@@ -145,6 +155,45 @@ def test_policy_rejects_invalid_configuration(key, value):
         recovery_policy(source)
     with pytest.raises(ContractError):
         RecoveryPolicy(**source)
+
+
+@pytest.mark.parametrize(
+    ("limit", "retention"),
+    [
+        (None, 2.0),
+        (0.0, 2.0),
+        (-0.0, 2.0),
+        (1.0, 3.0),
+        (9_007_199_254_740_991.0, 9_007_199_254_740_991.0),
+    ],
+    ids=["unlimited", "zero", "negative-zero", "positive", "maximum"],
+)
+def test_policy_decodes_equivalent_integer_numbers(limit, retention):
+    source = asdict(RecoveryPolicy()) | {
+        "max_optional_checkpoints": limit,
+        "retained_checkpoint_generations": retention,
+    }
+    integers = source | {
+        "max_optional_checkpoints": None if limit is None else int(limit),
+        "retained_checkpoint_generations": int(retention),
+    }
+    assert canonical(source) == canonical(integers)
+    validate("durability.schema.json", source, "RecoveryPolicy")
+    decoded = recovery_policy(source)
+    expected = recovery_policy(integers)
+    assert decoded == expected
+    assert type(decoded.retained_checkpoint_generations) is int
+    assert decoded.max_optional_checkpoints is None or type(decoded.max_optional_checkpoints) is int
+    assert source["max_optional_checkpoints"] is limit
+    assert source["retained_checkpoint_generations"] is retention
+
+    budget, probe = RecoveryBudget(210), candidate(210, 30)
+    result = checkpoint_decision(decoded, budget, probe)
+    assert result == checkpoint_decision(expected, budget, probe)
+    assert result.action == ("continue" if limit == 0 else "checkpoint")
+    if limit is not None:
+        spent = replace(budget, attempts=int(limit))
+        assert checkpoint_decision(decoded, spent, probe).reason == "attempt-limit"
 
 
 def test_policy_is_closed_and_never_a_request_permission():
@@ -175,6 +224,8 @@ def test_scalar_context_rejects_nonfinite_or_coerced_costs(number):
 
 def test_flags_and_counts_are_not_truthy_claims():
     for factory in (
+        lambda: RecoveryPolicy(max_optional_checkpoints=1.0),
+        lambda: RecoveryPolicy(retained_checkpoint_generations=2.0),
         lambda: RecoveryBudget(attempts=True),
         lambda: RecoveryBudget(accounting_complete=1),
         lambda: candidate(replay_safe="yes"),
