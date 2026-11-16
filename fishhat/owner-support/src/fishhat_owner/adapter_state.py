@@ -2,6 +2,10 @@
 
 This models persistence ordering, not native supervision or a separate journal.
 Native observations must be authenticated and qualified by the installed owner.
+These deltas and explicit restore checkpoints retain authoritative effect custody;
+they are not optional saved computation. Pure internal work may yield or replay
+without publishing a delta. Optional derived saves follow the common durability
+policy; neither restart mode nor its budget can waive an effect-state commit.
 """
 
 from __future__ import annotations

@@ -1615,7 +1615,8 @@
     "#/$defs/AdvanceRequest",
     "records.schema.json#/$defs/WorkflowTransferRequest",
     "workflow-recovery.schema.json#/$defs/RecoveryRequest",
-    "#/$defs/PreparationWitness"
+    "#/$defs/PreparationWitness",
+    "durability.schema.json#/$defs/RecoveryPolicy"
   ],
   "description": "Complete immutable procedure intent and shared inspection projections. Live owner admission, local custody and incremental coordination are owned by workflow-journal.schema.json. Complete proposals and full Workflow views belong once to the approved workflow gate, not to each member. The decoded preparation/binding/advance structures in this document describe complete audit relationships; they are not live per-owner RPC inputs."
 }
