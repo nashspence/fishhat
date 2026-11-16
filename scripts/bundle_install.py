@@ -574,6 +574,127 @@ def _install_owner_python(archive: Path, destination: Path) -> Path:
         os.close(parent)
 
 
+# Fixed administrator-selected inputs, never selected by a source or operation request.
+OWNER_BOOTSTRAP_INPUTS = (
+    ("busybox", 2_124_608, "dbac288c29ba568459550a2da9e7ae0ded6b1fc728ee9fad3044c44e62d6ac14"),
+    (
+        "busybox-static_1.36.1-6ubuntu3.1_amd64.deb",
+        1_008_874,
+        "944b2728f53ceb3916cec2c962873c9951e612408099601751db2a0a5d81e0ed",
+    ),
+    (
+        "busybox_1.36.1.orig.tar.bz2",
+        2_525_473,
+        "b8cc24c9574d809e7279c3be349795c5d5ceb6fdf19ca709f80cde50e47de314",
+    ),
+    (
+        "busybox_1.36.1-6ubuntu3.1.debian.tar.xz",
+        84_488,
+        "1c7d785cf1e1d5d09ddc22fe755e14327fb3799878a5d840fc611044ff05f022",
+    ),
+    (
+        "busybox_1.36.1-6ubuntu3.1.dsc",
+        2_711,
+        "ffbee3f0383ea5a3e77033c2bcc1978dc9ae00ff8c9d0a362ee32f6e84254be8",
+    ),
+    (
+        "busybox_1.36.1.orig.tar.bz2.asc",
+        195,
+        "d4a7082ba3cbc35b2fdb4f132a32e3789de66ce468b7b4858563f5f157c28afe",
+    ),
+    ("copyright", 1_110, "336d995e819d3a7a3fdbf3f5041c07094f75ee849acb3bb742b7503d45786329"),
+    ("LICENSE", 18_348, "bbfc9843646d483c334664f651c208b9839626891d8f17604db2146962f43548"),
+)
+
+
+def _verify_owner_bootstrap_elf(executable: Path) -> None:
+    """Check static ELF structure without loading or executing the approved bytes."""
+    import struct
+
+    descriptor = os.open(executable, os.O_RDONLY | os.O_NOFOLLOW)
+    with os.fdopen(descriptor, "rb") as source:
+        size = os.fstat(source.fileno()).st_size
+        header = source.read(64)
+        if len(header) != 64 or header[:7] != b"\x7fELF\x02\x01\x01":
+            raise ValueError("invalid static bootstrap ELF header")
+        fields = struct.unpack_from("<HHIQQQIHHHHHH", header, 16)
+        kind, machine, version, entry, offset = fields[:5]
+        header_size, row_size, rows = fields[7:10]
+        if (
+            (kind, machine, version, header_size, row_size) != (2, 62, 1, 64, 56)
+            or not rows
+            or offset < 64
+            or offset + rows * row_size > size
+        ):
+            raise ValueError("unsupported static bootstrap ELF layout")
+        source.seek(offset)
+        entry_loaded = False
+        for _ in range(rows):
+            row = source.read(row_size)
+            if len(row) != row_size:
+                raise ValueError("truncated static bootstrap ELF program table")
+            segment, flags, start, address, _, extent, memory, _ = struct.unpack("<IIQQQQQQ", row)
+            if segment in (2, 3):
+                raise ValueError("dynamic static bootstrap ELF segment")
+            if segment == 1:
+                if start + extent > size or extent > memory:
+                    raise ValueError("invalid static bootstrap ELF load extent")
+                entry_loaded |= bool(flags & 1 and address <= entry < address + memory)
+        if not entry_loaded:
+            raise ValueError("static bootstrap ELF entry is not executable")
+
+
+def _install_owner_bootstrap(inputs: Path, destination: Path) -> Path:
+    """Retain and seal the fixed static facility and complete source/notices.
+
+    This materializer never executes a binary, extracts a package, invokes a
+    maintainer script, changes credentials or activates an installed command.
+    Only a fresh administrator-selected protected destination can be returned.
+    Existing or failed candidates remain preserved and cannot be reused.
+    """
+    import platform
+
+    destination = destination.absolute()
+    parent = _protected_parent(destination)
+    source = None
+    installed = None
+    try:
+        if platform.machine().lower() != "x86_64":
+            raise ValueError("unsupported static bootstrap architecture")
+        source = _directory_fd(inputs, protected=True)
+        os.mkdir(destination.name, mode=0o700, dir_fd=parent)
+        installed = _source_directory(parent, (destination.name,))
+        for name, size, expected in OWNER_BOOTSTRAP_INPUTS:
+            _copy_regular(source, name, Path(name), parent=installed, expected_size=size)
+            if sha256(destination / name) != expected:
+                raise ValueError("untrusted static bootstrap input")
+        executable = destination / "busybox"
+        _verify_owner_bootstrap_elf(executable)
+        for name, _, _ in OWNER_BOOTSTRAP_INPUTS:
+            descriptor = os.open(name, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=installed)
+            try:
+                os.fchmod(descriptor, 0o555 if name == "busybox" else 0o444)
+                os.fsync(descriptor)
+            finally:
+                os.close(descriptor)
+        os.fsync(installed)
+        os.fsync(parent)
+        os.fchmod(installed, 0o555)
+        os.fsync(installed)
+        return executable
+    except BaseException:
+        if installed is not None:
+            try:
+                os.fchmod(installed, 0o700)
+            except OSError:
+                pass
+        raise
+    finally:
+        for opened in (installed, source, parent):
+            if opened is not None:
+                os.close(opened)
+
+
 def _prepare_owner_state(destination: Path) -> Path:
     """Create only fresh protected storage; never commission or adopt an owner.
 
