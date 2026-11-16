@@ -73,11 +73,13 @@ module = types.ModuleType("approved_interrupted_runtime_installer")
 exec(compile(base64.b64decode(c["bootstrap"]), "<approved-bootstrap>", "exec"), module.__dict__)
 def pause_before_extract(*args, **kwargs):
     path = pathlib.Path(c["ready"])
-    with path.open("x") as stream:
-        os.chmod(path, 0o600)
+    pending = path.with_suffix(".pending")
+    with pending.open("x") as stream:
+        os.chmod(pending, 0o600)
         json.dump({"pid": os.getpid(), "parent_pid": os.getppid(), "uid": os.geteuid(), "boot_id": pathlib.Path("/proc/sys/kernel/random/boot_id").read_text().strip()}, stream)
         stream.flush()
         os.fsync(stream.fileno())
+    os.replace(pending, path)
     assert sys.stdin.buffer.read(1) == b"never release"
     raise AssertionError("interrupted candidate resumed")
 tarfile.open = pause_before_extract

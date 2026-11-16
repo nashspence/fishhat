@@ -14709,6 +14709,30 @@
       "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
     },
     {
+      "node": "tests/test_native_owner_python.py::test_interruption_marker_is_published_after_complete_synced_json[complete-python]",
+      "purpose_sha256": "91c75bd9a1968ebffda90e1ad907b4aef902c77c75b9accb9ea7ff8f4fc17c22"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_interruption_marker_is_published_after_complete_synced_json[complete-state]",
+      "purpose_sha256": "91c75bd9a1968ebffda90e1ad907b4aef902c77c75b9accb9ea7ff8f4fc17c22"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_interruption_marker_is_published_after_complete_synced_json[complete-wheels]",
+      "purpose_sha256": "91c75bd9a1968ebffda90e1ad907b4aef902c77c75b9accb9ea7ff8f4fc17c22"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_interruption_marker_is_published_after_complete_synced_json[interrupted-python]",
+      "purpose_sha256": "91c75bd9a1968ebffda90e1ad907b4aef902c77c75b9accb9ea7ff8f4fc17c22"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_interruption_marker_is_published_after_complete_synced_json[interrupted-state]",
+      "purpose_sha256": "91c75bd9a1968ebffda90e1ad907b4aef902c77c75b9accb9ea7ff8f4fc17c22"
+    },
+    {
+      "node": "tests/test_native_owner_python.py::test_interruption_marker_is_published_after_complete_synced_json[interrupted-wheels]",
+      "purpose_sha256": "91c75bd9a1968ebffda90e1ad907b4aef902c77c75b9accb9ea7ff8f4fc17c22"
+    },
+    {
       "node": "tests/test_native_owner_python.py::test_regular_owned_input_streams_to_ordinary_python_child",
       "purpose_sha256": "4aa7889c7de77a39d84e245fb950075dc420e60c31408409a4d0d0f22e96ee06"
     },
