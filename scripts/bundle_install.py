@@ -599,6 +599,317 @@ def _prepare_owner_state(destination: Path) -> Path:
         os.close(parent)
 
 
+def _wheel_directory(root: int, parts: tuple[str, ...]) -> int:
+    """Create/traverse one private relative path without recursive path rescans."""
+    current = os.dup(root)
+    try:
+        for part in parts:
+            try:
+                os.mkdir(part, mode=0o700, dir_fd=current)
+                os.fsync(current)
+            except FileExistsError:
+                pass
+            child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=current)
+            os.close(current)
+            current = child
+        return current
+    except BaseException:
+        os.close(current)
+        raise
+
+
+def _owner_wheel_tag_compatible(tag: str) -> bool:
+    """Recognize supported CPython/glibc wheel tags without loading candidate code."""
+    pieces = tag.split("-")
+    if len(pieces) != 3:
+        return False
+    language, abi, target = pieces
+    current = f"cp{sys.version_info.major}{sys.version_info.minor}"
+    generic = language in ("py3", f"py3{sys.version_info.minor}") and abi == "none"
+    if target == "any":
+        return generic
+    stable = re.fullmatch(r"cp3([0-9]{1,2})", language)
+    python = (
+        generic
+        or (language == current and abi in (current, "none"))
+        or (abi == "abi3" and stable is not None and 2 <= int(stable[1]) <= sys.version_info.minor)
+    )
+    if not python or sys.platform != "linux":
+        return False
+    import platform
+
+    if platform.machine().lower() != "x86_64":
+        return False
+    libc = os.confstr("CS_GNU_LIBC_VERSION") or ""
+    match = re.fullmatch(r"glibc ([0-9]+)\.([0-9]+)", libc)
+    if match is None:
+        return False
+    required = {"manylinux1_x86_64": 5, "manylinux2010_x86_64": 12, "manylinux2014_x86_64": 17}.get(
+        target
+    )
+    modern = re.fullmatch(r"manylinux_2_([0-9]{1,2})_x86_64", target)
+    if modern is not None:
+        required = int(modern[1])
+    return required is not None and (int(match[1]), int(match[2])) >= (2, required)
+
+
+def _unpack_owner_wheel(wheel: Path, library: int, distribution: str, version: str) -> None:
+    """Materialize an approved root-layout wheel, without hooks or script activation."""
+    import base64
+    import csv
+    import email
+    import zipfile
+
+    prefix = distribution.replace("-", "_") + "-" + version + ".dist-info/"
+    with zipfile.ZipFile(wheel) as archive:
+        files = {}
+        for member in archive.infolist():
+            name = member.filename
+            parts = _member_parts(name)
+            if (
+                member.orig_filename != name
+                or "/".join(parts) + ("/" if member.is_dir() else "") != name
+                or parts[0].endswith(".data")
+                or name.endswith((".pth", ".pyc"))
+                or parts[0] in ("sitecustomize.py", "usercustomize.py")
+                or member.flag_bits & 1
+                or member.compress_type not in (zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED)
+                or stat.S_IFMT(member.external_attr >> 16)
+                not in (0, stat.S_IFDIR if member.is_dir() else stat.S_IFREG)
+                or name in files
+            ):
+                raise ValueError("unsupported or ambiguous owner wheel namespace")
+            files[name] = member
+        for name, member in files.items():
+            if member.is_dir():
+                directory = _wheel_directory(library, _member_parts(name))
+                try:
+                    os.fsync(directory)
+                finally:
+                    os.close(directory)
+        regular = {name: member for name, member in files.items() if not member.is_dir()}
+        roots = {name.split("/", 1)[0] + "/" for name in regular if ".dist-info/" in name}
+        if roots != {prefix}:
+            raise ValueError("owner wheel metadata identity mismatch")
+        metadata = email.message_from_bytes(archive.read(prefix + "METADATA"))
+        wheel_metadata = email.message_from_bytes(archive.read(prefix + "WHEEL"))
+        normalized = re.sub(r"[-_.]+", "-", str(metadata["Name"])).lower()
+        if (
+            len(metadata.get_all("Name", [])) != 1
+            or len(metadata.get_all("Version", [])) != 1
+            or normalized != distribution
+            or metadata["Version"] != version
+            or wheel_metadata.get_all("Wheel-Version", []) != ["1.0"]
+            or wheel_metadata.get_all("Root-Is-Purelib", []) not in (["true"], ["false"])
+        ):
+            raise ValueError("unsupported owner wheel metadata")
+        filename_tags = [
+            set(part.split(".")) for part in wheel.name.removesuffix(".whl").split("-")[-3:]
+        ]
+        tags = wheel_metadata.get_all("Tag", [])
+        if (
+            len(set(tags)) != len(tags)
+            or len(tags) != math.prod(len(part) for part in filename_tags)
+            or any(
+                len(tag.split("-")) != 3
+                or any(
+                    piece not in choices
+                    for piece, choices in zip(tag.split("-"), filename_tags, strict=True)
+                )
+                for tag in tags
+            )
+            or not any(_owner_wheel_tag_compatible(tag) for tag in tags)
+        ):
+            raise ValueError("unsupported owner wheel metadata tags")
+        records = {}
+        for row in csv.reader(io.StringIO(archive.read(prefix + "RECORD").decode("utf-8"))):
+            if len(row) != 3 or row[0] in records:
+                raise ValueError("ambiguous owner wheel record")
+            records[row[0]] = row[1:]
+        if set(records) != set(regular) or records[prefix + "RECORD"] != ["", ""]:
+            raise ValueError("incomplete owner wheel records")
+        for name, member in regular.items():
+            hash_text, size_text = records[name]
+            digest = None
+            if name != prefix + "RECORD":
+                algorithm, separator, encoded = hash_text.partition("=")
+                if (
+                    not separator
+                    or algorithm not in ("sha256", "sha384", "sha512")
+                    or not size_text.isascii()
+                    or not size_text.isdecimal()
+                    or len(size_text) > 20
+                    or int(size_text) != member.file_size
+                ):
+                    raise ValueError("invalid owner wheel record")
+                digest = hashlib.new(algorithm)
+            parts = _member_parts(name)
+            parent = _wheel_directory(library, parts[:-1])
+            descriptor = None
+            try:
+                descriptor = os.open(
+                    parts[-1],
+                    os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                    0o600,
+                    dir_fd=parent,
+                )
+                total = 0
+                with archive.open(member) as source:
+                    while chunk := source.read(1_048_576):
+                        total += len(chunk)
+                        if digest is not None:
+                            digest.update(chunk)
+                        view = memoryview(chunk)
+                        while view:
+                            written = os.write(descriptor, view)
+                            if written <= 0:
+                                raise OSError("owner wheel write made no progress")
+                            view = view[written:]
+                if total != member.file_size or (
+                    digest is not None
+                    and base64.urlsafe_b64encode(digest.digest()).rstrip(b"=").decode() != encoded
+                ):
+                    raise ValueError("owner wheel payload changed")
+                os.fsync(descriptor)
+                os.fsync(parent)
+            finally:
+                if descriptor is not None:
+                    os.close(descriptor)
+                os.close(parent)
+
+
+def _seal_owner_wheels(root: int) -> None:
+    """Seal complete regular payloads using descriptor-relative traversal."""
+    with closing(_source_events(root)) as events:
+        for kind, name, current in events:
+            if os.fstat(current).st_uid != os.geteuid():
+                raise ValueError("foreign owner wheel directory")
+            if kind == "file":
+                descriptor, metadata = _regular_source(current, name)
+                try:
+                    if metadata.st_uid != os.geteuid():
+                        raise ValueError("foreign owner wheel file")
+                    os.fchmod(descriptor, 0o444)
+                    os.fsync(descriptor)
+                finally:
+                    os.close(descriptor)
+            elif kind == "leave":
+                if name:
+                    os.fchmod(current, 0o555)
+                os.fsync(current)
+
+
+def _owner_wheel_selection(
+    bundle: Path, manifest: dict[str, Any]
+) -> tuple[dict[str, Any], dict[str, tuple[str, str]], dict[str, str]]:
+    selection = manifest["components"]["host"]
+    if selection["distribution"] != "fishhat-host" or selection["module"] != "fishhat_host":
+        raise ValueError("unexpected owner component")
+    with _BundleReader(bundle) as reader:
+        pins = {}
+        for line in reader.text(selection["lock"]).splitlines():
+            match = re.fullmatch(
+                r"([A-Za-z0-9_.-]+)==([A-Za-z0-9_.!+-]+) --hash=sha256:([a-f0-9]{64})", line
+            )
+            if match is None:
+                raise ValueError("invalid owner wheel pin")
+            name = re.sub(r"[-_.]+", "-", match[1]).lower()
+            if name in pins:
+                raise ValueError("ambiguous owner wheel pin")
+            pins[name] = (match[2], match[3])
+        if set(pins) != set(selection["dependencies"]):
+            raise ValueError("owner dependency selection changed")
+    selected = {}
+    for name, metadata in manifest["files"].items():
+        if name.startswith("wheels/") and name.endswith(".whl"):
+            parts = name.removeprefix("wheels/").split("-")
+            distribution = re.sub(r"[-_.]+", "-", parts[0]).lower()
+            if distribution not in pins:
+                continue
+            if (
+                len(parts) not in (5, 6)
+                or "/" in name.removeprefix("wheels/")
+                or distribution in selected
+                or (parts[1], metadata["sha256"]) != pins[distribution]
+            ):
+                raise ValueError("ambiguous or changed owner wheel")
+            selected[distribution] = name
+    if set(selected) != set(pins):
+        raise ValueError("incomplete owner wheel closure")
+    return selection, pins, selected
+
+
+def _install_owner_wheels(bundle: Path, destination: Path, expected: str) -> Path:
+    """Retain/seal only approved host wheel payloads in a fresh Linux prefix.
+
+    This root-layout materializer does not resolve dependencies, activate console
+    scripts, execute packages, initialize owner state or accept operation inputs.
+    The independently approved manifest/lock owns the selected runtime closure.
+    An interrupted candidate remains private and is never adopted implicitly.
+    """
+    destination = destination.absolute()
+    parent = _protected_parent(destination)
+    source = None
+    installed = None
+    wheels = None
+    library = None
+    try:
+        source = _directory_fd(bundle, protected=True)
+        manifest = verify(bundle, expected)
+        selection, pins, selected = _owner_wheel_selection(bundle, manifest)
+        os.mkdir(destination.name, mode=0o700, dir_fd=parent)
+        installed = _source_directory(parent, (destination.name,))
+        wheels = _wheel_directory(installed, ("wheels",))
+        library = _wheel_directory(installed, ("lib",))
+        for relative in ("manifest.json", selection["lock"]):
+            parts = _member_parts(relative)
+            source_parent = _source_directory(source, parts[:-1])
+            target_parent = _wheel_directory(installed, parts[:-1])
+            try:
+                _copy_regular(source_parent, parts[-1], Path(parts[-1]), parent=target_parent)
+            finally:
+                os.close(source_parent)
+                os.close(target_parent)
+        if sha256(destination / "manifest.json") != expected:
+            raise ValueError("owner manifest changed")
+        lock = selection["lock"]
+        if sha256(destination / lock) != manifest["files"][lock]["sha256"]:
+            raise ValueError("owner lock changed")
+        wheel_source = _source_directory(source, ("wheels",))
+        try:
+            for distribution, name in selected.items():
+                filename = _member_parts(name)[-1]
+                _copy_regular(
+                    wheel_source,
+                    filename,
+                    Path(filename),
+                    parent=wheels,
+                    expected_size=manifest["files"][name]["size"],
+                )
+                retained = destination / "wheels" / filename
+                if sha256(retained) != pins[distribution][1]:
+                    raise ValueError("owner wheel changed")
+                _unpack_owner_wheel(retained, library, distribution, pins[distribution][0])
+        finally:
+            os.close(wheel_source)
+        _seal_owner_wheels(installed)
+        os.fsync(parent)
+        os.fchmod(installed, 0o555)
+        os.fsync(installed)
+        return destination / "lib"
+    except BaseException:
+        if installed is not None:
+            try:
+                os.fchmod(installed, 0o700)
+            except OSError:
+                pass
+        raise
+    finally:
+        for descriptor in (library, wheels, installed, source, parent):
+            if descriptor is not None:
+                os.close(descriptor)
+
+
 def install(
     bundle: Path, destination: Path, component: str, expected: str, *, timeout_seconds: float = 180
 ) -> Path:

@@ -57,8 +57,8 @@
       ],
       "requiredness_authority": "release.toml#/governance/required_checks",
       "result_authority": "GitHub job conclusion; classification supplies no execution proof",
-      "scope": "explicitly enrolled disposable controller dependency, paused TCG/QMP identities and owned-controller fault cleanup and authenticated guest boot/SSH identity and owned disks, isolated guest filesystems/account permissions and partial-storage setup cleanup and owned guest process kill/reaping and independently observed SSH transport loss/retry and isolated real project-quota exhaustion and exact owned allocation release/reuse and known allocation destruction with independent absence/retry after an unadmitted cleanup reply and protected partial quota custody/selected interruption recovery and independently observed graceful same-controller reboot/persisted root canary and separately interrupted reboot observation with exact whole-guest cleanup and verified offline standalone snapshots of stopped owned guest disks and exact protected boot-input borrowing across an original-disk cold controller replacement and complete independently owned private restored disk inputs from verified sealed snapshots and independently authenticated fresh boot of private restored disks under an explicitly owned writable lifetime; no native owner qualification; no full pre/post-snapshot roundtrip qualification",
-      "work_sha256": "b3bae2df1cf8bf3af0c8ecc6c1792ff1186c7ab78655cd30e7b14f19ff3257b7"
+      "scope": "explicitly enrolled disposable controller dependency, paused TCG/QMP identities and owned-controller fault cleanup and authenticated guest boot/SSH identity and owned disks, isolated guest filesystems/account permissions and partial-storage setup cleanup and owned guest process kill/reaping and independently observed SSH transport loss/retry and isolated real project-quota exhaustion and exact owned allocation release/reuse and known allocation destruction with independent absence/retry after an unadmitted cleanup reply and protected partial quota custody/selected interruption recovery and independently observed graceful same-controller reboot/persisted root canary and separately interrupted reboot observation with exact whole-guest cleanup and verified offline standalone snapshots of stopped owned guest disks and exact protected boot-input borrowing across an original-disk cold controller replacement and complete independently owned private restored disk inputs from verified sealed snapshots and independently authenticated fresh boot of private restored disks under an explicitly owned writable lifetime and exact same-run approved host wheel payload custody with isolated root/peer imports and permission/refusal/interruption witnesses; no native owner qualification; no full pre/post-snapshot roundtrip qualification",
+      "work_sha256": "1bd73a90d4ae99491c977304c5bbb81334cdb6ee81ff4315e15168e2a8a85ef0"
     },
     ".github/workflows/ci.yml:native-prerequisites": {
       "authority": "release.toml",
@@ -14929,6 +14929,266 @@
       "purpose_sha256": "ad81e440e07d650498cceb9a4b5739e584bf80c453305578d7f4170ab6ac2f07"
     },
     {
+      "node": "tests/test_native_owner_wheels.py::test_complete_expected_payload_derivation_includes_every_selected_byte",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_controlled_observation_has_no_native_qualification",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_controller_downloads_same_run_candidate_after_installed_gate",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_fake_authenticated_transport_preserves_originals_and_scoped_stats[claim]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_fake_authenticated_transport_preserves_originals_and_scoped_stats[cleanup]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_fake_authenticated_transport_preserves_originals_and_scoped_stats[malformed]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_fake_authenticated_transport_preserves_originals_and_scoped_stats[none]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_fake_authenticated_transport_preserves_originals_and_scoped_stats[transport]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[admin]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[alias]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[binary-digest]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[binary]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[boot]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[bootstrap]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[bytecode]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[changed-after]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[cleanup-errors]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[cleanup]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[cli]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[denial-errno]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[denial]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[digest]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[enrollment]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[existing]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[extra-payload]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[input]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[interruption-alias]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[interruption-boot]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[interruption-empty]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[interruption-exit]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[interruption-join]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[interruption-parent]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[interruption-public]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[isolated]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[manifest-digest]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[manifest]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[missing-payload]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[module-digest]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[module]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[owner]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[parent]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[path]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[peer-caps]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[peer-groups]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[peer-uid]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[permissions]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[poison]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[primary]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[process]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[qualification]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[refusal]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[runtime-digest]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[runtime]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[scope]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[site]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[status]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_forged_or_incomplete_observation_is_rejected[unreported]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_guest_programs_parse_without_execution",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_unapproved_candidate_never_downloads_or_transmits_runtime[bootstrap]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_unapproved_candidate_never_downloads_or_transmits_runtime[dirty]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_unapproved_candidate_never_downloads_or_transmits_runtime[foreign-run]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_unapproved_candidate_never_downloads_or_transmits_runtime[foreign-source]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_unapproved_candidate_never_downloads_or_transmits_runtime[missing]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_unapproved_candidate_never_downloads_or_transmits_runtime[profile]",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
+      "node": "tests/test_native_owner_wheels.py::test_unverified_guest_never_prepares_or_transmits_inputs",
+      "purpose_sha256": "4f48b4170a17592379853a7c4ce224a4ec494e27314ed7300d3250e18f1d54b1"
+    },
+    {
       "node": "tests/test_native_smoke.py::test_account_failure_preserves_primary_exit_and_reports_cleanup[cleanup-failure]",
       "purpose_sha256": "56cc9ac6f293e965f08eeb5c5bec1e90fd0cd5cceeca44de6458260d0e807c35"
     },
@@ -18719,6 +18979,178 @@
     {
       "node": "tests/test_protected_owner_state.py::test_real_ancestry_traversal_refuses_substitutions[symlink]",
       "purpose_sha256": "e3e708bd5d70c47efe1c144c284344e4f09b3132fb2984efb5d33c4c2521088a"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_approved_selection_is_complete_exact_and_unambiguous[changed-wheel]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_approved_selection_is_complete_exact_and_unambiguous[component]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_approved_selection_is_complete_exact_and_unambiguous[duplicate-pin]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_approved_selection_is_complete_exact_and_unambiguous[duplicate-wheel]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_approved_selection_is_complete_exact_and_unambiguous[missing-wheel]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_approved_selection_is_complete_exact_and_unambiguous[untrusted-manifest]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_complete_selected_payloads_inputs_and_metadata_are_sealed",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_complete_wheel_materialization_work_is_linear[distributions]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_complete_wheel_materialization_work_is_linear[members]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_complete_wheel_materialization_work_is_linear[path-depth]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_complete_wheel_materialization_work_is_linear[payload-bytes]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_existing_destinations_and_unrelated_contents_are_preserved[directory]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_existing_destinations_and_unrelated_contents_are_preserved[file]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_existing_destinations_and_unrelated_contents_are_preserved[symlink]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_failed_candidate_is_private_preserved_and_requires_fresh_retry[payload]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_failed_candidate_is_private_preserved_and_requires_fresh_retry[seal]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_failed_candidate_is_private_preserved_and_requires_fresh_retry[sync]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_invalid_record_never_becomes_an_installation[duplicate]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_invalid_record_never_becomes_an_installation[extra]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_invalid_record_never_becomes_an_installation[hash]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_invalid_record_never_becomes_an_installation[missing]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_invalid_record_never_becomes_an_installation[self-hash]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_invalid_record_never_becomes_an_installation[size]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_invalid_record_never_becomes_an_installation[weak-hash]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_metadata_identity_and_format_are_explicit[duplicate-name]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_metadata_identity_and_format_are_explicit[missing-tags]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_metadata_identity_and_format_are_explicit[name]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_metadata_identity_and_format_are_explicit[purelib]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_metadata_identity_and_format_are_explicit[tags]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_metadata_identity_and_format_are_explicit[version]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_metadata_identity_and_format_are_explicit[wheel-version]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_unsafe_or_unsupported_namespace_never_exposes_success[absolute]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_unsafe_or_unsupported_namespace_never_exposes_success[backslash]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_unsafe_or_unsupported_namespace_never_exposes_success[bytecode]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_unsafe_or_unsupported_namespace_never_exposes_success[dot-part]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_unsafe_or_unsupported_namespace_never_exposes_success[drive]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_unsafe_or_unsupported_namespace_never_exposes_success[empty-part]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_unsafe_or_unsupported_namespace_never_exposes_success[nested-parent]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_unsafe_or_unsupported_namespace_never_exposes_success[parent]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_unsafe_or_unsupported_namespace_never_exposes_success[path-hook]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_unsafe_or_unsupported_namespace_never_exposes_success[site-hook]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_unsafe_or_unsupported_namespace_never_exposes_success[spread]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
+    },
+    {
+      "node": "tests/test_protected_owner_wheels.py::test_unsafe_or_unsupported_namespace_never_exposes_success[user-hook]",
+      "purpose_sha256": "75982b1448bbe835df05827c8c4fd37e0283037ab0edc0a8810392c5976715b3"
     },
     {
       "node": "tests/test_protected_values.py::test_destination_is_bound_before_native_dispatch[authority]",
