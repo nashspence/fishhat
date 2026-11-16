@@ -14,6 +14,8 @@ import pytest
 
 from scripts import native_linux_enrollment as enrollment
 from scripts import native_linux_owner_python as native
+from scripts import native_linux_owner_state as state_native
+from scripts import native_linux_owner_wheels as wheels_native
 from scripts.native_linux_guest import Guest, GuestBootError
 from scripts.run_stats import valid_stats
 from scripts.validation_timeouts import Deadline, Policy, using
@@ -29,6 +31,20 @@ CHECK_PURPOSE = {
     "relationship": "no-product-claim",
     "reason": "Guest programs are parsed only. Fake transports and invented observations exercise rejection rules, never native permission, engine, installation or reboot claims. The command-input tests execute only ordinary isolated Python children on temporary files, without SSH or privileged operations.",
     "claims": [],
+}
+
+
+CHECK_OVERRIDES = {
+    "test_interruption_marker_is_published_after_complete_synced_json": {
+        **CHECK_PURPOSE,
+        "authority": [
+            "scripts/native_linux_owner_python.py",
+            "scripts/native_linux_owner_state.py",
+            "scripts/native_linux_owner_wheels.py",
+        ],
+        "scope": "pure readiness-marker publication excerpts on owned temporary files, complete synchronized JSON visibility and preserved pre-publication interruption",
+        "reason": "Only a call-restricted marker-writing excerpt runs locally, with controlled metadata and real ordinary temporary-file I/O. No bootstrap, installer, native package, selected runtime, SSH, account or credential operation executes. This protects the fixture handoff and supplies no native qualification.",
+    }
 }
 
 
@@ -374,3 +390,126 @@ def test_unprotected_input_never_starts_a_child(tmp_path, monkeypatch, kind):
     ):
         enrollment.run(["never executed"], "controlled-input", 10, input_path=source)
     assert retained.read_bytes() == b"retained input"
+
+
+def _marker_publication(program):
+    tree = ast.parse(program)
+    (function,) = [node for node in tree.body if isinstance(node, ast.FunctionDef)]
+    start = next(
+        index
+        for index, node in enumerate(function.body)
+        if isinstance(node, ast.Assign)
+        and isinstance(node.value, ast.Call)
+        and ast.unparse(node.value.func) == "pathlib.Path"
+        and ast.unparse(node.value.args[0]) == "c['ready']"
+    )
+    stop = next(
+        index
+        for index, node in enumerate(function.body)
+        if isinstance(node, ast.Assert) and "sys.stdin" in ast.unparse(node.test)
+    )
+    fragment = ast.Module(body=function.body[start:stop], type_ignores=[])
+    allowed = {
+        "pathlib.Path",
+        "path.open",
+        "pending.open",
+        "path.with_suffix",
+        "ready.with_suffix",
+        "os.chmod",
+        "json.dump",
+        "os.getpid",
+        "os.getppid",
+        "os.geteuid",
+        "stream.flush",
+        "stream.fileno",
+        "os.fsync",
+        "original",
+        "os.replace",
+        "pathlib.Path('/proc/sys/kernel/random/boot_id').read_text",
+        "pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip",
+    }
+    assert all(
+        ast.unparse(node.func) in allowed
+        for node in ast.walk(fragment)
+        if isinstance(node, ast.Call)
+    )
+    return compile(ast.fix_missing_locations(fragment), "<marker-publication-only>", "exec")
+
+
+@pytest.mark.parametrize("provider", ["python", "state", "wheels"])
+@pytest.mark.parametrize("sync_result", ["complete", "interrupted"])
+def test_interruption_marker_is_published_after_complete_synced_json(
+    tmp_path, provider, sync_result
+):
+    programs = {
+        "python": native.INTERRUPTED,
+        "state": state_native.INTERRUPTED,
+        "wheels": wheels_native.INTERRUPTED,
+    }
+    ready = tmp_path / "ready.json"
+    boot = "00000000-0000-4000-8000-000000000001"
+    expected = {"pid": 102, "parent_pid": 101, "uid": 1000, "boot_id": boot}
+    events = []
+
+    def path(value):
+        if value == str(ready):
+            return ready
+        assert value == "/proc/sys/kernel/random/boot_id"
+        return SimpleNamespace(read_text=lambda: boot + "\n")
+
+    def slow_dump(value, stream):
+        assert not ready.exists(), "marker visible before complete JSON"
+        events.append("write-start")
+        assert value == expected
+        raw = json.dumps(value)
+        midpoint = len(raw) // 2
+        stream.write(raw[:midpoint])
+        stream.flush()
+        assert not ready.exists(), "marker visible during partial JSON write"
+        events.append("partial-json-hidden")
+        stream.write(raw[midpoint:])
+
+    def synchronize(descriptor):
+        assert not ready.exists(), "marker visible before synchronization"
+        events.append("sync")
+        os.fsync(descriptor)
+        if sync_result == "interrupted":
+            raise InterruptedError("controlled pre-publication interruption")
+
+    def publish(source, destination):
+        assert not ready.exists() and destination == ready
+        assert json.loads(source.read_text()) == expected
+        assert source.stat().st_mode & 0o777 == 0o600
+        assert events == ["write-start", "partial-json-hidden", "sync"]
+        os.replace(source, destination)
+        assert json.loads(ready.read_text()) == expected
+        events.append("published")
+
+    namespace = {
+        "c": {"ready": str(ready)},
+        "pathlib": SimpleNamespace(Path=path),
+        "json": SimpleNamespace(dump=slow_dump),
+        "os": SimpleNamespace(
+            getpid=lambda: 102,
+            getppid=lambda: 101,
+            geteuid=lambda: 1000,
+            chmod=os.chmod,
+            fsync=synchronize,
+            replace=publish,
+        ),
+        "original": synchronize,
+    }
+    try:
+        exec(_marker_publication(programs[provider]), namespace)
+    except InterruptedError:
+        assert sync_result == "interrupted"
+        assert not ready.exists()
+        (pending,) = tmp_path.iterdir()
+        assert pending.name == "ready.pending" and json.loads(pending.read_text()) == expected
+        assert pending.stat().st_mode & 0o777 == 0o600
+        assert events == ["write-start", "partial-json-hidden", "sync"]
+    else:
+        assert sync_result == "complete"
+        assert list(tmp_path.iterdir()) == [ready]
+        assert json.loads(ready.read_text()) == expected and ready.stat().st_mode & 0o777 == 0o600
+        assert events == ["write-start", "partial-json-hidden", "sync", "published"]
