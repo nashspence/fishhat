@@ -28,7 +28,17 @@
       "requiredness_authority": "release.toml#/governance/required_checks",
       "result_authority": "GitHub job conclusion; classification supplies no execution proof",
       "scope": "built/installed scaffold packages only; no native activation",
-      "work_sha256": "1230c7acc8b86ae78bee75842dba4d95fba453961cdbf8434e8dd4c875712c14"
+      "work_sha256": "4f69697a8b3f5b0c0c8f18f67ac73f0f10e9c9dcc4c98cb36442724a2b9e1953"
+    },
+    ".github/workflows/ci.yml:installed-linux": {
+      "authority": "release.toml",
+      "purposes": [
+        "implementation"
+      ],
+      "requiredness_authority": "release.toml#/governance/required_checks",
+      "result_authority": "GitHub job conclusion; classification supplies no execution proof",
+      "scope": "built/installed scaffold packages only; no native activation",
+      "work_sha256": "ae4eeeb9b025b3c75877c9cd436abde6b03bdc11af9849bc35eea1dbafd33dbc"
     },
     ".github/workflows/ci.yml:licensing": {
       "authority": "release.toml",
@@ -58,7 +68,7 @@
       "requiredness_authority": "release.toml#/governance/required_checks",
       "result_authority": "GitHub job conclusion; classification supplies no execution proof",
       "scope": "explicitly enrolled disposable controller dependency, paused TCG/QMP identities and owned-controller fault cleanup and authenticated guest boot/SSH identity and owned disks, isolated guest filesystems/account permissions and partial-storage setup cleanup and owned guest process kill/reaping and independently observed SSH transport loss/retry and isolated real project-quota exhaustion and exact owned allocation release/reuse and known allocation destruction with independent absence/retry after an unadmitted cleanup reply and protected partial quota custody/selected interruption recovery and independently observed graceful same-controller reboot/persisted root canary and separately interrupted reboot observation with exact whole-guest cleanup and verified offline standalone snapshots of stopped owned guest disks and exact protected boot-input borrowing across an original-disk cold controller replacement and complete independently owned private restored disk inputs from verified sealed snapshots and independently authenticated fresh boot of private restored disks under an explicitly owned writable lifetime and exact same-run approved host wheel payload custody with isolated root/peer imports and permission/refusal/interruption witnesses; no native owner qualification; no full pre/post-snapshot roundtrip qualification",
-      "work_sha256": "09a6b1ed90048ba7958ee1f7d7d28a3cb9a4f0b503c99dce4115adc8baaa4e8f"
+      "work_sha256": "1e4f7b0b5f49622a019fc3ac76bcce591e8106681bf2aa32d24718192e0b196f"
     },
     ".github/workflows/ci.yml:native-prerequisites": {
       "authority": "release.toml",
@@ -4817,11 +4827,19 @@
       "purpose_sha256": "f9d4487085d6c84dc7e02ba9ab524a49c04de463a61ce753ecec62c1e193c32e"
     },
     {
+      "node": "tests/test_ci_config.py::WorkflowSafety::test_installed_platforms_share_complete_artifact_validation_steps",
+      "purpose_sha256": "f9d4487085d6c84dc7e02ba9ab524a49c04de463a61ce753ecec62c1e193c32e"
+    },
+    {
       "node": "tests/test_ci_config.py::WorkflowSafety::test_main_push_is_a_trigger",
       "purpose_sha256": "f9d4487085d6c84dc7e02ba9ab524a49c04de463a61ce753ecec62c1e193c32e"
     },
     {
       "node": "tests/test_ci_config.py::WorkflowSafety::test_native_controller_requires_main_and_early_regressions",
+      "purpose_sha256": "f9d4487085d6c84dc7e02ba9ab524a49c04de463a61ce753ecec62c1e193c32e"
+    },
+    {
+      "node": "tests/test_ci_config.py::WorkflowSafety::test_native_controller_waits_for_its_ubuntu_candidate_producer",
       "purpose_sha256": "f9d4487085d6c84dc7e02ba9ab524a49c04de463a61ce753ecec62c1e193c32e"
     },
     {

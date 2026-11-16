@@ -449,7 +449,8 @@ def test_controller_downloads_same_run_candidate_after_installed_gate():
     root = Path(__file__).resolve().parents[1]
     workflow = yaml.safe_load((root / ".github/workflows/ci.yml").read_text())
     job = workflow["jobs"]["native-controller"]
-    assert "installed" in job["needs"]
+    assert "installed-linux" in job["needs"]
+    assert workflow["jobs"]["installed-linux"]["strategy"]["matrix"]["os"] == ["ubuntu-24.04"]
     steps = job["steps"]
     selected = [
         (i, step)
