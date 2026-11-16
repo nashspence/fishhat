@@ -2925,8 +2925,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/durability.py": "891cae5d954f755ac0562c05ec0c98afebcb0af963a0829fb37a3493210205a9",
-        "tests/test_durability.py": "97da95923d5be39358df24eb6a7b5365b5b1a03a3f65f1bca43494260194d969"
+        "packages/fishhat-contracts/src/fishhat_contracts/durability.py": "aefeeca61b230a8a8668c424e991c2c06df986dda04ccade7d242fa7549d3a79",
+        "tests/test_durability.py": "19d9639f98bf8dc1791b165e8482247facb4197ec0db9560702c6d8bb12c697e"
       },
       "symbol": "fishhat_contracts.durability:checkpoint_decision",
       "work": "O(B) for the complete fixed-shape policy; O(1) per scalar decision, O(K) for K candidate boundaries, with no history traversal or I/O"
@@ -2949,8 +2949,8 @@
       ],
       "qualification": "reference-model",
       "sources": {
-        "packages/fishhat-contracts/src/fishhat_contracts/durability.py": "891cae5d954f755ac0562c05ec0c98afebcb0af963a0829fb37a3493210205a9",
-        "tests/test_durability.py": "97da95923d5be39358df24eb6a7b5365b5b1a03a3f65f1bca43494260194d969"
+        "packages/fishhat-contracts/src/fishhat_contracts/durability.py": "aefeeca61b230a8a8668c424e991c2c06df986dda04ccade7d242fa7549d3a79",
+        "tests/test_durability.py": "19d9639f98bf8dc1791b165e8482247facb4197ec0db9560702c6d8bb12c697e"
       },
       "symbol": "fishhat_contracts.durability:recovery_policy",
       "work": "O(B) for the complete fixed-shape policy; O(1) per scalar decision, O(K) for K candidate boundaries, with no history traversal or I/O"

@@ -161,7 +161,13 @@ def recovery_policy(value: dict[str, Any] | None = None) -> RecoveryPolicy:
         else value
     )
     validate("durability.schema.json", selected, "RecoveryPolicy")
-    return RecoveryPolicy(**selected)
+    # JSON integers include integral floats. Normalize only after schema admission
+    # so invalid types, fractions and out-of-range counts are never coerced.
+    decoded = dict(selected)
+    for name in ("max_optional_checkpoints", "retained_checkpoint_generations"):
+        if decoded[name] is not None:
+            decoded[name] = int(decoded[name])
+    return RecoveryPolicy(**decoded)
 
 
 @bounds(_policy_bounds("checkpoint_decision"))
