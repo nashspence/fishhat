@@ -131,6 +131,14 @@ def check_text(
             message,
             flags=re.MULTILINE,
         )
+        # GitHub squash commits retain this public automation attribution.
+        # Preserve the display name so any other address remains checked.
+        message = re.sub(
+            r"^(Co-authored-by: [^<>\n]+ <)noreply@openai\.com(>)$",
+            r"\1bot@example.invalid\2",
+            message,
+            flags=re.MULTILINE,
+        )
         email_text = headers + separator + message
     for email in re.findall(r"(?<![\w.+-])[\w.+-]+@([\w.-]+\.[A-Za-z]{2,})", email_text):
         if not (
