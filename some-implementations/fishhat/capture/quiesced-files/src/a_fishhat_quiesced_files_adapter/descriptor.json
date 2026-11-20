@@ -46,13 +46,13 @@
     "capture": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/capture-adapter.schema.json",
-        "digest": "sha256:7a63a7fd0fe4c921f9bd9a7129b2d5f5fbb09e18e98483c0aea2da9e25e9d58a"
+        "digest": "sha256:f542ba56b30c1fb5604182e93f6d561a6a1733e8f37d352e67ef66d674038058"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/capture-adapter.schema.json#/$defs/Response",
-        "digest": "sha256:7225bfac9866e86d1d7ea108db79d00dd3c27a18d9e81b700421c8926b6f4beb"
+        "digest": "sha256:820fe197929e9920ac2efbcbf972c77ba237df1ff6cbf83d002131629dda5368"
       }
     }
   },
-  "process_schema_digest": "sha256:21ba253d1c6b06a85c1d44daa67a5a43fc38b047f8daafedd7ccea96c3b63d2f"
+  "process_schema_digest": "sha256:be911c0d4dc6760393c11ea5486e203ffe89818e36fb6b038d4c4f06a7928c65"
 }

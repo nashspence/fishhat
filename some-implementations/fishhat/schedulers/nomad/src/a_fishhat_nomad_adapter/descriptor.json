@@ -111,13 +111,13 @@
     "scheduler": {
       "request": {
         "uri": "https://fishhat.invalid/contracts/scheduler-adapter.schema.json",
-        "digest": "sha256:c82b65a622842ff35b8a7b3faf52a6d2949e2df3532b4ec2b759e62e1b1c4281"
+        "digest": "sha256:0c6f395ac03c61238b243027921bb59fd610a9c570814b82b49ef0027d007f2e"
       },
       "response": {
         "uri": "https://fishhat.invalid/contracts/scheduler-adapter.schema.json#/$defs/Response",
-        "digest": "sha256:38e5a864d34aac0571e7e7fab94366a2fca98edb21408a66ec4bcfb233c628a1"
+        "digest": "sha256:760f4989de426edd21c9a0b5ee71f5417a3dc65a3702728f0abe2793938cf4dc"
       }
     }
   },
-  "process_schema_digest": "sha256:21ba253d1c6b06a85c1d44daa67a5a43fc38b047f8daafedd7ccea96c3b63d2f"
+  "process_schema_digest": "sha256:be911c0d4dc6760393c11ea5486e203ffe89818e36fb6b038d4c4f06a7928c65"
 }

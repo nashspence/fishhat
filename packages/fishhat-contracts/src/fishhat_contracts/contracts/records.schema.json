@@ -4826,7 +4826,8 @@
     }
   },
   "x-fishhat-contract-dependencies": [
-    "#/$defs/Witness"
+    "#/$defs/Witness",
+    "durability.schema.json#/$defs/RecoveryPolicy"
   ],
   "x-fishhat-catalogue-dependencies": [
     "states.json"

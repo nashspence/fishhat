@@ -26,6 +26,7 @@
     "dns-changes.schema.json",
     "dns-intent.schema.json",
     "drill-result.schema.json",
+    "durability.schema.json",
     "hook-request.schema.json",
     "hook-result.schema.json",
     "host-preimages.schema.json",

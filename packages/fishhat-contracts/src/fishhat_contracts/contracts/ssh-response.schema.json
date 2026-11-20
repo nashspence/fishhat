@@ -1449,5 +1449,8 @@
   ],
   "x-fishhat-catalogue-dependencies": [
     "ssh-methods.json"
+  ],
+  "x-fishhat-contract-dependencies": [
+    "durability.schema.json#/$defs/RecoveryPolicy"
   ]
 }

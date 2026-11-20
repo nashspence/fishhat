@@ -1,5 +1,10 @@
 """Durable append-only workflow custody; no native authority or execution.
 
+These are authoritative acceptance/continuity commits, not optional computation
+saves. The installed durability contract allows bounded group commit with the
+same acceptance and continuity guarantees; this reference append still commits
+before returning. Its internal fsync count is not a native protocol requirement.
+
 The caller supplies a protected owner directory and independently approved schema
 identity. One locked file belongs to one owner epoch. Missing stores never become
 empty state, and interrupted/corrupt records never disappear during restoration.

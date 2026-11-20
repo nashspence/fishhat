@@ -50,11 +50,17 @@ Never expose secrets or private deployment identity in public code, fixtures, lo
 
 ## Bound the work, not the collection
 
-Large collections should not require processing everything at once. *Bounded work* handles a limited portion at a time; a page of results does not limit the total number of results. Long operations progress through bounded steps that can resume after interruption.
+Large collections should not require processing everything at once. *Bounded work* handles a limited portion at a time; a page of results does not limit the total number of results. Long operations make complete progress through bounded execution quanta. Recovery reconstructs accepted work from authoritative custody; a yield or internal phase does not automatically require a durable cursor or a separately resumable transaction.
 
 List bounds may limit a chunk or page only while preserving the complete collection. Any other list bound requires explicit maintainer approval before acceptance or merge, including a total-count cap or a cap enforced through explicit rejection. An operation-owned declaration or operator configuration does not supply that approval. Record the exact proposed bound and its effect on extent in the pull request. Resource limits must not silently omit data; deployment-specific limits that affect accepted work belong in operator configuration.
 
 The operation-owned declarations, [engineering projection](scripts/engineering.py), and [engineering tests](tests/test_engineering.py) identify the maintained bounds and extent proofs.
+
+## Separate execution, authority and optional recovery
+
+The installed [durability contract](packages/fishhat-contracts/src/fishhat_contracts/contracts/durability.schema.json) owns the common replay-safety and optional recovery policy. The [pure decision helper](packages/fishhat-contracts/src/fishhat_contracts/durability.py) and [policy tests](tests/test_durability.py) establish its deterministic reference behavior; each owner still requires its own native reservation, persistence and failure witnesses.
+
+Keep bounded execution, required authoritative commitments and optional saves distinct. Justify persistence boundaries by their protected obligations and failure counterexamples, and consider safe grouping. Apply the installed policy through existing owners without adding a separate policy registry or central service. Preserve complete semantic validation, custody, current authority, extent and growth; measured latency remains an observation.
 
 ## Preserve declared growth bounds
 

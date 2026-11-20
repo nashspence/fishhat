@@ -137,7 +137,14 @@ def _declaration(name: str, work: str) -> Bounds:
 
 
 class JournalStore(Protocol):
-    """Owner-supplied durable custody; append commits before returning."""
+    """Authoritative event custody; append commits before returning.
+
+    This is not an optional computation checkpoint interface. Internal execution
+    yields need not call it. A native bounded group commit may cover several exact
+    events before any covered acknowledgement or dependent effect, preserving
+    independent continuity and every original event identity. The installed
+    durability contract governs optional derived recovery separately.
+    """
 
     @property
     def owner(self) -> JSON: ...
