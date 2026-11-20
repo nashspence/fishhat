@@ -219,7 +219,7 @@ try:
     result['invocations']={}
     for role,peer in [('administrative',False),('peer',True)]:
         debug=poison/('loader-'+role)
-        poison_environment={**clean,'PATH':str(poison),'HOME':str(poison),'PYTHONHOME':str(poison),'PYTHONPATH':str(poison),'PYTHONUSERBASE':str(poison),'PYTHONSTARTUP':str(poison/'startup.py'),'ENV':str(poison/'shell-startup'),'BASH_ENV':str(poison/'shell-startup'),'LD_LIBRARY_PATH':str(poison),'LD_PRELOAD':str(poison/'missing-preload.so'),'LD_DEBUG':'libs,files','LD_DEBUG_OUTPUT':str(debug)}
+        poison_environment={**clean,'PATH':str(poison),'HOME':str(poison),'PYTHONHOME':str(poison),'PYTHONPATH':str(poison),'PYTHONUSERBASE':str(poison),'PYTHONSTARTUP':str(poison/'startup.py'),'ENV':str(poison/'shell-startup'),'BASH_ENV':str(poison/'shell-startup'),'LD_LIBRARY_PATH':str(poison),'LOCPATH':str(poison),'GCONV_PATH':str(poison),'LD_AUDIT':str(poison/'missing-audit.so'),'LD_PRELOAD':str(poison/'missing-preload.so'),'LD_DEBUG':'libs,files','LD_DEBUG_OUTPUT':str(debug)}
         credentials={'user':c['peer_uid'],'group':c['peer_gid'],'extra_groups':[]} if peer else {}
         observed_config={'peer':peer,'probe':str(uuid.uuid4()),'static':str(static),'package':str(installed/package.name),'interrupted':str(interrupted/'busybox'),'substitute':str(substitute),'unavailable':str(installed/'unavailable'),'bootstrap':c['bootstrap'],'poison':str(poison)}
         action=[str(runtime),'-I','-S','-B','-c',c['observe_program'],json.dumps(observed_config)]
@@ -580,10 +580,13 @@ def verify_observation(value: dict[str, Any], c: dict[str, Any]) -> None:
                     "PYTHONPATH",
                     "PYTHONUSERBASE",
                     "LD_LIBRARY_PATH",
+                    "LOCPATH",
+                    "GCONV_PATH",
                 )
             )
             and environment.get("LD_DEBUG") == "libs,files"
             and environment.get("LD_PRELOAD") == poison + "/missing-preload.so"
+            and environment.get("LD_AUDIT") == poison + "/missing-audit.so"
             and environment.get("LD_DEBUG_OUTPUT") == poison + "/loader-" + role
             and environment.get("ENV") == environment.get("BASH_ENV") == poison + "/shell-startup"
             and environment.get("PYTHONSTARTUP") == poison + "/startup.py",

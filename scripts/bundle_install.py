@@ -651,6 +651,8 @@ def _install_owner_bootstrap(inputs: Path, destination: Path) -> Path:
     maintainer script, changes credentials or activates an installed command.
     Only a fresh administrator-selected protected destination can be returned.
     Existing or failed candidates remain preserved and cannot be reused.
+    The fixed build disables locale startup and uses internal account readers.
+    Non-root multi-call startup may still consult root-controlled configuration.
     """
     import platform
 

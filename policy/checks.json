@@ -14895,7 +14895,19 @@
       "purpose_sha256": "9fe4a1e5b20eb5ed8f852d0913911997b69b24a0a88cf0531183b052858b832f"
     },
     {
+      "node": "tests/test_native_owner_bootstrap.py::test_forged_or_incomplete_observation_is_rejected[invocations-peer-negative-environment-GCONV_PATH]",
+      "purpose_sha256": "9fe4a1e5b20eb5ed8f852d0913911997b69b24a0a88cf0531183b052858b832f"
+    },
+    {
+      "node": "tests/test_native_owner_bootstrap.py::test_forged_or_incomplete_observation_is_rejected[invocations-peer-negative-environment-LD_AUDIT]",
+      "purpose_sha256": "9fe4a1e5b20eb5ed8f852d0913911997b69b24a0a88cf0531183b052858b832f"
+    },
+    {
       "node": "tests/test_native_owner_bootstrap.py::test_forged_or_incomplete_observation_is_rejected[invocations-peer-negative-environment-LD_DEBUG]",
+      "purpose_sha256": "9fe4a1e5b20eb5ed8f852d0913911997b69b24a0a88cf0531183b052858b832f"
+    },
+    {
+      "node": "tests/test_native_owner_bootstrap.py::test_forged_or_incomplete_observation_is_rejected[invocations-peer-negative-environment-LOCPATH]",
       "purpose_sha256": "9fe4a1e5b20eb5ed8f852d0913911997b69b24a0a88cf0531183b052858b832f"
     },
     {
