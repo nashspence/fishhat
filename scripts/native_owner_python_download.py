@@ -62,7 +62,14 @@ def main() -> int:
         )
         with os.fdopen(descriptor, "wb") as output:
             opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), ReleaseRedirect())
-            with opener.open(args.url, timeout=args.watchdog_seconds) as source:
+            request = urllib.request.Request(
+                args.url,
+                headers={
+                    "User-Agent": "fishhat-native-fixture/1",
+                    "Accept": "application/octet-stream",
+                },
+            )
+            with opener.open(request, timeout=args.watchdog_seconds) as source:
                 if source.status != 200:
                     raise ValueError("runtime download response")
                 while chunk := source.read(1_048_576):
