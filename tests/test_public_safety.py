@@ -73,3 +73,22 @@ def test_markdown_links_receive_destination_checks():
         "https://doc.yunohost.org/en/admin/what_is_yunohost/",
     ):
         assert check_text("README.md", f"[reference]({url})\u2060") == []
+
+
+def test_public_codex_attribution_is_recognized_only_in_commit_metadata():
+    footer = "Co-authored-by: OpenAI <noreply@" + "openai.com>"
+    assert check_text("commit", "\n\n" + footer, git_commit=True) == []
+    assert check_text("source", footer)
+    assert check_text("commit", "\n\nContact: noreply@" + "openai.com", git_commit=True)
+    assert check_text(
+        "commit", "\n\nCo-authored-by: OpenAI <person@" + "openai.com>", git_commit=True
+    )
+    assert check_text("commit", "\n\n" + footer, ["OpenAI"], git_commit=True)
+    assert check_text(
+        "commit",
+        "\n\nCo-authored-by: person@" + "private-domain.internal <noreply@" + "openai.com>",
+        git_commit=True,
+    )
+    assert check_text(
+        "commit", "\n\n" + footer + "\nprivate@" + "private-domain.internal", git_commit=True
+    )

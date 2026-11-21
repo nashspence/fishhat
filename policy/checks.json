@@ -19851,6 +19851,10 @@
       "purpose_sha256": "f9ce5d769535d030faa9dec9770e8b3b8c2fe86b8b252ab698a46805568a6631"
     },
     {
+      "node": "tests/test_public_safety.py::test_public_codex_attribution_is_recognized_only_in_commit_metadata",
+      "purpose_sha256": "f9ce5d769535d030faa9dec9770e8b3b8c2fe86b8b252ab698a46805568a6631"
+    },
+    {
       "node": "tests/test_publication.py::test_completed_publication_rejects_freshly_signed_substitution[artifact]",
       "purpose_sha256": "ae66d317629ba1bedbbafdc068237e0eb35cd8fdf05c2906646ec4b6612bbec0"
     },
