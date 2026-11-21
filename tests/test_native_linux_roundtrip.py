@@ -473,7 +473,7 @@ def test_comparison_job_keeps_common_enrollment_controls_with_profile_owned_budg
         assert job[key] == baseline[key]
     assert job["needs"] == ["watchdogs", "watchdog-regressions"]
     assert baseline["needs"] == [*job["needs"], "installed-linux"]
-    assert baseline["env"]["FISHHAT_VALIDATION_NOMINAL_MINUTES"] == "40"
+    assert baseline["env"]["FISHHAT_VALIDATION_NOMINAL_MINUTES"] == "60"
     assert job["env"]["FISHHAT_VALIDATION_NOMINAL_MINUTES"] == "25"
     assert "['native-restored-successor']" in job["timeout-minutes"]
     assert job["env"]["CHECK_PURPOSES"] == "validation-tooling"

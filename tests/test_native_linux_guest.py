@@ -751,6 +751,34 @@ def controlled_owner_launcher(
     assert not storage_calls and "reboot" not in events
 
 
+def controlled_owner_entrypoint(
+    fixture,
+    report,
+    input_calls,
+    storage_calls,
+    events,
+    guest,
+    temporary,
+    progress,
+    result,
+    *,
+    root_command,
+):
+    assert guest is fixture["guest"] and result is report["owner_entrypoint"]
+    assert temporary == fixture["temporary"] and root_command is native.root_run
+    assert report["boot_verified"] and report["peer_authenticated"]
+    assert {
+        "owner_python",
+        "owner_state",
+        "owner_wheels",
+        "owner_bootstrap",
+        "owner_launcher",
+    } <= report.keys()
+    assert input_calls == ["controlled-input-observation"]
+    assert not storage_calls and "reboot" not in events
+    result["controlled_observation"] = True
+
+
 @pytest.mark.parametrize(
     (
         "refused",
@@ -833,6 +861,12 @@ def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
         native,
         "qualify_launcher",
         partial(controlled_owner_launcher, fixture, report, input_calls, storage_calls, events),
+    )
+
+    monkeypatch.setattr(
+        native,
+        "qualify_entrypoint",
+        partial(controlled_owner_entrypoint, fixture, report, input_calls, storage_calls, events),
     )
 
     def qualify(guest, progress, result, *, inject_failure):
@@ -1017,6 +1051,9 @@ def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
     )
 
     assert len(input_calls) == (0 if refused or storage_error or reboot_error else 1)
+    assert report.get("owner_entrypoint", {}).get("controlled_observation", False) is not (
+        refused or storage_error or reboot_error
+    )
 
 
 def private_restore_witness(fixture, report, events, restore_error):

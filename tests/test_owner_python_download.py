@@ -38,7 +38,12 @@ def test_download_preserves_complete_identity_and_closed_failure_output(
     }
 
     def open_response(url, timeout):
-        assert url == "https://github.com/public/pinned-input" and timeout == 3
+        assert isinstance(url, urllib.request.Request) and timeout == 3
+        assert url.full_url == "https://github.com/public/pinned-input"
+        assert dict(url.header_items()) == {
+            "User-agent": "fishhat-native-fixture/1",
+            "Accept": "application/octet-stream",
+        }
         if kind == "exception":
             raise OSError("private-redirect-observation-must-not-leak")
         return Response(supplied[kind])

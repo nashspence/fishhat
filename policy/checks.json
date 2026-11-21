@@ -67,8 +67,8 @@
       ],
       "requiredness_authority": "release.toml#/governance/required_checks",
       "result_authority": "GitHub job conclusion; classification supplies no execution proof",
-      "scope": "explicitly enrolled disposable controller dependency, paused TCG/QMP identities and owned-controller fault cleanup and authenticated guest boot/SSH identity and owned disks, isolated guest filesystems/account permissions and partial-storage setup cleanup and owned guest process kill/reaping and independently observed SSH transport loss/retry and isolated real project-quota exhaustion and exact owned allocation release/reuse and known allocation destruction with independent absence/retry after an unadmitted cleanup reply and protected partial quota custody/selected interruption recovery and independently observed graceful same-controller reboot/persisted root canary and separately interrupted reboot observation with exact whole-guest cleanup and verified offline standalone snapshots of stopped owned guest disks and exact protected boot-input borrowing across an original-disk cold controller replacement and complete independently owned private restored disk inputs from verified sealed snapshots and independently authenticated fresh boot of private restored disks under an explicitly owned writable lifetime and exact same-run approved host wheel payload custody with isolated root/peer imports and permission/refusal/interruption witnesses and fixed static bootstrap input/source custody with actual root/peer loader-environment clearing, effective unsanitized controls and interrupted candidate/fresh retry and a repository-built fixed static launch primitive with original-credential rejection, complete literal argv, inherited descriptor closure and independently observed cleanup; no native owner qualification; no full pre/post-snapshot roundtrip qualification",
-      "work_sha256": "1e4f7b0b5f49622a019fc3ac76bcce591e8106681bf2aa32d24718192e0b196f"
+      "scope": "explicitly enrolled disposable controller dependency, paused TCG/QMP identities and owned-controller fault cleanup and authenticated guest boot/SSH identity and owned disks, isolated guest filesystems/account permissions and partial-storage setup cleanup and owned guest process kill/reaping and independently observed SSH transport loss/retry and isolated real project-quota exhaustion and exact owned allocation release/reuse and known allocation destruction with independent absence/retry after an unadmitted cleanup reply and protected partial quota custody/selected interruption recovery and independently observed graceful same-controller reboot/persisted root canary and separately interrupted reboot observation with exact whole-guest cleanup and verified offline standalone snapshots of stopped owned guest disks and exact protected boot-input borrowing across an original-disk cold controller replacement and complete independently owned private restored disk inputs from verified sealed snapshots and independently authenticated fresh boot of private restored disks under an explicitly owned writable lifetime and exact same-run approved host wheel payload custody with isolated root/peer imports and permission/refusal/interruption witnesses and fixed static bootstrap input/source custody with actual root/peer loader-environment clearing, effective unsanitized controls and interrupted candidate/fresh retry and a repository-built fixed static launch primitive with original-credential rejection, complete literal argv, inherited descriptor closure and independently observed cleanup and a fixed installed host command with exact protected runtime/wheel custody, actual root/peer offline invocation, independent live process/file-origin traces, untraced credential rejection and preserved interruption/fresh retry; no native owner qualification; no full pre/post-snapshot roundtrip qualification",
+      "work_sha256": "652a10188239ff9fdbfe9d37d94583ce01dbb9b251a2e196c00308883439243f"
     },
     ".github/workflows/ci.yml:native-prerequisites": {
       "authority": "release.toml",
@@ -167,7 +167,7 @@
       "requiredness_authority": "release.toml#/governance/required_checks",
       "result_authority": "GitHub job conclusion; classification supplies no execution proof",
       "scope": "watchdog propagation and negative progress/cleanup regressions and workflow safety",
-      "work_sha256": "1b65daa571461a28b8893b6dbafbe5c6b34f38c0b0ae38cfa6fa122f65ee9426"
+      "work_sha256": "c00700f844f8e7e198dbb11a094b6984e8575e96a9aacf09c5fd65179f7760b2"
     },
     ".github/workflows/ci.yml:watchdogs": {
       "authority": ".github/workflows/ci.yml",
@@ -15067,6 +15067,354 @@
       "purpose_sha256": "9fe4a1e5b20eb5ed8f852d0913911997b69b24a0a88cf0531183b052858b832f"
     },
     {
+      "node": "tests/test_native_owner_entrypoint.py::test_complete_invented_packet_is_accepted_without_native_execution",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_coordinator_retains_original_reply_cleanup_and_statistics[forged]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_coordinator_retains_original_reply_cleanup_and_statistics[invalid-json]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_coordinator_retains_original_reply_cleanup_and_statistics[passed]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_coordinator_retains_original_reply_cleanup_and_statistics[transport-failure]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_exec_trace_parser_retains_complete_literal_argument_extent[0]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_exec_trace_parser_retains_complete_literal_argument_extent[1024]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_exec_trace_parser_retains_complete_literal_argument_extent[16]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_exec_trace_parser_retains_complete_literal_argument_extent[256]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_exec_trace_parser_retains_complete_literal_argument_extent[64]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_guest_programs_are_syntax_checked_without_running_them[cleanup]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_guest_programs_are_syntax_checked_without_running_them[interruption]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_guest_programs_are_syntax_checked_without_running_them[observer]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[administrative_refusal-candidate_absent]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[boot_id]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[cleanup-0-removed]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[cleanup]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[cleanup_errors]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[complete_after]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[direct_invocations-0-environment-PATH]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[direct_invocations-0-returncode]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[direct_invocations-1-before-uids]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[dispatch_refusals-0-returncode]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[existing_refusal-type]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[inputs_after]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[interrupted_after]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[interrupted_refusal-errno]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[interruption-announced-uid]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[interruption-joined]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[interruption-returncode]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[native_product_qualified]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[negative_controls-0-loader-bytes]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[negative_controls-1-environment-LD_DEBUG]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[negative_controls]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[observer_after-usr-bin-strace-sha256]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[observer_pid]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[observer_tool-executable-mode]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[observer_tool-executable_path]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[observer_tool-offline]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[observer_tool-package_original]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[observer_tool-packages]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[observer_tool-preparation_tool-maintainer_scripts_executed]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[observer_tool-preparation_tool-mode]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[observer_tool-product_runtime_dependency]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[observer_uid]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[peer_denials-command-write-returncode]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[peer_denials]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[primary_error]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[refusals-0-traced]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[refusals-2-before-status-CapEff]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[refusals-3-target-mode]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[refusals-4-target-file_capability]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[refusals]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[retry_after]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[scope]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[status]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[symlink_refusals-0-target_child_absent]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[symlink_refusals]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[traced_invocations-0-code_opens]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[traced_invocations-0-observer_argv]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[traced_invocations-0-observer_environment]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[traced_invocations-0-positive_loader_files]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[traced_invocations-0-string_limit]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[traced_invocations-0-tracee_absent]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[traced_invocations-0-tracer_joined]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[traced_invocations-2-observation-executable]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[traced_invocations-2-observation-pidfd_open]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[traced_invocations-5-observation-cmdline_hex]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[traced_invocations-5-observation-environment_hex]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[traced_invocations-5-observation-status-Groups]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[traced_invocations-5-observation-status-Uid]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[traced_invocations]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[transfer-members]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_incomplete_or_forged_observations_are_refused[transfer-sha256]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_offline_observer_preparation_uses_only_fixed_download_and_package_data_readers[changed-download]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_offline_observer_preparation_uses_only_fixed_download_and_package_data_readers[escaping-alias]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_offline_observer_preparation_uses_only_fixed_download_and_package_data_readers[hardlink]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_offline_observer_preparation_uses_only_fixed_download_and_package_data_readers[none]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_registered_runtime_alias_and_loader_parent_spelling_resolve_to_exact_owned_bytes",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_semantically_forged_original_trace_is_refused_even_with_matching_hash[abbreviated-array]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_semantically_forged_original_trace_is_refused_even_with_matching_hash[changed-executable]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_semantically_forged_original_trace_is_refused_even_with_matching_hash[credential-change]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_semantically_forged_original_trace_is_refused_even_with_matching_hash[extra-network]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_semantically_forged_original_trace_is_refused_even_with_matching_hash[extra-program]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_semantically_forged_original_trace_is_refused_even_with_matching_hash[global-python]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_semantically_forged_original_trace_is_refused_even_with_matching_hash[unjoined-exit]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_unverified_guest_refuses_before_any_facility_or_payload_call",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
       "node": "tests/test_native_owner_launcher.py::test_guest_program_source_parses_without_execution[CLEANUP]",
       "purpose_sha256": "963620a08dafc9d6e91c96cf5ca129b6840161d35c7c4be5efb49b349504bff6"
     },
@@ -19901,6 +20249,110 @@
     {
       "node": "tests/test_protected_owner_bootstrap.py::test_static_elf_admission_rejects_dynamic_or_inconsistent_structure[version-20-I-0]",
       "purpose_sha256": "10152d0cbf6145c1f90db8da762711a5ba8da04dea54e5196fa7d5c9c93f89ec"
+    },
+    {
+      "node": "tests/test_protected_owner_entrypoint.py::test_a_different_fixed_target_is_not_accepted_for_this_installation[interpreter]",
+      "purpose_sha256": "f2f56b7d77b514f96ae91bbefbff93ed92ca4518b59117737ed43c642288e7b0"
+    },
+    {
+      "node": "tests/test_protected_owner_entrypoint.py::test_a_different_fixed_target_is_not_accepted_for_this_installation[program-digest]",
+      "purpose_sha256": "f2f56b7d77b514f96ae91bbefbff93ed92ca4518b59117737ed43c642288e7b0"
+    },
+    {
+      "node": "tests/test_protected_owner_entrypoint.py::test_a_different_fixed_target_is_not_accepted_for_this_installation[program]",
+      "purpose_sha256": "f2f56b7d77b514f96ae91bbefbff93ed92ca4518b59117737ed43c642288e7b0"
+    },
+    {
+      "node": "tests/test_protected_owner_entrypoint.py::test_command_copy_has_complete_extent_and_linear_byte_work",
+      "purpose_sha256": "f2f56b7d77b514f96ae91bbefbff93ed92ca4518b59117737ed43c642288e7b0"
+    },
+    {
+      "node": "tests/test_protected_owner_entrypoint.py::test_command_sealing_refuses_unsafe_final_file[directory]",
+      "purpose_sha256": "f2f56b7d77b514f96ae91bbefbff93ed92ca4518b59117737ed43c642288e7b0"
+    },
+    {
+      "node": "tests/test_protected_owner_entrypoint.py::test_command_sealing_refuses_unsafe_final_file[file-capability]",
+      "purpose_sha256": "f2f56b7d77b514f96ae91bbefbff93ed92ca4518b59117737ed43c642288e7b0"
+    },
+    {
+      "node": "tests/test_protected_owner_entrypoint.py::test_command_sealing_refuses_unsafe_final_file[hardlink]",
+      "purpose_sha256": "f2f56b7d77b514f96ae91bbefbff93ed92ca4518b59117737ed43c642288e7b0"
+    },
+    {
+      "node": "tests/test_protected_owner_entrypoint.py::test_command_sealing_refuses_unsafe_final_file[symlink]",
+      "purpose_sha256": "f2f56b7d77b514f96ae91bbefbff93ed92ca4518b59117737ed43c642288e7b0"
+    },
+    {
+      "node": "tests/test_protected_owner_entrypoint.py::test_complete_fixed_command_is_copied_and_sealed_without_execution",
+      "purpose_sha256": "f2f56b7d77b514f96ae91bbefbff93ed92ca4518b59117737ed43c642288e7b0"
+    },
+    {
+      "node": "tests/test_protected_owner_entrypoint.py::test_corrupt_command_copy_is_never_exposed",
+      "purpose_sha256": "f2f56b7d77b514f96ae91bbefbff93ed92ca4518b59117737ed43c642288e7b0"
+    },
+    {
+      "node": "tests/test_protected_owner_entrypoint.py::test_existing_destination_is_preserved_before_any_child_installation[directory]",
+      "purpose_sha256": "f2f56b7d77b514f96ae91bbefbff93ed92ca4518b59117737ed43c642288e7b0"
+    },
+    {
+      "node": "tests/test_protected_owner_entrypoint.py::test_existing_destination_is_preserved_before_any_child_installation[file]",
+      "purpose_sha256": "f2f56b7d77b514f96ae91bbefbff93ed92ca4518b59117737ed43c642288e7b0"
+    },
+    {
+      "node": "tests/test_protected_owner_entrypoint.py::test_existing_destination_is_preserved_before_any_child_installation[symlink]",
+      "purpose_sha256": "f2f56b7d77b514f96ae91bbefbff93ed92ca4518b59117737ed43c642288e7b0"
+    },
+    {
+      "node": "tests/test_protected_owner_entrypoint.py::test_interruption_preserves_private_candidate_refuses_reuse_and_allows_fresh_retry[_copy_regular]",
+      "purpose_sha256": "f2f56b7d77b514f96ae91bbefbff93ed92ca4518b59117737ed43c642288e7b0"
+    },
+    {
+      "node": "tests/test_protected_owner_entrypoint.py::test_interruption_preserves_private_candidate_refuses_reuse_and_allows_fresh_retry[_install_owner_launcher]",
+      "purpose_sha256": "f2f56b7d77b514f96ae91bbefbff93ed92ca4518b59117737ed43c642288e7b0"
+    },
+    {
+      "node": "tests/test_protected_owner_entrypoint.py::test_interruption_preserves_private_candidate_refuses_reuse_and_allows_fresh_retry[_install_owner_python]",
+      "purpose_sha256": "f2f56b7d77b514f96ae91bbefbff93ed92ca4518b59117737ed43c642288e7b0"
+    },
+    {
+      "node": "tests/test_protected_owner_entrypoint.py::test_interruption_preserves_private_candidate_refuses_reuse_and_allows_fresh_retry[_install_owner_wheels]",
+      "purpose_sha256": "f2f56b7d77b514f96ae91bbefbff93ed92ca4518b59117737ed43c642288e7b0"
+    },
+    {
+      "node": "tests/test_protected_owner_entrypoint.py::test_interruption_preserves_private_candidate_refuses_reuse_and_allows_fresh_retry[_seal_owner_entrypoint]",
+      "purpose_sha256": "f2f56b7d77b514f96ae91bbefbff93ed92ca4518b59117737ed43c642288e7b0"
+    },
+    {
+      "node": "tests/test_protected_owner_entrypoint.py::test_interruption_preserves_private_candidate_refuses_reuse_and_allows_fresh_retry[_write_owner_entrypoint_program]",
+      "purpose_sha256": "f2f56b7d77b514f96ae91bbefbff93ed92ca4518b59117737ed43c642288e7b0"
+    },
+    {
+      "node": "tests/test_protected_owner_entrypoint.py::test_program_is_only_the_fixed_path_and_host_command_import[ascii]",
+      "purpose_sha256": "f2f56b7d77b514f96ae91bbefbff93ed92ca4518b59117737ed43c642288e7b0"
+    },
+    {
+      "node": "tests/test_protected_owner_entrypoint.py::test_program_is_only_the_fixed_path_and_host_command_import[filesystem-surrogate]",
+      "purpose_sha256": "f2f56b7d77b514f96ae91bbefbff93ed92ca4518b59117737ed43c642288e7b0"
+    },
+    {
+      "node": "tests/test_protected_owner_entrypoint.py::test_program_is_only_the_fixed_path_and_host_command_import[line-unicode]",
+      "purpose_sha256": "f2f56b7d77b514f96ae91bbefbff93ed92ca4518b59117737ed43c642288e7b0"
+    },
+    {
+      "node": "tests/test_protected_owner_entrypoint.py::test_program_is_only_the_fixed_path_and_host_command_import[quotes]",
+      "purpose_sha256": "f2f56b7d77b514f96ae91bbefbff93ed92ca4518b59117737ed43c642288e7b0"
+    },
+    {
+      "node": "tests/test_protected_owner_entrypoint.py::test_program_refuses_unsafe_library_paths[nul]",
+      "purpose_sha256": "f2f56b7d77b514f96ae91bbefbff93ed92ca4518b59117737ed43c642288e7b0"
+    },
+    {
+      "node": "tests/test_protected_owner_entrypoint.py::test_program_refuses_unsafe_library_paths[parent]",
+      "purpose_sha256": "f2f56b7d77b514f96ae91bbefbff93ed92ca4518b59117737ed43c642288e7b0"
+    },
+    {
+      "node": "tests/test_protected_owner_entrypoint.py::test_program_refuses_unsafe_library_paths[relative]",
+      "purpose_sha256": "f2f56b7d77b514f96ae91bbefbff93ed92ca4518b59117737ed43c642288e7b0"
     },
     {
       "node": "tests/test_protected_owner_launcher.py::test_complete_copy_hash_and_seal_work_remains_linear_across_byte_extents",

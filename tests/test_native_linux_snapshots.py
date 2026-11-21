@@ -253,9 +253,26 @@ def capture(fixture, report):
     )
 
 
+def preserved_file(path):
+    """Keep byte identity and mutation metadata; ordinary reads may update atime."""
+    raw = path.read_bytes()
+    value = path.lstat()
+    return raw, (
+        value.st_dev,
+        value.st_ino,
+        value.st_mode,
+        value.st_nlink,
+        value.st_uid,
+        value.st_gid,
+        value.st_size,
+        value.st_mtime_ns,
+        value.st_ctime_ns,
+    )
+
+
 def test_cold_capture_checks_exact_extents_complete_logical_contents_seals_and_cleans(fixture):
     f = fixture
-    originals = {p: (p.read_bytes(), p.lstat()) for p in f.inputs.iterdir()}
+    originals = {p: preserved_file(p) for p in f.inputs.iterdir()}
     report = {}
     with capture(f, report) as owned:
         assert owned.active and set(owned.files) == set(images.DISK_BYTES)
@@ -280,7 +297,7 @@ def test_cold_capture_checks_exact_extents_complete_logical_contents_seals_and_c
     assert len(report["phases"]) == 5 and all(
         valid_stats(p["statistics"]) for p in report["phases"]
     )
-    assert {p: (p.read_bytes(), p.lstat()) for p in f.inputs.iterdir()} == originals
+    assert {p: preserved_file(p) for p in f.inputs.iterdir()} == originals
     assert not list(f.temporary.iterdir())
     with pytest.raises(snapshots.SnapshotError, match="snapshot-not-admitted"):
         owned.path("root.qcow2", f.guest.enrollment)
@@ -528,7 +545,7 @@ def test_admitted_capture_records_cannot_be_rewritten_to_adopt_new_custody(fixtu
                 target = neighbor / name
                 target.write_bytes((owned.directory / name).read_bytes())
                 target.chmod(0o400)
-            preserved = {p.name: (p.read_bytes(), p.lstat()) for p in neighbor.iterdir()}
+            preserved = {p.name: preserved_file(p) for p in neighbor.iterdir()}
             before_calls = len(f.state["calls"])
             if mode == "enrollment":
                 owned.enrollment = enrollment = str(uuid.uuid4())
@@ -562,7 +579,7 @@ def test_admitted_capture_records_cannot_be_rewritten_to_adopt_new_custody(fixtu
                 assert len(f.state["calls"]) == before_calls
     assert report["status"] == "failed" and not owned.active
     assert report["temporary_resources_removed"] and not original_directory.exists()
-    assert {p.name: (p.read_bytes(), p.lstat()) for p in neighbor.iterdir()} == preserved
+    assert {p.name: preserved_file(p) for p in neighbor.iterdir()} == preserved
     assert valid_stats(report["statistics"]) and not list(f.temporary.iterdir())
 
 

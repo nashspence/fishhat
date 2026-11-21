@@ -1219,6 +1219,115 @@ def _install_owner_wheels(bundle: Path, destination: Path, expected: str) -> Pat
                 os.close(descriptor)
 
 
+def _owner_entrypoint_program(library: Path) -> bytes:
+    """Render one installation-bound import root, never a request-selected program."""
+    if not library.is_absolute() or ".." in library.parts or "\0" in str(library):
+        raise ValueError("unsafe owner library path")
+    return (
+        "import sys\n"
+        f"sys.path.insert(0, {str(library)!a})\n"
+        "from fishhat_host.cli import main\n"
+        "raise SystemExit(main())\n"
+    ).encode("ascii")
+
+
+def _write_owner_entrypoint_program(installed: int, raw: bytes) -> None:
+    descriptor = os.open(
+        "host-ops.py",
+        os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+        0o600,
+        dir_fd=installed,
+    )
+    with os.fdopen(descriptor, "wb") as stream:
+        stream.write(raw)
+        stream.flush()
+        os.fchmod(stream.fileno(), 0o444)
+        os.fsync(stream.fileno())
+
+
+def _seal_owner_entrypoint(installed: int) -> None:
+    descriptor = os.open("host-ops", os.O_RDONLY | os.O_NOFOLLOW, dir_fd=installed)
+    try:
+        metadata = os.fstat(descriptor)
+        if not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1:
+            raise ValueError("unsafe installed host command")
+        if "security.capability" in os.listxattr(descriptor):
+            raise ValueError("unexpected host command file capability")
+        os.fchmod(descriptor, 0o555)
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+    os.fsync(installed)
+    os.fchmod(installed, 0o555)
+    os.fsync(installed)
+
+
+def _install_owner_entrypoint(
+    bundle: Path,
+    runtime_archive: Path,
+    launcher_inputs: Path,
+    destination: Path,
+    *,
+    manifest_sha256: str,
+    launcher_manifest_sha256: str,
+) -> Path:
+    """Compose approved inputs into a fresh, fixed, protected host command.
+
+    Installation authority selects every input and the destination. The outer
+    directory stays private until the selected runtime, complete host-wheel
+    closure, fixed program and exact static command have been synchronized.
+    Existing and interrupted installations are preserved and refused. This
+    materializer executes no candidate code and initializes no owner state.
+    """
+    destination = destination.absolute()
+    parent = _protected_parent(destination)
+    installed = None
+    launcher = None
+    try:
+        os.mkdir(destination.name, mode=0o700, dir_fd=parent)
+        installed = _source_directory(parent, (destination.name,))
+        interpreter = _install_owner_python(runtime_archive, destination / "runtime")
+        library = _install_owner_wheels(bundle, destination / "packages", manifest_sha256)
+        program = destination / "host-ops.py"
+        raw = _owner_entrypoint_program(library)
+        _write_owner_entrypoint_program(installed, raw)
+        executable = _install_owner_launcher(
+            launcher_inputs, destination / "launcher", launcher_manifest_sha256
+        )
+        manifest = json.loads((destination / "launcher/launcher.json").read_bytes())
+        if manifest["interpreter"]["path"] != str(interpreter) or manifest["program"] != {
+            "path": str(program),
+            "sha256": hashlib.sha256(raw).hexdigest(),
+        }:
+            raise ValueError("host command target binding changed")
+        launcher = _directory_fd(executable.parent, protected=True)
+        expected = manifest["files"]["launch"]
+        _copy_regular(
+            launcher,
+            executable.name,
+            Path("host-ops"),
+            parent=installed,
+            expected_size=expected["bytes"],
+        )
+        command = destination / "host-ops"
+        if sha256(command) != expected["sha256"]:
+            raise ValueError("installed host command changed")
+        _seal_owner_entrypoint(installed)
+        os.fsync(parent)
+        return command
+    except BaseException:
+        if installed is not None:
+            try:
+                os.fchmod(installed, 0o700)
+            except OSError:
+                pass
+        raise
+    finally:
+        for descriptor in (launcher, installed, parent):
+            if descriptor is not None:
+                os.close(descriptor)
+
+
 def install(
     bundle: Path, destination: Path, component: str, expected: str, *, timeout_seconds: float = 180
 ) -> Path:
