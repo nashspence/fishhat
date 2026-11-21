@@ -15379,6 +15379,58 @@
       "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
     },
     {
+      "node": "tests/test_native_owner_entrypoint.py::test_platform_loader_cache_keeps_exact_path_and_protected_file_custody[cache-library-alias]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_platform_loader_cache_keeps_exact_path_and_protected_file_custody[capability]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_platform_loader_cache_keeps_exact_path_and_protected_file_custody[foreign-group]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_platform_loader_cache_keeps_exact_path_and_protected_file_custody[foreign-owner]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_platform_loader_cache_keeps_exact_path_and_protected_file_custody[foreign-path]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_platform_loader_cache_keeps_exact_path_and_protected_file_custody[foreign-resolution]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_platform_loader_cache_keeps_exact_path_and_protected_file_custody[hardlink]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_platform_loader_cache_keeps_exact_path_and_protected_file_custody[invalid-extent]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_platform_loader_cache_keeps_exact_path_and_protected_file_custody[invalid-hash]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_platform_loader_cache_keeps_exact_path_and_protected_file_custody[lookalike-path]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_platform_loader_cache_keeps_exact_path_and_protected_file_custody[setuid-cache]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_platform_loader_cache_keeps_exact_path_and_protected_file_custody[special-file]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
+      "node": "tests/test_native_owner_entrypoint.py::test_platform_loader_cache_keeps_exact_path_and_protected_file_custody[writable-cache]",
+      "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
+    },
+    {
       "node": "tests/test_native_owner_entrypoint.py::test_registered_runtime_alias_and_loader_parent_spelling_resolve_to_exact_owned_bytes",
       "purpose_sha256": "c1aaba1cfb3f80899af0e05d4899d5a83616afc620afd22909dd3ab86a84fb70"
     },
