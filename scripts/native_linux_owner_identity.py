@@ -735,6 +735,7 @@ def _file_events(
     import os
     import posixpath
     import re
+    from pathlib import PurePosixPath
 
     from scripts.native_linux_owner_entrypoint import _literal_values
 
@@ -751,7 +752,7 @@ def _file_events(
         item = os.fsdecode(literals[0])
         if not item.startswith("/"):
             base = poison if directory == "AT_FDCWD" else descriptors[int(directory)][0]
-            item = posixpath.join(base, item)
+            item = str(PurePosixPath(base) / item)
         match = re.fullmatch(r"/proc/self/fd/([0-9]+)(/.*)?", item)
         if match:
             _require(int(match[1]) in descriptors, "unbound-directory-descriptor")

@@ -302,10 +302,39 @@ def fixture_history_errors(root: Path) -> list[str]:
     return errors
 
 
+def state_sources(root: Path, owners: list[dict[str, Any]]) -> tuple[set[str], list[str]]:
+    """Attribute storage helpers to their existing owner's schema authority."""
+    sources: set[str] = set()
+    errors = []
+    for owner in owners:
+        primary = root / owner["source"]
+        supporting = owner.get("supporting_sources", [])
+        if type(supporting) is not list:
+            errors.append("invalid supporting state sources")
+            continue
+        for name in [owner["source"], *supporting]:
+            if type(name) is not str:
+                errors.append("invalid supporting state source")
+                continue
+            path = root / name
+            if (
+                name in sources
+                or path.suffix != ".py"
+                or not path.is_file()
+                or not path.resolve().is_relative_to(primary.parent.resolve())
+                or not path.resolve().is_relative_to(root.resolve())
+            ):
+                errors.append("invalid or duplicate state source")
+            sources.add(name)
+    return sources, errors
+
+
 def state_errors(root: Path = ROOT, history: bool = False) -> list[str]:
     inventory = read_toml(root / "state/inventory.toml")
     errors = fixture_history_errors(root) if history else []
     owners = inventory["owners"]
+    sources, source_errors = state_sources(root, owners)
+    errors.extend(source_errors)
     modules = [owner["module"] for owner in owners + inventory.get("journals", [])]
     if len(set(modules)) != len(modules):
         errors.append("duplicate durable state owner")
@@ -342,7 +371,7 @@ def state_errors(root: Path = ROOT, history: bool = False) -> list[str]:
                 and node.func.attr == "connect"
                 for node in ast.walk(tree)
             ):
-                if str(path.relative_to(root)) not in {owner["source"] for owner in owners}:
+                if str(path.relative_to(root)) not in sources:
                     errors.append("unclassified persistent store")
     return errors
 

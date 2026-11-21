@@ -5059,6 +5059,22 @@
       "purpose_sha256": "fbb38f110c3d8c936ca2f72f7dbf5a1a58a87db13e7f4e3d188fe880f506468f"
     },
     {
+      "node": "tests/test_component_policy.py::test_store_helpers_remain_with_existing_schema_owner[duplicate]",
+      "purpose_sha256": "fbb38f110c3d8c936ca2f72f7dbf5a1a58a87db13e7f4e3d188fe880f506468f"
+    },
+    {
+      "node": "tests/test_component_policy.py::test_store_helpers_remain_with_existing_schema_owner[foreign-owner]",
+      "purpose_sha256": "fbb38f110c3d8c936ca2f72f7dbf5a1a58a87db13e7f4e3d188fe880f506468f"
+    },
+    {
+      "node": "tests/test_component_policy.py::test_store_helpers_remain_with_existing_schema_owner[missing-registration]",
+      "purpose_sha256": "fbb38f110c3d8c936ca2f72f7dbf5a1a58a87db13e7f4e3d188fe880f506468f"
+    },
+    {
+      "node": "tests/test_component_policy.py::test_store_helpers_remain_with_existing_schema_owner[registered]",
+      "purpose_sha256": "fbb38f110c3d8c936ca2f72f7dbf5a1a58a87db13e7f4e3d188fe880f506468f"
+    },
+    {
       "node": "tests/test_component_policy.py::test_unknown_journal_version_refuses_reinitialization",
       "purpose_sha256": "787392b2de95e28622c57e7fc49a31e8eca3b91fa598e88769568b94d66f8923"
     },

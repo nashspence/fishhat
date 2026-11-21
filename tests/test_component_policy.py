@@ -295,3 +295,37 @@ CHECK_OVERRIDES = {
         },
     },
 }
+
+
+@pytest.mark.parametrize(
+    "change", ["registered", "missing-registration", "foreign-owner", "duplicate"]
+)
+def test_store_helpers_remain_with_existing_schema_owner(monkeypatch, change):
+    from scripts import project_policy
+
+    read = project_policy.read_toml
+    inventory = copy.deepcopy(read(ROOT / "state/inventory.toml"))
+    owner = next(row for row in inventory["owners"] if row["id"] == "owner-journal")
+    if change == "missing-registration":
+        owner["supporting_sources"] = []
+    elif change == "foreign-owner":
+        owner["supporting_sources"] = [inventory["owners"][1]["source"]]
+    elif change == "duplicate":
+        owner["supporting_sources"].append(owner["supporting_sources"][0])
+    monkeypatch.setattr(
+        project_policy,
+        "read_toml",
+        lambda path: inventory if path == ROOT / "state/inventory.toml" else read(path),
+    )
+    errors = project_policy.state_errors()
+    if change == "registered":
+        assert not errors
+        assert len(inventory["owners"]) == 2
+        assert (
+            owner["migrations"] == "fishhat_owner.migrations"
+            and owner["migration_head"] == "v1_0003"
+        )
+    elif change == "missing-registration":
+        assert "unclassified persistent store" in errors
+    else:
+        assert "invalid or duplicate state source" in errors
