@@ -28,7 +28,7 @@ from scripts.validation import source_identity
 from scripts.validation_timeouts import watchdog
 
 SCOPE = "disposable-guest-fixed-static-bootstrap-only"
-ARCHIVE = "https://archive.ubuntu.com/ubuntu/pool/main/b/busybox/"
+ARCHIVE = "https://security.ubuntu.com/ubuntu/pool/main/b/busybox/"
 
 
 class ArtifactPin(TypedDict):

@@ -56,6 +56,7 @@ ALLOWED_DOMAINS = {
     "files.pythonhosted.org",
     "cloud-images.ubuntu.com",
     "archive.ubuntu.com",
+    "security.ubuntu.com",
     "localhost",
     "www.apache.org",
     "apache.org",
