@@ -720,6 +720,16 @@ def controlled_owner_wheels(
     assert not storage_calls and "reboot" not in events
 
 
+def controlled_owner_bootstrap(
+    fixture, report, input_calls, storage_calls, events, guest, temporary, progress, result
+):
+    assert guest is fixture["guest"] and result is report["owner_bootstrap"]
+    assert report["boot_verified"] and report["peer_authenticated"]
+    assert {"owner_python", "owner_state", "owner_wheels"} <= report.keys()
+    assert input_calls == ["controlled-input-observation"]
+    assert not storage_calls and "reboot" not in events
+
+
 @pytest.mark.parametrize(
     (
         "refused",
@@ -790,6 +800,12 @@ def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
         native,
         "qualify_wheels",
         partial(controlled_owner_wheels, fixture, report, input_calls, storage_calls, events),
+    )
+
+    monkeypatch.setattr(
+        native,
+        "qualify_bootstrap",
+        partial(controlled_owner_bootstrap, fixture, report, input_calls, storage_calls, events),
     )
 
     def qualify(guest, progress, result, *, inject_failure):

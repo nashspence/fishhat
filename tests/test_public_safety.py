@@ -63,8 +63,10 @@ def test_markdown_links_receive_destination_checks():
     assert check_text(
         "source.py", "https://" + "cloud-images.ubuntu.com.private-domain.internal/path"
     )
+    assert check_text("source.py", "https://" + "archive.ubuntu.com.private-domain.internal/path")
     for url in (
         "https://cloud-images.ubuntu.com/",
+        "https://archive.ubuntu.com/ubuntu/pool/main/b/busybox/",
         "https://docs.ansible.com/projects/ansible/latest/getting_started/basic_concepts.html",
         "https://pyinfra.com/",
         "https://kamal-deploy.org/",
