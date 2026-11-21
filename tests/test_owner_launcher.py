@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 import struct
+from pathlib import Path
 
 import pytest
 
@@ -132,7 +133,20 @@ def test_failed_build_preserves_partial_inputs_without_success_manifest(tmp_path
     assert (tmp_path / "build/launch").read_bytes() == b"incomplete output"
 
 
-@pytest.mark.parametrize("case", ["matching", "version", "architecture", "missing", "duplicate"])
+@pytest.mark.parametrize(
+    "case",
+    [
+        "matching",
+        "version",
+        "architecture",
+        "missing",
+        "duplicate",
+        "driver",
+        "frontend",
+        "assembler",
+        "linker",
+    ],
+)
 def test_build_tool_package_gate_uses_fixed_hosted_pins_and_retains_actual_hashes(
     tmp_path, monkeypatch, case
 ):
@@ -140,11 +154,29 @@ def test_build_tool_package_gate_uses_fixed_hosted_pins_and_retains_actual_hashe
 
     from scripts.native_linux_guest import GuestBootError
 
-    paths = {}
-    for name in launcher.TOOLS:
-        paths[name] = tmp_path / name
-        paths[name].write_bytes(("inert tool identity: " + name).encode())
-    monkeypatch.setattr(launcher, "TOOLS", paths)
+    # Model the files supplied by the selected Ubuntu packages. Keep this
+    # independent of the configured paths so an unsupported layout fails here.
+    layout = {
+        "driver": "/usr/bin/x86_64-linux-gnu-gcc-13",
+        "frontend": "/usr/libexec/gcc/x86_64-linux-gnu/13/cc1",
+        "assembler": "/usr/bin/x86_64-linux-gnu-as",
+        "linker": "/usr/bin/x86_64-linux-gnu-ld.bfd",
+    }
+    paths = {name: tmp_path / name for name in layout}
+    for name, path in paths.items():
+        if name != case:
+            path.write_bytes(("inert tool identity: " + name).encode())
+    selected = {path: paths[name] for name, path in layout.items()}
+    original_open = Path.open
+
+    def open_tool(path, *args, **kwargs):
+        if str(path).startswith("/usr/"):
+            if str(path) not in selected:
+                raise FileNotFoundError("unsupported fixture tool layout")
+            path = selected[str(path)]
+        return original_open(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", open_tool)
     rows = [[name, *values] for name, values in launcher.PACKAGES.items()]
     if case == "version":
         rows[0][1] = "unapproved"
@@ -177,6 +209,9 @@ def test_build_tool_package_gate_uses_fixed_hosted_pins_and_retains_actual_hashe
         assert report["packages"] == {
             name: list(value) for name, value in launcher.PACKAGES.items()
         }
+    elif case in layout:
+        with pytest.raises(GuestBootError, match=f"build-tool-unavailable-{case}"):
+            launcher.provision_tools(command, root, lambda name: nullcontext())
     else:
         with pytest.raises(GuestBootError, match="build-tool-mismatch"):
             launcher.provision_tools(command, root, lambda name: nullcontext())

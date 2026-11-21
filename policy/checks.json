@@ -18819,7 +18819,23 @@
       "purpose_sha256": "5a9c3bff00e64d3b061fe1ce3afd956ff31dc6615999914a19a48a1827032be4"
     },
     {
+      "node": "tests/test_owner_launcher.py::test_build_tool_package_gate_uses_fixed_hosted_pins_and_retains_actual_hashes[assembler]",
+      "purpose_sha256": "5a9c3bff00e64d3b061fe1ce3afd956ff31dc6615999914a19a48a1827032be4"
+    },
+    {
+      "node": "tests/test_owner_launcher.py::test_build_tool_package_gate_uses_fixed_hosted_pins_and_retains_actual_hashes[driver]",
+      "purpose_sha256": "5a9c3bff00e64d3b061fe1ce3afd956ff31dc6615999914a19a48a1827032be4"
+    },
+    {
       "node": "tests/test_owner_launcher.py::test_build_tool_package_gate_uses_fixed_hosted_pins_and_retains_actual_hashes[duplicate]",
+      "purpose_sha256": "5a9c3bff00e64d3b061fe1ce3afd956ff31dc6615999914a19a48a1827032be4"
+    },
+    {
+      "node": "tests/test_owner_launcher.py::test_build_tool_package_gate_uses_fixed_hosted_pins_and_retains_actual_hashes[frontend]",
+      "purpose_sha256": "5a9c3bff00e64d3b061fe1ce3afd956ff31dc6615999914a19a48a1827032be4"
+    },
+    {
+      "node": "tests/test_owner_launcher.py::test_build_tool_package_gate_uses_fixed_hosted_pins_and_retains_actual_hashes[linker]",
       "purpose_sha256": "5a9c3bff00e64d3b061fe1ce3afd956ff31dc6615999914a19a48a1827032be4"
     },
     {

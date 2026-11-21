@@ -30,7 +30,7 @@ PACKAGES = {
 }
 TOOLS = {
     "driver": Path("/usr/bin/x86_64-linux-gnu-gcc-13"),
-    "frontend": Path("/usr/lib/gcc/x86_64-linux-gnu/13/cc1"),
+    "frontend": Path("/usr/libexec/gcc/x86_64-linux-gnu/13/cc1"),
     "assembler": Path("/usr/bin/x86_64-linux-gnu-as"),
     "linker": Path("/usr/bin/x86_64-linux-gnu-ld.bfd"),
 }
@@ -106,8 +106,11 @@ def provision_tools(
             raise GuestBootError("owner-launcher-build-tool-mismatch")
         hashes = {}
         for name, path in TOOLS.items():
-            with path.open("rb") as stream:
-                hashes[name] = hashlib.file_digest(stream, "sha256").hexdigest()
+            try:
+                with path.open("rb") as stream:
+                    hashes[name] = hashlib.file_digest(stream, "sha256").hexdigest()
+            except OSError:
+                raise GuestBootError(f"owner-launcher-build-tool-unavailable-{name}") from None
         return {
             "packages": {name: list(version) for name, version in PACKAGES.items()},
             "sha256": hashes,
