@@ -2904,11 +2904,11 @@
   "sources": {
     "fishhat/app-ops/pyproject.toml": "67a1aab63f53c8bc43001f2e99a0e32813ca1d8520021b20bf240cbd717cebf2",
     "fishhat/app-ops/src/fishhat_app/cli.py": "270fee1b171f53ecd42834ea9eff986bf21d1855410cac7407c2042f7a50fee6",
-    "fishhat/cli-support/src/fishhat_cli/validation.py": "b3fe9590486f46d61f962495a85f12eb7a3741ca49fedca78fa127135f93abf0",
+    "fishhat/cli-support/src/fishhat_cli/validation.py": "1c47282a7f663b0449f141be5e0d6f87a86bdcd4dd8a44254a60a5da741d747d",
     "fishhat/domain-ops/pyproject.toml": "41a34c561fdac741aa867975c62eb3a679f4dd5475357b93a4e5f1555d01722e",
     "fishhat/domain-ops/src/fishhat_domain/cli.py": "c8e1242a73f5a670e836a35cbb92ffffab44496aff92d198ea80ab14e3279a57",
     "fishhat/host-ops/pyproject.toml": "3cc402bda8fd5e83e36d0bd5a299d0e6904535c69c992754e1aa169f37f88bd6",
-    "fishhat/host-ops/src/fishhat_host/cli.py": "d8457ca822e6d01be0b1301fb439ef9f5ed74b6224aca2d85feb189dadeb611c",
+    "fishhat/host-ops/src/fishhat_host/cli.py": "9a9c7d27038145a14ee3544036da712fcbb3e490ea06ee113005f2baaeb22ac2",
     "packages/fishhat-contracts/src/fishhat_contracts/contracts/actions.json": "d2139b4286ed2f531e4a71a8a1ab38293e2de00197a9560ee37d9c43509cb1bc",
     "packages/fishhat-contracts/src/fishhat_contracts/contracts/client-commands.json": "5b3e29df1fb1fecd18ef5699f8dc89da22c2f2dd6154f9d18a30f18d26db7f3e",
     "packages/fishhat-contracts/src/fishhat_contracts/contracts/owner-cli.json": "f8d17432379d9141fcd45d49c3f59b693e7d44f150fb6c222b804c2314886757",
@@ -2956,6 +2956,6 @@
     "some-implementations/fishhat/storage/xfs-project/pyproject.toml": "73e00e3691845add0fc45f4d7286bb87bff35a62083f3d310b63694b61da03af",
     "tests/test_component_policy.py": "7ecdb4fe665c1f7761682bd32785d1d0c9c9a6ccdb673ff9c689bf91abe31ec4",
     "tests/test_linear_growth.py": "e1f12f1500b7fd4f642605ea8e6aba80705fe9da70d19978cef853264acae846",
-    "tests/test_operation_coverage.py": "ce67abf586ef50d881231035a6f3022f16fdf05badb82e1f58a38263e733095d"
+    "tests/test_operation_coverage.py": "6be8e4296e06ad86330debaee462ce55aff5f91b04588049d6dca2c70ca2005b"
   }
 }

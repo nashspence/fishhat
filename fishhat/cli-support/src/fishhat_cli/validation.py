@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -23,7 +24,12 @@ from fishhat_contracts.validation import (
 from . import __version__
 
 
-def build_parser(tool: str) -> argparse.ArgumentParser:
+def build_parser(
+    tool: str,
+    *,
+    configure_commands: Callable[[argparse._SubParsersAction[argparse.ArgumentParser]], None]
+    | None = None,
+) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog=tool, description="Fishhat scaffold (no native mutations)"
     )
@@ -42,17 +48,22 @@ def build_parser(tool: str) -> argparse.ArgumentParser:
     )
     check.add_argument("--catalogue", type=Path)
     check.add_argument("--json", action="store_true")
+    if configure_commands is not None:
+        configure_commands(commands)
     return parser
 
 
 def main(tool: str, argv: list[str] | None = None) -> int:
-    args = build_parser(tool).parse_args(argv)
+    return execute(tool, build_parser(tool).parse_args(argv))
+
+
+def execute(tool: str, args: argparse.Namespace, *, capabilities: tuple[str, ...] = ()) -> int:
     if args.command == "info":
         result = {
             "tool": tool,
             "version": __version__,
             "implementation": "scaffold",
-            "capabilities": ["local-contract-validation"],
+            "capabilities": ["local-contract-validation", *capabilities],
             "native_mutations": False,
             "production_qualified": False,
         }
