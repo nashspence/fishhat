@@ -461,7 +461,7 @@ try:
     assert pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()==c['boot_id']
     prefix=pathlib.Path('/var/lib/fishhat-entrypoint-fixture-'+c['enrollment']);poison=pathlib.Path('/tmp/fishhat-entrypoint-fixture-'+c['enrollment'])
     for path in (prefix,poison):
-        path.mkdir(mode=0o755);owned.append((path,path.stat().st_dev,path.stat().st_ino))
+        path.mkdir(mode=0o755);path.chmod(0o755);owned.append((path,path.stat().st_dev,path.stat().st_ino))
     inputs=prefix/'inputs';inputs.mkdir(mode=0o700);traces=prefix/'traces';traces.mkdir(mode=0o700)
     stage='transfer';payload=sys.stdin.buffer.read();assert len(payload)==c['input_bytes'] and hashlib.sha256(payload).hexdigest()==c['input_sha256']
     expected={'runtime.tar.gz','bundle.zip','install.py','interrupt.py','configuration.json','valid-readiness.json'}|{'launchers/'+role+'/'+name for role in ('complete','interrupted','retry') for name in ('launch','launch.c','targets.h','launcher.json')}|set(c['observer_pins'])
