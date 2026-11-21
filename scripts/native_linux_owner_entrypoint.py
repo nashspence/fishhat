@@ -973,8 +973,11 @@ def _trace(row: dict[str, Any], inputs: dict[str, Any], c: dict[str, Any]) -> No
                     "changed-observed-code",
                 )
             else:
-                platform = (
-                    ".so" in PurePosixPath(resolved).name
+                # The dynamic loader reads its protected cache before selecting libraries.
+                loader_cache = path == resolved == "/etc/ld.so.cache"
+                platform = loader_cache or (
+                    path != "/etc/ld.so.cache"
+                    and ".so" in PurePosixPath(resolved).name
                     and PurePosixPath(resolved).name.startswith("lib")
                     and str(PurePosixPath(resolved).parent)
                     in ("/usr/lib/x86_64-linux-gnu", "/lib/x86_64-linux-gnu")

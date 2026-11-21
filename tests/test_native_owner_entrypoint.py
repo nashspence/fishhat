@@ -374,6 +374,7 @@ def receipt():
             ]
             observer += [path + "/host-ops", *args]
             opened = [
+                "/etc/ld.so.cache",
                 path + "/host-ops.py",
                 *[
                     path + "/packages/" + relative
@@ -452,7 +453,9 @@ def receipt():
                     "code_opens": {
                         item: {
                             "resolved": item,
-                            "metadata": copy.deepcopy(
+                            "metadata": metadata(file(b"inert protected loader cache", 0o644))
+                            if item == "/etc/ld.so.cache"
+                            else copy.deepcopy(
                                 value[profile + "_before"][item.removeprefix(path + "/")]
                             ),
                         }
@@ -499,6 +502,42 @@ def receipt():
 def test_complete_invented_packet_is_accepted_without_native_execution():
     value, c = receipt()
     native.verify_observation(value, c)
+
+
+@pytest.mark.parametrize(
+    "field,replacement",
+    [
+        pytest.param("path", "/unapproved/ld.so.cache", id="foreign-path"),
+        pytest.param("path", "/etc/ld.so.cache.backup", id="lookalike-path"),
+        pytest.param("resolved", "/unapproved/cache.so", id="foreign-resolution"),
+        pytest.param("resolved", "/usr/lib/x86_64-linux-gnu/libc.so.6", id="cache-library-alias"),
+        pytest.param("uid", 1001, id="foreign-owner"),
+        pytest.param("gid", 1002, id="foreign-group"),
+        pytest.param("mode", 0o666, id="writable-cache"),
+        pytest.param("mode", 0o4644, id="setuid-cache"),
+        pytest.param("links", 2, id="hardlink"),
+        pytest.param("file_capability", "00", id="capability"),
+        pytest.param("kind", "symlink", id="special-file"),
+        pytest.param("bytes", -1, id="invalid-extent"),
+        pytest.param("sha256", "invalid", id="invalid-hash"),
+    ],
+)
+def test_platform_loader_cache_keeps_exact_path_and_protected_file_custody(field, replacement):
+    value, c = receipt()
+    row = value["traced_invocations"][0]
+    cache = "/etc/ld.so.cache"
+    origin = row["code_opens"][cache]
+    if field == "path":
+        row["code_opens"][replacement] = row["code_opens"].pop(cache)
+        log = row["trace_original"].replace(quoted(cache), quoted(replacement))
+        row["trace_original"] = log
+        row["trace_metadata"].update(bytes=len(log.encode()), sha256=sha(log.encode()))
+    elif field == "resolved":
+        origin["resolved"] = replacement
+    else:
+        origin["metadata"][field] = replacement
+    with pytest.raises(native.GuestBootError):
+        native.verify_observation(value, c)
 
 
 CHALLENGES = [
