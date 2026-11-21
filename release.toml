@@ -46,7 +46,7 @@ required_checks = [
   "Public tree and full-history secret scan",
   "Build and install wheel outside source checkout",
   "Dependency review", "Dependency audit", "Strict mypy", "Ruff",
-  "CodeQL (python)", "CodeQL (actions)",
+  "CodeQL (python)", "CodeQL (actions)", "CodeQL (c-cpp)",
   "Component and compatibility policy", "Licensing provenance",
   "Installed distributions (ubuntu-24.04)",
   "Installed distributions (macos-15)",
@@ -69,7 +69,7 @@ delete_branch_on_merge = true
 
 [governance.security]
 query_suite = "security-extended"
-languages = ["python", "actions"]
+languages = ["python", "actions", "c-cpp"]
 security_alerts_threshold = "all"
 alerts_threshold = "all"
 secret_scanning = "enabled"

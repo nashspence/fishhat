@@ -66,11 +66,26 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [python, actions]
+        language: [python, actions, c-cpp]
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           persist-credentials: false
+      - name: Prepare fixed launch targets for C analysis
+        if: ${{ matrix.language == 'c-cpp' }}
+        run: |
+          python3 -I -S - <<'PY'
+          import hashlib
+          from pathlib import Path
+          from runpy import run_path
+          installer = run_path("scripts/bundle_install.py")
+          header = installer["_owner_launcher_header"]("/codeql/selected-interpreter", "/codeql/selected-program.py")
+          with Path("fishhat/host-ops/launcher/targets.h").open("xb") as output:
+              output.write(header)
+          source = Path("fishhat/host-ops/launcher/launch.c").read_bytes()
+          print("codeql-launcher-source-sha256=" + hashlib.sha256(source).hexdigest())
+          print("codeql-launcher-header-sha256=" + hashlib.sha256(header).hexdigest())
+          PY
       - uses: github/codeql-action/init@f051dc808ef3645eb0d08647ec751634ec2304ac # v4
         with:
           languages: ${{ matrix.language }}

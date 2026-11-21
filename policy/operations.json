@@ -2916,7 +2916,7 @@
     "policy/components.toml": "854e911c9e5c3e5605ef14319e43fad90f692b79fa2438a7feb2b69f5390b48c",
     "policy/interfaces.json": "9037ff3243327120cf74aa038be60a3bfdf874d1c7f8f311713ccdc59183ffb7",
     "policy/operation-coverage.toml": "a4f3f76cdbb755ea03ba39eb36ccc5ebcd682f6aabaacaa5fb88f849d42c54c4",
-    "release.toml": "7057aceac0232f24bb962384c27058c2f1899bd81fa6bcf49f476ba1eb777631",
+    "release.toml": "3261f89fbb7fb3acc862f310534191096af66ac1b91c10783bffcc384a8beedb",
     "some-implementations/fishhat/backup/restic/pyproject.toml": "665f88e34c00d431e829678503ae3bb7075294d0db3f303c318f87dbdab651e8",
     "some-implementations/fishhat/backup/sealed-archive/pyproject.toml": "772e4d721d40ccedc73a56f7a474eb9641ee817e209b4a37a58e7a36713a224e",
     "some-implementations/fishhat/bootstrap-source/forgejo-restic/pyproject.toml": "23019290c82c543d7105ec39c4d058b53c0f4e8088fffb2e282dd9cce3b83494",

@@ -177,6 +177,10 @@
                 "integration_id": 15368
               },
               {
+                "context": "CodeQL (c-cpp)",
+                "integration_id": 15368
+              },
+              {
                 "context": "Component and compatibility policy",
                 "integration_id": 15368
               },

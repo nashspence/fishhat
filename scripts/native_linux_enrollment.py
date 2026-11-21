@@ -34,6 +34,7 @@ from scripts.native_linux_guest import Guest, GuestBootError, guest_session, pro
 from scripts.native_linux_images import GuestInputError, GuestInputs, guest_inputs
 from scripts.native_linux_install_inputs import qualify_inputs
 from scripts.native_linux_owner_bootstrap import qualify_bootstrap
+from scripts.native_linux_owner_launcher import qualify_launcher
 from scripts.native_linux_owner_python import qualify_python
 from scripts.native_linux_owner_state import qualify_state
 from scripts.native_linux_owner_wheels import qualify_wheels
@@ -842,6 +843,10 @@ def boot_guest(
                     qualify_wheels(guest, temporary, stage, report["owner_wheels"])
                     report["owner_bootstrap"] = {}
                     qualify_bootstrap(guest, temporary, stage, report["owner_bootstrap"])
+                    report["owner_launcher"] = {}
+                    qualify_launcher(
+                        guest, temporary, stage, report["owner_launcher"], root_command=root_run
+                    )
                 if not storage_failure:
                     report["reboot"] = {}
                     with stage("guest-reboot"):
