@@ -275,12 +275,24 @@ class SecurityGates(unittest.TestCase):
         )
         self.assertEqual(workflow["on"]["pull_request"]["branches"], ["main"])
         job = workflow["jobs"]["analyze"]
-        self.assertEqual(set(job["strategy"]["matrix"]["language"]), {"python", "actions"})
+        self.assertEqual(set(job["strategy"]["matrix"]["language"]), {"python", "actions", "c-cpp"})
         self.assertEqual(
             job["permissions"], {"contents": "read", "security-events": "write", "packages": "read"}
         )
         init = next(step for step in job["steps"] if "codeql-action/init@" in step.get("uses", ""))
+        prepare = next(
+            step
+            for step in job["steps"]
+            if step.get("name") == "Prepare fixed launch targets for C analysis"
+        )
+        self.assertEqual(prepare["if"], "${{ matrix.language == 'c-cpp' }}")
+        self.assertIn('installer["_owner_launcher_header"]', prepare["run"])
+        self.assertIn("python3 -I -S", prepare["run"])
+        self.assertIn('Path("fishhat/host-ops/launcher/targets.h").open("xb")', prepare["run"])
+        self.assertIn("codeql-launcher-source-sha256=", prepare["run"])
+        self.assertLess(job["steps"].index(prepare), job["steps"].index(init))
         self.assertEqual(init["with"]["queries"], "security-extended")
+        self.assertEqual(init["with"]["build-mode"], "none")
         for step in job["steps"]:
             if "uses" in step:
                 self.assertRegex(step["uses"], r"^[\w-]+/[\w-]+(?:/[\w-]+)?@[0-9a-f]{40}$")

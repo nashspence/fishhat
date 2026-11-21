@@ -644,6 +644,192 @@ def _verify_owner_bootstrap_elf(executable: Path) -> None:
             raise ValueError("static bootstrap ELF entry is not executable")
 
 
+def _verify_owner_launcher_elf(executable: Path) -> None:
+    """Read static launch bytes only; require a non-executable stack and W^X."""
+    import struct
+
+    _verify_owner_bootstrap_elf(executable)
+    with executable.open("rb") as source:
+        header = source.read(64)
+        entry, offset = struct.unpack_from("<QQ", header, 24)
+        row_size, rows = struct.unpack_from("<HH", header, 54)
+        source.seek(offset)
+        stacks = 0
+        entry_loaded = False
+        for _ in range(rows):
+            segment, flags, _, address, _, extent, _, _ = struct.unpack(
+                "<IIQQQQQQ", source.read(row_size)
+            )
+            if segment == 1:
+                if flags & 3 == 3:
+                    raise ValueError("writable executable launcher segment")
+                entry_loaded |= bool(flags & 5 == 5 and address <= entry < address + extent)
+            if segment == 0x6474E551:
+                stacks += 1
+                if flags != 6:
+                    raise ValueError("unsafe launcher stack permissions")
+        if stacks != 1 or not entry_loaded:
+            raise ValueError("unsafe launcher execution layout")
+
+
+def _owner_launcher_header(interpreter: str, program: str) -> bytes:
+    declarations = []
+    for name, value in (("OWNER_INTERPRETER", interpreter), ("OWNER_PROGRAM", program)):
+        path = PurePosixPath(value)
+        if not value.startswith("/") or ".." in path.parts or "\0" in value:
+            raise ValueError("unsafe fixed launcher target")
+        literal = "".join("\\x" + format(byte, "02x") for byte in os.fsencode(value))
+        declarations.append("#define " + name + ' "' + literal + '"\n')
+    return "".join(declarations).encode()
+
+
+def _verify_owner_launch_target(value: dict[str, str], *, interpreter: bool) -> None:
+    if set(value) != {"path", "sha256"} or not re.fullmatch("[0-9a-f]{64}", value["sha256"]):
+        raise ValueError("invalid fixed launcher target identity")
+    path = Path(value["path"])
+    if not path.is_absolute():
+        raise ValueError("relative fixed launcher target")
+    parent = _directory_fd(path.parent, protected=True)
+    descriptor = None
+    try:
+        descriptor, before = _regular_source(parent, path.name)
+        if (
+            before.st_uid != 0
+            or before.st_nlink != 1
+            or stat.S_IMODE(before.st_mode) != (0o555 if interpreter else 0o444)
+        ):
+            raise ValueError("unprotected fixed launcher target")
+        with os.fdopen(os.dup(descriptor), "rb") as source:
+            digest = hashlib.file_digest(source, "sha256").hexdigest()
+        after = os.fstat(descriptor)
+        if digest != value["sha256"] or (
+            before.st_size,
+            before.st_mtime_ns,
+            before.st_ctime_ns,
+        ) != (after.st_size, after.st_mtime_ns, after.st_ctime_ns):
+            raise ValueError("fixed launcher target changed")
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+        os.close(parent)
+
+
+def _verify_owner_launcher_sources(source: int, names: set[str]) -> None:
+    if set(_entry_names(source)) != names:
+        raise ValueError("incomplete fixed launcher input closure")
+    for name in names:
+        metadata = os.stat(name, dir_fd=source, follow_symlinks=False)
+        if (
+            not stat.S_ISREG(metadata.st_mode)
+            or metadata.st_uid != 0
+            or metadata.st_nlink != 1
+            or metadata.st_mode & 0o6022
+        ):
+            raise ValueError("unprotected fixed launcher source")
+
+
+def _owner_launcher_manifest(raw: bytes, expected: str, names: set[str]) -> dict[str, Any]:
+    if hashlib.sha256(raw).hexdigest() != expected:
+        raise ValueError("untrusted fixed launcher manifest")
+    manifest = json.loads(raw)
+    if (
+        not isinstance(manifest, dict)
+        or set(manifest) != {"format", "interpreter", "program", "files", "build"}
+        or manifest["format"] != "fishhat-owner-launcher/v1"
+    ):
+        raise ValueError("invalid fixed launcher manifest")
+    if (json.dumps(manifest, sort_keys=True, separators=(",", ":")) + "\n").encode() != raw:
+        raise ValueError("noncanonical fixed launcher manifest")
+    if not isinstance(manifest["files"], dict) or set(manifest["files"]) != names - {
+        "launcher.json"
+    }:
+        raise ValueError("invalid fixed launcher files")
+    return manifest
+
+
+def _owner_launcher_file(item: Any) -> dict[str, Any]:
+    if (
+        not isinstance(item, dict)
+        or set(item) != {"bytes", "sha256"}
+        or type(item["bytes"]) is not int
+        or item["bytes"] < 0
+        or not isinstance(item["sha256"], str)
+        or not re.fullmatch("[0-9a-f]{64}", item["sha256"])
+    ):
+        raise ValueError("invalid fixed launcher file identity")
+    return item
+
+
+def _install_owner_launcher(inputs: Path, destination: Path, expected: str) -> Path:
+    """Admit only a fresh, explicitly approved static launch artifact closure.
+
+    This materializer does not build or run a program, acquire privileges or
+    commission an owner. The administrator approves the complete manifest hash.
+    A rejected or interrupted destination is preserved privately for inspection.
+    """
+    import platform
+
+    destination = destination.absolute()
+    parent = _protected_parent(destination)
+    source = None
+    installed = None
+    names = {"launch", "launch.c", "targets.h", "launcher.json"}
+    try:
+        if platform.machine().lower() != "x86_64" or not re.fullmatch("[0-9a-f]{64}", expected):
+            raise ValueError("unsupported fixed launcher inputs")
+        source = _directory_fd(inputs, protected=True)
+        _verify_owner_launcher_sources(source, names)
+        os.mkdir(destination.name, mode=0o700, dir_fd=parent)
+        installed = _source_directory(parent, (destination.name,))
+        _copy_regular(source, "launcher.json", Path("launcher.json"), parent=installed)
+        raw = (destination / "launcher.json").read_bytes()
+        manifest = _owner_launcher_manifest(raw, expected, names)
+        for name in ("launch", "launch.c", "targets.h"):
+            item = _owner_launcher_file(manifest["files"][name])
+            _copy_regular(source, name, Path(name), parent=installed, expected_size=item["bytes"])
+            if sha256(destination / name) != item["sha256"]:
+                raise ValueError("fixed launcher file changed")
+        for name in ("interpreter", "program"):
+            item = manifest[name]
+            if not isinstance(item, dict) or not all(
+                isinstance(value, str) for value in item.values()
+            ):
+                raise ValueError("invalid fixed launcher target")
+            _verify_owner_launch_target(item, interpreter=name == "interpreter")
+        header = _owner_launcher_header(
+            manifest["interpreter"]["path"], manifest["program"]["path"]
+        )
+        if (destination / "targets.h").read_bytes() != header:
+            raise ValueError("fixed launcher configuration changed")
+        executable = destination / "launch"
+        _verify_owner_launcher_elf(executable)
+        for name in sorted(names):
+            descriptor = os.open(name, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=installed)
+            try:
+                os.fchmod(descriptor, 0o555 if name == "launch" else 0o444)
+                if "security.capability" in os.listxattr(descriptor):
+                    raise ValueError("unexpected launcher file capability")
+                os.fsync(descriptor)
+            finally:
+                os.close(descriptor)
+        os.fsync(installed)
+        os.fsync(parent)
+        os.fchmod(installed, 0o555)
+        os.fsync(installed)
+        return executable
+    except BaseException:
+        if installed is not None:
+            try:
+                os.fchmod(installed, 0o700)
+            except OSError:
+                pass
+        raise
+    finally:
+        for opened in (installed, source, parent):
+            if opened is not None:
+                os.close(opened)
+
+
 def _install_owner_bootstrap(inputs: Path, destination: Path) -> Path:
     """Retain and seal the fixed static facility and complete source/notices.
 
