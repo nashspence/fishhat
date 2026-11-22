@@ -215,7 +215,7 @@ def trace_events(raw: str, authority: str) -> dict[str, Any]:
         parent = "/" if directory == "AT_FDCWD" else descriptors.get(int(directory))
         require(parent is not None, "unknown-relative-directory")
         assert parent is not None
-        return posixpath.normpath(posixpath.join(parent, name))
+        return posixpath.normpath(str(PurePosixPath(parent) / name))
 
     path: str | None
     for number, line in enumerate(raw.splitlines()):
