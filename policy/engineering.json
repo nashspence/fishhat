@@ -3803,6 +3803,124 @@
       "symbol": "fishhat_owner.adapter_state:AdapterCoordinator._publish",
       "work": "O(B) changed records and affected scope identities per atomic delta; O(sum(B)) across complete prepare/dispatch/observation/retry histories"
     },
+    "owner.checkpoint-store.initialize": {
+      "capacity": [
+        "Protected authority storage capacity; uncertainty prevents continued publication"
+      ],
+      "extent": "One exact commissioned binding and complete current checkpoint; no journal-history scan",
+      "growth": "linear",
+      "growth_proofs": [],
+      "id": "owner.checkpoint-store.initialize",
+      "limits": [
+        [
+          "io_chunk_bytes",
+          65536
+        ]
+      ],
+      "linear_proofs": [
+        "tests/test_protected_checkpoint_store.py::test_complete_path_work_is_linear_and_closes_on_rejection"
+      ],
+      "proofs": [
+        "tests/test_protected_checkpoint_store.py::test_compare_and_swap_and_nonmutating_inspection",
+        "tests/test_protected_checkpoint_store.py::test_complete_path_work_is_linear_and_closes_on_rejection"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "fishhat/owner-support/src/fishhat_owner/checkpoint_store.py": "1d81a2d001b409e27934da94b06d0cf1c37167cf4d703c547ced619097c95acb",
+        "tests/test_protected_checkpoint_store.py": "db77309dbb6b693989df770bb287c9c98dc0c93d28bdad6a343536adfc3d0151"
+      },
+      "symbol": "fishhat_owner.checkpoint_store:CheckpointStore.initialize",
+      "work": "O(P + B) complete protected path bytes and selected current-record bytes"
+    },
+    "owner.checkpoint-store.open": {
+      "capacity": [
+        "Protected authority storage capacity; uncertainty prevents continued publication"
+      ],
+      "extent": "One exact commissioned binding and complete current checkpoint; no journal-history scan",
+      "growth": "linear",
+      "growth_proofs": [],
+      "id": "owner.checkpoint-store.open",
+      "limits": [
+        [
+          "io_chunk_bytes",
+          65536
+        ]
+      ],
+      "linear_proofs": [
+        "tests/test_protected_checkpoint_store.py::test_complete_path_work_is_linear_and_closes_on_rejection",
+        "tests/test_protected_checkpoint_store.py::test_complete_record_refusal_work_is_linear"
+      ],
+      "proofs": [
+        "tests/test_protected_checkpoint_store.py::test_compare_and_swap_and_nonmutating_inspection",
+        "tests/test_protected_checkpoint_store.py::test_complete_path_work_is_linear_and_closes_on_rejection",
+        "tests/test_protected_checkpoint_store.py::test_complete_record_refusal_work_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "fishhat/owner-support/src/fishhat_owner/checkpoint_store.py": "1d81a2d001b409e27934da94b06d0cf1c37167cf4d703c547ced619097c95acb",
+        "tests/test_protected_checkpoint_store.py": "db77309dbb6b693989df770bb287c9c98dc0c93d28bdad6a343536adfc3d0151"
+      },
+      "symbol": "fishhat_owner.checkpoint_store:CheckpointStore.open",
+      "work": "O(P + B) complete protected path bytes and selected current-record bytes"
+    },
+    "owner.checkpoint-store.publish": {
+      "capacity": [
+        "Protected authority storage capacity; uncertainty prevents continued publication"
+      ],
+      "extent": "One exact commissioned binding and complete current checkpoint; no journal-history scan",
+      "growth": "linear",
+      "growth_proofs": [],
+      "id": "owner.checkpoint-store.publish",
+      "limits": [
+        [
+          "io_chunk_bytes",
+          65536
+        ]
+      ],
+      "linear_proofs": [
+        "tests/test_protected_checkpoint_store.py::test_complete_publication_work_is_linear"
+      ],
+      "proofs": [
+        "tests/test_protected_checkpoint_store.py::test_compare_and_swap_and_nonmutating_inspection",
+        "tests/test_protected_checkpoint_store.py::test_complete_publication_work_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "fishhat/owner-support/src/fishhat_owner/checkpoint_store.py": "1d81a2d001b409e27934da94b06d0cf1c37167cf4d703c547ced619097c95acb",
+        "tests/test_protected_checkpoint_store.py": "db77309dbb6b693989df770bb287c9c98dc0c93d28bdad6a343536adfc3d0151"
+      },
+      "symbol": "fishhat_owner.checkpoint_store:CheckpointStore.compare_and_swap",
+      "work": "O(P + B) complete protected path bytes and selected current-record bytes"
+    },
+    "owner.checkpoint-store.read": {
+      "capacity": [
+        "Protected authority storage capacity; uncertainty prevents continued publication"
+      ],
+      "extent": "One exact commissioned binding and complete current checkpoint; no journal-history scan",
+      "growth": "linear",
+      "growth_proofs": [],
+      "id": "owner.checkpoint-store.read",
+      "limits": [
+        [
+          "io_chunk_bytes",
+          65536
+        ]
+      ],
+      "linear_proofs": [
+        "tests/test_protected_checkpoint_store.py::test_complete_record_refusal_work_is_linear"
+      ],
+      "proofs": [
+        "tests/test_protected_checkpoint_store.py::test_compare_and_swap_and_nonmutating_inspection",
+        "tests/test_protected_checkpoint_store.py::test_complete_record_refusal_work_is_linear"
+      ],
+      "qualification": "reference-model",
+      "sources": {
+        "fishhat/owner-support/src/fishhat_owner/checkpoint_store.py": "1d81a2d001b409e27934da94b06d0cf1c37167cf4d703c547ced619097c95acb",
+        "tests/test_protected_checkpoint_store.py": "db77309dbb6b693989df770bb287c9c98dc0c93d28bdad6a343536adfc3d0151"
+      },
+      "symbol": "fishhat_owner.checkpoint_store:CheckpointStore.read",
+      "work": "O(P + B) complete protected path bytes and selected current-record bytes"
+    },
     "record-delivery.chunk": {
       "capacity": [],
       "extent": "one-record-chunk",

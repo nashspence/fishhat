@@ -156,6 +156,8 @@ def test_all_persistence_is_owned_and_baseline_fixtures_match():
     inventory = tomllib.loads((ROOT / "state/inventory.toml").read_text())
     assert {owner["id"] for owner in inventory["owners"]} == {"owner-journal", "reported-events"}
     assert {journal["id"] for journal in inventory["journals"]} == {"workflow-journal"}
+    assert {record["id"] for record in inventory["records"]} == {"owner-checkpoint"}
+    assert all(record["qualification"] == "reference-model" for record in inventory["records"])
     assert all(journal["qualification"] == "reference-model" for journal in inventory["journals"])
     assert all(owner["qualification"] == "reference-model" for owner in inventory["owners"])
     assert {c["id"] for c in components()} >= {"app", "host", "contracts", "client", "domain"}
@@ -329,3 +331,38 @@ def test_store_helpers_remain_with_existing_schema_owner(monkeypatch, change):
         assert "unclassified persistent store" in errors
     else:
         assert "invalid or duplicate state source" in errors
+
+
+@pytest.mark.parametrize(
+    "change", ["registered", "format-version", "fixture-digest", "duplicate-module", "authority"]
+)
+def test_fixed_record_format_is_owned_and_preserved(monkeypatch, change):
+    from scripts import project_policy
+
+    read = project_policy.read_toml
+    inventory = copy.deepcopy(read(ROOT / "state/inventory.toml"))
+    record = inventory["records"][0]
+    if change == "format-version":
+        record["format_version"] += 1
+    elif change == "fixture-digest":
+        record["sha256"] = "0" * 64
+    elif change == "duplicate-module":
+        record["module"] = inventory["owners"][0]["module"]
+    elif change == "authority":
+        record["version_authority"] = "journal-genesis"
+    monkeypatch.setattr(
+        project_policy,
+        "read_toml",
+        lambda path: inventory if path == ROOT / "state/inventory.toml" else read(path),
+    )
+    errors = project_policy.state_errors()
+    if change == "registered":
+        assert not errors
+    elif change == "format-version":
+        assert "fixed-record format version changed" in errors
+    elif change == "fixture-digest":
+        assert "fixed-record fixture digest changed" in errors
+    elif change == "duplicate-module":
+        assert "duplicate durable state owner" in errors
+    else:
+        assert "invalid fixed-record state authority" in errors
