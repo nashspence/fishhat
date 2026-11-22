@@ -55,17 +55,18 @@ def _directory_metadata(descriptor: int, *, private: bool) -> None:
 
 
 def _walk(path: Path) -> int:
-    if not path.is_absolute() or path.parts[0] != "/" or ".." in path.parts:
+    parts = path.parts
+    if not path.is_absolute() or parts[0] != "/" or ".." in parts:
         raise ContractError("absolute protected owner storage required")
     flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC
     descriptor = os.open("/", flags)
     try:
-        _directory_metadata(descriptor, private=len(path.parts) == 1)
-        for index, part in enumerate(path.parts[1:], 1):
+        _directory_metadata(descriptor, private=len(parts) == 1)
+        for index, part in enumerate(parts[1:], 1):
             child = os.open(part, flags, dir_fd=descriptor)
             os.close(descriptor)
             descriptor = child
-            _directory_metadata(descriptor, private=index == len(path.parts) - 1)
+            _directory_metadata(descriptor, private=index == len(parts) - 1)
         return descriptor
     except BaseException:
         os.close(descriptor)

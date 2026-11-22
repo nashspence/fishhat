@@ -355,6 +355,16 @@ def test_complete_retained_rows_are_not_scanned_or_changed_by_identity_open(enro
 def test_complete_ancestry_work_is_linear_and_handles_close_on_rejection(tmp_path, monkeypatch):
     original_open, original_close = os.open, os.close
     observed = []
+
+    class ChargedPath(type(tmp_path)):
+        @property
+        def parts(self):
+            components = super().parts
+            # Returning the complete decomposition visits every component;
+            # filesystem-call counts alone do not account for this Python work.
+            work[0] += sum(1 + len(os.fsencode(component)) for component in components)
+            return components
+
     with monkeypatch.context() as patch:
         patch.setattr(store, "_directory_metadata", lambda *args, **kwargs: None)
         for depth in (4, 16, 64):
@@ -363,6 +373,7 @@ def test_complete_ancestry_work_is_linear_and_handles_close_on_rejection(tmp_pat
                 path = path / "part"
             path.mkdir(parents=True)
             work, opened = [0], set()
+            path = ChargedPath(path)
 
             def counted(name, flags, *args, counter=work, active=opened, **kwargs):
                 counter[0] += 1 + len(os.fsencode(name))
