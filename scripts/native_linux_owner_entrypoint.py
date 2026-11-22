@@ -319,10 +319,11 @@ import importlib.util,json,os,pathlib,sys
 c=json.loads(pathlib.Path(sys.argv[1]).read_text());spec=importlib.util.spec_from_file_location('approved_installer',c['bootstrap'])
 module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
 def pause(descriptor):
-    ready=pathlib.Path(c['ready'])
-    with ready.open('x') as stream:
-        os.chmod(ready,0o600);json.dump({'pid':os.getpid(),'uid':os.geteuid(),'boot_id':pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()},stream)
+    ready=pathlib.Path(c['ready']);pending=ready.with_name(ready.name+'.pending')
+    with pending.open('x') as stream:
+        os.chmod(pending,0o600);json.dump({'pid':os.getpid(),'uid':os.geteuid(),'boot_id':pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()},stream)
         stream.flush();os.fsync(stream.fileno())
+    os.replace(pending,ready)
     assert sys.stdin.buffer.read(1)==b'never release'
     raise AssertionError('interrupted installation resumed')
 module._seal_owner_entrypoint=pause
