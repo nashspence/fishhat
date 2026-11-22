@@ -64,8 +64,8 @@ def _walk(path: Path) -> int:
         _directory_metadata(descriptor, private=len(parts) == 1)
         for index, part in enumerate(parts[1:], 1):
             child = os.open(part, flags, dir_fd=descriptor)
-            os.close(descriptor)
-            descriptor = child
+            previous, descriptor = descriptor, child
+            os.close(previous)
             _directory_metadata(descriptor, private=index == len(parts) - 1)
         return descriptor
     except BaseException:

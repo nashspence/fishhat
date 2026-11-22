@@ -335,7 +335,8 @@ def state_errors(root: Path = ROOT, history: bool = False) -> list[str]:
     owners = inventory["owners"]
     sources, source_errors = state_sources(root, owners)
     errors.extend(source_errors)
-    modules = [owner["module"] for owner in owners + inventory.get("journals", [])]
+    records = inventory.get("records", [])
+    modules = [owner["module"] for owner in owners + inventory.get("journals", []) + records]
     if len(set(modules)) != len(modules):
         errors.append("duplicate durable state owner")
     for owner in owners:
@@ -360,6 +361,49 @@ def state_errors(root: Path = ROOT, history: bool = False) -> list[str]:
             errors.append("invalid append-only state authority")
         if fingerprint(root / journal["fixture"]) != journal["sha256"]:
             errors.append("append-only state fixture digest changed")
+    for record in records:
+        _, record_errors = state_sources(root, [record])
+        errors.extend(record_errors)
+        if record_errors:
+            continue
+        module = root / record["source"]
+        if (
+            record["transition"] != "explicit-forward-only"
+            or record["qualification"] != "reference-model"
+            or record["classification"] != "durable-reference-state"
+            or record["version_authority"] != "record-format"
+            or not record["source"].endswith("/src/" + record["module"].replace(".", "/") + ".py")
+        ):
+            errors.append("invalid fixed-record state authority")
+        fixture = (root / record["fixture"]).resolve()
+        if not fixture.is_relative_to((root / "state/fixtures").resolve()):
+            errors.append("invalid fixed-record fixture path")
+            continue
+        try:
+            declarations = [
+                node.value
+                for node in ast.parse(module.read_text()).body
+                if isinstance(node, ast.Assign)
+                and any(
+                    isinstance(target, ast.Name) and target.id == "FORMAT"
+                    for target in node.targets
+                )
+            ]
+            header = ast.literal_eval(declarations[0]) if len(declarations) == 1 else None
+            value = json.loads(fixture.read_bytes())
+            if (
+                type(record["format_version"]) is not int
+                or record["format_version"] < 1
+                or not isinstance(header, str)
+                or not header.endswith("/v" + str(record["format_version"]))
+                or not isinstance(value, dict)
+                or value.get("format") != header
+            ):
+                errors.append("fixed-record format version changed")
+            if fingerprint(fixture) != record["sha256"]:
+                errors.append("fixed-record fixture digest changed")
+        except (OSError, SyntaxError, TypeError, ValueError):
+            errors.append("invalid fixed-record fixture or format authority")
     for item in components(root):
         for path in (root / item["path"] / "src").rglob("*.py"):
             tree = ast.parse(path.read_text())

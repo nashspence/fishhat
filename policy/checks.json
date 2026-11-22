@@ -167,7 +167,7 @@
       "requiredness_authority": "release.toml#/governance/required_checks",
       "result_authority": "GitHub job conclusion; classification supplies no execution proof",
       "scope": "watchdog propagation and negative progress/cleanup regressions and workflow safety",
-      "work_sha256": "be29b2ba0b049cd8d268ac0a78b8a3007206278b1f515ffd57d18dfe0f128bc4"
+      "work_sha256": "d3ff8d2071a1d457a7c258ea0240660044050d00d5fb6ec2cd6725d252629945"
     },
     ".github/workflows/ci.yml:watchdogs": {
       "authority": ".github/workflows/ci.yml",
@@ -5021,6 +5021,26 @@
     {
       "node": "tests/test_component_policy.py::test_components_and_public_contracts_are_current",
       "purpose_sha256": "6f276840306ae793f6cd6ad5ab8b1637fd0e64f61f24032d2560105c4f3ef59e"
+    },
+    {
+      "node": "tests/test_component_policy.py::test_fixed_record_format_is_owned_and_preserved[authority]",
+      "purpose_sha256": "fbb38f110c3d8c936ca2f72f7dbf5a1a58a87db13e7f4e3d188fe880f506468f"
+    },
+    {
+      "node": "tests/test_component_policy.py::test_fixed_record_format_is_owned_and_preserved[duplicate-module]",
+      "purpose_sha256": "fbb38f110c3d8c936ca2f72f7dbf5a1a58a87db13e7f4e3d188fe880f506468f"
+    },
+    {
+      "node": "tests/test_component_policy.py::test_fixed_record_format_is_owned_and_preserved[fixture-digest]",
+      "purpose_sha256": "fbb38f110c3d8c936ca2f72f7dbf5a1a58a87db13e7f4e3d188fe880f506468f"
+    },
+    {
+      "node": "tests/test_component_policy.py::test_fixed_record_format_is_owned_and_preserved[format-version]",
+      "purpose_sha256": "fbb38f110c3d8c936ca2f72f7dbf5a1a58a87db13e7f4e3d188fe880f506468f"
+    },
+    {
+      "node": "tests/test_component_policy.py::test_fixed_record_format_is_owned_and_preserved[registered]",
+      "purpose_sha256": "fbb38f110c3d8c936ca2f72f7dbf5a1a58a87db13e7f4e3d188fe880f506468f"
     },
     {
       "node": "tests/test_component_policy.py::test_migration_namespace_relocation_preserves_owner_and_introduced_bytes[changed]",
@@ -20465,6 +20485,182 @@
     {
       "node": "tests/test_protected_bundle_staging.py::test_untrusted_staged_manifest_never_invokes_installer",
       "purpose_sha256": "63030fcc74a738825c3930209ed2946c9ab55fc6c9da8d4eb8c7de5cd3ba5f2f"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_changed_anchor_cannot_escape_a_separate_process_holder[replace]",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_changed_anchor_cannot_escape_a_separate_process_holder[unlink]",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_changed_stable_anchor_refuses_without_erasing_custody[chmod]",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_changed_stable_anchor_refuses_without_erasing_custody[hardlink]",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_changed_stable_anchor_refuses_without_erasing_custody[nonempty]",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_changed_stable_anchor_refuses_without_erasing_custody[replace]",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_changed_stable_anchor_refuses_without_erasing_custody[unlink]",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_close_cannot_release_a_held_storage_anchor",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_closed_fixed_record_format_refuses_unsupported_bytes[anchor-type]",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_closed_fixed_record_format_refuses_unsupported_bytes[extra]",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_closed_fixed_record_format_refuses_unsupported_bytes[format]",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_closed_fixed_record_format_refuses_unsupported_bytes[genesis]",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_closed_fixed_record_format_refuses_unsupported_bytes[head]",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_closed_fixed_record_format_refuses_unsupported_bytes[missing]",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_closed_fixed_record_format_refuses_unsupported_bytes[noncanonical]",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_compare_and_swap_and_nonmutating_inspection",
+      "purpose_sha256": "3091b720e85fca849282bf585f876fff5c7d26d07876f8649cabf57169965724"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_competing_handles_share_one_stable_anchor",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_complete_path_work_is_linear_and_closes_on_rejection",
+      "purpose_sha256": "e74882b422aa40cfae4c260fd411b67577259ca3e2ab3778321b8267662fd46e"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_complete_publication_work_is_linear",
+      "purpose_sha256": "d2e16603bf8f56ba8fb982a8f4b09f2c6b48517cd690504bfcdcdb3ca13669fc"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_complete_record_refusal_work_is_linear",
+      "purpose_sha256": "865046ced9ce93479fedbbb23d5ed3839540675524ffdbee0e81316da8090f7b"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_exact_owner_epoch_and_journal_binding_is_required[journal_id-72726796-2970-479b-9af8-ff5cfa6d16f5]",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_exact_owner_epoch_and_journal_binding_is_required[owner-value1]",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_exact_owner_epoch_and_journal_binding_is_required[owner-value2]",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_exact_owner_epoch_and_journal_binding_is_required[owner-value3]",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_foreign_current_or_pending_custody_is_preserved[chmod]",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_foreign_current_or_pending_custody_is_preserved[hardlink]",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_foreign_current_or_pending_custody_is_preserved[malformed]",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_foreign_current_or_pending_custody_is_preserved[pending]",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_foreign_current_or_pending_custody_is_preserved[symlink]",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_initialization_preserves_existing_custody[directory]",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_initialization_preserves_existing_custody[file]",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_initialization_preserves_existing_custody[symlink]",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_open_never_initializes_missing_custody",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_preserved_fixed_record_format_fixture",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_process_exit_before_acknowledgement_preserves_committed_checkpoint",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_process_interruption_preserves_pending_and_existing_checkpoint",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_publication_failure_retains_pending_and_poisoned_handle",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_released_parent_close_error_keeps_successor_owned[checkpoint]",
+      "purpose_sha256": "9c3d2cdce51592854cb70ce05f94ab46a49b4cbfd9eade2c3c5df139c6eca325"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_released_parent_close_error_keeps_successor_owned[identity]",
+      "purpose_sha256": "9c3d2cdce51592854cb70ce05f94ab46a49b4cbfd9eade2c3c5df139c6eca325"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_remaining_descriptor_alias_keeps_storage_locked[duplicate]",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_remaining_descriptor_alias_keeps_storage_locked[inherited]",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_separate_processes_serialize_distinct_inode_journal_copies",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_shared_read_scope_cannot_publish",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
+    },
+    {
+      "node": "tests/test_protected_checkpoint_store.py::test_unconfirmed_directory_sync_preserves_published_predecessor",
+      "purpose_sha256": "3cc27957421d112afff9eed09ad103a0ffd07a3d6008147f0a4c2ebafb7e1cbe"
     },
     {
       "node": "tests/test_protected_owner_bootstrap.py::test_administrative_and_architecture_gates_refuse_before_candidate_creation[architecture]",
