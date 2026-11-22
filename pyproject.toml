@@ -26,6 +26,7 @@ dev = [
 pythonpath = ["."]
 testpaths = ["tests"]
 addopts = "-ra --strict-markers -p scripts.validation_pytest"
+tmp_path_retention_policy = "failed"
 
 [tool.mypy]
 python_version = "3.11"
