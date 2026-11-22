@@ -663,6 +663,14 @@
       "purpose_sha256": "c864cebdbce3895c1f09e88b6bf2f1ea99c7288eb941270f6dbdfb98ed8acf43"
     },
     {
+      "node": "tests/test_actions_pins.py::ActionsPinTests::test_only_direct_remote_references_are_checked",
+      "purpose_sha256": "1637d57921d9be4029f7fbf522c1bf80a725075f6d54dd6b3856852266dc7cdc"
+    },
+    {
+      "node": "tests/test_actions_pins.py::ActionsPinTests::test_remote_actions_and_workflows_use_commit_shas",
+      "purpose_sha256": "1637d57921d9be4029f7fbf522c1bf80a725075f6d54dd6b3856852266dc7cdc"
+    },
+    {
       "node": "tests/test_adapter_authority.py::test_a_service_request_cannot_supply_its_own_control_authority[controller]",
       "purpose_sha256": "8a7ee0ee2bda925ffc5e2d1c957cf9be26b01bcbc270fdeb95e59041d2c5af52"
     },
