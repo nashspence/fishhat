@@ -342,13 +342,33 @@ def test_failed_candidate_is_private_preserved_and_requires_fresh_retry(
         )
         with pytest.raises(OSError):
             installer._install_owner_wheels(source, destination, expected)
+    metadata = destination.stat()
+    assert stat.S_IMODE(metadata.st_mode) == 0o700
+    members = {entry.name for entry in destination.iterdir()}
+    os.utime(destination, ns=(0, metadata.st_mtime_ns), follow_symlinks=False)
     before = destination.stat()
-    assert stat.S_IMODE(before.st_mode) == 0o700
     with pytest.raises(FileExistsError):
         installer._install_owner_wheels(source, destination, expected)
     retry = custody / "retry"
     installer._install_owner_wheels(source, retry, expected)
-    assert destination.stat() == before and retry.stat().st_ino != before.st_ino
+    with os.scandir(destination) as entries:
+        assert {entry.name for entry in entries} == members
+    after = destination.stat()
+    fields = (
+        "st_dev",
+        "st_ino",
+        "st_mode",
+        "st_nlink",
+        "st_uid",
+        "st_gid",
+        "st_size",
+        "st_mtime_ns",
+        "st_ctime_ns",
+    )
+    assert {name: getattr(after, name) for name in fields} == {
+        name: getattr(before, name) for name in fields
+    }
+    assert retry.stat().st_ino != before.st_ino
 
 
 @pytest.mark.parametrize("axis", ["members", "distributions", "payload-bytes", "path-depth"])
