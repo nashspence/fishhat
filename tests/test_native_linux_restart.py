@@ -273,7 +273,7 @@ def fixture(tmp_path, tmp_path_factory, monkeypatch):
 @contextmanager
 def controller(f, child):
     f.child = child
-    with tempfile.TemporaryDirectory(prefix="controlled-controller-", dir=f.temporary) as folder:
+    with tempfile.TemporaryDirectory(prefix="ctl-", dir=f.temporary) as folder:
         endpoint = Path(folder) / "qmp"
         with socket.socket(socket.AF_UNIX) as control:
             control.bind(str(endpoint))
