@@ -54,7 +54,10 @@ def test_info_success_for_every_tool():
             values.append(value)
     with evidence_group("scaffold"):
         for value in values:
-            assert value["capabilities"] == ["local-contract-validation"]
+            expected = ["local-contract-validation"]
+            if value["tool"] == "host-ops":
+                expected.append("owner-state-identity")
+            assert value["capabilities"] == expected
             assert value["native_mutations"] is False
 
 

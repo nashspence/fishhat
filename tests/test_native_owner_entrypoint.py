@@ -272,7 +272,7 @@ def receipt():
             "tool": "host-ops",
             "version": "0.1.0.dev0",
             "implementation": "scaffold",
-            "capabilities": ["local-contract-validation"],
+            "capabilities": ["local-contract-validation", "owner-state-identity"],
             "native_mutations": False,
             "production_qualified": False,
         }
@@ -701,7 +701,9 @@ def test_unverified_guest_refuses_before_any_facility_or_payload_call(tmp_path):
         )
 
 
-@pytest.mark.parametrize("mode", ["passed", "invalid-json", "forged", "transport-failure"])
+@pytest.mark.parametrize(
+    "mode", ["passed", "invalid-json", "forged", "transport-failure", "identity-rejected"]
+)
 def test_coordinator_retains_original_reply_cleanup_and_statistics(tmp_path, monkeypatch, mode):
     value, c = receipt()
     inputs = c["inputs"] | {"bootstrap_sha256": "a" * 64, "interrupt_sha256": "b" * 64}
@@ -709,6 +711,16 @@ def test_coordinator_retains_original_reply_cleanup_and_statistics(tmp_path, mon
     path.write_bytes(b"inert transport input")
     monkeypatch.setattr(native.owner_launcher, "provision_tools", lambda *args: {"inert": True})
     monkeypatch.setattr(native, "_prepare_inputs", lambda *args: (path, inputs))
+    # This coordinator fixture isolates the pre-existing entrypoint witness.
+    # Identity receipt validation has its own complete malformed-data challenges.
+    identity_calls = []
+
+    def identity_check(observed, configuration):
+        identity_calls.append((observed, configuration))
+        if mode == "identity-rejected":
+            raise native.GuestBootError("identity witness rejected")
+
+    monkeypatch.setattr(native.native_linux_owner_identity, "verify_observation", identity_check)
     cleanup = {
         "pid": 800,
         "uid": 0,
@@ -761,6 +773,7 @@ def test_coordinator_retains_original_reply_cleanup_and_statistics(tmp_path, mon
     assert report["native_product_qualified"] is False
     assert valid_stats(report["qualification_statistics"])
     assert report["qualification_statistics"]["scope"] == "process-excludes-children"
+    assert len(identity_calls) == (1 if mode in ("passed", "identity-rejected") else 0)
     if mode != "transport-failure":
         assert report["original_reply_sha256"] == sha(raw.encode())
     if mode == "invalid-json":

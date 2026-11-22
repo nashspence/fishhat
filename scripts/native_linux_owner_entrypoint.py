@@ -17,7 +17,7 @@ from contextlib import AbstractContextManager
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-from scripts import native_linux_owner_wheels, owner_launcher
+from scripts import native_linux_owner_identity, native_linux_owner_wheels, owner_launcher
 from scripts.bundle_install import (
     OWNER_PYTHON_BYTES,
     OWNER_PYTHON_SHA256,
@@ -329,7 +329,9 @@ module._seal_owner_entrypoint=pause
 module._install_owner_entrypoint(pathlib.Path(c['bundle']),pathlib.Path(c['runtime']),pathlib.Path(c['launcher']),pathlib.Path(c['destination']),manifest_sha256=c['manifest'],launcher_manifest_sha256=c['launcher_manifest'])
 """
 
-REMOTE = r"""
+REMOTE = (
+    native_linux_owner_identity.REMOTE_HELPERS
+    + r"""
 import ctypes,errno,hashlib,importlib.util,io,json,os,pathlib,re,select,shutil,signal,stat,struct,subprocess,sys,tarfile,time,zipfile
 c=json.loads(sys.argv[1]);os.umask(0o077);owned=[];child=None;stage='admission';trace_pids=set()
 clean={'LANG':'C.UTF-8','LC_ALL':'C.UTF-8'}
@@ -576,6 +578,7 @@ try:
     reply=direct(['/usr/bin/python3','-I','-S','-B','-c',receiver],'peer',clean,json.dumps({'bootstrap':base64.b64encode((inputs/'install.py').read_bytes()).decode(),'bundle':str(bundle),'runtime':str(inputs/'runtime.tar.gz'),'launcher':str(inputs/'launchers/complete'),'destination':str(attempted),'manifest':configuration['manifest_sha256'],'launcher_manifest':configuration['bindings']['complete']['manifest_sha256']}).encode())
     assert reply['returncode']!=0 and 'protected staging requires Linux administrative custody' in reply['stderr'] and not attempted.exists()
     result['administrative_refusal']=reply|{'candidate_absent':True}
+    stage='owner-identity';result['owner_identity']=owner_identity_probe(command)
     for name in ('complete','interrupted','retry'):result[name+'_after']=inventory(prefix/name)
     result['inputs_after']=inventory(inputs);result['observer_after']=inventory(observer)
     assert result['observer_before']==result['observer_after']
@@ -584,6 +587,7 @@ try:
     result['status']='passed'
 except BaseException as error:result['primary_error']={'stage':stage,'type':type(error).__name__,'message':str(error)}
 finally:
+    result['identity_children'],identity_errors=identity_cleanup();result['cleanup_errors'].extend(identity_errors)
     if child is not None:
         try:
             if child.poll() is None:os.killpg(child.pid,signal.SIGKILL)
@@ -607,6 +611,7 @@ finally:
     if result['cleanup_errors']:result['status']='failed'
 print(json.dumps(result,sort_keys=True))
 """
+)
 
 
 def _file_metadata(row: dict[str, Any], expected: dict[str, Any]) -> tuple[int, int]:
@@ -1070,7 +1075,7 @@ def _info(raw: str) -> None:
     _require(
         value["tool"] == "host-ops"
         and value["implementation"] == "scaffold"
-        and value["capabilities"] == ["local-contract-validation"]
+        and value["capabilities"] == ["local-contract-validation", "owner-state-identity"]
         and value["native_mutations"] is value["production_qualified"] is False,
         "wrong-installed-capabilities",
     )
@@ -1409,6 +1414,8 @@ def qualify_entrypoint(
             peer = guest.observed["accounts"][guest.accounts[1]]
             c = {
                 "scope": SCOPE,
+                "identity_owner": native_linux_owner_identity.fixture_owner(guest.enrollment),
+                "identity_trace_filter": native_linux_owner_identity.TRACE_FILTER,
                 "enrollment": guest.enrollment,
                 "boot_id": guest.observed["boot_id"],
                 "peer_account": guest.accounts[1],
@@ -1467,6 +1474,7 @@ def qualify_entrypoint(
             )
             try:
                 verify_observation(value, c | {"inputs": inputs})
+                native_linux_owner_identity.verify_observation(value, c | {"inputs": inputs})
             except (KeyError, TypeError, ValueError, AttributeError):
                 raise GuestBootError("owner-entrypoint-invalid-observation-shape") from None
             report["status"] = "passed"
