@@ -34,6 +34,7 @@ from scripts.native_linux_guest import Guest, GuestBootError, guest_session, pro
 from scripts.native_linux_images import GuestInputError, GuestInputs, guest_inputs
 from scripts.native_linux_install_inputs import qualify_inputs
 from scripts.native_linux_owner_bootstrap import qualify_bootstrap
+from scripts.native_linux_owner_checkpoint import qualify_checkpoint
 from scripts.native_linux_owner_entrypoint import qualify_entrypoint
 from scripts.native_linux_owner_launcher import qualify_launcher
 from scripts.native_linux_owner_python import qualify_python
@@ -871,6 +872,11 @@ def boot_guest(
                 report["storage"] = {}
                 with stage("guest-storage"):
                     qualify_storage(guest, stage, report["storage"], inject_failure=storage_failure)
+                if not storage_failure and not reboot_failure:
+                    report["owner_checkpoint"] = {}
+                    qualify_checkpoint(
+                        guest, temporary, stage, report["owner_checkpoint"], report["storage"]
+                    )
                 report["process_kill"] = {}
                 with stage("guest-process-kill"):
                     qualify_process_kill(guest, stage, temporary, report["process_kill"])
@@ -971,6 +977,8 @@ def verify_guest_cleanup(guest: dict[str, Any], inputs: dict[str, Any]) -> None:
     endpoint_closed(guest["endpoint"])
     guest["endpoint"]["closed_after_cleanup"] = True
     guest["storage"]["resources_destroyed_with_guest"] = True
+    if isinstance(guest.get("owner_checkpoint"), dict):
+        guest["owner_checkpoint"]["resources_destroyed_with_guest"] = True
     if isinstance(guest.get("reboot"), dict):
         guest["reboot"]["resources_destroyed_with_guest"] = True
     if isinstance(guest.get("private_restore"), dict):

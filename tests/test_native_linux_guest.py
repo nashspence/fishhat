@@ -779,6 +779,16 @@ def controlled_owner_entrypoint(
     result["controlled_observation"] = True
 
 
+def controlled_owner_checkpoint(
+    fixture, report, storage_calls, events, calls, guest, temporary, progress, result, storage
+):
+    assert guest is fixture["guest"] and result is report["owner_checkpoint"]
+    assert temporary == fixture["temporary"] and storage is report["storage"]
+    assert storage_calls == ["storage"] and "reboot" in events
+    calls.append("checkpoint")
+    result["controlled_observation"] = True
+
+
 @pytest.mark.parametrize(
     (
         "refused",
@@ -889,6 +899,16 @@ def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
 
     monkeypatch.setattr(native, "qualify_reboot", reboot)
     monkeypatch.setattr(native, "qualify_storage", qualify)
+
+    checkpoint_calls = []
+
+    monkeypatch.setattr(
+        native,
+        "qualify_checkpoint",
+        partial(
+            controlled_owner_checkpoint, fixture, report, storage_calls, events, checkpoint_calls
+        ),
+    )
 
     def process_kill(guest, progress, temporary, result):
         assert guest is fixture["guest"] and result is report["process_kill"]
@@ -1037,6 +1057,9 @@ def test_boot_coordinator_admits_exact_paused_controller_before_start_and_reaps(
             invoke()
     else:
         invoke()
+    assert checkpoint_calls == (
+        [] if any((refused, storage_error, reboot_error)) else ["checkpoint"]
+    )
     assert_boot_coordinator_outcome(
         fixture,
         report,
