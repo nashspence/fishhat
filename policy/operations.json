@@ -2908,7 +2908,7 @@
     "fishhat/domain-ops/pyproject.toml": "41a34c561fdac741aa867975c62eb3a679f4dd5475357b93a4e5f1555d01722e",
     "fishhat/domain-ops/src/fishhat_domain/cli.py": "c8e1242a73f5a670e836a35cbb92ffffab44496aff92d198ea80ab14e3279a57",
     "fishhat/host-ops/pyproject.toml": "3cc402bda8fd5e83e36d0bd5a299d0e6904535c69c992754e1aa169f37f88bd6",
-    "fishhat/host-ops/src/fishhat_host/cli.py": "9a9c7d27038145a14ee3544036da712fcbb3e490ea06ee113005f2baaeb22ac2",
+    "fishhat/host-ops/src/fishhat_host/cli.py": "9087487fd8c4792af815b519a47e99f154324ad012eede361a8e8e8fd55f4634",
     "packages/fishhat-contracts/src/fishhat_contracts/contracts/actions.json": "d2139b4286ed2f531e4a71a8a1ab38293e2de00197a9560ee37d9c43509cb1bc",
     "packages/fishhat-contracts/src/fishhat_contracts/contracts/client-commands.json": "5b3e29df1fb1fecd18ef5699f8dc89da22c2f2dd6154f9d18a30f18d26db7f3e",
     "packages/fishhat-contracts/src/fishhat_contracts/contracts/owner-cli.json": "f8d17432379d9141fcd45d49c3f59b693e7d44f150fb6c222b804c2314886757",

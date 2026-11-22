@@ -109,8 +109,10 @@ def test_failed_provisioning_preserves_private_attempt_and_fresh_retry(
             patch.setattr(installer.os, "fsync", sync)
         with pytest.raises((ValueError, OSError)):
             installer._prepare_owner_state(state)
+    # The content inspection can update access time; snapshot metadata afterward.
+    assert not list(state.iterdir())
     before = state.stat()
-    assert stat.S_IMODE(before.st_mode) == 0o700 and not list(state.iterdir())
+    assert stat.S_IMODE(before.st_mode) == 0o700
     with pytest.raises(FileExistsError):
         installer._prepare_owner_state(state)
     fresh = custody / "retry"

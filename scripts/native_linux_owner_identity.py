@@ -969,10 +969,29 @@ def _publication(
                 if event[1] == "fsync" and event[2] == pending and event[3]
             ]
             removed = [event[0] for event in events if event[1] == "unpublish-private"]
-            directory_sync = [event for event in events if event[1] == "fsync" and event[2] == path]
+            # SQLite may synchronize its new rollback-journal directory before
+            # the private database commitment. Publication still needs its own
+            # successful directory sync after the private name is removed.
+            directory_sync = [
+                event
+                for event in events
+                if event[1] == "fsync" and event[2] == path and event[0] > published
+            ]
+            earlier_directory_sync = [
+                event
+                for event in events
+                if event[1] == "fsync" and event[2] == path and event[0] < published
+            ]
+            preparation_sync = [
+                event
+                for event in events
+                if event[1] in ("fsync", "fdatasync") and event[0] < published
+            ]
             _require(
                 bool(file_sync)
                 and reserves[0][0] < file_sync[-1] < published
+                and all(event[3] and reserves[0][0] < event[0] for event in preparation_sync)
+                and all(event[0] < file_sync[-1] for event in earlier_directory_sync)
                 and len(removed) == 1
                 and published < removed[0]
                 and len(directory_sync) == 1

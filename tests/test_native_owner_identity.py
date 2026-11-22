@@ -24,7 +24,7 @@ CHECK_PURPOSE = {
         "scripts/native_linux_owner_identity.py",
         "scripts/native_linux_owner_entrypoint.py",
     ],
-    "scope": "synthetic complete identity receipts, publication ordering, inert SQL originals, original trace/proc custody and adversarial collector mutations",
+    "scope": "synthetic complete identity receipts, schema-journal and publication synchronization ordering, inert SQL originals, original trace/proc custody and adversarial collector mutations",
     "relationship": "no-product-claim",
     "reason": "Invented process/file/syscall records and ordinary in-memory SQLite data challenge only evidence validation. No guest program, compiler, installed command, privilege change or native payload executes.",
     "claims": [],
@@ -272,6 +272,10 @@ def identity_receipt():
                         "--- SIGCONT {si_signo=SIGCONT, si_code=SI_TKILL} ---",
                     ]
                 lines += [
+                    f"openat(3, {quoted('.initializing-journal')}, O_RDWR|O_CREAT|O_CLOEXEC, 0600) = 5",
+                    "fsync(5) = 0",
+                    "fsync(3) = 0",
+                    "close(5) = 0",
                     "fsync(4) = 0",
                     f"linkat(3, {quoted('.initializing')}, 3, {quoted('owner.sqlite3')}, 0) = 0",
                     f"unlinkat(3, {quoted('.initializing')}, 0) = 0",
@@ -398,12 +402,12 @@ def identity_receipt():
         proof[key] = row
     uncertain = snapshot(raw)
     proof["unconfirmed_publication"] = dict(
-        sync_ordinal=2,
+        sync_ordinal=4,
         failed=trace(
             "initialize",
             "unconfirmed",
             "root-identity-unconfirmed",
-            "--inject=fsync:error=EIO:when=2",
+            "--inject=fsync:error=EIO:when=4",
             success=False,
         ),
         published=uncertain,
@@ -561,6 +565,11 @@ def test_complete_synthetic_identity_receipt():
         "ack-before-sync",
         "replace-publication",
         "missing-file-sync",
+        "missing-final-directory-sync",
+        "failed-journal-sync",
+        "failed-initial-directory-sync",
+        "misplaced-final-directory-sync",
+        "nscd-socket",
         "write-outside",
         "network",
         "extra-exec",
@@ -605,35 +614,17 @@ def test_rejects_corrupted_identity_receipts(fault):
         "ack-before-sync",
         "replace-publication",
         "missing-file-sync",
+        "missing-final-directory-sync",
+        "failed-journal-sync",
+        "failed-initial-directory-sync",
+        "misplaced-final-directory-sync",
+        "nscd-socket",
         "write-outside",
         "network",
         "extra-exec",
         "abbreviated-exec",
     ):
-        lines = trace["trace_original"].splitlines()
-        if fault == "ack-before-sync":
-            ack = next(line for line in lines if line.startswith("write(1,"))
-            lines.remove(ack)
-            lines.insert(next(i for i, line in enumerate(lines) if line == "fsync(3) = 0"), ack)
-        elif fault == "replace-publication":
-            lines = [line.replace("linkat(", "renameat(") for line in lines]
-        elif fault == "missing-file-sync":
-            lines.remove("fsync(4) = 0")
-        elif fault == "write-outside":
-            lines.insert(
-                -1, "openat(AT_FDCWD, " + quoted("/outside/store") + ", O_WRONLY|O_CREAT, 0600) = 8"
-            )
-        elif fault == "network":
-            lines.insert(-1, "socket(AF_INET, SOCK_STREAM, IPPROTO_IP) = 8")
-        elif fault == "extra-exec":
-            lines.insert(-1, execution("/unapproved", ["/unapproved"], {}))
-        else:
-            lines[0] = lines[0].replace("], [", ", ...], [", 1)
-        trace["trace_original"] = "\n".join(lines) + "\n"
-        trace["trace_metadata"].update(
-            bytes=len(trace["trace_original"].encode()),
-            sha256=hashlib.sha256(trace["trace_original"].encode()).hexdigest(),
-        )
+        _corrupt_identity_trace(trace, fault)
     elif fault == "unsafe-runtime":
         trace["environment"]["PYTHONPATH"] = "/caller"
     elif fault == "unjoined":
@@ -648,6 +639,46 @@ def test_rejects_corrupted_identity_receipts(fault):
         _corrupt_identity_data(value, proof, trace, fault)
     with pytest.raises((GuestBootError, KeyError, TypeError, ValueError, sqlite3.DatabaseError)):
         native.verify_observation(value, c)
+
+
+def _corrupt_identity_trace(trace, fault):
+    lines = trace["trace_original"].splitlines()
+    if fault == "ack-before-sync":
+        ack = next(line for line in lines if line.startswith("write(1,"))
+        lines.remove(ack)
+        lines.insert(next(i for i, line in enumerate(lines) if line == "fsync(3) = 0"), ack)
+    elif fault == "replace-publication":
+        lines = [line.replace("linkat(", "renameat(") for line in lines]
+    elif fault == "missing-file-sync":
+        lines.remove("fsync(4) = 0")
+    elif fault == "missing-final-directory-sync":
+        final = max(i for i, line in enumerate(lines) if line == "fsync(3) = 0")
+        lines.pop(final)
+    elif fault == "failed-journal-sync":
+        lines[lines.index("fsync(5) = 0")] = "fsync(5) = -1 EIO (Input/output error)"
+    elif fault == "failed-initial-directory-sync":
+        lines[lines.index("fsync(3) = 0")] = "fsync(3) = -1 EIO (Input/output error)"
+    elif fault == "misplaced-final-directory-sync":
+        final = max(i for i, line in enumerate(lines) if line == "fsync(3) = 0")
+        line = lines.pop(final)
+        lines.insert(next(i for i, line in enumerate(lines) if line.startswith("unlinkat(")), line)
+    elif fault == "nscd-socket":
+        lines.insert(-1, "socket(AF_UNIX, SOCK_STREAM|SOCK_CLOEXEC|SOCK_NONBLOCK, 0) = 8")
+    elif fault == "write-outside":
+        lines.insert(
+            -1, "openat(AT_FDCWD, " + quoted("/outside/store") + ", O_WRONLY|O_CREAT, 0600) = 8"
+        )
+    elif fault == "network":
+        lines.insert(-1, "socket(AF_INET, SOCK_STREAM, IPPROTO_IP) = 8")
+    elif fault == "extra-exec":
+        lines.insert(-1, execution("/unapproved", ["/unapproved"], {}))
+    else:
+        lines[0] = lines[0].replace("], [", ", ...], [", 1)
+    trace["trace_original"] = "\n".join(lines) + "\n"
+    trace["trace_metadata"].update(
+        bytes=len(trace["trace_original"].encode()),
+        sha256=hashlib.sha256(trace["trace_original"].encode()).hexdigest(),
+    )
 
 
 def _corrupt_identity_data(value, proof, trace, fault):

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -31,6 +32,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.command != "state":
         return execute("host-ops", args, capabilities=("owner-state-identity",))
 
+    # Dependency configuration must use the selected runtime rather than a
+    # caller-selected user base or an NSS lookup for a missing home directory.
+    os.environ["PYTHONUSERBASE"] = sys.prefix
     from fishhat_owner import identity_store
 
     owner = {"tool": "host-ops", "id": args.owner_id, "epoch": args.owner_epoch}
