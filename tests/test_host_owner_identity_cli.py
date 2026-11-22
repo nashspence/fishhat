@@ -11,7 +11,6 @@ from fishhat_host.cli import main
 from fishhat_owner import identity_store
 
 from scripts.validation_timeouts import watchdog
-
 from tests.test_owner_identity_store import OWNER, snapshot
 from tests.test_owner_identity_store import enrolled as enrolled
 
