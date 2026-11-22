@@ -67,7 +67,7 @@
       ],
       "requiredness_authority": "release.toml#/governance/required_checks",
       "result_authority": "GitHub job conclusion; classification supplies no execution proof",
-      "scope": "explicitly enrolled disposable controller dependency, paused TCG/QMP identities and owned-controller fault cleanup and authenticated guest boot/SSH identity and owned disks, isolated guest filesystems/account permissions and partial-storage setup cleanup and owned guest process kill/reaping and independently observed SSH transport loss/retry and isolated real project-quota exhaustion and exact owned allocation release/reuse and known allocation destruction with independent absence/retry after an unadmitted cleanup reply and protected partial quota custody/selected interruption recovery and independently observed graceful same-controller reboot/persisted root canary and separately interrupted reboot observation with exact whole-guest cleanup and verified offline standalone snapshots of stopped owned guest disks and exact protected boot-input borrowing across an original-disk cold controller replacement and complete independently owned private restored disk inputs from verified sealed snapshots and independently authenticated fresh boot of private restored disks under an explicitly owned writable lifetime and exact same-run approved host wheel payload custody with isolated root/peer imports and permission/refusal/interruption witnesses and fixed static bootstrap input/source custody with actual root/peer loader-environment clearing, effective unsanitized controls and interrupted candidate/fresh retry and a repository-built fixed static launch primitive with original-credential rejection, complete literal argv, inherited descriptor closure and independently observed cleanup and a fixed installed host command with exact protected runtime/wheel custody, actual root/peer offline invocation, independent live process/file-origin traces, untraced credential rejection and preserved interruption/fresh retry; no native owner qualification; no full pre/post-snapshot roundtrip qualification",
+      "scope": "explicitly enrolled disposable controller dependency, paused TCG/QMP identities and owned-controller fault cleanup and authenticated guest boot/SSH identity and owned disks, isolated guest filesystems/account permissions and partial-storage setup cleanup and owned guest process kill/reaping and independently observed SSH transport loss/retry and isolated real project-quota exhaustion and exact owned allocation release/reuse and known allocation destruction with independent absence/retry after an unadmitted cleanup reply and protected partial quota custody/selected interruption recovery and independently observed graceful same-controller reboot/persisted root canary and separately interrupted reboot observation with exact whole-guest cleanup and verified offline standalone snapshots of stopped owned guest disks and exact protected boot-input borrowing across an original-disk cold controller replacement and complete independently owned private restored disk inputs from verified sealed snapshots and independently authenticated fresh boot of private restored disks under an explicitly owned writable lifetime and exact same-run approved host wheel payload custody with isolated root/peer imports and permission/refusal/interruption witnesses and fixed static bootstrap input/source custody with actual root/peer loader-environment clearing, effective unsanitized controls and interrupted candidate/fresh retry and a repository-built fixed static launch primitive with original-credential rejection, complete literal argv, inherited descriptor closure and independently observed cleanup and a fixed installed host command with exact protected runtime/wheel custody, actual root/peer offline invocation, independent live process/file-origin traces, untraced credential rejection and preserved interruption/fresh retry and installed protected checkpoint serialization/CAS, exact-current synchronization, retained uncertainty and owned actor cleanup on distinct authority/journal filesystems; no native owner qualification; no full pre/post-snapshot roundtrip qualification",
       "work_sha256": "652a10188239ff9fdbfe9d37d94583ce01dbb9b251a2e196c00308883439243f"
     },
     ".github/workflows/ci.yml:native-prerequisites": {
@@ -167,7 +167,7 @@
       "requiredness_authority": "release.toml#/governance/required_checks",
       "result_authority": "GitHub job conclusion; classification supplies no execution proof",
       "scope": "watchdog propagation and negative progress/cleanup regressions and workflow safety",
-      "work_sha256": "679ab2ee254cd764d65de90d388c0b020250202b553c4fd19499b887dbf1d5b4"
+      "work_sha256": "d04bdb1ea24ac8badd0e6fc3ee32d1404c1cb37c7344321282baf998f82d7a1a"
     },
     ".github/workflows/ci.yml:watchdogs": {
       "authority": ".github/workflows/ci.yml",
@@ -15149,6 +15149,286 @@
     {
       "node": "tests/test_native_owner_bootstrap.py::test_unverified_guest_rejects_before_input_or_transport",
       "purpose_sha256": "9fe4a1e5b20eb5ed8f852d0913911997b69b24a0a88cf0531183b052858b832f"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_closed_workload_preserves_roles_domains_and_controlled_fault_scope",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_complete_reads_follow_duplicated_directory_descriptors",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_context_keeps_installed_authority_separate_from_journal_capture",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_controlled_directory_error_is_not_a_successful_directory_sync",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_guarded_coordinator_retains_originals_cleanup_and_scoped_statistics[None]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_guarded_coordinator_retains_originals_cleanup_and_scoped_statistics[cleanup-identity]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_guarded_coordinator_retains_originals_cleanup_and_scoped_statistics[cleanup-process]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_guarded_coordinator_retains_originals_cleanup_and_scoped_statistics[transport]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_guarded_coordinator_retains_originals_cleanup_and_scoped_statistics[validation]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_guest_payloads_are_parsed_without_substituting_backend_calls",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_live_process_facts_require_exact_original_execution[None]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_live_process_facts_require_exact_original_execution[argv]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_live_process_facts_require_exact_original_execution[capabilities]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_live_process_facts_require_exact_original_execution[environment]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_live_process_facts_require_exact_original_execution[exe-sha]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_live_process_facts_require_exact_original_execution[exe]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_live_process_facts_require_exact_original_execution[gid]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_live_process_facts_require_exact_original_execution[marker-capabilities]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_live_process_facts_require_exact_original_execution[marker-groups]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_live_process_facts_require_exact_original_execution[parent]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_live_process_facts_require_exact_original_execution[session]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_live_process_facts_require_exact_original_execution[stop-original]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_live_process_facts_require_exact_original_execution[stop-state]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_live_process_facts_require_exact_original_execution[trace-pid]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_live_process_facts_require_exact_original_execution[uid]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_original_publication_requires_sync_and_anchor_lock[False]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_original_publication_requires_sync_and_anchor_lock[True]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_pending_interruption_and_lost_reply_do_not_create_acknowledgement",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_publication_reader_refuses_forged_ordering[early-reply]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_publication_reader_refuses_forged_ordering[early-unlock]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_publication_reader_refuses_forged_ordering[injected-directory-error]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_publication_reader_refuses_forged_ordering[missing-directory-sync]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_publication_reader_refuses_forged_ordering[missing-file-sync]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_publication_reader_refuses_forged_ordering[unlocked-write]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_publication_reader_refuses_forged_ordering[wrong-head]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_publication_reader_refuses_forged_ordering[wrong-target]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_qualification_refuses_missing_enrollment_or_storage_before_actions[guest]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_qualification_refuses_missing_enrollment_or_storage_before_actions[storage-context]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_qualification_refuses_missing_enrollment_or_storage_before_actions[storage]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_record_reader_refuses_changed_custody[anchor-bytes]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_record_reader_refuses_changed_custody[anchor]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_record_reader_refuses_changed_custody[boolean-anchor]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_record_reader_refuses_changed_custody[capability]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_record_reader_refuses_changed_custody[digest]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_record_reader_refuses_changed_custody[directory-capability]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_record_reader_refuses_changed_custody[directory-mode]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_record_reader_refuses_changed_custody[epoch]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_record_reader_refuses_changed_custody[extra]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_record_reader_refuses_changed_custody[format]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_record_reader_refuses_changed_custody[head]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_record_reader_refuses_changed_custody[history]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_record_reader_refuses_changed_custody[journal]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_record_reader_refuses_changed_custody[links]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_record_reader_refuses_changed_custody[mode]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_record_reader_refuses_changed_custody[namespace]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_record_reader_refuses_changed_custody[noncanonical]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_record_reader_refuses_changed_custody[owner]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_record_reader_refuses_changed_custody[uid]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_trace_reader_rejects_ambiguous_or_incomplete_custody[abbreviated-read]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_trace_reader_rejects_ambiguous_or_incomplete_custody[no-cloexec]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_trace_reader_rejects_ambiguous_or_incomplete_custody[no-nofollow]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_trace_reader_rejects_ambiguous_or_incomplete_custody[oversized-read]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_trace_reader_rejects_ambiguous_or_incomplete_custody[unknown-dirfd]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_unprivileged_modification_requires_original_kernel_refusals[None]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_unprivileged_modification_requires_original_kernel_refusals[allowed-open]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_unprivileged_modification_requires_original_kernel_refusals[changed-path]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_unprivileged_modification_requires_original_kernel_refusals[missing-chmod]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_unprivileged_modification_requires_original_kernel_refusals[missing-open]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_unprivileged_modification_requires_original_kernel_refusals[no-reply-denials]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_versioned_record_binds_exact_original_bytes_and_anchor",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
     },
     {
       "node": "tests/test_native_owner_entrypoint.py::test_complete_invented_packet_is_accepted_without_native_execution",
