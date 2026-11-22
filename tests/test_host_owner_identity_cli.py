@@ -2,10 +2,15 @@
 
 import json
 import os
+import subprocess
+import sys
+import textwrap
 
 import pytest
 from fishhat_host.cli import main
 from fishhat_owner import identity_store
+
+from scripts.validation_timeouts import watchdog
 
 from tests.test_owner_identity_store import OWNER, snapshot
 from tests.test_owner_identity_store import enrolled as enrolled
@@ -16,11 +21,16 @@ CHECK_PURPOSE = {
         "fishhat/host-ops/src/fishhat_host/cli.py",
         "fishhat/owner-support/src/fishhat_owner/identity_store.py",
     ],
-    "scope": "explicit administrative argument routing, identity/schema checks and private-error redaction",
+    "scope": "explicit administrative argument routing, cold dependency startup, identity/schema checks and private-error redaction",
     "relationship": "candidate",
-    "reason": "Imported command functions and replaced administrative enrollment exercise ordinary temporary SQLite files only; actual installed command/runtime/credential custody needs enrolled-guest witnesses.",
+    "reason": "Imported command functions and replaced administrative enrollment exercise ordinary temporary SQLite files; isolated source processes forbid user-home lookup and owner enrollment during cold import. Actual installed command/runtime/credential custody needs enrolled-guest witnesses.",
     "claims": [],
 }
+
+
+@pytest.fixture(autouse=True)
+def isolated_user_configuration(monkeypatch):
+    monkeypatch.setenv("PYTHONUSERBASE", os.environ.get("PYTHONUSERBASE", ""))
 
 
 def arguments(action, path, owner=OWNER):
@@ -149,3 +159,57 @@ def test_posttransaction_database_failure_retains_attempt_and_redacts_errors(
     assert "SYNTHETIC_PRIVATE_DATABASE_SENTINEL" not in output.err and str(path) not in output.err
     assert (path / identity_store.PENDING).is_file()
     assert not (path / identity_store.DATABASE).exists()
+
+
+@pytest.mark.parametrize("user_base", [None, "SYNTHETIC_UNTRUSTED_USER_BASE"])
+def test_cold_state_dependency_loading_uses_selected_runtime_without_user_lookup(
+    tmp_path, user_base
+):
+    program = textwrap.dedent(
+        """\
+        import json, os, pwd, sys
+        inputs = json.loads(sys.stdin.read())
+        sys.path[:] = inputs["imports"]
+        assert "sysconfig" not in sys.modules
+        assert "HOME" not in os.environ
+        def forbidden(*args, **kwargs):
+            raise AssertionError("state startup attempted a user-home lookup")
+        pwd.getpwuid = forbidden
+        pwd.getpwnam = forbidden
+        os.getresuid = lambda: (1000, 1000, 1000)
+        os.getresgid = lambda: (1000, 1000, 1000)
+        from fishhat_host.cli import main
+        assert "fishhat_owner.identity_store" not in sys.modules
+        for action in ("initialize", "inspect"):
+            assert main(["state", action, inputs["path"], "--owner-id", inputs["owner"]["id"],
+                         "--owner-epoch", inputs["owner"]["epoch"], "--json"]) == 2
+            assert os.environ["PYTHONUSERBASE"] == sys.prefix
+        import sysconfig
+        assert sysconfig.get_config_var("userbase") == sys.prefix
+        """
+    )
+    environment = {"LANG": "C.UTF-8", "LC_ALL": "C.UTF-8"}
+    if user_base is not None:
+        environment["PYTHONUSERBASE"] = user_base
+    path = tmp_path / "uncreated-owner-store"
+    result = subprocess.run(
+        [sys.executable, "-I", "-S", "-B", "-c", program],
+        input=json.dumps({"imports": sys.path, "path": str(path), "owner": OWNER}),
+        text=True,
+        capture_output=True,
+        cwd=tmp_path,
+        env=environment,
+        check=False,
+        timeout=watchdog(30),
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout == ""
+    assert [json.loads(line) for line in result.stderr.splitlines()] == [
+        {
+            "tool": "host-ops",
+            "status": "unconfirmed",
+            "error": "OWNER_INITIALIZATION_UNCONFIRMED",
+        },
+        {"tool": "host-ops", "status": "invalid", "error": "OWNER_STATE_REJECTED"},
+    ]
+    assert not path.exists()

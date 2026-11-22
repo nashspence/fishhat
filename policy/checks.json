@@ -8947,36 +8947,44 @@
       "purpose_sha256": "ffb58893f3f7969f975206627aafe48a24b69536f741b9a5efdef0c06d50bb3f"
     },
     {
+      "node": "tests/test_host_owner_identity_cli.py::test_cold_state_dependency_loading_uses_selected_runtime_without_user_lookup[None]",
+      "purpose_sha256": "6a3c5dac6deb84cd2730e888a6ef6d3e771030cec758379d4bfa3c435482c5c0"
+    },
+    {
+      "node": "tests/test_host_owner_identity_cli.py::test_cold_state_dependency_loading_uses_selected_runtime_without_user_lookup[SYNTHETIC_UNTRUSTED_USER_BASE]",
+      "purpose_sha256": "6a3c5dac6deb84cd2730e888a6ef6d3e771030cec758379d4bfa3c435482c5c0"
+    },
+    {
       "node": "tests/test_host_owner_identity_cli.py::test_explicit_initialize_then_inspect_preserves_state",
-      "purpose_sha256": "802812605fbd87e4806b79c4e0210c594fab3ecffbb8fa1f3b4a7927f8c3b077"
+      "purpose_sha256": "6a3c5dac6deb84cd2730e888a6ef6d3e771030cec758379d4bfa3c435482c5c0"
     },
     {
       "node": "tests/test_host_owner_identity_cli.py::test_help_and_info_keep_native_operations_unavailable",
-      "purpose_sha256": "802812605fbd87e4806b79c4e0210c594fab3ecffbb8fa1f3b4a7927f8c3b077"
+      "purpose_sha256": "6a3c5dac6deb84cd2730e888a6ef6d3e771030cec758379d4bfa3c435482c5c0"
     },
     {
       "node": "tests/test_host_owner_identity_cli.py::test_identity_errors_do_not_echo_private_paths_or_values[invalid-id]",
-      "purpose_sha256": "802812605fbd87e4806b79c4e0210c594fab3ecffbb8fa1f3b4a7927f8c3b077"
+      "purpose_sha256": "6a3c5dac6deb84cd2730e888a6ef6d3e771030cec758379d4bfa3c435482c5c0"
     },
     {
       "node": "tests/test_host_owner_identity_cli.py::test_identity_errors_do_not_echo_private_paths_or_values[other-epoch]",
-      "purpose_sha256": "802812605fbd87e4806b79c4e0210c594fab3ecffbb8fa1f3b4a7927f8c3b077"
+      "purpose_sha256": "6a3c5dac6deb84cd2730e888a6ef6d3e771030cec758379d4bfa3c435482c5c0"
     },
     {
       "node": "tests/test_host_owner_identity_cli.py::test_identity_errors_do_not_echo_private_paths_or_values[other-id]",
-      "purpose_sha256": "802812605fbd87e4806b79c4e0210c594fab3ecffbb8fa1f3b4a7927f8c3b077"
+      "purpose_sha256": "6a3c5dac6deb84cd2730e888a6ef6d3e771030cec758379d4bfa3c435482c5c0"
     },
     {
       "node": "tests/test_host_owner_identity_cli.py::test_posttransaction_database_failure_retains_attempt_and_redacts_errors",
-      "purpose_sha256": "802812605fbd87e4806b79c4e0210c594fab3ecffbb8fa1f3b4a7927f8c3b077"
+      "purpose_sha256": "6a3c5dac6deb84cd2730e888a6ef6d3e771030cec758379d4bfa3c435482c5c0"
     },
     {
       "node": "tests/test_host_owner_identity_cli.py::test_unconfirmed_publication_is_reconciled_by_inspection_not_reinitialization",
-      "purpose_sha256": "802812605fbd87e4806b79c4e0210c594fab3ecffbb8fa1f3b4a7927f8c3b077"
+      "purpose_sha256": "6a3c5dac6deb84cd2730e888a6ef6d3e771030cec758379d4bfa3c435482c5c0"
     },
     {
       "node": "tests/test_host_owner_identity_cli.py::test_unprivileged_command_cannot_initialize",
-      "purpose_sha256": "802812605fbd87e4806b79c4e0210c594fab3ecffbb8fa1f3b4a7927f8c3b077"
+      "purpose_sha256": "6a3c5dac6deb84cd2730e888a6ef6d3e771030cec758379d4bfa3c435482c5c0"
     },
     {
       "node": "tests/test_host_resource_admission.py::test_account_ceilings_share_capacity_without_reserving_it_in_advance",
@@ -15520,139 +15528,159 @@
     },
     {
       "node": "tests/test_native_owner_identity.py::test_complete_synthetic_identity_receipt",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_identity_helpers_and_composed_guest_source_are_only_parsed",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[abbreviated-exec]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[ack-before-sync]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[boolean-generation]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[changed-retained]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[duplicate-pid]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[extra-exec]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
+    },
+    {
+      "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[failed-initial-directory-sync]",
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
+    },
+    {
+      "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[failed-journal-sync]",
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[fake-filecap-control]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[fake-symlink-control]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[forged-file-hash]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[genesis-not-empty]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[lost-private-bytes]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
+    },
+    {
+      "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[misplaced-final-directory-sync]",
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[missing-cleanup]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[missing-file-sync]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
+    },
+    {
+      "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[missing-final-directory-sync]",
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[missing-original]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[missing-refusal]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[missing-sync-error]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[missing-trace]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[network]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
+    },
+    {
+      "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[nscd-socket]",
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[owner]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[qualification]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[replace-publication]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[scope]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[unbounded-code-origin]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[unjoined]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[unsafe-runtime]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[write-outside]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[wrong-fault-ordinal]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[wrong-live-env]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[wrong-live-exe]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[wrong-live-pid]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[wrong-owner-data]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_identity.py::test_rejects_corrupted_identity_receipts[wrong-schema]",
-      "purpose_sha256": "a1dfedee257b6d1086efd3dc5a855d440f8a227780018fbf3614ff26074af157"
+      "purpose_sha256": "cecf25d155991609b638c40a0d06982f14b354510cf196ce7981f61bde4e1d62"
     },
     {
       "node": "tests/test_native_owner_launcher.py::test_guest_program_source_parses_without_execution[CLEANUP]",
