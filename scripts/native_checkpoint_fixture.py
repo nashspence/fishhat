@@ -17,6 +17,14 @@ def progress(value):
  stage=value
  try:print('fishhat-checkpoint-progress '+stage+' '+str(len(result['invocations'])),file=sys.stderr,flush=True)
  except OSError:pass
+def failure(error):
+ reason='observation-error'
+ if isinstance(error,subprocess.TimeoutExpired):reason='child-timeout'
+ elif isinstance(error,AssertionError):
+  reason={'native stop unavailable':'stop-unavailable','fixture marker unavailable':'marker-unavailable'}.get(str(error),'assertion')
+ elif isinstance(error,OSError):reason='os-error'
+ try:print('fishhat-checkpoint-failure '+stage+' '+reason,file=sys.stderr,flush=True)
+ except OSError:pass
 def digest(path):
  with path.open('rb') as stream:return hashlib.file_digest(stream,'sha256').hexdigest()
 def metadata(path):
@@ -290,7 +298,7 @@ try:
  result['program_after']={name:metadata(prefix/name) for name in ('probe.py','context.json')};assert result['program_after']==result['program_before']
  result['storage_after']=control_snapshot();assert result['storage_after']==result['storage_before']
  result['status']='passed'
-except BaseException as error:result['primary_error']={'stage':stage,'type':type(error).__name__,'message':str(error)}
+except BaseException as error:result['primary_error']={'stage':stage,'type':type(error).__name__,'message':str(error)};failure(error)
 finally:
  progress('child-settlement')
  for entry in children:
@@ -311,5 +319,5 @@ finally:
    shutil.rmtree(path);assert not path.exists();result['cleanup'].append({'path':str(path),'device':identity[0],'inode':identity[1],'removed':True})
   except BaseException as error:result['cleanup_errors'].append({'stage':'owned-namespace','type':type(error).__name__})
  if result['primary_error'] is not None or result['cleanup_errors']:result['status']='failed'
-print(json.dumps(result,sort_keys=True))
+json.dump(result,sys.stdout,sort_keys=True);sys.stdout.write('\n');sys.stdout.flush()
 """

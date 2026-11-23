@@ -56,6 +56,73 @@ print(json.dumps({'pid':os.getpid(),'uid':os.geteuid(),
 """
 
 
+MEMORY_OBSERVATION = r"""
+import json,os,pathlib,sys
+c=json.loads(sys.argv[1]);assert os.geteuid()==0
+boot=pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+enrollment=pathlib.Path('/etc/fishhat-fixture-enrollment').read_text().strip()
+assert boot==c['boot_id'] and enrollment==c['enrollment']
+vmstat=dict(line.split() for line in pathlib.Path('/proc/vmstat').read_text().splitlines())
+meminfo=dict(line.split(':',1) for line in pathlib.Path('/proc/meminfo').read_text().splitlines())
+print(json.dumps({'scope':'checkpoint-guest-memory-diagnostics-only','pid':os.getpid(),'uid':os.geteuid(),
+ 'boot_id':boot,'enrollment':enrollment,'oom_kills':int(vmstat['oom_kill']),
+ 'available_memory_kib':int(meminfo['MemAvailable'].split()[0])},sort_keys=True))
+"""
+
+
+def memory_observation(guest: Guest) -> dict[str, Any]:
+    """Observe closed guest facts; unavailable troubleshooting never replaces a failure."""
+    try:
+        assert guest.observed is not None
+        raw = guest.guarded(
+            [
+                "/usr/bin/python3",
+                "-I",
+                "-S",
+                "-B",
+                "-c",
+                MEMORY_OBSERVATION,
+                json.dumps(
+                    {"boot_id": guest.observed["boot_id"], "enrollment": guest.enrollment},
+                    sort_keys=True,
+                ),
+            ],
+            guest.enrollment,
+            guest.observed["boot_id"],
+            nominal=15,
+        )
+        value = json.loads(raw)
+        assert set(value) == {
+            "scope",
+            "pid",
+            "uid",
+            "boot_id",
+            "enrollment",
+            "oom_kills",
+            "available_memory_kib",
+        }
+        assert value["scope"] == "checkpoint-guest-memory-diagnostics-only"
+        assert (
+            value["boot_id"] == guest.observed["boot_id"]
+            and value["enrollment"] == guest.enrollment
+        )
+        assert type(value["uid"]) is int and value["uid"] == 0
+        assert type(value["pid"]) is int and value["pid"] > 1
+        assert all(
+            type(value[key]) is int and value[key] >= 0
+            for key in ("oom_kills", "available_memory_kib")
+        )
+        return {
+            "status": "observed",
+            "original_reply": raw,
+            "original_reply_sha256": hashlib.sha256(raw.encode()).hexdigest(),
+            "observation": value,
+            "qualification_claimed": False,
+        }
+    except Exception:
+        return {"status": "unavailable", "qualification_claimed": False}
+
+
 def require(value: bool, reason: str) -> None:
     if not value:
         raise GuestBootError("owner-checkpoint-" + reason)
@@ -225,22 +292,31 @@ def qualify_checkpoint(
                 },
             }
             report["configuration"] = c
+            before_memory = memory_observation(guest)
             with progress("guest-protected-owner-checkpoint"):
-                raw = guest.guarded(
-                    [
-                        "/usr/bin/python3",
-                        "-I",
-                        "-S",
-                        "-B",
-                        "-c",
-                        REMOTE,
-                        json.dumps(c, sort_keys=True),
-                    ],
-                    guest.enrollment,
-                    c["boot_id"],
-                    nominal=1200,
-                    input_path=path,
-                )
+                try:
+                    raw = guest.guarded(
+                        [
+                            "/usr/bin/python3",
+                            "-I",
+                            "-S",
+                            "-B",
+                            "-c",
+                            REMOTE,
+                            json.dumps(c, sort_keys=True),
+                        ],
+                        guest.enrollment,
+                        c["boot_id"],
+                        nominal=1200,
+                        input_path=path,
+                    )
+                except Exception:
+                    report["failure_resources"] = {
+                        "before": before_memory,
+                        "after": memory_observation(guest),
+                        "qualification_claimed": False,
+                    }
+                    raise
             report["original_reply_sha256"] = hashlib.sha256(raw.encode()).hexdigest()
             try:
                 value = json.loads(raw)

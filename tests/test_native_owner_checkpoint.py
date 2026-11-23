@@ -118,7 +118,7 @@ def publication_trace(*, initialize=False, uncertain=False, interrupted=False, r
 
 
 def test_guest_payloads_are_parsed_without_substituting_backend_calls():
-    for text in (PROGRAM, REMOTE, native.CLEANUP):
+    for text in (PROGRAM, REMOTE, native.CLEANUP, native.MEMORY_OBSERVATION):
         ast.parse(text)
     tree = ast.parse(PROGRAM)
     calls = {
@@ -411,7 +411,16 @@ def test_qualification_refuses_missing_enrollment_or_storage_before_actions(tmp_
 
 
 @pytest.mark.parametrize(
-    "failure", [None, "transport", "cleanup-identity", "cleanup-process", "validation"]
+    "failure",
+    [
+        None,
+        "transport",
+        "transport-baseline",
+        "transport-diagnostics",
+        "cleanup-identity",
+        "cleanup-process",
+        "validation",
+    ],
 )
 def test_guarded_coordinator_retains_originals_cleanup_and_scoped_statistics(
     tmp_path, monkeypatch, failure
@@ -433,6 +442,8 @@ def test_guarded_coordinator_retains_originals_cleanup_and_scoped_statistics(
     monkeypatch.setattr(native, "_prepare_inputs", lambda *args: (prepared, inputs))
     value = {"observer_pid": 300, "owned_children": [{"tracer_pid": 301, "tracee_pids": [302]}]}
     calls = []
+    memory_calls = []
+    transport_error = GuestBootError("controlled transport")
 
     def guarded(action, enrollment, boot, **options):
         assert (
@@ -441,11 +452,29 @@ def test_guarded_coordinator_retains_originals_cleanup_and_scoped_statistics(
             and action[:5] == ["/usr/bin/python3", "-I", "-S", "-B", "-c"]
         )
         ast.parse(action[5])
+        if action[5] == native.MEMORY_OBSERVATION:
+            assert options == {"nominal": 15}
+            memory_calls.append(action)
+            if failure == "transport-baseline" and len(memory_calls) == 1:
+                raise GuestBootError("fixture-private-value")
+            if failure == "transport-diagnostics" and len(memory_calls) == 2:
+                raise GuestBootError("fixture-private-value")
+            return json.dumps(
+                {
+                    "scope": "checkpoint-guest-memory-diagnostics-only",
+                    "pid": 500 + len(memory_calls),
+                    "uid": 0,
+                    "boot_id": BOOT,
+                    "enrollment": ENROLLMENT,
+                    "oom_kills": len(memory_calls) - 1,
+                    "available_memory_kib": 1024,
+                }
+            )
         calls.append((action, options))
         if len(calls) == 1:
             assert action[5] == REMOTE and options["input_path"] == prepared
-            if failure == "transport":
-                raise GuestBootError("controlled transport")
+            if failure is not None and failure.startswith("transport"):
+                raise transport_error
             return json.dumps(value)
         assert action[5] == native.CLEANUP
         request = json.loads(action[6])
@@ -480,8 +509,10 @@ def test_guarded_coordinator_retains_originals_cleanup_and_scoped_statistics(
     if failure is None:
         native.qualify_checkpoint(guest, tmp_path, lambda _: nullcontext(), report, storage)
     else:
-        with pytest.raises(GuestBootError):
+        with pytest.raises(GuestBootError) as caught:
             native.qualify_checkpoint(guest, tmp_path, lambda _: nullcontext(), report, storage)
+        if failure.startswith("transport"):
+            assert caught.value is transport_error
     assert report["status"] == ("passed" if failure is None else "failed")
     assert valid_stats(report["qualification_statistics"])
     assert (
@@ -491,7 +522,25 @@ def test_guarded_coordinator_retains_originals_cleanup_and_scoped_statistics(
         is False
     )
     assert calls[0][1]["nominal"] == 1200
-    if failure != "transport":
+    if failure is not None and failure.startswith("transport"):
+        resources = report["failure_resources"]
+        assert resources["qualification_claimed"] is False and len(memory_calls) == 2
+        for name in ("before", "after"):
+            observed = resources[name]
+            assert observed["qualification_claimed"] is False
+            if (failure == "transport-baseline" and name == "before") or (
+                failure == "transport-diagnostics" and name == "after"
+            ):
+                assert observed == {"status": "unavailable", "qualification_claimed": False}
+            else:
+                assert observed["status"] == "observed"
+                assert (
+                    observed["original_reply_sha256"]
+                    == hashlib.sha256(observed["original_reply"].encode()).hexdigest()
+                )
+        assert "fixture-private-value" not in json.dumps(report)
+    else:
+        assert "failure_resources" not in report and len(memory_calls) == 1
         assert (
             report["original_observation"] == value
             and report["original_reply_sha256"]
@@ -627,3 +676,81 @@ def test_live_process_facts_require_exact_original_execution(mutation):
     else:
         with pytest.raises(GuestBootError):
             observation._live_invocation(live, row, c)
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        None,
+        "boot",
+        "enrollment",
+        "scope",
+        "uid",
+        "boolean-uid",
+        "pid",
+        "boolean-pid",
+        "oom",
+        "boolean-oom",
+        "memory",
+        "extra",
+        "malformed",
+        "transport",
+    ],
+)
+def test_memory_diagnostics_bind_guest_and_boot_without_granting_qualification(mutation):
+    guest = guest_fixture()
+    value = {
+        "scope": "checkpoint-guest-memory-diagnostics-only",
+        "pid": 500,
+        "uid": 0,
+        "boot_id": BOOT,
+        "enrollment": ENROLLMENT,
+        "oom_kills": 1,
+        "available_memory_kib": 1024,
+    }
+    mutations = {
+        "boot": ("boot_id", ENROLLMENT),
+        "enrollment": ("enrollment", BOOT),
+        "scope": ("scope", "fixture-private-value"),
+        "uid": ("uid", 1000),
+        "boolean-uid": ("uid", False),
+        "pid": ("pid", 1),
+        "boolean-pid": ("pid", True),
+        "oom": ("oom_kills", -1),
+        "boolean-oom": ("oom_kills", True),
+        "memory": ("available_memory_kib", -1),
+        "extra": ("extra", "fixture-private-value"),
+    }
+    if mutation in mutations:
+        key, replacement = mutations[mutation]
+        value[key] = replacement
+    raw = "fixture-private-value" if mutation == "malformed" else json.dumps(value)
+
+    def guarded(action, enrollment, boot, **options):
+        assert action[:6] == ["/usr/bin/python3", "-I", "-S", "-B", "-c", native.MEMORY_OBSERVATION]
+        assert json.loads(action[6]) == {"boot_id": BOOT, "enrollment": ENROLLMENT}
+        assert enrollment == ENROLLMENT and boot == BOOT and options == {"nominal": 15}
+        if mutation == "transport":
+            raise GuestBootError("fixture-private-value")
+        return raw
+
+    guest.guarded = guarded
+    observed = native.memory_observation(guest)
+    assert observed["qualification_claimed"] is False
+    if mutation is None:
+        assert observed["status"] == "observed" and observed["observation"] == value
+        assert observed["original_reply"] == raw
+        assert observed["original_reply_sha256"] == hashlib.sha256(raw.encode()).hexdigest()
+    else:
+        assert observed == {"status": "unavailable", "qualification_claimed": False}
+    assert "fixture-private-value" not in json.dumps(observed)
+
+
+def test_checkpoint_reply_streams_one_complete_json_without_monolithic_copy():
+    tree = ast.parse(REMOTE)
+    write, newline, flush = tree.body[-3:]
+    assert ast.dump(write.value) == ast.dump(
+        ast.parse("json.dump(result,sys.stdout,sort_keys=True)").body[0].value
+    )
+    assert ast.dump(newline.value) == ast.dump(ast.parse("sys.stdout.write('\\n')").body[0].value)
+    assert ast.dump(flush.value) == ast.dump(ast.parse("sys.stdout.flush()").body[0].value)

@@ -161,14 +161,29 @@ def guest_failure_diagnostics(output: str) -> dict[str, Any]:
         "owned-namespace",
     }
     progress = []
+    failures = []
+    reasons = {
+        "stop-unavailable",
+        "marker-unavailable",
+        "child-timeout",
+        "assertion",
+        "os-error",
+        "observation-error",
+    }
     for line in output.splitlines():
+        failed = re.fullmatch(r"fishhat-checkpoint-failure ([a-z-]+) ([a-z-]+)", line)
+        if failed is not None and failed[1] in stages and failed[2] in reasons:
+            failures.append({"stage": failed[1], "reason": failed[2]})
         matched = re.fullmatch(r"fishhat-checkpoint-progress ([a-z-]+) ([0-9]{1,2})", line)
         if matched is not None and matched[1] in stages and int(matched[2]) <= 68:
             progress.append({"stage": matched[1], "completed_invocations": int(matched[2])})
-    return {
+    diagnostics = {
         "classifications": classes or ["unclassified-guest-failure"],
         "checkpoint_progress": progress,
     }
+    if failures:
+        diagnostics["checkpoint_failures"] = failures
+    return diagnostics
 
 
 class GuestCommandError(EnrollmentError):
@@ -179,6 +194,7 @@ class GuestCommandError(EnrollmentError):
         diagnostics = guest_failure_diagnostics(stderr or "")
         self.classifications = tuple(diagnostics["classifications"])
         self.checkpoint_progress = diagnostics["checkpoint_progress"]
+        self.checkpoint_failures = diagnostics.get("checkpoint_failures", [])
 
 
 class PackageCommandError(EnrollmentError):
@@ -1650,6 +1666,8 @@ def main(argv: list[str] | None = None) -> int:
             report["problem"]["classifications"] = list(error.classifications)
         if isinstance(error, GuestCommandError):
             report["problem"]["checkpoint_progress"] = error.checkpoint_progress
+            if error.checkpoint_failures:
+                report["problem"]["checkpoint_failures"] = error.checkpoint_failures
         if isinstance(error, ImageDownloadCommandError) and error.http_status is not None:
             report["problem"]["http_status"] = error.http_status
     guest_report = (
