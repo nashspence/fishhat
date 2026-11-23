@@ -264,7 +264,7 @@ try:
  first=snapshot(cases['initializing']);assert first==live['authority'];refuse('inspect','initializing','incomplete-open-refused');refuse('initialize','initializing','incomplete-reset-refused')
  call('initialize','fresh','fresh-initialize');result['incomplete_genesis']={'live':live,'killed':killed,'after':snapshot(cases['initializing']),'fresh':snapshot(cases['fresh'])}
  progress('interrupted-publication');call('initialize','interrupted','initialize-interrupted');call('publish','interrupted','interrupted-baseline',expected=None,current=a)
- before=snapshot(cases['interrupted']);entry=spawn('publish','interrupted','pending-publication',expected=a,current=b,inject='--inject=renameat:signal=SIGSTOP:when=1')
+ before=snapshot(cases['interrupted']);entry=spawn('publish','interrupted','pending-publication',expected=a,current=b,inject='--inject=fsync:signal=SIGSTOP:when=1')
  descriptor,live=wait_stopped(entry,cases['interrupted'])
  try:signal.pidfd_send_signal(descriptor,signal.SIGKILL);killed=finish(entry)
  finally:os.close(descriptor)
