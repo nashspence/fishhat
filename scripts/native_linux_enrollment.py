@@ -9,6 +9,7 @@ import hashlib
 import json
 import os
 import platform
+import re
 import signal
 import socket
 import stat
@@ -129,6 +130,57 @@ def package_failure_classes(output: str) -> tuple[str, ...]:
     return found or ("unclassified-package-failure",)
 
 
+def guest_failure_diagnostics(output: str) -> dict[str, Any]:
+    """Project failed guest stderr onto troubleshooting tokens, never authority."""
+    markers = {
+        "guest-remote-signal": ("Killed by signal ",),
+        "guest-connection-closed": ("Connection closed", "closed by remote host"),
+        "guest-connection-reset": ("Connection reset", "Broken pipe"),
+        "guest-network-timeout": ("Connection timed out", "Operation timed out"),
+        "guest-authentication-refused": ("Permission denied", "Host key verification failed"),
+        "guest-resource-failure": ("No space left on device", "Cannot allocate memory"),
+    }
+    classes = sorted(
+        name for name, values in markers.items() if any(value in output for value in values)
+    )
+    stages = {
+        "admission",
+        "observer",
+        "installed-payload",
+        "genesis",
+        "cas",
+        "copies",
+        "aliases",
+        "anchor-substitution",
+        "incomplete-genesis",
+        "interrupted-publication",
+        "lost-reply",
+        "controlled-publication-error",
+        "foreign-custody",
+        "child-settlement",
+        "owned-namespace",
+    }
+    progress = []
+    for line in output.splitlines():
+        matched = re.fullmatch(r"fishhat-checkpoint-progress ([a-z-]+) ([0-9]{1,2})", line)
+        if matched is not None and matched[1] in stages and int(matched[2]) <= 68:
+            progress.append({"stage": matched[1], "completed_invocations": int(matched[2])})
+    return {
+        "classifications": classes or ["unclassified-guest-failure"],
+        "checkpoint_progress": progress,
+    }
+
+
+class GuestCommandError(EnrollmentError):
+    def __init__(self, stage: str, reason: str, stderr: str | bytes | None) -> None:
+        super().__init__(stage, reason)
+        if isinstance(stderr, bytes):
+            stderr = stderr.decode(errors="replace")
+        diagnostics = guest_failure_diagnostics(stderr or "")
+        self.classifications = tuple(diagnostics["classifications"])
+        self.checkpoint_progress = diagnostics["checkpoint_progress"]
+
+
 class PackageCommandError(EnrollmentError):
     def __init__(self, stage: str, status: int, stderr: str) -> None:
         super().__init__(stage, f"command-exit-{status}")
@@ -238,6 +290,7 @@ def run(
 ) -> str:
     package = name in ("package-update", "package-install")
     download = name == "guest-image-download"
+    guest = name == "guest-ssh"
     try:
         with ExitStack() as resources:
             input_descriptor = subprocess.DEVNULL
@@ -257,13 +310,15 @@ def run(
                 env=COMMAND_ENV,
                 stdin=input_descriptor,
                 stdout=subprocess.PIPE if capture or download else subprocess.DEVNULL,
-                stderr=subprocess.PIPE if package else subprocess.DEVNULL,
-                text=True,
+                stderr=subprocess.PIPE if package or guest else subprocess.DEVNULL,
+                text=not guest,
                 errors="replace" if package or download else None,
                 timeout=watchdog(nominal),
                 check=False,
             )
-    except subprocess.TimeoutExpired:
+    except subprocess.TimeoutExpired as error:
+        if guest:
+            raise GuestCommandError(name, "observation-deadline", error.stderr) from None
         raise EnrollmentError(name, "observation-deadline") from None
     except OSError:
         raise EnrollmentError(name, "command-unavailable") from None
@@ -272,7 +327,11 @@ def run(
             raise PackageCommandError(name, result.returncode, result.stderr or "")
         if download:
             raise ImageDownloadCommandError(name, result.returncode, result.stdout or "")
+        if guest:
+            raise GuestCommandError(name, f"command-exit-{result.returncode}", result.stderr)
         raise EnrollmentError(name, f"command-exit-{result.returncode}")
+    if guest and capture:
+        return (result.stdout or b"").decode()
     return (result.stdout or "") if capture else ""
 
 
@@ -1587,8 +1646,10 @@ def main(argv: list[str] | None = None) -> int:
     except (EnrollmentError, GuestInputError, GuestBootError) as error:
         status = 1
         report.update(status="failed", problem={"stage": error.stage, "reason": error.reason})
-        if isinstance(error, (PackageCommandError, ImageDownloadCommandError)):
+        if isinstance(error, (PackageCommandError, ImageDownloadCommandError, GuestCommandError)):
             report["problem"]["classifications"] = list(error.classifications)
+        if isinstance(error, GuestCommandError):
+            report["problem"]["checkpoint_progress"] = error.checkpoint_progress
         if isinstance(error, ImageDownloadCommandError) and error.http_status is not None:
             report["problem"]["http_status"] = error.http_status
     guest_report = (

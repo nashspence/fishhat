@@ -18,7 +18,7 @@ from scripts.validation_timeouts import Policy, using
 CHECK_PURPOSE = {
     "purpose": "validation-tooling",
     "authority": ["scripts/native_linux_enrollment.py", "scripts/validation_timeouts.py"],
-    "scope": "enrollment refusal, exact controller identities, maintained watchdogs, allowlisted secret-safe package/image failure observations, strict acquisition-error failure before installation, sanitized provisioning failures, mandatory observed-successor and independently typed partial-restore proof in the selected composition profile and source/statistics receipts",
+    "scope": "enrollment refusal, exact controller identities, maintained watchdogs, allowlisted secret-safe package/image/guest failure observations and non-authoritative checkpoint progress, strict acquisition-error failure before installation, sanitized provisioning failures, mandatory observed-successor and independently typed partial-restore proof in the selected composition profile and source/statistics receipts",
     "relationship": "no-product-claim",
     "reason": "Controlled package/tool responses never install packages. Real unprivileged children exercise timeout/reaping and closed stdout/stderr classification without exposing their output. Only the separate admitted disposable-runner job can establish actual controller prerequisites; no guest or native owner is qualified here.",
     "claims": [],
@@ -217,6 +217,8 @@ def test_ordinary_invocation_creates_no_artifacts_or_native_commands(tmp_path, m
         "package-classified",
         "image-http-classified",
         "image-malformed",
+        "guest-classified",
+        "guest-deadline",
         "dirty-source",
         "changed-source",
     ],
@@ -263,6 +265,16 @@ def test_selected_run_records_failure_source_scope_and_required_statistics(
             )
 
         monkeypatch.setattr(native, "provision", package_failed)
+    elif failure in ("guest-classified", "guest-deadline"):
+
+        def guest_failed(*args):
+            raise native.GuestCommandError(
+                "guest-ssh",
+                "command-exit-255" if failure == "guest-classified" else "observation-deadline",
+                "fixture-private-value\nfishhat-checkpoint-progress aliases 23\nKilled by signal 9.",
+            )
+
+        monkeypatch.setattr(native, "boot_guest", guest_failed)
     elif failure in ("image-http-classified", "image-malformed"):
 
         def image_failed(*args):
@@ -301,6 +313,15 @@ def test_selected_run_records_failure_source_scope_and_required_statistics(
         if failure == "image-http-classified":
             expected["http_status"] = 503
         assert report["problem"] == expected
+    if failure in ("guest-classified", "guest-deadline"):
+        assert report["problem"] == {
+            "stage": "guest-ssh",
+            "reason": "command-exit-255"
+            if failure == "guest-classified"
+            else "observation-deadline",
+            "classifications": ["guest-remote-signal"],
+            "checkpoint_progress": [{"stage": "aliases", "completed_invocations": 23}],
+        }
     if failure == "dirty-source":
         assert not tools[1]
     logs = capsys.readouterr()
@@ -620,3 +641,76 @@ def test_strict_acquisition_failure_prevents_installation_and_preserves_failed_r
     assert "stage=package-install" not in logs.out
     assert "fixture-private-value" not in output.read_text() + logs.out + logs.err
     assert logs.err == ""
+
+
+@pytest.mark.parametrize(
+    "message,classification",
+    [
+        ("Killed by signal 9.", "guest-remote-signal"),
+        ("Connection closed", "guest-connection-closed"),
+        ("Connection reset", "guest-connection-reset"),
+        ("Connection timed out", "guest-network-timeout"),
+        ("Host key verification failed", "guest-authentication-refused"),
+        ("Cannot allocate memory", "guest-resource-failure"),
+        ("fixture-private-value", "unclassified-guest-failure"),
+    ],
+    ids=["signal", "closed", "reset", "timeout", "authentication", "resource", "unclassified"],
+)
+def test_guest_failure_retains_exit_and_safe_progress_without_raw_output(
+    message, classification, capsys
+):
+    output = "fixture-private-value\nfishhat-checkpoint-progress aliases 23\n" + message
+    code = (
+        "import sys; print('fixture-private-value'); sys.stderr.write(sys.argv[1]); sys.exit(255)"
+    )
+    with pytest.raises(native.GuestCommandError) as caught:
+        native.run([sys.executable, "-I", "-S", "-c", code, output], "guest-ssh", 10, capture=True)
+    assert caught.value.stage == "guest-ssh" and caught.value.reason == "command-exit-255"
+    assert caught.value.classifications == (classification,)
+    assert caught.value.checkpoint_progress == [{"stage": "aliases", "completed_invocations": 23}]
+    assert "fixture-private-value" not in str(caught.value) + repr(caught.value.__dict__)
+    logs = capsys.readouterr()
+    assert logs.out == logs.err == ""
+
+
+def test_guest_failure_ignores_unknown_malformed_and_out_of_workload_progress():
+    output = "\n".join(
+        [
+            "fishhat-checkpoint-progress aliases 23 extra",
+            "fishhat-checkpoint-progress fixture-private-value 23",
+            "fishhat-checkpoint-progress aliases -1",
+            "fishhat-checkpoint-progress aliases 69",
+            "fishhat-checkpoint-progress aliases 1.0",
+            "fishhat-checkpoint-progress aliases 000",
+            "prefix fishhat-checkpoint-progress aliases 23",
+        ]
+    )
+    failure = native.GuestCommandError("guest-ssh", "command-exit-255", output.encode() + b"\xff")
+    assert failure.reason == "command-exit-255" and failure.checkpoint_progress == []
+    assert failure.classifications == ("unclassified-guest-failure",)
+    assert "fixture-private-value" not in str(failure) + repr(failure.__dict__)
+
+
+def test_guest_deadline_preserves_safe_partial_stderr_and_original_failure(capsys):
+    code = "import sys,time; sys.stderr.write('fixture-private-value\\nfishhat-checkpoint-progress genesis 0\\n'); sys.stderr.flush(); time.sleep(10)"
+    with pytest.raises(native.GuestCommandError) as caught:
+        native.run([sys.executable, "-I", "-S", "-c", code], "guest-ssh", 0.2, capture=True)
+    assert caught.value.stage == "guest-ssh" and caught.value.reason == "observation-deadline"
+    assert caught.value.classifications == ("unclassified-guest-failure",)
+    assert caught.value.checkpoint_progress == [{"stage": "genesis", "completed_invocations": 0}]
+    assert "fixture-private-value" not in str(caught.value) + repr(caught.value.__dict__)
+    logs = capsys.readouterr()
+    assert logs.out == logs.err == ""
+
+
+def test_successful_guest_command_discards_stderr_diagnostics(capsys):
+    code = "import sys; print('reply'); sys.stderr.write('fixture-private-value\\nfishhat-checkpoint-progress aliases 23\\n')"
+    assert (
+        native.run([sys.executable, "-I", "-S", "-c", code], "guest-ssh", 10, capture=True)
+        == "reply\n"
+    )
+    invalid = "import sys; sys.stdout.buffer.write(b'\\xff')"
+    with pytest.raises(UnicodeDecodeError):
+        native.run([sys.executable, "-I", "-S", "-c", invalid], "guest-ssh", 10, capture=True)
+    logs = capsys.readouterr()
+    assert logs.out == logs.err == ""

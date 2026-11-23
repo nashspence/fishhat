@@ -12,6 +12,11 @@ owned=[];children=[];stage='admission'
 prefix=pathlib.Path('/var/lib/fishhat-checkpoint-fixture-'+c['enrollment'])
 storage_root=pathlib.Path('/run/fhs-'+uuid.UUID(c['enrollment']).hex)
 control_mount=storage_root/'control';journal_root=control_mount/('checkpoint-'+uuid.UUID(c['enrollment']).hex)
+def progress(value):
+ global stage
+ stage=value
+ try:print('fishhat-checkpoint-progress '+stage+' '+str(len(result['invocations'])),file=sys.stderr,flush=True)
+ except OSError:pass
 def digest(path):
  with path.open('rb') as stream:return hashlib.file_digest(stream,'sha256').hexdigest()
 def metadata(path):
@@ -64,7 +69,7 @@ def spawn(action,case,label,*,role='root',inject=None,**options):
  process=subprocess.Popen(argv,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,cwd='/',env=observer_env,close_fds=True,start_new_session=True)
  entry={'process':process,'label':label,'request':request,'arguments':arguments,'observer_argv':argv,
         'observer_environment':observer_env,'environment':clean,'role':role,'started':started,'finished':False}
- children.append(entry);return entry
+ children.append(entry);progress(stage);return entry
 def trace_files(entry):return sorted(traces.glob(entry['label']+'.*'))
 def wait_marker(entry,label=None):
  path=control/(entry['label'] if label is None else label);end=time.monotonic()+c['child_timeout']
@@ -108,7 +113,7 @@ def finish(entry):
  record.update(tracer_pid=process.pid,tracer_joined=process.poll() is not None,trace_originals=originals,
                returncode=process.returncode,stdout=output.decode(),stderr=error.decode(),elapsed_seconds=time.monotonic()-entry['started'])
  assert len(output)<c['string_limit'] and error==b''
- entry['finished']=True;entry['record']=record;result['invocations'].append(record);return record
+ entry['finished']=True;entry['record']=record;result['invocations'].append(record);progress(stage);return record
 def reply(record,*,success=True):
  assert record['returncode']==0 and record['stderr']=='' and record['tracer_joined']
  value=json.loads(record['stdout']);assert (value['error'] is None)==success
@@ -122,6 +127,7 @@ def refuse(action,case,label,**options):
  before=snapshot(cases[case]);value=call(action,case,label,success=False,**options);after=snapshot(cases[case]);assert before==after
  result['refusals'].append({'label':label,'before':before,'after':after,'reply':value});return value
 try:
+ progress('admission')
  assert os.geteuid()==os.getegid()==0
  assert pathlib.Path('/etc/fishhat-fixture-enrollment').read_text().strip()==c['enrollment']
  assert pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()==c['boot_id']
@@ -151,7 +157,7 @@ try:
    assert stat.S_IFMT(member.external_attr>>16) in (0,stat.S_IFREG);seen.add(member.filename)
    target=bundle/member.filename;target.parent.mkdir(parents=True,exist_ok=True,mode=0o700)
    with archive.open(member) as source,target.open('xb') as output:shutil.copyfileobj(source,output,1048576)
- stage='observer';observer=prefix/'observer';observer.mkdir(mode=0o700);packages={}
+ progress('observer');observer=prefix/'observer';observer.mkdir(mode=0o700);packages={}
  for name,pin in c['observer_pins'].items():
   path=inputs/name;assert path.stat().st_size==pin['bytes'] and digest(path)==pin['sha256'];fields={}
   for field in ('Package','Version','Architecture'):
@@ -162,7 +168,7 @@ try:
   packages[name]={'bytes':path.stat().st_size,'sha256':digest(path),'fields':fields,'data_tar_sha256':hashlib.sha256(ran.stdout).hexdigest()}
  module._seal_python(observer);observer_env=clean|{'LD_LIBRARY_PATH':str(observer/'usr/lib/x86_64-linux-gnu')}
  result['observer_packages']=packages
- stage='installed-payload';executable=module._install_owner_python(inputs/'runtime.tar.gz',prefix/'runtime')
+ progress('installed-payload');executable=module._install_owner_python(inputs/'runtime.tar.gz',prefix/'runtime')
  module._install_owner_wheels(bundle,prefix/'packages',c['manifest_sha256'])
  for name in ('probe.py','context.json'):
   source=inputs/name;target=prefix/name
@@ -192,7 +198,7 @@ try:
  installed={'runtime':prefix/'runtime','packages':prefix/'packages','observer':observer}
  result['installed_before']={name:inventory(path) for name,path in installed.items()};result['program_before']={name:metadata(prefix/name) for name in ('probe.py','context.json')}
  result['refusals']=[];result['initializations']=[]
- stage='genesis';result['genesis_before']=snapshot(cases['valid']);genesis=call('initialize','valid','initialize-valid');result['genesis_after']=snapshot(cases['valid'])
+ progress('genesis');result['genesis_before']=snapshot(cases['valid']);genesis=call('initialize','valid','initialize-valid');result['genesis_after']=snapshot(cases['valid'])
  first=snapshot(cases['valid']);call('inspect','valid','inspect-valid');assert snapshot(cases['valid'])==first
  call('deny-modification','valid','peer-modification-denied',role=c['peer_account'])
  refuse('initialize','valid','refuse-existing');refuse('inspect','missing','refuse-missing')
@@ -200,13 +206,13 @@ try:
  refuse('inspect','valid','refuse-same-domain',capture='same-domain')
  for role in (c['admin_account'],c['peer_account']):
   refuse('inspect','valid','refuse-'+role+'-inspect',role=role);refuse('initialize','valid','refuse-'+role+'-initialize',role=role)
- stage='cas';a,b=c['heads']
+ progress('cas');a,b=c['heads']
  call('publish','valid','publish-first',expected=None,current=a)
  refuse('publish','valid','refuse-stale',expected=None,current=b)
  call('publish','valid','publish-second',expected=a,current=b)
  first=snapshot(cases['valid']);call('publish','valid','publish-idempotent',expected=b,current=b);assert snapshot(cases['valid'])==first
  result['normal_publication']=snapshot(cases['valid'])
- stage='copies';call('initialize','contested','initialize-contested')
+ progress('copies');call('initialize','contested','initialize-contested')
  entry=spawn('held-publish','contested','holder',expected=None,current=a);descriptor,live=wait_marker(entry)
  try:
   first=snapshot(cases['contested']);refuse('inspect','contested','copy-lock-refused',journal_index=1)
@@ -215,7 +221,7 @@ try:
  refuse('publish','contested','copy-stale-refused',journal_index=1,expected=None,current=b)
  inspected=call('inspect','contested','copy-inspect',journal_index=1)
  result['competition']={'live':live,'held':first,'published':after,'completed':completed,'inspected':inspected}
- stage='aliases';call('initialize','aliases','initialize-aliases');entry=spawn('alias-parent','aliases','alias-holder')
+ progress('aliases');call('initialize','aliases','initialize-aliases');entry=spawn('alias-parent','aliases','alias-holder')
  parent_descriptor,parent_live=wait_marker(entry,'alias-holder-parent')
  try:send(entry,'spawn-child')
  finally:os.close(parent_descriptor)
@@ -230,7 +236,7 @@ try:
  finally:os.close(descriptor)
  inspected=call('inspect','aliases','aliases-final')
  result['aliases']={'parent_live':parent_live,'parent_absent_before_competition':True,'inherited_live':live,'single_alias_live':second_live,'completed':completed,'inspected':inspected}
- stage='anchor-substitution';result['anchor_substitutions']=[]
+ progress('anchor-substitution');result['anchor_substitutions']=[]
  for case,replace in (('replaced',True),('unlinked',False)):
   call('initialize',case,'initialize-'+case);entry=spawn('held-publish',case,'hold-'+case,expected=None,current=a);descriptor,live=wait_marker(entry)
   try:
@@ -243,31 +249,31 @@ try:
   finally:os.close(descriptor)
   refuse('inspect',case,case+'-after-holder-refused')
   result['anchor_substitutions'].append({'case':case,'live':live,'before':before,'substituted':substituted,'held_reply':completed,'after':snapshot(cases[case])})
- stage='incomplete-genesis';entry=spawn('initialize','initializing','incomplete-initialize',inject='--inject=fsync:signal=SIGSTOP:when=1')
+ progress('incomplete-genesis');entry=spawn('initialize','initializing','incomplete-initialize',inject='--inject=fsync:signal=SIGSTOP:when=1')
  descriptor,live=wait_stopped(entry,cases['initializing'],initializing=True)
  try:signal.pidfd_send_signal(descriptor,signal.SIGKILL);killed=finish(entry)
  finally:os.close(descriptor)
  first=snapshot(cases['initializing']);assert first==live['authority'];refuse('inspect','initializing','incomplete-open-refused');refuse('initialize','initializing','incomplete-reset-refused')
  call('initialize','fresh','fresh-initialize');result['incomplete_genesis']={'live':live,'killed':killed,'after':snapshot(cases['initializing']),'fresh':snapshot(cases['fresh'])}
- stage='interrupted-publication';call('initialize','interrupted','initialize-interrupted');call('publish','interrupted','interrupted-baseline',expected=None,current=a)
+ progress('interrupted-publication');call('initialize','interrupted','initialize-interrupted');call('publish','interrupted','interrupted-baseline',expected=None,current=a)
  before=snapshot(cases['interrupted']);entry=spawn('publish','interrupted','pending-publication',expected=a,current=b,inject='--inject=renameat:signal=SIGSTOP:when=1')
  descriptor,live=wait_stopped(entry,cases['interrupted'])
  try:signal.pidfd_send_signal(descriptor,signal.SIGKILL);killed=finish(entry)
  finally:os.close(descriptor)
  assert snapshot(cases['interrupted'])==live['authority'];refuse('inspect','interrupted','pending-open-refused');refuse('initialize','interrupted','pending-reset-refused')
  result['interruption']={'before':before,'live':live,'killed':killed,'after':snapshot(cases['interrupted'])}
- stage='lost-reply';call('initialize','lost','initialize-lost');entry=spawn('lost-reply','lost','lost-before-reply',expected=None,current=a)
+ progress('lost-reply');call('initialize','lost','initialize-lost');entry=spawn('lost-reply','lost','lost-before-reply',expected=None,current=a)
  descriptor,live=wait_marker(entry)
  try:published=snapshot(cases['lost']);signal.pidfd_send_signal(descriptor,signal.SIGKILL);killed=finish(entry)
  finally:os.close(descriptor)
  assert killed['stdout']=='' and snapshot(cases['lost'])==published
  inspected=call('inspect','lost','lost-reply-inspect');refuse('publish','lost','lost-reply-stale',expected=None,current=a)
  result['lost_reply']={'live':live,'published':published,'killed':killed,'inspected':inspected,'after':snapshot(cases['lost'])}
- stage='controlled-publication-error';call('initialize','uncertain','initialize-uncertain')
+ progress('controlled-publication-error');call('initialize','uncertain','initialize-uncertain')
  entry=spawn('uncertain-publish','uncertain','uncertain-publication',expected=None,current=a,inject='--inject=fsync:error=EIO:when=2');failed=reply(finish(entry),success=False)
  published=snapshot(cases['uncertain']);inspected=call('inspect','uncertain','uncertain-inspect');refuse('publish','uncertain','uncertain-stale',expected=None,current=a)
  result['uncertainty']={'scope':'controlled-syscall-error-after-replace-not-device-fault','failed':failed,'published':published,'inspected':inspected,'after':snapshot(cases['uncertain'])}
- stage='foreign-custody'
+ progress('foreign-custody')
  for case in ('malformed','file-mode','directory-mode','file-owner','directory-owner','hardlink','capability','pending'):
   call('initialize',case,'initialize-'+case)
   if case=='malformed':(cases[case]/'current').write_bytes(b'not canonical checkpoint custody\n')
@@ -286,6 +292,7 @@ try:
  result['status']='passed'
 except BaseException as error:result['primary_error']={'stage':stage,'type':type(error).__name__,'message':str(error)}
 finally:
+ progress('child-settlement')
  for entry in children:
   process=entry['process']
   try:
@@ -297,6 +304,7 @@ finally:
    assert all(not pathlib.Path('/proc',str(pid)).exists() for pid in pids)
    result['owned_children'].append({'label':entry['label'],'tracer_pid':process.pid,'returncode':process.returncode,'tracer_joined':True,'tracee_pids':pids,'tracees_absent':True})
   except BaseException as error:result['cleanup_errors'].append({'stage':'child-settlement','label':entry['label'],'type':type(error).__name__})
+ progress('owned-namespace')
  for path,identity in reversed(owned):
   try:
    assert directory_identity(path)==identity and shutil.rmtree.avoids_symlink_attacks
