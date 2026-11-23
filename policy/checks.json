@@ -15287,6 +15287,26 @@
       "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
     },
     {
+      "node": "tests/test_native_owner_checkpoint.py::test_interrupted_publication_requires_synchronized_pending_before_replacement[acknowledged-interruption]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_interrupted_publication_requires_synchronized_pending_before_replacement[changed-pending-head]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_interrupted_publication_requires_synchronized_pending_before_replacement[early-unlock]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_interrupted_publication_requires_synchronized_pending_before_replacement[replacement-before-stop]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_interrupted_publication_requires_synchronized_pending_before_replacement[unsynchronized-pending]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
       "node": "tests/test_native_owner_checkpoint.py::test_live_process_facts_require_exact_original_execution[None]",
       "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
     },

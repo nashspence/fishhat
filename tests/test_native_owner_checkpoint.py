@@ -148,7 +148,7 @@ def test_closed_workload_preserves_roles_domains_and_controlled_fault_scope():
     assert rows["refuse-peer-inspect"]["role"] == "peer"
     assert rows["refuse-same-domain"]["request"]["capture"] == "same-domain"
     assert rows["copy-lock-refused"]["request"]["journal_index"] == 1
-    assert rows["pending-publication"]["inject"] == "--inject=renameat:signal=SIGSTOP:when=1"
+    assert rows["pending-publication"]["inject"] == "--inject=fsync:signal=SIGSTOP:when=1"
     assert {name for name, row in rows.items() if row["outcome"] == "killed"} == {
         "incomplete-initialize",
         "pending-publication",
@@ -310,6 +310,35 @@ def test_pending_interruption_and_lost_reply_do_not_create_acknowledgement():
             AUTHORITY,
             value,
             unacknowledged=True,
+        )
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        "replacement-before-stop",
+        "unsynchronized-pending",
+        "changed-pending-head",
+        "early-unlock",
+        "acknowledged-interruption",
+    ],
+)
+def test_interrupted_publication_requires_synchronized_pending_before_replacement(mutation):
+    value, lines = publication_trace(interrupted=mutation != "replacement-before-stop", reply=False)
+    if mutation == "unsynchronized-pending":
+        lines.remove("fsync(6) = 0")
+    elif mutation == "changed-pending-head":
+        value["current"] = "b" * 64
+    elif mutation == "early-unlock":
+        lines.insert(lines.index("fsync(6) = 0"), "flock(5, LOCK_UN) = 0")
+    elif mutation == "acknowledged-interruption":
+        lines.append(f"write(1, {quoted(b'ack')}, 3) = 3")
+    with pytest.raises(GuestBootError):
+        observation._publication(
+            observation.trace_events("\n".join(lines), AUTHORITY)["events"],
+            AUTHORITY,
+            value,
+            interrupted=True,
         )
 
 

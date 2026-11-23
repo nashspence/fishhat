@@ -516,7 +516,7 @@ def selection(c: dict[str, Any]) -> dict[str, dict[str, Any]]:
         "interrupted",
         "pending-publication",
         outcome="killed",
-        inject="--inject=renameat:signal=SIGSTOP:when=1",
+        inject="--inject=fsync:signal=SIGSTOP:when=1",
         expected=a,
         current=b,
     )
