@@ -10583,6 +10583,50 @@
       "purpose_sha256": "6a3d4865a71662039a4034ffb2d92096a40920f190f02be6c18cfc27d2ffd2b9"
     },
     {
+      "node": "tests/test_native_linux_enrollment.py::test_checkpoint_failure_projects_only_closed_stage_and_reason_tokens[assertion]",
+      "purpose_sha256": "a4d3252836d847cde69fc4ca0b85a4c49261681152e07cfc7ba283c67debf5c3"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_checkpoint_failure_projects_only_closed_stage_and_reason_tokens[deadline]",
+      "purpose_sha256": "a4d3252836d847cde69fc4ca0b85a4c49261681152e07cfc7ba283c67debf5c3"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_checkpoint_failure_projects_only_closed_stage_and_reason_tokens[extra]",
+      "purpose_sha256": "a4d3252836d847cde69fc4ca0b85a4c49261681152e07cfc7ba283c67debf5c3"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_checkpoint_failure_projects_only_closed_stage_and_reason_tokens[foreign-reason]",
+      "purpose_sha256": "a4d3252836d847cde69fc4ca0b85a4c49261681152e07cfc7ba283c67debf5c3"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_checkpoint_failure_projects_only_closed_stage_and_reason_tokens[foreign-stage]",
+      "purpose_sha256": "a4d3252836d847cde69fc4ca0b85a4c49261681152e07cfc7ba283c67debf5c3"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_checkpoint_failure_projects_only_closed_stage_and_reason_tokens[marker]",
+      "purpose_sha256": "a4d3252836d847cde69fc4ca0b85a4c49261681152e07cfc7ba283c67debf5c3"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_checkpoint_failure_projects_only_closed_stage_and_reason_tokens[missing]",
+      "purpose_sha256": "a4d3252836d847cde69fc4ca0b85a4c49261681152e07cfc7ba283c67debf5c3"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_checkpoint_failure_projects_only_closed_stage_and_reason_tokens[os-error]",
+      "purpose_sha256": "a4d3252836d847cde69fc4ca0b85a4c49261681152e07cfc7ba283c67debf5c3"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_checkpoint_failure_projects_only_closed_stage_and_reason_tokens[other]",
+      "purpose_sha256": "a4d3252836d847cde69fc4ca0b85a4c49261681152e07cfc7ba283c67debf5c3"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_checkpoint_failure_projects_only_closed_stage_and_reason_tokens[split-lines]",
+      "purpose_sha256": "a4d3252836d847cde69fc4ca0b85a4c49261681152e07cfc7ba283c67debf5c3"
+    },
+    {
+      "node": "tests/test_native_linux_enrollment.py::test_checkpoint_failure_projects_only_closed_stage_and_reason_tokens[stop]",
+      "purpose_sha256": "a4d3252836d847cde69fc4ca0b85a4c49261681152e07cfc7ba283c67debf5c3"
+    },
+    {
       "node": "tests/test_native_linux_enrollment.py::test_enrollment_requires_confirmation_and_accepts_selected_host",
       "purpose_sha256": "a4d3252836d847cde69fc4ca0b85a4c49261681152e07cfc7ba283c67debf5c3"
     },
@@ -15191,6 +15235,10 @@
       "purpose_sha256": "9fe4a1e5b20eb5ed8f852d0913911997b69b24a0a88cf0531183b052858b832f"
     },
     {
+      "node": "tests/test_native_owner_checkpoint.py::test_checkpoint_reply_streams_one_complete_json_without_monolithic_copy",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
       "node": "tests/test_native_owner_checkpoint.py::test_closed_workload_preserves_roles_domains_and_controlled_fault_scope",
       "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
     },
@@ -15216,6 +15264,14 @@
     },
     {
       "node": "tests/test_native_owner_checkpoint.py::test_guarded_coordinator_retains_originals_cleanup_and_scoped_statistics[cleanup-process]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_guarded_coordinator_retains_originals_cleanup_and_scoped_statistics[transport-baseline]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_guarded_coordinator_retains_originals_cleanup_and_scoped_statistics[transport-diagnostics]",
       "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
     },
     {
@@ -15288,6 +15344,62 @@
     },
     {
       "node": "tests/test_native_owner_checkpoint.py::test_live_process_facts_require_exact_original_execution[uid]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_memory_diagnostics_bind_guest_and_boot_without_granting_qualification[None]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_memory_diagnostics_bind_guest_and_boot_without_granting_qualification[boolean-oom]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_memory_diagnostics_bind_guest_and_boot_without_granting_qualification[boolean-pid]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_memory_diagnostics_bind_guest_and_boot_without_granting_qualification[boolean-uid]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_memory_diagnostics_bind_guest_and_boot_without_granting_qualification[boot]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_memory_diagnostics_bind_guest_and_boot_without_granting_qualification[enrollment]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_memory_diagnostics_bind_guest_and_boot_without_granting_qualification[extra]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_memory_diagnostics_bind_guest_and_boot_without_granting_qualification[malformed]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_memory_diagnostics_bind_guest_and_boot_without_granting_qualification[memory]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_memory_diagnostics_bind_guest_and_boot_without_granting_qualification[oom]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_memory_diagnostics_bind_guest_and_boot_without_granting_qualification[pid]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_memory_diagnostics_bind_guest_and_boot_without_granting_qualification[scope]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_memory_diagnostics_bind_guest_and_boot_without_granting_qualification[transport]",
+      "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
+    },
+    {
+      "node": "tests/test_native_owner_checkpoint.py::test_memory_diagnostics_bind_guest_and_boot_without_granting_qualification[uid]",
       "purpose_sha256": "b1a6cc325434329138ca698e3e2638318ed26e5215a3ffafcfe2864a4fdf930a"
     },
     {

@@ -271,7 +271,7 @@ def test_selected_run_records_failure_source_scope_and_required_statistics(
             raise native.GuestCommandError(
                 "guest-ssh",
                 "command-exit-255" if failure == "guest-classified" else "observation-deadline",
-                "fixture-private-value\nfishhat-checkpoint-progress aliases 23\nKilled by signal 9.",
+                "fixture-private-value\nfishhat-checkpoint-progress aliases 23\nfishhat-checkpoint-failure interrupted-publication stop-unavailable\nKilled by signal 9.",
             )
 
         monkeypatch.setattr(native, "boot_guest", guest_failed)
@@ -321,6 +321,9 @@ def test_selected_run_records_failure_source_scope_and_required_statistics(
             else "observation-deadline",
             "classifications": ["guest-remote-signal"],
             "checkpoint_progress": [{"stage": "aliases", "completed_invocations": 23}],
+            "checkpoint_failures": [
+                {"stage": "interrupted-publication", "reason": "stop-unavailable"}
+            ],
         }
     if failure == "dirty-source":
         assert not tools[1]
@@ -714,3 +717,46 @@ def test_successful_guest_command_discards_stderr_diagnostics(capsys):
         native.run([sys.executable, "-I", "-S", "-c", invalid], "guest-ssh", 10, capture=True)
     logs = capsys.readouterr()
     assert logs.out == logs.err == ""
+
+
+@pytest.mark.parametrize(
+    "token,expected",
+    [
+        (
+            "interrupted-publication stop-unavailable",
+            [{"stage": "interrupted-publication", "reason": "stop-unavailable"}],
+        ),
+        ("aliases marker-unavailable", [{"stage": "aliases", "reason": "marker-unavailable"}]),
+        (
+            "interrupted-publication child-timeout",
+            [{"stage": "interrupted-publication", "reason": "child-timeout"}],
+        ),
+        ("genesis assertion", [{"stage": "genesis", "reason": "assertion"}]),
+        ("owned-namespace os-error", [{"stage": "owned-namespace", "reason": "os-error"}]),
+        ("observer observation-error", [{"stage": "observer", "reason": "observation-error"}]),
+        ("fixture-private-value stop-unavailable", []),
+        ("genesis fixture-private-value", []),
+        ("genesis assertion extra", []),
+        ("genesis", []),
+        ("genesis assertion\rfixture-private-value", [{"stage": "genesis", "reason": "assertion"}]),
+    ],
+    ids=[
+        "stop",
+        "marker",
+        "deadline",
+        "assertion",
+        "os-error",
+        "other",
+        "foreign-stage",
+        "foreign-reason",
+        "extra",
+        "missing",
+        "split-lines",
+    ],
+)
+def test_checkpoint_failure_projects_only_closed_stage_and_reason_tokens(token, expected):
+    output = "fixture-private-value\nfishhat-checkpoint-failure " + token + "\n"
+    error = native.GuestCommandError("guest-ssh", "command-exit-255", output)
+    assert error.checkpoint_failures == expected
+    assert error.reason == "command-exit-255"
+    assert "fixture-private-value" not in repr(error.__dict__) + str(error)
