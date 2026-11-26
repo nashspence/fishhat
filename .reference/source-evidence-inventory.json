@@ -1,0 +1,2187 @@
+{
+  "format": "fishhat-policy-cutover-source-audit/v1",
+  "purpose": "Research snapshot only; not an additional normative task or contract registry.",
+  "repository": "nashspence/fishhat",
+  "main_sha": "f96b83dc20f059d62a4363a63c37bb0ef8c642e5",
+  "main_url": "https://github.com/nashspence/fishhat/commit/f96b83dc20f059d62a4363a63c37bb0ef8c642e5",
+  "attachment": {
+    "name": "fishhat-durability-delivery(1).zip",
+    "base_sha": "930ee3301648b6c0f13c751a2ac8f42990abeaff",
+    "prepared_sha": "fbf0f0d7747a8e201818fbf0afb957b6820baa8c",
+    "patch_sha256": "57cda6d62df0174609eebc615c75a1ccac7ccb21bb9eb4249c8549574b9dc8b4",
+    "archive_changed_files": 20,
+    "zip_sha256": "4ac4bf68abe9fbdd37a86656d5b33d90b5918a9418c6401480b9f613375d8bff",
+    "verified_members": {
+      "fishhat-durability-contract.tar.gz": {
+        "bytes": 1876583,
+        "sha256": "1b9d9023a2b09bdca39a0dbadb4927e6096fefceb1d5c60f705bc6aaa36cea23"
+      },
+      "fishhat-durability-contract.bundle": {
+        "bytes": 44204,
+        "sha256": "1f3052e890e7971493103e0e42b8900302c51f7f0e81d0155ae5d1f81094346b"
+      },
+      "fishhat-durability-contract.patch": {
+        "bytes": 138085,
+        "sha256": "57cda6d62df0174609eebc615c75a1ccac7ccb21bb9eb4249c8549574b9dc8b4"
+      }
+    }
+  },
+  "integration": {
+    "pr": 418,
+    "url": "https://github.com/nashspence/fishhat/pull/418",
+    "merge_sha": "e46bad60c32422f07a0a376615a5a92f2f7e3323",
+    "changed_file_count": 57,
+    "descriptor_count": 37,
+    "changed_files": [
+      {
+        "path": "AGENTS.md",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/AGENTS.md"
+      },
+      {
+        "path": "fishhat/owner-support/src/fishhat_owner/adapter_state.py",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/fishhat/owner-support/src/fishhat_owner/adapter_state.py"
+      },
+      {
+        "path": "fishhat/owner-support/src/fishhat_owner/workflow_journal.py",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/fishhat/owner-support/src/fishhat_owner/workflow_journal.py"
+      },
+      {
+        "path": "packages/fishhat-contracts/src/fishhat_contracts/contracts/adapter.schema.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/packages/fishhat-contracts/src/fishhat_contracts/contracts/adapter.schema.json"
+      },
+      {
+        "path": "packages/fishhat-contracts/src/fishhat_contracts/contracts/cli-output.schema.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/packages/fishhat-contracts/src/fishhat_contracts/contracts/cli-output.schema.json"
+      },
+      {
+        "path": "packages/fishhat-contracts/src/fishhat_contracts/contracts/durability.schema.json",
+        "status": "added",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/packages/fishhat-contracts/src/fishhat_contracts/contracts/durability.schema.json"
+      },
+      {
+        "path": "packages/fishhat-contracts/src/fishhat_contracts/contracts/records.schema.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/packages/fishhat-contracts/src/fishhat_contracts/contracts/records.schema.json"
+      },
+      {
+        "path": "packages/fishhat-contracts/src/fishhat_contracts/contracts/source.schema.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/packages/fishhat-contracts/src/fishhat_contracts/contracts/source.schema.json"
+      },
+      {
+        "path": "packages/fishhat-contracts/src/fishhat_contracts/contracts/ssh-request.schema.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/packages/fishhat-contracts/src/fishhat_contracts/contracts/ssh-request.schema.json"
+      },
+      {
+        "path": "packages/fishhat-contracts/src/fishhat_contracts/contracts/ssh-response.schema.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/packages/fishhat-contracts/src/fishhat_contracts/contracts/ssh-response.schema.json"
+      },
+      {
+        "path": "packages/fishhat-contracts/src/fishhat_contracts/contracts/workflow-journal.schema.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/packages/fishhat-contracts/src/fishhat_contracts/contracts/workflow-journal.schema.json"
+      },
+      {
+        "path": "packages/fishhat-contracts/src/fishhat_contracts/contracts/workflow.schema.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/packages/fishhat-contracts/src/fishhat_contracts/contracts/workflow.schema.json"
+      },
+      {
+        "path": "packages/fishhat-contracts/src/fishhat_contracts/durability.py",
+        "status": "added",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/packages/fishhat-contracts/src/fishhat_contracts/durability.py"
+      },
+      {
+        "path": "packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/packages/fishhat-contracts/src/fishhat_contracts/workflow_journal.py"
+      },
+      {
+        "path": "policy/checks.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/policy/checks.json"
+      },
+      {
+        "path": "policy/engineering.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/policy/engineering.json"
+      },
+      {
+        "path": "policy/interfaces.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/policy/interfaces.json"
+      },
+      {
+        "path": "policy/operations.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/policy/operations.json"
+      },
+      {
+        "path": "some-implementations/fishhat/backup/restic/src/a_fishhat_restic_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/backup/restic/src/a_fishhat_restic_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/backup/sealed-archive/src/a_fishhat_sealed_archive_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/backup/sealed-archive/src/a_fishhat_sealed_archive_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/bootstrap-source/forgejo-restic/src/a_fishhat_forgejo_restic_bootstrap/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/bootstrap-source/forgejo-restic/src/a_fishhat_forgejo_restic_bootstrap/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/bootstrap-source/git-bundle/src/a_fishhat_git_bundle_bootstrap/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/bootstrap-source/git-bundle/src/a_fishhat_git_bundle_bootstrap/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/builds/buildah/src/a_fishhat_buildah_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/builds/buildah/src/a_fishhat_buildah_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/builds/buildkit/src/a_fishhat_buildkit_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/builds/buildkit/src/a_fishhat_buildkit_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/capture/postgresql/src/a_fishhat_postgresql_capture_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/capture/postgresql/src/a_fishhat_postgresql_capture_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/capture/quiesced-files/src/a_fishhat_quiesced_files_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/capture/quiesced-files/src/a_fishhat_quiesced_files_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/compute/delegated-cgroup/src/a_fishhat_delegated_cgroup_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/compute/delegated-cgroup/src/a_fishhat_delegated_cgroup_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/compute/systemd-cgroup/src/a_fishhat_systemd_cgroup_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/compute/systemd-cgroup/src/a_fishhat_systemd_cgroup_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/credentials/openbao-database/src/a_fishhat_openbao_database_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/credentials/openbao-database/src/a_fishhat_openbao_database_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/credentials/postgresql/src/a_fishhat_postgresql_credential_issuer_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/credentials/postgresql/src/a_fishhat_postgresql_credential_issuer_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/dns/bind-rfc2136/src/a_fishhat_bind_rfc2136_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/dns/bind-rfc2136/src/a_fishhat_bind_rfc2136_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/dns/dnsmasq-appliance/src/a_fishhat_dnsmasq_appliance_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/dns/dnsmasq-appliance/src/a_fishhat_dnsmasq_appliance_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/ingress/caddy/src/a_fishhat_caddy_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/ingress/caddy/src/a_fishhat_caddy_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/ingress/nginx/src/a_fishhat_nginx_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/ingress/nginx/src/a_fishhat_nginx_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/network/firewalld/src/a_fishhat_firewalld_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/network/firewalld/src/a_fishhat_firewalld_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/network/nftables/src/a_fishhat_nftables_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/network/nftables/src/a_fishhat_nftables_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/reporting/forgejo-issues/src/a_fishhat_forgejo_issues_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/reporting/forgejo-issues/src/a_fishhat_forgejo_issues_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/reporting/jsonl/src/a_fishhat_jsonl_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/reporting/jsonl/src/a_fishhat_jsonl_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/repositories/forgejo/src/a_fishhat_forgejo_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/repositories/forgejo/src/a_fishhat_forgejo_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/repositories/git-ssh/src/a_fishhat_git_ssh_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/repositories/git-ssh/src/a_fishhat_git_ssh_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/runtimes/docker-compose/src/a_fishhat_docker_compose_runtime/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/runtimes/docker-compose/src/a_fishhat_docker_compose_runtime/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/runtimes/podman-quadlet/src/a_fishhat_podman_quadlet_runtime/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/runtimes/podman-quadlet/src/a_fishhat_podman_quadlet_runtime/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/runtimes/systemd-native/src/a_fishhat_systemd_native_runtime/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/runtimes/systemd-native/src/a_fishhat_systemd_native_runtime/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/schedulers/nomad/src/a_fishhat_nomad_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/schedulers/nomad/src/a_fishhat_nomad_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/schedulers/slurm/src/a_fishhat_slurm_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/schedulers/slurm/src/a_fishhat_slurm_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/secrets/forgejo-age/src/a_fishhat_forgejo_age_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/secrets/forgejo-age/src/a_fishhat_forgejo_age_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/secrets/openbao-kv/src/a_fishhat_openbao_kv_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/secrets/openbao-kv/src/a_fishhat_openbao_kv_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/services/launchd/src/a_fishhat_launchd_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/services/launchd/src/a_fishhat_launchd_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/services/procd/src/a_fishhat_procd_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/services/procd/src/a_fishhat_procd_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/services/systemd/src/a_fishhat_systemd_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/services/systemd/src/a_fishhat_systemd_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/software/apt/src/a_fishhat_apt_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/software/apt/src/a_fishhat_apt_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/software/archive-slots/src/a_fishhat_archive_slots_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/software/archive-slots/src/a_fishhat_archive_slots_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/software/homebrew/src/a_fishhat_homebrew_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/software/homebrew/src/a_fishhat_homebrew_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/storage/ext4-filesystem/src/a_fishhat_ext4_filesystem_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/storage/ext4-filesystem/src/a_fishhat_ext4_filesystem_adapter/descriptor.json"
+      },
+      {
+        "path": "some-implementations/fishhat/storage/xfs-project/src/a_fishhat_xfs_project_adapter/descriptor.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/some-implementations/fishhat/storage/xfs-project/src/a_fishhat_xfs_project_adapter/descriptor.json"
+      },
+      {
+        "path": "tests/fixtures/index.json",
+        "status": "modified",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/tests/fixtures/index.json"
+      },
+      {
+        "path": "tests/test_durability.py",
+        "status": "added",
+        "current_source_url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/tests/test_durability.py"
+      }
+    ]
+  },
+  "source_findings": [
+    {
+      "path": "AGENTS.md",
+      "url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/AGENTS.md",
+      "finding": "Lines59–63 route to universal durability schema/helper. Lines95–121 and137 forbid numerical gates; advisory policy predates attachment and must be superseded separately."
+    },
+    {
+      "path": "packages/fishhat-contracts/src/fishhat_contracts/contracts/durability.schema.json",
+      "url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/packages/fishhat-contracts/src/fishhat_contracts/contracts/durability.schema.json",
+      "finding": "RecoveryPolicy default adaptive/120s/0.125/unlimitedattempts/twogenerations. Rules prescribe cross-owner optional budgets, reservation/debt/restart accounting and matched adaptive/restart observations; remove common economic mandate and relocate any independently necessary product guarantees to owning contracts."
+    },
+    {
+      "path": "packages/fishhat-contracts/src/fishhat_contracts/durability.py",
+      "url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/packages/fishhat-contracts/src/fishhat_contracts/durability.py",
+      "finding": "Pure helper RecoveryPolicy/RecoveryBudget/CheckpointCandidate/CheckpointDecision/recovery_policy/checkpoint_decision implements obsolete economics; remove active module/API and sole-purpose tests/projections without compatibility fallback."
+    },
+    {
+      "path": "tests/test_durability.py",
+      "url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/tests/test_durability.py",
+      "finding": "Tests explicitly bind8schema roots to RecoveryPolicy and assert changed defaults/rules alter installed identity; hard cut must repair closure, not just remove guide text."
+    },
+    {
+      "path": "policy/performance.toml",
+      "url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/policy/performance.toml",
+      "finding": "Existing targets are report_only=true, whole validation suite statistics, not project operation numerical authority. Do not promote existing30s/5s advisory suite goals to product contracts."
+    },
+    {
+      "path": "scripts/run_stats.py",
+      "url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/scripts/run_stats.py",
+      "finding": "Parser requires report_only=true. Retain honest noncontractual suite/resource statistics while installing separate approved common-runner production measurements."
+    },
+    {
+      "path": "tests/test_performance_measurement.py",
+      "url": "https://github.com/nashspence/fishhat/blob/f96b83dc20f059d62a4363a63c37bb0ef8c642e5/tests/test_performance_measurement.py",
+      "finding": "Enforces old report-only statistics semantics. Revise blanket policy claims; preserve correctness of observational statistics; add evidence for contractual product acceptance separately."
+    }
+  ],
+  "closure_roots": [
+    "source.schema.json",
+    "records.schema.json",
+    "adapter.schema.json",
+    "workflow.schema.json",
+    "workflow-journal.schema.json",
+    "ssh-request.schema.json",
+    "ssh-response.schema.json",
+    "cli-output.schema.json"
+  ],
+  "open_issue_scan": {
+    "method": "GET issues?state=open&per_page=100 page1,2,3; exclude pull_request objects; examine current bodies (not search snippets/comments).",
+    "page_urls": [
+      "https://api.github.com/repos/nashspence/fishhat/issues?state=open&per_page=100&page=1",
+      "https://api.github.com/repos/nashspence/fishhat/issues?state=open&per_page=100&page=2",
+      "https://api.github.com/repos/nashspence/fishhat/issues?state=open&per_page=100&page=3"
+    ],
+    "page_counts": [
+      100,
+      73,
+      0
+    ],
+    "open_issue_count": 169,
+    "open_pull_request_count": 4,
+    "advisory_body_issue_count": 151,
+    "exact_numerical_performance_misses_body_count": 126,
+    "patterns": [
+      "numerical performance misses",
+      "timing goals remain advisory",
+      "numerical.*(not|do not|never|by themselves|alone).*(gate|block|fail|approval)",
+      "advisory performance",
+      "non.contractual developer.performance",
+      "numerical.*advisory"
+    ],
+    "scope_note": "Every matching open issue is listed. Nonmatching bodies do not establish presence/absence of an approved numerical contract. Comments and native relations require reconciliation during implementation.",
+    "matches": [
+      {
+        "number": 450,
+        "title": "Authenticate commissioned local checkpoint inspection without enabling writes",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/450",
+        "updated_at": "2026-11-23T12:54:14Z",
+        "clauses": [
+          "numerical misses do not waive proofs or require approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 358,
+        "title": "Complete positive resident admission qualification for the selected native profile",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/358",
+        "updated_at": "2026-11-12T15:36:05Z",
+        "clauses": [
+          "Numerical targets remain advisory."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 357,
+        "title": "Select a supported resident admission profile and route its native qualification",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/357",
+        "updated_at": "2026-11-12T15:36:03Z",
+        "clauses": [
+          "Numerical targets remain advisory."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 356,
+        "title": "Qualify current-epoch recovery of queued admission before Operation acceptance",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/356",
+        "updated_at": "2026-11-12T15:30:46Z",
+        "clauses": [
+          "Numerical targets remain advisory."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 355,
+        "title": "Qualify Nomad batch read-only reconciliation before scheduler activation",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/355",
+        "updated_at": "2026-11-12T15:30:45Z",
+        "clauses": [
+          "Numerical targets remain advisory."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 354,
+        "title": "Qualify Slurm read-only reconciliation before scheduler activation",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/354",
+        "updated_at": "2026-11-12T15:30:44Z",
+        "clauses": [
+          "Numerical targets remain advisory."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 342,
+        "title": "Qualify host admission through actual scheduler placement and release",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/342",
+        "updated_at": "2026-11-12T15:36:01Z",
+        "clauses": [
+          "Numerical performance targets remain advisory."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 341,
+        "title": "Implement and qualify the Nomad batch scheduler adapter one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/341",
+        "updated_at": "2026-11-12T15:35:59Z",
+        "clauses": [
+          "Numerical performance targets remain advisory."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 340,
+        "title": "Implement and qualify the Slurm scheduler adapter one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/340",
+        "updated_at": "2026-11-12T15:35:57Z",
+        "clauses": [
+          "Numerical performance targets remain advisory."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 339,
+        "title": "Release admission charges only after verified cessation and closure",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/339",
+        "updated_at": "2026-11-12T15:35:54Z",
+        "clauses": [
+          "Numerical performance targets remain advisory."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 338,
+        "title": "Reconcile queue observations without losing retained allocation facts",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/338",
+        "updated_at": "2026-11-12T15:35:53Z",
+        "clauses": [
+          "Numerical performance targets remain advisory."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 337,
+        "title": "Consume an exact workload grant once at protected process launch",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/337",
+        "updated_at": "2026-11-11T22:58:20Z",
+        "clauses": [
+          "Numerical performance targets remain advisory."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 336,
+        "title": "Debit shared host capacity atomically for exact resource grants",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/336",
+        "updated_at": "2026-11-11T22:58:18Z",
+        "clauses": [
+          "Numerical performance targets remain advisory."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 335,
+        "title": "Persist exact admission cancellation intent and immutable receipts",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/335",
+        "updated_at": "2026-11-11T22:58:17Z",
+        "clauses": [
+          "Numerical performance targets remain advisory."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 334,
+        "title": "Deliver complete host admission records and bounded queue pages",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/334",
+        "updated_at": "2026-11-12T15:35:50Z",
+        "clauses": [
+          "Numerical performance targets remain advisory."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 333,
+        "title": "Persist host admission submission and immutable replay custody",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/333",
+        "updated_at": "2026-11-12T15:35:49Z",
+        "clauses": [
+          "Numerical performance targets remain advisory."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 332,
+        "title": "Enforce finite protected control admission without a configured scheduler",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/332",
+        "updated_at": "2026-11-11T22:58:13Z",
+        "clauses": [
+          "Numerical performance targets remain advisory."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 331,
+        "title": "Load current host admission policy and exact stage resource requests",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/331",
+        "updated_at": "2026-11-12T15:35:47Z",
+        "clauses": [
+          "Numerical performance targets remain advisory."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 330,
+        "title": "Pin and qualify disposable Nomad batch prerequisites",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/330",
+        "updated_at": "2026-11-12T15:35:58Z",
+        "clauses": [
+          "Numerical performance targets remain advisory."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 329,
+        "title": "Pin and qualify disposable Slurm prerequisites",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/329",
+        "updated_at": "2026-11-12T15:35:55Z",
+        "clauses": [
+          "Numerical performance targets remain advisory."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 328,
+        "title": "Implement host-owned resource admission through qualified scheduler execution",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/328",
+        "updated_at": "2026-11-12T15:36:02Z",
+        "clauses": [
+          "Numerical performance targets remain advisory."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 271,
+        "title": "Provide isolated macOS 15 arm64 native test fixtures",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/271",
+        "updated_at": "2026-11-08T21:08:47Z",
+        "clauses": [
+          "Use maintained local checks and protected PR gates. For each checked step retain exact-source original CI receipts, positive/refusal/failure observations and applicable crash/extent/growth proofs. Record elapsed/CPU/memory statistics with their scopes and I/O availability. Numerical timing misses remain advisory. Native support remains unqualified until its owning packets pass. Close only after all three steps pass."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 267,
+        "title": "Implement explicit application retirement and identity tombstones",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/267",
+        "updated_at": "2026-11-08T17:38:20Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 266,
+        "title": "Implement explicit app recovery dispositions and hold clearance",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/266",
+        "updated_at": "2026-11-08T17:38:18Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 265,
+        "title": "Recover one uncertain native Operation without replacing owner authority",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/265",
+        "updated_at": "2026-11-08T17:38:15Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 264,
+        "title": "Compose host apply from exact owned effects and notifications",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/264",
+        "updated_at": "2026-11-08T17:38:12Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 263,
+        "title": "Implement host source update without activating accepted policy",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/263",
+        "updated_at": "2026-11-08T17:38:10Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 262,
+        "title": "Assemble a release-ready implementation candidate and publication handoff",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/262",
+        "updated_at": "2026-11-08T17:33:24Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 261,
+        "title": "Audit complete implementation coverage and remaining qualification gaps",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/261",
+        "updated_at": "2026-11-11T23:00:18Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 260,
+        "title": "Qualify the complete cross-owner recovery slice",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/260",
+        "updated_at": "2026-11-08T17:33:20Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 259,
+        "title": "Verify first-use and recovery workflows with independent human walkthroughs",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/259",
+        "updated_at": "2026-11-08T17:33:17Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 258,
+        "title": "Qualify the first complete stateful application owner slice",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/258",
+        "updated_at": "2026-11-08T17:39:10Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 257,
+        "title": "Demonstrate fresh-machine total-loss recovery and old-path retention",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/257",
+        "updated_at": "2026-11-08T17:39:08Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 256,
+        "title": "Implement first-write-aware app relocation and conditional placement",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/256",
+        "updated_at": "2026-11-08T17:33:11Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 255,
+        "title": "Qualify reporting privacy and complete owner noninterference",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/255",
+        "updated_at": "2026-11-08T17:33:08Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 254,
+        "title": "Publish independently retained complete native recovery sets",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/254",
+        "updated_at": "2026-11-08T17:33:06Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 253,
+        "title": "Expose portable resource inspection and exact cleanup planning",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/253",
+        "updated_at": "2026-11-08T17:33:03Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 252,
+        "title": "Implement session open, check, export and non-deleting closeout",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/252",
+        "updated_at": "2026-11-08T17:33:01Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 251,
+        "title": "Implement safe native owner/runtime replacement and direct rescue",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/251",
+        "updated_at": "2026-11-08T17:32:59Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 250,
+        "title": "Implement app backup and backup-check orchestration",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/250",
+        "updated_at": "2026-11-08T17:32:57Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 249,
+        "title": "Implement isolated native restore drills and explicit production restoration",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/249",
+        "updated_at": "2026-11-08T17:39:07Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 248,
+        "title": "Implement explicit host recovery and retirement with retained custody",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/248",
+        "updated_at": "2026-11-08T17:39:05Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 247,
+        "title": "Qualify the first complete host-only owner slice",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/247",
+        "updated_at": "2026-11-11T23:00:17Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 246,
+        "title": "Implement portable planning, submission and finite workflow resume",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/246",
+        "updated_at": "2026-11-08T17:32:47Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 245,
+        "title": "Implement and qualify the selected GPU capability profile",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/245",
+        "updated_at": "2026-11-08T17:32:45Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 244,
+        "title": "Qualify mixed-runtime network isolation and effective ingress",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/244",
+        "updated_at": "2026-11-08T17:32:42Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 243,
+        "title": "Implement explicit restored-owner commissioning and obligation retirement",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/243",
+        "updated_at": "2026-11-08T17:39:03Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 242,
+        "title": "Implement coordinated credential and interface cutovers",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/242",
+        "updated_at": "2026-11-08T17:39:01Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 241,
+        "title": "Assemble complete native checkpoints from exact dataset custody",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/241",
+        "updated_at": "2026-11-08T17:32:35Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 240,
+        "title": "Implement explicit workflow driver transfer and abandonment",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/240",
+        "updated_at": "2026-11-08T17:32:33Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 239,
+        "title": "Implement local bounded application schedules and due-work recovery",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/239",
+        "updated_at": "2026-11-11T23:00:16Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 238,
+        "title": "Implement deploy, repair, restart, upgrade and non-deleting undeploy",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/238",
+        "updated_at": "2026-11-08T17:39:00Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 237,
+        "title": "Expose complete resource observations and local pressure scheduling",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/237",
+        "updated_at": "2026-11-11T23:00:14Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 236,
+        "title": "Implement bounded host drain and disruptive operation admission",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/236",
+        "updated_at": "2026-11-08T17:32:16Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 235,
+        "title": "Implement and qualify the systemd-native-runtime profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/235",
+        "updated_at": "2026-11-08T17:32:14Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 234,
+        "title": "Implement and qualify the podman-quadlet-runtime profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/234",
+        "updated_at": "2026-11-08T17:32:12Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 233,
+        "title": "Implement and qualify the docker-compose-runtime profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/233",
+        "updated_at": "2026-11-08T17:32:09Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 232,
+        "title": "Implement source publication as an independently authorized effect",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/232",
+        "updated_at": "2026-11-08T17:32:07Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 231,
+        "title": "Implement exact DNS reconciliation and provider-specific record disposition",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/231",
+        "updated_at": "2026-11-08T17:32:05Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 230,
+        "title": "Qualify appliance management without assuming a normal host runtime",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/230",
+        "updated_at": "2026-11-08T17:32:02Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 229,
+        "title": "Qualify macOS host resources and native client behavior",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/229",
+        "updated_at": "2026-11-08T17:32:00Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 228,
+        "title": "Implement explicit host/app secret adoption and durable credential effects",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/228",
+        "updated_at": "2026-11-08T17:31:58Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 227,
+        "title": "Implement positive native writer exclusion and recovery attestations",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/227",
+        "updated_at": "2026-11-08T17:31:55Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 226,
+        "title": "Resume workflows from authenticated retained child facts",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/226",
+        "updated_at": "2026-11-08T17:31:53Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 225,
+        "title": "Confine application hooks, maintenance and subordinate jobs",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/225",
+        "updated_at": "2026-11-08T17:31:51Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 224,
+        "title": "Execute exact protected-reference cleanup with race-safe resumption",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/224",
+        "updated_at": "2026-11-08T17:31:48Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 223,
+        "title": "Authenticate adapter qualification and retain compatible readers",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/223",
+        "updated_at": "2026-11-08T17:31:46Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 222,
+        "title": "Implement and qualify the xfs-project-adapter profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/222",
+        "updated_at": "2026-11-08T17:31:44Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 221,
+        "title": "Implement and qualify the systemd-cgroup-adapter profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/221",
+        "updated_at": "2026-11-08T17:31:41Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 220,
+        "title": "Implement and qualify the systemd-adapter profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/220",
+        "updated_at": "2026-11-08T17:31:39Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 219,
+        "title": "Implement and qualify the sealed-archive-adapter profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/219",
+        "updated_at": "2026-11-08T17:31:36Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 218,
+        "title": "Implement and qualify the restic-adapter profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/218",
+        "updated_at": "2026-11-08T17:31:34Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 217,
+        "title": "Implement and qualify the quiesced-files-adapter profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/217",
+        "updated_at": "2026-11-08T17:31:32Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 216,
+        "title": "Implement and qualify the procd-adapter profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/216",
+        "updated_at": "2026-11-08T17:31:29Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 215,
+        "title": "Implement and qualify the postgresql-credential-issuer-adapter profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/215",
+        "updated_at": "2026-11-08T17:31:27Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 214,
+        "title": "Implement and qualify the postgresql-capture-adapter profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/214",
+        "updated_at": "2026-11-08T17:31:24Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 213,
+        "title": "Implement and qualify the openbao-kv-adapter profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/213",
+        "updated_at": "2026-11-08T17:31:22Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 212,
+        "title": "Implement and qualify the openbao-database-adapter profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/212",
+        "updated_at": "2026-11-08T17:30:55Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 211,
+        "title": "Implement and qualify the nginx-adapter profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/211",
+        "updated_at": "2026-11-08T17:30:53Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 210,
+        "title": "Implement and qualify the nftables-adapter profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/210",
+        "updated_at": "2026-11-08T17:30:50Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 209,
+        "title": "Implement and qualify the launchd-adapter profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/209",
+        "updated_at": "2026-11-08T17:30:48Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 208,
+        "title": "Implement and qualify the homebrew-adapter profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/208",
+        "updated_at": "2026-11-08T17:30:46Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 207,
+        "title": "Implement and qualify the git-ssh-adapter profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/207",
+        "updated_at": "2026-11-08T17:30:43Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 206,
+        "title": "Implement and qualify the forgejo-age-adapter profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/206",
+        "updated_at": "2026-11-08T17:30:40Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 205,
+        "title": "Implement and qualify the forgejo-adapter profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/205",
+        "updated_at": "2026-11-08T17:30:37Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 204,
+        "title": "Implement and qualify the firewalld-adapter profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/204",
+        "updated_at": "2026-11-08T17:30:34Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 203,
+        "title": "Implement and qualify the ext4-filesystem-adapter profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/203",
+        "updated_at": "2026-11-08T17:30:31Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 202,
+        "title": "Implement and qualify the dnsmasq-appliance-adapter profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/202",
+        "updated_at": "2026-11-08T17:30:29Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 201,
+        "title": "Implement and qualify the delegated-cgroup-adapter profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/201",
+        "updated_at": "2026-11-08T17:30:26Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 200,
+        "title": "Implement and qualify the caddy-adapter profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/200",
+        "updated_at": "2026-11-08T17:30:24Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 199,
+        "title": "Implement and qualify the buildkit-adapter profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/199",
+        "updated_at": "2026-11-08T17:30:21Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 198,
+        "title": "Implement and qualify the buildah-adapter profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/198",
+        "updated_at": "2026-11-08T17:30:19Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 197,
+        "title": "Implement and qualify the bind-rfc2136-adapter profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/197",
+        "updated_at": "2026-11-08T17:30:16Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 196,
+        "title": "Implement and qualify the archive-slots-adapter profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/196",
+        "updated_at": "2026-11-08T17:30:14Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 195,
+        "title": "Implement and qualify the apt-adapter profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/195",
+        "updated_at": "2026-11-08T17:30:12Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 194,
+        "title": "Implement explicit backup backend enrollment, checks and exact pruning",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/194",
+        "updated_at": "2026-11-08T17:30:09Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 193,
+        "title": "Implement sole-custodian immutable secret publication and recovery",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/193",
+        "updated_at": "2026-11-08T17:30:07Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 192,
+        "title": "Implement participant preparation and exact workflow child admission",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/192",
+        "updated_at": "2026-11-11T23:00:13Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 191,
+        "title": "Implement native application checks and independent dataset invariants",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/191",
+        "updated_at": "2026-11-08T17:30:02Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 190,
+        "title": "Persist app intent, holds and guarded boot behavior",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/190",
+        "updated_at": "2026-11-08T17:30:00Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 189,
+        "title": "Implement complete authenticated adapter observation and quiescence",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/189",
+        "updated_at": "2026-11-08T17:29:58Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 188,
+        "title": "Implement exact encrypted bundle materialization and plaintext custody",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/188",
+        "updated_at": "2026-11-08T17:29:56Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 187,
+        "title": "Install durable owner workflow journals and recovery-safe publication",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/187",
+        "updated_at": "2026-11-08T17:28:51Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 186,
+        "title": "Implement protected application registration and release admission",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/186",
+        "updated_at": "2026-11-08T17:38:58Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 185,
+        "title": "Implement cancellation and close-if-unaccepted decision custody",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/185",
+        "updated_at": "2026-11-08T17:28:46Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 184,
+        "title": "Dispatch durable adapter attempts and preserve original reconciliation identity",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/184",
+        "updated_at": "2026-11-08T17:38:57Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 183,
+        "title": "Implement native host check and shared observation dispatch",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/183",
+        "updated_at": "2026-11-08T17:28:42Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 182,
+        "title": "Account for every native write path and helper resource envelope",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/182",
+        "updated_at": "2026-11-11T23:00:12Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 181,
+        "title": "Implement owner discovery, status, logs and complete history reads",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/181",
+        "updated_at": "2026-11-08T17:28:37Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 180,
+        "title": "Implement complete typed owner content transfer",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/180",
+        "updated_at": "2026-11-12T15:35:51Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 179,
+        "title": "Implement exact plan preparation and accepted operation submission",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/179",
+        "updated_at": "2026-11-08T17:28:32Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 178,
+        "title": "Confine installed adapter processes and protected input delivery",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/178",
+        "updated_at": "2026-11-11T23:00:11Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 177,
+        "title": "Capture host changes into complete protected source proposals",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/177",
+        "updated_at": "2026-11-08T17:28:27Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 176,
+        "title": "Introduce make linux-qualification with the first real owner suite",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/176",
+        "updated_at": "2026-11-08T17:28:24Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 175,
+        "title": "Qualify historical readers and forward state upgrades in installed bundles",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/175",
+        "updated_at": "2026-11-08T17:28:21Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 174,
+        "title": "Implement explicit wake and sleep readiness for on-demand profiles",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/174",
+        "updated_at": "2026-11-08T17:28:19Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 173,
+        "title": "Persist native capacity reservations and attributable charges",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/173",
+        "updated_at": "2026-11-11T23:00:10Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 172,
+        "title": "Implement bounded RPC framing and direct CLI dispatch parity",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/172",
+        "updated_at": "2026-11-08T17:28:14Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 171,
+        "title": "Persist receiving-owner adapter installation and binding approval",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/171",
+        "updated_at": "2026-11-11T23:00:09Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 170,
+        "title": "Implement host account identity and scoped grant changes",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/170",
+        "updated_at": "2026-11-08T17:28:08Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 169,
+        "title": "Implement managed host files and exact stale-file retirement",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/169",
+        "updated_at": "2026-11-08T17:38:56Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 168,
+        "title": "Qualify receipts durability, tunnel access and independent packaging",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/168",
+        "updated_at": "2026-11-08T17:28:04Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 167,
+        "title": "Install and qualify fixed SSH owner dispatch",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/167",
+        "updated_at": "2026-11-08T17:28:01Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 166,
+        "title": "Connect installed owner admission and effect history to durable storage",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/166",
+        "updated_at": "2026-11-11T23:00:08Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 165,
+        "title": "Qualify installed SQLite durability and explicit forward migrations",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/165",
+        "updated_at": "2026-11-08T17:27:57Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 164,
+        "title": "Execute trusted session tests with honest execution classes",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/164",
+        "updated_at": "2026-11-08T17:27:54Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 163,
+        "title": "Bind owner permissions to authenticated receiving principals",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/163",
+        "updated_at": "2026-11-08T17:27:52Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 162,
+        "title": "Implement local checkpoint custody and exclusive writable reopen",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/162",
+        "updated_at": "2026-11-23T12:43:45Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 161,
+        "title": "Record native qualification evidence with exact scope and mandatory statistics",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/161",
+        "updated_at": "2026-11-08T17:27:41Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 160,
+        "title": "Qualify directory installation on the selected appliance profile",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/160",
+        "updated_at": "2026-11-08T17:27:39Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 159,
+        "title": "Implement pinned source bootstrap before Fishhat installation",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/159",
+        "updated_at": "2026-11-08T17:27:37Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 158,
+        "title": "Implement safe source status, fetch, worktree and fast-forward",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/158",
+        "updated_at": "2026-11-08T17:27:34Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 157,
+        "title": "Qualify portable clients on each claimed OS and architecture",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/157",
+        "updated_at": "2026-11-08T17:27:32Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 155,
+        "title": "Implement and qualify the jsonl-adapter profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/155",
+        "updated_at": "2026-11-08T17:27:27Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 154,
+        "title": "Implement and qualify the git-bundle-bootstrap profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/154",
+        "updated_at": "2026-11-08T17:27:25Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 153,
+        "title": "Implement and qualify the forgejo-restic-bootstrap profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/153",
+        "updated_at": "2026-11-08T17:27:23Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 152,
+        "title": "Implement and qualify the forgejo-issues-adapter profile one method at a time",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/152",
+        "updated_at": "2026-11-08T17:27:20Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 151,
+        "title": "Close selected-profile research assumptions and privileged dependency qualification",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/151",
+        "updated_at": "2026-11-08T17:27:18Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 150,
+        "title": "Implement discovery-only MCP and network boundaries",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/150",
+        "updated_at": "2026-11-08T17:27:16Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 149,
+        "title": "Implement explicit portable source context and owner discovery",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/149",
+        "updated_at": "2026-11-08T17:27:13Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 148,
+        "title": "Build authenticated offline artifact closures and independent install bundles",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/148",
+        "updated_at": "2026-11-08T17:27:10Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 147,
+        "title": "Establish independent source and application behavior oracles",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/147",
+        "updated_at": "2026-11-08T17:27:08Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 146,
+        "title": "Retain exact source and release closures for native planning",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/146",
+        "updated_at": "2026-11-15T08:38:42Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 143,
+        "title": "Route every retained safety requirement to a concrete native proof",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/143",
+        "updated_at": "2026-11-15T12:10:23Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 142,
+        "title": "Implement authenticated metadata-only receipts endpoints",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/142",
+        "updated_at": "2026-11-08T17:26:56Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 141,
+        "title": "Implement explicit best-effort tracking and receipt import/export",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/141",
+        "updated_at": "2026-11-08T17:26:54Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 140,
+        "title": "Implement the discovery directory source and safe projections",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/140",
+        "updated_at": "2026-11-08T17:26:52Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 139,
+        "title": "Connect native intake to strict source parsing and semantic validation",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/139",
+        "updated_at": "2026-11-15T08:38:41Z",
+        "clauses": [
+          "Numerical performance misses do not waive correctness or block approval by themselves."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 137,
+        "title": "Implement Fishhat completely through tested owner and adapter slices",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/137",
+        "updated_at": "2026-11-23T13:10:42Z",
+        "clauses": [
+          "#84 remains a linked advisory performance investigation, not a timing gate or prerequisite for all implementation.",
+          "Timing goals remain advisory."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 84,
+        "title": "Profile workflow recovery validation costs",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/84",
+        "updated_at": "2026-11-23T13:10:41Z",
+        "clauses": [
+          "Non-contractual developer-performance follow-up from #83."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      },
+      {
+        "number": 48,
+        "title": "Qualify native owner slices and retain every safety obligation",
+        "state": "open",
+        "url": "https://github.com/nashspence/fishhat/issues/48",
+        "updated_at": "2026-11-11T23:00:02Z",
+        "clauses": [
+          "Numerical performance targets remain advisory."
+        ],
+        "product_budget_status": "not_established_from_body; owning approved contract must be resolved"
+      }
+    ]
+  },
+  "specific_issue_dispositions": [
+    {
+      "number": 137,
+      "url": "https://github.com/nashspence/fishhat/issues/137",
+      "state": "open",
+      "title": "Implement Fishhat completely through tested owner and adapter slices",
+      "disposition": "Update implementation entrypoint and navigation to #64 adoption; remove universal advisory-only language; retain outcome/growth/native acceptance scope.",
+      "product_budget_status": "not_established_by_this_audit; resolve through approved owning design contract, not silence in issue body"
+    },
+    {
+      "number": 48,
+      "url": "https://github.com/nashspence/fishhat/issues/48",
+      "state": "open",
+      "title": "Qualify native owner slices and retain every safety obligation",
+      "disposition": "Replace universal advisory-only qualification language with approved operation-budget acceptance; keep correctness/native evidence obligations.",
+      "product_budget_status": "not_established_by_this_audit; resolve through approved owning design contract, not silence in issue body"
+    },
+    {
+      "number": 84,
+      "url": "https://github.com/nashspence/fishhat/issues/84",
+      "state": "open",
+      "title": "Profile workflow recovery validation costs",
+      "disposition": "Retain profiling observations and investigation; remove categorical ban on numerical gates and route actual product operations to approved #64 contracts. Whole-suite observations remain observational.",
+      "product_budget_status": "known_report_only_suite_observations_no_approved_product_budget_in_reviewed_body"
+    },
+    {
+      "number": 144,
+      "url": "https://github.com/nashspence/fishhat/issues/144",
+      "state": "closed",
+      "title": "Specify and test the first protected local authority mechanism",
+      "disposition": "Closed completed preexisting local-authority decision; preserve history and authority outcome. Do not reopen or delete as an optional-recovery policy artifact.",
+      "product_budget_status": "not_established_by_this_audit; resolve through approved owning design contract, not silence in issue body"
+    },
+    {
+      "number": 435,
+      "url": "https://github.com/nashspence/fishhat/issues/435",
+      "state": "closed",
+      "title": "Persist protected local checkpoint custody without enabling writable authority",
+      "disposition": "Closed completed protected storage primitive. Preserve scoped evidence; annotate supersession of common durability-policy reference only if needed. Do not mark writable owner admission complete.",
+      "product_budget_status": "not_established_by_this_audit; resolve through approved owning design contract, not silence in issue body"
+    },
+    {
+      "number": 439,
+      "url": "https://github.com/nashspence/fishhat/issues/439",
+      "state": "closed",
+      "title": "Qualify installed protected checkpoint storage in the enrolled Linux profile",
+      "disposition": "Closed completed installed storage qualification. Preserve separate native fault/custody scope; shared CI timing does not replace it.",
+      "product_budget_status": "not_established_by_this_audit; resolve through approved owning design contract, not silence in issue body"
+    },
+    {
+      "number": 162,
+      "url": "https://github.com/nashspence/fishhat/issues/162",
+      "state": "open",
+      "title": "Implement local checkpoint custody and exclusive writable reopen",
+      "disposition": "Open local continuity/writable-reopen work. Update blanket timing exemption; preserve uncompleted authority, fencing, exclusion and failure obligations.",
+      "product_budget_status": "not_established_by_this_audit; resolve through approved owning design contract, not silence in issue body"
+    },
+    {
+      "number": 166,
+      "url": "https://github.com/nashspence/fishhat/issues/166",
+      "state": "open",
+      "title": "Connect installed owner admission and effect history to durable storage",
+      "disposition": "Open accepted owner/effect durability work. Add approved complete-operation timing ownership; preserve acceptance-before-acknowledgement/effects and unknown-effect handling.",
+      "product_budget_status": "not_established_by_this_audit; resolve through approved owning design contract, not silence in issue body"
+    },
+    {
+      "number": 165,
+      "url": "https://github.com/nashspence/fishhat/issues/165",
+      "state": "open",
+      "title": "Qualify installed SQLite durability and explicit forward migrations",
+      "disposition": "Open installed SQLite/migration qualification. Add applicable raw operation budgets separately from native durability/migration proof.",
+      "product_budget_status": "not_established_by_this_audit; resolve through approved owning design contract, not silence in issue body"
+    },
+    {
+      "number": 450,
+      "url": "https://github.com/nashspence/fishhat/issues/450",
+      "state": "open",
+      "title": "Authenticate commissioned local checkpoint inspection without enabling writes",
+      "disposition": "Open next authenticated read-only checkpoint inspection packet. Update advisory exemption and add approved complete inspection timing when implemented; do not expand it into publication/writable permission.",
+      "product_budget_status": "not_established_by_this_audit; resolve through approved owning design contract, not silence in issue body"
+    },
+    {
+      "number": 418,
+      "url": "https://github.com/nashspence/fishhat/pull/418",
+      "state": "closed",
+      "title": "Define replay-aware durability contracts and checkpoint policy",
+      "disposition": "Merged PR history. Record hard-cut supersession in a linked new issue/comment; do not rewrite its historical validation or reopen.",
+      "product_budget_status": "not_established_by_this_audit; resolve through approved owning design contract, not silence in issue body"
+    },
+    {
+      "number": 187,
+      "url": "https://github.com/nashspence/fishhat/issues/187",
+      "state": "open",
+      "title": "Install durable owner workflow journals and recovery-safe publication",
+      "disposition": "Route complete journal publication/acknowledgement performance to independently approved raw budgets as actual installed operations land; preserve independent authority and failure outcomes.",
+      "product_budget_status": "not_established_by_this_audit; resolve owning approved contract"
+    }
+  ],
+  "preserve_independent_guarantees": [
+    "Accepted bytes and original immutable request/effect identities",
+    "Commit-before-acknowledgement/effect and correct same-epoch continuity",
+    "Positive exclusion, current authorization and safe unknown-effect reconciliation",
+    "Protected state, introduced migrations/fixtures and retained readers",
+    "Complete result extent and existing aggregate growth promises",
+    "Actual independent native durability/custody/failure evidence, distinct from shared CI timing"
+  ],
+  "hard_cut_notes": [
+    "Delete mandatory optional-recovery economic model rather than retain default-off compatibility modes or rename it.",
+    "Do not blindly revert #418: retain useful per-owner semantics and recompute current schema/adapter identities through maintained tooling.",
+    "No proof shows authoritative CheckpointStore was introduced by this optional-recovery policy; original #418 diff already had protected checkpoint continuity rules before its additions.",
+    "Integration may propose numbers but may not approve its own budget/profile/timer/acceptance changes.",
+    "No matching operation budget in an issue body is not evidence that an operation has no external authority."
+  ],
+  "shared_authority": {
+    "policy": "https://github.com/nashspence/all/issues/64",
+    "storage_enrollment": "https://github.com/nashspence/all/issues/66",
+    "implementation_sha": "29d2af516a91d762094da1da55c71d07d79e095c",
+    "profile": "public-linux-x64-4cpu-prepared-ext4-v2",
+    "numerical_consumer_budgets_approved_by_this_handoff": false
+  },
+  "proffer_revision": "2ce5e15c3191fcdc2be70213c0170f57c852a883",
+  "verification": {
+    "archive_manifest": "all three member hashes and byte lengths match",
+    "pr418_file_inventory": "independently verified by two reviewers:57 paths,37 descriptors",
+    "open_issue_body_scan": "independently reproduced page counts100,73,0;169 issues,4 PRs;151 advisory matches,126 exact boilerplate",
+    "comments_limit": "This is not an exhaustive scan of all comments; integration must reconcile current decisions and native relationships."
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "kind": "handoff",
+  "issue": "https://github.com/nashspence/fishhat/issues/451",
+  "purpose": "Researched integration handoff for the maintainer-directed hard cut of PR #418's universal replay-aware durability economics and adoption of independently approved raw GitHub Actions production-operation budgets under nashspence/all issue #64.",
+  "producer": [
+    "ChatGPT; independent read-only reviews of Fishhat lineage, Proffer protocol and cutover acceptance"
+  ],
+  "requester": "nashspence, through the explicit maintainer request in the originating conversation",
+  "first_step": "Read issue #451 and .reference/HANDOFF.md, compare current Fishhat main with the inspected base, and begin removing the obsolete common policy while preparing the first real warm/full-process bindings. Resolve numerical authority through ordinary independent review of a short concrete table; do not design another calibration system. Record integration disposition in issue #451.",
+  "source": {
+    "repository": "nashspence/fishhat",
+    "base": {
+      "ref": "refs/heads/main",
+      "commit": "f96b83dc20f059d62a4363a63c37bb0ef8c642e5"
+    },
+    "work_state": "edited"
+  },
+  "artifacts": [
+    ".reference/HANDOFF.md",
+    ".reference/source-evidence-inventory.json",
+    ".reference/proffer.json"
+  ],
+  "checks": [
+    {
+      "command": "python proffer_validation/check.py .reference/proffer.json",
+      "result": "passed",
+      "source": {
+        "kind": "worktree",
+        "details": "Reference-only .reference/proffer.json and companion research files added to inspected Fishhat main f96b83dc20f059d62a4363a63c37bb0ef8c642e5; no maintained product file edited."
+      },
+      "environment": "Linux scratch; Python 3.12.14; jsonschema 4.26.0; Proffer validator/schema from pinned 2ce5e15c3191fcdc2be70213c0170f57c852a883.",
+      "notes": "Record/schema validation only. Exact publication and content verification are recorded separately in the owning issue."
+    },
+    {
+      "command": "python - (ZIP manifest SHA-256/size verification and research-inventory consistency assertions)",
+      "result": "passed",
+      "source": {
+        "kind": "worktree",
+        "details": "Supplied durability ZIP and current-source research inventory, not execution of Fishhat product code."
+      },
+      "environment": "Linux scratch; Python 3.12.14 standard library; GitHub connector read-only source/issue retrieval.",
+      "notes": "All 3 manifest members matched; PR #418 had 57 changed files and 37 descriptors; all 3 issue pages independently counted 169 open issues, 151 advisory body matches and 126 exact boilerplate matches. These counts precede creation of owning issue #451."
+    },
+    {
+      "command": "Fishhat make check, installed/native qualification and new product performance execution",
+      "result": "not-run",
+      "reason": "This contribution is research and a non-authoritative Proffer handoff. It changes no maintained product implementation, approves no numerical consumer contract and installs no required consumer gate."
+    }
+  ],
+  "limitations": [
+    "Hard-cut direction comes from the maintainer; this reference is not approval of integration or numerical limits.",
+    "Open-issue audit covers current bodies, not every comment. Integration must re-read current decisions, active PRs and native relationships.",
+    "Inspected source is pinned. Later source/issue changes require reconciliation.",
+    "Shared prepared v2 approval establishes configuration and bounded correct execution, not uniform latency, a precision allowance or physical power-loss survival.",
+    "The prior 320 ms Fishhat comparison was experimental; two misses remain 473.010732 ms and 605.141475 ms. No new product performance run was performed.",
+    "The uploaded ZIP is provenance input. The published reference commit is a new authored research artifact; it is not asserted to be byte-identical to that archive.",
+    "Keep reference planning/history off maintained main. Publish the consumer Proffer disposition in issue #451."
+  ]
+}
